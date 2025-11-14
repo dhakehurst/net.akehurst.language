@@ -1,10 +1,10 @@
 package agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.processor.AsmTransformString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.TransformString
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -21,7 +21,7 @@ class test_FileMap {
                 unit = entry* ;
                 entry = GLOB ':' value ';' ;
                 value = PATH | QUALIFIED_NAME ;
-                leaf GLOB = "([a-zA-Z0-9_*/.?{},\\[\\]-]|\\.)+" ;
+                leaf GLOB = "([a-zA-Z0-9_*/.?{},\[\]-])+" ;
                 QUALIFIED_NAME = [ID / '.']+ ;
                 PATH = '/' [ID / '/']+ ;
                 leaf ID = "[a-zA-Z._][a-zA-Z0-9._-]*" ;
@@ -33,7 +33,7 @@ class test_FileMap {
             #override-default-transform
             
             namespace ide
-            transform FileExtensionMap {
+            asm-transform FileExtensionMap {
                unit : children.asMap as Map<String,String>
                entry : tuple { key:=child[0] value:=child[2] }
                PATH: (child[0] + child[1].children.join) as String
@@ -41,11 +41,11 @@ class test_FileMap {
             }
         """
 
-        val processor: LanguageProcessor<List<MapStringString>, ContextWithScope<Any, Any>> by lazy {
-            val res = Agl.processorFromString<List<MapStringString>, ContextWithScope<Any, Any>>(
+        val processor: LanguageProcessor<List<MapStringString>, SentenceContextAny> by lazy {
+            val res = Agl.processorFromString<List<MapStringString>, SentenceContextAny>(
                 grammarDefinitionStr = grammar,
-                configuration = Agl.configuration<List<MapStringString>, ContextWithScope<Any, Any>>(base = Agl.configurationBase()) {
-                    transformString(TransformString(asmTransform))
+                configuration = Agl.configuration<List<MapStringString>, SentenceContextAny>(base = Agl.configurationBase()) {
+                    transformString(AsmTransformString(asmTransform))
 //                    syntaxAnalyserResolver { p ->
 //                        ProcessResultDefault(
 //                            FileExtensionMapSyntaxAnalyser(

@@ -17,9 +17,9 @@
 package net.akehurst.language.parser.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SpptDataNode
@@ -211,6 +211,7 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
+        println(result.sppt!!.toStringAll)
         assertEquals(InputLocation(0, 1, 1, 11, null), ss.locationForNode(result.sppt!!.treeData.userRoot))
         assertEquals(InputLocation(0, 1, 1, 3, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[0]))
         assertEquals(InputLocation(3, 4, 1, 1, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[1]))

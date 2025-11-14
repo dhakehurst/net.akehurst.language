@@ -19,7 +19,6 @@ package net.akehurst.language.scope.api
 
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.sentence.api.InputLocation
 
 data class ItemInScope<ItemInScopeType>(
     /** identity of the item in this scope */

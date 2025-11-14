@@ -22,8 +22,6 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.regex.agl.RegexEngineAgl
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.regex.api.RegexEngineKind
@@ -41,7 +39,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
 
     private var _grammarString: GrammarString? = base.grammarString
     private var _typesString: TypesString? = base.typesString
-    private var _transformString: TransformString? = base.transformString
+    private var _Asm_transformString: AsmTransformString? = base.asmTransformString
     private var _crossReferenceString: CrossReferenceString? = base.crossReferenceString
     private var _styleString: StyleString? = base.styleString
     private var _formatString: FormatString? = base.formatString
@@ -79,8 +77,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         _typesString = value
     }
 
-    fun transformString(value: TransformString?) {
-        _transformString = value
+    fun transformString(value: AsmTransformString?) {
+        _Asm_transformString = value
     }
 
     fun crossReferenceString(value: CrossReferenceString?) {
@@ -167,7 +165,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             defaultGoalRuleName = _defaultGoalRuleName,
             grammarString = _grammarString,
             typesString = _typesString,
-            transformString =  _transformString,
+            asmTransformString =  _Asm_transformString,
             crossReferenceString = _crossReferenceString,
             styleString = _styleString,
             formatString = _formatString,

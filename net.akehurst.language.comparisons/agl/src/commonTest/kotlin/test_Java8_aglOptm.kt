@@ -15,14 +15,15 @@
  */
 package net.akehurst.language.comparisons.agl
 
+import kotlinx.coroutines.test.runTest
 import korlibs.io.file.std.StandardPaths
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.comparisons.common.*
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import kotlin.test.Test
 import kotlin.time.measureTime
 
@@ -32,16 +33,16 @@ class test_Java8_aglOptm {
         const val col = "agl_optm"
         var totalFiles = 0
 
-        suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm, ContextSimple> {
+        suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm, ContextWithScope<Any,Any>> {
             println(StandardPaths.cwd)
             val javaGrammarStr = myResourcesVfs[aglFile].readString()
-            val res = Agl.processorFromString<Asm, ContextSimple>(
+            val res = Agl.processorFromString<Asm, ContextWithScope<Any,Any>>(
                 grammarDefinitionStr = javaGrammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
-                        context(ContextFromGrammarRegistry(Agl.registry))
+                        context(contextFromGrammarRegistry(Agl.registry))
                     }
                 }
             )
@@ -49,10 +50,10 @@ class test_Java8_aglOptm {
             return res.processor!!
         }
 
-        lateinit var aglProcessor: LanguageProcessor<Asm, ContextSimple>
+        lateinit var aglProcessor: LanguageProcessor<Asm, ContextWithScope<Any,Any>>
 
         suspend fun files(): Collection<FileDataCommon> {
-            val skipPatterns = aglProcessor.grammar!!.allResolvedSkipTerminal.map { Regex(it.value) }.toSet()
+            val skipPatterns = aglProcessor.targetGrammar!!.allResolvedSkipTerminal.map { Regex(it.unescapedValue.escapedForRegex) }.toSet()
             val f =  FilesCommon.javaFiles("nogit/javaTestFiles.txt", skipPatterns) { it.endsWith(".java") }
             //val f = FilesCommon.files().subList(0, 5)//300) // after this we get java.lang.OutOfMemoryError: Java heap space
             totalFiles = f.size

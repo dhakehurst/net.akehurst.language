@@ -56,10 +56,11 @@ class test_AglGrammar_expectedTerminalsAt {
     fun namespace() {
 
         val sentence = "namespace"
-        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 9)
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, sentence.length)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "<IDENTIFIER>")
+            CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
+            CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace")
         )
 
         assertEquals(expected, result.items, result.items.joinToString("\n"))
@@ -69,7 +70,7 @@ class test_AglGrammar_expectedTerminalsAt {
     fun namespace_WS() {
 
         val sentence = "namespace "
-        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 10)
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, sentence.length)
 
         val expected = listOf<CompletionItem>(
             CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "<IDENTIFIER>")
@@ -81,8 +82,8 @@ class test_AglGrammar_expectedTerminalsAt {
     @Test
     fun namespace_WS_n() {
 
-        val sentence = "namespace n"
-        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 11)
+        val sentence = "namespace n "
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, sentence.length)
 
         val expected = listOf<CompletionItem>(
             CompletionItem(CompletionItemKind.LITERAL, "'.'", "."),
@@ -96,9 +97,9 @@ class test_AglGrammar_expectedTerminalsAt {
     }
 
     @Test
-    fun namespace_WS_n_grammar() {
+    fun namespace_WS_n_grammar_WS() {
 
-        val sentence = "namespace n grammar"
+        val sentence = "namespace n grammar "
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, sentence.length)
 
         val expected = listOf<CompletionItem>(

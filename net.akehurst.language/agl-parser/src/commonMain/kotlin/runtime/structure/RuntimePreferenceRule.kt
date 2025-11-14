@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
 import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.PrefOption

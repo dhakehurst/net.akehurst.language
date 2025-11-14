@@ -19,9 +19,7 @@ package net.akehurst.kotlinx.komposite.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 /**
  * Kotlin (JVM & JS) do not provide a mechnism/syntax for indicating which members of an object
@@ -43,12 +41,12 @@ import net.akehurst.language.typemodel.api.TypeModel
  */
 object Komposite {
 
-    private var _processor: LanguageProcessor<TypeModel,Any>? = null
+    private var _processor: LanguageProcessor<TypesDomain,Any>? = null
 
-    internal fun processor(): LanguageProcessor<TypeModel,Any> {
+    internal fun processor(): LanguageProcessor<TypesDomain,Any> {
         if (null == _processor) {
             val grammarStr = fetchGrammarStr()
-            val res = Agl.processorFromString<TypeModel,Any>(
+            val res = Agl.processorFromString<TypesDomain,Any>(
                 grammarDefinitionStr = grammarStr,
                 configuration = Agl.configuration {
                     defaultGoalRuleName("unit")

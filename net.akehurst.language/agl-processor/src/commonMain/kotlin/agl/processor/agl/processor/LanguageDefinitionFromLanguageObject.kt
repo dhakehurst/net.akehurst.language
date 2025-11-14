@@ -19,18 +19,18 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.types.api.TypesDomain
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType : Any>(
@@ -40,19 +40,19 @@ internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType :
     override val isModifiable: Boolean = false
 
     override val grammarString: GrammarString? get() = GrammarString(languageObject.grammarString)
-    override val grammarModel: GrammarModel? get() = languageObject.grammarModel
+    override val grammarDomain: GrammarDomain? get() = languageObject.grammarDomain
     override val targetGrammar: Grammar? get() = languageObject.defaultTargetGrammar
     override val targetGrammarName: SimpleName? get() = targetGrammar?.name
     override val defaultGoalRule: GrammarRuleName? get() = GrammarRuleName(languageObject.defaultTargetGoalRule)
 
     override val typesString: TypesString? get() = TypesString(languageObject.typesString)
-    override val typesModel: TypeModel? get() = languageObject.typesModel
+    override val typesDomain: TypesDomain? get() = languageObject.typesDomain
 
-    override val transformString: TransformString? get() = TransformString(languageObject.asmTransformString)
-    override val transformModel: TransformModel? get() = languageObject.asmTransformModel
+    override val asmTransformString: AsmTransformString? get() = AsmTransformString(languageObject.asmTransformString)
+    override val transformDomain: AsmTransformDomain? get() = languageObject.asmTransformDomain
 
     override val crossReferenceString: CrossReferenceString? get() = CrossReferenceString(languageObject.crossReferenceString)
-    override val crossReferenceModel: CrossReferenceModel? get() = languageObject.crossReferenceModel
+    override val crossReferenceDomain: CrossReferenceDomain? get() = languageObject.crossReferenceDomain
 
     override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
         get() = TODO()
@@ -75,15 +75,15 @@ internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType :
     }
 
     override val styleString: StyleString? get() = StyleString(languageObject.styleString)
-    override val styleModel: AglStyleModel? get() = languageObject.styleModel
+    override val styleDomain: AglStyleDomain? get() = languageObject.styleDomain
 
     override val issues: IssueCollection<LanguageIssue> = IssueHolder(LanguageProcessorPhase.ALL)
 
     override val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit> = mutableListOf()
     override val grammarStrObservers: MutableList<(GrammarString?, GrammarString?) -> Unit> = mutableListOf()
-    override val grammarObservers: MutableList<(GrammarModel?, GrammarModel?) -> Unit> = mutableListOf()
-    override val typeModelStrObservers: MutableList<(TypesString?, TypesString?) -> Unit> = mutableListOf()
-    override val asmTransformStrObservers: MutableList<(TransformString?, TransformString?) -> Unit> = mutableListOf()
+    override val grammarObservers: MutableList<(GrammarDomain?, GrammarDomain?) -> Unit> = mutableListOf()
+    override val typesStrObservers: MutableList<(TypesString?, TypesString?) -> Unit> = mutableListOf()
+    override val asmTransformStrObservers: MutableList<(AsmTransformString?, AsmTransformString?) -> Unit> = mutableListOf()
     override val crossReferenceStrObservers: MutableList<(CrossReferenceString?, CrossReferenceString?) -> Unit> = mutableListOf()
 
     //val crossReferenceModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>
@@ -96,7 +96,7 @@ internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType :
     override fun update(
         grammarString: GrammarString?,
         typesString: TypesString?,
-        transformString: TransformString?,
+        asmTransformString: AsmTransformString?,
         crossReferenceString: CrossReferenceString?,
         styleString: StyleString?,
         formatString: FormatString?,

@@ -16,37 +16,42 @@
 
 package net.akehurst.language.grammar.processor
 
-import net.akehurst.language.agl.format.builder.formatModel
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.format.builder.formatDomain
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.reference.builder.crossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.builder.asmTransform
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.builder.crossReferenceDomain
+import net.akehurst.language.regex.api.CommonRegexPatterns
+import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 
-object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, Any>>() {
+object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Grammar"
+    const val TYPES_API_NS_QN = "$NAMESPACE_NAME.grammar.api"
+    const val TYPES_ASM_NS_QN = "$NAMESPACE_NAME.grammar.asm"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
+
+    override val extends by lazy { listOf(AglBase) }
 
     override val grammarString = """
         namespace $NAMESPACE_NAME
@@ -84,8 +89,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
             nonTerminal = possiblyQualifiedName ;
             embedded = possiblyQualifiedName '::' nonTerminal ;
             terminal = LITERAL | PATTERN ;
-            leaf LITERAL = "'([^'\\\\]|\\\\.)+'" ;
-            leaf PATTERN = "\"([^\"\\\\]|\\\\.)+\"" ;
+            leaf LITERAL = "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" ;
+            leaf PATTERN = "${CommonRegexPatterns.PATTERN.escapedFoAgl.value}" ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
             leaf POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
             preferenceRule = 'preference' simpleItem '{' preferenceOption+ '}' ;
@@ -97,6 +102,12 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
             leaf CHOICE_INDICATOR = "EMPTY|ITEM" ;
           }
         """.trimIndent()
+
+    override val typesString: String by lazy {
+        typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString() +
+                "\n" +
+                typesDomain.findNamespaceOrNull(QualifiedName(TYPES_ASM_NS_QN))!!.asString()
+    }
 
     override val kompositeString = """
         namespace $NAMESPACE_NAME.grammar.api
@@ -141,10 +152,24 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
             }
         """.trimIndent()
 
+    override val asmTransformString: String = """
+        namespace $NAMESPACE_NAME
+          asm-transform Grammar {
+            import-types net.akehurst.language.grammar.api
+            import-types net.akehurst.language.grammar.asm
+            unit: GrammarDomain() { }
+          }
+    """
+
+    override val crossReferenceString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """
+
     override val styleString: String = """
         namespace $NAMESPACE_NAME
           styles $NAME {
-            $$ "'[^']+'" {
+            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
               foreground: darkgreen;
               font-weight: bold;
             }
@@ -164,8 +189,13 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
           }
       """.trimIndent()
 
-    override val grammarModel: GrammarModel by lazy {
-        grammarModel(NAME) {
+    override val formatString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """
+
+    override val grammarDomain: GrammarDomain by lazy {
+        grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
@@ -214,9 +244,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
                         ref("priorityChoice") //TODO: remove this
                         ref("simpleChoice")
                     }
-                    separatedList("ambiguousChoice", 2, -1) { ref("concatenation");lit("||") }
-                    separatedList("priorityChoice", 2, -1) { ref("concatenation");lit("<") }
-                    separatedList("simpleChoice", 2, -1) { ref("concatenation");lit("|") }
+                    separatedList("ambiguousChoice", 2, -1) { ref("concatenation"); lit("||") }
+                    separatedList("priorityChoice", 2, -1) { ref("concatenation"); lit("<") }
+                    separatedList("simpleChoice", 2, -1) { ref("concatenation"); lit("|") }
                     list("concatenation", 1, -1) { ref("concatenationItem") }
                     choice("concatenationItem") {
                         ref("simpleItemOrGroup")
@@ -281,8 +311,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
                         ref("LITERAL")
                         ref("PATTERN")
                     }
-                    concatenation("LITERAL", isLeaf = true) { pat("'([^'\\\\]|\\\\.)+'") }
-                    concatenation("PATTERN", isLeaf = true) { pat("\"([^\"\\\\]|\\\\.)+\"") }
+                    concatenation("LITERAL", isLeaf = true) { pat(CommonRegexPatterns.LITERAL.value) }
+                    concatenation("PATTERN", isLeaf = true) { pat(CommonRegexPatterns.PATTERN.value) }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") }
                     concatenation("POSITIVE_INTEGER_GT_ZERO", isLeaf = true) { pat("[1-9][0-9]*") }
 
@@ -311,15 +341,16 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
     }
 
     /** implemented as kotlin classes **/
-    override val typesModel: TypeModel by lazy {
+    override val typesDomain: TypesDomain by lazy {
         //TODO: GrammarTypeNamespace?
-        typeModel("Grammar", true, AglBase.typesModel.namespace) {
-            grammarTypeNamespace("net.akehurst.language.grammar.api", listOf("std", "net.akehurst.language.base.api")) {
+        typesDomain("Grammar", true, AglBase.typesDomain.namespace) {
+            grammarTypeNamespace(TYPES_API_NS_QN, listOf("std", "net.akehurst.language.base.api")) {
                 enum("SeparatedListKind", listOf("Flat", "Left", "Right"))
                 enum("OverrideKind", listOf("REPLACE", "APPEND_ALTERNATIVE", "SUBSTITUTION"))
                 enum("Associativity", listOf("LEFT", "RIGHT"))
                 enum("ChoiceIndicator", listOf("NONE", "EMPTY", "ITEM", "NUMBER"))
-                value("GrammarRuleName") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("GrammarRuleName") {
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
@@ -389,8 +420,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
                 interface_("GrammarNamespace") {
                     supertype("Namespace") { ref("Grammar") }
                 }
-                interface_("GrammarModel") {
-                    supertype("Model") { ref("GrammarNamespace"); ref("Grammar") }
+                interface_("GrammarDomain") {
+                    supertype("Domain") { ref("GrammarNamespace"); ref("Grammar") }
                 }
                 interface_("GrammarItem") {
                     supertype("Formatable")
@@ -439,7 +470,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
                     }
                 }
             }
-            namespace("net.akehurst.language.grammar.asm", listOf("net.akehurst.language.grammar.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
+            namespace(TYPES_ASM_NS_QN, listOf(TYPES_API_NS_QN, "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
                 data("TerminalDefault") {
                     supertype("TangibleItemAbstract")
                     supertype("Terminal")
@@ -626,9 +657,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
-                data("GrammarModelDefault") {
-                    supertype("GrammarModel")
-                    supertype("ModelAbstract") { ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
+                data("GrammarDomainDefault") {
+                    supertype("GrammarDomain")
+                    supertype("DomainAbstract") { ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
                     constructor_ {
                         parameter("name", "SimpleName", false)
                         parameter("options", "OptionHolder", false)
@@ -745,19 +776,19 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
         }
     }
 
-    override val asmTransformModel: TransformModel by lazy {
+    override val asmTransformDomain: AsmTransformDomain by lazy {
         asmTransform(
             name = NAME,
-            typeModel = typesModel,
+            typesDomain = typesDomain,
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
-                transform(NAME) {
+                ruleSet(NAME) {
                     importTypes(
                         "net.akehurst.language.grammar.api",
                         "net.akehurst.language.grammar.asm"
                     )
-                    createObject("unit", "GrammarModel") {
+                    createObject("unit", "GrammarDomain") {
 
                     }
                     //TODO: currently the types are not found in the typemodel
@@ -802,24 +833,24 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
         }
     }
 
-    override val crossReferenceModel: CrossReferenceModel by lazy {
-        crossReferenceModel(NAME) {
+    override val crossReferenceDomain: CrossReferenceDomain by lazy {
+        crossReferenceDomain(NAME) {
             //TODO
 
         }
     }
 
-    override val formatModel: AglFormatModel by lazy {
-        formatModel(AglBase.NAME) {
+    override val formatDomain: AglFormatDomain by lazy {
+        formatDomain(NAME) {
 //            TODO("not implemented")
         }
     }
 
-    override val styleModel: AglStyleModel by lazy {
-        styleModel(NAME) {
+    override val styleDomain: AglStyleDomain by lazy {
+        styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule("'[^']+'") {
+                    metaRule(CommonRegexPatterns.LITERAL.value) {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")
                     }
@@ -886,12 +917,12 @@ namespace net.akehurst.language.Grammar {
 }
 """.trimIndent().replace("$", "\$")
 
-    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.$NAME"))!! }
+    override val defaultTargetGrammar: Grammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.$NAME"))!! }
     override val defaultTargetGoalRule: String = "unit"
 
-    override val syntaxAnalyser: SyntaxAnalyser<GrammarModel> by lazy { AglGrammarSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<GrammarModel, ContextWithScope<Any, Any>> by lazy { AglGrammarSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<GrammarModel, ContextWithScope<Any, Any>> by lazy { AglGrammarCompletionProvider() }
+    override val syntaxAnalyser: SyntaxAnalyser<GrammarDomain> by lazy { AglGrammarSyntaxAnalyser() }
+    override val semanticAnalyser: SemanticAnalyser<GrammarDomain, SentenceContextAny> by lazy { AglGrammarSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<GrammarDomain, SentenceContextAny> by lazy { AglGrammarCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"
 

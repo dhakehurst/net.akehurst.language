@@ -16,10 +16,8 @@
 
 package net.akehurst.language.regex.agl
 
-import net.akehurst.language.regex.api.RegexMatcher
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class test_RegexValueProvider {
 

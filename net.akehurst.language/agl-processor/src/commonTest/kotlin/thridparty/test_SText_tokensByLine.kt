@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.sentence.common.SentenceDefault
@@ -44,8 +45,8 @@ namespace  org.yakindu.stext
 grammar Expressions {
 
     skip WS = "\s+";
-   	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-   	skip MULTI_LINE_COMMENT = "//.*?${'$'}" ;
+   	skip SINGLE_LINE_COMMENT = "/[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
+   	skip MULTI_LINE_COMMENT = "//.*?$" ;
 
     Expression
       = AssignmentExpression
@@ -254,8 +255,21 @@ FQN = ID ('.' ID)*;
 }
         """.trimIndent()
 
-        val exprProcessor = Agl.processorFromStringSimple(GrammarString(grammarStr1)).processor!!
-        var processor = Agl.processorFromStringSimple(GrammarString(grammarStr2)).processor!!
+        val context = contextAsmSimple {  }
+        val exprProcessor = Agl.processorFromStringSimple(
+            grammarDefinitionStr = GrammarString(grammarStr1),
+            grammarAglOptions = Agl.options { semanticAnalysis { context(context) } }
+        ).let {
+            check(it.issues.errors.isEmpty()) { it.issues.toString() }
+            it.processor!!
+        }
+        var processor = Agl.processorFromStringSimple(
+            grammarDefinitionStr = GrammarString(grammarStr2),
+            grammarAglOptions = Agl.options { semanticAnalysis { context(context) } }
+        ).let {
+            check(it.issues.errors.isEmpty()) { it.issues.toString() }
+            it.processor!!
+        }
     }
 
     @Test
@@ -266,7 +280,7 @@ FQN = ID ('.' ID)*;
         assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
-        assertEquals("after", SentenceDefault(text, null).textAt(actual[0].position,actual[0].length))
+        assertEquals("after", SentenceDefault(text, null).textAt(actual[0].position, actual[0].length))
     }
 
 }

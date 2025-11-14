@@ -19,9 +19,9 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.types.api.*
 
-interface Grammar2TypeModelMapping {
+interface Grammar2TypesDomainMapping {
     fun typeNameFor(rule: GrammarRule): SimpleName
     fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): PropertyName
 }
@@ -31,7 +31,7 @@ fun String.lower() = when {
     else -> this.replaceFirstChar { it.lowercase() }
 }
 
-class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
+class TypesDomainFromGrammarConfigurationDefault() : Grammar2TypesDomainMapping {
     override fun typeNameFor(rule: GrammarRule): SimpleName = SimpleName(rule.name.value.replaceFirstChar { it.titlecase() })
     override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): PropertyName {
         val baseName = baseNameFor(ruleItem, ruleItemType)

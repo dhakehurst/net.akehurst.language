@@ -16,21 +16,22 @@
 package net.akehurst.language.style.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.processor.StyleString
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.DefinitionAbstract
-import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.regex.api.EscapedPattern
 import net.akehurst.language.style.api.*
 
-class AglStyleModelDefault(
+class AglStyleDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null,emptyMap()),
     namespace: List<StyleNamespace> = emptyList()
-) : AglStyleModel, ModelAbstract<StyleNamespace, StyleSet>(namespace,options) {
+) : AglStyleDomain, DomainAbstract<StyleNamespace, StyleSet>(namespace,options) {
 
     companion object {
         //not sure if this should be here or in grammar object
@@ -45,7 +46,7 @@ class AglStyleModelDefault(
         //    it.declaration["font-style"] = AglStyleDeclaration("font-style", "normal")
         //}
 
-        fun fromString(context: ContextWithScope<Any,Any>, aglStyleModelSentence: StyleString): ProcessResult<AglStyleModel> {
+        fun fromString(context: SentenceContextAny, aglStyleModelSentence: StyleString): ProcessResult<AglStyleDomain> {
             val proc = Agl.registry.agl.style.processor ?: error("Styles language not found!")
             return proc.process(
                 sentence = aglStyleModelSentence.value,
@@ -106,7 +107,7 @@ class AglStyleSetDefault(
 }
 
 data class AglStyleMetaRuleDefault(
-    override val pattern: Regex
+    override val pattern: EscapedPattern
 ) : AglStyleMetaRule {
 
     // order matters
@@ -114,7 +115,7 @@ data class AglStyleMetaRuleDefault(
 
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
-        val sel = this.pattern.pattern
+        val sel = this.pattern.value
         sb.append("$$ \"$sel\" {\n")
         val newIndent = indent.inc
         val decls = declaration.values // do not sort, order matters

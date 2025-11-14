@@ -17,6 +17,10 @@
 
 package test
 
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
+import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -27,6 +31,6 @@ class test_Dummy {
 
     @Test
     fun t() {
-        assertTrue(true)
+        assertTrue(false, "Dummy Test executed")
     }
 }

@@ -51,7 +51,7 @@ class test_rightRecursive_a : test_LeftCornerParserAbstract() {
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -70,7 +70,7 @@ class test_rightRecursive_a : test_LeftCornerParserAbstract() {
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -98,7 +98,7 @@ class test_rightRecursive_a : test_LeftCornerParserAbstract() {
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -115,7 +115,7 @@ class test_rightRecursive_a : test_LeftCornerParserAbstract() {
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 

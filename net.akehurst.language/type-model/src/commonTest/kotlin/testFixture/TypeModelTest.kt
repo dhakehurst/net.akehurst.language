@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.typemodel.test
+package net.akehurst.language.types.test
 
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.types.api.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
@@ -52,7 +52,7 @@ object TypeModelTest {
                 for (k in expected.ownedTypesByName.keys) {
                     val expEl = expected.ownedTypesByName[k]
                     val actEl = actual.ownedTypesByName[k]
-                    tmAssertEquals(expEl, actEl, "TypeModel")
+                    tmAssertEquals(expEl, actEl, "TypesDomain")
                 }
             }
         }

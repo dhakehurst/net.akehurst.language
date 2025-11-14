@@ -17,28 +17,28 @@
 package net.akehurst.language.reference.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.DefinitionAbstract
-import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.reference.api.*
 
-class CrossReferenceModelDefault(
+class CrossReferenceDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespace: List<CrossReferenceNamespace> = emptyList()
-) : ModelAbstract<CrossReferenceNamespace, DeclarationsForNamespace>(namespace,options), CrossReferenceModel {
+) : DomainAbstract<CrossReferenceNamespace, DeclarationsForNamespace>(namespace,options), CrossReferenceDomain {
     companion object {
         val ROOT_SCOPE_TYPE_NAME = QualifiedName("§root")
         val IDENTIFY_BY_NOTHING = "§nothing"
 
-        fun fromString(context: ContextFromTypeModel?, crossReferenceString: CrossReferenceString): ProcessResult<CrossReferenceModel> {
+        fun fromString(context: ContextFromTypesDomain?, crossReferenceString: CrossReferenceString): ProcessResult<CrossReferenceDomain> {
             val proc = Agl.registry.agl.crossReference.processor ?: error("Agl CrossReference language not found!")
             return proc.process(
                 sentence = crossReferenceString.value,
@@ -140,7 +140,7 @@ data class DeclarationsForNamespaceDefault(
 
     init {
         namespace.addDefinition(this)
-        scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last)
+        scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last] = ScopeDefinitionDefault(CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last)
     }
 
     override val isEmpty: Boolean get() = scopeDefinition.isEmpty() && references.isEmpty()

@@ -20,7 +20,6 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.scanner.api.ScanOptions
-import net.akehurst.language.sentence.api.InputLocation
 
 /**
  * Options to configure the syntax analysis of a Shared Packed Parse Tree (SPPT)
@@ -71,15 +70,21 @@ interface CompletionProviderOptions<ContextType : Any> {
     /**
      * list of (depth, ruleName) pairs
      */
-    var path: List<Pair<Int,Int>>
+    var path: List<Pair<Int, Int>>
 
-    var showOptionalItems:Boolean
+    var showOptionalItems: Boolean
 
-    var provideValuesForPatternTerminals:Boolean
+    var provideValuesForPatternTerminals: Boolean
 
     val other: Map<String, Any>
 
     fun clone(): CompletionProviderOptions<ContextType>
+}
+
+interface FormatOptions<SelfType : Any> {
+    val environment: Map<String, SelfType>
+
+    fun clone(): FormatOptions<SelfType>
 }
 
 /**
@@ -91,6 +96,7 @@ interface ProcessOptions<AsmType : Any, ContextType : Any> {
     val syntaxAnalysis: SyntaxAnalysisOptions<AsmType>
     val semanticAnalysis: SemanticAnalysisOptions<ContextType>
     val completionProvider: CompletionProviderOptions<ContextType>
+    val format: FormatOptions<AsmType>
 
     fun clone(): ProcessOptions<AsmType, ContextType>
 }

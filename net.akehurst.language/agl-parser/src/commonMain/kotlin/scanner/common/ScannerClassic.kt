@@ -17,7 +17,6 @@
 
 package net.akehurst.language.scanner.common
 
-import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet

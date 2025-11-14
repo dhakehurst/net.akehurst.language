@@ -19,13 +19,14 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.asm.GrammarDomainDefault
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -48,8 +49,8 @@ class test_AglGrammarSemanticAnalyser {
         init {
             // grammars are registered in a registry when semantically analysed,
             // thus need to analyse Base grammar first
-            val context = ContextFromGrammarRegistry(Agl.registry)
-            val gm = GrammarModelDefault(SimpleName("Test"), namespace = listOf(AglBase.defaultTargetGrammar.namespace as GrammarNamespace))
+            val context = contextFromGrammarRegistry(Agl.registry)
+            val gm = GrammarDomainDefault(SimpleName("Test"), namespace = listOf(AglBase.defaultTargetGrammar.namespace as GrammarNamespace))
             semanticAnalysis(
                 SyntaxAnalysisResultDefault(
                     gm,
@@ -70,18 +71,18 @@ class test_AglGrammarSemanticAnalyser {
             return res.sppt!!
         }
 
-        fun syntaxAnalysis(sppt: SharedPackedParseTree): SyntaxAnalysisResult<GrammarModel> {
+        fun syntaxAnalysis(sppt: SharedPackedParseTree): SyntaxAnalysisResult<GrammarDomain> {
             val sut = AglGrammarSyntaxAnalyser()
-            val res = sut.transform(sppt, { _, _ -> TODO() })
+            val res = sut.transform(sppt)
             return res
         }
 
         fun semanticAnalysis(
-            asmRes: SyntaxAnalysisResult<GrammarModel>,
-            options: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>
+            asmRes: SyntaxAnalysisResult<GrammarDomain>,
+            options: ProcessOptions<GrammarDomain, SentenceContextAny>
         ): SemanticAnalysisResult {
             val semanticAnalyser = AglGrammarSemanticAnalyser()
-            val context = ContextFromGrammarRegistry(Agl.registry)
+            val context = contextFromGrammarRegistry(Agl.registry)
             options.semanticAnalysis.context = context
             return semanticAnalyser.analyse(null,asmRes.asm!!, asmRes.locationMap, options.semanticAnalysis)
         }
@@ -89,8 +90,8 @@ class test_AglGrammarSemanticAnalyser {
         fun test(
             grammarStr: String,
             expected: Set<LanguageIssue>,
-            options: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>> = Agl.options { }
-        ): ProcessResult<GrammarModel> {
+            options: ProcessOptions<GrammarDomain, SentenceContextAny> = Agl.options { }
+        ): ProcessResult<GrammarDomain> {
             val sppt = parse(grammarStr)
             val asmRes = syntaxAnalysis(sppt)
             val res = semanticAnalysis(asmRes, options)
@@ -116,7 +117,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -135,7 +136,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
         val gBase = res.asm!!.allDefinitions[0]
@@ -175,7 +176,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -195,7 +196,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -227,7 +228,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -248,7 +249,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -284,7 +285,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -337,7 +338,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -359,7 +360,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -397,7 +398,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -451,7 +452,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -477,7 +478,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -522,7 +523,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -590,7 +591,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -618,7 +619,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -667,7 +668,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -706,7 +707,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -733,7 +734,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -742,7 +743,7 @@ class test_AglGrammarSemanticAnalyser {
     fun extends_diamond_repeat_with_override3() {
         val grammarStr = """
             namespace ns.test
-            grammar Annotations {
+            grammar Base {
                 Annotation = 'annotation' ;
             }
             grammar Mid1 : Base {
@@ -760,7 +761,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -820,7 +821,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }

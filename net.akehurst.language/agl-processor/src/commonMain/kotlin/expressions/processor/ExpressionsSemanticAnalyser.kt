@@ -18,7 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -26,18 +26,18 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
 class ExpressionsSemanticAnalyser(
-) : SemanticAnalyser<Expression, ContextWithScope<Any,Any>> {
+) : SemanticAnalyser<Expression, SentenceContextAny> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
     private var _locationMap: LocationMap = LocationMapDefault()
 
-    private var _grammarNamespace: GrammarTypeNamespace? = null
+    private var _grammarNamespace: GrammarTypesNamespace? = null
 
     override fun clear() {
         _grammarNamespace = null
@@ -47,12 +47,12 @@ class ExpressionsSemanticAnalyser(
     }
 
     override fun analyse(
-        sentenceIdentity:Any?,
+        sentenceIdentity: Any?,
         asm: Expression,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions< ContextWithScope<Any,Any>>
+        options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }
 
 }

@@ -1,0 +1,105 @@
+namespace projectIT
+
+grammar Expressions {
+
+    skip leaf WHITESPACE = "\s+" ;
+    skip leaf COMMENT_SINGLE_LINE = "//[^\r\n]*" ;
+    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+
+    expression
+      = constant
+      | instanceExpression
+      | functionExpression
+      | navigationExpression
+      | listExpression
+      | tableExpression
+      //? | keyword/boolean
+      ;
+
+    instanceExpression = var ':' var ;
+    navigationExpression = [var / '.']+ ;
+    functionExpression = var '(' argList ')' ;
+    argList = [expression / ',']* ;
+
+    listExpression = 'list' navigationExpression listInfo ;
+    listInfo = listDirection? (listInfoType '[' literal ']' )? ;
+    leaf listDirection = 'horizontal' | 'vertical' ;
+    leaf listInfoType = 'separator' | 'terminator' | 'initiator' ;
+
+    tableExpression = 'table' navigationExpression tableInfo ;
+    tableInfo = ('rows'|'columns')? ;
+
+    constant = number | string ;
+
+    leaf var = "[a-zA-Z][a-zA-Z0-9]*" ;
+    leaf number = "[0-9]+" ;
+    leaf string = "\"([^\"\\]|\.)*\"" ;
+
+    leaf literal = "[^\$\\]\|]+" ;
+
+}
+
+grammar Template {
+
+    text = textItem* ;
+    textItem
+     = literal
+     | escapedChar
+     | embeddedExpression
+     ;
+
+    embeddedExpression = '${' Expressions::expression '}' ;
+
+    leaf escapedChar = '\\' | '\\$' ;
+    leaf literal = "[^\$\]\\|]+" ;
+}
+
+grammar PiEditGrammar : Expressions {
+
+    projectionGroup = 'editor' var ('precedence' number)?
+          standardBooleanProjection?
+          standardReferenceSeparator?
+          classifierProjection*
+    ;
+
+
+    standardBooleanProjection = 'boolean' '[' templateText '|' templateText ']' ;
+    standardReferenceSeparator = 'referenceSeparator' '[' templateText ']' ;
+
+
+    classifierProjection =
+            classifierReference '{'
+                projectionChoice{0..2}
+                //extraClassifierInfo?
+            '}'
+      ;
+
+    projectionChoice
+      = projection
+      | tableProjection
+      ;
+
+    projection = '[' projectionContent ']' ;
+    projectionContent
+      = templateText
+      | optionalProjection
+      | superProjection
+      ;
+
+    optionalProjection = '[' '?' projectionContent  ']' ;
+    superProjection = '[' '=>' classifierReference ( ':' var )? ']' ;
+
+    singleProperty = ;
+    listProperty = ;
+    tableProperty = ;
+    booleanProperty = ;
+
+    tableProjection = 'table' '[' tableContent  ']' ;
+    tableContent = [templateText / '|']* ;
+
+
+    classifierReference = var ;
+
+    templateText = Template::text ;
+
+}

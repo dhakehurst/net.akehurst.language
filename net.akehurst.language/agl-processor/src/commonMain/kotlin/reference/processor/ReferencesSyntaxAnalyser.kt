@@ -30,14 +30,14 @@ import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.asm.NavigationExpressionDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
-import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.CrossReferenceNamespace
 import net.akehurst.language.reference.asm.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 
-class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<CrossReferenceModel>() {
+class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<CrossReferenceDomain>() {
 
     override fun registerHandlers() {
         super.register(this::unit)
@@ -74,12 +74,12 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     )
 
     //  Base::unit = options* namespace* ;
-    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceModelDefault {
+    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceDomainDefault {
         val options = children[0] as List<Pair<String, String>>
         val namespace = children[1] as List<CrossReferenceNamespace>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it.first to it.second })
-        val result = CrossReferenceModelDefault(SimpleName("Unit"), optHolder, namespace)
+        val optHolder = OptionHolderDefault(null, options.toMap())
+        val result = CrossReferenceDomainDefault(SimpleName("Unit"), optHolder, namespace)
         //namespace.forEach { result.declarationsForNamespace[it.qualifiedName] = it }
         return result
     }
@@ -103,7 +103,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val referencesOpt = children[2] as List<ReferenceDefinitionDefault>?
         return { ns ->
             val decl = DeclarationsForNamespaceDefault(ns)
-            (decl.scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
+            (decl.scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
             scopes.forEach { decl.scopeDefinition[it.scopeForTypeName] = it }
             referencesOpt?.let { decl.references.addAll(referencesOpt) }
             decl.also { setLocationFor(it,nodeInfo,sentence) }

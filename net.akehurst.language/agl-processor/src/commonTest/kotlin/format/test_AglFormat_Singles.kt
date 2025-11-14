@@ -1,7 +1,7 @@
 package format
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.format.processor.AglFormat
@@ -11,10 +11,10 @@ import kotlin.test.assertTrue
 
 class test_AglFormat_Singles {
     private companion object {
-        fun processor(targetGrammar: String): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
+        fun processor(targetGrammar: String): LanguageProcessor<Asm, SentenceContextAny> {
             Agl.registry.agl.expressions
             return Agl.processorFromGrammar(
-                AglFormat.grammarModel,
+                AglFormat.grammarDomain,
                 Agl.configuration(base = Agl.configurationSimple()) {
                     targetGrammarName(targetGrammar)
                 }
@@ -22,8 +22,8 @@ class test_AglFormat_Singles {
         }
 
         private fun test_process(targetGrammar: String, goal: String, sentence: String, expectedAsm: Asm? = null) {
-            //val proc = processor(targetGrammar)
-            val proc = Agl.registry.agl.format.processor!!
+            val proc = processor(targetGrammar)
+            //val proc = Agl.registry.agl.format.processor!!
             val result = proc.process(
                 sentence,
                 Agl.options {
@@ -140,7 +140,21 @@ class test_AglFormat_Singles {
         val sentence = $$"""
             namespace test
             format F {
-                Type -> "he said $[greetings / ','] to me!" 
+                Type -> "he said $[greetings sep ','] to me!" 
+            }
+        """.trimIndent()
+        val asm = null
+        test_process(targetGrammar, goal, sentence, asm)
+    }
+
+    @Test
+    fun Format_unit_template_with_text_list_text_sep_is_namedValue() {
+        val targetGrammar = "Format"
+        val goal = "unit"
+        val sentence = $$"""
+            namespace test
+            format F {
+                Type -> "he said $[greetings sep $EOL] to me!" 
             }
         """.trimIndent()
         val asm = null

@@ -23,8 +23,8 @@ import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -36,8 +36,8 @@ class test_CompletionProviderSimple {
         data class TestData(
             val grammarStr: String,
             val crossReferencesStr: String = "",
-            val additionalTypeModel: TypeModel? = null,
-            val context: ContextWithScope<Any, Any>? = contextAsmSimple(),
+            val additionalTypesDomain: TypesDomain? = null,
+            val context: SentenceContextAny? = contextAsmSimple(),
             val sentence: String,
             val position: Int,
             val expected: List<CompletionItem>
@@ -47,12 +47,12 @@ class test_CompletionProviderSimple {
             val res = Agl.processorFromStringSimple(grammarDefinitionStr = GrammarString(data.grammarStr), referenceStr = CrossReferenceString(data.crossReferencesStr))
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
-            data.additionalTypeModel?.let {
-                proc.typesModel.addAllNamespaceAndResolveImports(it.namespace)
+            data.additionalTypesDomain?.let {
+                proc.typesDomain.addAllNamespaceAndResolveImports(it.namespace)
             }
-            proc.typesModel
-            proc.crossReferenceModel
-            assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
+            proc.typesDomain
+            proc.crossReferenceDomain
+            assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
 
             val actual = proc.expectedItemsAt(data.sentence, data.position, Agl.options {
                 completionProvider {
@@ -60,8 +60,8 @@ class test_CompletionProviderSimple {
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-            assertEquals(data.expected.size, actual.items.size, actual.items.joinToString(separator = "\n"))
-            assertEquals(data.expected.toSet(), actual.items.toSet())
+            //assertEquals(data.expected.size, actual.items.size, actual.items.joinToString(separator = "\n"))
+            assertEquals(data.expected.joinToString(separator = "\n"), actual.items.joinToString(separator = "\n"))
         }
 
     }
@@ -180,7 +180,7 @@ class test_CompletionProviderSimple {
             }
         """
 
-        val sentence = "var x:"
+        val sentence = "var x: "
 
         val expected = listOf(
             CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
@@ -223,8 +223,8 @@ class test_CompletionProviderSimple {
         """.trimIndent()
 
 
-        val sentence = "var x:"
-        val additionalTypeModel = typeModel("External", true) {
+        val sentence = "var x: "
+        val additionalTypeModel = typesDomain("External", true) {
             namespace(externalNsName) {
                 data("TypeDef")
             }
@@ -244,7 +244,7 @@ class test_CompletionProviderSimple {
             TestData(
                 grammarStr = grammarStr,
                 crossReferencesStr = crossReferencesStr,
-                additionalTypeModel = additionalTypeModel,
+                additionalTypesDomain = additionalTypeModel,
                 context = context,
                 sentence = sentence,
                 position = sentence.length,
@@ -263,19 +263,19 @@ class test_CompletionProviderSimple {
             }
         """
         val sentence = "This is a sentence ."
-//        test(
-//            TestData(
-//                grammarStr = grammarStr,
-//                sentence = sentence,
-//                position = 0,
-//                expected = listOf(
-//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
-//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
-//                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
-//                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
-//                )
-//            )
-//        )
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = 0,
+                expected = listOf(
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+                )
+            )
+        )
 //        test(
 //            TestData(
 //                grammarStr = grammarStr,

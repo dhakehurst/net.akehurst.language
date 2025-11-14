@@ -1,7 +1,5 @@
-import java.nio.file.Files
-import java.nio.file.Path
-
 plugins {
+    id("project-conventions")
     alias(libs.plugins.jsIntegration)
 }
 
@@ -21,15 +19,15 @@ kotlin.js("js").compilations["main"].packageJson {
 }
 */
 
-configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension> {
-    js("js", IR) {
+kotlin {
+    js {
         binaries.library()
-        generateTypeScriptDefinitions()
         compilerOptions {
             target.set("es2015")
         }
         nodejs()
         browser()
+
     }
 
     sourceSets {
@@ -50,7 +48,9 @@ jsIntegration {
     nodeOutDirectoryProd.set(jsOutDir)
 
 
-    productionCommand.set(mapOf("tscProd" to "run tsc -p ${jsSrcDir} --outDir ${jsOutDir}"))
+    productionCommand.set(mapOf(
+        "tscProd" to "run tsc -p ${jsSrcDir} --outDir ${jsOutDir}"
+    ))
     developmentCommand.set(mapOf(
         "tscDev" to "run tsc -p ${jsSrcDir} --outDir ${jsOutDir}",
         "test" to "node out/run_all.mjs"

@@ -28,7 +28,6 @@ import net.akehurst.language.parser.api.SentenceIdentityFunction
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.common.ScanOptionsDefault
-import net.akehurst.language.sentence.api.InputLocation
 
 @DslMarker
 annotation class ProcessOptionsDslMarker

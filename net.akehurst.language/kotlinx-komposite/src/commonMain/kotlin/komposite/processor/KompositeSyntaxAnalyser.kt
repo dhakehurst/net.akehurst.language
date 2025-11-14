@@ -18,12 +18,17 @@ package net.akehurst.kotlinx.komposite.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.base.api.*
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.DataTypeSimple
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypesDomainSimple
+import net.akehurst.language.types.asm.TypesNamespaceSimple
 
 
 data class TypeRefInfo(
@@ -38,7 +43,7 @@ data class TypeRefInfo(
 }
 
 //FIXME: currently using TypeModel as asm, should have its own really!
-class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
+class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<TypesDomain>() {
 
     class SyntaxAnalyserException : RuntimeException {
         constructor(message: String) : super(message)
@@ -53,12 +58,12 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
         super.register(this::characteristic)
     }
 
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<TypeModel>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<TypesDomain>> = emptyMap()
 
     // unit = namespace+ ;
-    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeModel {
-        val result = TypeModelSimple(SimpleName("A Komposite"))
-        val namespaces = (children as List<TypeNamespace?>).filterNotNull()
+    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypesDomain {
+        val result = TypesDomainSimple(SimpleName("A Komposite"))
+        val namespaces = (children as List<TypesNamespace?>).filterNotNull()
         namespaces.forEach { ns ->
             result.addNamespace(ns)
         }
@@ -66,12 +71,12 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
     }
 
     // namespace = 'namespace' qualifiedName declaration+;
-    private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeNamespace {
+    private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypesNamespace {
         val qualifiedName = children[1] as List<String?>
-        val declaration = children[2] as List<((namespace: TypeNamespace) -> TypeDefinition)>
+        val declaration = children[2] as List<((namespace: TypesNamespace) -> TypeDefinition)>
         val qn = QualifiedName(qualifiedName.joinToString(separator = "."))
 
-        val ns = TypeNamespaceSimple(qn)
+        val ns = TypesNamespaceSimple(qn)
         declaration.forEach {
             val dec = it.invoke(ns)
             //ns.addDefinition(dec)
@@ -86,10 +91,10 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
     }
 
     // declaration = declKind NAME '{' property* '}' ;
-    private fun declaration(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> TypeDefinition {
+    private fun declaration(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> TypeDefinition {
         val name = SimpleName(children[1] as String)
         val properties = children[3] as List<(StructuredType) -> PropertyDeclaration>
-        val result = { namespace: TypeNamespace ->
+        val result = { namespace: TypesNamespace ->
             val decl = DataTypeSimple(namespace, name) //FIXME: using datatype, but maybe should distinguish!
             properties.forEach { it.invoke(decl) }
             decl

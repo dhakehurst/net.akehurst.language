@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.asm.api.AsmList
@@ -28,7 +28,7 @@ import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -130,8 +130,8 @@ grammar SQL {
             grammarDefinitionStr = (grammarStr),
             referenceStr = (crossReferenceModelStr)
         ).processor!!
-        val typeModel = processor.typesModel
-        val crossReferenceModel = processor.crossReferenceModel
+        val typeModel = processor.typesDomain
+        val crossReferenceModel = processor.crossReferenceDomain
 
         operator fun AsmStructure.get(value:String) = this.getProperty(PropertyValueName(value))
         fun <T> Any.ass() = this as T
@@ -151,7 +151,7 @@ grammar SQL {
         """.trimIndent()
         val result = processor.process(sentence)
 
-        val expected = asmSimple(typeModel = typeModel) {
+        val expected = asmSimple(typesDomain = typeModel) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -198,7 +198,7 @@ grammar SQL {
             }
         }
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
 
         //check paths
         val asmRoot = result.asm!!.root[0] as AsmStructure
@@ -207,8 +207,8 @@ grammar SQL {
 
     @Test
     fun check_crossReferenceModel() {
-        val context = ContextFromTypeModel(processor.typesModel)
-        val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
+        val context = ContextFromTypesDomain(processor.typesDomain)
+        val res = CrossReferenceDomainDefault.fromString(context, crossReferenceModelStr)
         assertTrue(res.allIssues.isEmpty(), res.allIssues.toString())
     }
 
@@ -224,7 +224,7 @@ grammar SQL {
 
         val result = processor.process(sentence)
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple()) {
+        val expected = asmSimple(typesDomain = typeModel, crossReferenceDomain = crossReferenceModel, context = contextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -258,7 +258,7 @@ grammar SQL {
         }
 
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -275,7 +275,7 @@ grammar SQL {
 
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimpleWithAsmPath()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimpleWithAsmPath()) {
+        val expected = asmSimple(typesDomain = typeModel, crossReferenceDomain = crossReferenceModel, context = contextAsmSimpleWithAsmPath()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -323,7 +323,7 @@ grammar SQL {
         }
 
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -341,8 +341,8 @@ grammar SQL {
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimpleWithAsmPath()) } })
 
         val expected = asmSimple(
-            typeModel = typeModel,
-            crossReferenceModel = crossReferenceModel, context = contextAsmSimple(),
+            typesDomain = typeModel,
+            crossReferenceDomain = crossReferenceModel, context = contextAsmSimple(),
             failIfIssues = false //there are failing references expected
         ) {
             element("StatementList") {
@@ -399,7 +399,7 @@ grammar SQL {
         )
 
         assertEquals(expIssues, result.allIssues.toSet())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -433,7 +433,7 @@ grammar SQL {
 
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple()) {
+        val expected = asmSimple(typesDomain = typeModel, crossReferenceDomain = crossReferenceModel, context = contextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -487,7 +487,7 @@ grammar SQL {
         }
 
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
 }

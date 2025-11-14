@@ -18,6 +18,7 @@
 package net.akehurst.language.grammar.builder
 
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.GrammarRegistry
 import net.akehurst.language.base.api.*
@@ -25,20 +26,21 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.regex.api.UnescapedLiteral
+import net.akehurst.language.regex.api.UnescapedPattern
 
 @DslMarker
 annotation class GrammarBuilderMarker
 
-fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(), grammarRegistry: GrammarRegistry? = null, init: GrammarModelBuilder.() -> Unit): GrammarModel {
-    val b = GrammarModelBuilder(SimpleName(name), namespaces)
+fun grammarDomain(name: String, namespaces: List<GrammarNamespace> = emptyList(), grammarRegistry: GrammarRegistry? = null, init: GrammarDomainBuilder.() -> Unit): GrammarDomain {
+    val b = GrammarDomainBuilder(SimpleName(name), namespaces)
     b.init()
     val gm = b.build()
     grammarRegistry?.let { gr ->
         gm.allDefinitions.forEach { gr.registerGrammar(it) }
         val sa = AglGrammarSemanticAnalyser()
         val opts = SemanticAnalysisOptionsDefault(
-            context = ContextFromGrammarRegistry(gr)
+            context = contextFromGrammarRegistry(gr)
         )
         sa.analyse(null,gm, LocationMapDefault(), opts)
     }
@@ -54,12 +56,12 @@ fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): G
 }
 
 @GrammarBuilderMarker
-class GrammarModelBuilder(
+class GrammarDomainBuilder(
     name: SimpleName,
     namespaces: List<GrammarNamespace>
 ) {
     private val _options = mutableMapOf<String, String>()
-    private val _model = GrammarModelDefault(name, OptionHolderDefault(null, _options), namespaces)
+    private val _model = GrammarDomainDefault(name, OptionHolderDefault(null, _options), namespaces)
 
     fun option(key: String, value: String) {
         _options[key] = value
@@ -77,7 +79,7 @@ class GrammarModelBuilder(
 
 @GrammarBuilderMarker
 class GrammarNamespaceBuilder(
-    val grammarModel: GrammarModel,
+    val grammarDomain: GrammarDomain,
     qualifiedName: String
 ) {
     private val _options = mutableMapOf<String, String>()
@@ -118,20 +120,20 @@ class GrammarBuilder(
         _grammar.extends.add(extended)
     }
 
-    private fun terminal(value: String, isPattern: Boolean): Terminal {
-        val t = _terminals[value]
-        return if (null == t) {
-            val tt = TerminalDefault(value, isPattern)
-            _terminals[value] = tt
-            tt
-        } else {
-            if (isPattern == t.isPattern) {
-                t
-            } else {
-                error("Error terminal defined as both pattern and literal!")
-            }
-        }
-    }
+//    private fun terminal(value: String, isPattern: Boolean): Terminal {
+//        val t = _terminals[value]
+//        return if (null == t) {
+//            val tt = TerminalDefault(value, isPattern)
+//            _terminals[value] = tt
+//            tt
+//        } else {
+//            if (isPattern == t.isPattern) {
+//                t
+//            } else {
+//                error("Error terminal defined as both pattern and literal!")
+//            }
+//        }
+//    }
 
     private fun createRule(grammarRuleName: GrammarRuleName, overrideKind: OverrideKind?, isSkip: Boolean, isLeaf: Boolean, rhs: RuleItem) = when (overrideKind) {
         null -> {
@@ -147,13 +149,13 @@ class GrammarBuilder(
         }
     }
 
-    fun terminalLiteral(value: String): Terminal {
-        return terminal(value, false)
-    }
-
-    fun terminalPattern(value: String): Terminal {
-        return terminal(value, true)
-    }
+//    fun terminalLiteral(value: String): Terminal {
+//        return terminal(value, false)
+//    }
+//
+//    fun terminalPattern(value: String): Terminal {
+//        return terminal(value, true)
+//    }
 
     fun empty(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false) {
         val rhs = EmptyRuleDefault()
@@ -244,12 +246,12 @@ open class SimpleItemsBuilder(
         items.add(item as SimpleItem)
     }
 
-    fun lit(value: String) {
-        addItem(TerminalDefault(value, false))
+    fun lit(unescapedValue: String) {
+        addItem(TerminalDefault(UnescapedLiteral( unescapedValue).escapedFoAgl, false))
     }
 
-    fun pat(value: String) {
-        addItem(TerminalDefault(value, true))
+    fun pat(unescapedValue: String) {
+        addItem(TerminalDefault(UnescapedPattern(unescapedValue).escapedFoAgl, true))
     }
 
     fun ebd(embeddedGrammarReference: String, embeddedGoalName: String) {
@@ -388,7 +390,7 @@ class PreferenceRuleBuilder(
                 spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
                 choiceNumber = choiceNumber,
-                onTerminals = terminals.map { TerminalDefault(it, false) },
+                onTerminals = terminals.map { TerminalDefault(UnescapedLiteral(it).escapedFoAgl, false) },
                 Associativity.LEFT
             )
         )
@@ -400,7 +402,7 @@ class PreferenceRuleBuilder(
                 spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
                 choiceNumber = choiceNumber,
-                onTerminals = terminals.map { TerminalDefault(it, false) },
+                onTerminals = terminals.map { TerminalDefault(UnescapedLiteral(it).escapedFoAgl, false) },
                 Associativity.RIGHT
             )
         )

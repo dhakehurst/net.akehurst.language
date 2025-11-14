@@ -1,31 +1,36 @@
 [versions]
-project = "4.2.1.21"
+project = "4.2.2.20"
 
-kotlin = "2.1.21"
-dokka = "2.0.0"
-buildconfig = "5.5.1"
-credentials = "3.0"
-exportPublic = "2.1.21"
-nak-kotlinx = "2.1.21"
-jsIntegration = "2.1.21"
+kotlin = "2.2.20"
+dokka = "2.1.0"
+buildconfig = "5.7.0"
+exportPublic = "2.2.20"
+nak-kotlinx = "2.2.20"
+jsIntegration = "2.2.20"
+vanniktech = "0.34.0"
 
-korlibs = "6.0.1"
-kotest = "5.9.1"
+korlibs = "6.0.2"
+kotest = "6.0.4"
+kotlinx-coroutines = "1.10.2"
 
 [libraries]
 korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
+nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections", version.ref = "nak-kotlinx" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
-kotest-framework-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 exportPublic = { id = "net.akehurst.kotlin.gradle.plugin.exportPublic", version.ref = "exportPublic" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
-credentials = { id = "nu.studer.credentials", version.ref = "credentials" }
 reflex = { id ="net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref="nak-kotlinx" }
 jsIntegration =  { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }
+vanniktech-maven-publish = { id="com.vanniktech.maven.publish", version.ref="vanniktech" }

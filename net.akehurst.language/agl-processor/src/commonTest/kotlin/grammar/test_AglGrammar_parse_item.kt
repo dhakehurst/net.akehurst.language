@@ -137,10 +137,10 @@ class test_AglGrammar_parse_item {
 
     @Test
     fun LITERAL__backslash() {
-        val text = """
+        val sentence = """
             '\\'
             """.trimIndent()
-        val result = parse("LITERAL", text)
+        val result = parse("LITERAL", sentence)
         val expected = this.sppt(
             """
             LITERAL  : '\'\\\\\''
@@ -154,7 +154,10 @@ class test_AglGrammar_parse_item {
 
     @Test
     fun PATTERN__range_a2c() {
-        val result = parse("PATTERN", "\"[a-c]\"")
+        val sentence = """
+            "[a-c]"
+        """.trimIndent()
+        val result = parse("PATTERN", sentence)
         val expected = this.sppt("PATTERN  : '\"[a-c]\"' ")
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
@@ -163,8 +166,15 @@ class test_AglGrammar_parse_item {
 
     @Test
     fun PATTERN__double_quote_string() {
-        val result = parse("PATTERN", "\"([^\\\"\\\\]|\\.)*\"")
-        val expected = this.sppt("PATTERN  : '\"([^\\\"\\\\\\]|\\.)*\"' ")
+        val sentence = """
+            "\\"|([^\"])+"
+        """.trimIndent()
+        val result = parse("PATTERN", sentence) //"\"([^\\\"\\\\]|\\.)*\"")
+        val expected = this.sppt(
+            """
+            PATTERN  : '"\\\\"|([^\\"])+"'
+        """.trimIndent()
+        ) //"PATTERN  : '\"([^\\\"\\\\\\]|\\.)*\"' ")
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -172,11 +182,27 @@ class test_AglGrammar_parse_item {
 
     @Test
     fun PATTERN__backslash() {
-        val text = """
+        val sentence = """
             "[\\]"
         """.trimIndent()
-        val result = parse("PATTERN", text)
-        val expected = this.sppt("PATTERN  : '\"[\\\\\\]\"' ")
+        val result = parse("PATTERN", sentence)
+        val expected = this.sppt("""
+            PATTERN  : '"[\\\\]"'
+        """.trimIndent()) //"PATTERN  : '\"[\\\\\\]\"' ")
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test
+    fun PATTERN__not_backslash() {
+        val sentence = """
+            "[btnfr'^\\]"
+        """.trimIndent()
+        val result = parse("PATTERN", sentence)
+        val expected = this.sppt("""
+            PATTERN  : '"[btnfr\'^\\\\]"'
+        """.trimIndent()) //"PATTERN  : '\"[\\\\\\]\"' ")
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals(1, result.sppt!!.maxNumHeads)

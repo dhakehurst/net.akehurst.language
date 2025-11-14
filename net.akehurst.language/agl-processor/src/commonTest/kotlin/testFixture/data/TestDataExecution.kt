@@ -1,14 +1,15 @@
 package testFixture.data
 
 import net.akehurst.language.agl.*
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.asm.builder.asmSimple
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: TestDataParserSentence) {
+fun testSentence(proc: LanguageProcessor<Asm, SentenceContextAny>, sd: TestDataParserSentence) {
     println("Testing - $sd")
     when (sd) {
         is TestDataProcessorSentencePass -> when {
@@ -17,7 +18,8 @@ fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: T
                 val asmRes = proc.process(sd.sentence, sd.options)
                 assertTrue(asmRes.allIssues.errors.isEmpty(), asmRes.allIssues.toString())
                 val actual = asmRes.asm!!
-                assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
+                val expectedAsm = asmSimple(typesDomain = proc.typesDomain,init = sd.expectedAsm)
+                assertEquals(expectedAsm.asString(), actual.asString(), "Different ASM")
             }
 
             null != sd.expectedCompletionItem -> {
@@ -40,11 +42,11 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     val procRes = Agl.processorFromStringSimple(
         grammarDefinitionStr = GrammarString(testData.grammarStr),
         typeStr = testData.typeStr?.let { TypesString(it) },
-        transformStr = testData.transformStr?.let { TransformString(it) },
+        transformStr = testData.transformStr?.let { AsmTransformString(it) },
         referenceStr = testData.referenceStr?.let { CrossReferenceString(it) },
         grammarAglOptions = Agl.options {
             semanticAnalysis {
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
 //TODO:                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
             }
         }
@@ -53,9 +55,9 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     val proc = procRes.processor!!
 
     println("--- TypeDomain ---")
-    println(proc.typesModel.asString())
+    println(proc.typesDomain.asString())
     println("--- Asm Transform ---")
-    println(proc.transformModel.asString())
+    println(proc.transformDomain.asString())
 
     println("****** ${testData.description} Sentences ******")
     if (null == sentenceIndex) {

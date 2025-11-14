@@ -17,26 +17,28 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.processor.FormatResultDefault
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
+import net.akehurst.language.objectgraph.api.TypedObject
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
 
-class FormatterOverTypedObject<SelfType:Any>(
-    override val formatModel: AglFormatModel,
-    objectGraph: ObjectGraph<SelfType>,
+class FormatterOverTypedObject<SelfType : Any>(
+    override val formatDomain: AglFormatDomain,
+    objectGraph: ObjectGraphAccessorMutator<SelfType>,
     issues: IssueHolder
 ) : ExpressionsInterpreterOverTypedObject<SelfType>(objectGraph, issues), Formatter<SelfType> {
 
     companion object {
+        const val EOL_NAME = $$"$EOL"
         val prefixMatchPattern = Regex("\\s+")
     }
 
@@ -51,15 +53,25 @@ class FormatterOverTypedObject<SelfType:Any>(
         type.conformsTo(ti)
     }?.value
 
-    override fun format(formatSetName: PossiblyQualifiedName, asm: SelfType): FormatResult {
-        _formatSet = formatModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
-        val typesSelf = objectGraph.toTypedObject(asm)
+    override fun formatSelf(formatSetName: PossiblyQualifiedName, self: SelfType): FormatResult {
+        _formatSet = formatDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
+        val typesSelf = objectGraph.toTypedObject(self)
         val evc = EvaluationContext.ofSelf(typesSelf)
-        val str = formatSelf(evc)
+        return format(formatSetName, evc)
+    }
+
+    override fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<SelfType>): FormatResult {
+        _formatSet = formatDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
+        val evc2 = if (evc.namedValues.contains(EOL_NAME).not()) {
+            evc.copy(namedValues = evc.namedValues + Pair(EOL_NAME, objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "\n")))
+        } else {
+            evc
+        }
+        val str = formatEvc(evc2)
         return FormatResultDefault(str, issues)
     }
 
-    private fun formatSelf(evc: EvaluationContext<SelfType>): String {
+    private fun formatEvc(evc: EvaluationContext<SelfType>): String {
         val self = evc.self
         return when (self) {
             null -> ""
@@ -77,55 +89,60 @@ class FormatterOverTypedObject<SelfType:Any>(
         val self = evc.self
         return when (self) {
             null -> ""
-            else -> {
-                val selfType = self.type.resolvedDeclaration
-                when (selfType) {
-                    is SpecialType -> when {
-                        StdLibDefault.NothingType.resolvedDeclaration == selfType -> ""
-                        StdLibDefault.AnyType.resolvedDeclaration == selfType -> self.self.toString()
-                        else -> error("SpecialType not handled '${self.type.resolvedDeclaration::class.simpleName}'")
-                    }
-
-                    is SingletonType -> objectGraph.valueOf(self).toString()
-                    is PrimitiveType -> {
-                        objectGraph.valueOf(self).toString()
-                    }
-
-                    is ValueType -> objectGraph.valueOf(self).toString()
-                    is EnumType -> objectGraph.valueOf(self).toString()
-                    is CollectionType -> when {
-                        selfType.isStdList -> {
-                            val coll = objectGraph.valueOf(self) as List<SelfType>
-                            coll.joinToString(separator = "") {
-                                val tobj = objectGraph.toTypedObject(it)
-                                formatSelf(EvaluationContext.ofSelf(tobj))
-                            }
-                        }
-
-                        selfType.isStdSet -> TODO()
-                        selfType.isStdMap -> {
-                            val coll = objectGraph.valueOf(self) as Map<Any, SelfType>
-                            coll.values.joinToString(separator = "") {
-                                val tobj = objectGraph.toTypedObject(it)
-                                formatSelf(EvaluationContext.ofSelf(tobj))
-                            }
-                        }
-
-                        else -> TODO()
-                    }
-
-                    is StructuredType -> {
-                        val containedProps = self.type.resolvedDeclaration.allProperty
-                            .filter { (pname, pdecl) -> pdecl.isComposite || pdecl.isPrimitive }
-                        containedProps.map { (pname, pdecl) ->
-                            val propValue = objectGraph.getProperty(self, pname.value)
-                            formatSelf(EvaluationContext.ofSelf(propValue))
-                        }.joinToString(separator = "") { it }
-                    }
-
-                    else -> error("Subtype of TypeDeclaration not handled '${self.type.resolvedDeclaration::class.simpleName}'")
-                }
+            else -> when {
+                self.self is Formatable -> (self.self as Formatable).asString()
+                else -> formatWhenNoRuleBasedOnTypeInfo(evc, self)
             }
+        }
+    }
+
+    private fun formatWhenNoRuleBasedOnTypeInfo(evc: EvaluationContext<SelfType>, self: TypedObject<SelfType>): String {
+        val selfType = self.type.resolvedDeclaration
+        return when (selfType) {
+            is SpecialType -> when {
+                StdLibDefault.NothingType.resolvedDeclaration == selfType -> ""
+                StdLibDefault.AnyType.resolvedDeclaration == selfType -> self.self.toString()
+                else -> error("SpecialType not handled '${self.type.resolvedDeclaration::class.simpleName}'")
+            }
+
+            is SingletonType -> objectGraph.valueOf(self).toString()
+            is PrimitiveType -> {
+                objectGraph.valueOf(self).toString()
+            }
+
+            is ValueType -> objectGraph.valueOf(self).toString()
+            is EnumType -> objectGraph.valueOf(self).toString()
+            is CollectionType -> when {
+                selfType.isStdList -> {
+                    val coll = objectGraph.valueOf(self) as List<SelfType>
+                    coll.joinToString(separator = "") {
+                        val tobj = objectGraph.toTypedObject(it)
+                        formatEvc(evc.childSelf(tobj))
+                    }
+                }
+
+                selfType.isStdSet -> TODO()
+                selfType.isStdMap -> {
+                    val coll = objectGraph.valueOf(self) as Map<Any, SelfType>
+                    coll.values.joinToString(separator = "") {
+                        val tobj = objectGraph.toTypedObject(it)
+                        formatEvc(evc.childSelf(tobj))
+                    }
+                }
+
+                else -> TODO()
+            }
+
+            is StructuredType -> {
+                val containedProps = self.type.resolvedDeclaration.allProperty
+                    .filter { (pname, pdecl) -> pdecl.isComposite || pdecl.isPrimitive }
+                containedProps.map { (pname, pdecl) ->
+                    val propValue = objectGraph.getProperty(self, pname.value)
+                    formatEvc(evc.childSelf(propValue))
+                }.joinToString(separator = "") { it }
+            }
+
+            else -> error("Subtype of TypeDeclaration not handled '${self.type.resolvedDeclaration::class.simpleName}'")
         }
     }
 
@@ -148,7 +165,7 @@ class FormatterOverTypedObject<SelfType:Any>(
             is String -> value as String
             else -> {
                 //issues.error(null, "Expression should result in a String value, got '${value::class.simpleName}'")
-                formatSelf(EvaluationContext.ofSelf(res))
+                formatEvc(evc.childSelf(res))
             }
         }
     }
@@ -161,6 +178,7 @@ class FormatterOverTypedObject<SelfType:Any>(
                 val text = formatTemplateContent(evc, formatExpr.content.last())
                 sb.append(text)
             }
+
             else -> {
                 // find the shortest prefix
                 val textContent = formatExpr.content
@@ -286,14 +304,8 @@ class FormatterOverTypedObject<SelfType:Any>(
     }
 
     private fun formatTemplateElementExpressionSimple(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionProperty): String {
-        val self = evc.self
-        return when (self) {
-            null -> ""
-            else -> {
-                val value = objectGraph.getProperty(self, templateElement.propertyName)
-                formatSelf(EvaluationContext.ofSelf(value))
-            }
-        }
+        val value = getNamedValue(evc, templateElement.propertyName)
+        return formatEvc(evc.childSelf(value))
     }
 
     private fun formatTemplateElementExpressionList(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionList): String {
@@ -302,13 +314,15 @@ class FormatterOverTypedObject<SelfType:Any>(
             null -> ""
             else -> {
                 //val typedlist = expressionInterpreter.evaluateExpression(evc, templateElement.listPropertyName)
-                val typedlist = objectGraph.getProperty(self, templateElement.listPropertyName)
+                val typedlist = super.evaluateExpression(evc, templateElement.listExpression)
+                val typedSep = evaluateExpression(evc, templateElement.separator)
                 val list = objectGraph.valueOf(typedlist)
                 when (list) {
                     is List<*> -> {
-                        (list as List<Any>).joinToString(separator = templateElement.separator) {
+                        val sep = objectGraph.valueOf(typedSep) as String
+                        (list as List<Any>).joinToString(separator = sep) {
                             val typedElement = objectGraph.toTypedObject(it as SelfType)
-                            formatSelf(EvaluationContext.ofSelf(typedElement))
+                            formatEvc(evc.childSelf(typedElement))
                         }
                     }
 
@@ -344,6 +358,24 @@ class FormatterOverTypedObject<SelfType:Any>(
             }
         }
         return ""
+    }
+
+    private fun getNamedValue(evc: EvaluationContext<SelfType>, name: String): TypedObject<SelfType> {
+        return if (evc.namedValues.containsKey(name)) {
+            evc.namedValues[name]!!
+        } else {
+            val name1 = when {
+                name.startsWith("\$") -> name.substring(1)
+                else -> name
+            }
+            val self = evc.self
+            when (self) {
+                null -> objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "")
+                else -> {
+                    objectGraph.getProperty(self, name1) //drop the dollar
+                }
+            }
+        }
     }
 
     override fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {

@@ -19,13 +19,14 @@ package net.akehurst.language.format.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.format.asm.*
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 
-internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AglFormatModel>() {
+internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AglFormatDomain>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mutableMapOf(
@@ -55,26 +56,26 @@ internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationA
     // text = RAW_TEXT ;
     fun text(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementText {
         val parsedText = children[0] as String
-       /* var lines = parsedText.split('\n')
-        var joined = when {
-            1==lines.size -> lines[0]
-            else -> {
-                lines = when {
-                    lines.first().isBlank() -> lines.drop(1)
-                    else -> lines
-                }
-                lines = when {
-                    lines.isEmpty() -> lines
-                    lines.last().isBlank() -> lines.dropLast(1)
-                    else -> lines
-                }
+        /* var lines = parsedText.split('\n')
+         var joined = when {
+             1==lines.size -> lines[0]
+             else -> {
+                 lines = when {
+                     lines.first().isBlank() -> lines.drop(1)
+                     else -> lines
+                 }
+                 lines = when {
+                     lines.isEmpty() -> lines
+                     lines.last().isBlank() -> lines.dropLast(1)
+                     else -> lines
+                 }
 
-                val prefixMatch = Regex("\\s+").matchAt(lines.first(), 0)
-                val prefix = prefixMatch?.value?.length ?: 0
-                lines.map { ln -> ln.drop(prefix) }
-                lines.joinToString("\n")
-            }
-        }*/
+                 val prefixMatch = Regex("\\s+").matchAt(lines.first(), 0)
+                 val prefix = prefixMatch?.value?.length ?: 0
+                 lines.map { ln -> ln.drop(prefix) }
+                 lines.joinToString("\n")
+             }
+         }*/
         val unescaped = parsedText.replace("\\", "")
         return TemplateElementTextDefault(unescaped)
     }
@@ -85,13 +86,25 @@ internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationA
 
     // templateExpressionProperty = DOLLAR_IDENTIFIER ;
     fun templateExpressionProperty(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionProperty =
-        TemplateElementExpressionPropertyDefault((children[0] as String).drop(1))
+        TemplateElementExpressionPropertyDefault((children[0] as String))
 
-    // templateExpressionList = '$[' IDENTIFIER '/' STRING ']' ;
+    // templateExpressionList = '$[' Format::separatedList ']' ;
     fun templateExpressionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionList {
-        val expression = children[1] as String
-        val separator = (children[3] as String).removeSurrounding("'").replace("\\\\n", "\n")
-        return TemplateElementExpressionListDefault(expression, separator)
+        val sepList = children[1] as Pair<Expression, Expression>
+        return TemplateElementExpressionListDefault(sepList.first, sepList.second)
+    }
+
+    // templateExpressionListSeparator = templateExpressionProperty | Expressions::STRING ;
+    fun templateExpressionListSeparator(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionListSeparator {
+        val value = children[0] as String
+        return when (nodeInfo.alt.option.value) {
+            0 -> TemplateElementExpressionListSeparatorDefault(value, true)
+            1 -> TemplateElementExpressionListSeparatorDefault(
+                value.removeSurrounding("'").replace("\\\\n", "\n"),
+                false
+            )
+            else -> error("Option not supported")
+        }
     }
 
     // templateExpressionEmbedded = '${' formatExpression '}'

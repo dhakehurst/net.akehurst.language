@@ -51,17 +51,17 @@ class test_Agl_registry_agl {
 
         fun <AsmType : Any, ContextType : Any> checkLanguageDefinition(expected: LanguageObject<AsmType, ContextType>, actual: LanguageDefinition<AsmType, ContextType>) {
             assertEquals(expected.identity.value, actual.identity.value)
-            checkStringEqualsModel(Agl.registry.agl.grammar.processor!!, expected.grammarString, actual.grammarModel!!,contextFromGrammarRegistry(Agl.registry))
-            checkModelEqualsString(Agl.registry.agl.grammar.processor!!, expected.grammarModel, actual.grammarString!!.value,contextFromGrammarRegistry(Agl.registry))
+            checkStringEqualsModel(Agl.registry.agl.grammar.processor!!, expected.grammarString, actual.grammarDomain!!,contextFromGrammarRegistry(Agl.registry))
+            checkModelEqualsString(Agl.registry.agl.grammar.processor!!, expected.grammarDomain, actual.grammarString!!.value,contextFromGrammarRegistry(Agl.registry))
 
-            assertEquals((expected.typesString), actual.typesString?.value)
+            assertEquals(expected.allTypesString, actual.typesString?.value, "typesString doesn't match")
 
-            assertEquals((expected.asmTransformString), actual.transformString?.value)
+            assertEquals(expected.asmTransformString, actual.asmTransformString?.value, "asmTransformString doesn't match")
 
-            assertEquals((expected.crossReferenceString), actual.crossReferenceString?.value)
+            assertEquals(expected.crossReferenceString, actual.crossReferenceString?.value, "crossReferenceString doesn't match")
 
-            checkStringEqualsModel(Agl.registry.agl.style.processor!!, expected.styleString, actual.styleModel!!, contextFromGrammar(expected.grammarModel))
-            checkModelEqualsString(Agl.registry.agl.style.processor!!, expected.styleModel, actual.styleString!!.value, contextFromGrammar(actual.grammarModel!!))
+            checkStringEqualsModel(Agl.registry.agl.style.processor!!, expected.styleString, actual.styleDomain!!, contextFromGrammar(expected.grammarDomain))
+            checkModelEqualsString(Agl.registry.agl.style.processor!!, expected.styleDomain, actual.styleString!!.value, contextFromGrammar(actual.grammarDomain!!))
 
             assertEquals((expected.formatString), actual.formatString?.value)
             //TODO
@@ -70,19 +70,19 @@ class test_Agl_registry_agl {
         fun checkProcessor(processor: LanguageProcessor<*, *>?) {
             assertNotNull(processor)
             assertNotNull(processor.configuration)
-            assertTrue(processor.issues.isEmpty())
-            assertNotNull(processor.grammarModel)
+            assertTrue(processor.allIssues.isEmpty())
+            assertNotNull(processor.grammarDomain)
             assertNotNull(processor.targetGrammar)
             assertNotNull(processor.targetRuleSet)
             assertNotNull(processor.scanner)
             assertNotNull(processor.spptParser)
             assertNotNull(processor.parser)
-            assertNotNull(processor.baseTypeModel)
-            assertNotNull(processor.typesModel)
-            assertNotNull(processor.transformModel)
+            assertNotNull(processor.baseTypesDomain)
+            assertNotNull(processor.typesDomain)
+            assertNotNull(processor.transformDomain)
             assertNotNull(processor.targetTransformRuleSet)
-            assertNotNull(processor.crossReferenceModel)
-            assertNotNull(processor.formatModel)
+            assertNotNull(processor.crossReferenceDomain)
+            assertNotNull(processor.formatDomain)
             assertNotNull(processor.syntaxAnalyser)
             assertNotNull(processor.semanticAnalyser)
             assertNotNull(processor.formatter)
@@ -115,8 +115,13 @@ class test_Agl_registry_agl {
     }
 
     @Test
-    fun test_Agl_registry_agl_transform() {
-        checkProcessor(Agl.registry.agl.transform.processor)
+    fun test_Agl_registry_agl_asmTransform() {
+        checkProcessor(Agl.registry.agl.asmTransform.processor)
+    }
+
+    @Test
+    fun test_Agl_registry_agl_m2mTransform() {
+        checkProcessor(Agl.registry.agl.m2mTransform.processor)
     }
 
     @Test

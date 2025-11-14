@@ -15,20 +15,25 @@
  */
 package net.akehurst.language.comparisons.agl
 
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
-import org.junit.*
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Ignore
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
 import java.nio.file.Files
-import kotlin.time.*
+import kotlin.time.ExperimentalTime
+import kotlin.time.TimeSource
+import kotlin.time.TimedValue
+import kotlin.time.measureTimedValue
 
 @RunWith(Parameterized::class)
 class Java8_compare_Test_aglOptm_perf(val file: FileData) {
@@ -44,10 +49,10 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm,ContextSimple> {
-            val bytes = Java8_compare_Test_aglOptm_perf::class.java.getResourceAsStream(aglFile).readBytes()
+        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm,ContextWithScope<Any,Any>> {
+            val bytes = Resources::class.java.getResourceAsStream(aglFile)?.readBytes() ?: error("Cannot find resource: $aglFile")
             val javaGrammarStr = String(bytes)
-            val res = Agl.processorFromString<Asm, ContextSimple>(
+            val res = Agl.processorFromString<Asm, ContextWithScope<Any,Any>>(
                 grammarDefinitionStr = javaGrammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
@@ -66,7 +71,7 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
         var input: String? = null
 
         @ExperimentalTime
-        fun parse(file: FileData, proc:LanguageProcessor<Asm,ContextSimple>): TimedValue<SharedPackedParseTree> {
+        fun parse(file: FileData, proc:LanguageProcessor<Asm,ContextWithScope<Any,Any>>): TimedValue<SharedPackedParseTree> {
             val tree = proc.parse( input!!,Agl.parseOptions { goalRuleName("CompilationUnit") })
             return TimeSource.Monotonic.measureTimedValue {
                 val res = proc.parse( input!!,Agl.parseOptions { goalRuleName("CompilationUnit") })

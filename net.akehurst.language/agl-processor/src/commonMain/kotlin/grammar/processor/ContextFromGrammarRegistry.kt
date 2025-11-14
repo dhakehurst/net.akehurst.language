@@ -16,11 +16,7 @@
 
 package net.akehurst.language.grammar.processor
 
-import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.api.processor.GrammarRegistry
-
-fun ContextFromGrammarRegistry(registry: GrammarRegistry) = contextFromGrammarRegistry(registry)
+//fun ContextFromGrammarRegistry(registry: GrammarRegistry) = contextFromGrammarRegistry(registry)
 
 //class ContextFromGrammarRegistry(
 //    val grammarRegistry: GrammarRegistry

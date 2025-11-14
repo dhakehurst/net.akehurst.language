@@ -23,7 +23,7 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.DefinitionDefault
-import net.akehurst.language.base.asm.ModelDefault
+import net.akehurst.language.base.asm.DomainDefault
 import net.akehurst.language.base.asm.NamespaceDefault
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.sentence.api.Sentence
@@ -41,12 +41,12 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
     }
 
     // unit = option* namespace* ;
-    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ModelDefault {
+    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): DomainDefault {
         val options = children[0] as List<Pair<String,String>>
         val namespace = children[1] as List<NamespaceDefault>
-        val optHolder = OptionHolderDefault(null,options.associate{it})
+        val optHolder = OptionHolderDefault(null,options.toMap())
         namespace.forEach { (it.options as OptionHolderDefault).parent = optHolder }
-        val result = ModelDefault(SimpleName("Unit"), optHolder, namespace)
+        val result = DomainDefault(SimpleName("Unit"), optHolder, namespace)
         return result
     }
 
@@ -57,7 +57,7 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
         val import = children[3] as List<Import>
         val definition = children[4] as List<(NamespaceDefault) -> DefinitionDefault>
 
-        val optHolder = OptionHolderDefault(null,options.associate{it})
+        val optHolder = OptionHolderDefault(null,options.toMap())
         val ns = NamespaceDefault(pqn.asQualifiedName(null),optHolder, import)
         definition.forEach {
             val def = it.invoke(ns)

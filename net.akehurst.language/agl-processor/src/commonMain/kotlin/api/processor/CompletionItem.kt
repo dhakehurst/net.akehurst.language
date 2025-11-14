@@ -35,13 +35,14 @@ data class CompletionItem(
 ) {
     var id: Int? = 0
     var description: String = ""
+    var detail: RuleItem? = null
 }
 
 interface SpineNode {
     val rule: GrammarRule
     val nextChildNumber: Int
     val nextExpectedItems: Set<RuleItem>
-    val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
+    //val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
     val nextExpectedConcatenation: Set<Concatenation>
 }
 

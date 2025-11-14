@@ -15,8 +15,9 @@
  *
  */
 
+let describe = require('describe');
 let assert = require('assert');
-let Agl = require('./net.akehurst.language-agl-processor').net.akehurst.language.agl.processor.Agl;
+let Agl = require('./net.akehurst.language-agl-processor').net.akehurst.language.agl.Agl;
 describe('test_Agl', function () {
 
     it('getBuildStamp', function () {
@@ -33,7 +34,7 @@ describe('test_Agl', function () {
               S='hello' 'world' '!';
             }
         `;
-        let proc = Agl.processorFromString(grammarStr);
+        let proc = Agl.processorFromStringSimple(grammarStr);
         assert.notEqual(null, proc);
     });
 

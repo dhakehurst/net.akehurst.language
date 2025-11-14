@@ -16,11 +16,11 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.api.ParseAction
+import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals

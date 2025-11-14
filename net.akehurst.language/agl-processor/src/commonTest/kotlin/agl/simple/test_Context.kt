@@ -27,14 +27,14 @@ class test_Context {
 
     @Test
     fun isEmpty() {
-        val sut = ContextWithScope<Any,Any>()
+        val sut = SentenceContextAny()
         val actual = sut.isEmpty
         assertEquals(true, actual)
     }
 
     @Test
     fun asString__empty() {
-        val sut = ContextWithScope<Any,Any>()
+        val sut = SentenceContextAny()
         val actual = sut.asString()
         val expected = "context { }"
         assertEquals(expected, actual)
@@ -42,7 +42,7 @@ class test_Context {
 
     @Test
     fun asString__1_sentence_3_items() {
-        val sut = ContextWithScope<Any,Any>()
+        val sut = SentenceContextAny()
         sut.addToScope(1, listOf("item","qual","1"), QualifiedName("Type"), null, "TheItemStored_1")
         sut.addToScope(1, listOf("item","qual","2"), QualifiedName("Type"), null, "TheItemStored_2")
         sut.addToScope(1, listOf("item","qual","3"), QualifiedName("Type"), null, "TheItemStored_3")
@@ -71,7 +71,7 @@ class test_Context {
 
     @Test
     fun asString__3_sentence_1_item() {
-        val sut = ContextWithScope<Any,Any>()
+        val sut = SentenceContextAny()
         sut.addToScope(1, listOf("item","qual","1"), QualifiedName("Type"), null, "TheItemStored_1")
         sut.addToScope(2, listOf("item","qual","2"), QualifiedName("Type"), null, "TheItemStored_2")
         sut.addToScope(3, listOf("item","qual","3"), QualifiedName("Type"), null, "TheItemStored_3")
@@ -112,7 +112,7 @@ class test_Context {
 
     @Test
     fun addToScope() {
-        val sut = ContextWithScope<Any,Any>()
+        val sut = SentenceContextAny()
         sut.addToScope(1, listOf("item","qual","name"), QualifiedName("Type"), InputLocation(1,2,3,4,5), "TheItemStored")
 
         val expected = contextAsmSimple() {

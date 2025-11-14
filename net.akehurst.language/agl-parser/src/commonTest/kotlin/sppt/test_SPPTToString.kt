@@ -32,7 +32,7 @@ class test_SPPTToString {
         val expected = """
             S { }
         """.trimIndent()
-        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll
+        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll.trim()
 
         assertEquals(expected, actual)
     }
@@ -45,7 +45,7 @@ class test_SPPTToString {
         val expected = """
             S { 'a' }
         """.trimIndent()
-        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll
+        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll.trim()
 
         assertEquals(expected, actual)
     }
@@ -59,7 +59,7 @@ class test_SPPTToString {
         val expected = """
             S { A { 'a' } }
         """.trimIndent()
-        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll
+        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll.trim()
 
         assertEquals(expected, actual)
     }
@@ -79,7 +79,7 @@ class test_SPPTToString {
               C { 'c' }
             }
         """.trimIndent()
-        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll
+        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll.trim()
 
         assertEquals(expected, actual)
     }
@@ -111,7 +111,7 @@ class test_SPPTToString {
               }
             }
         """.trimIndent()
-        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll
+        val actual = SPPTParserDefault(rrs).parse(expected).toStringAll.trim()
 
         assertEquals(expected, actual)
     }

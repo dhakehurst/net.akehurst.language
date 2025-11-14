@@ -16,9 +16,9 @@
 
 package net.akehurst.language.sppt.treedata
 
-import net.akehurst.language.collections.mutableStackOf
-import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.*
 

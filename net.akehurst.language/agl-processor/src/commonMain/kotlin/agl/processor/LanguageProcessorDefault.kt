@@ -17,13 +17,13 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.parser.api.RuleSet
 
 internal class LanguageProcessorDefault<AsmType:Any, ContextType : Any>(
-    override val grammarModel: GrammarModel,
+    override val grammarDomain: GrammarDomain,
     override val configuration: LanguageProcessorConfiguration<AsmType,  ContextType>,
 ) : LanguageProcessorAbstract<AsmType,  ContextType>() {
 
@@ -33,8 +33,10 @@ internal class LanguageProcessorDefault<AsmType:Any, ContextType : Any>(
     private var _originalRuleMap: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()
     private var _runtimeRuleSet: MutableMap<String,RuleSet> = mutableMapOf()
 
+    override val ruleSets: Map<String, RuleSet> = _runtimeRuleSet
+
     init {
-        val allGrammars = grammarModel.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }.toSet()
+        val allGrammars = grammarDomain.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }.toSet()
         val converters = allGrammars.map  { ConverterToRuntimeRules(it) }
         val grmToRrs = converters.associateBy({ it.grammar}, { it.runtimeRuleSet })
         converters.forEach {c ->

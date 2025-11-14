@@ -20,8 +20,8 @@ import net.akehurst.kotlinx.komposite.api.KompositeException
 import net.akehurst.language.agl.expressions.processor.get
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
 
 inline fun <P : Any?, A : Any?> kompositeWalker(registry: DatatypeRegistry, init: KompositeWalker.Builder<P, A>.() -> Unit): KompositeWalker<P, A> {
     val builder = KompositeWalker.Builder<P, A>()
@@ -443,6 +443,7 @@ class KompositeWalker<P : Any?, A : Any?>(
             else -> {
                 val dataKClassName = data::class.simpleName!! //TODO: want qualified name here when JS supports it
                 registry.findFirstDefinitionByNameOrNull(SimpleName(dataKClassName))
+                    ?: DatatypeRegistry.KOTLIN_TO_AGL[dataKClassName]?.let { registry.findFirstDefinitionByNameOrNull(SimpleName(it)) }
                     ?: throw KompositeException("Cannot find a runtimeTypeFor for data object named: ${data::class.simpleName}")
             }
         }

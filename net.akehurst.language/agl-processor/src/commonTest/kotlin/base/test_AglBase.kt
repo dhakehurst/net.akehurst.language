@@ -3,8 +3,8 @@ package net.akehurst.language.base.processor
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
-import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -14,7 +14,7 @@ class test_AglBase {
 
     @Test
     fun test_typeModel() {
-        val actual = AglBase.typesModel
+        val actual = AglBase.typesDomain
 
         assertNotNull(actual)
         val ns = actual.findFirstDefinitionByNameOrNull(SimpleName("NamespaceDefault"))
@@ -23,7 +23,7 @@ class test_AglBase {
         val ns__def = ns.findAllPropertyOrNull(PropertyName("_definition"))
         assertNotNull(ns__def)
 
-        val tm = typeModel("Test",true,actual.namespace) {
+        val tm = typesDomain("Test",true,actual.namespace) {
             namespace("test") {
                 data("TestDefinition")
             }

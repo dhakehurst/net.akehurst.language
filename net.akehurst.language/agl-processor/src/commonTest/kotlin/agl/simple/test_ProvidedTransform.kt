@@ -1,6 +1,22 @@
-package agl.simple
+/*
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
-import net.akehurst.language.asm.builder.asmSimple
+package net.akehurst.language.agl.simple
+
 import testFixture.data.doTest
 import testFixture.data.executeTestSuit
 import testFixture.data.testSuit
@@ -22,11 +38,11 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("a") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S") {
                             propertyString("a", "a")
                         }
-                    })
+                    }
                 }
             }
             testData("S = a; leaf a = 'a'; nothing rewritten, use default") {
@@ -47,11 +63,11 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("a") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S") {
                             propertyString("a", "a")
                         }
-                    })
+                    }
                 }
             }
             testData("S = a; leaf a = 'a'; rewrite root rule") {
@@ -68,17 +84,17 @@ class test_ProvidedTransform {
                     """
                     #create-missing-types
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         S : XXX() { yyy := child[0] }
                       }
                 """.trimIndent()
                 )
                 sentencePass("a") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyString("yyy", "a")
                         }
-                    })
+                    }
                 }
             }
             testData("S = A | B; A = a a; B = 'b' b; rewrite root only") {
@@ -98,30 +114,30 @@ class test_ProvidedTransform {
                     """
                     #create-missing-types
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         #override-default-transform
                         S : XXX() { yyy := child[0] }
                       }
                 """.trimIndent()
                 )
                 sentencePass("aa") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "A") {
                                 propertyString("a", "a")
                                 propertyString("a2", "a")
                             }
                         }
-                    })
+                    }
                 }
                 sentencePass("bb") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
                                 propertyString("b", "b")
                             }
                         }
-                    })
+                    }
                 }
             }
             testData("S = a; leaf a = 'a'; override-default in unit, change only type of root rule") {
@@ -139,17 +155,17 @@ class test_ProvidedTransform {
                     #create-missing-types
                     #override-default-transform
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         S : XXX
                       }
                 """.trimIndent()
                 )
                 sentencePass("a") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyString("a", "a")
                         }
-                    })
+                    }
                 }
             }
             testData("S = A | B; A = a a; B = 'b' b; override-default in transform, rewrite Root and one choice") {
@@ -169,7 +185,7 @@ class test_ProvidedTransform {
                     """
                     #create-missing-types
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         #override-default-transform
                         S : XXX() { yyy := child[0] }
                         A : child[0] as String
@@ -177,20 +193,20 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("aa") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyString("yyy", "a")
                         }
-                    })
+                    }
                 }
                 sentencePass("bb") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
                                 propertyString("b", "b")
                             }
                         }
-                    })
+                    }
                 }
             }
             testData("S = A | B; A = a a; B = 'b' b; override-default in unit, rewrite Root and one choice") {
@@ -211,27 +227,27 @@ class test_ProvidedTransform {
                     #create-missing-types
                     #override-default-transform
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         S : XXX() { yyy := child[0] }
                         A : child[0] as String
                       }
                 """.trimIndent()
                 )
                 sentencePass("aa") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyString("yyy", "a")
                         }
-                    })
+                    }
                 }
                 sentencePass("bb") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
                                 propertyString("b", "b")
                             }
                         }
-                    })
+                    }
                 }
             }
             testData("Embedded grammars, override-default in unit, rewrite outer") {
@@ -258,38 +274,38 @@ class test_ProvidedTransform {
                     #create-missing-types
                     #override-default-transform
                     namespace test
-                        transform Outer {
+                        asm-transform Outer {
                             B: BI() { inner := child[1] }
                         }
                 """
                 )
                 sentencePass("d") {
-                    expectedAsm(asmSimple() {
+                    expectedAsm {
                         string("d")
-                    })
+                    }
                 }
                 sentencePass("babd") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "a")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
                 sentencePass("cacd") {
-                    expectedAsm(asmSimple() {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "a")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
                 sentencePass("baaaabd") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyElementExplicitType("inner", "S1") {
@@ -305,7 +321,7 @@ class test_ProvidedTransform {
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
             }
             testData("Embedded grammars, override-default in unit, rewrite inner & outer") {
@@ -332,49 +348,49 @@ class test_ProvidedTransform {
                     #create-missing-types
                     #override-default-transform
                     namespace test
-                        transform Inner {
+                        asm-transform Inner {
                             S: child[0] as String
                             S1: (child[0] + child[1]) as String
                         }
-                        transform Outer {
+                        asm-transform Outer {
                             B: BI() { inner := child[1] }
                         }
                 """.replace("§", "$")
                 )
                 sentencePass("d") {
-                    expectedAsm(asmSimple() {
+                    expectedAsm {
                         string("d")
-                    })
+                    }
                 }
                 sentencePass("babd") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "a")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
                 sentencePass("cacd") {
-                    expectedAsm(asmSimple() {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "a")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
                 sentencePass("baaaabd") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "aaaa")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
             }
         }

@@ -18,11 +18,10 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.expressions.api.Expression
 
-class ExpressionsCompletionProvider : CompletionProviderAbstract<Expression, ContextWithScope<Any,Any>>() {
+class ExpressionsCompletionProvider : CompletionProviderAbstract<Expression, SentenceContextAny>() {
 
        //TODO
 

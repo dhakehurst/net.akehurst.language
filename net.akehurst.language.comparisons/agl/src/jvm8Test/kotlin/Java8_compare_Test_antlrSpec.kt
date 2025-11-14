@@ -15,17 +15,16 @@
  */
 package net.akehurst.language.comparisons.agl
 
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
 import net.akehurst.language.comparisons.common.Results
 import net.akehurst.language.comparisons.common.TimeLogger
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.sppt.api.SharedPackedParseTree
 import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -49,10 +48,10 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm, ContextSimple> {
+        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm, ContextWithScope<Any,Any>> {
             val bytes = Java8_compare_Test_antlrSpec::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
-            val res = Agl.processorFromString<Asm, ContextSimple>(
+            val res = Agl.processorFromString<Asm, ContextWithScope<Any,Any>>(
                 grammarDefinitionStr = javaGrammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
@@ -80,7 +79,7 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
                     timer.success()
                     res.sppt
                 }
-            } catch (e: ParseFailedException) {
+            } catch (e: Throwable) {
                 println("Error: ${e.message}")
                 Results.logError("${col}-fst", file)
                 assertTrue(file.isError)

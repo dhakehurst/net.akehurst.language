@@ -18,7 +18,7 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -28,26 +28,26 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExpressionTypeResolver
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.reference.asm.*
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
 
 class ReferencesSemanticAnalyser(
-) : SemanticAnalyser<CrossReferenceModel, ContextFromTypeModel> {
+) : SemanticAnalyser<CrossReferenceDomain, ContextFromTypesDomain> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
     private var _locationMap: LocationMap = LocationMapDefault()
 
-    private var _grammarNamespace: GrammarTypeNamespace? = null
+    private var _grammarNamespace: GrammarTypesNamespace? = null
 
-    private var _context: ContextFromTypeModel? = null
+    private var _context: ContextFromTypesDomain? = null
     private var _typeResolver: ExpressionTypeResolver? = null
 
     override fun clear() {
@@ -60,9 +60,9 @@ class ReferencesSemanticAnalyser(
 
     override fun analyse(
         sentenceIdentity:Any?,
-        asm: CrossReferenceModel,
+        asm: CrossReferenceDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<ContextFromTypeModel>
+        options: SemanticAnalysisOptions<ContextFromTypesDomain>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: LocationMapDefault()
         _context = options.context
@@ -71,14 +71,14 @@ class ReferencesSemanticAnalyser(
         if (null != _context) {
             asm.declarationsForNamespace.values.forEach {
                 val importedNamespaces = it.importedNamespaces.mapNotNull { impNs ->
-                    val ns = _context!!.typeModel.findNamespaceOrNull(impNs.asQualifiedName)
+                    val ns = _context!!.typesDomain.findNamespaceOrNull(impNs.asQualifiedName)
                     when (ns) {
                         null -> raiseError(it, "Namespace to import not found")
                     }
                     ns
                 }
 
-                val ns = _context!!.typeModel.findNamespaceOrNull(it.namespace.qualifiedName)
+                val ns = _context!!.typesDomain.findNamespaceOrNull(it.namespace.qualifiedName)
                 when (ns) {
                     null -> _issues.raise(
                         LanguageIssueKind.ERROR,
@@ -88,8 +88,8 @@ class ReferencesSemanticAnalyser(
                     )
 
                     else -> {
-                        _typeResolver = _context?.let { ExpressionTypeResolver(it.typeModel, ns, _issues) }
-                        _grammarNamespace = ns as GrammarTypeNamespace
+                        _typeResolver = _context?.let { ExpressionTypeResolver(it.typesDomain, ns, _issues) }
+                        _grammarNamespace = ns as GrammarTypesNamespace
                         it.scopeDefinition.values.forEach {
                             checkScopeDefinition(it as ScopeDefinitionDefault)
                         }
@@ -117,7 +117,7 @@ class ReferencesSemanticAnalyser(
     }
 
     private fun checkScopeDefinition(scopeDef: ScopeDefinitionDefault) {
-        val msgStart = if (CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last == scopeDef.scopeForTypeName) {
+        val msgStart = if (CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last == scopeDef.scopeForTypeName) {
             //do nothing
             "In root scope"
         } else {
@@ -155,7 +155,7 @@ class ReferencesSemanticAnalyser(
         }
     }
 
-    private fun checkReferenceDefinition(crossReferenceModel: CrossReferenceModel, ref: ReferenceDefinitionDefault, importedNamespaces: List<TypeNamespace>) {
+    private fun checkReferenceDefinition(crossReferenceDomain: CrossReferenceDomain, ref: ReferenceDefinitionDefault, importedNamespaces: List<TypesNamespace>) {
         val contextType = _grammarNamespace?.findOwnedTypeNamed(ref.inTypeName)
         when {
             (null == contextType) -> {
@@ -167,31 +167,31 @@ class ReferencesSemanticAnalyser(
 
             else -> {
                 for (refExpr in ref.referenceExpressionList) {
-                    checkReferenceExpression(crossReferenceModel, contextType, ref, refExpr, importedNamespaces)
+                    checkReferenceExpression(crossReferenceDomain, contextType, ref, refExpr, importedNamespaces)
                 }
             }
         }
     }
 
     private fun checkReferenceExpression(
-        crossReferenceModel: CrossReferenceModel,
+        crossReferenceDomain: CrossReferenceDomain,
         contextType: TypeDefinition,
         ref: ReferenceDefinitionDefault,
         refExpr: ReferenceExpression,
-        importedNamespaces: List<TypeNamespace>
+        importedNamespaces: List<TypesNamespace>
     ) =
         when (refExpr) {
-            is ReferenceExpressionPropertyDefault -> checkPropertyReferenceExpression(crossReferenceModel, contextType, ref, refExpr, importedNamespaces)
-            is ReferenceExpressionCollectionDefault -> checkCollectionReferenceExpression(crossReferenceModel, contextType, ref, refExpr, importedNamespaces)
+            is ReferenceExpressionPropertyDefault -> checkPropertyReferenceExpression(crossReferenceDomain, contextType, ref, refExpr, importedNamespaces)
+            is ReferenceExpressionCollectionDefault -> checkCollectionReferenceExpression(crossReferenceDomain, contextType, ref, refExpr, importedNamespaces)
             else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
         }
 
     private fun checkCollectionReferenceExpression(
-        crossReferenceModel: CrossReferenceModel,
+        crossReferenceDomain: CrossReferenceDomain,
         contextType: TypeDefinition,
         ref: ReferenceDefinitionDefault,
         refExpr: ReferenceExpressionCollectionDefault,
-        importedNamespaces: List<TypeNamespace>
+        importedNamespaces: List<TypesNamespace>
     ) {
         refExpr.ofType?.let {
             val type = _grammarNamespace?.findTypeNamed(it)
@@ -222,7 +222,7 @@ class ReferencesSemanticAnalyser(
                     }
                 } ?: loopVarType
                 for (re in refExpr.referenceExpressionList) {
-                    checkReferenceExpression(crossReferenceModel, filteredLoopVarType, ref, re, importedNamespaces)
+                    checkReferenceExpression(crossReferenceDomain, filteredLoopVarType, ref, re, importedNamespaces)
                 }
             }
 
@@ -232,11 +232,11 @@ class ReferencesSemanticAnalyser(
     }
 
     private fun checkPropertyReferenceExpression(
-        crossReferenceModel: CrossReferenceModel,
+        crossReferenceDomain: CrossReferenceDomain,
         contextType: TypeDefinition,
         ref: ReferenceDefinitionDefault,
         refExpr: ReferenceExpressionPropertyDefault,
-        importedNamespaces: List<TypeNamespace>
+        importedNamespaces: List<TypesNamespace>
     ) {
         refExpr.refersToTypeName.forEachIndexed { i, n ->
             if (null == findReferredToType(n, importedNamespaces)) {
@@ -260,12 +260,12 @@ class ReferencesSemanticAnalyser(
 
             else -> {
                 val qualifiedTypeNames = refExpr.refersToTypeName.mapNotNull { findReferredToType(it, importedNamespaces)?.qualifiedName }
-                (crossReferenceModel as CrossReferenceModelDefault).addRecordReferenceForProperty(prop.owner.qualifiedName, prop.name.value, qualifiedTypeNames)
+                (crossReferenceDomain as CrossReferenceDomainDefault).addRecordReferenceForProperty(prop.owner.qualifiedName, prop.name.value, qualifiedTypeNames)
             }
         }
     }
 
-    private fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypeNamespace>): TypeDefinition? {
+    private fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypesNamespace>): TypeDefinition? {
         return _grammarNamespace?.findTypeNamed(name)
             ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name as SimpleName) }
     }

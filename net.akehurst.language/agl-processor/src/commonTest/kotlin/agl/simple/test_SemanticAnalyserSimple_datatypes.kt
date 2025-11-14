@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.ResolvedReference
@@ -26,7 +26,7 @@ import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -84,15 +84,15 @@ class test_SemanticAnalyserSimple_datatypes {
             grammarDefinitionStr = grammarStr,
             referenceStr = crossReferenceModelStr
         ).processor!!
-        val typeModel = processor.typesModel
-        val crossReferenceModel = processor.crossReferenceModel
+        val typeModel = processor.typesDomain
+        val crossReferenceModel = processor.crossReferenceDomain
 
     }
 
     @Test
     fun check_scopeModel() {
-        val context = ContextFromTypeModel(processor.typesModel)
-        val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
+        val context = ContextFromTypesDomain(processor.typesDomain)
+        val res = CrossReferenceDomainDefault.fromString(context, crossReferenceModelStr)
         assertTrue(res.allIssues.isEmpty(), res.allIssues.toString())
     }
 
@@ -110,7 +110,7 @@ class test_SemanticAnalyserSimple_datatypes {
         assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = processor.typesDomain) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -121,7 +121,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -139,7 +139,7 @@ class test_SemanticAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = processor.typesDomain) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -154,7 +154,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -175,7 +175,7 @@ class test_SemanticAnalyserSimple_datatypes {
         )
         assertNotNull(result.asm)
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = processor.typesDomain) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -227,7 +227,7 @@ class test_SemanticAnalyserSimple_datatypes {
         assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
 
         val expectedResolvedList = mutableListOf<ResolvedReference>()
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple(), resolvedReferences = expectedResolvedList) {
+        val expected = asmSimple(typesDomain = typeModel, crossReferenceDomain = crossReferenceModel, context = contextAsmSimple(), resolvedReferences = expectedResolvedList) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {
@@ -249,7 +249,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
         val expectedResolved = listOf(
             ResolvedReference(
                 source = expectedResolvedList[0].source,

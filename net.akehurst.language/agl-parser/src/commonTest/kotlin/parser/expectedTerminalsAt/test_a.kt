@@ -16,7 +16,6 @@
 
 package net.akehurst.language.parser.expectedTerminalsAt
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 
@@ -65,7 +64,7 @@ class test_a : test_ExpectedTerminasAtAbstract() {
 
     @Test
     fun one() {
-        val i = 2
+        val i = 4
         val td = testData[i]
         println("Test[$i]: At ${td.position} in '${td.sentence}'")
         test(rrs, goal, td)

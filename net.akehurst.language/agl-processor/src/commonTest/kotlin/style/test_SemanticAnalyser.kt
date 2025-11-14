@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -33,7 +33,7 @@ class test_SemanticAnalyser {
     private companion object {
         val aglProc = Agl.registry.agl.style.processor!!
 
-        fun grammarFor(grammarStr: String): GrammarModel {
+        fun grammarFor(grammarStr: String): GrammarDomain {
             return Agl.registry.agl.grammar.processor?.process(grammarStr)?.asm!!
         }
 

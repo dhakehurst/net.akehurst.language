@@ -16,34 +16,35 @@
 
 package net.akehurst.language.grammar.asm
 
+import net.akehurst.kotlinx.collections.*
 import net.akehurst.language.base.api.*
-import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.collections.*
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.regex.api.EscapedPattern
 
 
-class GrammarModelDefault(
+class GrammarDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespace: List<GrammarNamespace> = emptyList()
-) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>(namespace,options) {
+) : GrammarDomain, DomainAbstract<GrammarNamespace, Grammar>(namespace,options) {
 
     override fun hashCode(): Int = arrayOf(name, namespace).contentHashCode()
     override fun equals(other: Any?): Boolean = when {
-        other !is GrammarModel -> false
+        other !is GrammarDomain -> false
         this.name != other.name -> false
         this.namespace != other.namespace -> false
         else -> true
     }
 
-    override fun toString(): String = "GrammarModel '$name'"
+    override fun toString(): String = "GrammarDomain '$name'"
 }
 
-@Deprecated("Just use a GrammarModel", ReplaceWith("Just use a GrammarModel"))
-fun Grammar.asGrammarModel(): GrammarModel = GrammarModelDefault(this.name, OptionHolderDefault(null, emptyMap()), listOf(this.namespace as GrammarNamespace))
+@Deprecated("Just use a GrammarDomain", ReplaceWith("Just use a GrammarDomain"))
+fun Grammar.asGrammarDomain(): GrammarDomain = GrammarDomainDefault(this.name, OptionHolderDefault(null, emptyMap()), listOf(this.namespace as GrammarNamespace))
 
 class GrammarNamespaceDefault(
     override val qualifiedName: QualifiedName,
@@ -250,7 +251,7 @@ abstract class GrammarAbstract(
 
     override val allResolvedPreferenceRuleRule: OrderedSet<PreferenceRule> by lazy {
         val rules = this.extends.flatMap { it.resolved?.allResolvedPreferenceRuleRule ?: emptyList() }.toMutableOrderedSet()
-        rules + this.preferenceRule
+        rules.plus( this.preferenceRule)
     }
 
     override val allResolvedEmbeddedRules: Set<Embedded> by lazy {
@@ -280,8 +281,8 @@ abstract class GrammarAbstract(
         }
     }
 
-    override fun findAllResolvedTerminalRule(terminalPattern: String): Terminal {
-        val all = this.allResolvedTerminal.filter { it.value == terminalPattern }
+    override fun findAllResolvedTerminalRule(terminalPattern: EscapedPattern): Terminal {
+        val all = this.allResolvedTerminal.filter { it.escapedValue == terminalPattern }
         when {
             all.isEmpty() -> error("$terminalPattern in Grammar(${this.name}).findTerminalRule")
             all.size > 1 -> error("More than one rule named $terminalPattern in Grammar(${this.name}).findTerminalRule")

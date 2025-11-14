@@ -16,7 +16,7 @@
  */
 
 let assert = require('assert');
-let Agl = require('./net.akehurst.language-agl-processor').net.akehurst.language.agl.processor.Agl;
+let Agl = require('./net.akehurst.language-agl-processor').net.akehurst.language.agl.Agl;
 describe('test_LanguageProcessor', function () {
 
     let grammarStr = `
@@ -28,7 +28,7 @@ describe('test_LanguageProcessor', function () {
               W = 'world' '!' ;
             }
         `;
-    let pr = Agl.processorFromStringDefault(grammarStr);
+    let pr = Agl.processorFromStringSimple(grammarStr);
     let proc = pr.processor;
 
     it('scan', function () {

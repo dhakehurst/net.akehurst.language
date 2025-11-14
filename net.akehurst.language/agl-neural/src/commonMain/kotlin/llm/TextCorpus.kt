@@ -23,8 +23,6 @@ package net.akehurst.language.agl.llm
 
 import korlibs.io.async.runBlockingNoJs
 import korlibs.io.file.std.resourcesVfs
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 
 // The TextCorpus provides functionality to store textual data corpora for the model, including

@@ -1,23 +1,20 @@
 plugins {
-    alias(libs.plugins.reflex)
+    id("project-conventions")
+    //alias(libs.plugins.reflex)
 }
 
 dependencies {
-    commonMainApi(project(":agl-parser"))
-    commonMainApi(project(":agl-regex"))
-    commonMainApi(project(":collections")) //TODO merge with kotlinx collections
 
-    commonMainApi(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
 }
 
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+        freeCompilerArgs.add("-Xes-long-as-bigint")
     }
 
     js("js") {
         binaries.library()
-        generateTypeScriptDefinitions()
         compilations["main"].packageJson {
             customField(
                 "author", mapOf(
@@ -36,13 +33,25 @@ kotlin {
    // macosArm64()
 
     sourceSets {
+        commonMain {
+            dependencies {
+                api(project(":agl-parser"))
+                api(project(":agl-regex"))
+                api(project(":collections")) //TODO merge with kotlinx collections
+
+                api(libs.nak.kotlinx.collections) // needed for topologicalSort, OrderedSet
+                api(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
+            }
+        }
+
+
         commonTest.configure {
             // add language repository so we can test the grammars with specific sentences here
             resources.srcDir(projectDir.resolve("../language-repository/languages"))
         }
     }
 }
-
+/*
 //  since change in Kotlin compiler, can't see transitive deps in module (without additional work yet done
 // thus we get each module to generate KotlinxReflect for itself - to fix in future FIXME
 kotlinxReflect {
@@ -51,7 +60,7 @@ kotlinxReflect {
             "net.akehurst.language.base.**",
             "net.akehurst.language.grammar.**",
             "net.akehurst.language.style.**",
-            "net.akehurst.language.typemodel.**",
+            "net.akehurst.language.types.**",
             "net.akehurst.language.grammarTypemodel.**",
             "net.akehurst.language.asm.**",
             "net.akehurst.language.expressions.**",
@@ -70,7 +79,7 @@ kotlinxReflect {
         )
     )
 }
-
+*/
 /*
 exportPublic {
     exportPatterns.set(
@@ -84,7 +93,7 @@ exportPublic {
             "net.akehurst.language.style.api.**",
             "net.akehurst.language.style.asm.**",
 
-            "net.akehurst.language.typemodel.api.**",
+            "net.akehurst.language.types.api.**",
             "net.akehurst.language.agl.regex.**",
             "net.akehurst.language.agl.scanner.**",
             "net.akehurst.language.agl.processor.**",

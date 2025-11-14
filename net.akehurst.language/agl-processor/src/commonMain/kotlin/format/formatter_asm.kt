@@ -19,34 +19,33 @@ package net.akehurst.language.format.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.DefinitionAbstract
-import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 
-class AglFormatModelDefault(
+class AglFormatDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespaces: List<FormatNamespace> = emptyList()
-) : AglFormatModel, ModelAbstract<FormatNamespace, FormatSet>(namespaces, options) {
+) : AglFormatDomain, DomainAbstract<FormatNamespace, FormatSet>(namespaces, options) {
     companion object {
         private fun fromRuleItem(grammar: Grammar, ruleItem: RuleItem): TemplateElement = when (ruleItem) {
             is Terminal -> when {
                 ruleItem.isPattern -> TODO()
-                else -> TemplateElementTextDefault(ruleItem.value)
+                else -> TemplateElementTextDefault(ruleItem.escapedValue.value)
             }
 
             is EmptyRule -> TemplateElementTextDefault("")
@@ -61,13 +60,13 @@ class AglFormatModelDefault(
             else -> error("Internal error: subtype of RuleItem not handled: '${ruleItem::class.simpleName}'")
         }
 
-        fun fromGrammar(grammarModel: GrammarModel, typeModel: TypeModel): ProcessResult<AglFormatModel> {
+        fun fromGrammar(grammarDomain: GrammarDomain, typesDomain: TypesDomain): ProcessResult<AglFormatDomain> {
             val issues = IssueHolder(LanguageProcessorPhase.ALL)
-            val formatModel = AglFormatModelDefault(grammarModel.name)
-            for (ns in typeModel.namespace) {
+            val formatModel = AglFormatDomainDefault(grammarDomain.name)
+            for (ns in typesDomain.namespace) {
                 when {
-                    ns is GrammarTypeNamespace -> {
-                        val grammar = grammarModel.allDefinitions.firstOrNull { gr -> gr.qualifiedName == ns.qualifiedName }
+                    ns is GrammarTypesNamespace -> {
+                        val grammar = grammarDomain.allDefinitions.firstOrNull { gr -> gr.qualifiedName == ns.qualifiedName }
                         when {
                             null != grammar -> {
                                 for ((rn, ty) in ns.allRuleNameToType) {
@@ -91,7 +90,7 @@ class AglFormatModelDefault(
             return ProcessResultDefault(formatModel, processIssues=issues)
         }
 
-        fun fromString(context: ContextWithScope<Any, Any>, formatModelStr: FormatString): ProcessResult<AglFormatModel> {
+        fun fromString(context: SentenceContextAny, formatModelStr: FormatString): ProcessResult<AglFormatDomain> {
             val proc = Agl.registry.agl.format.processor ?: error("Agl Format language not found!")
             val res = proc.process(
                 sentence = formatModelStr.value,
@@ -200,11 +199,16 @@ class TemplateElementExpressionPropertyDefault(
 }
 
 class TemplateElementExpressionListDefault(
-    override val listPropertyName: String,
-    override val separator: String
+    override val listExpression: Expression,
+    override val separator: Expression
 ) : TemplateElementExpressionList {
-    override fun toString(): String = "\$[$listPropertyName / '$separator']"
+    override fun toString(): String = "\$[${listExpression.asString(Indent())} sep '${separator.asString(Indent())}']"
 }
+
+data class TemplateElementExpressionListSeparatorDefault(
+    override val value:String,
+    override val isNamedOfValue:Boolean
+):TemplateElementExpressionListSeparator
 
 class TemplateElementExpressionEmbeddedDefault(
     override val expression: FormatExpression

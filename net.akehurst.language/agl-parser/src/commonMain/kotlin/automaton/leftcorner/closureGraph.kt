@@ -294,7 +294,7 @@ internal class ClosureGraph(
                 else -> true
             }
 
-            override fun toString(): String = "$rulePosition[${parentExpectedAt}]"//{${upInfo.parentNextContextFirstOf}}"
+            override fun toString(): String = "{$context} $rulePosition [${parentExpectedAt}]"//{${upInfo.parentNextContextFirstOf}}"
 
         }
 
@@ -391,4 +391,20 @@ internal class ClosureGraph(
         return if (added) child else null
     }
 
+    fun asString():String {
+        val sb = StringBuilder()
+        sb.appendLine("ClosureGraph :")
+        sb.appendLine("(parents)")
+        sb.appendLine("  root: $root")
+        for( (k,v) in parentsOf) {
+            sb.appendLine("  $k -> $v")
+        }
+        sb.appendLine("(children)")
+        for( (k,v) in _childrenOf) {
+            for((i,c) in v) {
+                sb.appendLine("  $k -> $c")
+            }
+        }
+        return sb.toString()
+    }
 }

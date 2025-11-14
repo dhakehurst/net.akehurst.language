@@ -22,7 +22,7 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 
 
-interface CrossReferenceModel : Model<CrossReferenceNamespace, DeclarationsForNamespace> {
+interface CrossReferenceDomain : Domain<CrossReferenceNamespace, DeclarationsForNamespace> {
 
     val declarationsForNamespace: Map<QualifiedName, DeclarationsForNamespace>
 

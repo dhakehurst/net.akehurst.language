@@ -18,26 +18,23 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
-import net.akehurst.language.api.processor.CompletionProviderOptions
-import net.akehurst.language.api.processor.ProcessOptions
-import net.akehurst.language.api.processor.SemanticAnalysisOptions
-import net.akehurst.language.api.processor.SyntaxAnalysisOptions
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.common.ScanOptionsDefault
-import net.akehurst.language.sentence.api.InputLocation
 
 class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val scan: ScanOptions = ScanOptionsDefault(),
     override val parse: ParseOptions = ParseOptionsDefault(),
     override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault(),
     override val semanticAnalysis: SemanticAnalysisOptions<ContextType> = SemanticAnalysisOptionsDefault(),
-    override val completionProvider: CompletionProviderOptions<ContextType> = CompletionProviderOptionsDefault()
+    override val completionProvider: CompletionProviderOptions<ContextType> = CompletionProviderOptionsDefault(),
+    override val format: FormatOptions<AsmType> = FormatOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType> {
-    override fun clone()= ProcessOptionsDefault<AsmType, ContextType>(
+    override fun clone() = ProcessOptionsDefault<AsmType, ContextType>(
         scan = scan.clone(),
         parse = parse.clone(),
         syntaxAnalysis = syntaxAnalysis.clone(),
@@ -49,7 +46,7 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var enabled: Boolean = true
 ) : SyntaxAnalysisOptions<AsmType> {
-    override fun clone()= SyntaxAnalysisOptionsDefault<AsmType>(
+    override fun clone() = SyntaxAnalysisOptionsDefault<AsmType>(
         enabled = this.enabled
     )
 }
@@ -65,7 +62,7 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override var resolveReferences: Boolean = true,
     override val other: Map<String, Any> = mutableMapOf()
 ) : SemanticAnalysisOptions<ContextType> {
-    override fun clone()= SemanticAnalysisOptionsDefault<ContextType>(
+    override fun clone() = SemanticAnalysisOptionsDefault<ContextType>(
         enabled = this.enabled,
         locationMap = this.locationMap,
         context = this.context,
@@ -93,5 +90,13 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
         showOptionalItems = this.showOptionalItems,
         provideValuesForPatternTerminals = this.provideValuesForPatternTerminals,
         other = other
+    )
+}
+
+class FormatOptionsDefault<SelfType : Any>(
+    override val environment: Map<String, SelfType> = mutableMapOf(),
+) : FormatOptions<SelfType> {
+    override fun clone() = FormatOptionsDefault<SelfType>(
+        environment = environment.toMutableMap()
     )
 }

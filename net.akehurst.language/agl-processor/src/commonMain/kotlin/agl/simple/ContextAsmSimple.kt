@@ -18,15 +18,13 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.sentence.api.InputLocation
-import kotlin.collections.set
 
 fun interface CreateScopedItem<ItemType, ItemInScopeType> {
     fun invoke(qualifiedName: List<String>, item: ItemType, location: InputLocation?): ItemInScopeType
@@ -53,7 +51,6 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = ResolveScopedItemDefault()
 ) : SentenceContext {
 
-
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
@@ -67,7 +64,7 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     }
 
     fun newScopeForSentence(sentenceIdentity: Any?): Scope<ItemInScopeType> {
-        val newScope = ScopeSimple<ItemInScopeType>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+        val newScope = ScopeSimple<ItemInScopeType>(null, ScopeSimple.ROOT_ID, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME)
         scopeForSentence[sentenceIdentity ?: NULL_SENTENCE_IDENTIFIER] = newScope
         return newScope
     }
@@ -121,4 +118,20 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     }
 
     override fun toString(): String = "ContextWithScope"
+}
+
+
+class SentenceContextAny(
+    createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault(),
+    resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault()
+) : ContextWithScope<Any,Any>(createScopedItem, resolveScopedItem) {
+    override fun hashCode(): Int = 0 //scopeForSentence.hashCode()
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is SentenceContextAny -> false
+        this.scopeForSentence != other.scopeForSentence -> false
+        else -> true
+    }
+
+    override fun toString(): String = "SentenceContextAny"
 }

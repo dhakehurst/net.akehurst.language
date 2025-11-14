@@ -1,16 +1,29 @@
 plugins {
-
+    alias(libs.plugins.kotlin)
+}
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
 }
 
-dependencies {
-    jvm8TestImplementation(project(":agl-processor"))
-    jvm8TestImplementation("junit:junit:4.13.2")
+group = rootProject.name
+version = libs.versions.project.get()
+project.layout.buildDirectory = File(rootProject.projectDir, ".gradle-build/${project.name}")
+
+kotlin {
+    applyDefaultHierarchyTemplate()
+    jvm {
+
+    }
+    sourceSets {
+        jvmTest {
+            dependencies {
+                implementation(project(":agl-processor"))
+                implementation("junit:junit:4.13.2")
+            }
+        }
+    }
 }
 
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
-}
-
-tasks.withType<AbstractPublishToMaven> {
-    onlyIf { false }
-}
+// do not publish
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }

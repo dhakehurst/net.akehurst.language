@@ -23,40 +23,44 @@ import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammar.asm.GrammarReferenceDefault
-import net.akehurst.language.grammar.asm.NonTerminalDefault
-import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.typemodel.api.CollectionType
-import net.akehurst.language.typemodel.api.PropertyDeclaration
-import net.akehurst.language.typemodel.api.StructuredType
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
+import kotlin.Throwable
 import kotlin.collections.List
 import kotlin.collections.Set
+import kotlin.collections.all
 import kotlin.collections.emptyList
+import kotlin.collections.filter
+import kotlin.collections.first
 import kotlin.collections.firstOrNull
 import kotlin.collections.flatMap
-import kotlin.collections.flatten
+import kotlin.collections.getOrNull
+import kotlin.collections.isNotEmpty
 import kotlin.collections.map
 import kotlin.collections.mapNotNull
+import kotlin.collections.minByOrNull
+import kotlin.collections.minOf
 import kotlin.collections.plus
+import kotlin.collections.setOf
 import kotlin.collections.toList
 import kotlin.collections.toSet
 import kotlin.error
+import kotlin.printStackTrace
+import kotlin.ranges.until
 
 class CompletionProviderSimple(
     val targetGrammar: Grammar,
-    val grammar2TypeModel: Grammar2TypeModelMapping,
-    val typeModel: TypeModel,
-    val crossReferenceModel: CrossReferenceModel
-) : CompletionProviderAbstract<Asm, ContextWithScope<Any, Any>>() {
+    val grammar2TypesDomain: Grammar2TypesDomainMapping,
+    val typesDomain: TypesDomain,
+    val crossReferenceDomain: CrossReferenceDomain
+) : CompletionProviderAbstract<Asm, SentenceContextAny>() {
 
-    val targetNamespace = typeModel.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypeNamespaceSimple?
+    val targetNamespace = typesDomain.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypesNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any, Any>>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContextAny>): List<CompletionItem> {
         val context = options.context
 
         return when {
@@ -123,7 +127,7 @@ class CompletionProviderSimple(
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)
 
 
-    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: ContextWithScope<Any, Any>): List<CompletionItem> {
+    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: SentenceContextAny): List<CompletionItem> {
         try {
             val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
             //TODO: lists ?
@@ -144,11 +148,11 @@ class CompletionProviderSimple(
                                 }.toSet()
                     }
                     strProps.flatMap { prp ->
-                        val refTypeNames = crossReferenceModel.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
-                        val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
+                        val refTypeNames = crossReferenceDomain.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
+                        val refTypes = refTypeNames.mapNotNull { typesDomain.findByQualifiedNameOrNull(it) }
                         val items = refTypes.flatMap { refType ->
                             context.findItemsConformingTo {
-                                val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                                 itemType.conformsTo(refType)
                             }
                         }
@@ -163,8 +167,8 @@ class CompletionProviderSimple(
             return emptyList()
         }
     }
-
-    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: ContextWithScope<Any, Any>): List<CompletionItem> {
+/*
+    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: SentenceContextAny): List<CompletionItem> {
         val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
         //TODO: lists ?
         return when (prop) {
@@ -194,7 +198,7 @@ class CompletionProviderSimple(
             }
         }
     }
-
+*/
     private fun firstPropertyOf(type: TypeInstance): List<PropertyDeclaration> {
         val typesClosure = setOf(type).transitiveClosure { it.resolvedDeclaration.subtypes.toSet() }
         val minProps = typesClosure.mapNotNull { it.allResolvedProperty.values.minByOrNull { it.index } }

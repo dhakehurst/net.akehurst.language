@@ -1,7 +1,6 @@
 package parser.scannerless.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.leftcorner.listSeparated.test_literal_a0n
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test

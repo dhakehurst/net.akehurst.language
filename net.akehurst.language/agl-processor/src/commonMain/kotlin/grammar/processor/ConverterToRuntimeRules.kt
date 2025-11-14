@@ -20,12 +20,16 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.asm.TerminalDefault
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.PrefRule
 import net.akehurst.language.parser.api.RulePosition
+import net.akehurst.language.regex.api.EscapedValue
+import net.akehurst.language.regex.api.UnescapedLiteral
+import net.akehurst.language.regex.api.UnescapedPattern
 
 /**
  * arg: String =
@@ -80,20 +84,18 @@ internal class ConverterToRuntimeRules(
         return newRule
     }
 
-    private fun terminalRule(name: String?, value: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
+    private fun terminalRule(name: String?, escapedValue: EscapedValue, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
         val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, name, isSkip, false).also {
             if (isPattern) {
-                val unescaped = value //RuntimeRuleRhsPattern.unescape(value)
-                it.setRhs(RuntimeRuleRhsPattern(it, unescaped))
+                it.setRhs(RuntimeRuleRhsPattern(it, escapedValue.unescapedFromAgl as UnescapedPattern))
             } else {
-                val unescaped = RuntimeRuleRhsLiteral.unescape(value)
-                it.setRhs(RuntimeRuleRhsLiteral(it, unescaped))
+                it.setRhs(RuntimeRuleRhsLiteral(it, escapedValue.unescapedFromAgl as UnescapedLiteral))
             }
         }
         if (Debug.CHECK) check(this._runtimeRules.containsKey(newRule.tag).not()) { "Already got rule with tag '$name'" }
 //TODO: warn in analyser        check(this.terminalRules.containsKey(value).not()) { "Already got terminal rule with value '$value'" }
         _runtimeRules[newRule.tag] = newRule
-        _terminalRules[value] = newRule
+        _terminalRules[escapedValue.value] = newRule
         name?.let { _terminalRules[it] = newRule } // add terminal by leaf name
         return newRule
     }
@@ -116,9 +118,9 @@ internal class ConverterToRuntimeRules(
     private fun buildCompressedRule(target: GrammarRule, isSkip: Boolean): RuntimeRule {
         val ci = target.compressedLeaf
         val rule = if (ci.isPattern) {
-            this.terminalRule(target.name.value, ci.value, RuntimeRuleKind.TERMINAL, true, isSkip)
+            this.terminalRule(target.name.value, ci.escapedValue, RuntimeRuleKind.TERMINAL, true, isSkip)
         } else {
-            this.terminalRule(target.name.value, ci.value, RuntimeRuleKind.TERMINAL, false, isSkip)
+            this.terminalRule(target.name.value, ci.escapedValue, RuntimeRuleKind.TERMINAL, false, isSkip)
         }
         return rule
     }
@@ -142,7 +144,7 @@ internal class ConverterToRuntimeRules(
         val contextRule = when (forItem) {
             is NonTerminal -> findNamedRule(forItem.ruleReference.value)!!
             is Embedded -> TODO()
-            is Terminal -> findTerminal(forItem.value)!!
+            is Terminal -> findTerminal(forItem.escapedValue.value)!!
             else -> error("Internal Error: subtype '${forItem::class.simpleName}' of SimpleItem not handled")
         }
         val options = target.optionList.mapIndexed { idx, it ->
@@ -171,7 +173,7 @@ internal class ConverterToRuntimeRules(
             }
             val terminals = it.onTerminals.map {
                 when (it) {
-                    is Terminal -> findTerminal(it.value) ?: error("Terminal '${it.value}' not found")
+                    is Terminal -> findTerminal(it.escapedValue.value) ?: error("Terminal '${it.escapedValue}' not found")
                     is NonTerminal -> {
                         val r = findNamedRule(it.ruleReference.value)
                         when {
@@ -201,25 +203,38 @@ internal class ConverterToRuntimeRules(
             val (rrule, ruleItem) = when {
                 target.isLeaf -> when {
                     rhs is Terminal -> {
-                        val rrule = this.terminalRule(target.name.value, rhs.value, RuntimeRuleKind.TERMINAL, rhs.isPattern, target.isSkip)
+                        val rrule = this.terminalRule(target.name.value, rhs.escapedValue, RuntimeRuleKind.TERMINAL, rhs.isPattern, target.isSkip)
+                        recordOriginalRuleItem(rrule, rhs)
                         Pair(rrule, rhs)
                     }
 
                     rhs is Concatenation && rhs.items.size == 1 && rhs.items[0] is Terminal -> {
                         val t = (rhs.items[0] as Terminal)
-                        val rrule = this.terminalRule(target.name.value, t.value, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        val rrule = this.terminalRule(target.name.value, t.escapedValue, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        recordOriginalRuleItem(rrule, rhs)
                         Pair(rrule, t)
                     }
 
                     rhs is Choice && rhs.alternative.size == 1 && rhs.alternative[0] is Terminal -> {
                         val t = (rhs.alternative[0] as Terminal)
-                        val rrule = this.terminalRule(target.name.value, t.value, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        val rrule = this.terminalRule(target.name.value, t.escapedValue, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        recordOriginalRuleItem(rrule, rhs)
                         Pair(rrule, t)
                     }
 
                     else -> {
                         val rrule = this.buildCompressedRule(target, target.isSkip)
-                        Pair(rrule, rhs)
+                        //fake Term
+                        val compRhs = rrule.rhs
+                        val escapedValue = when(compRhs) {
+                            is RuntimeRuleRhsPattern -> compRhs.patternUnescaped.escapedFoAgl
+                            is RuntimeRuleRhsLiteral -> compRhs.literalUnescaped.escapedFoAgl
+                            else -> error("unsupported")
+                        }
+                       val ft = TerminalDefault(escapedValue, true)
+                        ft.setOwningRule(target, listOf(0))
+                        recordOriginalRuleItem(rrule, ft)
+                        Pair(rrule, ft)
                     }
                 }
 
@@ -239,10 +254,11 @@ internal class ConverterToRuntimeRules(
                     val nrule = this.nextRule(target.name.value, target.isSkip, false)
                     val rrhs = createRhs(nrule, target.rhs, target.name.value)
                     nrule.setRhs(rrhs)
+                    recordOriginalRuleItem(nrule, target.rhs)
                     Pair(nrule, target.rhs)
                 }
             }
-            recordOriginalRuleItem(rrule, ruleItem)
+//            recordOriginalRuleItem(rrule, ruleItem)
             rrule
         } else {
             rule
@@ -353,9 +369,9 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun createRuleForRuleItemTerminal(target: Terminal, arg: String): RuntimeRule {
-        val existing = this.findTerminal(target.value)
+        val existing = this.findTerminal(target.escapedValue.value)
         return if (null == existing) {
-            val terminalRule = this.terminalRule(null, target.value, RuntimeRuleKind.TERMINAL, target.isPattern, false)
+            val terminalRule = this.terminalRule(null, target.escapedValue, RuntimeRuleKind.TERMINAL, target.isPattern, false)
             this.recordOriginalRuleItem(terminalRule, target)
             terminalRule
         } else {
@@ -366,7 +382,7 @@ internal class ConverterToRuntimeRules(
     private fun createRuleForRuleItemNonTerminal(target: NonTerminal, arg: String): RuntimeRule {
         val refName = target.ruleReference
         return findNamedRule(refName.value)
-            ?: this.convertGrammarRule(target.referencedRule(this.grammar!!), arg)
+            ?: this.convertGrammarRule(target.referencedRule(this.grammar), arg)
     }
 
     private fun createRuleForRuleItemEmbedded(target: Embedded, arg: String): RuntimeRule {

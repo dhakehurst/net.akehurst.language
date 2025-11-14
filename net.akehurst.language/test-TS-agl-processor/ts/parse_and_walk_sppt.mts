@@ -1,7 +1,7 @@
 //import {Agl, KtList} from 'net.akehurst.language-agl-processor';
 //import {SpptWalker, SpptDataNodeInfo, SpptDataNode} from 'net.akehurst.language-agl-processor';
-import {Agl, KtList} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-processor.mjs';
-import {SpptWalker, SpptDataNodeInfo, SpptDataNode} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-parser.mjs';
+import {Agl, GrammarString, KtList} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-processor.mjs';
+import {SpptDataNode, SpptDataNodeInfo, SpptWalker} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-parser.mjs';
 
 const grammarStr = `
 namespace test
@@ -69,7 +69,7 @@ class MyWalker implements SpptWalker {
 export function parse_and_walk_sppt() {
 
     console.log("Create Processor")
-    const res = Agl.getInstance().processorFromStringSimple(grammarStr);
+    const res = Agl.getInstance().processorFromStringSimple(new GrammarString(grammarStr));
     console.log(res.issues.toString());
     const proc = res.processor;
 
@@ -92,6 +92,6 @@ export function parse_and_walk_sppt() {
         console.log(sppt.toStringAll);
 
         const walker = new MyWalker();
-        sppt.traverseTreeDepthFirst(walker);
+        sppt.traverseTreeDepthFirst(walker, false);
     }
 }

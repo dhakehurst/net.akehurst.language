@@ -29,22 +29,19 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.test.FixMethodOrder
-import net.akehurst.language.test.MethodSorters
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class test_SyntaxAnalyserSimple {
 
     private companion object {
         fun processor(grammarStr: String) = Agl.processorFromStringSimple(GrammarString(grammarStr))
 
-        fun testProc(grammarStr: String): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
+        fun testProc(grammarStr: String): LanguageProcessor<Asm, SentenceContextAny> {
             val result = processor(grammarStr)
             assertNotNull(result.processor, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -58,30 +55,30 @@ class test_SyntaxAnalyserSimple {
 
         fun MutableList<TestData>.define(sentence: String, sppt: String? = null, expected: () -> Asm) = this.add(TestData(sentence, expected()))
 
-        fun test(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, data: TestData) {
+        fun test(proc: LanguageProcessor<Asm, SentenceContextAny>, data: TestData) {
             println("'${data.sentence}'")
             val result = proc.process(data.sentence)
             assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
             assertNotNull(result.asm)
             val actual = result.asm!!
 
-            assertEquals(data.expected.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "))
+            assertEquals(data.expected.asString(), actual.asString())
         }
 
-        fun testAll(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, tests: List<TestData>) {
+        fun testAll(proc: LanguageProcessor<Asm, SentenceContextAny>, tests: List<TestData>) {
             for (data in tests) {
                 test(proc, data)
             }
         }
 
-        fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, expected: RuleSet) {
+        fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, SentenceContextAny>, expected: RuleSet) {
             val actual = (proc as LanguageProcessorAbstract).targetRuleSet as RuntimeRuleSet
             assertEquals(expected.toString(), actual.toString())
             assertTrue(expected.matches(actual))
         }
 
-        fun checkTypeModel(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, expected: TypeModel) {
-            GrammarTypeModelTest.tmAssertEquals(expected, proc.typesModel)
+        fun checkTypeModel(proc: LanguageProcessor<Asm, SentenceContextAny>, expected: TypesDomain) {
+            GrammarTypeModelTest.tmAssertEquals(expected, proc.typesDomain)
         }
     }
 
@@ -307,7 +304,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(proc, typeModel("FromGrammarParsedGrammarUnit", true) {
+        checkTypeModel(proc, typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("NAME")
                 // S = type ;

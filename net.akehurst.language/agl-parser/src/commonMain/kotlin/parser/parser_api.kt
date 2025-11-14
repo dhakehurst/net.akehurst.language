@@ -23,7 +23,6 @@ import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sppt.api.SharedPackedParseTree
-import kotlin.jvm.JvmInline
 
 interface RuleSet {
     val nonSkipTerminals: List<Rule>
@@ -92,13 +91,15 @@ interface PrefOption {
     val associativity: Assoc
 }
 
-@JvmInline
-value class OptionNum(val value:Int) :Comparable<OptionNum> {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class OptionNum(val value:Int) :Comparable<OptionNum> {
     val asIndex:Int get() {
         if(value < 0) error("Should not happen")
         return value
     }
 
+    val isEmpty get() = this == RulePosition.OPTION_OPTIONAL_EMPTY || this == RulePosition.OPTION_MULTI_EMPTY || this == RulePosition.OPTION_SLIST_EMPTY
     val isChoiceOption get() = value >= 0
     val isNoneOption get() = this == RulePosition.OPTION_NONE
     val isOptionalOption get() = this == RulePosition.OPTION_OPTIONAL_EMPTY || this == RulePosition.OPTION_OPTIONAL_ITEM
@@ -172,12 +173,55 @@ fun interface SentenceIdentityFunction {
  */
 // cannot have targetGrammar as an option because the grammar converted to rule set is needed to construct the parser TODO: change this, it could be possible
 interface ParseOptions {
+    /**
+     * default = true
+     */
     var enabled:Boolean
+    /**
+     * default = null, use first non skip rule found in last Grammar
+     */
     var goalRuleName: String?
+    /**
+     * default = { null }
+     */
     var sentenceIdentity: SentenceIdentityFunction
+    /**
+     * default = true
+     */
     var reportErrors: Boolean
+    /**
+     * default = false
+     */
     var reportGrammarAmbiguities: Boolean
+    /**
+     * default = true
+     */
     var cacheSkip: Boolean
+
+    /**
+     * A regular expression pattern used for identifying the start of a word
+     * while looking for the nextExpected Tokens
+     * (in the reverse direction, i.e. a sentence position going backwards towards the start of the sentence).
+     *
+     * This allows for handling of partial-words. The 'next-expected' could be partially written/covered by a position.
+     *
+     * This property is optional and can be set to null, in which case the parser
+     * may resort to a default behavior or other mechanisms for determining word boundaries.
+     *
+     * The Regex should identify the first character (i.e. not part of a word) after which the search for the next expected tokens should start.
+     *
+     * Default value: `null`.
+     */
+    var reverseFindWordStartRegex: String?
+
+    /**
+     * Indicates whether the parser should use the skip rules of the grammar to determine a word's start position
+     * while looking for the nextExpected Tokens
+     * (in the reverse direction, i.e. a sentence position going backwards towards the start of the sentence).
+     *
+     * Default value: `true`.
+     */
+    var reverseFindWordStartBySkipRules: Boolean
 
     fun clone(): ParseOptions
 }
@@ -228,4 +272,8 @@ interface Parser {
 
 interface ParseFailure {
     val failedSpines: List<RuntimeSpine>
+}
+
+interface RuntimeParser {
+
 }

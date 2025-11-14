@@ -116,7 +116,7 @@ grammar Expressions {
     SQ_STRING = "'([^'\\]|\\'|\\)*'" ;
 }
 
-grammar Global extends Expressions {
+grammar Global : Expressions {
 
     StatechartSpecification = Namespace? Annotation* StatechartScope* ;
     Namespace = 'namespace' FQN ;
@@ -185,7 +185,7 @@ grammar Global extends Expressions {
     FQN = [ID /'.']+;
 }
 
-grammar States extends Expressions {
+grammar States : Expressions {
 
     StateSpecification = StateScope;
     StateScope = (LocalReaction | SubmachineReferenceExpression)* ;
@@ -252,7 +252,7 @@ grammar States extends Expressions {
 
 }
 
-grammar Transitions extends Expressions {
+grammar Transitions : Expressions {
 
     TransitionSpecification = TransitionReaction ;
     TransitionReaction = StextTrigger? ('/' ReactionEffect)? ('#' TransitionProperty*)?;

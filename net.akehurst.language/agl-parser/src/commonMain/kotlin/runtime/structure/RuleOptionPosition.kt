@@ -18,7 +18,6 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
-import kotlin.jvm.JvmInline
 
 internal typealias RuleOptionId = RuleOption //TODO: Make this an Int
 

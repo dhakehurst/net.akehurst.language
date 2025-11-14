@@ -12,7 +12,7 @@ grammar Base {
     leaf STRING_VALUE = "\"(\\\"|[^\"])*\"" ;
     leaf REGULAR_COMMENT =  "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*/" ;
     leaf ID = "[a-zA-Z_][0-9a-zA-Z_]+" ;
-    leaf UNRESTRICTED_NAME = "'([^'\\\\]|\\'|\\\\)*'" ;
+    leaf UNRESTRICTED_NAME = "'(\|\'|[^'\\])*'" ;
 
     NAME = ID | UNRESTRICTED_NAME  ;
     QualifiedName = [NAME / '::']+ ;

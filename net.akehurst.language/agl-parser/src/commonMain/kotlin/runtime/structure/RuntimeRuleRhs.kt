@@ -18,10 +18,12 @@ package net.akehurst.language.agl.runtime.structure
 
 
 import net.akehurst.language.parser.api.OptionNum
-import net.akehurst.language.scanner.api.Matchable
-import net.akehurst.language.scanner.api.MatchableKind
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
+import net.akehurst.language.regex.api.UnescapedLiteral
+import net.akehurst.language.regex.api.UnescapedPattern
+import net.akehurst.language.scanner.api.Matchable
+import net.akehurst.language.scanner.api.MatchableKind
 
 enum class RuntimeRuleChoiceKind {
     NONE,
@@ -79,7 +81,10 @@ class RuntimeRuleRhsCommonTerminal(
     rule: RuntimeRule
 ) : RuntimeRuleRhsTerminal(rule) {
 
-    override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, "", MatchableKind.EOT) }//only used if EOT RuntimeRule
+    //only used if EOT RuntimeRule
+    override val matchable by lazy {
+        Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, UnescapedLiteral(""), MatchableKind.EOT)
+    }
 
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsCommonTerminal(clonedRules[rule.tag]!!)
     override fun toString(): String = rule.tag
@@ -87,35 +92,20 @@ class RuntimeRuleRhsCommonTerminal(
 
 class RuntimeRuleRhsPattern(
     rule: RuntimeRule,
-    val patternUnescaped: String
+    val patternUnescaped: UnescapedPattern
 ) : RuntimeRuleRhsTerminal(rule) {
-    companion object {
-        fun unescape(literalEscaped: String) =
-            literalEscaped
-                .replace("\\\"", "\"").replace("\\\\","\\")
-    }
-
     override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, this.patternUnescaped, MatchableKind.REGEX) }
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsPattern(clonedRules[rule.tag]!!, patternUnescaped)
-    override fun toString(): String = "\"$patternUnescaped\""
+    override fun toString(): String = "\"${patternUnescaped.value}\""
 }
 
 class RuntimeRuleRhsLiteral(
     rule: RuntimeRule,
-    val literalUnescaped: String
+    val literalUnescaped: UnescapedLiteral
 ) : RuntimeRuleRhsTerminal(rule) {
-
-    companion object {
-        fun unescape(literalEscaped: String) =
-            literalEscaped
-                .replace("\\'", "'")
-                .replace("\\\\", "\\")
-    }
-
     override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, this.literalUnescaped, MatchableKind.LITERAL) }
-
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsLiteral(clonedRules[rule.tag]!!, literalUnescaped)
-    override fun toString(): String = "'$literalUnescaped'"
+    override fun toString(): String = "'${literalUnescaped.value}'"
 }
 
 class RuntimeRuleRhsEmbedded(

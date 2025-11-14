@@ -17,8 +17,7 @@
 
 package net.akehurst.language.base.api
 
-//import net.akehurst.language.transform.api.TransformRuleSet
-import kotlin.jvm.JvmInline
+//import net.akehurst.language.asmTransform.api.TransformRuleSet
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
 // [https://youtrack.jetbrains.com/issue/IDEA-359261/value-class-extension-methods-not-working-when-defined-in-companion-object]
@@ -48,10 +47,11 @@ sealed interface PossiblyQualifiedName {
 /**
  * A qualified name, separator assumed to be '.'
  */
-@JvmInline
-value class QualifiedName(override val value: String) : PossiblyQualifiedName, PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class QualifiedName(override val value: String) : PossiblyQualifiedName, PublicValueType {
 
-    constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.$name")
+    constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.${name.value}")
 
     val isQualified: Boolean get() = value.isQualifiedName
 
@@ -75,8 +75,9 @@ value class QualifiedName(override val value: String) : PossiblyQualifiedName, P
 val String.isSimpleName: Boolean get() = this.contains(".").not()
 val String.asSimpleName: SimpleName get() = SimpleName(this)
 
-@JvmInline
-value class SimpleName(override val value: String) : PossiblyQualifiedName, PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class SimpleName(override val value: String) : PossiblyQualifiedName, PublicValueType {
     companion object {
         //FIXME: from here - see above
     }
@@ -104,8 +105,9 @@ interface PublicValueType {
  *
  * Separator assumed to be '.'
  */
-@JvmInline
-value class Import(override val value: String) : PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class Import(override val value: String) : PublicValueType {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
     override fun toString() = value
 }
@@ -130,7 +132,7 @@ interface OptionHolder {
  * A group of related namespaces in which the definitions may reference each other
  */
 //TODO: consider using alternative words for this interface - Domain, System, Unit, Module !
-interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
+interface Domain<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     val name: SimpleName
 
     val options: OptionHolder
@@ -169,7 +171,7 @@ interface Namespace<DT : Definition<DT>> : Formatable {
 
     val definitionByName: Map<SimpleName, DT>
 
-    fun resolveImports(model: Model<Namespace<DT>, DT>)
+    fun resolveImports(domain: Domain<Namespace<DT>, DT>)
 
     /** find owned or imported definition **/
     fun findDefinitionOrNull(simpleName: SimpleName): DT?

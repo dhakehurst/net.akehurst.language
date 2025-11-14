@@ -17,12 +17,13 @@
 
 package net.akehurst.language.grammarTypemodel.api
 
+import net.akehurst.language.base.api.Import
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeNamespace
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesNamespace
 
 //TODO: why is this needed..the grammar->Type mapping should be in the transform !
-interface GrammarTypeNamespace : TypeNamespace {
+interface GrammarTypesNamespace : TypesNamespace {
     /**
      * grammarRuleName -> TypeUsage
      */
@@ -30,7 +31,7 @@ interface GrammarTypeNamespace : TypeNamespace {
 
     val allTypesByRuleName: Collection<Pair<GrammarRuleName, TypeInstance>>
 
-    fun findTypeForRule(ruleName: GrammarRuleName): TypeInstance?
+    fun findTypeForRule(ruleName: GrammarRuleName, excludingImports:Set<Import> = emptySet()): TypeInstance?
 
     fun setTypeForGrammarRule(grammarRuleName: GrammarRuleName, typeUse: TypeInstance)
 }

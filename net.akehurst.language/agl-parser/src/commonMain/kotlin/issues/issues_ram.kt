@@ -55,7 +55,6 @@ class IssueHolder(
     fun warn(location: InputLocation?, message: String, data: Any? = null) =
         raise(LanguageIssueKind.WARNING, defaultPhase, location, message, data)
 
-
     fun error(location: InputLocation?, message: String, data: Any? = null) =
         raise(LanguageIssueKind.ERROR, defaultPhase, location, message, data)
 

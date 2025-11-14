@@ -20,11 +20,11 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
 import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.language.collections.binaryHeap
+import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
@@ -77,7 +77,7 @@ internal class ParseGraph(
         val text:String
     )
 
-    enum class MergeReason { LENGTH, CHOICE_RULE_LENGTH, CHOICE_RULE_PRIORITY, CHOICE_RULE_AMBIGUOUS, NUM_NON_SKIP_CHILDREN, DYNAMIC_PRIORITY }
+    enum class MergeReason { LENGTH, CHOICE_RULE_LENGTH, CHOICE_RULE_PRIORITY, CHOICE_RULE_AMBIGUOUS, NUM_NON_SKIP_CHILDREN, DYNAMIC_PRIORITY, OPTIONAL_EMPTY }
 
     enum class MergeChoice {
         /**
@@ -372,6 +372,17 @@ internal class ParseGraph(
         }
     }
 
+    private fun mergeDecisionOnEmpty(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: ( reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
+        val newReasonList = reasonList+MergeReason.OPTIONAL_EMPTY
+        val extOption = existingParent.option
+        val newOption = newParent.option
+        when {
+            extOption.isEmpty && newOption.isEmpty.not() -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING,"existing empty, new not")
+            newOption.isEmpty && extOption.isEmpty.not() -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING,"new empty, existing not")
+        }
+        return ifEqual(newReasonList)
+    }
+
     private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: ( reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         val newReasonList = reasonList+MergeReason.DYNAMIC_PRIORITY
         val extList = existingParent.dynamicPriority
@@ -427,7 +438,12 @@ internal class ParseGraph(
                 }
             }
 
-            // newParent.rule.isOptional -> FULL has priority over EMPTY, but that is covered by length below
+            // optional with content has priority of EMPTY, unless the length of the content is 0
+            newParent.rule.isOptional -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
+                mergeDecisionOnEmpty(existingParent, newParent, rl) { rl2->
+                    MergeDecision(rl2,MergeChoice.UNDECIDABLE,"both EMPTY or both 0 length")
+                }
+            }
 
             else -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
                 mergeDecisionOnDynamicPriority(existingParent, newParent, rl) { rl2->

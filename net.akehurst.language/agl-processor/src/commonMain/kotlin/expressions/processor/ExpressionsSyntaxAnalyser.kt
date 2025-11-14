@@ -26,7 +26,7 @@ import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.asm.StdLibDefault
 
 class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Expression>() {
 
@@ -44,6 +44,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::navigationPart)
         super.register(this::infixExpression)
         super.registerFor("object", this::object_)
+        super.register(this::functionCall)
         super.register(this::constructorArguments)
         super.register(this::tuple)
         super.register(this::assignmentBlock)
@@ -134,20 +135,26 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return InfixExpressionDefault(expressions, operators)
     }
 
-    // object = possiblyQualifiedName constructorArguments assignmentBlock? ;
+    // functionCall = possiblyQualifiedName '(' argumentList ')' ;
+    private fun functionCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FunctionCall {
+        val pqn = children[0] as PossiblyQualifiedName
+        val args = children[2] as List<Expression>
+        return FunctionCallDefault(pqn, args)
+    }
+
+    // object = possiblyQualifiedName constructorArguments assignmentBlock ;
     private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
         val pqn = children[0] as PossiblyQualifiedName
         val args = children[1] as List<AssignmentStatement>
-        val propertyAssignments = children[2] as List<AssignmentStatement>?
+        val propertyAssignments = children[2] as List<AssignmentStatement>
         val exp = CreateObjectExpressionDefault(pqn, args)
-        exp.propertyAssignments = propertyAssignments ?: emptyList()
+        exp.propertyAssignments = propertyAssignments
         return exp
     }
 
-    // constructorArguments = '(' assignmentList ')' ;
+    // constructorArguments = '(' [ assignment / ',' ]* ')' ;
     private fun constructorArguments(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
-        children[1] as List<AssignmentStatement> //TODO: maybe should also be assignments ?
-
+        (children[1] as List<Any>).toSeparatedList<Any, AssignmentStatement, String>().items
 
     // tuple = 'tuple' assignmentBlock ;
     private fun tuple(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateTupleExpression {
@@ -166,7 +173,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     // assignment = propertyName  grammarRuleIndex? ':=' expression ;
     private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
         val lhsPropertyName = children[0] as String
-        val  lhsGrammarRuleIndex = children[1] as Int?
+        val lhsGrammarRuleIndex = children[1] as Int?
         val rhs = children[3] as Expression
         return AssignmentStatementDefault(lhsPropertyName, lhsGrammarRuleIndex, rhs)
     }

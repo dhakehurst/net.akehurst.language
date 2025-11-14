@@ -17,9 +17,9 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import net.akehurst.language.sentence.common.SentenceDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

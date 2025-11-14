@@ -26,16 +26,14 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.regex.api.EscapedLiteral
+import net.akehurst.language.regex.api.EscapedPattern
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.sppt.treedata.locationForNode
-import net.akehurst.language.transform.api.TransformNamespace
-import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.asm.TransformNamespaceDefault
 
 internal class AglGrammarSyntaxAnalyser(
     //val languageRegistry: LanguageRegistryDefault
-) : SyntaxAnalyserByMethodRegistrationAbstract<GrammarModel>() {
+) : SyntaxAnalyserByMethodRegistrationAbstract<GrammarDomain>() {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
@@ -45,7 +43,7 @@ internal class AglGrammarSyntaxAnalyser(
         QualifiedName("Base") to BaseSyntaxAnalyser()
     )
 
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<GrammarModel>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<GrammarDomain>> = emptyMap()
 
     override fun <T : Any> clear(done: Set<SyntaxAnalyser<T>>) {
         super.clear(done)
@@ -98,12 +96,12 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // Base.unit = option* namespace* ;
-    private fun unit(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarModel {
+    private fun unit(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarDomain {
         val options = children[0] as List<Pair<String, String>>
         val namespaces = children[1] as List<GrammarNamespace>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
-        val unit = GrammarModelDefault(name = SimpleName("ParsedGrammarUnit"), namespace = namespaces, options = optHolder)
+        val optHolder = OptionHolderDefault(null, options.toMap())
+        val unit = GrammarDomainDefault(name = SimpleName("ParsedGrammarUnit"), namespace = namespaces, options = optHolder)
         return unit
     }
 
@@ -124,7 +122,7 @@ internal class AglGrammarSyntaxAnalyser(
         val imports = children[3] as List<Import>
         val grammarBuilders = children[4] as List<(GrammarNamespace) -> Grammar>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val namespace = GrammarNamespaceDefault(nsName, optHolder, imports)
         grammarBuilders.map { it.invoke(namespace) }
         return namespace
@@ -138,7 +136,7 @@ internal class AglGrammarSyntaxAnalyser(
         val options = (children[4] as List<Pair<String, String>>)
         val rules = children[5] as List<Pair<Boolean, (Grammar) -> GrammarItem>>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val grmRules = rules.filter { it.first }.map { it.second }
         val precRules = rules.filter { it.first.not() }.map { it.second }
 
@@ -440,11 +438,11 @@ internal class AglGrammarSyntaxAnalyser(
         }
         val mt = children[0] as String
         val value = mt.substring(1, mt.length - 1)
-        val unescaped = when (isPattern) {
-            false -> value.replace("\\'", "'").replace("\\\\","\\")
-            true -> value.replace("\\\"", "\"").replace("\\\\","\\")
+        val escapedValue = when(isPattern) {
+            true -> EscapedPattern(value)
+            false -> EscapedLiteral(value)
         }
-        return { TerminalDefault(unescaped, isPattern).also { setLocationFor(it, target, sentence) } }
+        return { TerminalDefault(escapedValue, isPattern).also { setLocationFor(it, target, sentence) } }
     }
 
     // preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;

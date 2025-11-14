@@ -40,8 +40,8 @@ grammar Xml {
 	WS = "\s+" ;
 	CHARDATA = "[^<]+" ;
 	NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
-	DOUBLE_QUOTE_STRING = "\"([^\"\\\\]|\.)*\"" ;
-	SINGLE_QUOTE_STRING = "['][^']*[']" ;
+	DOUBLE_QUOTE_STRING = "\"(\.|[^\"\\])*\"" ;
+	SINGLE_QUOTE_STRING = "'[^']*'" ;
 }
 
 grammar Dot  {

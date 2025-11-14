@@ -17,15 +17,17 @@
 
 package net.akehurst.language.grammar.api
 
+import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.language.base.api.*
-import net.akehurst.language.collections.OrderedSet
-import kotlin.jvm.JvmInline
+import net.akehurst.language.regex.api.EscapedPattern
+import net.akehurst.language.regex.api.EscapedValue
+import net.akehurst.language.regex.api.UnescapedValue
 
 //class GrammarException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 //class GrammarRuleItemNotFoundException(message: String) : RuntimeException(message)
 
 
-interface GrammarModel : Model<GrammarNamespace, Grammar> {
+interface GrammarDomain : Domain<GrammarNamespace, Grammar> {
 
     val primary get() = this.namespace.lastOrNull()?.definition?.lastOrNull()
 }
@@ -145,14 +147,15 @@ interface Grammar : Definition<Grammar> {
 
     fun findAllResolvedGrammarRule(ruleName: GrammarRuleName): GrammarRule?
 
-    fun findAllResolvedTerminalRule(terminalPattern: String): Terminal
+    fun findAllResolvedTerminalRule(terminalPattern: EscapedPattern): Terminal
 
     fun findAllResolvedEmbeddedGrammars(found:Set<Grammar> = emptySet()) : Set<Grammar>
 
 }
 
-@JvmInline
-value class GrammarRuleName(override val value: String) : PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class GrammarRuleName(override val value: String) : PublicValueType {
     override fun toString(): String = value
 }
 
@@ -192,11 +195,11 @@ interface NormalRule : GrammarRule {
 }
 
 enum class OverrideKind {
-    /** '=' replace references to original rule with this one */
+    /** '=' replace references to the original rule with this one */
     REPLACE,
-    /** '+|=' either append this as another option or convert original to a choice and append this option */
+    /** '+|=' either append this as another option or convert the original to a choice and append this option */
     APPEND_ALTERNATIVE,
-    /** '==' ?? */
+    /** '==' when a rule is inherited via multiple inheritance paths (i.e. diamond), specify which one to use */
     SUBSTITUTION //TODO: document this!
 }
 
@@ -286,14 +289,22 @@ interface TangibleItem : SimpleItem {
 
 interface EmptyRule : TangibleItem
 interface Terminal : TangibleItem {
-    //, GrammarItem {
     /**
-     * id of the terminal is its value encosed in '' or ""
+     * id of the terminal is its value enclosed in '' or ""
      */
     val id: String
     val isLiteral: Boolean
     val isPattern: Boolean
-    val value: String
+
+    /**
+     * with characters special to AGL (i.e. ") having a \ before
+     */
+    val escapedValue: EscapedValue
+
+    /**
+     * with characters special to AGL (i.e. ") not escaped
+     */
+    val unescapedValue: UnescapedValue
 }
 
 interface NonTerminal : TangibleItem {

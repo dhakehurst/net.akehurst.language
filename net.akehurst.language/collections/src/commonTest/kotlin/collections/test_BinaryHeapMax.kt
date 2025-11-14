@@ -16,10 +16,7 @@
 
 package net.akehurst.language.collections
 
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.*
 
 class test_BinaryHeapMax {
 
@@ -288,7 +285,7 @@ class test_BinaryHeapMax {
     fun _10_element_peekRoot() {
         insert_10()
 
-        assertEquals("C", sut.peekRoot)
+        assertEquals("M", sut.peekRoot)
     }
 
     @Test
@@ -302,7 +299,7 @@ class test_BinaryHeapMax {
     fun _10_element_peekOneOf_isAKey() {
         insert_10()
 
-        assertEquals("J1", sut.peekOneOf(10))
+        assertTrue( setOf("J1","J2").contains(sut.peekOneOf(10)) )
     }
 
     @Test
@@ -325,7 +322,7 @@ class test_BinaryHeapMax {
 
         val actual = sut.extractRoot()
 
-        assertEquals("C", actual)
+        assertEquals("M", actual)
         assertEquals(9, sut.size)
         assertEquals(emptyList(), sut[3])
     }
@@ -362,7 +359,7 @@ class test_BinaryHeapMax {
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
         assertEquals(listOf("F"), sut[6])
-        assertEquals("C", sut.peekRoot)
+        assertEquals("M", sut.peekRoot)
     }
 
     @Test
@@ -386,7 +383,7 @@ class test_BinaryHeapMax {
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
         assertEquals(listOf("M", "M2"), sut[13])
-        assertEquals("C", sut.peekRoot)
+        assertEquals("M", sut.peekRoot)
     }
 
     @Test

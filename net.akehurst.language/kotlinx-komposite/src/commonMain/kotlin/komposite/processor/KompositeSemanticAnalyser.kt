@@ -23,11 +23,10 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sentence.api.InputLocation
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 
-class KompositeSemanticAnalyser : SemanticAnalyser<TypeModel,Any> {
+class KompositeSemanticAnalyser : SemanticAnalyser<TypesDomain,Any> {
 
 
     override fun clear() {
@@ -35,7 +34,7 @@ class KompositeSemanticAnalyser : SemanticAnalyser<TypeModel,Any> {
     }
 
 
-    override fun analyse(sentenceIdentity:Any?,asm: TypeModel, locationMap: LocationMap?,options: SemanticAnalysisOptions<Any>): SemanticAnalysisResult {
+    override fun analyse(sentenceIdentity:Any?, asm: TypesDomain, locationMap: LocationMap?, options: SemanticAnalysisOptions<Any>): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(emptyList(),IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }
 }

@@ -18,8 +18,8 @@
 package net.akehurst.language.scope.processor
 
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 
 object AglScope {
 
@@ -31,9 +31,9 @@ interface Scope {
 }
 """
 
-    val typeModel: TypeModel by lazy {
+    val typesDomain: TypesDomain by lazy {
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
-        typeModel("Scope", true, AglBase.typesModel.namespace) {
+        typesDomain("Scope", true, AglBase.typesDomain.namespace) {
             namespace("net.akehurst.language.scope.api", listOf("std", "net.akehurst.language.base.api")) {
                 interface_("Scope") {
                     typeParameters("ItemInScopeType")

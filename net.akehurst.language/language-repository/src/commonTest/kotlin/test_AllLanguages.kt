@@ -17,8 +17,8 @@
 package net.akehurst.language.repository
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.IsStableType
 import io.kotest.datatest.withData
+import io.kotest.engine.stable.IsStableType
 import korlibs.io.file.VfsFile
 import korlibs.io.file.extension
 import korlibs.io.file.std.localCurrentDirVfs

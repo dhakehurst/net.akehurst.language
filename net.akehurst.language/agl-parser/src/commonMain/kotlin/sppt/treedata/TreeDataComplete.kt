@@ -16,7 +16,6 @@
 
 package net.akehurst.language.sppt.treedata
 
-import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.Rule

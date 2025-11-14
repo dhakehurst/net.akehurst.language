@@ -2,7 +2,6 @@ package testFixture.data.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import testFixture.data.TestDataParser
-import testFixture.data.TestDataParserSentence
 import testFixture.data.TestDataParserSentencePass
 import testFixture.data.TestDataProviderAbstract
 

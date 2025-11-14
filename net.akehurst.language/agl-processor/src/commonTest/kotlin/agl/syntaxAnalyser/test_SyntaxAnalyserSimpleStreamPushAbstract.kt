@@ -20,7 +20,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
@@ -31,24 +31,20 @@ import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.typemodel.api.DataType
-import net.akehurst.language.typemodel.api.PrimitiveType
-import net.akehurst.language.typemodel.api.PropertyDeclaration
-import net.akehurst.language.typemodel.api.TypeModel
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.types.api.DataType
+import net.akehurst.language.types.api.PrimitiveType
+import net.akehurst.language.types.api.PropertyDeclaration
+import net.akehurst.language.types.api.TypesDomain
+import kotlin.test.*
 
 class test_SyntaxAnalyserSimpleStreamPushAbstract {
 
     private companion object {
         class SyntaxAnalyserToString(
-            typeModel: TypeModel,
-            scopeModel: CrossReferenceModel
-        ) : SyntaxAnalyserSimpleStreamPushAbstract<String>(QualifiedName("ns"), typeModel, scopeModel) {
+            typesDomain: TypesDomain,
+            scopeModel: CrossReferenceDomain
+        ) : SyntaxAnalyserSimpleStreamPushAbstract<String>(QualifiedName("ns"), typesDomain, scopeModel) {
 
             private val sb = StringBuilder()
             private var indent = ""
@@ -132,7 +128,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
 
         }
 
-        class SemanticAnalyserToString() : SemanticAnalyser<String, ContextWithScope<Any, Any>> {
+        class SemanticAnalyserToString() : SemanticAnalyser<String, SentenceContextAny> {
             override fun clear() {}
 
             //override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> = emptyList()
@@ -141,23 +137,23 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
                 sentenceIdentity:Any?,
                 asm: String,
                 locationMap: LocationMap?,
-                options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
+                options: SemanticAnalysisOptions<SentenceContextAny>
             ): SemanticAnalysisResult {
                 return SemanticAnalysisResultDefault(emptyList(),IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
             }
 
         }
 
-        fun processor(grammarStr: String) = Agl.processorFromString<String, ContextWithScope<Any, Any>>(
+        fun processor(grammarStr: String) = Agl.processorFromString<String, SentenceContextAny>(
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
                 //typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typesModel!!, p.crossReferenceModel!!)) }
+                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typesDomain!!, p.crossReferenceDomain!!)) }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString()) }
             }
         )
 
-        fun testProc(grammarStr: String): LanguageProcessor<String, ContextWithScope<Any, Any>> {
+        fun testProc(grammarStr: String): LanguageProcessor<String, SentenceContextAny> {
             val result = processor(grammarStr)
             assertNotNull(result.processor, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -169,7 +165,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             val expected: String
         )
 
-        fun test(proc: LanguageProcessor<String, ContextWithScope<Any, Any>>, data: TestData) {
+        fun test(proc: LanguageProcessor<String, SentenceContextAny>, data: TestData) {
             println("'${data.sentence}'")
             val result = proc.process(data.sentence)
             assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())

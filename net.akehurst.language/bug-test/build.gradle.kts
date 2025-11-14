@@ -1,5 +1,5 @@
 plugins {
-
+    id("project-conventions")
 }
 
 // do not publish
@@ -23,4 +23,3 @@ kotlin {
         }
     }
 }
-

@@ -21,8 +21,6 @@ import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
-import net.akehurst.language.sentence.api.InputLocation
-import kotlin.collections.component1
 
 class ScopeSimple<ItemInScopeType>(
     val parent: ScopeSimple<ItemInScopeType>?,

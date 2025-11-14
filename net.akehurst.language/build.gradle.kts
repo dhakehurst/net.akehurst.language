@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import com.github.gmazzo.buildconfig.BuildConfigExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-
 plugins {
-    alias(libs.plugins.kotlin) apply false
-    alias(libs.plugins.dokka) apply false
-    alias(libs.plugins.buildconfig) apply false
-    alias(libs.plugins.credentials) apply true
-    alias(libs.plugins.exportPublic) apply false
+   alias(libs.plugins.kotlin) apply false
+   alias(libs.plugins.dokka) apply false
+   alias(libs.plugins.buildconfig) apply false
+   alias(libs.plugins.exportPublic) apply false
+   alias(libs.plugins.vanniktech.maven.publish) apply false
 }
+project.layout.buildDirectory = File(rootProject.projectDir, ".gradle-build/${project.name}")
 
+
+/*
 allprojects {
     repositories {
         mavenLocal {
@@ -43,8 +43,8 @@ allprojects {
 }
 
 subprojects {
-    val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1
-    val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1
+    val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+    val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
     val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
 
     apply(plugin = "org.jetbrains.kotlin.multiplatform")
@@ -94,26 +94,25 @@ subprojects {
                 }
             }
         }
-        js("js") {
-            compilerOptions {
-                target.set("es2015")
-            }
+        js {
+            binaries.library()
             nodejs {
-                testTask {
-                    useMocha {
-                        timeout = "5000"
-                    }
-                }
             }
             browser {
-                // webpackTask {
-                //    outputFileName = "${project.group}-${project.name}.js"
-                // }
                 testTask {
                     useMocha {
                         timeout = "5000"
                     }
+//                    useKarma {
+//                        useChromeHeadless()
+//                        println("karma use config directory : ${rootDir.resolve("karma.config.d")}")
+//                        useConfigDirectory(rootDir.resolve("karma.config.d"))
+//                    }
                 }
+            }
+            compilerOptions {
+                target.set("es2015")
+                freeCompilerArgs.add("-Xes-long-as-bigint")
             }
         }
 
@@ -121,11 +120,10 @@ subprojects {
 //            publishLibraryVariants("release", "debug")
 //        }
 
-
-        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
         wasmJs() {
             binaries.library()
-            browser()
+            browser{
+            }
         }
 
        // macosArm64 {
@@ -155,8 +153,8 @@ subprojects {
 
     fun getProjectProperty(s: String) = project.findProperty(s) as String?
 
-    val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
-    val sonatype_pwd = creds.forKey("SONATYPE_PASSWORD")
+//    val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
+    val sonatype_pwd = null/*creds.forKey("SONATYPE_PASSWORD")*/
         ?: getProjectProperty("SONATYPE_PASSWORD")
         ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
     project.ext.set("signing.password", sonatype_pwd)
@@ -179,7 +177,7 @@ subprojects {
                 credentials {
                     username = getProjectProperty("PUB_USERNAME")
                         ?: error("Must set project property with Username (-P PUB_USERNAME=<...> or set in ~/.gradle/gradle.properties)")
-                    password = getProjectProperty("PUB_PASSWORD") ?: creds.forKey(getProjectProperty("PUB_USERNAME"))
+                    password = getProjectProperty("PUB_PASSWORD") //?: creds.forKey(getProjectProperty("PUB_USERNAME"))
                 }
             }
         }
@@ -220,7 +218,7 @@ subprojects {
     tasks.forEach {
         when {
             it.name.matches(Regex("publish(.)+")) -> {
-                println("${it.name}.mustRunAfter(${signTasks.toList()})")
+                //println("${it.name}.mustRunAfter(${signTasks.toList()})")
                 it.mustRunAfter(*signTasks)
             }
         }
@@ -238,4 +236,11 @@ subprojects {
 //    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
 //    tasks.named("publishWasmJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
 
+
+    configurations.all {
+        // Check for updates every build
+        resolutionStrategy.cacheChangingModulesFor( 0, "seconds")
+    }
+
 }
+ */

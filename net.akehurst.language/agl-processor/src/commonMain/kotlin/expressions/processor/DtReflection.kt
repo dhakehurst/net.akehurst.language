@@ -18,7 +18,7 @@ package net.akehurst.language.agl.expressions.processor
 
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.types.api.*
 import kotlin.reflect.KClass
 
 val TypeDefinition.clazz: KClass<*> get() = KotlinxReflect.classForName(qualifiedName.value)

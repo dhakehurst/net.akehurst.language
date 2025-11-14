@@ -17,34 +17,38 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.processor.FormatResultDefault
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 class FormatterOverAsmSimple(
-    override val formatModel: AglFormatModel,
-    val typeModel: TypeModel,
+    override val formatDomain: AglFormatDomain,
+    val typesDomain: TypesDomain,
     val issues: IssueHolder
 ) : Formatter<Asm> {
 
-    private val _formatter = FormatterOverTypedObject(formatModel, ObjectGraphAsmSimple(typeModel, issues),issues)
+    private val _formatter = FormatterOverTypedObject(formatDomain, ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues),issues)
 
-    override fun format(formatSetName: PossiblyQualifiedName, asm: Asm): FormatResult {
+    override fun formatSelf(formatSetName: PossiblyQualifiedName, self: Asm): FormatResult {
         val sb = StringBuilder()
 
-        for (root in asm.root) {
-            val str = _formatter.format(formatSetName,root).sentence
+        for (root in self.root) {
+            val str = _formatter.formatSelf(formatSetName,root).sentence
             sb.append(str)
         }
 
         return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
+    override fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<Asm>): FormatResult {
+        TODO("not implemented")
+    }
 
 }

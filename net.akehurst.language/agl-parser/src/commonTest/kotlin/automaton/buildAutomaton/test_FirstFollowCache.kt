@@ -16,10 +16,7 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -454,5 +451,76 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
                 "G-NE.0-MR[0]-MI[1]='('",
             )
         )
+    }
+
+
+    @Test
+    fun forIEEEPaper() {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { empty() }
+                concatenation {  literal("a") ; ref("S");}
+            }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val G = rrs.goalRuleFor[S]
+        val a = rrs.findRuntimeRule("'a'")
+        val E = RuntimeRuleSet.EMPTY
+
+        //state 0
+//        val ft = sut.firstTerminalInContext(
+//            context = RP(G, oN,0),
+//            rulePosition = RP(G, oN,0),
+//            parentFollow = LookaheadSetPart.EOT
+//        )
+//        print(ft)
+
+        // state 1
+//        val pt = sut.parentInContext(
+//            contextContext = RP(G, oN,0),
+//            context = RP(G, oN,0),
+//            a
+//        )
+//        println(pt)
+
+        // state 2
+//        val pt = sut.parentInContext(
+//            contextContext = RP(G, oN,0),
+//            context = RP(G, oN,0),
+//            E
+//        )
+//        println(pt)
+
+        // state 3
+//        val ft = sut.firstTerminalInContext(
+//            context = RP(G, oN, 0),
+//            rulePosition = RP(S, o0, ER),
+//            parentFollow = LookaheadSetPart.EOT
+//        )
+//        print(ft)
+
+        //state 6 {0}<-{0}<-S
+        val pt = sut.parentInContext(
+            contextContext = RP(G, oN, 0),
+            context = RP(G, oN, 0),
+            S
+        )
+        println(pt)
+
+         //state 6 {0}<-{5}<-S
+//        val pt = sut.parentInContext(
+//            contextContext = RP(G, oN, 0),
+//            context = RP(S, o1,p1),
+//            S
+//        )
+//        println(pt)
+
+        // state 6 {5}<-{5}<-S
+//        val pt = sut.parentInContext(
+//            contextContext = RP(S, o1,p1),
+//            context = RP(S, o1,p1),
+//            S
+//        )
+//        println(pt)
     }
 }

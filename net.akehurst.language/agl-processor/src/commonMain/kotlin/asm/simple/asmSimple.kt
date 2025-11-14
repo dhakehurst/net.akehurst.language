@@ -18,10 +18,12 @@
 package net.akehurst.language.asm.simple
 
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.asm.StdLibDefault
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
 
@@ -58,26 +60,48 @@ class AsmPathSimple(
     override fun toString(): String = this.value
 }
 
-open class AsmSimple() : Asm {
+open class AsmSimple(
+    val objectGraph: ObjectGraphAccessorMutatorAsmSimple,
+) : Asm {
 
-    /*    companion object {
-            internal fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
-                is String -> "'$this'"
-                is List<*> -> when (this.size) {
-                    0 -> "[]"
-                    1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
-                    else -> {
-                        val newIndent = currentIndent + indent
-                        this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
+    companion object {
+        fun traverseDepthFirst(roots: List<AsmValue>, walker: AsmTreeWalker) {
+            fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
+                when (value) {
+                    is AsmNothing -> walker.onNothing(owningProperty, value)
+                    is AsmPrimitive -> walker.onPrimitive(owningProperty, value)
+                    is AsmStructure -> {
+                        walker.beforeStructure(owningProperty, value)
+                        for (prop in value.propertyOrdered) {
+                            walker.onProperty(value, prop)
+                            val pv = prop.value
+                            traverse(prop, pv)
+                        }
+                        walker.afterStructure(owningProperty, value)
                     }
+
+                    is AsmList -> {
+                        walker.beforeList(owningProperty, value)
+                        value.elements.forEach { el -> traverse(owningProperty, el) }
+                        walker.afterList(owningProperty, value)
+                    }
+
+                    is AsmListSeparated -> {
+                        walker.beforeList(owningProperty, value)
+                        value.elements.forEach { el -> traverse(owningProperty, el) }
+                        walker.afterList(owningProperty, value)
+                    }
+
+                    else -> Unit
                 }
-
-                is AsmElementSimple -> this.asString(currentIndent, indent)
-                else -> error("property value type not handled '${this::class.simpleName}'")
             }
-        }*/
-
-    private var _nextElementId = 0
+            roots.forEach {
+                walker.beforeRoot(it)
+                traverse(null, it)
+                walker.afterRoot(it)
+            }
+        }
+    }
 
     override val root: List<AsmValue> = mutableListOf()
     override val elementIndex = mutableMapOf<AsmPath, AsmStructure>()
@@ -86,7 +110,8 @@ open class AsmSimple() : Asm {
     fun removeRoot(root: Any)= (this.root as MutableList).remove(root)
 
     fun createStructure(parsePath: String, typeName: QualifiedName): AsmStructureSimple {
-        val el = AsmStructureSimple(typeName)
+        val obj = objectGraph.createStructureValue(typeName, emptyMap())
+        val el = obj.self as AsmStructureSimple
         el.parsePath = parsePath
         //this.elementIndex[asmPath] = el
         return el
@@ -96,45 +121,10 @@ open class AsmSimple() : Asm {
         this.elementIndex[AsmPathSimple(value.parsePath.toString())] = value //FIXME: should use asmPath !
     }
 
-    override fun traverseDepthFirst(callback: AsmTreeWalker) {
-        fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
-            when (value) {
-                is AsmNothing -> callback.onNothing(owningProperty, value)
-                is AsmPrimitive -> callback.onPrimitive(owningProperty, value)
-                is AsmStructure -> {
-                    callback.beforeStructure(owningProperty, value)
-                    for (prop in value.propertyOrdered) {
-                        callback.onProperty(value, prop)
-                        val pv = prop.value
-                        traverse(prop, pv)
-                    }
-                    callback.afterStructure(owningProperty, value)
-                }
+    override fun traverseDepthFirst(walker: AsmTreeWalker) = traverseDepthFirst(this.root, walker)
 
-                is AsmList -> {
-                    callback.beforeList(owningProperty, value)
-                    value.elements.forEach { el -> traverse(owningProperty, el) }
-                    callback.afterList(owningProperty, value)
-                }
-
-                is AsmListSeparated -> {
-                    callback.beforeList(owningProperty, value)
-                    value.elements.forEach { el -> traverse(owningProperty, el) }
-                    callback.afterList(owningProperty, value)
-                }
-
-                else -> Unit
-            }
-        }
-        this.root.forEach {
-            callback.beforeRoot(it)
-            traverse(null, it)
-            callback.afterRoot(it)
-        }
-    }
-
-    override fun asString(currentIndent: String, indentIncrement: String): String = this.root.joinToString(separator = "\n") {
-        it.asString(indentIncrement, currentIndent)
+    override fun asString(indent: Indent): String = this.root.joinToString(separator = "\n") {
+        it.asString(indent)
     }
 
 }
@@ -145,7 +135,7 @@ abstract class AsmValueAbstract() : AsmValue {
 
 object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
     override val qualifiedTypeName: QualifiedName get() = StdLibDefault.NothingType.qualifiedTypeName
-    override fun asString(currentIndent: String, indentIncrement: String): String = "Nothing"
+    override fun asString(indent: Indent): String = $$"$nothing"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmNothing -> false
         else -> true
@@ -157,7 +147,7 @@ object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
         else -> true
     }
 
-    override fun toString(): String = "Nothing"
+    override fun toString(): String = $$"$nothing"
 }
 
 class AsmAnySimple(
@@ -169,7 +159,7 @@ class AsmAnySimple(
 
     override val qualifiedTypeName: QualifiedName get() = StdLibDefault.AnyType.qualifiedTypeName
 
-    override fun asString(currentIndent: String, indentIncrement: String): String = "AsmAny($value)"
+    override fun asString(indent: Indent): String = "AsmAny($value)"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmAny -> false
         other.value != this.value -> false
@@ -198,7 +188,7 @@ class AsmPrimitiveSimple(
         fun stdReal(value: Double) = AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, value)
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String = "$value"
+    override fun asString(indent: Indent): String = "'$value'"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmPrimitive -> false
         other.value != this.value -> false
@@ -246,7 +236,7 @@ class AsmReferenceSimple(
         this.value = value
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String = when (value) {
+    override fun asString(indent: Indent): String = when (value) {
         null -> "<unresolved> &$reference"
         else -> "&{'${value!!.parsePath.toString()}' : ${value!!.typeName}}"
     }
@@ -303,15 +293,13 @@ class AsmStructureSimple(
 
     override fun hasProperty(name: PropertyValueName): Boolean = property.containsKey(name)
 
-    fun getPropertyAsStringOrNull(name: PropertyValueName): String? = property[name]?.value as String?
-    fun getPropertyAsAsmElementOrNull(name: PropertyValueName): AsmStructureSimple? = property[name]?.value as AsmStructureSimple?
     fun getPropertyAsReferenceOrNull(name: PropertyValueName): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
     fun getPropertyAsListOrNull(name: PropertyValueName): List<Any>? = property[name]?.value as List<Any>?
 
-    override fun getPropertyOrNothing(name: PropertyValueName): AsmValue = property[name]?.value ?: AsmNothingSimple
     override fun getProperty(name: PropertyValueName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$parsePath' ")
-    fun getPropertyAsString(name: PropertyValueName): String = (getProperty(name) as AsmPrimitive).value as String
-    fun getPropertyAsAsmElement(name: PropertyValueName): AsmStructureSimple = getProperty(name) as AsmStructureSimple
+    override fun getPropertyOrNothing(name: PropertyValueName): AsmValue = property[name]?.value ?: AsmNothingSimple
+    override fun getPropertyOrNull(name: PropertyValueName): AsmValue? = property[name]?.value
+
     fun getPropertyAsReference(name: PropertyValueName): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
     fun getPropertyAsList(name: PropertyValueName): List<Any> = getProperty(name) as List<Any>
     fun getPropertyAsListOfElement(name: PropertyValueName): List<AsmStructureSimple> = getProperty(name) as List<AsmStructureSimple>
@@ -324,24 +312,23 @@ class AsmStructureSimple(
         value.forEach { this._properties[it.name] = it }
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String {
-        val newIndent = currentIndent + indentIncrement
-        val propsStr = this.property.values.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
+    override fun asString(indent: Indent): String {
+        val propsStr = this.property.values.joinToString(separator = "\n") {
             if (it.isReference) {
                 val ref = it.value as AsmReferenceSimple
-                "${it.name} = $ref"
+                "${indent.inc}${it.name} = $ref"
             } else {
-                "${it.name} = ${it.value.asString(indentIncrement, newIndent)}"
+                "${indent.inc}${it.name} = ${it.value.asString(indent.inc)}"
             }
         }
         //return ":$typeName $propsStr"
-        return ":$typeName $propsStr"
+        return ":$typeName {\n$propsStr\n$indent}"
     }
 
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmStructure -> false
         this.qualifiedTypeName != other.qualifiedTypeName -> false
-        this.parsePath != other.parsePath -> false
+        //this.parsePath != other.parsePath -> false
         this.property.size != other.property.size -> false
         else -> {
             this.property.all { (k, v) ->
@@ -413,11 +400,7 @@ class AsmStructurePropertySimple(
                         error("Cannot compare property values: ${t} and ${o}")
                     }
                 } else {
-                    if (t is AsmStructureSimple && o is AsmStructureSimple) {
                         t.equalTo(o)
-                    } else {
-                        t == o
-                    }
                 }
             }
         }
@@ -450,8 +433,11 @@ class AsmListSimple(
     override val isEmpty: Boolean get() = elements.isEmpty()
     override val isNotEmpty: Boolean get() = elements.isNotEmpty()
 
-    override fun asString(currentIndent: String, indentIncrement: String): String =
-        this.elements.joinToString { it.asString(currentIndent, indentIncrement) }
+    override fun asString(indent: Indent): String = when {
+        elements.isEmpty() -> "[]"
+        1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
+        else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
+    }
 
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmList -> false
@@ -480,9 +466,11 @@ class AsmListSeparatedSimple(
     override val isEmpty: Boolean get() = elements.isEmpty()
     override val isNotEmpty: Boolean get() = elements.isNotEmpty()
 
-    override fun asString(currentIndent: String, indentIncrement: String): String =
-        this.elements.elements.joinToString { (it).asString(currentIndent, indentIncrement) }
-
+    override fun asString(indent: Indent): String = when {
+        elements.isEmpty() -> "[]"
+        1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
+        else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
+    }
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmListSeparated -> false
         other.elements.size != this.elements.size -> false
@@ -517,7 +505,7 @@ class AsmLambdaSimple(
         return false
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String {
-        return "{ <expre> }"
+    override fun asString(indent: Indent): String {
+        return "{ <lambda expression> }" //TODO
     }
 }

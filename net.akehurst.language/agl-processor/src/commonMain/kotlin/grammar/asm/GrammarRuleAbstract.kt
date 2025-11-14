@@ -18,6 +18,9 @@ package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.regex.api.EscapedValue
+import net.akehurst.language.regex.api.UnescapedPattern
+import net.akehurst.language.regex.api.UnescapedValue
 
 abstract class GrammarItemAbstract() : GrammarItem {
     //override lateinit var grammar: Grammar
@@ -28,11 +31,12 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
     companion object {
         class CompressedLeafRule(
             override val id: String,
-            override val value: String,
+            override val unescapedValue: UnescapedValue,
             override val isPattern: Boolean
         ) : Terminal, RuleItemAbstract() {
 
             override val isLiteral: Boolean get() = isPattern.not()
+            override val escapedValue: EscapedValue get() = unescapedValue.escapedFoAgl
             override val allTerminal: Set<Terminal> = setOf(this)
             override val allNonTerminal: Set<NonTerminal> = emptySet()
             override val allEmbedded: Set<Embedded> = emptySet()
@@ -59,9 +63,13 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
             val grammar = item.owningRule.grammar
             val cr = when (item) {
                 is Terminal -> when {
-                    item.isPattern -> CompressedLeafRule(compressedName, item.value, true)
+                    item.isPattern -> CompressedLeafRule(compressedName, item.unescapedValue, true)
                     //else -> CompressedLeafRule(compressedName, "(${toRegEx(item.value)})", true)
-                    else -> CompressedLeafRule(compressedName, toRegEx(item.value), false) //TODO: not escape literals if not needed ! asRegexLiteral ?
+                    else -> {
+                        //TODO: not escape literals if not needed ! asRegexLiteral ?
+                        val unescapedValue = UnescapedPattern(toRegEx(item.unescapedValue.value))
+                        CompressedLeafRule(compressedName, unescapedValue, false)
+                    }
                 }
 
                 is Concatenation -> {
@@ -69,8 +77,8 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
                         this.compressRuleItem(compressedName, item.items[0])
                     } else {
                         val items = item.items.mapIndexed { idx, it -> this.compressRuleItem("$compressedName$idx", it) }
-                        val pattern = items.joinToString(separator = "") { "(${it.value})" }
-                        CompressedLeafRule(compressedName, pattern, true)
+                        val pattern = items.joinToString(separator = "") { "(${it.unescapedValue.value})" }
+                        CompressedLeafRule(compressedName, UnescapedPattern(pattern), true)
                         //throw GrammarExeception("GrammarRule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
                     }
                 }
@@ -79,29 +87,29 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
                     1 -> this.compressRuleItem(compressedName, item.alternative[0])
                     else -> {
                         val ct = item.alternative.mapIndexed { idx, it -> this.compressRuleItem("$compressedName$idx", it) }
-                        val pattern = ct.joinToString(separator = "|") { "(${it.value})" }
-                        CompressedLeafRule(compressedName, pattern, true)
+                        val pattern = ct.joinToString(separator = "|") { "(${it.unescapedValue.value})" }
+                        CompressedLeafRule(compressedName, UnescapedPattern(pattern), true)
                     }
                 }
 
                 is OptionalItem -> {
                     val ct = this.compressRuleItem("${compressedName}List", item.item)
-                    val pattern = "(${ct.value})?"
-                    CompressedLeafRule(compressedName, pattern, true)
+                    val pattern = "(${ct.unescapedValue.value})?"
+                    CompressedLeafRule(compressedName, UnescapedPattern(pattern), true)
                 }
 
                 is SimpleList -> {
                     val ct = this.compressRuleItem("${compressedName}List", item.item)
                     val min = item.min
                     val max = if (-1 == item.max) "" else item.max
-                    val pattern = "(${ct.value}){${min},${max}}"
-                    CompressedLeafRule(compressedName, pattern, true)
+                    val pattern = "(${ct.unescapedValue.value}){${min},${max}}"
+                    CompressedLeafRule(compressedName, UnescapedPattern(pattern), true)
                 }
 
                 is Group -> {
                     val ct = this.compressRuleItem("${compressedName}Group", item.groupedContent)
-                    val pattern = "(${ct.value})"
-                    CompressedLeafRule(compressedName, pattern, true)
+                    val pattern = "(${ct.unescapedValue.value})"
+                    CompressedLeafRule(compressedName, UnescapedPattern(pattern), true)
                 }
 
                 is NonTerminal -> {

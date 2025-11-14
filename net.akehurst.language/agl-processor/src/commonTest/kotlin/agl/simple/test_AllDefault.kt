@@ -20,6 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.processor.LanguageProcessorAbstract
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
@@ -27,24 +28,20 @@ import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.AsmTransformRuleSetBuilder
+import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.asmTransform.test.AsmTransformDomainTest
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.test.FixMethodOrder
-import net.akehurst.language.test.MethodSorters
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.builder.AsmTransformRuleSetBuilder
-import net.akehurst.language.transform.builder.asmTransform
-import net.akehurst.language.transform.test.AsmTransformModelTest
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class test_AllDefault {
 
     private companion object {
@@ -53,11 +50,11 @@ class test_AllDefault {
          * TrNamespace.name = qualifiedName.front
          * TrRuleSet.name = qualifiedName.last
          */
-        fun asmGrammarTransform(domainName: String, namespaceName: String, typeModel: TypeModel, createTypes: Boolean, init: AsmTransformRuleSetBuilder.() -> Unit): TransformModel {
+        fun asmGrammarTransform(domainName: String, namespaceName: String, typesDomain: TypesDomain, createTypes: Boolean, init: AsmTransformRuleSetBuilder.() -> Unit): AsmTransformDomain {
             val qn = QualifiedName(namespaceName)
-            return asmTransform(domainName, typeModel, createTypes) {
+            return asmTransform(domainName, typesDomain, createTypes) {
                 namespace(qn.front.value) {
-                    transform(qn.last.value) {
+                    this.ruleSet(qn.last.value) {
                         importTypes(namespaceName)
                         this.init()
                     }
@@ -68,8 +65,8 @@ class test_AllDefault {
         class TestDataForGeneratedParser(
             val grammarStr: String,
             val expectedRrs: RuleSet,
-            val expectedTm: TypeModel,
-            val expectedTr: TransformModel
+            val expectedTm: TypesDomain,
+            val expectedTr: AsmTransformDomain
         ) {
             val sentenceData = mutableListOf<TestDataForSentenceParse>()
 
@@ -88,13 +85,13 @@ class test_AllDefault {
             grammarDefinitionStr = GrammarString(grammarStr),
             grammarAglOptions = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
 //TODO:                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
                 }
             }
         )
 
-        fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: TestDataForSentenceParse) {
+        fun testSentence(proc: LanguageProcessor<Asm, SentenceContextAny>, sd: TestDataForSentenceParse) {
             println("'${sd.sentence}'")
             val spptRes = proc.parse(sd.sentence)
             assertTrue(spptRes.issues.errors.isEmpty(), spptRes.issues.toString())
@@ -105,7 +102,7 @@ class test_AllDefault {
             val asmRes = proc.process(sd.sentence)
             assertTrue(asmRes.allIssues.errors.isEmpty(), asmRes.allIssues.toString())
             val actual = asmRes.asm!!
-            assertEquals(sd.expected.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
+            assertEquals(sd.expected.asString(), actual.asString(), "Different ASM")
 
         }
 
@@ -118,11 +115,11 @@ class test_AllDefault {
             assertEquals(testData.expectedRrs.toString(), rrs.toString(), "Different RRS by string")
             assertTrue(testData.expectedRrs.matches(rrs), "Different RRS by match")
 
-            assertEquals(testData.expectedTm.asString(), proc.typesModel.asString(), "Different TypeModel by string")
-            GrammarTypeModelTest.tmAssertEquals(testData.expectedTm, proc.typesModel)
+            assertEquals(testData.expectedTm.asString(), proc.typesDomain.asString(), "Different TypeModel by string")
+            GrammarTypeModelTest.tmAssertEquals(testData.expectedTm, proc.typesDomain)
 
-            assertEquals(testData.expectedTr.asString(), proc.transformModel.asString(), "Different AsmTransform by string")
-            AsmTransformModelTest.trAssertEquals(testData.expectedTr, proc.transformModel)
+            assertEquals(testData.expectedTr.asString(), proc.transformDomain.asString(), "Different AsmTransform by string")
+            AsmTransformDomainTest.trAssertEquals(testData.expectedTr, proc.transformDomain)
 
             if (null == sentenceIndex) {
                 for (sd in testData.sentenceData) {
@@ -137,8 +134,8 @@ class test_AllDefault {
         fun test(
             grammarStr: String,
             expectedRrs: RuleSet,
-            expectedTm: TypeModel,
-            expectedTr: TransformModel,
+            expectedTm: TypesDomain,
+            expectedTr: AsmTransformDomain,
             sentenceIndex: Int? = null,
             sentenceData: TestDataForGeneratedParser.() -> Unit
         ) {
@@ -169,7 +166,7 @@ class test_AllDefault {
           namespace test.Test
           S -> datatype S
          */
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -184,7 +181,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -198,7 +195,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("test.Test.S") {
                     }
                 }
@@ -219,7 +216,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -228,7 +225,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -242,7 +239,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -264,7 +261,7 @@ class test_AllDefault {
             literal("a", "a")
 
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("a")
                 dataFor("S", "S") {
@@ -275,7 +272,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -292,7 +289,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { a:'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                     }
@@ -313,7 +310,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { pattern("[a-z]") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -322,7 +319,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -336,7 +333,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { \"[a-z]\":'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -357,7 +354,7 @@ class test_AllDefault {
             concatenation("S") { ref("v") }
             pattern("v", "[a-z]")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("v")
                 dataFor("S", "S") {
@@ -368,7 +365,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -385,7 +382,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { v:'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("v", "a")
                     }
@@ -412,7 +409,7 @@ class test_AllDefault {
             concatenation("B") { literal("b") }
             concatenation("C") { literal("c") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyDataTypeOf("a", "A", false, 0)
@@ -427,7 +424,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -448,7 +445,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abc", sppt = "S { A {'a'} B{'b'} C{'c'} }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("a", "A") {}
                         propertyElementExplicitType("b", "B") {}
@@ -476,7 +473,7 @@ class test_AllDefault {
             concatenation("B") { literal("b") }
             concatenation("C") { literal("c") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyDataTypeOf("a", "A", false, 0)
@@ -491,7 +488,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -512,7 +509,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a,b,c", sppt = "S { A { 'a' } ',' B { 'b' } ',' C { 'c' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("a", "A") {}
                         propertyElementExplicitType("b", "B") {}
@@ -539,7 +536,7 @@ class test_AllDefault {
                 literal("c")
             }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("S")
             }
@@ -547,7 +544,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -561,7 +558,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("a")
                 }
             }
@@ -597,7 +594,7 @@ class test_AllDefault {
             literal("c", "c")
             literal("x", "x")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     subtypes("A", "B", "C")
@@ -626,7 +623,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -656,7 +653,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ax", sppt = "S{A{a:'a' x:'x'}}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("A") {
                         propertyString("a", "a")
                         propertyString("x", "x")
@@ -664,7 +661,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "bx", sppt = "S{B{b:'b' x:'x'}}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("B") {
                         propertyString("b", "b")
                         propertyString("x", "x")
@@ -672,7 +669,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "cx", sppt = "S{C{c:'c' x:'x'}}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("C") {
                         propertyString("c", "c")
                         propertyString("x", "x")
@@ -712,7 +709,7 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 unionFor("S","S") {
                     tupleType {
@@ -745,7 +742,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -792,7 +789,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ab", sppt = "S{ A{a:'a'} B{b:'b'} }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     tuple {
                         propertyElementExplicitType("a", "A") {
                             propertyString("a", "a")
@@ -804,7 +801,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "cd", sppt = "S{ C{c:'c'} D{d:'d'} }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     tuple {
                         propertyElementExplicitType("c", "C") {
                             propertyString("c", "c")
@@ -843,7 +840,7 @@ class test_AllDefault {
                 literal("y")
             }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("S")
                 stringTypeFor("L")
@@ -853,7 +850,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -869,27 +866,27 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S{L{'a'}}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("a")
                 }
             }
             define(sentence = "b", sppt = "S{L{'b'}}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("b")
                 }
             }
             define(sentence = "c", sppt = "S{L{'c'}}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("c")
                 }
             }
             define(sentence = "x", sppt = "S{M{'x'}}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("x")
                 }
             }
             define(sentence = "y", sppt = "S{M{'y'}}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("y")
                 }
             }
@@ -931,7 +928,7 @@ class test_AllDefault {
             literal("x", "x")
             literal("y", "y")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("S")
                 stringTypeFor("L")
@@ -946,7 +943,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -967,27 +964,27 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { L{ a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("a")
                 }
             }
             define(sentence = "b", sppt = "S { L{ b:'b' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("b")
                 }
             }
             define(sentence = "c", sppt = "S { L{ c:'c' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("c")
                 }
             }
             define(sentence = "x", sppt = "S { M{ x:'x' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("x")
                 }
             }
             define(sentence = "y", sppt = "S { M{ y:'y' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("y")
                 }
             }
@@ -1028,7 +1025,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("x", "x")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     subtypes("A", "B", "C")
@@ -1061,7 +1058,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1092,7 +1089,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ax", sppt = "S { A { a:'a' x:'x' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("A") {
                         propertyString("a", "a")
                         propertyString("x", "x")
@@ -1100,7 +1097,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "cx", sppt = "S { C { c:'c' x:'x' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("C") {
                         propertyString("c", "c")
                         propertyString("x", "x")
@@ -1108,7 +1105,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "dx", sppt = "S { B { D { d:'d' x:'x' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("D") {
                         propertyString("d", "d")
                         propertyString("x", "x")
@@ -1145,7 +1142,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("x", "x")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 unionFor("B", "B"){
                     typeRef("String",false)
@@ -1175,7 +1172,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1226,7 +1223,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ax", sppt = "S { A { a:'a' x:'x' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("A") {
                         propertyString("a", "a")
                         propertyString("x", "x")
@@ -1234,14 +1231,14 @@ class test_AllDefault {
                 }
             }
             define("c", sppt = "S { C { c:'c' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("C") {
                         propertyString("c", "c")
                     }
                 }
             }
             define("d", sppt = "S { B { D { d:'d' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("D") {
                         propertyString("d", "d")
                     }
@@ -1273,7 +1270,7 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("BC", "BC") {
                     propertyPrimitiveType("b", "String", false, 0)
@@ -1293,7 +1290,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1326,7 +1323,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bc", sppt = "S { BC { b:'b' c:'c' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm)  {
                     element("BC") {
                         propertyString("b", "b")
                         propertyString("c", "c")
@@ -1334,17 +1331,17 @@ class test_AllDefault {
                 }
             }
             define(sentence = "d", sppt = "S { §S§multi1 { d : 'd' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     listOfString("d")
                 }
             }
             define(sentence = "dd", sppt = "S { §S§multi1 { d:'d' d:'d' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     listOfString("d", "d")
                 }
             }
             define(sentence = "ddd", sppt = "S { §S§multi1 { d:'d' d:'d' d:'d' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     listOfString("d", "d", "d")
                 }
             }
@@ -1376,7 +1373,7 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 unionFor("S","S") {
                     typeRef("BC")
@@ -1399,7 +1396,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1435,7 +1432,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bc", sppt = "S { BC { b:'b' c:'c' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("BC") {
                         propertyString("b", "b")
                         propertyString("c", "c")
@@ -1443,12 +1440,12 @@ class test_AllDefault {
                 }
             }
             define(sentence = "", sppt = "S { §S§multi1 { <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     listOfString()
                 }
             }
             define(sentence = "d", sppt = "S { §S§multi1 { D { d : 'd' } } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     list {
                         element("D") {
                             propertyString("d", "d")
@@ -1457,7 +1454,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "dd", sppt = "S { §S§multi1 { D { d:'d' } D { d:'d' } } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     list {
                         element("D") {
                             propertyString("d", "d")
@@ -1469,7 +1466,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ddd", sppt = "S { §S§multi1 { D { d:'d' } D { d:'d' } D { d:'d' } } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     list {
                         element("D") {
                             propertyString("d", "d")
@@ -1504,7 +1501,7 @@ class test_AllDefault {
             concatenation("S1") { ref("S"); ref("a") }
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 unionFor("S","S") {
                     typeRef("String")
@@ -1520,7 +1517,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1549,12 +1546,12 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { a:'a' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     string("a")
                 }
             }
             define(sentence = "aa", sppt = "S { S1{ S { a:'a' } a:'a' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S1") {
                         propertyString("s", "a")
                         propertyString("a", "a")
@@ -1562,7 +1559,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aaa", sppt = "S { S1{ S { S1{ S { a:'a' } a:'a' } } a:'a' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S1") {
                         propertyElementExplicitType("s", "S1") {
                             propertyString("s", "a")
@@ -1573,7 +1570,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aaaa", sppt = "S { S1{ S { S1{ S { S1{ S { a:'a' } a:'a' } } a:'a' } } a:'a' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S1") {
                         propertyElementExplicitType("s", "S1") {
                             propertyElementExplicitType("s", "S1") {
@@ -1602,7 +1599,7 @@ class test_AllDefault {
             optional("S", "'a'")
             literal("a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -1611,7 +1608,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1625,12 +1622,12 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") { }
                 }
             }
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") { }
                 }
             }
@@ -1650,7 +1647,7 @@ class test_AllDefault {
             optional("S", "a")
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", true, 0)
@@ -1661,7 +1658,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1678,14 +1675,14 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("a")
                     }
                 }
             }
             define(sentence = "a", sppt = "S { a:'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                     }
@@ -1711,7 +1708,7 @@ class test_AllDefault {
             literal("b")
             literal("c", "c")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -1724,7 +1721,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1743,7 +1740,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' §S§opt1 {<EMPTY>} c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -1751,7 +1748,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' §S§opt1 {'b'} c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -1779,7 +1776,7 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -1794,7 +1791,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1824,7 +1821,7 @@ class test_AllDefault {
                  }
              }*/
             define(sentence = "abc", sppt = "S { a:'a' §S§opt1 {b:'b'} c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("b", "b")
@@ -1850,7 +1847,7 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyDataTypeOf("a", "A", true, 0)
@@ -1864,7 +1861,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1884,14 +1881,14 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("a")
                     }
                 }
             }
             define(sentence = "a", sppt = "S { A { a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("a", "A") {
                             propertyString("a", "a")
@@ -1920,7 +1917,7 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("b", "String", false, 0)
@@ -1936,7 +1933,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -1958,7 +1955,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "b", sppt = "S { b:'b' §S§opt1 { <EMPTY> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyNothing("a")
@@ -1966,7 +1963,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ba", sppt = "S { b:'b' §S§opt1 { A { a:'a' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyElementExplicitType("a", "A") {
@@ -1995,7 +1992,7 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyDataTypeOf("oA", "OA", false, 0)
@@ -2012,7 +2009,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2035,7 +2032,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { oA { <EMPTY> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("oA", "OA") {
                             propertyNothing("a")
@@ -2044,7 +2041,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S { oA { A { a:'a' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("oA", "OA") {
                             propertyElementExplicitType("a", "A") {
@@ -2070,7 +2067,7 @@ class test_AllDefault {
             multi("S", 0, -1, "'a'")
             literal("a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -2079,7 +2076,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2093,22 +2090,22 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY_LIST> }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {}
                 }
             }
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {}
                 }
             }
             define(sentence = "aa", sppt = "S { 'a' 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {}
                 }
             }
             define(sentence = "aaa", sppt = "S { 'a' 'a' 'a'}") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {}
                 }
             }
@@ -2132,7 +2129,7 @@ class test_AllDefault {
             literal("b")
             literal("c", "c")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -2145,7 +2142,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2166,7 +2163,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' §S§multi1 { <EMPTY_LIST> } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2174,7 +2171,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' §S§multi1 { 'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2182,7 +2179,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abbc", sppt = "S { a:'a' §S§multi1 { 'b' 'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2190,7 +2187,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abbbc", sppt = "S { a:'a' §S§multi1 { 'b' 'b' 'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2213,7 +2210,7 @@ class test_AllDefault {
             multi("S", 0, -1, "a")
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListType("a", false, 0) { ref("String") }
@@ -2224,7 +2221,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2241,28 +2238,28 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY_LIST> }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("a", listOf())
                     }
                 }
             }
             define(sentence = "a", sppt = "S { a:'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("a", listOf("a"))
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { a:'a' a:'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("a", listOf("a", "a"))
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { a:'a' a:'a' a:'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("a", listOf("a", "a", "a"))
                     }
@@ -2289,7 +2286,7 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -2304,7 +2301,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2325,7 +2322,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' §S§multi1 { <EMPTY_LIST> } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("b", emptyList())
@@ -2334,7 +2331,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' §S§multi1 { b:'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("b", listOf("b"))
@@ -2343,7 +2340,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abbc", sppt = "S { a:'a' §S§multi1 { b:'b' b:'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("b", listOf("b", "b"))
@@ -2352,7 +2349,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abbbc", sppt = "S { a:'a' §S§multi1 { b:'b' b:'b' b:'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("b", listOf("b", "b", "b"))
@@ -2378,7 +2375,7 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListTypeOf("a", "A", false, 0)
@@ -2392,7 +2389,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2412,14 +2409,14 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY_LIST> }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("a") {}
                     }
                 }
             }
             define(sentence = "a", sppt = "S { A{ a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("a") {
                             element("A") {
@@ -2430,7 +2427,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aa", sppt = "S { A{ a:'a' } A{ a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("a") {
                             element("A") {
@@ -2466,7 +2463,7 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("b", "String", false, 0)
@@ -2484,7 +2481,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2508,7 +2505,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define("bc", sppt = "S { b:'b' §S§multi1 { <EMPTY_LIST> } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyListOfElement("a") {}
@@ -2517,7 +2514,7 @@ class test_AllDefault {
                 }
             }
             define("bac", sppt = "S { b:'b' §S§multi1 { A { a:'a' } } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyListOfElement("a") {
@@ -2530,7 +2527,7 @@ class test_AllDefault {
                 }
             }
             define("baac", sppt = "S { b:'b' §S§multi1 { A { a:'a' } A { a:'a' } } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyListOfElement("a") {
@@ -2562,7 +2559,7 @@ class test_AllDefault {
             multi("as", 0, -1, "'a'")
             literal("a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -2573,7 +2570,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2590,25 +2587,25 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { 'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { as { 'a' 'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { as { 'a' 'a' 'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -2631,7 +2628,7 @@ class test_AllDefault {
             multi("as", 0, -1, "a")
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListType("as", false, 0) { ref("String") }
@@ -2646,7 +2643,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2666,28 +2663,28 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf())
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { as { a:'a' a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { as { a:'a' a:'a' a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                     }
@@ -2714,7 +2711,7 @@ class test_AllDefault {
             optional("ao", "a")
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListTypeOf("as", "Ao", false, 0)
@@ -2731,7 +2728,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2754,7 +2751,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { ao { <EMPTY> } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("as") {
                             element("Ao") {
@@ -2765,21 +2762,21 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S { as { ao { a:'a' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                     }
@@ -2814,7 +2811,7 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListTypeOf("abs", "AB", false, 0)
@@ -2840,7 +2837,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -2868,7 +2865,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { abs { <EMPTY_LIST> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
 
@@ -2877,7 +2874,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S { abs { AB{ A { a:'a' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2888,7 +2885,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "b", sppt = "S { abs { AB{ B { b:'b' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("B") {
@@ -2899,7 +2896,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aa", sppt = "S { abs { AB{ A { a:'a' } } AB{ A { a:'a' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2913,7 +2910,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "bb", sppt = "S { abs { AB{ B { b:'b' } } AB{ B { b:'b' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("B") {
@@ -2927,7 +2924,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab", sppt = "S { abs { AB{ A { a:'a' } } AB{ B { b:'b' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2941,7 +2938,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ababab", sppt = "S{ abs{ AB{ A{ a:'a' } } AB{ B{ b:'b' } } AB{ A{ a:'a' } } AB{ B{ b:'b' } } AB{ A{ a:'a' } } AB{ B{ b:'b' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2993,7 +2990,7 @@ class test_AllDefault {
             concatenation("V") { ref("N") }
             pattern("N", "[a-zA-Z]+")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyDataTypeOf("e", "E", false, 0)
@@ -3015,7 +3012,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3034,7 +3031,7 @@ class test_AllDefault {
         }
         test(grammarStr = grammarStr, expectedRrs = expectedRrs, expectedTm = expectedTm, expectedTr = expectedTr) {
             define(sentence = "v", sppt = "S{ E{ V{ N:'v' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("e", "V") {
                             propertyString("n", "v")
@@ -3043,7 +3040,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "v w", sppt = "S{ E{ A{ E{V{N:'v' WS:' '}} E{V{N:'w'}} } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("e", "A") {
                             propertyListOfElement("e") {
@@ -3059,7 +3056,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "v w x y z", sppt = "S{ E{ A{ E{V{N:'v' WS:' '}} E{V{N:'w' WS:' '}} E{V{N:'x' WS:' '}} E{V{N:'y' WS:' '}} E{V{N:'z'}} } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("e", "A") {
                             propertyListOfElement("e") {
@@ -3102,7 +3099,7 @@ class test_AllDefault {
             literal("a")
             literal(",")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -3113,7 +3110,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3128,31 +3125,31 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { 'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a,a", sppt = "S { as { 'a' ',' 'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a,a,a", sppt = "S { as { 'a' ',' 'a' ',' 'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a,a,a,a", sppt = "S { as { 'a' ',' 'a' ',' 'a' ',' 'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -3179,7 +3176,7 @@ class test_AllDefault {
             literal(",")
             literal("c", "c")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -3195,7 +3192,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3215,7 +3212,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' bs { <EMPTY_LIST> } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -3223,7 +3220,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' bs { 'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -3231,7 +3228,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab,bc", sppt = "S { a:'a' bs { 'b' ',' 'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -3239,7 +3236,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab,b,bc", sppt = "S { a:'a' bs { 'b' ',' 'b' ',' 'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -3247,7 +3244,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab,b,b,bc", sppt = "S { a:'a' bs { 'b' ',' 'b' ',' 'b' ',' 'b' } c:'c' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -3273,7 +3270,7 @@ class test_AllDefault {
             literal(",")
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListTypeOf("as", "String", false, 0) // of String
@@ -3287,7 +3284,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3307,35 +3304,35 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf())
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                     }
                 }
             }
             define(sentence = "a,a", sppt = "S { as { a:'a' ',' a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                     }
                 }
             }
             define(sentence = "a,a,a", sppt = "S { as { a:'a' ',' a:'a' ',' a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                     }
                 }
             }
             define(sentence = "a,a,a,a", sppt = "S { as { a:'a' ',' a:'a' ',' a:'a' ',' a:'a' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a", "a"))
                     }
@@ -3371,7 +3368,7 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListTypeOf("abs", "AB", false, 0)
@@ -3397,7 +3394,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3425,7 +3422,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S{ abs{ <EMPTY_LIST> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
 
@@ -3434,7 +3431,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S{ abs{ AB{ A{a:'a'} } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -3445,7 +3442,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "b", sppt = "S{ abs{ AB{ B{b:'b'} } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("B") {
@@ -3456,7 +3453,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,a", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ A{a:'a'} } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -3470,7 +3467,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "b,b", sppt = "S{ abs{ AB{ B{b:'b'} } ',' AB{ B{b:'b'} } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("B") {
@@ -3484,7 +3481,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,b", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ B{b:'b'} } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -3498,7 +3495,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,b,a,b,a,b", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ B{b:'b'} } ',' AB { A{a:'a'} } ',' AB{ B{b:'b'} } ',' AB { A{a:'a'} } ',' AB{ B{b:'b'} } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -3544,7 +3541,7 @@ class test_AllDefault {
             literal("a")
             literal(".")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     // no property 'a' because it is list of non-leaf literals
@@ -3561,7 +3558,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3579,42 +3576,42 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { A { 'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("b")
                     }
                 }
             }
             define(sentence = "a.a", sppt = "S { A { 'a' '.' 'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("b")
                     }
                 }
             }
             define(sentence = "a.a.a", sppt = "S { A { 'a' '.' 'a' '.' 'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("b")
                     }
                 }
             }
             define(sentence = "ab", sppt = "S { A { 'a' } §S§opt1 { B{'b'} } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("b", "B") {}
                     }
                 }
             }
             define(sentence = "a.ab", sppt = "S { A { 'a' '.' 'a' } §S§opt1 { B{'b'} } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("b", "B") {}
                     }
                 }
             }
             define(sentence = "a.a.ab", sppt = "S { A { 'a' '.' 'a' '.' 'a' } §S§opt1 { B{'b'} } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("b", "B") {}
                     }
@@ -3642,7 +3639,7 @@ class test_AllDefault {
             literal("A", "a")
             literal("B", "b")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListType("as", false, 0) { ref("String") }
@@ -3658,7 +3655,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3680,7 +3677,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { As { A:'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                         propertyNothing("b")
@@ -3688,7 +3685,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a.a", sppt = "S { As { A:'a' '.' A:'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                         propertyNothing("b")
@@ -3696,7 +3693,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a.a.a", sppt = "S { As { A:'a' '.' A:'a' '.' A:'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                         propertyNothing("b")
@@ -3704,7 +3701,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab", sppt = "S { As { A:'a' } §S§opt1 { B:'b' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                         propertyString("b", "b")
@@ -3712,7 +3709,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a.ab", sppt = "S { As { A:'a' '.' A:'a' } §S§opt1 { B:'b' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                         propertyString("b", "b")
@@ -3720,7 +3717,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a.a.ab", sppt = "S { As { A:'a' '.' A:'a' '.' A:'a' } §S§opt1 { B:'b' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                         propertyString("b", "b")
@@ -3748,7 +3745,7 @@ class test_AllDefault {
             concatenation("a") { literal("a") }
             literal(",")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyListTypeOf("ass", "As", false, 0) // of String
@@ -3766,7 +3763,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3789,7 +3786,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { ass { as { <EMPTY_LIST> } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3800,7 +3797,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S { ass { as { a { 'a' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3813,7 +3810,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aa", sppt = "S { ass { as { a { 'a' } a { 'a' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3827,7 +3824,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,a", sppt = "S{ ass{ as{ a{ 'a' } } ',' as{ a{ 'a' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3845,7 +3842,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aa,aa", sppt = "S{ ass{ as{ a{ 'a' } a{ 'a' } } ',' as{ a{ 'a' } a{ 'a' } } }  }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3865,7 +3862,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,a,a", sppt = "S{ ass{ as{ a{ 'a' } } ',' as{ a{ 'a' } } ',' as{ a{ 'a' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3888,7 +3885,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aaa,a,aa", sppt = "S{ ass{ as{ a{ 'a' } a{ 'a' } a{ 'a' } } ',' as{ a{ 'a' } } ',' as{ a{ 'a' } a{ 'a' } } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3929,7 +3926,7 @@ class test_AllDefault {
             concatenation("S") { ref("§S§group1") }
             concatenation("§S§group1", isPseudo = true) { literal("b"); literal("c"); literal("d") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -3938,7 +3935,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -3953,7 +3950,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bcd", sppt = "S{ §S§group1 { 'b' 'c' 'd' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -3979,7 +3976,7 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyTupleType("\$group", false, 0) {
@@ -3996,7 +3993,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4015,7 +4012,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bcd", sppt = "S{ §S§group1 { b:'b' c:'c' d:'d' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyTuple("\$group", 0) {
                             propertyString("b", "b")
@@ -4044,7 +4041,7 @@ class test_AllDefault {
             literal("a", "a")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4057,7 +4054,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4076,7 +4073,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcde", sppt = "S{ a:'a' §S§group1 { 'b' 'c' 'd' } e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("e", "e")
@@ -4108,7 +4105,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4129,7 +4126,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4152,7 +4149,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcde", sppt = "S { a:'a' §S§group1 {b:'b' c:'c' d:'d'} e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4190,7 +4187,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4216,7 +4213,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4240,7 +4237,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcdbace", sppt = "S { a:'a' §S§group1 {b:'b' c:'c' d:'d'} §S§group2 {b:'b' a:'a' c:'c'} e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4278,7 +4275,7 @@ class test_AllDefault {
             literal("b", "b")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4295,7 +4292,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4316,7 +4313,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abe", sppt = "S { a:'a' §S§group1 { b:'b' }  e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4352,7 +4349,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4375,7 +4372,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4408,7 +4405,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcde", sppt = "S { a:'a' §S§group2{ b:'b' §S§group1{c:'c'} d:'d' }  e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4451,7 +4448,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4468,7 +4465,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4491,7 +4488,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abe", sppt = "S { a:'a' §S§choice1 { b:'b' } e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("\$choice", "b")
@@ -4500,7 +4497,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ace", sppt = "S { a:'a' §S§choice1 { c:'c' } e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("\$choice", "c")
@@ -4509,7 +4506,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ade", sppt = "S { a:'a' §S§choice1 { d:'d' } e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("\$choice", "d")
@@ -4545,7 +4542,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4569,7 +4566,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4600,7 +4597,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abce", sppt = "S { a:'a' §S§choice1 { b:'b' c:'c' } e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4612,7 +4609,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ade", sppt = "S { a:'a' §S§choice1 { d:'d' } e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("\$choice", "d")
@@ -4650,7 +4647,7 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4678,7 +4675,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4710,7 +4707,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcf", sppt = "S { a:'a' §S§choice1 { b:'b' c:'c' } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4722,7 +4719,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adef", sppt = "S { a:'a' §S§choice1 { d:'d' e:'e' } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4767,7 +4764,7 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4795,7 +4792,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4827,7 +4824,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "axbcf", sppt = "S { a:'a' §S§choice2 { §S§choice1 { 'x' } b:'b' c:'c' } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4839,7 +4836,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adef", sppt = "S { a:'a' §S§choice2 { d:'d' e:'e' } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4881,7 +4878,7 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -4909,7 +4906,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -4941,7 +4938,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "af", sppt = "S { a:'a' §S§opt1 { <EMPTY> } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyNothing("\$choice")
@@ -4950,7 +4947,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abcf", sppt = "S { a:'a' §S§opt1 { §S§choice1 { b:'b' c:'c' } } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4962,7 +4959,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adef", sppt = "S { a:'a' §S§opt1 { §S§choice1 { d:'d' e:'e' } } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4997,7 +4994,7 @@ class test_AllDefault {
             literal("c", "c")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -5016,7 +5013,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -5045,7 +5042,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abce", sppt = "S { a:'a' §S§group1 { §S§opt1 { b:'b' } c:'c' } e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -5057,7 +5054,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ace", sppt = "S { a:'a' §S§group1 { §S§opt1 { <EMPTY> } c:'c' } e:'e' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -5100,7 +5097,7 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -5124,7 +5121,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -5156,7 +5153,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abef", sppt = "S { a:'a' §S§group2 { §S§choice1 { b:'b' } §S§group1 { <EMPTY> } e:'e' } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -5171,7 +5168,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "acef", sppt = "S { a:'a' §S§group2 { §S§choice1 { c:'c' } §S§group1 { <EMPTY> } e:'e' } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -5186,7 +5183,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abdef", sppt = "S { a:'a' §S§group2 { §S§choice1 { b:'b' } §S§group1 { d:'d' } e:'e' } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -5201,7 +5198,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "acdef", sppt = "S { a:'a' §S§group2 { §S§choice1 { c:'c' } §S§group1 { d:'d' } e:'e' } f:'f' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -5246,7 +5243,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -5271,7 +5268,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -5306,7 +5303,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abce", sppt = "S { a:'a' §S§choice1 { BC { b:'b' c:'c' } } e:'e' }") {
-                asmSimple {
+                asmSimple (typesDomain = expectedTm){
                     element("S") {
                         propertyString("a", "a")
                         propertyElementExplicitType("\$choice", "BC") {
@@ -5318,7 +5315,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ade", sppt = "S { a:'a' §S§choice1 { §S§multi1 { d:'d' } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d"))
@@ -5327,7 +5324,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adde", sppt = "S { a:'a' §S§choice1 { §S§multi1 { d:'d' d:'d' } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d", "d"))
@@ -5336,7 +5333,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "addde", sppt = "S { a:'a' §S§choice1 { §S§multi1 { d:'d' d:'d' d:'d' } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d", "d", "d"))
@@ -5376,7 +5373,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -5401,7 +5398,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -5436,7 +5433,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ae", sppt = "S { a:'a' §S§opt1 { <EMPTY> } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyNothing("\$choice")
@@ -5445,7 +5442,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abce", sppt = "S { a:'a' §S§opt1 { §S§choice1 { BC { b:'b' c:'c' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyElementExplicitType("\$choice", "BC") {
@@ -5457,7 +5454,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ade", sppt = "S { a:'a' §S§opt1 { §S§choice1 { §S§multi1 { d:'d' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d"))
@@ -5466,7 +5463,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adde", sppt = "S { a:'a' §S§opt1 { §S§choice1 { §S§multi1 { d:'d' d:'d' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d", "d"))
@@ -5475,7 +5472,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "addde", sppt = "S { a:'a' §S§opt1 { §S§choice1 { §S§multi1 { d:'d' d:'d' d:'d' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d", "d", "d"))
@@ -5510,7 +5507,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 unionFor("S","S") {
                     tupleType {
@@ -5533,7 +5530,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -5615,7 +5612,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 unionFor("S","S") {
                     tupleType {
@@ -5642,7 +5639,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -5733,7 +5730,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 unionFor("S","S") {
                     tupleType {
@@ -5760,7 +5757,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -5853,7 +5850,7 @@ class test_AllDefault {
             literal("x", "x")
             literal("y", "y")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("x", "String", false, 0)
@@ -5883,7 +5880,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -5916,7 +5913,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "xaby", sppt = "S { x:'x' §S§choice1 { a:'a' b:'b' } y:'y' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("x", "x")
                         propertyTuple("\$choice") {
@@ -5928,7 +5925,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "xcdey", sppt = "S { x:'x' §S§choice1 { c:'c' d:'d' e:'e' } y:'y' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("x", "x")
                         propertyTuple("\$choice") {
@@ -5969,7 +5966,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyUnionTypeOf("ch", "CH", false, 0)
@@ -5995,7 +5992,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -6042,7 +6039,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ab", sppt = "S { CH { a:'a' b:'b' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyTuple("ch") {
                             propertyString("a", "a")
@@ -6052,7 +6049,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "cde", sppt = "S { CH { c:'c' d:'d' e:'e' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyTuple("ch") {
                             propertyString("c", "c")
@@ -6095,7 +6092,7 @@ class test_AllDefault {
             literal("x", "x")
             literal("y", "y")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("x", "String", false, 0)
@@ -6125,7 +6122,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -6176,7 +6173,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "xaby", sppt = "S { x:'x' CH { a:'a' b:'b' } y:'y' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("x", "x")
                         propertyTuple("ch") {
@@ -6188,7 +6185,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "xcdey", sppt = "S { x:'x' CH { c:'c' d:'d' e:'e' } y:'y' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("x", "x")
                         propertyTuple("ch") {
@@ -6252,7 +6249,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -6288,7 +6285,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -6355,7 +6352,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ae", sppt = "S { a:'a' §S§opt1 { <EMPTY> } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyNothing("x")
@@ -6364,7 +6361,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abce", sppt = "S { a:'a' §S§opt1 { X { R { §R§group1 { b:'b' c:'c' } } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("x") {
@@ -6378,7 +6375,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "axe", sppt = "S { a:'a' §S§opt1 { X { D { 'x' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("x", "x")
@@ -6434,7 +6431,7 @@ class test_AllDefault {
             literal("d", "d")
             embedded("§Inner§S§embedded1", Inner, "S", isPseudo = true)
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Inner") {
                 unionFor("S","S") {
                     typeRef("String")
@@ -6475,23 +6472,23 @@ class test_AllDefault {
         }
         val expectedTr = asmTransform(
             "FromGrammarOuter",
-            typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain("FromGrammarParsedGrammarUnit", true) {
                 namespace("test.Outer") {} //default adds 'std' namespace
                 namespace("test.Inner") {} //default adds 'std' namespace
             },
             true
         ) {
             namespace("test") {
-                transform("Inner") {
+                this.ruleSet("Inner") {
                     importTypes("test.Inner")
                     unionRule(
                         "S", "S",$$"""
-                       when {
-                          0 == $alternative -> with(child[0]) $self
-                          1 == $alternative -> with(child[0]) $self
-                          else -> $nothing
-                       }
-                    """.trimIndent()
+                                   when {
+                                      0 == $alternative -> with(child[0]) $self
+                                      1 == $alternative -> with(child[0]) $self
+                                      else -> $nothing
+                                   }
+                                """.trimIndent()
                     ) {
                         typeRef("String")
                         typeRef("S1")
@@ -6502,16 +6499,16 @@ class test_AllDefault {
                     }
                     leafStringRule("a")
                 }
-                transform("Outer") {
+                this.ruleSet("Outer") {
                     importTypes("test.Outer")
                     unionRule(
                         "S", "S",$$"""
-                       when {
-                          0 == $alternative -> with(child[0]) $self
-                          1 == $alternative -> with(child[0]) $self
-                          else -> $nothing
-                       }
-                    """.trimIndent()
+                                   when {
+                                      0 == $alternative -> with(child[0]) $self
+                                      1 == $alternative -> with(child[0]) $self
+                                      else -> $nothing
+                                   }
+                                """.trimIndent()
                     ) {
                         typeRef("String")
                         typeRef("S1")
@@ -6522,20 +6519,20 @@ class test_AllDefault {
                     }
                     unionRule(
                         "B", "B",$$"""
-                       when {
-                          0 == $alternative -> tuple {
-                              b := child[0]
-                              s := with(child[1]) $self
-                              b2 := child[2]
-                          }
-                          1 == $alternative -> tuple {
-                              c := child[0]
-                              s := with(child[1]) $self
-                              c2 := child[2]
-                          }
-                          else -> $nothing
-                       }
-                    """
+                                   when {
+                                      0 == $alternative -> tuple {
+                                          b := child[0]
+                                          s := with(child[1]) $self
+                                          b2 := child[2]
+                                      }
+                                      1 == $alternative -> tuple {
+                                          c := child[0]
+                                          s := with(child[1]) $self
+                                          c2 := child[2]
+                                      }
+                                      else -> $nothing
+                                   }
+                                """
                     ) {
                         tupleType {
                             typeRef("b", "String", false)
@@ -6561,12 +6558,12 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "d", sppt = "S { d:'d' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("d")
                 }
             }
             define(sentence = "babd", sppt = "S { S1 { B{ b:'b' §Inner§S§embedded1:Inner::S { a : 'a' }  b:'b' } S { d:'d' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S1") {
                         propertyTuple("b") {
                             propertyString("b", "b")
@@ -6578,7 +6575,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "cacd", sppt = "S { S1 { B{ c:'c' §Inner§S§embedded1:Inner::S { a : 'a' }  c:'c' } S { d:'d' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S1") {
                         propertyTuple("b") {
                             propertyString("c", "c")
@@ -6633,7 +6630,7 @@ class test_AllDefault {
             concatenation("C") { literal("c"); ref("§I§S§embedded1"); literal("c") }
             embedded("§I§S§embedded1", Inner, "S", isPseudo = true)
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.I") {
                 dataFor("S", "S") {
                     subtypes("A", "SA")
@@ -6673,14 +6670,14 @@ class test_AllDefault {
         }
         val expectedTr = asmTransform(
             "FromGrammarO",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 namespace("test.O") {}
                 namespace("test.I") {}
             },
             true
         ) {
             namespace("test") {
-                transform("I") {
+                this.ruleSet("I") {
                     importTypes("test.I")
                     subtypeRule("S", "S")
                     createObject("SA", "SA") {
@@ -6692,7 +6689,7 @@ class test_AllDefault {
                     }
                     leafStringRule("a")
                 }
-                transform("O") {
+                this.ruleSet("O") {
                     importTypes("test.O")
                     subtypeRule("S", "S")
                     createObject("SBC", "SBC") {
@@ -6716,7 +6713,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bab", sppt = "S { B { 'b' §I§S§embedded1:I::S { A { a:'a' } } 'b' } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("B") {
                         propertyElementExplicitType("s", "test.I.A") {
                             propertyString("a", "a")
@@ -6745,7 +6742,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -6754,7 +6751,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -6768,7 +6765,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -6796,7 +6793,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -6805,7 +6802,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -6819,7 +6816,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -6851,7 +6848,7 @@ class test_AllDefault {
             pattern("NAME", "[a-zA-Z][a-zA-Z0-9]*")
             literal(",")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 // S = type ;
                 dataFor("S", "S") {
@@ -6877,7 +6874,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -6904,7 +6901,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "A", sppt = "S { type { NAME:'A' §type§opt1  { <EMPTY> } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("type", "Type") {
                             propertyString("name", "A")
@@ -6929,7 +6926,7 @@ class test_AllDefault {
                    } } 
                 """
             ) {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("type", "Type") {
                             propertyString("name", "A")
@@ -6962,7 +6959,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -6971,7 +6968,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -6985,7 +6982,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7008,7 +7005,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7017,7 +7014,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7031,7 +7028,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7058,7 +7055,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7067,7 +7064,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7081,7 +7078,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7104,7 +7101,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7113,7 +7110,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7127,7 +7124,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7150,7 +7147,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7159,7 +7156,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7173,7 +7170,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7195,7 +7192,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7204,7 +7201,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7218,7 +7215,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7241,7 +7238,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7250,7 +7247,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7264,7 +7261,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7296,7 +7293,7 @@ class test_AllDefault {
             pattern("NAME", "[a-zA-Z][a-zA-Z0-9]+")
             pattern("NUMBER", "[0-9]+")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                     propertyPrimitiveType("id", "String", false, 0)
@@ -7310,7 +7307,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7330,7 +7327,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { ID:'a' §S§multi1 { <EMPTY_LIST> } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("id", "a")
                         propertyListOfString("\$choiceList", emptyList())
@@ -7338,7 +7335,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a bb 12", sppt = "S { ID:'a' WS:' ' §S§multi1 { §S§choice1 { NAME:'bb' WS:' ' } §S§choice1 { NUMBER:'12' } } }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("id", "a")
                         propertyListOfString("\$choiceList", listOf("bb", "12"))
@@ -7361,7 +7358,7 @@ class test_AllDefault {
                   }
                 """.trimIndent()
             ) {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("id", "a")
                         propertyListOfString("\$choiceList", listOf("bb", "12", "cc", "45", "dd", "98"))
@@ -7388,7 +7385,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7397,7 +7394,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7411,7 +7408,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7438,7 +7435,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7447,7 +7444,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7461,7 +7458,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7490,7 +7487,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7499,7 +7496,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7513,7 +7510,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7542,7 +7539,7 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S") {
                 }
@@ -7551,7 +7548,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7565,7 +7562,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7602,7 +7599,7 @@ class test_AllDefault {
             pattern("b", "(\\Qb\\E)(\\Qb\\E)")
             literal(",")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 unionFor("S","S") {
                     typeRef("As")
@@ -7626,7 +7623,7 @@ class test_AllDefault {
         val expectedTr = asmGrammarTransform(
             "FromGrammarTest",
             "test.Test",
-            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
@@ -7656,7 +7653,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -7681,7 +7678,7 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Base") {
                 stringTypeFor("a")
             }
@@ -7696,18 +7693,18 @@ class test_AllDefault {
         }
         val expectedTr = asmTransform(
             "FromGrammarTest",
-            typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Base") {}
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
         ) {
             namespace("test") {
-                transform("Base") {
+                this.ruleSet("Base") {
                     importTypes("test.Base")
                     leafStringRule("a")
                 }
-                transform("Test") {
+                this.ruleSet("Test") {
                     extends("Base")
                     importTypes("test.Base","test.Test")
                     createObject("S","S") {
@@ -7727,7 +7724,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { A { a:'a'} }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("a", "A") {
                             propertyString("a","a")
@@ -7755,7 +7752,7 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Base") {
                 dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -7770,21 +7767,21 @@ class test_AllDefault {
         }
         val expectedTr = asmTransform(
             "FromGrammarTest",
-            typeModel("FromGrammarParsedGrammarUnit", true) {
+            typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Base") {}
                 grammarTypeNamespace("test.Test") {}
             }.also { it.resolveImports() },
             true
         ) {
             namespace("test") {
-                transform("Base") {
+                this.ruleSet("Base") {
                     importTypes("test.Base")
                     createObject("A","A") {
                         assignment("a", null, "child[0]")
                     }
                     leafStringRule("a")
                 }
-                transform("Test") {
+                this.ruleSet("Test") {
                     extends("Base")
                     importTypes("test.Base", "test.Test")
                     createObject("S","S") {
@@ -7801,7 +7798,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { A { a:'a'} }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                asmSimple(typesDomain = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("a", "A") {
                             propertyString("a","a")

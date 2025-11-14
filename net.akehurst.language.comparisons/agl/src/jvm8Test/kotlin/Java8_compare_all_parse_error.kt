@@ -15,13 +15,14 @@
  */
 package net.akehurst.language.comparisons.agl
 
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
+import net.akehurst.language.sppt.api.SharedPackedParseTree
 import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -44,10 +45,10 @@ class Java8_compare_all_parse_error(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String, goalRuleName: String): LanguageProcessor<Asm,ContextSimple> {
+        fun createAndBuildProcessor(aglFile: String, goalRuleName: String): LanguageProcessor<Asm,ContextWithScope<Any,Any>> {
             val bytes = Java8_compare_all_parse_error::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
-            val res = Agl.processorFromStringDefault(javaGrammarStr)
+            val res = Agl.processorFromStringSimple(GrammarString(javaGrammarStr))
             res.processor!!.buildFor(Agl.parseOptions { goalRuleName(goalRuleName) })
             return res.processor!!
         }
@@ -60,7 +61,7 @@ class Java8_compare_all_parse_error(val file: FileData) {
         var input: String? = null
 
         @ExperimentalTime
-        fun parse(file: FileData, proc: LanguageProcessor<Asm,ContextSimple>, goalRuleName: String): TimedValue<SharedPackedParseTree?> {
+        fun parse(file: FileData, proc: LanguageProcessor<Asm,ContextWithScope<Any,Any>>, goalRuleName: String): TimedValue<SharedPackedParseTree?> {
             return TimeSource.Monotonic.measureTimedValue {
                 try {
                     val res = proc.parse(input!!,Agl.parseOptions { goalRuleName(goalRuleName) })

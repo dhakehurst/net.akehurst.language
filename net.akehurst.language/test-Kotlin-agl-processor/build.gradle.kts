@@ -1,16 +1,19 @@
 plugins {
-
+    id("project-conventions")
 }
 
 dependencies {
-    commonTestImplementation(project(":agl-processor"))
-//    commonTestImplementation("net.akehurst.language:agl-processor:4.0.1")
 
-    commonTestImplementation("junit:junit:4.13.2")
 }
 
 kotlin {
-    jvm("jvm8") {
+    sourceSets {
+        commonTest {
+            dependencies {
+                implementation(project(":agl-processor"))
+                implementation("junit:junit:4.13.2")
+            }
+        }
     }
 }
 

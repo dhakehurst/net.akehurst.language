@@ -17,94 +17,22 @@
 
 package net.akehurst.language.expressions.processor
 
-//import net.akehurst.language.transform.processor.AsmTransformInterpreter
+//import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
+import net.akehurst.language.objectgraph.api.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
-data class EvaluationContext<SelfType:Any>(
-    val parent: EvaluationContext<SelfType>?,
-    val namedValues: Map<String, TypedObject<SelfType>>
-) {
-    companion object {
-        fun <SelfType:Any> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
-        fun <SelfType:Any> ofSelf(self: TypedObject<SelfType>) = of(mapOf(RootExpressionDefault.SELF.name to self))
-    }
-
-    val self = namedValues[RootExpressionDefault.SELF.name]
-
-    fun getOrInParent(name: String): TypedObject<SelfType>? = namedValues[name] ?: parent?.getOrInParent(name)
-
-    fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
-
-    override fun toString(): String {
-        val sb = StringBuilder()
-        this.parent?.let {
-            sb.append(it.toString())
-            sb.append("----------\n")
-        }
-        this.namedValues.forEach {
-            sb.append(it.key)
-            sb.append(" := ")
-            sb.append(it.value.toString())
-            sb.append("\n")
-        }
-        return sb.toString()
-    }
-}
-
-interface TypedObject<out SelfType:Any> {
-    val self: SelfType
-    val type: TypeInstance
-    fun asString(): String
-}
-
-interface ObjectGraph<SelfType:Any> {
-    var typeModel: TypeModel
-
-    fun typeFor(obj: SelfType?): TypeInstance
-    fun toTypedObject(obj:SelfType?) : TypedObject<SelfType>
-
-    fun nothing(): TypedObject<SelfType>
-    fun any(value: Any): TypedObject<SelfType>
-    fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject<SelfType>
-    fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<SelfType>>): TypedObject<SelfType>
-    fun createCollection(qualifiedTypeName: QualifiedName, collection:Iterable<TypedObject<SelfType>>): TypedObject<SelfType>
-    fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<SelfType>
-    fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
-
-    fun valueOf(value: TypedObject<SelfType>): Any
-
-    // would like to use Long as index to be compatible with Integer implemented as Long - but index in underlying kotlin is always an Int
-    fun getIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType>
-
-    /**
-     * value of the given PropertyDeclaration or Nothing if no such property exists
-     */
-    fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType>
-    fun setProperty(tobj: TypedObject<SelfType>, propertyName: String, value: TypedObject<SelfType>)
-
-    fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>
-    fun cast(tobj: TypedObject<SelfType>, newType: TypeInstance): TypedObject<SelfType>
-}
-
-////val TypedObject<SelfType>.asmValue
-//    get() = when (this) {
-//        is TypedObjectAsmValue -> this.self
-//        else -> error("Not possible to convert ${this::class.simpleName} to AsmValue")
-//    }
-
-open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
-    val objectGraph: ObjectGraph<SelfType>,
+open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
+    val objectGraph: ObjectGraphAccessorMutator<SelfType>,
     val issues: IssueHolder
 ) {
-    val typeModel = objectGraph.typeModel
+    val typeModel = objectGraph.typesDomain
     //val typeResolver = ExpressionTypeResolver(typeModel, issues)
 
     /**
@@ -126,6 +54,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
         is RootExpression -> this.evaluateRootExpression(evc, expression)
         is LiteralExpression -> this.evaluateLiteralExpression(expression)
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
+        is FunctionCall -> this.evaluateFunctionCall(evc, expression)
         is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
         is OnExpression -> TODO()
         is NavigationExpression -> this.evaluateNavigation(evc, expression)
@@ -151,7 +80,10 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
             expression.name.startsWith("\$") -> evaluateSpecial(evc, expression.name)
             else -> evc.getOrInParent(expression.name)
                 ?: evc.self?.let { evaluatePropertyName(it, PropertyName(expression.name)) }
-                ?: error("Evaluation Context does not contain '${expression.name}' and there is no 'self' object with that property name")
+                ?: let {
+                    issues.error(null, "Evaluation Context does not contain '${expression.name}' and there is no 'self' object with that property name")
+                    objectGraph.nothing()
+                }
         }
     }
 
@@ -164,6 +96,13 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
 
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject<SelfType> =
         objectGraph.createPrimitiveValue(expression.qualifiedTypeName, expression.value)
+
+    private fun evaluateFunctionCall(evc: EvaluationContext<SelfType>, expression: FunctionCall): TypedObject<SelfType> {
+        val argValues = expression.arguments.map {
+            evaluateExpression(evc, it)
+        }
+        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues)
+    }
 
     private fun evaluateNavigation(evc: EvaluationContext<SelfType>, expression: NavigationExpression): TypedObject<SelfType> {
         // start should be a RootExpression or LiteralExpression
@@ -181,7 +120,6 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
     }
 
     private fun evaluatePropertyName(obj: TypedObject<SelfType>, propertyName: PropertyName): TypedObject<SelfType> {
-        val type = obj.type
         return objectGraph.getProperty(obj, propertyName.value)
     }
 
@@ -285,10 +223,13 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
                 }
             }
 
-            else -> error("'$op' must have same type for lhs and rhs")
+            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
         }
 
         "+" -> when {
+            objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
+            objectGraph.isNothing(lhs) -> rhs
+            objectGraph.isNothing(rhs) -> lhs
             lhs.type.conformsTo(StdLibDefault.String) && rhs.type.conformsTo(StdLibDefault.String) -> {
                 val lhsv = objectGraph.valueOf(lhs) as String
                 val rhsv = objectGraph.valueOf(rhs) as String
@@ -332,56 +273,6 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
         return evaluateExpression(evc, expression.elseOption.expression)
     }
 
-    private fun evaluateCreateTuple(evc: EvaluationContext<SelfType>, expression: CreateTupleExpression): TypedObject<SelfType> {
-        val typeArgs = mutableListOf<TypeArgumentNamed>()
-        val tuple = objectGraph.createTupleValue(typeArgs)
-        expression.propertyAssignments.forEach {
-            val value = evaluateExpression(evc, it.rhs)
-            objectGraph.setProperty(tuple, it.lhsPropertyName, value)
-            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
-        }
-        return tuple
-    }
-
-    private fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
-        val typeDecl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
-            ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
-//        val asmPath = evaluateRootExpression(evc, RootExpressionSimple(AsmTransformInterpreter.PATH.value)) //FIXME: don't like this import on AsmTransformInterpreter
-        return when (typeDecl) {
-            is DataType, is ValueType -> {
-                val args = expression.constructorArguments.map { evaluateExpression(evc, it.rhs) }
-                val constructorArgs = when {
-                    args.isNotEmpty() -> {
-                        val constructors = when(typeDecl) {
-                            is DataType -> typeDecl.constructors
-                            is ValueType -> typeDecl.constructors
-                            else -> error("Type '${typeDecl.qualifiedName.value}' has no constructors")
-                        }
-                        val constructor = constructors.firstOrNull { cons ->
-                            cons.parameters.size == args.size && cons.parameters.zip(args).all { (p, a) -> a.type.conformsTo(p.typeInstance) }
-                        } ?: error("Constructor not found for '${typeDecl.qualifiedName.value}' with arguments ${args.joinToString { it.type.qualifiedTypeName.value }}")
-
-                        // val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
-                        // if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
-
-                        constructor.parameters.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.associate { it }
-                    }
-                    else -> emptyMap()
-                }
-
-                val obj = objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
-                expression.propertyAssignments.forEach {
-                    val value = evaluateExpression(evc, it.rhs)
-                    objectGraph.setProperty(obj, it.lhsPropertyName, value)
-                }
-                return obj
-            }
-            else -> error("Cannot create an object of type '${typeDecl.qualifiedName.value}'")
-        }
-
-
-    }
-
     private fun evaluateLambda(evc: EvaluationContext<SelfType>, expression: LambdaExpression): TypedObject<SelfType> {
         val lambda = objectGraph.createLambdaValue { it ->
             val newEvc = evc.child(mapOf("it" to it))
@@ -409,12 +300,63 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
         return evaluateExpression(evc, expression.expression)
     }
 
-     fun evaluateTypeReference(typeReference: TypeReference): TypeInstance {
+    fun evaluateTypeReference(typeReference: TypeReference): TypeInstance {
         //TODO: issues rather than exceptions!
         val decl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
         val targs = typeReference.typeArguments.map { evaluateTypeReference(it).asTypeArgument }
         return decl.type(targs, typeReference.isNullable)
     }
+
+    // mutation
+    private fun evaluateCreateTuple(evc: EvaluationContext<SelfType>, expression: CreateTupleExpression): TypedObject<SelfType> {
+        val typeArgs = mutableListOf<TypeArgumentNamed>()
+        val tuple = objectGraph.createTupleValue(typeArgs)
+        expression.propertyAssignments.forEach {
+            val value = evaluateExpression(evc, it.rhs)
+            objectGraph.setProperty(tuple, it.lhsPropertyName, value)
+            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
+        }
+        return tuple
+    }
+
+    private fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
+        val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
+            ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
+        return when (typeDef) {
+            is DataType, is ValueType -> {
+                val args = expression.constructorArguments.map { evaluateExpression(evc, it.rhs) }
+                val constructorArgs = when {
+                    args.isNotEmpty() -> {
+                        val constructors = when (typeDef) {
+                            is DataType -> typeDef.constructors
+                            is ValueType -> typeDef.constructors
+                            else -> error("Type '${typeDef.qualifiedName.value}' has no constructors")
+                        }
+                        val constructor = constructors.firstOrNull { cons ->
+                            cons.parameters.size == args.size && cons.parameters.zip(args).all { (p, a) -> a.type.conformsTo(p.typeInstance) }
+                        } ?: error("Constructor not found for '${typeDef.qualifiedName.value}' with arguments ${args.joinToString { it.type.qualifiedTypeName.value }}")
+
+                        // val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
+                        // if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
+
+                        constructor.parameters.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.toMap()
+                    }
+
+                    else -> emptyMap()
+                }
+
+                val obj = objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
+                expression.propertyAssignments.forEach {
+                    val value = evaluateExpression(evc, it.rhs)
+                    objectGraph.setProperty(obj, it.lhsPropertyName, value)
+                }
+                return obj
+            }
+
+            else -> error("Cannot create an object of type '${typeDef.qualifiedName.value}'")
+        }
+    }
+
 
 }
 

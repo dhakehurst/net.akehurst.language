@@ -43,7 +43,14 @@ class RuntimeRule(
     // not sure if I really want to add the data to this class as only used for AsmSimple not runtime use?
 
     val isExplicitlyNamed: Boolean get() = this.name != null
-    override val tag: String get() = this.name ?: if (this.isTerminal) this.rhs.toString() else error("Internal Error: no tag")
+    override val tag: String
+        get() =
+            this.name
+                ?: if (this.isTerminal) {
+                    (this.rhs as RuntimeRuleRhsTerminal).toString() //TODO: a bit unsafe to use toString here!
+                } else {
+                    error("Internal Error: no tag")
+                }
 
     val isGoal get() = this.rhs is RuntimeRuleRhsGoal
     override val isEndOfText: Boolean get() = this == RuntimeRuleSet.END_OF_TEXT
@@ -113,8 +120,8 @@ class RuntimeRule(
 
     override val unescapedTerminalValue: String
         get() = when (rhs) {
-            is RuntimeRuleRhsLiteral -> (rhs as RuntimeRuleRhsLiteral).literalUnescaped
-            is RuntimeRuleRhsPattern -> (rhs as RuntimeRuleRhsPattern).patternUnescaped
+            is RuntimeRuleRhsLiteral -> (rhs as RuntimeRuleRhsLiteral).literalUnescaped.value
+            is RuntimeRuleRhsPattern -> (rhs as RuntimeRuleRhsPattern).patternUnescaped.value
             else -> error("'unescapedTerminalValue' is only valid for Literals and Patterns")
         }
 

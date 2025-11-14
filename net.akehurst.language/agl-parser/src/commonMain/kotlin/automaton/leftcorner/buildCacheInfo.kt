@@ -42,11 +42,11 @@ data class LookaheadSetPart(
         fun Collection<LookaheadSetPart>.unionAll() = this.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
     }
 
-    val regex by lazy {
+    val regex: Regex by lazy {
         val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
             when (it.rhs) {
-                is RuntimeRuleRhsLiteral -> "\\Q${(it.rhs as RuntimeRuleRhsLiteral).literalUnescaped}\\E"
-                is RuntimeRuleRhsPattern -> (it.rhs as RuntimeRuleRhsPattern).patternUnescaped
+                is RuntimeRuleRhsLiteral -> (it.rhs as RuntimeRuleRhsLiteral).literalUnescaped.escapedForRegex
+                is RuntimeRuleRhsPattern -> (it.rhs as RuntimeRuleRhsPattern).patternUnescaped.escapedForRegex
                 else -> error("Internal Error: rhs not a literal that can be joined to a regex")
             }
         }

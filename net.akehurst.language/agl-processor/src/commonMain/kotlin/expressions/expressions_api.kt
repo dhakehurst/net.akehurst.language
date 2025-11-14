@@ -43,6 +43,11 @@ interface CreateObjectExpression : Expression {
     val propertyAssignments: List<AssignmentStatement>
 }
 
+interface FunctionCall: Expression {
+    val possiblyQualifiedName: PossiblyQualifiedName
+    val arguments: List<Expression>
+}
+
 interface CreateTupleExpression : Expression {
     val propertyAssignments: List<AssignmentStatement>
 }

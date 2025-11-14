@@ -21,8 +21,7 @@ import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
-import net.akehurst.language.style.processor.AglStyle
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.builder.typesDomain
 
 object AglCrossReference {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
@@ -137,8 +136,8 @@ interface ReferenceExpressionCollection {
 }
 """
 
-    val typeModel by lazy {
-        typeModel(NAME, true, AglExpressions.typesModel.namespace) {
+    val typesDomain by lazy {
+        typesDomain(NAME, true, AglExpressions.typesDomain.namespace) {
             namespace("net.akehurst.language.reference.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.expressions.api")) {
                 interface_("ScopeDefinition") {
                     supertype("Formatable")
@@ -184,8 +183,8 @@ interface ReferenceExpressionCollection {
                 interface_("CrossReferenceNamespace") {
                     supertype("Namespace"){ ref("DeclarationsForNamespace") }
                 }
-                interface_("CrossReferenceModel") {
-                    supertype("Model"){ ref("CrossReferenceNamespace"); ref("DeclarationsForNamespace") }
+                interface_("CrossReferenceDomain") {
+                    supertype("Domain"){ ref("CrossReferenceNamespace"); ref("DeclarationsForNamespace") }
                 }
             }
             namespace("net.akehurst.language.reference.asm", listOf("net.akehurst.language.reference.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.expressions.api", "net.akehurst.language.base.asm")) {

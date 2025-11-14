@@ -19,7 +19,6 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsNonTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
-import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.treedata.CompleteTreeDataNode

@@ -126,12 +126,12 @@ class LookaheadSet(
             return c
         }
 
-    val regex by lazy {
-        val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
+    val regex: Regex by lazy {
+       val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
             if (it.isPattern) {
-                (it.rhs as RuntimeRuleRhsPattern).patternUnescaped
+                (it.rhs as RuntimeRuleRhsPattern).patternUnescaped.escapedForRegex
             } else {
-                "\\Q${(it.rhs as RuntimeRuleRhsLiteral).literalUnescaped}\\E"
+                (it.rhs as RuntimeRuleRhsLiteral).literalUnescaped.escapedForRegex
             }
         }
         Regex(str)

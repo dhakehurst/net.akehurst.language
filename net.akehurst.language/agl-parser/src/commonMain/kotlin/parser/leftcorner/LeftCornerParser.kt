@@ -27,8 +27,10 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.*
-import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.scanner.api.Matchable
+import net.akehurst.language.scanner.api.MatchableKind
 import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SharedPackedParseTree
@@ -45,7 +47,9 @@ class ParseOptionsDefault(
     override var sentenceIdentity: SentenceIdentityFunction = SentenceIdentityFunctionNull,
     override var reportErrors: Boolean = true,
     override var reportGrammarAmbiguities: Boolean = false,
-    override var cacheSkip: Boolean = true
+    override var cacheSkip: Boolean = true,
+    override var reverseFindWordStartRegex: String? = null,
+    override var reverseFindWordStartBySkipRules: Boolean = true
 ) : ParseOptions {
     override fun clone() = ParseOptionsDefault(
         enabled = enabled,
@@ -92,7 +96,7 @@ class LeftCornerParser(
     internal val runtimeRuleSet = ruleSet as RuntimeRuleSet
 
     // cached only so it can be interrupted
-    private var runtimeParser: RuntimeParser? = null
+    private var runtimeParser: RuntimeParserAgl? = null
 
     private val _issues = IssueHolder(LanguageProcessorPhase.PARSE)
 
@@ -132,7 +136,7 @@ class LeftCornerParser(
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
-        val parseArgs = RuntimeParser.Companion.GrowArgs(
+        val parseArgs = RuntimeParserAgl.Companion.GrowArgs(
             true,
             false,
             false,
@@ -168,7 +172,7 @@ class LeftCornerParser(
         }
     }
 
-    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp: RuntimeParser) {
+    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp: RuntimeParserAgl) {
         if (options.reportErrors) {
             // need to include the 'startSkipFailures',
             val map1 = rp.failedReasons //no need to clone it as it will not be modified after this point
@@ -180,7 +184,7 @@ class LeftCornerParser(
 
             // find embedded failures
             val map2 = map1.values.flatten().flatMap { v ->
-                when(v) {
+                when (v) {
                     is FailedParseReasonEmbedded -> v.embededFailedParseReasons.map { it }
                     else -> listOf(v)
                 }
@@ -195,11 +199,11 @@ class LeftCornerParser(
         }
     }
 
-    private fun createRuntimeParser(sentence: Sentence, goalRuleName: String, scanner: Scanner, automatonKind: AutomatonKind, cacheSkip: Boolean): RuntimeParser {
+    private fun createRuntimeParser(sentence: Sentence, goalRuleName: String, scanner: Scanner, automatonKind: AutomatonKind, cacheSkip: Boolean): RuntimeParserAgl {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRuleName, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        return RuntimeParser(sentence, false, s0.stateSet, skipStateSet, cacheSkip, goalRule, scanner, _issues)
+        return RuntimeParserAgl(sentence, false, s0.stateSet, skipStateSet, cacheSkip, goalRule, scanner, _issues)
     }
 
     private fun addParseIssue(
@@ -234,7 +238,7 @@ class LeftCornerParser(
             when (fr) {
                 is FailedParseReasonLookahead -> {
                     when (fr.attemptedAction) {
-                        // don't use this unless the transition.to matches text at current position
+                        // don't use this unless the transition.to matches text at the current position
                         ParseAction.WIDTH -> {
                             val rhs = fr.transition.to.firstRule.rhs
                             when {
@@ -295,27 +299,22 @@ class LeftCornerParser(
         }
         val y = x.groupBy { it.first.position }
         return y[failedAtPosition]?.let { Pair(it.first().first, it.map { it.second }.toSet()) }
-            ?: Pair(InputLocation(failedAtPosition, 0, 0, 1,options.sentenceIdentity?.invoke()), emptySet())
+            ?: Pair(InputLocation(failedAtPosition, 0, 0, 1, options.sentenceIdentity.invoke()), emptySet())
 
     }
 
     override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult {
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val cacheSkip = options.cacheSkip
-
-        val previousText = sentenceText.substring(0, position)
-        val revWordStartPosition = previousText.reversed().let {
-            Regex("\\s+").find(it)?.range?.start //TODO: use scanner to find this using skip terminals
-        } ?: position
-
+        val revWordStartPosition = findReverseStartPosition(sentenceText, position, options)
         val wordStartPosition = position - revWordStartPosition
         val usedText = sentenceText.substring(0, wordStartPosition) // parse from start (0) to position - ignore rest of text
         scanner.reset()
-        val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity?.invoke()), goalRuleName, scanner, automatonKind, cacheSkip)
+        val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity.invoke()), goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
-        val parseArgs = RuntimeParser.forExpectedAt
+        val parseArgs = RuntimeParserAgl.forExpectedAt
         val startSkipFailures = rp.start(0, possibleEndOfText, parseArgs)
         var seasons = 1
 
@@ -336,7 +335,7 @@ class LeftCornerParser(
          */
         //val nextExpected = this.findNextExpected(rp, matches, possibleEndOfText)
         return if (rp.failedReasons.isEmpty()) {
-            ExpectedAtResultDefault(wordStartPosition,emptySet())
+            ExpectedAtResultDefault(wordStartPosition, emptySet())
         } else {
             // need to include the 'startSkipFailures',
             val map = rp.failedReasons //no need to clone it as it will not be modified after this point
@@ -358,7 +357,7 @@ class LeftCornerParser(
             } ?: emptyList()
             // parse might fail BEFORE the requested 'position' - so filter to get {} if it does
             val rspines = validFailReasons.map { it.spine }
-            return ExpectedAtResultDefault(wordStartPosition,rspines.toSet())
+            return ExpectedAtResultDefault(wordStartPosition, rspines.toSet())
         }
     }
 
@@ -371,5 +370,75 @@ class LeftCornerParser(
                 else -> emptyList() // TODO()
             }
         }.toSet()
+    }
+
+    private fun findReverseStartPosition(sentenceText: String, position: Int, options: ParseOptions): Int {
+        val previousText = sentenceText.substring(0, position)
+        return when {
+            options.reverseFindWordStartBySkipRules -> {
+                //TODO: actually parse rather than simply OR the regexes
+                val matchables = this.runtimeRuleSet.skipParserStateSet?.let {
+                    it.usedTerminalRules.mapNotNull { (it.rhs as RuntimeRuleRhsTerminal).matchable }
+                }
+                when (matchables) {
+                    null -> 0
+                    else -> {
+                        val revPos = findLastMatchOf2(previousText, matchables) ?: position
+                        revPos
+                    }
+                }
+            }
+
+            null != options.reverseFindWordStartRegex -> {
+                val regex = options.reverseFindWordStartRegex!!.toRegex()
+                previousText.reversed().let {
+                    regex.find(it)?.range?.start
+                } ?: 0//position
+            }
+
+            else -> 0
+        }
+    }
+
+    private fun findLastMatchOf(text:String, matchables: List<Matchable>):Int ?{
+        //Does not really work, as regExs are not reversed
+        val str = matchables.joinToString(separator = "|") {
+            when (it.kind) {
+                MatchableKind.EOT -> ""
+                else -> it.expression.escapedForRegex
+            }
+        }
+        val regex = str.toRegex()
+        return text.reversed().let {
+            regex.find(it)?.range?.start
+        }
+    }
+
+    private fun findLastMatchOf2(text:String, matchables: List<Matchable>):Int ? {
+        val str = matchables.joinToString(separator = "|") {
+            when (it.kind) {
+                MatchableKind.EOT -> ""
+                else -> "(${it.expression.escapedForRegex})"
+            }
+        }
+        val regex = str.toRegex()
+        var pos = text.length - 1
+        var lastMatchLen:Int? = null
+        while(null==lastMatchLen && pos >=0 ){
+            val match = regex.matchAt(text, pos)
+            if(null==match) {
+                //try one character more
+            } else {
+                if( text.length-1 == match.range.last) {
+                    lastMatchLen = pos+match.value.length
+                } else {
+                    // matched something that finished in wrong place, thus nothing found
+                    lastMatchLen = null
+                    break
+                }
+            }
+            pos-=1
+        }
+        return lastMatchLen?.let { text.length - it }
     }
 }

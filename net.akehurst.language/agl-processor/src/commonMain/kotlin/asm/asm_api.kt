@@ -17,11 +17,11 @@
 
 package net.akehurst.language.asm.api
 
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
-import kotlin.jvm.JvmInline
 
 interface AsmPath {
     val value: String
@@ -39,7 +39,7 @@ interface Asm {
 
     fun addToIndex(value: AsmStructure)
     fun traverseDepthFirst(callback: AsmTreeWalker)
-    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
+    fun asString(indent: Indent = Indent()): String
 }
 
 interface AsmValue {
@@ -51,7 +51,7 @@ interface AsmValue {
      */
     val typeName: SimpleName
 
-    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
+    fun asString(indent: Indent = Indent()): String
     fun equalTo(other: AsmValue): Boolean
 }
 
@@ -71,8 +71,9 @@ interface AsmReference {
     fun resolveAs(value: AsmStructure?)
 }
 
-@JvmInline
-value class PropertyValueName(override val value: String) : PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class PropertyValueName(override val value: String) : PublicValueType {
     override fun toString(): String = value
 }
 
@@ -105,7 +106,42 @@ interface AsmStructure : AsmValue {
      */
     fun getPropertyOrNothing(name: PropertyValueName): AsmValue
 
+    /**
+     * the value of the named property, null if no property with that name
+     */
+    fun getPropertyOrNull(name: PropertyValueName): AsmValue?
+
     fun setProperty(name: PropertyValueName, value: AsmValue, childIndex: Int)
+
+    /**
+     * get the property as an AsmPrimitive, or null if the property does not exist
+     */
+    fun getPropertyAsAsmPrimitiveOrNull(name: String): AsmPrimitive? = getPropertyOrNull(PropertyValueName(name)) as AsmPrimitive
+
+    /**
+     * get the property as an AsmPrimitive, return its value.toString or null if the property does not exist
+     */
+    fun getPropertyAsStringOrNull(name: String): String? = getPropertyAsAsmPrimitiveOrNull(name)?.value?.toString()
+
+    /**
+     * get the property as an AsmStructure, or null if the property does not exist
+     */
+    fun getPropertyAsAsmStructureOrNull(name: String): AsmStructure? = getPropertyOrNull(PropertyValueName(name)) as AsmStructure?
+
+    /**
+     * get the property as an AsmList, or null if the property does not exist
+     */
+    fun getPropertyAsAsmListOrNull(name: String): AsmList? = getPropertyOrNull(PropertyValueName(name)) as AsmList?
+
+    fun getPropertyAsListOfAsmPrimitiveOrNull(name: String): List<AsmPrimitive>? = getPropertyAsAsmListOrNull(name)?.elements as? List<AsmPrimitive>
+    fun getPropertyAsListOfAnyOrNull(name: String): List<Any>? = getPropertyAsListOfAsmPrimitiveOrNull(name)?.map { it.value }
+    fun getPropertyAsListOfStringOrNull(name: String): List<String>? = getPropertyAsListOfAsmPrimitiveOrNull(name)?.map { it.toString() }
+    fun getPropertyAsListOfAsmStructureOrNull(name: String): List<AsmStructure>? = getPropertyAsAsmListOrNull(name)?.elements as? List<AsmStructure>
+
+    /**
+     * get the property as an AsmListSeparated, or null if the property does not exist
+     */
+    fun getPropertyAsAsmListSeparatedOrNull(name: String): AsmListSeparated? = getPropertyOrNull(PropertyValueName(name)) as AsmListSeparated?
 }
 
 interface AsmStructureProperty {

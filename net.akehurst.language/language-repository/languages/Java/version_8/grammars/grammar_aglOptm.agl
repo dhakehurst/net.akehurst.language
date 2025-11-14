@@ -23,7 +23,7 @@ namespace net.akehurst.language.java8
 grammar Base {
     skip leaf WHITESPACE = "\s+" ;
     skip leaf COMMENT_SINGLE_LINE = "//[^\r\n]*" ;
-    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+    skip leaf COMMENT_MULTI_LINE = "/[*][^*]*[*]+([^*/][^*]*[*]+)*/" ;
 
     leaf IDENTIFIER = JAVA_LETTER JAVA_LETTER_OR_DIGIT* ;
     leaf JAVA_LETTER_OR_DIGIT = JAVA_LETTER | "[0-9]" ;
@@ -65,13 +65,13 @@ grammar Literals {
      ;
 
     leaf BOOLEAN_LITERAL   = 'true' | 'false' ;
-    leaf CHARACTER_LITERAL = "'" ("[^'\r\n\\\\]" | ESCAPE_SEQUENCE) "'" ;
+    leaf CHARACTER_LITERAL = "'" ("[^'\r\n\\]" | ESCAPE_SEQUENCE) "'" ;
     leaf ESCAPE_SEQUENCE
-        = '\\' "[btnfr\x27\\\\]"
+        = '\\' "[btnfr\x27\\]"
         | '\\' ("[0-3]"? "[0-7]")? "[0-7]"
         | '\\' 'u'+ "[0-9a-fA-F]{4}"
         ;
-    leaf STRING_LITERAL    = "\"([^\"\\\\]|\\.)*\"" ;
+    leaf STRING_LITERAL    = "\"(\\.|[^\"\\])*\"" ;
     leaf NULL_LITERAL      = 'null' ;
 }
 
@@ -143,19 +143,19 @@ grammar Expressions : Types {
     preference Expression {
       MethodReference on '::' left
 //      LambdaExpression
-      Assignment on ASSIGNMENT_OPERATOR left
+      Assignment ITEM on ASSIGNMENT_OPERATOR left
       TernaryIf on '?' right
-      InfixLogicalOr on '||' left
-      InfixLogicalAnd on '&&' left
-      InfixBitwiseOr on '|' left
-      InfixBitwiseXor on '^' left
-      InfixBitwiseAnd on '&' left
-      InfixEquality on INFIX_OPERATOR_EQUALITY left
+      InfixLogicalOr ITEM on '||' left
+      InfixLogicalAnd ITEM on '&&' left
+      InfixBitwiseOr ITEM on '|' left
+      InfixBitwiseXor ITEM on '^' left
+      InfixBitwiseAnd ITEM on '&' left
+      InfixEquality ITEM on INFIX_OPERATOR_EQUALITY left
       InstanceOf on 'instanceOf' left
-      InfixRelational on INFIX_OPERATOR_RELATIONAL left
-      InfixBitShift on INFIX_OPERATOR_BIT_SHIFT left
-      InfixAdditive on INFIX_OPERATOR_ADDITIVE left
-      InfixMultiplicative on INFIX_OPERATOR_MULTIPLICATIVE left
+      InfixRelational ITEM on INFIX_OPERATOR_RELATIONAL left
+      InfixBitShift ITEM on INFIX_OPERATOR_BIT_SHIFT left
+      InfixAdditive ITEM on INFIX_OPERATOR_ADDITIVE left
+      InfixMultiplicative ITEM on INFIX_OPERATOR_MULTIPLICATIVE left
 //      Prefix
       Postfix on POSTFIX_OPERATOR left
 //      CastExpression

@@ -25,8 +25,8 @@ grammar KerML {
 
     // KerML: 8.2.2.2 Notes and Comments
     skip leaf SINGLE_LINE_NOTE = "//[^\n\r]*" ;
-    skip leaf MULTILINE_NOTE = "//\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-    leaf REGULAR_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
+    skip leaf MULTILINE_NOTE = "//[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
+    leaf REGULAR_COMMENT =      "/[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
 
     // KerML: 8.2.2.3 Names
     NAME = BASIC_NAME | UNRESTRICTED_NAME ;

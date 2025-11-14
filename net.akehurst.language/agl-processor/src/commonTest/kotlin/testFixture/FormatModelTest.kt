@@ -17,14 +17,14 @@
 
 package net.akehurst.language.format.test
 
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.formatter.api.AglFormatRule
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
 object FormatModelTest {
 
-    fun assertEqual(expected: AglFormatModel?, actual: AglFormatModel?) {
+    fun assertEqual(expected: AglFormatDomain?, actual: AglFormatDomain?) {
         when {
             (expected == null && actual == null) -> Unit // pass
             expected == null -> fail()

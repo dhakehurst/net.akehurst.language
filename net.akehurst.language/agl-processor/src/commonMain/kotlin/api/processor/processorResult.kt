@@ -55,7 +55,33 @@ interface FormatResult {
 }
 
 interface ExpectedAtResult {
+    /**
+     * The position in the sentence that the completions were requested for.
+     */
+    val requestedPosition: Int
+
+    /**
+     * The position in the sentence that the completions are being offered for.
+     */
+    val offeredPosition: Int
+
+    /**
+     * true if the offered completions are for completing a terminal.
+     */
+    val isTerminalCompletion: Boolean
+
+    /**
+     * The number of characters from the requested position to the offered position.
+     */
     val offset: Int
+
+    /**
+     * the completion items being offered
+     */
     val items: List<CompletionItem>
+
+    /**
+     * Any issues found whilst trying to provide completions.
+     */
     val issues: IssueCollection<LanguageIssue>
 }

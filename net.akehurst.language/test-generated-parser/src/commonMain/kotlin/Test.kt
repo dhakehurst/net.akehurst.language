@@ -16,43 +16,39 @@
  */
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.processor.LanguageObjectAbstract
-import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.runtime.structure.ruleSet
-import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.api.processor.CompletionProvider
-import net.akehurst.language.api.processor.Formatter
-import net.akehurst.language.api.processor.LanguageIdentity
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.ProcessOptions
+import net.akehurst.language.agl.simple.SemanticAnalyserSimple
+import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.aut
 import net.akehurst.language.format.processor.FormatterOverAsmSimple
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 
 // sample
-object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<Any, Any>>() {
+object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, SentenceContextAny>() {
 
     val issues = IssueHolder(LanguageProcessorPhase.ALL)
 
-    override val identity: LanguageIdentity
-        get() = TODO("not implemented")
+    override val identity = LanguageIdentity("Test")
+
+    override val extends: List<LanguageObject<Any, SentenceContextAny>> = emptyList()
 
     override val grammarString = """
         namespace test
@@ -60,28 +56,33 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
           S = 'a' ;
         }
      """.trimIndent()
-    override val crossReferenceString: String = """
-    """
 
-    override val grammarModel: GrammarModel get() = TODO("not implemented")
-    override val typesModel: TypeModel = typeModel("test", true) {
+    override val typesString: String = ""
+    override val kompositeString: String = ""
+    override val asmTransformString: String = ""
+    override val crossReferenceString: String = ""
+    override val styleString: String = ""
+    override val formatString: String = ""
+
+    override val grammarDomain: GrammarDomain get() = TODO("not implemented")
+    override val typesDomain: TypesDomain = typesDomain("test", true) {
         TODO("build type model")
     }
-    override val kompositeModel: TypeModel get() = typesModel
-    override val asmTransformModel: TransformModel get() = TODO()
-    override val crossReferenceModel: CrossReferenceModel get() = TODO("builder for cross reference model")
-    override val styleModel: AglStyleModel get() = TODO("not implemented")
-    override val formatModel: AglFormatModel get() = TODO("not implemented")
+    override val kompositeDomain: TypesDomain get() = typesDomain
+    override val asmTransformDomain: AsmTransformDomain get() = TODO()
+    override val crossReferenceDomain: CrossReferenceDomain get() = TODO("builder for cross reference model")
+    override val styleDomain: AglStyleDomain get() = TODO("not implemented")
+    override val formatDomain: AglFormatDomain get() = TODO("not implemented")
     override val defaultTargetGrammar: Grammar
         get() = TODO("not implemented")
     override val defaultTargetGoalRule: String
         get() = TODO("not implemented")
 
-    override val ruleSet: RuleSet = ruleSet("Test") {
+    override val targetRuleSet: RuleSet = ruleSet("Test") {
         concatenation("S") { literal("a") }
     }
 
-    private val automaton_S = aut(ruleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
+    private val automaton_S = aut(targetRuleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
         // 0: G = . S
         state(GOAL_RULE, OP_NONE, SR)
         // 1: G = S .
@@ -100,17 +101,17 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
     override val syntaxAnalyser: SyntaxAnalyser<Asm> get() = TODO()
 
     // SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
-    override val semanticAnalyser: SemanticAnalyser<Asm, ContextWithScope<Any, Any>> = SemanticAnalyserSimple(typesModel, crossReferenceModel)
-    override val completionProvider: CompletionProvider<Asm, ContextWithScope<Any, Any>>?
+    override val semanticAnalyser: SemanticAnalyser<Asm, SentenceContextAny> = SemanticAnalyserSimple(typesDomain, crossReferenceDomain)
+    override val completionProvider: CompletionProvider<Asm, SentenceContextAny>?
         get() = TODO("not implemented")
-    val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatModel, typesModel, this.issues)
+    val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatDomain, typesDomain, this.issues)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )
 
-    val processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> by lazy { Agl.processorFromGeneratedCode(this) }
+    val processor: LanguageProcessor<Asm, SentenceContextAny> by lazy { Agl.processorFromLanguageObject(this) }
 
     fun parse(sentence: String, options: ParseOptions? = null) = processor.parse(sentence, options)
 
-    fun process(sentence: String, options: ProcessOptions<Asm, ContextWithScope<Any, Any>>? = null) = processor.process(sentence, options)
+    fun process(sentence: String, options: ProcessOptions<Asm, SentenceContextAny>? = null) = processor.process(sentence, options)
 }

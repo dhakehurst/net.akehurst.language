@@ -22,7 +22,7 @@ import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.api.WhenOption
 import net.akehurst.language.expressions.api.WhenOptionElse
 
-interface AglFormatModel : Model<FormatNamespace, FormatSet> {
+interface AglFormatDomain : Domain<FormatNamespace, FormatSet> {
 
     val defaultWhiteSpace: String
 
@@ -93,9 +93,15 @@ interface TemplateElementExpressionProperty : TemplateElement {
 }
 
 interface TemplateElementExpressionList : TemplateElement {
-    val listPropertyName: String
-    val separator:String
+    val listExpression: Expression
+    val separator: Expression
 }
+
+interface TemplateElementExpressionListSeparator {
+    val value:String
+    val isNamedOfValue:Boolean
+}
+
 
 interface TemplateElementExpressionEmbedded : TemplateElement {
     val expression: FormatExpression

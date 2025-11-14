@@ -20,7 +20,7 @@ import net.akehurst.kotlinx.reflect.EnumValuesFunction
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.language.agl.expressions.processor.valueOf
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.typemodel.api.EnumType
+import net.akehurst.language.types.api.EnumType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
