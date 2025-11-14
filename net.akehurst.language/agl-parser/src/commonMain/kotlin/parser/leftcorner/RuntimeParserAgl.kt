@@ -17,25 +17,25 @@
 package net.akehurst.language.parser.leftcorner
 
 
-import net.akehurst.language.automaton.leftcorner.*
-import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule.RuntimePreferenceOption
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
-import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.automaton.api.ParseAction
+import net.akehurst.language.automaton.leftcorner.*
+import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
 import net.akehurst.language.collections.clone
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuntimeParser
 import net.akehurst.language.parsermessages.IssueMessage
+import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.api.Sentence

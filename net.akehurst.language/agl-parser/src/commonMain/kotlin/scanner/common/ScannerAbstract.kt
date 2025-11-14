@@ -28,7 +28,6 @@ import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.regex.api.RegexEngine
 import net.akehurst.language.scanner.api.*
 import net.akehurst.language.sentence.api.Sentence
-import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.LeafData
 
 class ScanOptionsDefault(

@@ -54,7 +54,7 @@ data class ReferenceExpressionContext<ItemInScopeType>(
 class ReferenceResolverSimple<ItemInScopeType : Any>(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain,
-    val context: ContextWithScope<Any, ItemInScopeType>, //TODO: use interface or something more abstract
+    val context: ContextWithScope<Any,ItemInScopeType>, //TODO: use interface or something more abstract
     val sentenceIdentity: Any?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
     val resolveFunction: ResolveScopedItem<Any, ItemInScopeType>?,

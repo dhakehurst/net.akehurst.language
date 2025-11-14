@@ -17,7 +17,6 @@
 
 package net.akehurst.language.m2mTransform.processor
 
-import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.SimpleName
@@ -27,6 +26,8 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyName
 
 data class M2MTransformResult<OT : Any>(

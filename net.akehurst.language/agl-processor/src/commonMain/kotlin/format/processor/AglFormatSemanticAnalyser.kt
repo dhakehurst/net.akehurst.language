@@ -18,7 +18,7 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -27,7 +27,7 @@ import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
-class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, ContextWithScope<Any, Any>> {
+class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceContextAny> {
     override fun clear() {
 
     }
@@ -37,10 +37,10 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, ContextWithS
 //    }
 
     override fun analyse(
-        sentenceIdentity:Any?,
+        sentenceIdentity: Any?,
         asm: AglFormatDomain, locationMap: LocationMap?,
-        options: SemanticAnalysisOptions< ContextWithScope<Any, Any>>
+        options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(emptyList(),IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
+        return SemanticAnalysisResultDefault(emptyList(), IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }
 }

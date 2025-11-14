@@ -18,7 +18,7 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -28,12 +28,12 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.style.api.AglStyleMetaRule
 import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.style.api.AglStyleMetaRule
 import net.akehurst.language.style.api.AglStyleSelectorKind
 import net.akehurst.language.style.api.AglStyleTagRule
 
-class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, ContextWithScope<Any,Any>> {
+class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceContextAny> {
 
     companion object {
         // TODO: AglGrammar.typesModel.findTypeForRule(GrammarRuleName("grammarRule"))
@@ -52,7 +52,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, ContextWithS
         sentenceIdentity:Any?,
         asm: AglStyleDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>
+        options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
         val context = options.context
         val locMap = locationMap ?: LocationMapDefault()
@@ -70,10 +70,10 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, ContextWithS
         return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
-    private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, context: ContextWithScope<Any,Any>) {
+    private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, context: SentenceContextAny) {
     }
 
-    private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, context: ContextWithScope<Any,Any>) {
+    private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, context: SentenceContextAny) {
         rule.selector.forEach { sel ->
             val loc = locMap[sel]
             // TODO: user types

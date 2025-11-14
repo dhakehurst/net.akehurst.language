@@ -18,12 +18,19 @@
 package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformNamespace
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
+import net.akehurst.language.asmTransform.asm.AsmTransformationRuleDefault
+import net.akehurst.language.asmTransform.asm.asmTransformationRule
 import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
@@ -40,20 +47,13 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.api.AsmTransformNamespace
-import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
-import net.akehurst.language.asmTransform.api.AsmTransformationRule
-import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
-import net.akehurst.language.asmTransform.asm.AsmTransformationRuleDefault
-import net.akehurst.language.asmTransform.asm.asmTransformationRule
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.ParameterDefinitionSimple
 import net.akehurst.language.types.asm.PropertyDeclarationStored
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.util.cached
 
-class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, ContextWithScope<Any, Any>> {
+class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, SentenceContextAny> {
 
     companion object {
         const val OPTION_CREATE_TYPES = "create-missing-types"
@@ -67,7 +67,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
 
-    private var _context: ContextWithScope<Any, Any>? = null
+    private var _context: SentenceContextAny? = null
     private var __asm: AsmTransformDomain? = null
     private val _asm: AsmTransformDomain get() = __asm!!
     //TODO: rework to allow use of proper items in context
@@ -92,7 +92,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
         sentenceIdentity: Any?,
         asm: AsmTransformDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
+        options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
         _context = options.context
         __asm = asm

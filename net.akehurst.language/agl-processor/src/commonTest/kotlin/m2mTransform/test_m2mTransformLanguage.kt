@@ -18,21 +18,14 @@
 package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
-import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.agl.simple.contextAsmSimple
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.test.AsmTransformDomainTest
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 import net.akehurst.language.types.test.TypesDomainTest
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.set
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -735,8 +728,10 @@ class test_m2mTransformLanguage {
                 sentence = """
                     namespace test
                     transform-test Test(d1:D1, d2:D2) {
+                      test-case TC {
                         domain d1 := X() {}
                         domain d2 := Y() {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -777,7 +772,7 @@ class test_m2mTransformLanguage {
             println()
             println("--- ${data.testName} ---")
             println("Processing '${data.sentence}'")
-            val context = ContextWithScope<Any, Any>()
+            val context = SentenceContextAny()
             data.typeDomains.forEach { (k,v) ->
                 context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
             }

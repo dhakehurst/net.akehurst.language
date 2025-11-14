@@ -16,7 +16,10 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSimple
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.parser.api.RulePosition
 

@@ -20,6 +20,7 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.formatter.api.AglFormatDomain
@@ -30,7 +31,6 @@ import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.style.api.AglStyleDomain
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.types.api.TypesDomain
 
 interface LanguageObject<AsmType : Any, ContextType : Any> {

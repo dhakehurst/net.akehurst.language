@@ -19,6 +19,7 @@ package net.akehurst.language.agl.language.reference
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
@@ -29,7 +30,6 @@ import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.sentence.api.InputLocation
-import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesDomainSimple

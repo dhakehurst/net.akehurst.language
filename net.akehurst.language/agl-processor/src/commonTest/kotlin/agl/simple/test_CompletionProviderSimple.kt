@@ -37,7 +37,7 @@ class test_CompletionProviderSimple {
             val grammarStr: String,
             val crossReferencesStr: String = "",
             val additionalTypesDomain: TypesDomain? = null,
-            val context: ContextWithScope<Any, Any>? = contextAsmSimple(),
+            val context: SentenceContextAny? = contextAsmSimple(),
             val sentence: String,
             val position: Int,
             val expected: List<CompletionItem>

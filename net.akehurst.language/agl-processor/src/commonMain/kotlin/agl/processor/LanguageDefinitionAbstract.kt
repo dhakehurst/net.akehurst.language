@@ -20,6 +20,7 @@ import net.akehurst.language.agl.*
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
@@ -30,7 +31,6 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.style.api.AglStyleDomain
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached

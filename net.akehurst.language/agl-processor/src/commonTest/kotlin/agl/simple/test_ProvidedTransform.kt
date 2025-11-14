@@ -17,7 +17,6 @@
 
 package net.akehurst.language.agl.simple
 
-import net.akehurst.language.asm.builder.asmSimple
 import testFixture.data.doTest
 import testFixture.data.executeTestSuit
 import testFixture.data.testSuit

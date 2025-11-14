@@ -22,7 +22,6 @@ import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
-import kotlin.jvm.JvmInline
 
 interface AsmPath {
     val value: String

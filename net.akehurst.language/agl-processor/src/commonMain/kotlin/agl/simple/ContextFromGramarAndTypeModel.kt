@@ -24,7 +24,7 @@ import net.akehurst.language.types.api.TypesDomain
 fun ContextFromGrammarAndTypesDomain(
     grammarDomain: GrammarDomain,
     typesDomain: TypesDomain
-) = ContextWithScope<Any, Any>().also {
+) = SentenceContextAny().also {
     it.addToScope(null, listOf("grammar"), QualifiedName("GrammarDomain"),null, grammarDomain)
     it.addToScope(null, listOf("types"), QualifiedName("TypesDomain"),null, typesDomain)
 }

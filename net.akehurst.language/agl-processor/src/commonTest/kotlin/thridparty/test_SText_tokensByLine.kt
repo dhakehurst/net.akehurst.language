@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault

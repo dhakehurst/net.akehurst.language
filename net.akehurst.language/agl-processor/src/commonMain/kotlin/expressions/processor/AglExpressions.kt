@@ -18,9 +18,10 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.api.Expression
@@ -29,12 +30,11 @@ import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
-import net.akehurst.language.style.builder.styleDomain
-import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.regex.api.CommonRegexPatterns
+import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.types.builder.typesDomain
 
-object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any, Any>>() {
+object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Expressions"
     const val TYPES_API_NS_QN = "${NAMESPACE_NAME}.expressions.api"
@@ -249,13 +249,13 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
                     }
                     concatenation("functionCall") {
-                        ref("possiblyQualifiedName");  lit("("); ref("argumentList"); lit(")")
+                        ref("possiblyQualifiedName"); lit("("); ref("argumentList"); lit(")")
                     }
                     concatenation("object") {
                         ref("possiblyQualifiedName"); ref("constructorArguments"); ref("assignmentBlock")
                     }
                     concatenation("constructorArguments") {
-                        lit("("); spLst(0,-1) { ref("assignment"); lit(",") }; lit(")");
+                        lit("("); spLst(0, -1) { ref("assignment"); lit(",") }; lit(")");
                     }
                     concatenation("tuple") {
                         lit("tuple"); ref("assignmentBlock")

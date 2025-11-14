@@ -16,11 +16,7 @@
 
 package net.akehurst.language.collections
 
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class test_BinaryHeapMax {
 

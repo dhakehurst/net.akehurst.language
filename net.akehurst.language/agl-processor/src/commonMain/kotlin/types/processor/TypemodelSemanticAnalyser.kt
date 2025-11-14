@@ -18,7 +18,7 @@
 package net.akehurst.language.types.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
@@ -30,7 +30,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 
-internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypesDomain, ContextWithScope<Any,Any>> {
+internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypesDomain, SentenceContextAny> {
 
     companion object {
         const val OPTION_INCLUDE_STD = "include-std"
@@ -47,11 +47,11 @@ internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypesDomain, Context
         _resolvedReferences.clear()
     }
 
-    override fun analyse(sentenceIdentity:Any?, asm: TypesDomain, locationMap: LocationMap?, options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>): SemanticAnalysisResult {
-        if(asm.options.includeStd) {
+    override fun analyse(sentenceIdentity: Any?, asm: TypesDomain, locationMap: LocationMap?, options: SemanticAnalysisOptions<SentenceContextAny>): SemanticAnalysisResult {
+        if (asm.options.includeStd) {
             asm.addNamespace(StdLibDefault)
         }
-        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }
 
 }

@@ -19,7 +19,6 @@ import net.akehurst.kotlinx.collections.lazyMap
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.Agl.configurationSimple
 import net.akehurst.language.api.processor.GrammarString
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.BufferedReader

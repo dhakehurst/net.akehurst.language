@@ -32,11 +32,11 @@ import net.akehurst.language.types.api.TypesDomain
 /**
  * Creates scopes and sets semantic Path on AsmStructures, based on scopes and identifying expressions from CrossReference definitions
  */
-class ScopeCreator<ItemInScopeType:Any>(
+class ScopeCreator<ItemInScopeType : Any>(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain,
     val context: ContextWithScope<Any, ItemInScopeType>, //TODO: use interface or something more abstract
-    val sentenceIdentity:Any?,
+    val sentenceIdentity: Any?,
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
@@ -194,7 +194,7 @@ class ScopeCreator<ItemInScopeType:Any>(
     }
 
     private fun addToScopeAs(scope: Scope<ItemInScopeType>, el: AsmStructure, referableName: String) {
-        val scopeItem = context.createScopedItem.invoke(scope.scopePath+referableName, el,this.locationMap[el])
+        val scopeItem = context.createScopedItem.invoke(scope.scopePath + referableName, el, this.locationMap[el])
         val existingItems = context.findItemsNamedConformingTo(referableName) { itemTypeName ->
             val itemType = typesDomain.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")
             val requireType = typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName) ?: error("Type not found '${el.qualifiedTypeName.value}'")

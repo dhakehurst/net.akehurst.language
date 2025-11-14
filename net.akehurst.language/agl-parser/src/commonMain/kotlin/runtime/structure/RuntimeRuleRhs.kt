@@ -18,12 +18,12 @@ package net.akehurst.language.agl.runtime.structure
 
 
 import net.akehurst.language.parser.api.OptionNum
-import net.akehurst.language.scanner.api.Matchable
-import net.akehurst.language.scanner.api.MatchableKind
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.regex.api.UnescapedLiteral
 import net.akehurst.language.regex.api.UnescapedPattern
+import net.akehurst.language.scanner.api.Matchable
+import net.akehurst.language.scanner.api.MatchableKind
 
 enum class RuntimeRuleChoiceKind {
     NONE,

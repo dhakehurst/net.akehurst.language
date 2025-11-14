@@ -18,6 +18,8 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
@@ -34,8 +36,6 @@ import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.types.api.TypesDomain
 
 /**

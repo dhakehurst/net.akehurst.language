@@ -17,12 +17,12 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.automaton.api.AutomatonKind
-import testFixture.utils.AutomatonTest
 import net.akehurst.language.automaton.leftcorner.automaton
 import net.akehurst.language.automaton.leftcorner.test_AutomatonUtilsAbstract
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import testFixture.utils.AutomatonTest
 import kotlin.test.Test
 
 class test_buildFor : test_AutomatonUtilsAbstract() {

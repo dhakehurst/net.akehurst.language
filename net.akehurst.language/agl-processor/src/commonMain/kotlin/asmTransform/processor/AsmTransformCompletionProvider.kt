@@ -18,9 +18,9 @@
 package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 
-class AsmTransformCompletionProvider : CompletionProviderAbstract<AsmTransformDomain, ContextWithScope<Any, Any>>() {
+class AsmTransformCompletionProvider : CompletionProviderAbstract<AsmTransformDomain, SentenceContextAny>() {
     //TODO
 }

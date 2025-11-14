@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.GrammarDomain
@@ -26,7 +26,7 @@ import net.akehurst.language.grammar.asm.GrammarDomainDefault
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: LanguageIdentity,
-    private val aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>?,
+    private val aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>?,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
@@ -128,7 +128,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     internal fun updateGrammar(oldValue: GrammarString?, newValue: GrammarString?) {
         if (oldValue != newValue) {
-            val res = Agl.grammarFromString<GrammarDomain, ContextWithScope<Any,Any>>(newValue?.value, aglOptions)
+            val res = Agl.grammarFromString<GrammarDomain, SentenceContextAny>(newValue?.value, aglOptions)
             this._issues.addAllFrom(res.allIssues)
             this.grammarDomain = when {
                 res.allIssues.errors.isNotEmpty() -> GrammarDomainDefault(SimpleName("Error"))

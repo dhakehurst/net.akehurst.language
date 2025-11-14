@@ -26,13 +26,13 @@ import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.sentence.api.InputLocation
-import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -49,7 +49,7 @@ class test_Vistraq_References {
                     check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                     it.asm!!
                 }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextWithScope<Any, Any>>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContextAny>> { grmName ->
             val grm = grammarList
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
@@ -77,9 +77,9 @@ class test_Vistraq_References {
             grammar: String,
             goal: String,
             sentence: String,
-            context: ContextWithScope<Any,Any>,
+            context: SentenceContextAny,
             resolveReferences: Boolean,
-            expectedContext: ContextWithScope<Any,Any>,
+            expectedContext: SentenceContextAny,
             expectedAsm: Asm? = null,
             expectedIssues: List<LanguageIssue> = emptyList()
         ) {

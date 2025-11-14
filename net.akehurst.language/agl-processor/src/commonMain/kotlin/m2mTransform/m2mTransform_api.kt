@@ -22,7 +22,6 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
-import kotlin.jvm.JvmInline
 
 interface M2mTransformDomain : Domain<M2mTransformNamespace, M2MTransformDefinition> {
     override val namespace: List<M2mTransformNamespace>

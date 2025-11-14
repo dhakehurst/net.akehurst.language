@@ -1,7 +1,6 @@
 package testFixture.data.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.ruleSet
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import testFixture.data.*
 
 object OptionalCoveredByPrecedingList : TestDataProviderAbstract() {

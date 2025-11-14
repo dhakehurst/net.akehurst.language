@@ -18,11 +18,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
-import net.akehurst.language.api.processor.CompletionProviderOptions
-import net.akehurst.language.api.processor.FormatOptions
-import net.akehurst.language.api.processor.ProcessOptions
-import net.akehurst.language.api.processor.SemanticAnalysisOptions
-import net.akehurst.language.api.processor.SyntaxAnalysisOptions
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions

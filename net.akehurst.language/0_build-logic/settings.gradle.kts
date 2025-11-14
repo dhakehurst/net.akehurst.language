@@ -16,11 +16,11 @@
 
 pluginManagement {
     repositories {
-        mavenLocal {
-            content {
-                includeGroupByRegex("net\\.akehurst.+")
-            }
-        }
+//        mavenLocal {
+//            content {
+//                includeGroupByRegex("net\\.akehurst.+")
+//            }
+//        }
         mavenCentral()
         google()
         gradlePluginPortal()

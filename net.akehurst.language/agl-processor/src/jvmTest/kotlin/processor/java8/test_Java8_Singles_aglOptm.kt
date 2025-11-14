@@ -20,7 +20,7 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
@@ -38,10 +38,10 @@ class test_Java8_Singles_aglOptm {
     companion object {
         val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
         val grammarStr = this::class.java.getResource(grammarFile)?.readText() ?: error("file not found '$grammarFile'")
-        val proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>> = createJava8Processor(grammarFile, true)
+        val proc: LanguageProcessor<Asm, SentenceContextAny> = createJava8Processor(grammarFile, true)
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
-            val proc = Agl.processorFromString<Asm, ContextWithScope<Any, Any>>(
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, SentenceContextAny> {
+            val proc = Agl.processorFromString<Asm, SentenceContextAny>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {

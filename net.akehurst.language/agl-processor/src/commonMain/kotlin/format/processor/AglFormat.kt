@@ -18,12 +18,14 @@ package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
@@ -32,16 +34,14 @@ import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.builder.asmTransform
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
 
-object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any, Any>>() {
+object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Format"
     const val goalRuleName = "unit"
@@ -241,7 +241,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any,
     override val defaultTargetGoalRule = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<AglFormatDomain>? by lazy { AglFormatSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<AglFormatDomain, ContextWithScope<Any, Any>>? by lazy { AglFormatSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<AglFormatDomain, ContextWithScope<Any, Any>>? by lazy { AglFormatCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<AglFormatDomain, SentenceContextAny>? by lazy { AglFormatSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AglFormatDomain, SentenceContextAny>? by lazy { AglFormatCompletionProvider() }
 
 }

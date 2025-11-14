@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
@@ -37,9 +37,9 @@ class test_VistraqQuery_Singles {
     private companion object {
 
         private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> = tgqlprocessor()
+        var processor: LanguageProcessor<Asm, SentenceContextAny> = tgqlprocessor()
 
-        fun tgqlprocessor(): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
+        fun tgqlprocessor(): LanguageProcessor<Asm, SentenceContextAny> {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
             return Agl.processorFromStringSimple(GrammarString(grammarStr)).let {
                 assertTrue(it.issues.errors.isEmpty(), it.issues.toString())

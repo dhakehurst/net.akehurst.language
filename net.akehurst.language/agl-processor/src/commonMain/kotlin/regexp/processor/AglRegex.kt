@@ -16,11 +16,12 @@
 
 package net.akehurst.language.regexp.processor
 
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
@@ -30,16 +31,15 @@ import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.regex.agl.RegexParser
 import net.akehurst.language.regex.api.Regex
 import net.akehurst.language.style.api.AglStyleDomain
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.types.api.TypesDomain
 
-object AglRegex : LanguageObjectAbstract<Regex, ContextWithScope<Any, Any>>() {
+object AglRegex : LanguageObjectAbstract<Regex, SentenceContextAny>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Regex"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
 
-    override val extends by lazy { emptyList<LanguageObject<Any, ContextWithScope<Any, Any>>>() }
+    override val extends by lazy { emptyList<LanguageObject<Any, SentenceContextAny>>() }
 
     override val grammarString = """
         namespace ${AglGrammar.NAMESPACE_NAME}
@@ -193,7 +193,7 @@ object AglRegex : LanguageObjectAbstract<Regex, ContextWithScope<Any, Any>>() {
     override val defaultTargetGoalRule: String
         get() = TODO("not implemented")
 
-    override val completionProvider: CompletionProvider<Regex, ContextWithScope<Any, Any>>?
+    override val completionProvider: CompletionProvider<Regex, SentenceContextAny>?
         get() = TODO("not implemented")
 
 

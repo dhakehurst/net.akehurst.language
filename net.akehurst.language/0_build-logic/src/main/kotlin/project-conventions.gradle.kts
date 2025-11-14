@@ -18,15 +18,15 @@
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import java.time.Instant
-import java.time.format.DateTimeFormatter
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 plugins {
     alias(libs.plugins.kotlin)
     alias(libs.plugins.dokka)
     alias(libs.plugins.buildconfig)
     alias(libs.plugins.exportPublic)
-    `maven-publish`
+    alias(libs.plugins.vanniktech.maven.publish)
     signing
 }
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
@@ -35,11 +35,11 @@ val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
 
 repositories {
     //TODO: remove mavenLocal repo
-    mavenLocal {
-        content {
-            includeGroupByRegex("net\\.akehurst.+")
-        }
-    }
+//    mavenLocal {
+//        content {
+//            includeGroupByRegex("net\\.akehurst.+")
+//        }
+//    }
     mavenCentral()
     gradlePluginPortal()
 }
@@ -103,7 +103,13 @@ kotlin {
     }
     wasmJs {
         binaries.library()
-        browser()
+        browser {
+            testTask {
+                useKarma {
+                     useChrome()
+                }
+            }
+        }
     }
     //macosArm64()
 
@@ -163,51 +169,30 @@ tasks.forEach {
     }
 }
 
-publishing {
-    repositories {
-        maven {
-            name = "Other"
-            setUrl(getProjectProperty("PUB_URL") ?: "<use -P PUB_URL=<...> to set>")
-            credentials {
-                username = getProjectProperty("PUB_USERNAME")
-                    ?: error("Must set project property with Username (-P PUB_USERNAME=<...> or set in ~/.gradle/gradle.properties)")
-                password = getProjectProperty("PUB_PASSWORD")
-                    //?: creds.forKey(getProjectProperty("PUB_USERNAME"))
+mavenPublishing {
+    signAllPublications()
+    publishToMavenCentral(automaticRelease = false)
+
+    coordinates(group as String, project.name, version as String)
+    pom {
+        name.set("AGL Parser, Processor, etc")
+        description.set("Dynamic, scan-on-demand, parsing; when a regular expression is just not enough")
+        url.set("https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79")
+
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
             }
         }
-
-        maven {
-            name = "sonatype"
-            setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = getProjectProperty("SONATYPE_USERNAME")
-                    ?: error("Must set project property with Sonatype Username (-P SONATYPE_USERNAME=<...> or set in ~/.gradle/gradle.properties)")
-                password = sonatype_pwd
+        developers {
+            developer {
+                name.set("Dr. David H. Akehurst")
+                email.set("dr.david.h@akehurst.net")
             }
         }
-    }
-    publications.withType<MavenPublication> {
-        artifact(javadocJar.get())
-        pom {
-            name.set("AGL Parser, Processor, etc")
-            description.set("Dynamic, scan-on-demand, parsing; when a regular expression is just not enough")
-            url.set("https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79")
-
-            licenses {
-                license {
-                    name.set("The Apache License, Version 2.0")
-                    url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                }
-            }
-            developers {
-                developer {
-                    name.set("Dr. David H. Akehurst")
-                    email.set("dr.david.h@akehurst.net")
-                }
-            }
-            scm {
-                url.set("https://github.com/dhakehurst/net.akehurst.language")
-            }
+        scm {
+            url.set("https://github.com/dhakehurst/net.akehurst.language")
         }
     }
 }

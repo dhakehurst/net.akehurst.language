@@ -1,13 +1,16 @@
 package test;
 
 import net.akehurst.language.agl.Agl;
-import net.akehurst.language.agl.simple.ContextAsmSimple;
 import net.akehurst.language.agl.processor.LanguageProcessorResult;
+import net.akehurst.language.agl.simple.SentenceContextAny;
 import net.akehurst.language.api.processor.LanguageProcessor;
 import net.akehurst.language.asm.api.Asm;
 import net.akehurst.language.parser.api.ParseResult;
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault;
-import net.akehurst.language.sppt.api.*;
+import net.akehurst.language.sppt.api.PathFunction;
+import net.akehurst.language.sppt.api.SharedPackedParseTree;
+import net.akehurst.language.sppt.api.SpptDataNodeInfo;
+import net.akehurst.language.sppt.api.SpptWalker;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,7 +41,7 @@ public class test_ParseAndWalkSppt {
                 "  leaf IDENTIFIER = \"[a-zA-Z_][a-zA-Z_0-9-]*\" ;\n" +
                 "}";
 
-        LanguageProcessorResult<Asm, ContextAsmSimple> res = Agl.INSTANCE.processorFromStringSimpleJava(
+        LanguageProcessorResult<Asm, SentenceContextAny> res = Agl.INSTANCE.processorFromStringSimpleJava(
                 grammarStr,
                 null, null, null, null, null,
                 Agl.INSTANCE.configurationSimple(),
@@ -47,7 +50,7 @@ public class test_ParseAndWalkSppt {
         System.out.println(res.getIssues());
         Assert.assertTrue(res.getIssues().getErrors().isEmpty());
 
-        LanguageProcessor<Asm, ContextAsmSimple> proc = res.getProcessor();
+        LanguageProcessor<Asm, SentenceContextAny> proc = res.getProcessor();
         Assert.assertNotNull(proc);
 
         String sentence = "{ a:false b:1 c:3.141 d:'bob' e:var2 }";

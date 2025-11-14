@@ -19,7 +19,7 @@ package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract.Companion.defaultSortAndFilter
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.GrammarRuleName
@@ -30,26 +30,28 @@ import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.asm.AglStyleDomainDefault
 import net.akehurst.language.types.api.TypeInstance
 
-class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextWithScope<Any,Any>> {
+class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, SentenceContextAny> {
 
     companion object {
-       // private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
-       // private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typesModel
+        // private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
+        // private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typesModel
         //private val aglGrammarNamespace: GrammarTypeNamespace get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 
         //private val aglStyleQualifiedName get() = Agl.registry.agl.style.processor!!.targetGrammar!!.qualifiedName
         //private val aglStyleTypeModel get() = Agl.registry.agl.style.processor!!.typesModel
         //private val aglStyleNamespace: GrammarTypeNamespace get() = AglStyle.typesModel.findNamespaceOrNull(QualifiedName("net.akehurst.language.style.api")) as GrammarTypeNamespace? ?: error("Internal error: aglStyleNamespace not found")
 
-        private val styleTransformRuleSet = AglStyle.asmTransformDomain.findDefinitionByQualifiedNameOrNull(AglStyle.defaultTargetGrammar.qualifiedName)?: error("Internal error: styleTransformRuleSet not found")
+        private val styleTransformRuleSet =
+            AglStyle.asmTransformDomain.findDefinitionByQualifiedNameOrNull(AglStyle.defaultTargetGrammar.qualifiedName) ?: error("Internal error: styleTransformRuleSet not found")
 
         //private val aglBaseQualifiedName get() = Agl.registry.agl.base.processor!!.targetGrammar!!.qualifiedName
         //private val aglBaseTypeModel = Agl.registry.agl.base.processor!!.typeModel
-       // private val aglBaseNamespace: GrammarTypeNamespace get() = AglBase.typesModel.findNamespaceOrNull(QualifiedName("net.akehurst.language.base.api")) as GrammarTypeNamespace? ?: error("")
+        // private val aglBaseNamespace: GrammarTypeNamespace get() = AglBase.typesModel.findNamespaceOrNull(QualifiedName("net.akehurst.language.base.api")) as GrammarTypeNamespace? ?: error("")
 
         //        private val terminal = aglGrammarNamespace.findTypeUsageForRule("terminal") ?: error("Internal error: type for 'terminal' not found")
         //private val grammarRule = aglGrammarNamespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
-        private val grammarRuleTypeDefinition = AglGrammar.typesDomain.findByQualifiedNameOrNull(QualifiedName("net.akehurst.language.grammar.api.GrammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
+        private val grammarRuleTypeDefinition =
+            AglGrammar.typesDomain.findByQualifiedNameOrNull(QualifiedName("net.akehurst.language.grammar.api.GrammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
 
 //        private val LITERAL = aglStyleNamespace.findTypeUsageForRule("LITERAL") ?: error("Internal error: type for 'LITERAL' not found")
 //        private val PATTERN = aglStyleNamespace.findTypeUsageForRule("PATTERN") ?: error("Internal error: type for 'PATTERN' not found")
@@ -59,7 +61,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextW
 //        private val STYLE_VALUE = aglStyleNamespace.findTypeUsageForRule("STYLE_VALUE") ?: error("Internal error: type for 'STYLE_VALUE' not found")
     }
 
-    override fun provide(spines: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any,Any>>): List<CompletionItem> {
+    override fun provide(spines: Set<Spine>, options: CompletionProviderOptions<SentenceContextAny>): List<CompletionItem> {
         val context = options.context
         return if (null == context) {
             emptyList()
@@ -69,7 +71,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextW
         }
     }
 
-    private fun provideForTerminalItem(spine: Spine, nextExpected: RuleItem,options: CompletionProviderOptions<ContextWithScope<Any,Any>>): List<CompletionItem> {
+    private fun provideForTerminalItem(spine: Spine, nextExpected: RuleItem, options: CompletionProviderOptions<SentenceContextAny>): List<CompletionItem> {
 //        val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name)
 //            ?: aglBaseNamespace.findTypeForRule(nextExpected.owningRule.name)
 //            ?: error("Should not be null")
@@ -89,7 +91,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextW
         }
     }
 
-    private fun LITERAL(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun LITERAL(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         val scopeItems = context.findItemsConformingTo { it.value == "LITERAL" }
         return scopeItems.map {
             CompletionItem(CompletionItemKind.REFERRED, "LITERAL", it.referableName).also {
@@ -98,7 +100,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextW
         }
     }
 
-    private fun PATTERN(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun PATTERN(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         val scopeItems = context.findItemsConformingTo { it.value == "PATTERN" }
         return scopeItems.map {
             CompletionItem(CompletionItemKind.REFERRED, "PATTERN", it.referableName).also {
@@ -107,21 +109,21 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextW
         }
     }
 
-    private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         val scopeItems = context.findItemsConformingTo { it == grammarRuleTypeDefinition.qualifiedName }
         return scopeItems.map {
             CompletionItem(CompletionItemKind.REFERRED, grammarRuleTypeDefinition.name.value, it.referableName)
         }
     }
 
-    private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         return listOf(
             CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.KEYWORD_STYLE_ID.value),
             CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.NO_STYLE_ID.value)
         )
     }
 
-    private fun STYLE_ID(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun STYLE_ID(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         return listOf(
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
@@ -130,7 +132,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextW
         )
     }
 
-    private fun STYLE_VALUE(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun STYLE_VALUE(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         return listOf(
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
@@ -138,13 +140,13 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextW
         )
     }
 
-    private fun selectorAndComposition(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun selectorAndComposition(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         return listOf(
             CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
         )
     }
 
-    private fun rule(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun rule(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         return when (nextExpected) {
             is Terminal -> when (nextExpected.id) {
                 "'{'" -> listOf(
@@ -160,7 +162,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextW
         }
     }
 
-    private fun style(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+    private fun style(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContextAny): List<CompletionItem> {
         return when (nextExpected) {
             is Terminal -> when (nextExpected.id) {
                 "':'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "style", ":"))

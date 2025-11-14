@@ -18,12 +18,12 @@ package net.akehurst.language.automaton.leftcorner.concatenation
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
-import testFixture.utils.AutomatonTest
 import net.akehurst.language.automaton.leftcorner.automaton
 import net.akehurst.language.automaton.leftcorner.test_AutomatonAbstract
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import testFixture.utils.AutomatonTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

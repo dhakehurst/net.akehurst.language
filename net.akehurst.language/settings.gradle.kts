@@ -21,11 +21,11 @@ println("===============================================")
 
 pluginManagement {
     repositories {
-        mavenLocal {
-            content {
-                includeGroupByRegex("net\\.akehurst.+")
-            }
-        }
+//        mavenLocal {
+//            content {
+//                includeGroupByRegex("net\\.akehurst.+")
+//            }
+//        }
         gradlePluginPortal()
     }
     includeBuild("./0_build-logic")

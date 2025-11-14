@@ -22,8 +22,6 @@ import net.akehurst.language.automaton.leftcorner.ParserStateSet
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.parser.api.PrefRule
 import net.akehurst.language.parser.api.RuleSet
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 class RuntimeRuleSet(
     val number: Int,

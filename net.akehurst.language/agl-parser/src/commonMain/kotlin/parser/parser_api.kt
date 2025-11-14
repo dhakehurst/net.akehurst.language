@@ -23,7 +23,6 @@ import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sppt.api.SharedPackedParseTree
-import kotlin.jvm.JvmInline
 
 interface RuleSet {
     val nonSkipTerminals: List<Rule>

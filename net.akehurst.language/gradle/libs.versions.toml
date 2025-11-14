@@ -1,5 +1,5 @@
 [versions]
-project = "4.2.2.20-SNAPSHOT"
+project = "4.2.2.20"
 
 kotlin = "2.2.20"
 dokka = "2.1.0"
@@ -7,6 +7,7 @@ buildconfig = "5.7.0"
 exportPublic = "2.2.20"
 nak-kotlinx = "2.2.20"
 jsIntegration = "2.2.20"
+vanniktech = "0.34.0"
 
 korlibs = "6.0.2"
 kotest = "6.0.4"
@@ -32,3 +33,4 @@ exportPublic = { id = "net.akehurst.kotlin.gradle.plugin.exportPublic", version.
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 reflex = { id ="net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref="nak-kotlinx" }
 jsIntegration =  { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }
+vanniktech-maven-publish = { id="com.vanniktech.maven.publish", version.ref="vanniktech" }

@@ -19,11 +19,12 @@ package net.akehurst.language.asmTransform.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.agl.simple.Grammar2TypesDomainMapping
 import net.akehurst.language.agl.simple.GrammarDomain2TransformDomain
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.asmTransform.api.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
@@ -31,7 +32,6 @@ import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.asmTransform.api.*
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.TypesDomainSimple
@@ -43,7 +43,7 @@ class AsmTransformDomainDefault(
 ) : AsmTransformDomain, DomainAbstract<AsmTransformNamespace, AsmTransformRuleSet>(namespace,options) {
 
     companion object Companion {
-        fun fromString(context: ContextWithScope<Any, Any>, transformStr: AsmTransformString): ProcessResult<AsmTransformDomain> {
+        fun fromString(context: SentenceContextAny, transformStr: AsmTransformString): ProcessResult<AsmTransformDomain> {
             val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             val res = proc.process(
                 sentence = transformStr.value,

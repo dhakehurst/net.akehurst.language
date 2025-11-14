@@ -22,7 +22,6 @@ import net.akehurst.language.base.api.*
 import net.akehurst.language.regex.api.EscapedPattern
 import net.akehurst.language.regex.api.EscapedValue
 import net.akehurst.language.regex.api.UnescapedValue
-import kotlin.jvm.JvmInline
 
 //class GrammarException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 //class GrammarRuleItemNotFoundException(message: String) : RuntimeException(message)

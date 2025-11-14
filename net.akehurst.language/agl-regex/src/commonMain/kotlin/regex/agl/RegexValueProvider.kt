@@ -17,7 +17,6 @@
 package net.akehurst.language.regex.agl
 
 import net.akehurst.language.regex.api.RegexMatcher
-import kotlin.collections.removeAll
 
 class RegexValueProvider(
     pattern: String,

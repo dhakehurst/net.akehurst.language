@@ -17,12 +17,14 @@
 package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.formatter.api.AglFormatDomain
@@ -36,12 +38,10 @@ import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
-object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, Any>>() {
+object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
@@ -244,9 +244,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, 
                         ref("priorityChoice") //TODO: remove this
                         ref("simpleChoice")
                     }
-                    separatedList("ambiguousChoice", 2, -1) { ref("concatenation");lit("||") }
-                    separatedList("priorityChoice", 2, -1) { ref("concatenation");lit("<") }
-                    separatedList("simpleChoice", 2, -1) { ref("concatenation");lit("|") }
+                    separatedList("ambiguousChoice", 2, -1) { ref("concatenation"); lit("||") }
+                    separatedList("priorityChoice", 2, -1) { ref("concatenation"); lit("<") }
+                    separatedList("simpleChoice", 2, -1) { ref("concatenation"); lit("|") }
                     list("concatenation", 1, -1) { ref("concatenationItem") }
                     choice("concatenationItem") {
                         ref("simpleItemOrGroup")
@@ -921,8 +921,8 @@ namespace net.akehurst.language.Grammar {
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<GrammarDomain> by lazy { AglGrammarSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<GrammarDomain, ContextWithScope<Any, Any>> by lazy { AglGrammarSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<GrammarDomain, ContextWithScope<Any, Any>> by lazy { AglGrammarCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<GrammarDomain, SentenceContextAny> by lazy { AglGrammarSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<GrammarDomain, SentenceContextAny> by lazy { AglGrammarCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"
 

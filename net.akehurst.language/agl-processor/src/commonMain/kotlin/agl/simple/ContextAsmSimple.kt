@@ -51,7 +51,6 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = ResolveScopedItemDefault()
 ) : SentenceContext {
 
-
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
@@ -119,4 +118,20 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     }
 
     override fun toString(): String = "ContextWithScope"
+}
+
+
+class SentenceContextAny(
+    createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault(),
+    resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault()
+) : ContextWithScope<Any,Any>(createScopedItem, resolveScopedItem) {
+    override fun hashCode(): Int = 0 //scopeForSentence.hashCode()
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is SentenceContextAny -> false
+        this.scopeForSentence != other.scopeForSentence -> false
+        else -> true
+    }
+
+    override fun toString(): String = "SentenceContextAny"
 }

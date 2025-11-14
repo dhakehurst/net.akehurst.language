@@ -19,8 +19,8 @@ package net.akehurst.language.scanner.common
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
+import net.akehurst.language.sentence.common.SentenceDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

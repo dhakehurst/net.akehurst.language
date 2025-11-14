@@ -18,8 +18,8 @@
 package net.akehurst.language.typemodel
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.AsmTransformString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace

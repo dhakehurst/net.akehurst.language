@@ -19,8 +19,8 @@ package test;
 
 import kotlin.Unit;
 import net.akehurst.language.agl.Agl;
-import net.akehurst.language.agl.simple.ContextAsmSimple;
 import net.akehurst.language.agl.processor.ProcessOptionsDefault;
+import net.akehurst.language.agl.simple.SentenceContextAny;
 import net.akehurst.language.api.processor.*;
 import net.akehurst.language.asm.api.Asm;
 import net.akehurst.language.parser.api.ParseOptions;
@@ -61,7 +61,7 @@ public class test_Processor {
             "  leaf IDENTIFIER = \"[a-zA-Z_][a-zA-Z_0-9-]*\" ;\n" +
             "}";
 
-    private static final LanguageProcessor<Asm, ContextAsmSimple> proc = Agl.INSTANCE.processorFromStringSimpleJava(
+    private static final LanguageProcessor<Asm, SentenceContextAny> proc = Agl.INSTANCE.processorFromStringSimpleJava(
             grammarStr,
             null,
             null,
@@ -88,7 +88,7 @@ public class test_Processor {
         for(String s: sentences) {
             Sentence sentence = new SentenceDefault(s, null);
             assert proc != null;
-            ScanResult result = proc.scan(sentence.getText());
+            ScanResult result = proc.scan(sentence.getText(), null);
 
             Assert.assertNotNull(result);
             Assert.assertFalse(result.getAllTokens().isEmpty());
@@ -149,7 +149,7 @@ public class test_Processor {
         Assert.assertNotNull(synt.getAsm());
         SemanticAnalysisResult result = proc.semanticAnalysis(synt.getAsm(), Agl.INSTANCE.options(new ProcessOptionsDefault<>(), b ->{
             b.semanticAnalysis(b2->{
-                b2.context(new ContextAsmSimple());
+                b2.context(new SentenceContextAny());
                 return Unit.INSTANCE;
             });
             return Unit.INSTANCE;
@@ -167,7 +167,7 @@ public class test_Processor {
 
     @Test
     public void process_defaultOptions() {
-        ProcessOptions<Asm, ContextAsmSimple> options = proc.optionsDefault();
+        ProcessOptions<Asm, SentenceContextAny> options = proc.optionsDefault();
         options.getParse().setGoalRuleName("value");
         ProcessResult<Asm> result = proc.process("{ a:false b:1 c:3.141 d:'bob' e:var2 }", options);
         Assert.assertNotNull(result.getAsm());

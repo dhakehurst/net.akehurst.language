@@ -18,15 +18,15 @@
 package net.akehurst.language.types.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.types.api.TypesDomain
 
-internal class TypemodelCompletionProvider: CompletionProviderAbstract<TypesDomain, ContextWithScope<Any,Any>>() {
+internal class TypemodelCompletionProvider : CompletionProviderAbstract<TypesDomain, SentenceContextAny>() {
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any,Any>>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContextAny>): List<CompletionItem> {
         return super.provide(nextExpected, options)
     }
 

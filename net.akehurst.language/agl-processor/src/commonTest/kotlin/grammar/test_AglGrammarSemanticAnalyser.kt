@@ -20,7 +20,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
@@ -79,7 +79,7 @@ class test_AglGrammarSemanticAnalyser {
 
         fun semanticAnalysis(
             asmRes: SyntaxAnalysisResult<GrammarDomain>,
-            options: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>
+            options: ProcessOptions<GrammarDomain, SentenceContextAny>
         ): SemanticAnalysisResult {
             val semanticAnalyser = AglGrammarSemanticAnalyser()
             val context = contextFromGrammarRegistry(Agl.registry)
@@ -90,7 +90,7 @@ class test_AglGrammarSemanticAnalyser {
         fun test(
             grammarStr: String,
             expected: Set<LanguageIssue>,
-            options: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>> = Agl.options { }
+            options: ProcessOptions<GrammarDomain, SentenceContextAny> = Agl.options { }
         ): ProcessResult<GrammarDomain> {
             val sppt = parse(grammarStr)
             val asmRes = syntaxAnalysis(sppt)

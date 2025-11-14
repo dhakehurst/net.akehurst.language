@@ -18,6 +18,11 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.kotlinx.collections.topologicalSort
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformNamespace
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
+import net.akehurst.language.asmTransform.asm.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.AssignmentStatement
@@ -29,11 +34,6 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.api.AsmTransformNamespace
-import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
-import net.akehurst.language.asmTransform.api.AsmTransformationRule
-import net.akehurst.language.asmTransform.asm.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.StructuredTypeSimpleAbstract

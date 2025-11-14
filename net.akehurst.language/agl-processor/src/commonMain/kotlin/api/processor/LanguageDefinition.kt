@@ -17,9 +17,10 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.processor.AglLanguages
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.PublicValueType
@@ -31,12 +32,10 @@ import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.style.api.AglStyleDomain
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.types.api.TypesDomain
-import kotlin.jvm.JvmInline
 
 interface GrammarRegistry {
-    val grammars:List<Grammar>
+    val grammars: List<Grammar>
 
     fun registerGrammar(grammar: Grammar)
     fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar?
@@ -76,14 +75,14 @@ interface LanguageRegistry : GrammarRegistry {
 
     val agl: AglLanguages
 
-    val languages:Map<LanguageIdentity,LanguageDefinition<*, *>>
+    val languages: Map<LanguageIdentity, LanguageDefinition<*, *>>
 
     /**
      * create and register a LanguageDefinition as specified
      */
     fun <AsmType : Any, ContextType : Any> register(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>?,
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType>
@@ -94,7 +93,7 @@ interface LanguageRegistry : GrammarRegistry {
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>? = null,
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>? = null,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageDefinition<AsmType, ContextType>
 }
@@ -128,6 +127,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
     val formatString: FormatString?
+
     //val formatterModel:AglFormatterModel?
     val formatter: Formatter<AsmType>?
 
@@ -155,11 +155,11 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     //val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
     fun update(
-        grammarString: GrammarString?=null,
-        typesString: TypesString?=null,
-        asmTransformString: AsmTransformString?=null,
-        crossReferenceString: CrossReferenceString?=null,
-        styleString: StyleString?=null,
-        formatString: FormatString?=null,
+        grammarString: GrammarString? = null,
+        typesString: TypesString? = null,
+        asmTransformString: AsmTransformString? = null,
+        crossReferenceString: CrossReferenceString? = null,
+        styleString: StyleString? = null,
+        formatString: FormatString? = null,
     )
 }

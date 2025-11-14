@@ -13,13 +13,8 @@ kotlin {
         compilerOptions {
             target.set("es2015")
         }
-        nodejs()
-        browser {
-            testTask {
-                useMocha {
-                    timeout = "5000"
-                }
-            }
+        nodejs {
+
         }
     }
 }
@@ -40,14 +35,14 @@ jsIntegration {
 //tasks.named<Copy>("jsTestTestDevelopmentExecutableCompileSync") {
 //    duplicatesStrategy = DuplicatesStrategy.WARN
 //}
-tasks.register<Copy>("overwriteTestEntryFile") {
-    mustRunAfter("compileTestDevelopmentExecutableKotlinJs")
-    from("src/test/javascript")
-    into(File(rootProject.projectDir, ".gradle-build/net.akehurst.language/js/packages/net.akehurst.language-test-JS-api-agl-processor-test/kotlin"))
-}
-tasks["jsTestTestDevelopmentExecutableCompileSync"].mustRunAfter("overwriteTestEntryFile")
-tasks["jsNodeTest"].dependsOn("overwriteTestEntryFile")
-tasks["jsBrowserTest"].dependsOn("overwriteTestEntryFile")
+//tasks.register<Copy>("overwriteTestEntryFile") {
+//    mustRunAfter("compileTestDevelopmentExecutableKotlinJs")
+//    from("src/test/javascript")
+//    into(File(rootProject.projectDir, ".gradle-build/net.akehurst.language/js/packages/net.akehurst.language-test-JS-api-agl-processor-test/kotlin"))
+//}
+//tasks["overwriteTestEntryFile"].mustRunAfter("jsTestTestDevelopmentExecutableCompileSync")
+//tasks["jsNodeTest"].dependsOn("overwriteTestEntryFile")
+//tasks["jsBrowserTest"].dependsOn("overwriteTestEntryFile")
 
 tasks.withType<AbstractPublishToMaven> {
     onlyIf { false }

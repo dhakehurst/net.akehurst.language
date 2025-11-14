@@ -35,7 +35,6 @@ import net.akehurst.language.m2mTransform.asm.*
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import kotlin.collections.set
 
 class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2mTransformDomain>() {
 

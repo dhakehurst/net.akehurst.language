@@ -29,8 +29,8 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.*
 import net.akehurst.language.scanner.api.Matchable
 import net.akehurst.language.scanner.api.MatchableKind
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SharedPackedParseTree

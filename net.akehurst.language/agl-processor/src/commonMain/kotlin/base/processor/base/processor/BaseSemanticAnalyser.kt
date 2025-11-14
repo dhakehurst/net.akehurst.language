@@ -16,21 +16,20 @@
 
 package net.akehurst.language.base.processor
 
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 
 
-class BaseSemanticAnalyser() : SemanticAnalyser<Any, ContextWithScope<Any, Any>> {
+class BaseSemanticAnalyser() : SemanticAnalyser<Any, SentenceContextAny> {
 
     override fun clear() {
         TODO("not implemented")
     }
 
-    override fun analyse(sentenceIdentity: Any?, asm: Any, locationMap: LocationMap?, options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>): SemanticAnalysisResult {
+    override fun analyse(sentenceIdentity: Any?, asm: Any, locationMap: LocationMap?, options: SemanticAnalysisOptions<SentenceContextAny>): SemanticAnalysisResult {
         TODO("not implemented")
     }
 

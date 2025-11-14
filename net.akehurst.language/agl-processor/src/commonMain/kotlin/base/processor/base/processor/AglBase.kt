@@ -18,14 +18,16 @@
 package net.akehurst.language.base.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.base.api.*
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
@@ -36,23 +38,17 @@ import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.builder.asmTransform
-import net.akehurst.language.base.api.Domain
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.Namespace
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 
-object AglBase : LanguageObjectAbstract<Any, ContextWithScope<Any, Any>>() {
+object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
     const val NAMESPACE_NAME = "net.akehurst.language"
     const val NAME = "Base"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
-    override val extends = emptyList<LanguageObject<Any, ContextWithScope<Any, Any>>>()
+    override val extends = emptyList<LanguageObject<Any, SentenceContextAny>>()
 
     override val grammarString: String = """
         namespace $NAMESPACE_NAME
@@ -194,7 +190,7 @@ object AglBase : LanguageObjectAbstract<Any, ContextWithScope<Any, Any>>() {
                 interface_("Domain") {
                     typeParameters("NT", "DT")
                     supertype("Formatable")
-                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false, Domain<*,*>::namespace) {
+                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false, Domain<*, *>::namespace) {
                         typeArgument("NT")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
@@ -347,8 +343,8 @@ object AglBase : LanguageObjectAbstract<Any, ContextWithScope<Any, Any>>() {
     override val defaultTargetGrammar: Grammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.Base"))!! }
 
     override val syntaxAnalyser: SyntaxAnalyser<Any>? by lazy { BaseSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<Any, ContextWithScope<Any, Any>>? by lazy { BaseSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<Any, ContextWithScope<Any, Any>>? by lazy { BaseCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<Any, SentenceContextAny>? by lazy { BaseSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<Any, SentenceContextAny>? by lazy { BaseCompletionProvider() }
 
 
     //TODO: gen this from the ASM

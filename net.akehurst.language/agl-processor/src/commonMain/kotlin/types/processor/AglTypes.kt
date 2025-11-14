@@ -18,26 +18,25 @@
 package net.akehurst.language.types.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.reference.builder.crossReferenceDomain
-import net.akehurst.language.style.builder.styleDomain
-import net.akehurst.language.asmTransform.builder.asmTransform
-import net.akehurst.language.m2mTransform.processor.M2mTransform
 import net.akehurst.language.regex.api.CommonRegexPatterns
+import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
-object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>>() {
+object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContextAny>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Types"
     const val goalRuleName = "unit"
@@ -856,7 +855,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
     override val defaultTargetGoalRule = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<TypesDomain> by lazy { TypesSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<TypesDomain, ContextWithScope<Any, Any>>? by lazy { TypemodelSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<TypesDomain, ContextWithScope<Any, Any>>? by lazy { TypemodelCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<TypesDomain, SentenceContextAny>? by lazy { TypemodelSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<TypesDomain, SentenceContextAny>? by lazy { TypemodelCompletionProvider() }
 
 }

@@ -20,9 +20,7 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.simple.contextAsmSimpleWithAsmPath
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals

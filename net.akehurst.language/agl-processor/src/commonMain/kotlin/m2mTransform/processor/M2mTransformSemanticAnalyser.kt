@@ -18,17 +18,17 @@
 package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.m2mTransform.api.M2mTransformDomain
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.types.api.TypesDomain
 
-class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, ContextWithScope<Any, Any>> {
+class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContextAny> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
 
@@ -40,7 +40,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Contex
         sentenceIdentity: Any?,
         asm: M2mTransformDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
+        options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
         val context = options.context
         when {
@@ -54,8 +54,8 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Contex
                             if (null == typesDomainName) {
                                 _issues.error(null, "TypeDomain '${dv.domainRef}' not found for rule '${k}'")
                             } else {
-                                val tm = (context.findItemsNamedConformingTo(typesDomainName.value,) { true }).firstOrNull()?.item
-                                when(tm) {
+                                val tm = (context.findItemsNamedConformingTo(typesDomainName.value) { true }).firstOrNull()?.item
+                                when (tm) {
                                     null -> _issues.error(null, "TypeModel '${typesDomainName.value}' not found for rule '${k}'")
                                     !is TypesDomain -> _issues.error(null, "TypeModel '${typesDomainName.value}' is not a TypesDomain for rule '${k}'")
                                     else -> dv.variable.resolveType(tm)

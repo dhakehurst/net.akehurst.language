@@ -17,19 +17,19 @@
 
 package net.akehurst.language.agl
 
-import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
-import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypesDomain
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.format.asm.AglFormatDomainDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
@@ -40,14 +40,14 @@ import net.akehurst.language.grammar.asm.GrammarDomainDefault
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.asm.AglStyleDomainDefault
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.TypesDomainSimple
 
@@ -83,7 +83,7 @@ object Agl {
             completionProviderResolver = { p -> ProcessResultDefault<CompletionProvider<AsmType, ContextType>>(languageObject.completionProvider) },
         )
 
-    fun configurationSimple(): LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = LanguageProcessorConfigurationSimple()
+    fun configurationSimple(): LanguageProcessorConfiguration<Asm, SentenceContextAny> = LanguageProcessorConfigurationSimple()
 
     /**
      * build a configuration for a language processor
@@ -148,12 +148,12 @@ object Agl {
         referenceStr: CrossReferenceString? = null,
         styleStr: StyleString? = null,
         formatterStr: FormatString? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
-    ): LanguageProcessorResult<Asm, ContextWithScope<Any, Any>> {
+        configurationBase: LanguageProcessorConfiguration<Asm, SentenceContextAny> = configurationSimple(),
+        grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
+    ): LanguageProcessorResult<Asm, SentenceContextAny> {
         val config = Agl.configuration(configurationBase) {
             if (null != typeStr) {
-                typesResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> ->
+                typesResolver { p: LanguageProcessor<Asm, SentenceContextAny> ->
                     TypesDomainSimple.fromString(
                         SimpleName("FromGrammar" + p.grammarDomain!!.name.value),
                         contextFromGrammar(p.grammarDomain!!),
@@ -162,7 +162,7 @@ object Agl {
                 }
             }
             if (null != transformStr) {
-                transformResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> ->
+                transformResolver { p: LanguageProcessor<Asm, SentenceContextAny> ->
                     AsmTransformDomainDefault.fromString(
                         ContextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain),
                         transformStr
@@ -170,13 +170,13 @@ object Agl {
                 }
             }
             if (null != referenceStr) {
-                crossReferenceResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), referenceStr) }
+                crossReferenceResolver { p: LanguageProcessor<Asm, SentenceContextAny> -> CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), referenceStr) }
             }
             if (null != styleStr) {
-                styleResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), styleStr) }
+                styleResolver { p: LanguageProcessor<Asm, SentenceContextAny> -> AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), styleStr) }
             }
             if (null != formatterStr) {
-                formatResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> Agl.formatDomain(formatterStr, p.typesDomain) }
+                formatResolver { p: LanguageProcessor<Asm, SentenceContextAny> -> Agl.formatDomain(formatterStr, p.typesDomain) }
             }
         }
         val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)
@@ -193,8 +193,8 @@ object Agl {
         crossReferenceStr: String? = null,
         styleStr: String? = null,
         formatterStr: String? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
+        configurationBase: LanguageProcessorConfiguration<Asm, SentenceContextAny> = configurationSimple(),
+        grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
     ) = processorFromStringSimple(
         GrammarString(grammarDefinitionStr),
         typesStr?.let { TypesString(it) },
@@ -216,10 +216,10 @@ object Agl {
     fun <AsmType : Any, ContextType : Any> processorFromString(
         grammarDefinitionStr: String,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = configurationBase(),
-        aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any, Any>>? = Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>? = Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }
     ): LanguageProcessorResult<AsmType, ContextType> {
         return try {
-            val res = Agl.grammarFromString<GrammarDomain, ContextWithScope<Any, Any>>(
+            val res = Agl.grammarFromString<GrammarDomain, SentenceContextAny>(
                 grammarDefinitionStr,
                 aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
             )
@@ -254,7 +254,7 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> grammarFromString(
         sentence: String?,
-        aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any, Any>>? = Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>? = Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }
     ): ProcessResult<GrammarDomain> {
         return if (null == sentence) {
             ProcessResultDefault(null)
@@ -273,7 +273,7 @@ object Agl {
         styleStr: StyleString? = null,
         formatterStr: FormatString? = null,
         configurationBase: LanguageProcessorConfiguration<AsmType, ContextType> = configurationBase(),
-        grammarAglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
+        grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
     ): LanguageDefinition<AsmType, ContextType> {
         val config = Agl.configuration(configurationBase) {
             grammarString(grammarDefinitionStr)
@@ -311,9 +311,9 @@ object Agl {
         referenceStr: CrossReferenceString? = null,
         styleStr: StyleString? = null,
         formatterStr: FormatString? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
-    ): LanguageDefinition<Asm, ContextWithScope<Any, Any>> {
+        configurationBase: LanguageProcessorConfiguration<Asm, SentenceContextAny> = configurationSimple(),
+        grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
+    ): LanguageDefinition<Asm, SentenceContextAny> {
         val config = Agl.configuration(configurationBase) {
             grammarString(grammarDefinitionStr)
             typesString(typesStr)

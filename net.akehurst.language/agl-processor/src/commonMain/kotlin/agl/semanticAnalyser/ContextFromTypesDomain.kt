@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.asQualifiedName
@@ -46,8 +46,8 @@ class ContextFromTypesDomain(
     override fun toString(): String = "ContextFromTypesDomain($typesDomain)"
 }
 
-fun contextFromTypesDomain(typesDomain: TypesDomain) : ContextWithScope<Any, Any> {
-    val context = ContextWithScope<Any, Any>()
+fun contextFromTypesDomain(typesDomain: TypesDomain) : SentenceContextAny {
+    val context = SentenceContextAny()
     val sentenceIdentity = typesDomain.name.value
     typesDomain.allDefinitions.forEach { def ->
         val qualifiedName = def.qualifiedName.parts.map { it.value }

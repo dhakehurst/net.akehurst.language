@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.SysML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
@@ -27,14 +27,9 @@ import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.sentence.api.InputLocation
 import testFixture.utils.parseError
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class test_SysML_agl_Singles {
 
@@ -43,7 +38,7 @@ class test_SysML_agl_Singles {
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
-        val processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> by lazy {
+        val processor: LanguageProcessor<Asm, SentenceContextAny> by lazy {
             val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
@@ -57,7 +52,7 @@ class test_SysML_agl_Singles {
             assertEquals(expIssues, result.issues.all, result.issues.toString())
         }
 
-        fun test_process(sentence: String, context: ContextWithScope<Any, Any>, expIssues: Set<LanguageIssue>) {
+        fun test_process(sentence: String, context: SentenceContextAny, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)

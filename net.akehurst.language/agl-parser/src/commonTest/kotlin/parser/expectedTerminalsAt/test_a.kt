@@ -16,7 +16,6 @@
 
 package net.akehurst.language.parser.expectedTerminalsAt
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 

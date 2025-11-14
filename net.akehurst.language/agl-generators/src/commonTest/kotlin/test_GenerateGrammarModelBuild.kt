@@ -1,6 +1,6 @@
 package net.akehurst.language.agl.generators
 
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.types.processor.AglTypes
 import kotlin.test.Test
 import kotlin.test.assertEquals

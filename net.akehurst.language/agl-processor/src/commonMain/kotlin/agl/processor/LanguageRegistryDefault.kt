@@ -18,7 +18,7 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.processor.AsmTransform
@@ -47,8 +47,8 @@ import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.processor.AglTypes
 
-fun contextFromGrammarRegistry(registry: GrammarRegistry = Agl.registry): ContextWithScope<Any, Any> {
-    val context = ContextWithScope<Any, Any>()
+fun contextFromGrammarRegistry(registry: GrammarRegistry = Agl.registry): SentenceContextAny {
+    val context = SentenceContextAny()
     registry.grammars.forEach {
         context.addToScope(registry, it.qualifiedName.parts.map { it.value }, QualifiedName("GrammarNamespace"), null, it)
     }
@@ -66,15 +66,15 @@ interface AglLanguages {
     val styleLanguageIdentity: LanguageIdentity
     val formatLanguageIdentity: LanguageIdentity
 
-    val base: LanguageDefinition<Any, ContextWithScope<Any,Any>>
-    val expressions: LanguageDefinition<Expression, ContextWithScope<Any,Any>>
-    val grammar: LanguageDefinition<GrammarDomain, ContextWithScope<Any,Any>>
-    val types: LanguageDefinition<TypesDomain, ContextWithScope<Any,Any>>
+    val base: LanguageDefinition<Any, SentenceContextAny>
+    val expressions: LanguageDefinition<Expression, SentenceContextAny>
+    val grammar: LanguageDefinition<GrammarDomain, SentenceContextAny>
+    val types: LanguageDefinition<TypesDomain, SentenceContextAny>
     val crossReference: LanguageDefinition<CrossReferenceDomain, ContextFromTypesDomain>
-    val asmTransform: LanguageDefinition<AsmTransformDomain, ContextWithScope<Any, Any>>
-    val m2mTransform: LanguageDefinition<M2mTransformDomain, ContextWithScope<Any, Any>>
-    val style: LanguageDefinition<AglStyleDomain, ContextWithScope<Any,Any>>
-    val format: LanguageDefinition<AglFormatDomain, ContextWithScope<Any,Any>>
+    val asmTransform: LanguageDefinition<AsmTransformDomain, SentenceContextAny>
+    val m2mTransform: LanguageDefinition<M2mTransformDomain, SentenceContextAny>
+    val style: LanguageDefinition<AglStyleDomain, SentenceContextAny>
+    val format: LanguageDefinition<AglFormatDomain, SentenceContextAny>
 }
 
 class LanguageRegistryDefault : LanguageRegistry {
@@ -99,32 +99,32 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val styleLanguageIdentity: LanguageIdentity get() = AglStyle.identity
         override val formatLanguageIdentity: LanguageIdentity get() = AglFormat.identity
 
-        override val base: LanguageDefinition<Any, ContextWithScope<Any,Any>> by lazy {
+        override val base: LanguageDefinition<Any, SentenceContextAny> by lazy {
             this@LanguageRegistryDefault.registerFromLanguageObject(AglBase)
         }
 
-        override val expressions: LanguageDefinition<Expression, ContextWithScope<Any,Any>> by lazy {
+        override val expressions: LanguageDefinition<Expression, SentenceContextAny> by lazy {
             base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglExpressions)
         }
 
-        override val grammar: LanguageDefinition<GrammarDomain, ContextWithScope<Any,Any>> by lazy {
+        override val grammar: LanguageDefinition<GrammarDomain, SentenceContextAny> by lazy {
             base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglGrammar)
         }
 
-        override val types: LanguageDefinition<TypesDomain, ContextWithScope<Any,Any>> by lazy {
+        override val types: LanguageDefinition<TypesDomain, SentenceContextAny> by lazy {
             base // ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglTypes)
         }
 
-        override val asmTransform: LanguageDefinition<AsmTransformDomain, ContextWithScope<Any, Any>> by lazy {
+        override val asmTransform: LanguageDefinition<AsmTransformDomain, SentenceContextAny> by lazy {
             base //ensure base is instantiated
             expressions // ensure expressions is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AsmTransform)
         }
 
-        override val m2mTransform: LanguageDefinition<M2mTransformDomain, ContextWithScope<Any, Any>> by lazy {
+        override val m2mTransform: LanguageDefinition<M2mTransformDomain, SentenceContextAny> by lazy {
             base //ensure base is instantiated
             expressions // ensure expressions is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(M2mTransform)
@@ -158,7 +158,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromLanguageObject(AglFormat)
         }
 
-        override val style: LanguageDefinition<AglStyleDomain, ContextWithScope<Any,Any>> by lazy {
+        override val style: LanguageDefinition<AglStyleDomain, SentenceContextAny> by lazy {
             base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglStyle)
         }
@@ -178,7 +178,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     override fun <AsmType : Any, ContextType : Any> register(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>?,
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType> = this.registerFromDefinition(
@@ -235,7 +235,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     fun <AsmType : Any, ContextType : Any> createLanguageDefinition(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>?,
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> = LanguageDefinitionDefault<AsmType, ContextType>(
         identity = identity,
@@ -246,7 +246,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     override fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>?,
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> {
         val existing = this.findOrNull<AsmType, ContextType>(identity)

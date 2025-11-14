@@ -18,7 +18,7 @@
 package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.base.api.QualifiedName
@@ -1142,7 +1142,7 @@ class test_m2mTransformInterpreter {
                 println(v.asString())
             }
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val context = ContextWithScope<Any, Any>()
+            val context = SentenceContextAny()
             testData.typeDomains.forEach { (k, v) ->
                 context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
             }

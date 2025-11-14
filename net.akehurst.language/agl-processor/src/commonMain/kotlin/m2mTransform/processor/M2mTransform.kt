@@ -18,8 +18,7 @@
 package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.m2mTransform.api.*
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -34,14 +33,14 @@ import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
-import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.types.builder.typesDomain
 
-object M2mTransform : LanguageObjectAbstract<M2mTransformDomain, ContextWithScope<Any, Any>>() {
+object M2mTransform : LanguageObjectAbstract<M2mTransformDomain, SentenceContextAny>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "M2mTransform"
     const val goalRuleName = "unit"
@@ -177,7 +176,7 @@ grammar $NAME : Base {
                         ref("tableRule")
                     }
                     concatenation("abstractRule") {
-                        lit("abstract"); opt { lit("top") };  lit("rule"); ref("ruleName"); opt { ref("extends") }; lit("{")
+                        lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("domainPrimitive") }
                         lst(0, -1) { ref("domainSignature") }
                         lit("}")
@@ -210,7 +209,7 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("pivot") { lit("pivot"); ref("variableDefinition") }
-                    concatenation("domainPrimitive") { lit("primitive"); lit("domain"); ref("variableDefinition");}
+                    concatenation("domainPrimitive") { lit("primitive"); lit("domain"); ref("variableDefinition"); }
                     concatenation("domainSignature") {
                         lit("domain"); ref("domainReference"); ref("variableDefinition")
                     }
@@ -359,8 +358,8 @@ grammar $NAME : Base {
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<M2mTransformDomain> by lazy { M2mTransformSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<M2mTransformDomain, ContextWithScope<Any, Any>> by lazy { M2mTransformSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<M2mTransformDomain, ContextWithScope<Any, Any>> by lazy { M2mTransformCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<M2mTransformDomain, SentenceContextAny> by lazy { M2mTransformSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<M2mTransformDomain, SentenceContextAny> by lazy { M2mTransformCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.${NAME}"
 

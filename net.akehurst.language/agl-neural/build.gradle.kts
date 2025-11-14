@@ -12,7 +12,5 @@ kotlin {
     }
 }
 
-
-tasks.withType<AbstractPublishToMaven> {
-    onlyIf { false }
-}
+// do not publish, yet
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }

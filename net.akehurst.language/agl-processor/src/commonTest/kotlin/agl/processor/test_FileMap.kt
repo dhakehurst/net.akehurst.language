@@ -1,10 +1,10 @@
 package agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.processor.AsmTransformString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.AsmTransformString
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -41,10 +41,10 @@ class test_FileMap {
             }
         """
 
-        val processor: LanguageProcessor<List<MapStringString>, ContextWithScope<Any, Any>> by lazy {
-            val res = Agl.processorFromString<List<MapStringString>, ContextWithScope<Any, Any>>(
+        val processor: LanguageProcessor<List<MapStringString>, SentenceContextAny> by lazy {
+            val res = Agl.processorFromString<List<MapStringString>, SentenceContextAny>(
                 grammarDefinitionStr = grammar,
-                configuration = Agl.configuration<List<MapStringString>, ContextWithScope<Any, Any>>(base = Agl.configurationBase()) {
+                configuration = Agl.configuration<List<MapStringString>, SentenceContextAny>(base = Agl.configurationBase()) {
                     transformString(AsmTransformString(asmTransform))
 //                    syntaxAnalyserResolver { p ->
 //                        ProcessResultDefault(

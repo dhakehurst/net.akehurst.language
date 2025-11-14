@@ -16,8 +16,6 @@
 
 package net.akehurst.language.regex.api
 
-import kotlin.jvm.JvmInline
-
 enum class RegexEngineKind {
     PLATFORM, AGL
 }

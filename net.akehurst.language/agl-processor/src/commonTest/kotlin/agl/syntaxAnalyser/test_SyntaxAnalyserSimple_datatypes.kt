@@ -19,17 +19,16 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
-import net.akehurst.language.agl.simple.test_SemanticAnalyserSimple_datatypes
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
-import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.*
 
@@ -72,7 +71,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         }
         val scopeModel = CrossReferenceDomainDefault(grammar.primary!!.name)
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
-        val processor = Agl.processorFromString<Asm, ContextWithScope<Any, Any>>(
+        val processor = Agl.processorFromString<Asm, SentenceContextAny>(
             grammarStr,
             Agl.configuration {
                 crossReferenceResolver { ProcessResultDefault(scopeModel) }

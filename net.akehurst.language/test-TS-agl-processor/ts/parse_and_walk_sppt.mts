@@ -1,7 +1,7 @@
 //import {Agl, KtList} from 'net.akehurst.language-agl-processor';
 //import {SpptWalker, SpptDataNodeInfo, SpptDataNode} from 'net.akehurst.language-agl-processor';
-import {Agl, KtList, GrammarString} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-processor.mjs';
-import {SpptWalker, SpptDataNodeInfo, SpptDataNode} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-parser.mjs';
+import {Agl, GrammarString, KtList} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-processor.mjs';
+import {SpptDataNode, SpptDataNodeInfo, SpptWalker} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-parser.mjs';
 
 const grammarStr = `
 namespace test

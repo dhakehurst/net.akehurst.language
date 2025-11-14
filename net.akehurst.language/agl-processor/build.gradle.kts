@@ -1,6 +1,6 @@
 plugins {
     id("project-conventions")
-    alias(libs.plugins.reflex)
+    //alias(libs.plugins.reflex)
 }
 
 dependencies {
@@ -51,7 +51,7 @@ kotlin {
         }
     }
 }
-
+/*
 //  since change in Kotlin compiler, can't see transitive deps in module (without additional work yet done
 // thus we get each module to generate KotlinxReflect for itself - to fix in future FIXME
 kotlinxReflect {
@@ -79,7 +79,7 @@ kotlinxReflect {
         )
     )
 }
-
+*/
 /*
 exportPublic {
     exportPatterns.set(

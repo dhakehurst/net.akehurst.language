@@ -17,11 +17,11 @@
 
 package net.akehurst.language.asmTransform.test
 
-import net.akehurst.language.expressions.test.ExpressionsTest
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.api.AsmTransformNamespace
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
+import net.akehurst.language.expressions.test.ExpressionsTest
 import net.akehurst.language.types.test.TypesDomainTest
 import kotlin.test.assertEquals
 import kotlin.test.fail

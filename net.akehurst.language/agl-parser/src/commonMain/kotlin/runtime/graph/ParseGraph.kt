@@ -20,12 +20,11 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
 import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.language.collections.binaryHeap
-import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData

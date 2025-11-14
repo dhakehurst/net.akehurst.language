@@ -9,17 +9,15 @@ import {
     Nullable,
     SemanticAnalyser,
     SemanticAnalysisOptions,
-    SemanticAnalysisResult, SemanticAnalysisResultDefault,
+    SemanticAnalysisResult,
+    SemanticAnalysisResultDefault,
     Sentence,
     SentenceContext,
     SpptDataNodeInfo,
     SyntaxAnalyserByMethodRegistrationAbstract
 } from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-processor.mjs';
 
-import {
-    IssueHolder,
-    locationForNode
-} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-parser.mjs';
+import {IssueHolder} from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-parser.mjs';
 
 
 const grammarStr = `

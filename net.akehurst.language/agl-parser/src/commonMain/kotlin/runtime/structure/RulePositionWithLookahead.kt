@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import kotlin.jvm.JvmInline
-
 // @JvmInline
 // TODO: value classes don't work (fully) in js and wasm
 data class StateNumber(val value:Int) //: PublicValueType

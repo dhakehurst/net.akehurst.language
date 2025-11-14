@@ -20,12 +20,7 @@ package net.akehurst.language.objectgraph.api
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.types.api.MethodDeclaration
-import net.akehurst.language.types.api.PropertyDeclaration
-import net.akehurst.language.types.api.TypeArgumentNamed
-import net.akehurst.language.types.api.TypeDefinition
-import net.akehurst.language.types.api.TypeInstance
-import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.api.*
 
 interface TypedObject<out SelfType:Any> {
     val self: SelfType

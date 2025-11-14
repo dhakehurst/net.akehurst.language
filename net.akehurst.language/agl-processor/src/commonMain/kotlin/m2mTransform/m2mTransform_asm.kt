@@ -27,7 +27,6 @@ import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
-import kotlin.collections.set
 
 class M2mTransformDomainDefault(
     override val name: SimpleName,
