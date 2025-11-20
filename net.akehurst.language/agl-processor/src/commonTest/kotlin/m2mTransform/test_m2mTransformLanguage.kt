@@ -58,7 +58,16 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                     }
                 """.trimIndent(),
-            ),
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                }
+                val tm2 = typesDomain("D2", true) {
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
             TestData(
                 testName = "single line comment",
                 sentence = """
@@ -67,7 +76,16 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                     }
                 """.trimIndent()
-            ),
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                }
+                val tm2 = typesDomain("D2", true) {
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
             TestData(
                 testName = "multi line comment",
                 sentence = """
@@ -79,7 +97,16 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                     }
                 """.trimIndent()
-            ),
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                }
+                val tm2 = typesDomain("D2", true) {
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
             // relations
             TestData(
                 testName = "top relation",

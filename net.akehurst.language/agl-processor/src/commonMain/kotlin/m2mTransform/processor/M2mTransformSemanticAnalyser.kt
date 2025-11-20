@@ -47,19 +47,21 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
             null == context -> _issues.warn(null, "No context provided, either provide one or switch off Semantic Analysis.")
             else -> {
                 asm.allTransformRuleSet.forEach { def ->
-                    val typeDomains = def.domainParameters
+                    def.domainParameters.entries.forEach { (k, v) ->
+                        val td = (context.findItemsNamedConformingTo(v.value) { true }).firstOrNull()?.item
+                        when (td) {
+                            null -> _issues.error(null, "TypesDomain '${v.value}' not found in context for parameter '${k}'")
+                            !is TypesDomain -> _issues.error(null, "TypesDomain '${v.value}' is not a TypesDomain in the context, rather a '${td::class.simpleName}'")
+                            else -> def.resolveDomainParameter(k, td)
+                        }
+                    }
                     def.rule.forEach { (k, v) ->
                         v.domainSignature.forEach { (dk, dv) ->
-                            val typesDomainName = typeDomains[dv.domainRef]
-                            if (null == typesDomainName) {
-                                _issues.error(null, "TypeDomain '${dv.domainRef}' not found for rule '${k}'")
+                            val typesDomain = def.domainParameterResolved[dv.domainRef]
+                            if (null == typesDomain) {
+                                _issues.error(null, "TypesDomain '${dv.domainRef}' not found in rule '${k}'")
                             } else {
-                                val tm = (context.findItemsNamedConformingTo(typesDomainName.value) { true }).firstOrNull()?.item
-                                when (tm) {
-                                    null -> _issues.error(null, "TypeModel '${typesDomainName.value}' not found for rule '${k}'")
-                                    !is TypesDomain -> _issues.error(null, "TypeModel '${typesDomainName.value}' is not a TypesDomain for rule '${k}'")
-                                    else -> dv.variable.resolveType(tm)
-                                }
+                                 dv.variable.resolveType(typesDomain)
                             }
                         }
                     }

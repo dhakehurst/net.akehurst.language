@@ -29,11 +29,21 @@ interface M2mTransformDomain : Domain<M2mTransformNamespace, M2MTransformDefinit
     val allTransformTest: List<M2mTransformTest>
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): M2mTransformNamespace
+    fun findTestDefinitionByQualifiedNameOrNull(qualifiedName: QualifiedName): M2mTransformTest?
 
 }
 
 interface M2mTransformNamespace : Namespace<M2MTransformDefinition> {
+
+    val testDefinition: List<M2mTransformTest>
+
+    val testDefinitionByName: Map<SimpleName, M2mTransformTest>
+
     fun createOwnedTransformRuleSet(name: SimpleName, extends: List<M2MTransformDefinition>, options: OptionHolder): M2mTransformRuleSet
+
+    fun findOwnedTestDefinitionOrNull(simpleName: SimpleName): M2mTransformTest?
+
+    fun addTestDefinition(value: M2mTransformTest)
 }
 
 /**
@@ -54,6 +64,7 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
     override val namespace: M2mTransformNamespace
 
     val domainParameters: Map<DomainReference, SimpleName>
+    val domainParameterResolved: Map<DomainReference, TypesDomain>
     val extends: List<M2mTransformRuleSetReference>
 
     /**
@@ -67,6 +78,8 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
 
     fun addImportType(value: Import)
     fun setRule(rule: M2mTransformRule)
+
+    fun resolveDomainParameter(ref:DomainReference, typesDomain: TypesDomain)
 }
 
 interface M2mTransformRule {
@@ -143,7 +156,13 @@ interface PropertyTemplateExpression :  PropertyTemplateRhs {
     val expression: Expression
 }
 
-interface M2mTransformTest : M2MTransformDefinition {
+interface M2mTransformTest  {
+    val namespace: M2mTransformNamespace
+    val name: SimpleName
+    val qualifiedName: QualifiedName
+
+    val options: OptionHolder
+
     val domainParameters: Map<DomainReference, SimpleName>
     val testCase : Map<SimpleName, M2mTransformTestCase>
 }

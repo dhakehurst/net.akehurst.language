@@ -2,6 +2,14 @@ plugins {
     alias(libs.plugins.kotlin)
 }
 repositories {
+    mavenLocal {
+        content {
+            includeGroupByRegex("net\\.akehurst.+")
+        }
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
     mavenCentral()
     gradlePluginPortal()
 }

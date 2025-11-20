@@ -26,20 +26,22 @@ plugins {
     alias(libs.plugins.dokka)
     alias(libs.plugins.buildconfig)
     alias(libs.plugins.exportPublic)
-    alias(libs.plugins.vanniktech.maven.publish)
     signing
+    alias(libs.plugins.vanniktech.maven.publish)
 }
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
 val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
 val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
 
 repositories {
-    //TODO: remove mavenLocal repo
-//    mavenLocal {
-//        content {
-//            includeGroupByRegex("net\\.akehurst.+")
-//        }
-//    }
+    mavenLocal {
+        content {
+            includeGroupByRegex("net\\.akehurst.+")
+        }
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
     mavenCentral()
     gradlePluginPortal()
 }

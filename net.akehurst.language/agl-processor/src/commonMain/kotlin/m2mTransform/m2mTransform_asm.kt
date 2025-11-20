@@ -40,7 +40,9 @@ class M2mTransformDomainDefault(
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): M2mTransformNamespace {
         TODO("not implemented")
     }
-
+    override fun findTestDefinitionByQualifiedNameOrNull(qualifiedName: QualifiedName): M2mTransformTest? {
+        return (findNamespaceOrNull(qualifiedName.front) as? M2mTransformNamespace)?.findOwnedTestDefinitionOrNull(qualifiedName.last)
+    }
 }
 
 class M2mTransformNamespaceDefault(
@@ -48,12 +50,26 @@ class M2mTransformNamespaceDefault(
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import> = mutableListOf()
 ) : M2mTransformNamespace, NamespaceAbstract<M2MTransformDefinition>(options, import) {
+
+    override val testDefinition: List<M2mTransformTest>  get() = _testDefinition.values.toList()
+    override val testDefinitionByName: Map<SimpleName, M2mTransformTest> get() = _testDefinition
+
+    protected val _testDefinition = linkedMapOf<SimpleName, M2mTransformTest>() //order is important
+
     override fun createOwnedTransformRuleSet(
         name: SimpleName,
         extends: List<M2MTransformDefinition>,
         options: OptionHolder
     ): M2mTransformRuleSet {
         TODO("not implemented")
+    }
+
+    override fun findOwnedTestDefinitionOrNull(simpleName: SimpleName): M2mTransformTest? {
+        return _testDefinition[simpleName]
+    }
+
+    override fun addTestDefinition(value: M2mTransformTest) {
+        _testDefinition[value.name] = value
     }
 }
 
@@ -89,10 +105,13 @@ class M2mTransformRuleSetDefault(
     override val importTypes: List<Import> = mutableListOf()
     override val topRule: List<M2mTransformRule> get() = rule.values.filter { it.isTop }
     override val rule: Map<SimpleName, M2mTransformRule> = mutableMapOf()
+    override val domainParameterResolved: Map<DomainReference, TypesDomain> get() = _domainParameterResolved
 
     init {
         namespace.addDefinition(this)
     }
+
+    private val _domainParameterResolved = mutableMapOf<DomainReference, TypesDomain>()
 
     override fun addImportType(value: Import) {
         if (this.importTypes.contains(value).not()) {
@@ -102,6 +121,10 @@ class M2mTransformRuleSetDefault(
 
     override fun setRule(value: M2mTransformRule) {
         (this.rule as MutableMap)[value.name] = value
+    }
+
+    override fun resolveDomainParameter(ref: DomainReference, typesDomain: TypesDomain) {
+        _domainParameterResolved[ref] = typesDomain
     }
 }
 
@@ -218,12 +241,12 @@ data class M2MTransformTestDefault(
     override val name: SimpleName,
     override val domainParameters: Map<DomainReference, SimpleName>,
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
-) : M2mTransformTest, DefinitionAbstract<M2MTransformDefinition>() {
+) : M2mTransformTest {
 
     init {
-        namespace.addDefinition(this)
+        namespace.addTestDefinition(this)
     }
-
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
     override val testCase = mutableMapOf<SimpleName, M2mTransformTestCase>()
 
 }
