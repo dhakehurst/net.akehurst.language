@@ -112,6 +112,15 @@ abstract class DomainAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
         }
     }
 
+    override fun mergeNamespace(value: NT) {
+        if (_namespace.containsKey(value.qualifiedName)) {
+            _namespace[value.qualifiedName]!!.merge(value)
+        } else {
+            (_namespace as MutableMap)[value.qualifiedName] = value
+            value.options.parent = this.options //FIXME: could cause wrong parent if namespace in multiple Domains!
+        }
+    }
+
     // --- Formatable ---
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
@@ -185,6 +194,16 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
         check(_definition.containsKey(value.name).not()) { "namespace '$qualifiedName' already contains a declaration named '${value.name}', cannot add another" }
         _definition[value.name] = value
         value.options.parent = this.options
+    }
+
+    override fun merge(value: Namespace<DT>) {
+        value.definition.forEach {
+            if(_definition.containsKey(it.name)) {
+                error("Namespace '${qualifiedName}' already contains a definition named '${it.name}', cannot merge another")
+            } else {
+                addDefinition(it)
+            }
+        }
     }
 
     // --- Formatable ---

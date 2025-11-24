@@ -23,7 +23,7 @@ import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 
-interface M2mTransformDomain : Domain<M2mTransformNamespace, M2MTransformDefinition> {
+interface M2mTransformDomain : Domain<M2mTransformNamespace, M2mTransformRuleSet> {
     override val namespace: List<M2mTransformNamespace>
     val allTransformRuleSet: List<M2mTransformRuleSet>
     val allTransformTest: List<M2mTransformTest>
@@ -33,7 +33,7 @@ interface M2mTransformDomain : Domain<M2mTransformNamespace, M2MTransformDefinit
 
 }
 
-interface M2mTransformNamespace : Namespace<M2MTransformDefinition> {
+interface M2mTransformNamespace : Namespace<M2mTransformRuleSet> {
 
     val testDefinition: List<M2mTransformTest>
 
@@ -44,15 +44,17 @@ interface M2mTransformNamespace : Namespace<M2MTransformDefinition> {
     fun findOwnedTestDefinitionOrNull(simpleName: SimpleName): M2mTransformTest?
 
     fun addTestDefinition(value: M2mTransformTest)
+
+    override fun merge(value: Namespace<M2mTransformRuleSet>)
 }
 
 /**
  * entries in an M2mTransformNamespace, either a RuleSet or a Test
  */
-interface M2MTransformDefinition : Definition<M2MTransformDefinition>
+interface M2MTransformDefinition : Definition<M2mTransformRuleSet>
 
-interface M2mTransformRuleSetReference : DefinitionReference<M2MTransformDefinition> {
-    override fun resolveAs(resolved: M2MTransformDefinition)
+interface M2mTransformRuleSetReference : DefinitionReference<M2mTransformRuleSet> {
+    override fun resolveAs(resolved: M2mTransformRuleSet)
     fun cloneTo(ns: M2mTransformNamespace): M2mTransformRuleSetReference
 }
 
@@ -80,6 +82,8 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
     fun setRule(rule: M2mTransformRule)
 
     fun resolveDomainParameter(ref:DomainReference, typesDomain: TypesDomain)
+
+    fun merge(value: M2mTransformRuleSet)
 }
 
 interface M2mTransformRule {
@@ -165,6 +169,8 @@ interface M2mTransformTest  {
 
     val domainParameters: Map<DomainReference, SimpleName>
     val testCase : Map<SimpleName, M2mTransformTestCase>
+
+    fun merge(value: M2mTransformTest)
 }
 
 interface M2mTransformTestCase {

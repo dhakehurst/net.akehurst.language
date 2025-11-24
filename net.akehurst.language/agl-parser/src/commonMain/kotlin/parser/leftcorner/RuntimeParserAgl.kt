@@ -588,7 +588,7 @@ internal class RuntimeParserAgl(
                         ParseAction.HEIGHT -> recordFailedHeightLh(parseArgs, runtimeContext.head, it, runtimeContext.prev.runtimeState.runtimeLookaheadSet, possibleEndOfText)
                         ParseAction.GRAFT -> recordFailedGraftLH(parseArgs, runtimeContext.head, it, runtimeContext.prev.runtimeState.runtimeLookaheadSet, possibleEndOfText)
                         ParseAction.GOAL -> recordFailedGraftLH(parseArgs, runtimeContext.head, it, runtimeContext.prev.runtimeState.runtimeLookaheadSet, possibleEndOfText)
-                        else -> error("Internal Error: should never happen")
+                        else -> error("Internal Error: should never happen - transition is: ${it}")
                     }
                 }
                 resolvePrecedence(transWithValidLookahead, runtimeContext)

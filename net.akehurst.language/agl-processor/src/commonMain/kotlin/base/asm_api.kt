@@ -154,6 +154,7 @@ interface Domain<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     fun resolveReference(reference:DefinitionReference<DT>): DT?
 
     fun addNamespace(value: NT)
+    fun mergeNamespace(value: NT)
 }
 
 interface Namespace<DT : Definition<DT>> : Formatable {
@@ -181,6 +182,7 @@ interface Namespace<DT : Definition<DT>> : Formatable {
 
     fun addImport(value: Import)
     fun addDefinition(value: DT)
+    fun merge(value: Namespace<DT>)
 }
 
 interface DefinitionReference<DT : Definition<DT>> {

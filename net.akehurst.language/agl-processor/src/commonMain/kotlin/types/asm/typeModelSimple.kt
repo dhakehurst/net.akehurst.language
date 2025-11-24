@@ -81,6 +81,10 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
         }
     }
 
+    override fun mergeNamespace(value: TypesNamespace) {
+        TODO("not implemented")
+    }
+
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypesNamespace {
         return if (_namespace.value.containsKey(qualifiedName)) {
             _namespace.value[qualifiedName]!!

@@ -32,14 +32,15 @@ class M2mTransformDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespace: List<M2mTransformNamespace> = emptyList()
-) : M2mTransformDomain, DomainAbstract<M2mTransformNamespace, M2MTransformDefinition>(namespace, options) {
+) : M2mTransformDomain, DomainAbstract<M2mTransformNamespace, M2mTransformRuleSet>(namespace, options) {
 
-    override val allTransformRuleSet: List<M2mTransformRuleSet> get() = allDefinitions.filterIsInstance<M2mTransformRuleSet>()
-    override val allTransformTest: List<M2mTransformTest> get() = allDefinitions.filterIsInstance<M2mTransformTest>()
+    override val allTransformRuleSet: List<M2mTransformRuleSet> get() = allDefinitions
+    override val allTransformTest: List<M2mTransformTest> get() = namespace.flatMap { it.testDefinition }
 
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): M2mTransformNamespace {
         TODO("not implemented")
     }
+
     override fun findTestDefinitionByQualifiedNameOrNull(qualifiedName: QualifiedName): M2mTransformTest? {
         return (findNamespaceOrNull(qualifiedName.front) as? M2mTransformNamespace)?.findOwnedTestDefinitionOrNull(qualifiedName.last)
     }
@@ -49,9 +50,9 @@ class M2mTransformNamespaceDefault(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import> = mutableListOf()
-) : M2mTransformNamespace, NamespaceAbstract<M2MTransformDefinition>(options, import) {
+) : M2mTransformNamespace, NamespaceAbstract<M2mTransformRuleSet>(options, import) {
 
-    override val testDefinition: List<M2mTransformTest>  get() = _testDefinition.values.toList()
+    override val testDefinition: List<M2mTransformTest> get() = _testDefinition.values.toList()
     override val testDefinitionByName: Map<SimpleName, M2mTransformTest> get() = _testDefinition
 
     protected val _testDefinition = linkedMapOf<SimpleName, M2mTransformTest>() //order is important
@@ -71,6 +72,24 @@ class M2mTransformNamespaceDefault(
     override fun addTestDefinition(value: M2mTransformTest) {
         _testDefinition[value.name] = value
     }
+
+    override fun merge(value: Namespace<M2mTransformRuleSet>) {
+        value.definition.forEach {
+            if (_definition.containsKey(it.name)) {
+                _definition[it.name]!!.merge(it)
+            } else {
+                addDefinition(it)
+            }
+        }
+
+        (value as M2mTransformNamespace).testDefinition.forEach {
+            if (_testDefinition.containsKey(it.name)) {
+                _testDefinition[it.name]!!.merge(it)
+            } else {
+                addTestDefinition(it)
+            }
+        }
+    }
 }
 
 data class M2mTransformRuleSetReferenceDefault(
@@ -78,9 +97,9 @@ data class M2mTransformRuleSetReferenceDefault(
     override val nameOrQName: PossiblyQualifiedName
 ) : M2mTransformRuleSetReference {
 
-    override var resolved: M2MTransformDefinition? = null
+    override var resolved: M2mTransformRuleSet? = null
 
-    override fun resolveAs(resolved: M2MTransformDefinition) {
+    override fun resolveAs(resolved: M2mTransformRuleSet) {
         this.resolved = resolved
     }
 
@@ -99,7 +118,7 @@ class M2mTransformRuleSetDefault(
     argExtends: List<M2mTransformRuleSetReference> = emptyList(),
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     _rules: List<M2mTransformRule>
-) : M2mTransformRuleSet, DefinitionAbstract<M2MTransformDefinition>() {
+) : M2mTransformRuleSet, DefinitionAbstract<M2mTransformRuleSet>() {
 
     override val extends: List<M2mTransformRuleSetReference> = mutableListOf()
     override val importTypes: List<Import> = mutableListOf()
@@ -119,12 +138,25 @@ class M2mTransformRuleSetDefault(
         }
     }
 
-    override fun setRule(value: M2mTransformRule) {
-        (this.rule as MutableMap)[value.name] = value
+    override fun setRule(rule: M2mTransformRule) {
+        (this.rule as MutableMap)[rule.name] = rule
     }
 
     override fun resolveDomainParameter(ref: DomainReference, typesDomain: TypesDomain) {
         _domainParameterResolved[ref] = typesDomain
+    }
+
+    override fun merge(value: M2mTransformRuleSet) {
+        check(this.domainParameters == value.domainParameters) { "Domain parameters must match" }
+        (extends as MutableList).addAll(value.extends)
+        (importTypes as MutableList).addAll(value.importTypes)
+        value.rule.forEach {
+            if (this.rule.containsKey(it.key)) {
+                error("M2mTransformRuleSet '${qualifiedName}' already contains a rule named '${it.key}', cannot merge another")
+            } else {
+                setRule(it.value)
+            }
+        }
     }
 }
 
@@ -246,9 +278,22 @@ data class M2MTransformTestDefault(
     init {
         namespace.addTestDefinition(this)
     }
+
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
     override val testCase = mutableMapOf<SimpleName, M2mTransformTestCase>()
 
+    override fun merge(value: M2mTransformTest) {
+        check(this.domainParameters == value.domainParameters) { "Domain parameters must match" }
+       // (extends as MutableList).addAll(value.extends)
+       // (importTypes as MutableList).addAll(value.importTypes)
+        value.testCase.forEach {
+            if (this.testCase.containsKey(it.key)) {
+                error("M2mTransformTest '${qualifiedName}' already contains a test-case named '${it.key}', cannot merge another")
+            } else {
+                testCase[it.key] = (it.value)
+            }
+        }
+    }
 }
 
 data class M2mTransformTestCaseDefault(

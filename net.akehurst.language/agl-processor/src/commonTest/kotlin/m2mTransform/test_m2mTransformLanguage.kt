@@ -867,4 +867,81 @@ class test_m2mTransformLanguage {
         }
     }
 
+    @Test
+    fun single() {
+            test_process(24)
+
+    }
+
+    @Test
+    fun bug() {
+        val s1 = """
+namespace generateFmea
+
+// this is a one-way transformation
+transform T(arch:Source, fmea:Target) {
+
+   // map each Class with stereotype 'System' to a root (top-level) SystemElement
+   top mapping Class2System {
+     // match Classes with stereotype 'System'
+     domain arch c:Class {
+       stereotype == 'System'
+       name == cn
+							property == prop 
+     }
+     // create a root SystemElement
+     domain fmea sys:SystemElement := SystemElement() {
+       name := cn
+       children += de
+     }
+
+     where {
+       // if prop has a value for any (c, prop) pair of objects invoke these sub-mappings
+       EngDomainProperty2SystemElement(root:=sys, engDomain:='Hardware', path:=List(cn)){arch:=prop fmea:=de}   or 
+       EngDomainProperty2SystemElement(root:=sys, engDomain:='Software', path:=List(cn)){arch:=prop fmea:=de}    or
+       EngDomainProperty2SystemElement(root:=sys, engDomain:='Mechanical', path:=List(cn)){arch:=prop fmea:=de}
+     }
+   }
+
+  // map propertes whoes type has a stereotype of engDomain to SystemElements under the EngDomain SystemElement
+  mapping EngDomainProperty2SystemElement {
+    primitive domain root:SystemElement
+    primitive domain engDomain:String
+    primitive domain path:List<String>
+
+    domain arch prop:Property {
+      name == pn
+      type == c:Class {
+        stereotype==engDomain
+        name == cn
+        property == prop
+      }
+    }
+    domain fmea se:SystemElement := SystemElement() {
+      name := engDomain
+      note := 'The ${'$'}engDomain components'
+      parent := root
+      children += SystemElement() {
+        name := cn
+        note += path
+      }
+    }
+
+     where {
+       EngDomainProperty2SystemElement(root:=root, engDomain:='Hardware', path:=path+pn){arch:=prop fmea:=se}   or 
+       EngDomainProperty2SystemElement(root:=root, engDomain:='Software', path:=path+pn){arch:=prop fmea:=se}    or
+       EngDomainProperty2SystemElement(root:=root, engDomain:='Mechanical', path:=path+pn){arch:=prop fmea:=se}
+     }
+  }
+
+}            
+        """.trimIndent()
+        val proc = Agl.registry.agl.m2mTransform.processor!!
+        val result = proc.parse(
+            s1,
+        )
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+    }
+
 }
