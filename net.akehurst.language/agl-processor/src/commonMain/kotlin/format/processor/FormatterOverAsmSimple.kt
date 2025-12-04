@@ -36,7 +36,7 @@ class FormatterOverAsmSimple(
 
     private val _formatter = FormatterOverTypedObject(formatDomain, ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues),issues)
 
-    override fun formatSelf(formatSetName: PossiblyQualifiedName, self: Asm): FormatResult {
+    override  fun formatSelf(formatSetName: PossiblyQualifiedName, self: Asm): FormatResult {
         val sb = StringBuilder()
 
         for (root in self.root) {
@@ -47,7 +47,7 @@ class FormatterOverAsmSimple(
         return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
-    override fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<Asm>): FormatResult {
+    override  fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<Asm>): FormatResult {
         TODO("not implemented")
     }
 

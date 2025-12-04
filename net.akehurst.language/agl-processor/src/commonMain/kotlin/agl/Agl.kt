@@ -334,7 +334,7 @@ object Agl {
         return AglFormatDomainDefault.fromString(contextFromTypesDomain(typesDomain), template)
     }
 
-    fun <SelfType : Any> format(formatDomain: AglFormatDomain, objectGraph: ObjectGraphAccessorMutator<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+     fun <SelfType : Any> format(formatDomain: AglFormatDomain, objectGraph: ObjectGraphAccessorMutator<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
         val formatter = FormatterOverTypedObject(formatDomain, objectGraph, issueHolder)
         val formatSetName = formatDomain.allDefinitions.lastOrNull()?.qualifiedName ?: error("No FormatSet found.")
@@ -347,14 +347,14 @@ object Agl {
         return result
     }
 
-    fun <SelfType : Any> formatWithTemplate(template: FormatString, typesDomain: TypesDomain, objectGraph: ObjectGraphAccessorMutator<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+     fun <SelfType : Any> formatWithTemplate(template: FormatString, typesDomain: TypesDomain, objectGraph: ObjectGraphAccessorMutator<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
         val formatResult = formatDomain(template, typesDomain)
         val formatDomain = formatResult.asm ?: error("AglFormatDomain not created from template.")
         val result = format(formatDomain, objectGraph, self, options)
         return result
     }
 
-    fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+     fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
         val objectGraph = ObjectGraphByReflection<SelfType>(typesDomain, issueHolder)
         return formatWithTemplate(template, typesDomain, objectGraph, self, options)

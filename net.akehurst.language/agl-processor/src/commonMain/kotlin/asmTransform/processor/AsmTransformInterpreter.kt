@@ -132,17 +132,17 @@ class AsmTransformInterpreter<AsmValueType:Any>(
         this.issues.clear()
     }
 
-    fun evaluate(evc: EvaluationContext<AsmValueType>,trRule: AsmTransformationRule): TypedObject<AsmValueType> {
+     fun evaluate(evc: EvaluationContext<AsmValueType>,trRule: AsmTransformationRule): TypedObject<AsmValueType> {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
         return asm
     }
 
-    private fun evaluateSelfStatement(evc: EvaluationContext<AsmValueType>, expression: Expression): TypedObject<AsmValueType> {
+    private  fun evaluateSelfStatement(evc: EvaluationContext<AsmValueType>, expression: Expression): TypedObject<AsmValueType> {
         return exprInterpreter.evaluateExpression(evc, expression)
     }
 
-    private fun executeStatementOn(evc: EvaluationContext<AsmValueType>, st: AssignmentStatement, asm: AsmStructure) {
+    private  fun executeStatementOn(evc: EvaluationContext<AsmValueType>, st: AssignmentStatement, asm: AsmStructure) {
         val propertyName = st.lhsPropertyName
         val propValue = evaluateExpressionOver(st.rhs, evc)
         val tObj = objectGraph.toTypedObject(asm as AsmValueType)
@@ -151,7 +151,7 @@ class AsmTransformInterpreter<AsmValueType:Any>(
         //asm.setProperty(PropertyValueName(st.lhsPropertyName), propValue, asm.property.size)
     }
 
-    private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext<AsmValueType>): AsmValueType {
+    private  fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext<AsmValueType>): AsmValueType {
         val res = exprInterpreter.evaluateExpression(evc, expr)
         return res.self
     }

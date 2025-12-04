@@ -38,7 +38,7 @@ interface Asm {
     val elementIndex: Map<AsmPath, AsmStructure>
 
     fun addToIndex(value: AsmStructure)
-    fun traverseDepthFirst(callback: AsmTreeWalker)
+     fun traverseDepthFirst(callback: AsmTreeWalker)
     fun asString(indent: Indent = Indent()): String
 }
 
@@ -168,17 +168,17 @@ interface AsmListSeparated : AsmList {
 }
 
 interface AsmLambda : AsmValue {
-    fun invoke(args: Map<String, AsmValue>): AsmValue
+     fun invoke(args: Map<String, AsmValue>): AsmValue
 }
 
 interface AsmTreeWalker {
-    fun beforeRoot(root: AsmValue)
-    fun afterRoot(root: AsmValue)
-    fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing)
-    fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive)
-    fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
-    fun onProperty(owner: AsmStructure, property: AsmStructureProperty)
-    fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
-    fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList)
-    fun afterList(owningProperty: AsmStructureProperty?, value: AsmList)
+     fun beforeRoot(root: AsmValue)
+     fun afterRoot(root: AsmValue)
+     fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing)
+     fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive)
+     fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
+     fun onProperty(owner: AsmStructure, property: AsmStructureProperty)
+     fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
+     fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList)
+     fun afterList(owningProperty: AsmStructureProperty?, value: AsmList)
 }

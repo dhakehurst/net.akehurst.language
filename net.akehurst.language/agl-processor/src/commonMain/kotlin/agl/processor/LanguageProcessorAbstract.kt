@@ -208,7 +208,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return sa.transform(sppt) as SyntaxAnalysisResult<AsmType>
     }
 
-    override fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): SemanticAnalysisResult {
+    override  fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): SemanticAnalysisResult {
         val opts = defaultOptions(options)
         val semAnalyser = this.semanticAnalyser
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SemanticAnalyser")
@@ -241,7 +241,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         }
     }
 
-    override fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
+    override  fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
         val opts = defaultOptions(options)
         val parseResult = this.parse(sentence, opts.parse)
         return if (null == parseResult.sppt) {
@@ -257,7 +257,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         }
     }
 
-    override fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
+    override  fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
         val opts = defaultOptions(options)
         val formatSetName = this.targetGrammar!!.qualifiedName //TODO: make configuratble in options
         //val fm = formatModel?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a FormatModel")

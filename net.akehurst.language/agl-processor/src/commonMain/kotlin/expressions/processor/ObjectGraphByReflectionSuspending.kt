@@ -31,7 +31,7 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 import kotlin.reflect.KProperty1
 
-class StdLibPrimitiveExecutionsForReflection<T : Any>(
+class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
     val issues: IssueHolder = IssueHolder(LanguageProcessorPhase.INTERPRET)
 ) : PrimitiveExecutor<T> {
 
@@ -225,285 +225,15 @@ class StdLibPrimitiveExecutionsForReflection<T : Any>(
     }
 }
 
-class TypedObjectAny<SelfType : Any>(
-    override val type: TypeInstance,
-    override val self: SelfType
-) : TypedObject<SelfType> {
-
-    override fun asString(indent: Indent): String = "$indent$self"
-
-    override fun hashCode(): Int = self.hashCode()
-    override fun equals(other: Any?): Boolean = when {
-        other !is TypedObject<*> -> false
-        else -> self == other.self
-    }
-
-    override fun toString(): String = "$self : ${type.qualifiedTypeName}"
-}
-
-class ObjectGraphAny<SelfType : Any>(
-    override val nodes: Set<TypedObject<SelfType>>,
-    override val edges: Set<ObjectGraphEdge<SelfType>>
-) : ObjectGraph<SelfType> {
-
-}
-
-data class ObjectGraphEdgeAny<SelfType : Any>(
-    override val source: TypedObject<SelfType>,
-    override val target: TypedObject<SelfType>,
-    override val property: PropertyDeclaration
-) : ObjectGraphEdge<SelfType>
-
-abstract class ObjectGraphByReflectionAbstract<SelfType : Any>(
-    override var typesDomain: TypesDomain,
-    val issues: IssueHolder,
-    override val primitiveExecutor: PrimitiveExecutor<SelfType> = StdLibPrimitiveExecutionsForReflection<SelfType>()
-) : ObjectGraphAccessorMutatorCommon<SelfType> {
-
-    override val createdStructuresByType = mutableMapOf<TypeInstance, List<SelfType>>()
-
-    fun untyped(typedObj: TypedObject<SelfType>): Any {
-        val obj = typedObj.self
-        return when (obj) {
-            is List<*> -> obj.map { untypedAny(it) }
-            is Map<*, *> -> obj.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
-            else -> obj
-        }
-    }
-
-    fun untypedAny(possiblyTypedObject: Any?): Any {
-        return when (possiblyTypedObject) {
-            null -> Unit
-            is TypedObject<*> -> untyped(possiblyTypedObject as TypedObject<SelfType>)
-            is List<*> -> possiblyTypedObject.map { untypedAny(it) }
-            is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
-            else -> possiblyTypedObject
-        }
-    }
-
-    override fun typeFor(obj: SelfType?): TypeInstance {
-        return when (obj) {
-            null -> StdLibDefault.NothingType
-            is Boolean -> StdLibDefault.Boolean
-            is Long -> StdLibDefault.Integer
-            is String -> StdLibDefault.String
-            is Double -> StdLibDefault.Real
-            is List<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
-            is Map<*, *> -> {
-                val me = obj.entries.firstOrNull()
-                when (me) {
-                    null -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
-                    else -> when (me.key) {
-                        is String -> {
-                            val ttargs = obj.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k as String), typeFor(v as SelfType)) }
-                            StdLibDefault.TupleType.type(ttargs)
-                        }
-
-                        else -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
-                    }
-                }
-            }
-
-            else -> {
-                val tp = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
-                when (tp) {
-                    null -> {
-                        issues.error(null, "ObjectGraphByReflection cannot get type for ${obj::class.simpleName}")
-                        StdLibDefault.AnyType
-                    }
-
-                    else -> tp.type()
-                }
-            }
-        }
-    }
-
-    override fun toTypedObject(obj: SelfType?): TypedObject<SelfType> = when {
-        obj is TypedObject<*> -> obj as TypedObject<SelfType>
-        else -> obj?.let { TypedObjectAny(typeFor(obj), obj) } ?: nothing()
-    }
-
-    override fun isNothing(obj: TypedObject<SelfType>): Boolean = obj.self == Unit
-    override fun equalTo(lhs: TypedObject<SelfType>, rhs: TypedObject<SelfType>): Boolean = lhs.self == rhs.self
-
-    override fun nothing(): TypedObject<SelfType> = TypedObjectAny(StdLibDefault.NothingType, Unit) as TypedObject<SelfType>
-    override fun any(value: Any): TypedObject<SelfType> = TypedObjectAny(StdLibDefault.AnyType, value) as TypedObject<SelfType>
-
-    override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value as SelfType?)
-
-    override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<SelfType> {
-        val tupleType = StdLibDefault.TupleType
-        val tuple = mutableMapOf<String, Any>()
-        return TypedObjectAny(tupleType.type(typeArgs), tuple) as TypedObject<SelfType>
-    }
-
-    override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<SelfType>>): TypedObject<SelfType> {
-        val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
-            ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
-        val obj = when (typeDef) {
-            is SingletonType -> typeDef.objectInstance()
-            is StructuredType -> when (typeDef) {
-                is DataType -> typeDef.constructDataType(*(constructorArgs.values.map { untyped(it) }.toTypedArray<Any>()))
-                is ValueType -> typeDef.constructValueType(constructorArgs.values.map { untyped(it) }.first()) //TODO: special method
-                is CollectionType -> error("use 'createCollection' for CollectionType")
-                is InterfaceType -> error("Should not create an instance of a InterfaceType")
-                else -> error("Unsupported subtype of StructuredType: '${typeDef::class.simpleName}'")
-            }
-
-            is SpecialType -> error("Should not create an instance of a SpecialType")
-            is PrimitiveType -> error("use 'createPrimitiveValue' for PrimitiveType")
-            is EnumType -> error("use '??' for EnumType")
-            is TupleType -> error("use 'createTupleValue' for TupleType")
-            is UnionType -> error("Should not create an instance of a UnionType")
-            else -> error("Unsupported subtype of TypeDefinition: '${typeDef::class.simpleName}'")
-        }
-        val type = typeDef.type()
-        addCreatedStructure(type, obj as SelfType)
-        return TypedObjectAny(type, obj) as TypedObject<SelfType>
-    }
-
-    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<SelfType>>): TypedObject<SelfType> {
-        return when (qualifiedTypeName) {
-            StdLibDefault.List.qualifiedName -> {
-                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType //TODO: should really take comon supertype !
-                val type = StdLibDefault.List.type(listOf(elType.asTypeArgument))
-                TypedObjectAny(type, collection.toList()) as TypedObject<SelfType>
-            }
-
-            StdLibDefault.ListSeparated.qualifiedName -> {
-                val list = collection.toList()
-                val elType = list.getOrNull(0)?.type ?: StdLibDefault.AnyType
-                val sepType = list.getOrNull(1)?.type ?: StdLibDefault.AnyType
-                TypedObjectAny(StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)), list.toSeparatedList()) as TypedObject<SelfType>
-            }
-
-            StdLibDefault.Set.qualifiedName -> {
-                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType //TODO: should really take comon supertype !
-                val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
-                TypedObjectAny(type, collection.toList()) as TypedObject<SelfType>
-            }
-
-            StdLibDefault.Map.qualifiedName -> {
-                val fstElType = collection.firstOrNull()?.type ?: StdLibDefault.Pair.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
-                val keyType = fstElType.typeArguments[0]
-                val valType = fstElType.typeArguments[1]
-                val map = collection.associate { it as Pair<Any, Any> }
-                TypedObjectAny(StdLibDefault.Map.type(listOf(keyType, valType)), map) as TypedObject<SelfType>
-            }
-
-            else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
-        }
-    }
-
-    override fun valueOf(value: TypedObject<SelfType>): Any = untyped(value)
-
-    override fun getIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType> {
-        val self = untyped(tobj)
-        return when (self) {
-            is List<*> -> {
-                val el = self.getOrNull(index.toInt())
-                when (el) {
-                    null -> {
-                        issues.error(null, "In getIndex argument index '$index' out of range")
-                        nothing()
-                    }
-
-                    else -> toTypedObject(el as SelfType)
-                }
-            }
-
-            else -> {
-                issues.error(null, "getIndex not supported on type '${tobj.type.typeName}'")
-                nothing()
-            }
-        }
-    }
-
-    override fun forEachIndexed(tobj: TypedObject<SelfType>, body: (index: Int, value: TypedObject<SelfType>) -> Unit) {
-        val self = untyped(tobj)
-        when (self) {
-            is List<*> -> {
-                self.forEachIndexed { index, el -> body(index, toTypedObject(el as SelfType?)) }
-            }
-
-            else -> {
-                issues.error(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
-                nothing()
-            }
-        }
-    }
-
-    override fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType> {
-        val meth = tobj.type.allResolvedMethod[MethodName(methodName)]
-        return when (meth) {
-            null -> {
-                //try reflection on untyped object, FIXME: will not work currently for JS and wasmJS
-                val obj = untyped(tobj)
-                val arguments = args.map { untyped(it) }
-                val value = obj.reflect().call(methodName, arguments)
-                value?.let { toTypedObject(it as SelfType?) } ?: nothing()
-            }
-
-            else -> {
-                // first try execution
-                val type = tobj.type.resolvedDeclaration
-                val execResult = primitiveExecutor.methodCall(untyped(tobj) as SelfType, type, meth.original, args)
-                when (execResult) {
-                    null -> when (meth.original) {
-                        is MethodDeclarationDerived -> TODO()
-                        is MethodDeclarationPrimitive -> {
-                            // should have found execution if there is one
-                            issues.error(null, "using StdLibPrimitiveExecutionsForReflection not found for method '${meth}'")
-                            nothing()
-                        }
-
-                        else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
-                    }
-
-                    else -> toTypedObject(execResult.value as SelfType?)
-                }
-            }
-        }
-    }
-
-    override fun callFunction(functionName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType> {
-        return primitiveExecutor.functionCall(functionName, args)?.let {
-            toTypedObject(it.value as? SelfType)
-        } ?: nothing()
-    }
-
-    override fun cast(tobj: TypedObject<SelfType>, newType: TypeInstance): TypedObject<SelfType> {
-        return TypedObjectAny(newType, tobj.self)
-    }
-
-    private fun addCreatedStructure(type: TypeInstance, obj: SelfType) {
-        var list = this.createdStructuresByType[type]
-        if (null == list) {
-            list = mutableListOf(obj)
-            this.createdStructuresByType[type] = list
-        } else {
-            (list as MutableList).add(obj)
-        }
-    }
-
-    override fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject<SelfType>>): ObjectGraph<SelfType> {
-        val nodes = mutableSetOf<TypedObject<SelfType>>()
-        val edges = mutableSetOf<ObjectGraphEdge<SelfType>>()
-
-        TODO("Needs a Komposite walker!")
-        return ObjectGraphAny(nodes, edges)
-    }
-}
-
-open class ObjectGraphByReflection<SelfType : Any>(
+open class ObjectGraphByReflectionSuspending<SelfType : Any>(
     typesDomain: TypesDomain,
     issues: IssueHolder,
     primitiveExecutor: PrimitiveExecutor<SelfType> = StdLibPrimitiveExecutionsForReflection<SelfType>()
-) : ObjectGraphByReflectionAbstract<SelfType>(typesDomain, issues, primitiveExecutor), ObjectGraphAccessorMutator<SelfType> {
+) : ObjectGraphByReflectionAbstract<SelfType>(typesDomain, issues, primitiveExecutor), ObjectGraphAccessorMutatorSuspending<SelfType> {
 
-    override fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType> {
+    override fun createLambdaValue(lambda: suspend (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType> {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
-        val lmb: (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it as SelfType))) }
+        val lmb: suspend (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it as SelfType))) }
         return TypedObjectAny(lambdaType, lmb) as TypedObject<SelfType>
     }
 
@@ -514,7 +244,7 @@ open class ObjectGraphByReflection<SelfType : Any>(
      *   type has resolved property -> try primitiveExecutor or reflection if executor fails
      * }
      */
-    override fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType> {
+    override suspend fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType> {
         return when {
             StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
                 val obj = untyped(tobj)
@@ -569,7 +299,7 @@ open class ObjectGraphByReflection<SelfType : Any>(
         }
     }
 
-    override fun setProperty(tobj: TypedObject<SelfType>, propertyName: String, value: TypedObject<SelfType>) {
+    override suspend fun setProperty(tobj: TypedObject<SelfType>, propertyName: String, value: TypedObject<SelfType>) {
         when {
             StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
                 when (tobj.self) {

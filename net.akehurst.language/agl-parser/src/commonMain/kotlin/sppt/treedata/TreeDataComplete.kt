@@ -199,7 +199,7 @@ class TreeDataComplete(
         }
     }
 
-    override fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
+    override  fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
         val walker = TreeDataWalkerDepthFirst<SpptDataNode>(this)
         walker.traverse(callback, skipDataAsTree)
     }

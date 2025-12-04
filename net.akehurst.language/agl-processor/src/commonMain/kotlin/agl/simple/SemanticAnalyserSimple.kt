@@ -42,7 +42,7 @@ class SemanticAnalyserSimple(
 ) : SemanticAnalyser<Asm, SentenceContextAny> {
 
     companion object {
-        fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject<AsmValue>, crossReferenceDomain: CrossReferenceDomain, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
+         fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject<AsmValue>, crossReferenceDomain: CrossReferenceDomain, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
             return when {
                 //crossReferenceModel.isScopeDefinedFor(self.qualifiedTypeName).not() -> null
                 else -> {
@@ -75,7 +75,7 @@ class SemanticAnalyserSimple(
         _issues.clear()
     }
 
-    override fun analyse(
+    override  fun analyse(
         sentenceIdentity: Any?,
         asm: Asm,
         locationMap: LocationMap?,
@@ -93,7 +93,7 @@ class SemanticAnalyserSimple(
         return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
-    private fun checkAndResolveReferences(options: SemanticAnalysisOptions<SentenceContextAny>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContextAny) {
+    private  fun checkAndResolveReferences(options: SemanticAnalysisOptions<SentenceContextAny>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContextAny) {
         when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
             crossReferenceDomain.isEmpty -> _issues.warn(null, "Empty CrossReferenceDomain")
@@ -109,7 +109,7 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContextAny, resolve: Boolean) {
+    private  fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContextAny, resolve: Boolean) {
         val resFunc: ((ref: Any) -> AsmStructure?)? = if (resolve) {
             { ref -> context.resolveScopedItem.invoke(ref) as AsmStructure }
         } else {
@@ -134,7 +134,7 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private fun buildScope(options: SemanticAnalysisOptions<SentenceContextAny>, sentenceIdentity: Any?, asm: Asm, context: SentenceContextAny) {
+    private  fun buildScope(options: SemanticAnalysisOptions<SentenceContextAny>, sentenceIdentity: Any?, asm: Asm, context: SentenceContextAny) {
         when {
             options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
             else -> {
@@ -153,7 +153,7 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private fun identifyingValueInFor(inScopeNamed: SimpleName, self: AsmStructure): Any? =
+    private  fun identifyingValueInFor(inScopeNamed: SimpleName, self: AsmStructure): Any? =
         identifyingValueInFor(_interpreter, crossReferenceDomain, inScopeNamed, self)
 
 }

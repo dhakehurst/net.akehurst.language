@@ -159,7 +159,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     /**
      *
      */
-    fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): SemanticAnalysisResult
+     fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): SemanticAnalysisResult
 
     /**
      * Process the sentence, performing all phases where possible.
@@ -174,9 +174,9 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     /**
      *
      */
-    fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
+     fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
 
-    fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
+     fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
 
     /**
      * returns list of terminals expected at the given position

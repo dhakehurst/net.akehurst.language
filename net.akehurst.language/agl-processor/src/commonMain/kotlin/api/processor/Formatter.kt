@@ -60,6 +60,6 @@ data class EvaluationContext<SelfType:Any>(
 
 interface Formatter<SelfType:Any> {
     val formatDomain: AglFormatDomain
-    fun formatSelf(formatSetName: PossiblyQualifiedName, self:SelfType): FormatResult
-    fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<SelfType>): FormatResult
+     fun formatSelf(formatSetName: PossiblyQualifiedName, self:SelfType): FormatResult
+     fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<SelfType>): FormatResult
 }

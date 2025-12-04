@@ -559,10 +559,10 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
     }
 
-    private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData<AsmValueType>>): TypedObject<AsmValueType>? =
+    private  fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData<AsmValueType>>): TypedObject<AsmValueType>? =
         createValueFromBranch2(sentence, downData, target, children)
 
-    private fun createValueFromBranch2(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData<AsmValueType>>): TypedObject<AsmValueType> {
+    private  fun createValueFromBranch2(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData<AsmValueType>>): TypedObject<AsmValueType> {
         // optional children should have value Nothing, if it is an empty list then it will contain null
         val asmChildren = children.mapNotNull { it.value }
         val childrenAsmList = when {

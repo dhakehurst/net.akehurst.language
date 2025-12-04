@@ -65,8 +65,8 @@ open class AsmSimple(
 ) : Asm {
 
     companion object {
-        fun traverseDepthFirst(roots: List<AsmValue>, walker: AsmTreeWalker) {
-            fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
+         fun traverseDepthFirst(roots: List<AsmValue>, walker: AsmTreeWalker) {
+             fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
                 when (value) {
                     is AsmNothing -> walker.onNothing(owningProperty, value)
                     is AsmPrimitive -> walker.onPrimitive(owningProperty, value)
@@ -121,7 +121,7 @@ open class AsmSimple(
         this.elementIndex[AsmPathSimple(value.parsePath.toString())] = value //FIXME: should use asmPath !
     }
 
-    override fun traverseDepthFirst(walker: AsmTreeWalker) = traverseDepthFirst(this.root, walker)
+    override  fun traverseDepthFirst(walker: AsmTreeWalker) = traverseDepthFirst(this.root, walker)
 
     override fun asString(indent: Indent): String = this.root.joinToString(separator = "\n") {
         it.asString(indent)
@@ -491,12 +491,12 @@ class AsmListSeparatedSimple(
 }
 
 class AsmLambdaSimple(
-    val lambda: (it: AsmValue) -> AsmValue
+    val lambda:  (it: AsmValue) -> AsmValue
 ) : AsmValueAbstract(), AsmLambda {
 
     override val qualifiedTypeName = StdLibDefault.Lambda.qualifiedTypeName
 
-    override fun invoke(args: Map<String, AsmValue>): AsmValue {
+    override  fun invoke(args: Map<String, AsmValue>): AsmValue {
         val it = args["it"]!!
         return this.lambda.invoke(it)
     }

@@ -39,25 +39,25 @@ class ScopeCreator<ItemInScopeType : Any>(
     val sentenceIdentity: Any?,
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
-    val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    val identifyingValueInFor:  (inTypeName: SimpleName, item: AsmStructure) -> Any?,
     val locationMap: LocationMap,
     val issues: IssueHolder
 ) : AsmTreeWalker {
 
     val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
 
-    override fun beforeRoot(root: AsmValue) {
+    override  fun beforeRoot(root: AsmValue) {
     }
 
-    override fun afterRoot(root: AsmValue) {
+    override  fun afterRoot(root: AsmValue) {
 
     }
 
-    override fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
+    override  fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
 
-    override fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
+    override  fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
 
-    override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
+    override  fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         val scope = currentScope.peek()
 
         addToScope(scope, value)
@@ -67,17 +67,17 @@ class ScopeCreator<ItemInScopeType : Any>(
         value.semanticPath = chScope.scopePath.fold(AsmPathSimple.ROOT) { acc, it -> acc.plus(it) }
     }
 
-    override fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {}
+    override  fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {}
 
-    override fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
+    override  fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         currentScope.pop()
     }
 
-    override fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+    override  fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+    override  fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    private fun createScope(parentScope: Scope<ItemInScopeType>, el: AsmStructure): Scope<ItemInScopeType> {
+    private  fun createScope(parentScope: Scope<ItemInScopeType>, el: AsmStructure): Scope<ItemInScopeType> {
         return if (crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)) {
             val inTypeName = parentScope.forTypeName.last
             val refInParent = identifyingValueInFor.invoke(inTypeName, el)
@@ -130,7 +130,7 @@ class ScopeCreator<ItemInScopeType : Any>(
         }
     }
 
-    private fun addToScope(scope: Scope<ItemInScopeType>, el: AsmStructure) {
+    private  fun addToScope(scope: Scope<ItemInScopeType>, el: AsmStructure) {
         val inTypeName = scope.forTypeName.last
         val scopeLocalReference = identifyingValueInFor.invoke(inTypeName, el)
         when {

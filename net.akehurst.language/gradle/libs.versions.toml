@@ -17,6 +17,7 @@ kotlinx-coroutines = "1.10.2"
 korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
 nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections", version.ref = "nak-kotlinx" }
+nak-kotlinx-utils = { module = "net.akehurst.kotlinx:kotlinx-utils", version.ref = "nak-kotlinx" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }

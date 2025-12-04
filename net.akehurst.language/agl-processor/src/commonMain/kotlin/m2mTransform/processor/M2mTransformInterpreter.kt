@@ -128,10 +128,10 @@ class M2mTransformInterpreter<OT : Any>(
          * @param matches A function returning Pair<Boolean, R> for a match/transformed R element.
          * @return A Set of Lists, representing all valid covering combinations of type R.
          */
-        fun <T, B, R> findCoveringSubsets2(
+         fun <T, B, R> findCoveringSubsets2(
             cover: Collection<T>,
             bySubsetsOf: Collection<B>,
-            matches: (c: T, b: B) -> Pair<Boolean, R>
+            matches:  (c: T, b: B) -> Pair<Boolean, R>
         ): List<List<R>> {
 
             // T_to_CoverMap: Map<t_element, Set<CoverOption>>
@@ -356,7 +356,7 @@ class M2mTransformInterpreter<OT : Any>(
      * @param targetDomainRef reference to the domain that is the target of the transformation
      * @param domainGraphs the objects for each source domain, keyed by the domain reference
      */
-    fun transform(targetTransform: M2mTransformRuleSet, targetDomainRef: DomainReference, domainGraphs: Map<DomainReference, List<TypedObject<OT>>>): M2MTransformResult<OT> {
+     fun transform(targetTransform: M2mTransformRuleSet, targetDomainRef: DomainReference, domainGraphs: Map<DomainReference, List<TypedObject<OT>>>): M2MTransformResult<OT> {
         val objectGraphHandler = targetTransform.domainParameters.entries.associate { (k, v) ->
             Pair(k, domainObjectGraph[v] ?: error("Domain ObjectGraph not found for domain $k"))
         }
@@ -377,7 +377,7 @@ class M2mTransformInterpreter<OT : Any>(
         return M2MTransformResult(_issues, r, targetDomainRef)
     }
 
-    private fun executeRule(
+    private  fun executeRule(
         rule: M2mTransformRule,
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
@@ -399,7 +399,7 @@ class M2mTransformInterpreter<OT : Any>(
         TODO()
     }
 
-    private fun executeMapping(
+    private  fun executeMapping(
         rule: M2MTransformMapping,
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
@@ -455,7 +455,7 @@ class M2mTransformInterpreter<OT : Any>(
         return MappingRecord(rule, res)
     }
 
-    private fun executeRelation(
+    private  fun executeRelation(
         rule: M2MTransformRelation,
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
@@ -494,7 +494,7 @@ class M2mTransformInterpreter<OT : Any>(
         return MappingRecord(rule, res)
     }
 
-    private fun executeTable(
+    private  fun executeTable(
         rule: M2MTransformTable,
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
@@ -531,7 +531,7 @@ class M2mTransformInterpreter<OT : Any>(
         return MappingRecord(rule, matchingValues)
     }
 
-    private fun matchSourceVariables(
+    private  fun matchSourceVariables(
         rule: M2mTransformPatternRule,
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
@@ -552,7 +552,7 @@ class M2mTransformInterpreter<OT : Any>(
         return results.toMap()
     }
 
-    fun matchVariablesFromRhs(
+     fun matchVariablesFromRhs(
         variables: Map<String, TypedObject<OT>>,
         srcObjectGraph: ObjectGraphAccessorMutator<OT>,
         src: TypedObject<OT>,
@@ -577,7 +577,7 @@ class M2mTransformInterpreter<OT : Any>(
     /**
      * always returns isMatch==true
      */
-    fun matchVariablesFromPropertyTemplateExpression(
+     fun matchVariablesFromPropertyTemplateExpression(
         variables: Map<String, TypedObject<OT>>,
         srcObjectGraph: ObjectGraphAccessorMutator<OT>,
         lhs: TypedObject<OT>,
@@ -602,7 +602,7 @@ class M2mTransformInterpreter<OT : Any>(
         }
     }
 
-    fun matchVariablesFromObjectTemplate(
+     fun matchVariablesFromObjectTemplate(
         variables: Map<String, TypedObject<OT>>,
         objectTemplate: ObjectTemplate,
         srcObjectGraph: ObjectGraphAccessorMutator<OT>,
@@ -623,7 +623,7 @@ class M2mTransformInterpreter<OT : Any>(
         }
     }
 
-    fun matchVariablesFromCollectionTemplate(
+     fun matchVariablesFromCollectionTemplate(
         variables: Map<String, TypedObject<OT>>,
         collectionTemplate: CollectionTemplate,
         srcObjectGraph: ObjectGraphAccessorMutator<OT>,
@@ -657,7 +657,7 @@ class M2mTransformInterpreter<OT : Any>(
         return TemplateMatchAlternatives(result)
     }
 
-    fun createFromRhs(variables: Map<String, TypedObject<OT>>, rhs: PropertyTemplateRhs, tgtObjectGraph: ObjectGraphAccessorMutator<OT>): TypedObject<OT> = when (rhs) {
+     fun createFromRhs(variables: Map<String, TypedObject<OT>>, rhs: PropertyTemplateRhs, tgtObjectGraph: ObjectGraphAccessorMutator<OT>): TypedObject<OT> = when (rhs) {
         is PropertyTemplateExpression -> createFromPropertyPatternExpression(variables, rhs, tgtObjectGraph)
         is ObjectTemplate -> createFromObjectPattern(variables, rhs, tgtObjectGraph)
         else -> error("Unknown rhs type ${rhs::class}")
@@ -666,7 +666,7 @@ class M2mTransformInterpreter<OT : Any>(
     /**
      * returns value of expression evaluated in context of provided variables
      */
-    fun createFromPropertyPatternExpression(variables: Map<String, TypedObject<OT>>, ppe: PropertyTemplateExpression, tgtObjectGraph: ObjectGraphAccessorMutator<OT>): TypedObject<OT> {
+     fun createFromPropertyPatternExpression(variables: Map<String, TypedObject<OT>>, ppe: PropertyTemplateExpression, tgtObjectGraph: ObjectGraphAccessorMutator<OT>): TypedObject<OT> {
         val expr = ppe.expression
         val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtObjectGraph, _issues)
         val evc = EvaluationContext.of(variables)
@@ -674,7 +674,7 @@ class M2mTransformInterpreter<OT : Any>(
         return value
     }
 
-    fun createFromObjectPattern(variables: Map<String, TypedObject<OT>>, objectTemplate: ObjectTemplate, tgtObjectGraph: ObjectGraphAccessorMutator<OT>): TypedObject<OT> {
+     fun createFromObjectPattern(variables: Map<String, TypedObject<OT>>, objectTemplate: ObjectTemplate, tgtObjectGraph: ObjectGraphAccessorMutator<OT>): TypedObject<OT> {
         val propValues = mutableMapOf<String, TypedObject<OT>>()
         objectTemplate.propertyTemplate.forEach { (k, v) ->
             val value = createFromRhs(variables, v.rhs, tgtObjectGraph)

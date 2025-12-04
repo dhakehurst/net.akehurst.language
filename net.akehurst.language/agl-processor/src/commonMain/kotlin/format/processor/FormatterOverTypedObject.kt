@@ -40,6 +40,21 @@ class FormatterOverTypedObject<SelfType : Any>(
     companion object {
         const val EOL_NAME = $$"$EOL"
         val prefixMatchPattern = Regex("\\s+")
+
+        suspend fun <T> Iterable<T>.joinToStringSuspend(separator: CharSequence = ", ", prefix: CharSequence = "", postfix: CharSequence = "", limit: Int = -1, truncated: CharSequence = "...", transform: (suspend (T) -> CharSequence)? = null): String {
+            val buffer = StringBuilder()
+            buffer.append(prefix)
+            var count = 0
+            for (element in this) {
+                if (++count > 1) buffer.append(separator)
+                if (limit < 0 || count <= limit) {
+                    buffer.append(transform?.invoke(element)?:"")
+                } else break
+            }
+            if (limit >= 0 && count > limit) buffer.append(truncated)
+            buffer.append(postfix)
+            return buffer.toString()
+        }
     }
 
     private lateinit var _formatSet: FormatSet
@@ -53,14 +68,14 @@ class FormatterOverTypedObject<SelfType : Any>(
         type.conformsTo(ti)
     }?.value
 
-    override fun formatSelf(formatSetName: PossiblyQualifiedName, self: SelfType): FormatResult {
+    override  fun formatSelf(formatSetName: PossiblyQualifiedName, self: SelfType): FormatResult {
         _formatSet = formatDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
         val typesSelf = objectGraph.toTypedObject(self)
         val evc = EvaluationContext.ofSelf(typesSelf)
         return format(formatSetName, evc)
     }
 
-    override fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<SelfType>): FormatResult {
+    override  fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<SelfType>): FormatResult {
         _formatSet = formatDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
         val evc2 = if (evc.namedValues.contains(EOL_NAME).not()) {
             evc.copy(namedValues = evc.namedValues + Pair(EOL_NAME, objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "\n")))
@@ -71,7 +86,7 @@ class FormatterOverTypedObject<SelfType : Any>(
         return FormatResultDefault(str, issues)
     }
 
-    private fun formatEvc(evc: EvaluationContext<SelfType>): String {
+    private  fun formatEvc(evc: EvaluationContext<SelfType>): String {
         val self = evc.self
         return when (self) {
             null -> ""
@@ -85,7 +100,7 @@ class FormatterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun formatWhenNoRule(evc: EvaluationContext<SelfType>): String {
+    private  fun formatWhenNoRule(evc: EvaluationContext<SelfType>): String {
         val self = evc.self
         return when (self) {
             null -> ""
@@ -96,7 +111,7 @@ class FormatterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun formatWhenNoRuleBasedOnTypeInfo(evc: EvaluationContext<SelfType>, self: TypedObject<SelfType>): String {
+    private  fun formatWhenNoRuleBasedOnTypeInfo(evc: EvaluationContext<SelfType>, self: TypedObject<SelfType>): String {
         val selfType = self.type.resolvedDeclaration
         return when (selfType) {
             is SpecialType -> when {
@@ -146,14 +161,14 @@ class FormatterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun formatExpression(evc: EvaluationContext<SelfType>, formatExpr: FormatExpression) = when (formatExpr) {
+    private  fun formatExpression(evc: EvaluationContext<SelfType>, formatExpr: FormatExpression) = when (formatExpr) {
         is FormatExpressionExpression -> formatFromExpression(evc, formatExpr)
         is FormatExpressionTemplate -> formatFromTemplate(evc, formatExpr)
         is FormatExpressionWhen -> formatFromWhen(evc, formatExpr)
         else -> error("Internal error: subtype of AglFormatExpression not handled: '${formatExpr::class.simpleName}'")
     }
 
-    private fun formatFromExpression(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionExpression): String {
+    private  fun formatFromExpression(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionExpression): String {
         val res = super.evaluateExpression(evc, formatExpr.expression)
         val value = res.self
         return when (value) {
@@ -170,7 +185,7 @@ class FormatterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun formatFromTemplate(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionTemplate): String {
+    private  fun formatFromTemplate(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionTemplate): String {
         val sb = StringBuilder()
         when (formatExpr.content.size) {
             0 -> Unit
@@ -289,7 +304,7 @@ class FormatterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun formatTemplateContent(evc: EvaluationContext<SelfType>, content: TemplateElement): String {
+    private  fun formatTemplateContent(evc: EvaluationContext<SelfType>, content: TemplateElement): String {
         return when (content) {
             is TemplateElementText -> formatTemplateElementText(evc, content)
             is TemplateElementExpressionProperty -> formatTemplateElementExpressionSimple(evc, content)
@@ -303,12 +318,12 @@ class FormatterOverTypedObject<SelfType : Any>(
         return templateElement.text
     }
 
-    private fun formatTemplateElementExpressionSimple(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionProperty): String {
+    private  fun formatTemplateElementExpressionSimple(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionProperty): String {
         val value = getNamedValue(evc, templateElement.propertyName)
         return formatEvc(evc.childSelf(value))
     }
 
-    private fun formatTemplateElementExpressionList(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionList): String {
+    private  fun formatTemplateElementExpressionList(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionList): String {
         val self = evc.self
         return when (self) {
             null -> ""
@@ -336,12 +351,12 @@ class FormatterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun formatTemplateElementExpressionEmbedded(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionEmbedded): String {
+    private  fun formatTemplateElementExpressionEmbedded(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionEmbedded): String {
         val v = evaluateExpression(evc, templateElement.expression)
         return objectGraph.valueOf(v) as String
     }
 
-    private fun formatFromWhen(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionWhen): String {
+    private  fun formatFromWhen(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionWhen): String {
         for (opt in formatExpr.options) {
             val condValue = super.evaluateExpression(evc, opt.condition)
             when (condValue.type) {
@@ -360,7 +375,7 @@ class FormatterOverTypedObject<SelfType : Any>(
         return ""
     }
 
-    private fun getNamedValue(evc: EvaluationContext<SelfType>, name: String): TypedObject<SelfType> {
+    private  fun getNamedValue(evc: EvaluationContext<SelfType>, name: String): TypedObject<SelfType> {
         return if (evc.namedValues.containsKey(name)) {
             evc.namedValues[name]!!
         } else {
@@ -378,7 +393,7 @@ class FormatterOverTypedObject<SelfType : Any>(
         }
     }
 
-    override fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
+    override  fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
         is FormatExpression -> {
             val fmt = when (expression) {
                 is FormatExpressionExpression -> formatFromExpression(evc, expression)

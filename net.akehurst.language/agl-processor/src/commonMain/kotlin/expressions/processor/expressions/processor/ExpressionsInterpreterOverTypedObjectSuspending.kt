@@ -28,8 +28,8 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
-open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
-    val objectGraph: ObjectGraphAccessorMutator<SelfType>,
+open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
+    val objectGraph: ObjectGraphAccessorMutatorSuspending<SelfType>,
     val issues: IssueHolder
 ) {
     val typeModel = objectGraph.typesDomain
@@ -39,7 +39,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    fun evaluateStr(evc: EvaluationContext<SelfType>, expression: String): TypedObject<SelfType> {
+    suspend fun evaluateStr(evc: EvaluationContext<SelfType>, expression: String): TypedObject<SelfType> {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
         check(result.allIssues.errors.isEmpty()) { result.allIssues.toString() }
         val asm = result.asm!!
@@ -50,7 +50,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    open fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
+    open suspend fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
         is RootExpression -> this.evaluateRootExpression(evc, expression)
         is LiteralExpression -> this.evaluateLiteralExpression(expression)
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
@@ -68,7 +68,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
     }
 
-    private fun evaluateRootExpression(evc: EvaluationContext<SelfType>, expression: RootExpression): TypedObject<SelfType> {
+    private suspend fun evaluateRootExpression(evc: EvaluationContext<SelfType>, expression: RootExpression): TypedObject<SelfType> {
         return when {
             expression.isNothing -> objectGraph.nothing()
             expression.isSelf -> {
@@ -87,7 +87,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun evaluateSpecial(evc: EvaluationContext<SelfType>, name: String): TypedObject<SelfType> {
+    private suspend fun evaluateSpecial(evc: EvaluationContext<SelfType>, name: String): TypedObject<SelfType> {
         // the name must exist as a property of the self which must be a tuple
         return evc.getOrInParent(name)
             ?: evc.self?.let { evaluatePropertyName(it, PropertyName(name)) }
@@ -97,14 +97,14 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject<SelfType> =
         objectGraph.createPrimitiveValue(expression.qualifiedTypeName, expression.value)
 
-    private fun evaluateFunctionCall(evc: EvaluationContext<SelfType>, expression: FunctionCall): TypedObject<SelfType> {
+    private suspend fun evaluateFunctionCall(evc: EvaluationContext<SelfType>, expression: FunctionCall): TypedObject<SelfType> {
         val argValues = expression.arguments.map {
             evaluateExpression(evc, it)
         }
         return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues)
     }
 
-    private fun evaluateNavigation(evc: EvaluationContext<SelfType>, expression: NavigationExpression): TypedObject<SelfType> {
+    private suspend fun evaluateNavigation(evc: EvaluationContext<SelfType>, expression: NavigationExpression): TypedObject<SelfType> {
         // start should be a RootExpression or LiteralExpression
         val st = expression.start
         val start = evaluateExpression(evc, st)
@@ -119,11 +119,11 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         return result
     }
 
-    private fun evaluatePropertyName(obj: TypedObject<SelfType>, propertyName: PropertyName): TypedObject<SelfType> {
+    private suspend fun evaluatePropertyName(obj: TypedObject<SelfType>, propertyName: PropertyName): TypedObject<SelfType> {
         return objectGraph.getProperty(obj, propertyName.value)
     }
 
-    private fun evaluateMethodCall(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, methodName: MethodName, args: List<Expression>): TypedObject<SelfType> {
+    private suspend fun evaluateMethodCall(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, methodName: MethodName, args: List<Expression>): TypedObject<SelfType> {
         val type = obj.type
         val md = type.resolvedDeclaration.findAllMethodOrNull(methodName)
         return when (md) {
@@ -141,7 +141,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun evaluateIndexOperation(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, indices: List<Expression>): TypedObject<SelfType> {
+    private suspend fun evaluateIndexOperation(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, indices: List<Expression>): TypedObject<SelfType> {
         return when {
             obj.type.resolvedDeclaration.conformsTo(StdLibDefault.List) -> {
                 when (indices.size) {
@@ -198,7 +198,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun evaluateInfix(evc: EvaluationContext<SelfType>, expression: InfixExpression): TypedObject<SelfType> {
+    private suspend fun evaluateInfix(evc: EvaluationContext<SelfType>, expression: InfixExpression): TypedObject<SelfType> {
         //TODO: Operator precedence
         var result = evaluateExpression(evc, expression.expressions.first())
         for (i in expression.operators.indices) {
@@ -242,7 +242,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         else -> error("Unsupported Operator '$op'")
     }
 
-    private fun evaluateWith(evc: EvaluationContext<SelfType>, expression: WithExpression): TypedObject<SelfType> {
+    private suspend fun evaluateWith(evc: EvaluationContext<SelfType>, expression: WithExpression): TypedObject<SelfType> {
         val newSelf = evaluateExpression(evc, expression.withContext)
         return when {
             objectGraph.nothing() == newSelf -> newSelf
@@ -254,7 +254,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun evaluateWhen(evc: EvaluationContext<SelfType>, expression: WhenExpression): TypedObject<SelfType> {
+    private suspend fun evaluateWhen(evc: EvaluationContext<SelfType>, expression: WhenExpression): TypedObject<SelfType> {
         for (opt in expression.options) {
             val condValue = evaluateExpression(evc, opt.condition)
             when (condValue.type) {
@@ -273,7 +273,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         return evaluateExpression(evc, expression.elseOption.expression)
     }
 
-    private fun evaluateLambda(evc: EvaluationContext<SelfType>, expression: LambdaExpression): TypedObject<SelfType> {
+    private suspend fun evaluateLambda(evc: EvaluationContext<SelfType>, expression: LambdaExpression): TypedObject<SelfType> {
         val lambda = objectGraph.createLambdaValue { it ->
             val newEvc = evc.child(mapOf("it" to it))
             evaluateExpression(newEvc, expression.expression)
@@ -281,14 +281,14 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         return lambda
     }
 
-    private fun evaluateCast(evc: EvaluationContext<SelfType>, expression: CastExpression): TypedObject<SelfType> {
+    private suspend fun evaluateCast(evc: EvaluationContext<SelfType>, expression: CastExpression): TypedObject<SelfType> {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
         return objectGraph.cast(exprResult, tgtType)
     }
 
-    private fun evaluateTypeTest(evc: EvaluationContext<SelfType>, expression: TypeTestExpression): TypedObject<SelfType> {
+    private suspend fun evaluateTypeTest(evc: EvaluationContext<SelfType>, expression: TypeTestExpression): TypedObject<SelfType> {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
@@ -296,7 +296,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         return objectGraph.toTypedObject(res as SelfType)
     }
 
-    private fun evaluateGroup(evc: EvaluationContext<SelfType>, expression: GroupExpression): TypedObject<SelfType> {
+    private suspend fun evaluateGroup(evc: EvaluationContext<SelfType>, expression: GroupExpression): TypedObject<SelfType> {
         return evaluateExpression(evc, expression.expression)
     }
 
@@ -308,7 +308,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
     }
 
     // mutation
-    private fun evaluateCreateTuple(evc: EvaluationContext<SelfType>, expression: CreateTupleExpression): TypedObject<SelfType> {
+    private suspend fun evaluateCreateTuple(evc: EvaluationContext<SelfType>, expression: CreateTupleExpression): TypedObject<SelfType> {
         val typeArgs = mutableListOf<TypeArgumentNamed>()
         val tuple = objectGraph.createTupleValue(typeArgs)
         expression.propertyAssignments.forEach {
@@ -319,7 +319,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         return tuple
     }
 
-    private fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
+    private suspend fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
         val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName) ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
         return when (typeDef) {
             is DataType, is ValueType -> {

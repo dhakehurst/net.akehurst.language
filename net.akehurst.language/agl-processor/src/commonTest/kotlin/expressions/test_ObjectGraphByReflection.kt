@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.expressions.processor
 
+import kotlinx.coroutines.test.runTest
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -85,7 +86,7 @@ class test_ObjectGraphByReflection {
     @Test
     fun getIndex() {
         val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
-        val list = TypedObjectAny(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), listOf("Adam","Betty","Charles"))
+        val list = TypedObjectAny(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), listOf("Adam", "Betty", "Charles"))
 
         val actual1 = og.getIndex(list, 0)
         assertEquals("Adam", actual1.self)
@@ -99,17 +100,17 @@ class test_ObjectGraphByReflection {
         val actual4 = og.getIndex(list, -1)
         assertEquals(Unit, actual4.self)
         assertEquals(1, og.issues.size)
-        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.INTERPRET,null,"In getIndex argument index '-1' out of range",null)), og.issues.toString())
+        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getIndex argument index '-1' out of range", null)), og.issues.toString())
 
         val actual5 = og.getIndex(list, 5)
         assertEquals(Unit, actual5.self)
         assertEquals(2, og.issues.size)
-        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.INTERPRET,null,"In getIndex argument index '5' out of range",null)), og.issues.toString())
+        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getIndex argument index '5' out of range", null)), og.issues.toString())
 
     }
 
     @Test
-    fun object_getProperty() {
+    fun object_getProperty() = runTest {
         val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = TestClass("A", 1, TestClass("B", 2, null))
         val tp = testTypeModel.findFirstDefinitionByNameOrNull(SimpleName("TestClass"))!!.type()
@@ -124,12 +125,12 @@ class test_ObjectGraphByReflection {
         val actual3 = og.getProperty(tobj, "prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)
 
-        val actual4 = og.getProperty(og.getProperty(tobj, "prop3"),"prop1")
+        val actual4 = og.getProperty(og.getProperty(tobj, "prop3"), "prop1")
         assertEquals("B", actual4.self)
     }
 
     @Test
-    fun tuple_getProperty() {
+    fun tuple_getProperty() = runTest {
         val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = mapOf(
             "prop1" to "A",
@@ -148,7 +149,7 @@ class test_ObjectGraphByReflection {
         val actual3 = og.getProperty(tobj, "prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)
 
-        val actual4 = og.getProperty(og.getProperty(tobj, "prop3"),"prop1")
+        val actual4 = og.getProperty(og.getProperty(tobj, "prop3"), "prop1")
         assertEquals("B", actual4.self)
     }
 
@@ -156,12 +157,14 @@ class test_ObjectGraphByReflection {
     fun executeMethod_Primitive_map() {
         //given
         val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
-        val tObj =  TypedObjectAny<Any>(StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument)), listOf(
-            TypedObjectAny(StdLibDefault.Integer,1L),
-            TypedObjectAny(StdLibDefault.Integer,2L),
-            TypedObjectAny(StdLibDefault.Integer,3L)
-        ))
-        val lambda = TypedObjectAny<Any>(StdLibDefault.Lambda, { it:Any ->
+        val tObj = TypedObjectAny<Any>(
+            StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument)), listOf(
+                TypedObjectAny(StdLibDefault.Integer, 1L),
+                TypedObjectAny(StdLibDefault.Integer, 2L),
+                TypedObjectAny(StdLibDefault.Integer, 3L)
+            )
+        )
+        val lambda = TypedObjectAny<Any>(StdLibDefault.Lambda, { it: Any ->
             it.toString()
         })
         //when
@@ -169,7 +172,7 @@ class test_ObjectGraphByReflection {
 
         //then
         assertTrue(actual.self is List<*>)
-        assertEquals(listOf("1","2","3"), actual.self)
+        assertEquals(listOf("1", "2", "3"), actual.self)
     }
 
     @Ignore

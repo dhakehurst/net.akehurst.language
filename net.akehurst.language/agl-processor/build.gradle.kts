@@ -39,6 +39,7 @@ kotlin {
                 api(project(":agl-regex"))
                 api(project(":collections")) //TODO merge with kotlinx collections
 
+                api(libs.nak.kotlinx.utils) // needed for asyncLazy
                 api(libs.nak.kotlinx.collections) // needed for topologicalSort, OrderedSet
                 api(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
             }

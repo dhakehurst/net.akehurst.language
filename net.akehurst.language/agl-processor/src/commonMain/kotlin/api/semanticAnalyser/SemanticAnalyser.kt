@@ -32,7 +32,7 @@ interface SemanticAnalyser<in AsmType : Any, ContextType : Any> {
 
     //fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue>
 
-    fun analyse(
+     fun analyse(
         sentenceIdentity:Any?,
         asm: AsmType,
         locationMap: LocationMap? = null,
