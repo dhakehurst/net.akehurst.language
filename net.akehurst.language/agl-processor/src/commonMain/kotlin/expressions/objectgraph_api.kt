@@ -51,7 +51,6 @@ interface ObjectGraphEdge<SelfType : Any> {
 
 interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
     var typesDomain: TypesDomain
-    val primitiveExecutor: PrimitiveExecutor<SelfType>
     val createdStructuresByType: Map<TypeInstance, List<SelfType>>
 
     fun typeFor(obj: SelfType?): TypeInstance
@@ -69,7 +68,6 @@ interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
     fun getIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType>
     fun forEachIndexed(tobj: TypedObject<SelfType>, body: (index: Int, value: TypedObject<SelfType>) -> Unit)
 
-    fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>
     fun callFunction(functionName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>
     fun cast(tobj: TypedObject<SelfType>, newType: TypeInstance): TypedObject<SelfType>
 
@@ -81,7 +79,14 @@ interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
     fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject<SelfType>>): ObjectGraph<SelfType>
 }
 
+interface ExternalGetter<T : Any>  {
+    fun typeFor(obj: T): TypeInstance
+    fun getProperty(obj: T, propertyName: String): Pair<Any?, TypeInstance?>
+}
+
 interface ObjectGraphAccessorMutator<SelfType : Any> : ObjectGraphAccessorMutatorCommon<SelfType> {
+    val primitiveExecutor: PrimitiveExecutor<SelfType>
+    val externalGetter: ExternalGetter<SelfType>
 
     fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
 
@@ -90,19 +95,35 @@ interface ObjectGraphAccessorMutator<SelfType : Any> : ObjectGraphAccessorMutato
      */
     fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType>
 
+    fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>
+
     fun setProperty(tobj: TypedObject<SelfType>, propertyName: String, value: TypedObject<SelfType>)
 
 }
 
+interface ExternalGetterSuspending<T : Any>  {
+    fun typeFor(obj: T): TypeInstance
+    suspend fun getProperty(obj: T, propertyName: String): Pair<Any?, TypeInstance?>
+}
+
+interface PrimitiveExecutorSuspending<T : Any> {
+    fun propertyValue(obj: T, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult?
+    suspend fun methodCall(obj: T, typeDef: TypeDefinition, method: MethodDeclaration, args: List<TypedObject<T>>): ExecutionResult?
+    fun functionCall(functionName: String, args: List<TypedObject<T>>): ExecutionResult?
+}
+
 interface ObjectGraphAccessorMutatorSuspending<SelfType : Any> : ObjectGraphAccessorMutatorCommon<SelfType> {
+    val primitiveExecutor: PrimitiveExecutorSuspending<SelfType>
+    val externalGetter: ExternalGetterSuspending<SelfType>
 
     fun createLambdaValue(lambda: suspend (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
-
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists
      */
     suspend fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType>
+
+    suspend fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>
 
     suspend fun setProperty(tobj: TypedObject<SelfType>, propertyName: String, value: TypedObject<SelfType>)
 

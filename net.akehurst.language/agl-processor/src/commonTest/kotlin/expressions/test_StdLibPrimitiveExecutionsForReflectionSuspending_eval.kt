@@ -17,53 +17,63 @@
 
 package net.akehurst.language.expressions.processor
 
+import kotlinx.coroutines.test.runTest
+import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
+import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflectionSuspending
+import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
+import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflectionSuspending
+import net.akehurst.language.agl.expressions.processor.TypedObjectAny
 import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_SimpleTypeModelStdLib_eval {
+class test_StdLibPrimitiveExecutionsForReflectionSuspending_eval {
 
-    companion object {
-        fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
-            val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+    companion object Companion {
+        data class TestObj(
+            val list: List<String>
+        )
+
+        suspend fun test(typesDomain: TypesDomain, self: Any, selfType: String, expression: String, expected: Any) {
+            val st = typesDomain.findByQualifiedNameOrNull(selfType.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain,issues),issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st,self)), expression)
+            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(
+                ObjectGraphByReflectionSuspending(typesDomain, issues, primitiveExecutor = StdLibPrimitiveExecutionsForReflectionSuspending(issues)),
+                issues
+            )
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
             assertEquals(expected, actual.self)
         }
     }
 
     @Test
-    fun collection_List_size__empty() {
+    fun collection_List_size__empty() = runTest {
         val tm = typesDomain("test", true) {
             namespace("ns") {
-                data("Test") {
+                data("TestObj") {
                     propertyListTypeOf("list", "std.String", false, 0)
                 }
             }
         }
-        val asm = asmSimple(typesDomain = tm) {
-            element("Test") {
-                propertyListOfString("list", listOf())
-            }
-        }
-        val self = asm.root[0]
+        val self = TestObj(emptyList())
 
-        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger(0))
+        test(tm, self, "ns.TestObj", "list.size", 0L)
     }
 
     @Test
-    fun collection_List_size() {
+    fun collection_List_size() = runTest {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
@@ -71,17 +81,12 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple(typesDomain = tm) {
-            element("Test") {
-                propertyListOfString("list", listOf("A", "B", "C", "D"))
-            }
-        }
-        val self = asm.root[0]
-        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger( 4L))
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.size", 4L)
     }
 
     @Test
-    fun collection_List_size__missing_prop_name() {
+    fun collection_List_size__missing_prop_name() = runTest {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
@@ -89,17 +94,12 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple(typesDomain = tm) {
-            element("Test") {
-                propertyListOfString("list", listOf("A", "B", "C", "D"))
-            }
-        }
-        val self = asm.root[0]
-        test(tm, self, "list2.size", AsmNothingSimple)
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list2.size", Unit)
     }
 
     @Test
-    fun collection_List_first() {
+    fun collection_List_first() = runTest {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
@@ -107,17 +107,12 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple(typesDomain = tm) {
-            element("Test") {
-                propertyListOfString("list", listOf("A", "B", "C", "D"))
-            }
-        }
-        val self = asm.root[0]
-        test(tm, self, "list.first", AsmPrimitiveSimple.stdString("A"))
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.first", "A")
     }
 
     @Test
-    fun collection_List_last() {
+    fun collection_List_last() = runTest {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
@@ -125,17 +120,12 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple(typesDomain = tm) {
-            element("Test") {
-                propertyListOfString("list", listOf("A", "B", "C", "D"))
-            }
-        }
-        val self = asm.root[0]
-        test(tm, self, "list.last", AsmPrimitiveSimple.stdString("D"))
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.last", "D")
     }
 
     @Test
-    fun collection_List_back() {
+    fun collection_List_back() = runTest {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
@@ -143,17 +133,12 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple(typesDomain = tm) {
-            element("Test") {
-                propertyListOfString("list", listOf("A", "B", "C", "D"))
-            }
-        }
-        val self = asm.root[0]
-        test(tm, self, "list.back", AsmListSimple(listOf("B", "C", "D").map { AsmPrimitiveSimple.stdString(it) }))
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.back", listOf("B", "C", "D"))
     }
 
     @Test
-    fun collection_List_front() {
+    fun collection_List_front()  = runTest {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
@@ -161,17 +146,12 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple(typesDomain = tm) {
-            element("Test") {
-                propertyListOfString("list", listOf("A", "B", "C", "D"))
-            }
-        }
-        val self = asm.root[0]
-        test(tm, self, "list.front", AsmListSimple(listOf("A", "B", "C").map { AsmPrimitiveSimple.stdString(it)}))
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.front", listOf("A", "B", "C"))
     }
 
     @Test
-    fun collection_List_join() {
+    fun collection_List_join() = runTest {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
@@ -179,12 +159,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple(typesDomain = tm) {
-            element("Test") {
-                propertyListOfString("list", listOf("A", "B", "C", "D"))
-            }
-        }
-        val self = asm.root[0]
-        test(tm, self, "list.join", AsmPrimitiveSimple.stdString("ABCD"))
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.join", "ABCD")
     }
 }

@@ -138,6 +138,16 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor<AsmValue> {
     }
 }
 
+class ExternalGetterAsmSimple() : ExternalGetter<AsmValue> {
+    override fun typeFor(obj: AsmValue): TypeInstance {
+        TODO("not implemented")
+    }
+
+    override fun getProperty(obj: AsmValue, propertyName: String): Pair<Any, TypeInstance?> {
+        TODO("not implemented")
+    }
+}
+
 class TypedObjectAsmValue(
     override val type: TypeInstance,
     override val self: AsmValue
@@ -157,6 +167,7 @@ class TypedObjectAsmValue(
 open class ObjectGraphAccessorMutatorAsmSimple(
     override var typesDomain: TypesDomain,
     val issues: IssueHolder,
+    override val externalGetter: ExternalGetter<AsmValue> = ExternalGetterAsmSimple(),
     override val primitiveExecutor: PrimitiveExecutor<AsmValue> = StdLibPrimitiveExecutionsForAsmSimple
 ) : ObjectGraphAccessorMutator<AsmValue> {
 
@@ -225,12 +236,6 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override  fun createLambdaValue(lambda:  (it: TypedObject<AsmValue>) -> TypedObject<AsmValue>): TypedObject<AsmValue> {
-        val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
-        val lmb = AsmLambdaSimple { lambda.invoke(it.toTypedObject()).self }
-        return TypedObjectAsmValue(lambdaType, lmb)
-    }
-
     override fun valueOf(value: TypedObject<AsmValue>): Any = value.self.raw
 
     override fun getIndex(tobj: TypedObject<AsmValue>, index: Int): TypedObject<AsmValue> {
@@ -267,6 +272,80 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                 nothing()
             }
         }
+    }
+
+    override fun cast(tobj: TypedObject<AsmValue>, newType: TypeInstance): TypedObject<AsmValue> {
+        val rtd = newType.resolvedDeclaration
+        return when (rtd) {
+            is TupleType -> {
+                val targs = (tobj.self as AsmStructure).property.map {
+                    val n = PropertyName(it.key.value)
+                    val t = StdLibDefault.AnyType //TODO: can do better!
+                    TypeArgumentNamedSimple(n, t)
+                }
+                val tp = rtd.typeTuple(targs)
+                TypedObjectAsmValue(tp, tobj.self)
+            }
+
+            else -> tobj.self.toTypedObject()
+        }
+    }
+
+    private fun addCreatedStructure(type: TypeInstance, obj: AsmValue) {
+        var list = this.createdStructuresByType[type]
+        if (null == list) {
+            list = mutableListOf(obj)
+            this.createdStructuresByType[type] = list
+        } else {
+            (list as MutableList).add(obj)
+        }
+    }
+
+    override fun getCompositeGraphFrom(resultGraphIdentity:String, roots: List<TypedObject<AsmValue>>): ObjectGraph<AsmValue> {
+        val nodes = mutableSetOf<TypedObject<AsmValue>>()
+        val edges = mutableSetOf<ObjectGraphEdge<AsmValue>>()
+
+        AsmSimple.traverseDepthFirst(roots.map { it.self }, object : AsmTreeWalker {
+            override  fun beforeRoot(root: AsmValue) {}
+            override  fun afterRoot(root: AsmValue) {}
+
+            override  fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
+
+            override  fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
+
+            override  fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {}
+
+            override  fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {
+                val src = toTypedObject(owner)
+                val tgt = toTypedObject(property.value)
+                val ownerTypeDef = src.type.resolvedDeclaration
+                val propDef = ownerTypeDef.findAllPropertyOrNull(PropertyName(property.name.value))
+                if (null == propDef) {
+                    issues.error(null, "Cannot find property '${property.name.value}' on type definition '${ownerTypeDef.qualifiedName.value}'")
+                } else {
+                    val edge = ObjectGraphEdgeSimple(src, tgt, propDef)
+                    edges.add(edge)
+                }
+            }
+
+            override  fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
+                val node = toTypedObject(value)
+                nodes.add(node)
+            }
+
+            override  fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+
+            override  fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+
+        })
+        return ObjectGraphAsmSimple(resultGraphIdentity, nodes, edges)
+    }
+
+    //
+    override  fun createLambdaValue(lambda:  (it: TypedObject<AsmValue>) -> TypedObject<AsmValue>): TypedObject<AsmValue> {
+        val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
+        val lmb = AsmLambdaSimple { lambda.invoke(it.toTypedObject()).self }
+        return TypedObjectAsmValue(lambdaType, lmb)
     }
 
     override  fun getProperty(tobj: TypedObject<AsmValue>, propertyName: String): TypedObject<AsmValue> {
@@ -336,77 +415,11 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     }
 
     override fun callFunction(functionName: String, args: List<TypedObject<AsmValue>>): TypedObject<AsmValue> {
-       return primitiveExecutor.functionCall(functionName, args) ?.let {
-           toTypedObject(it.value as AsmValue)
-       } ?: nothing()
+        return primitiveExecutor.functionCall(functionName, args) ?.let {
+            toTypedObject(it.value as AsmValue)
+        } ?: nothing()
     }
 
-    override fun cast(tobj: TypedObject<AsmValue>, newType: TypeInstance): TypedObject<AsmValue> {
-        val rtd = newType.resolvedDeclaration
-        return when (rtd) {
-            is TupleType -> {
-                val targs = (tobj.self as AsmStructure).property.map {
-                    val n = PropertyName(it.key.value)
-                    val t = StdLibDefault.AnyType //TODO: can do better!
-                    TypeArgumentNamedSimple(n, t)
-                }
-                val tp = rtd.typeTuple(targs)
-                TypedObjectAsmValue(tp, tobj.self)
-            }
-
-            else -> tobj.self.toTypedObject()
-        }
-    }
-
-    private fun addCreatedStructure(type: TypeInstance, obj: AsmValue) {
-        var list = this.createdStructuresByType[type]
-        if (null == list) {
-            list = mutableListOf(obj)
-            this.createdStructuresByType[type] = list
-        } else {
-            (list as MutableList).add(obj)
-        }
-    }
-
-    override fun getCompositeGraphFrom(resultGraphIdentity:String, roots: List<TypedObject<AsmValue>>): ObjectGraph<AsmValue> {
-        val nodes = mutableSetOf<TypedObject<AsmValue>>()
-        val edges = mutableSetOf<ObjectGraphEdge<AsmValue>>()
-
-        AsmSimple.traverseDepthFirst(roots.map { it.self }, object : AsmTreeWalker {
-            override  fun beforeRoot(root: AsmValue) {}
-            override  fun afterRoot(root: AsmValue) {}
-
-            override  fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
-
-            override  fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
-
-            override  fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {}
-
-            override  fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {
-                val src = toTypedObject(owner)
-                val tgt = toTypedObject(property.value)
-                val ownerTypeDef = src.type.resolvedDeclaration
-                val propDef = ownerTypeDef.findAllPropertyOrNull(PropertyName(property.name.value))
-                if (null == propDef) {
-                    issues.error(null, "Cannot find property '${property.name.value}' on type definition '${ownerTypeDef.qualifiedName.value}'")
-                } else {
-                    val edge = ObjectGraphEdgeSimple(src, tgt, propDef)
-                    edges.add(edge)
-                }
-            }
-
-            override  fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
-                val node = toTypedObject(value)
-                nodes.add(node)
-            }
-
-            override  fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
-
-            override  fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
-
-        })
-        return ObjectGraphAsmSimple(resultGraphIdentity, nodes, edges)
-    }
 }
 
 class ObjectGraphAsmSimple(

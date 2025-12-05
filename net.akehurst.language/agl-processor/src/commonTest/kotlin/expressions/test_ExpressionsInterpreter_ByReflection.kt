@@ -18,9 +18,8 @@
 package net.akehurst.language.expressions.processor
 
 import kotlinx.coroutines.test.runTest
-import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflectionSuspending
+import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
-import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflectionSuspending
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
 import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.asm.api.AsmValue
@@ -43,7 +42,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_ExpressionsInterpreterSuspending_ByReflection {
+class test_ExpressionsInterpreter_ByReflection {
 
     companion object Companion {
         data class TestObj(
@@ -56,25 +55,25 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             val prop1: String
         )
 
-        val executor = StdLibPrimitiveExecutionsForReflectionSuspending<Any>().also {
+        val executor = StdLibPrimitiveExecutionsForReflection<Any>().also {
             val qn = AglBase.typesDomain.findFirstDefinitionByNameOrNull(SimpleName("QualifiedName"))!!
             val qn_v = qn.property.first { it.name.value == "value" }
             it.addPropertyExecution1(qn_v, QualifiedName::value)
         }
 
-        suspend fun test(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any) {
+        fun test(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(ObjectGraphByReflectionSuspending(typesDomain, issues, primitiveExecutor=executor), issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = executor), issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
             assertEquals(expected, actual.self)
         }
 
-        suspend fun test_fail(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any, expectedIssues: List<LanguageIssue>) {
+        fun test_fail(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any, expectedIssues: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(ObjectGraphByReflectionSuspending(typesDomain, issues, primitiveExecutor=executor), issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = executor), issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
             assertEquals(expected, actual.self)
             assertEquals(expectedIssues, interpreter.issues.all.toList())
@@ -84,7 +83,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun nothing() = runTest {
+    fun nothing() {
         val expression = $$"$nothing"
         val tm = typesDomain("test", true) {
             namespace("ns") {
@@ -101,7 +100,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun primitive_string() = runTest {
+    fun primitive_string() {
         val expression = $$"'Hello World!'"
         val tm = typesDomain("test", true) {
         }
@@ -111,7 +110,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun Set_of_string() = runTest {
+    fun Set_of_string() {
         val expression = $$"Set('Hello', 'World', '!')"
         val tm = typesDomain("test", true) {
         }
@@ -124,7 +123,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun structure_self() = runTest {
+    fun structure_self() {
         val expression = $$"$self"
         val tm = typesDomain("test", true) {
             namespace("ns") {
@@ -141,7 +140,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun structure_property__notfound() = runTest {
+    fun structure_property__notfound() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -164,7 +163,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun structure_property__found() = runTest {
+    fun structure_property__found() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -180,7 +179,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun structure_property_index__notIndexable() = runTest {
+    fun structure_property_index__notIndexable() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -203,7 +202,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun structure_property_index__onlyOneIndexValue() = runTest {
+    fun structure_property_index__onlyOneIndexValue() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -216,7 +215,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"))
+        val self = TestObj("strValue", listOf("A", "B", "C"))
 
         val expectedIssues = listOf(
             LanguageIssue(
@@ -229,7 +228,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun structure_property_index__mustBeInteger() = runTest {
+    fun structure_property_index__mustBeInteger() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -242,7 +241,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"))
+        val self = TestObj("strValue", listOf("A", "B", "C"))
 
         val expectedIssues = listOf(
             LanguageIssue(
@@ -255,7 +254,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun structure_property_index__outOfRange() = runTest {
+    fun structure_property_index__outOfRange() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -268,7 +267,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"))
+        val self = TestObj("strValue", listOf("A", "B", "C"))
 
         val expectedIssues = listOf(
             LanguageIssue(
@@ -281,7 +280,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
-    fun structure_propertyListOfString_index_0() = runTest {
+    fun structure_propertyListOfString_index_0() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -294,14 +293,14 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"))
+        val self = TestObj("strValue", listOf("A", "B", "C"))
 
         val expected = "A"
         test(tm, self, "ns.TestObj", "propList[0]", expected)
     }
 
     @Test
-    fun structure_propertyListOfA_get() = runTest {
+    fun structure_propertyListOfA_get() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -322,14 +321,14 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"), listOf(TestObjA("A"),TestObjA("B"),TestObjA("C")))
+        val self = TestObj("strValue", listOf("A", "B", "C"), listOf(TestObjA("A"), TestObjA("B"), TestObjA("C")))
 
         val expected = "B"
         test(tm, self, "ns.TestObj", "propListA.get(1).prop1", expected)
     }
 
     @Test
-    fun structure_propertyListOfA_map() = runTest {
+    fun structure_propertyListOfA_map() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestObj") {
@@ -350,8 +349,8 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"), listOf(TestObjA("A"),TestObjA("B"),TestObjA("C")))
-        val expected =listOf("A","B","C")
+        val self = TestObj("strValue", listOf("A", "B", "C"), listOf(TestObjA("A"), TestObjA("B"), TestObjA("C")))
+        val expected = listOf("A", "B", "C")
 
         test(tm, self, "ns.TestObj", "propListA.map() {it.prop1}", expected)
     }
