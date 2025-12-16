@@ -754,23 +754,23 @@ abstract class TypesNamespaceAbstract(
         val props = mutableListOf<PropertyDeclaration>()
         for (i in ends.indices) {
             val thisEnd = ends[i]
-            val thisEndDef = thisEnd.endType
+            val thisEndType = if (null == thisEnd.collectionTypeName) {
+                thisEnd.endType.type(emptyList(), thisEnd.isNullable)
+            } else {
+                val ti = thisEnd.endType.type(emptyList(), thisEnd.isNullable)
+                val targs = listOf(ti.asTypeArgument)
+                this.createTypeInstance(null, thisEnd.collectionTypeName, targs, false)
+            }
             for (j in ends.indices) {
                 if (i == j) {
                     continue
                 } else {
                     val otherEnd = ends[j]
-                    val otherEndType = if (null == otherEnd.collectionTypeName) {
-                        otherEnd.endType.type(emptyList(), otherEnd.isNullable)
-                    } else {
-                        val ti = otherEnd.endType.type(emptyList(), otherEnd.isNullable)
-                        val targs = listOf(ti.asTypeArgument)
-                        this.createTypeInstance(null, otherEnd.collectionTypeName, targs, false)
-                    }
+                    val otherEndDef = otherEnd.endType
                     val byEval = thisEnd.byEvaluation
                     val pd = when(byEval) {
-                        null -> thisEndDef.appendPropertyStored(otherEnd.endName, otherEndType, otherEnd.characteristics)
-                        else ->  thisEndDef.appendPropertyPrimitive(otherEnd.endName, otherEndType, "").also {
+                        null -> otherEndDef.appendPropertyStored(thisEnd.endName,thisEndType, thisEnd.characteristics)
+                        else ->  otherEndDef.appendPropertyPrimitive(thisEnd.endName, thisEndType, "").also {
                             (it as PropertyDeclarationAbstract).execution = byEval.invoke(it)
                         }
                     }
