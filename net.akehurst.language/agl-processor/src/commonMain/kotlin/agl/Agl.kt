@@ -354,9 +354,9 @@ object Agl {
         return result
     }
 
-     fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+     fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<Any> = FormatOptionsDefault()): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
-        val objectGraph = ObjectGraphByReflection<SelfType>(typesDomain, issueHolder)
+        val objectGraph = ObjectGraphByReflection(typesDomain, issueHolder)
         return formatWithTemplate(template, typesDomain, objectGraph, self, options)
     }
 }

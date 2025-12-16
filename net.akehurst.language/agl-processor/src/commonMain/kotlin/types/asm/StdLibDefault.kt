@@ -85,13 +85,6 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             ),
             "A Map object with elements being the Pairs of this List."
         )
-
-        typeDecl.appendMethodPrimitive(
-            MethodName("map"),
-            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
-            AnyType, //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
-            "A list created by mapping each element using the given lambda expression."
-        )
     }
 
     val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName).also { typeDecl ->
@@ -146,6 +139,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
 
     private fun createMethods() {
         createMethodsForString()
+        createMethodsForCollection()
         createMethodsForList()
     }
 
@@ -179,6 +173,38 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
         )
         typeDecl.appendPropertyPrimitive(PropertyName("join"), this.createTypeInstance(typeDecl.qualifiedName, String.typeName), "The String value of all elements concatenated.")
     }
+    private fun createMethodsForCollection() {
+        val typeDecl = Collection
+        typeDecl.appendMethodPrimitive(
+            MethodName("get"),
+            listOf(ParameterDefinitionSimple(TmParameterName("index"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), null)),
+            TypeParameterReference(typeDecl, SimpleName("E")),
+            "The element at the given index."
+        )
+        typeDecl.appendMethodPrimitive(
+            MethodName("separate"),
+            emptyList(),
+            this.createTypeInstance(
+                typeDecl.qualifiedName, ListSeparated_typeName, listOf(
+                    AnyType.asTypeArgument, //TODO: this should be type provided by method typeargs
+                    AnyType.asTypeArgument //TODO: this should be type provided by method typeargs
+                )
+            ),
+            ""
+        )
+        typeDecl.appendMethodPrimitive(
+            MethodName("map"),
+            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
+            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
+            "A list created by mapping each element using the given lambda expression."
+        )
+        typeDecl.appendMethodPrimitive(
+            MethodName("filter"),
+            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
+            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
+            "A list created by filtering the elements to those for which the given lambda expression evaluates to true."
+        )
+    }
     private fun createMethodsForList() {
         val typeDecl = List
         typeDecl.appendMethodPrimitive(
@@ -197,6 +223,24 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                 )
             ),
             ""
+        )
+        typeDecl.appendMethodPrimitive(
+            MethodName("map"),
+            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
+            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
+            "A list created by mapping each element using the given lambda expression."
+        )
+        typeDecl.appendMethodPrimitive(
+            MethodName("filter"),
+            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
+            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
+            "A list created by filtering the elements to those for which the given lambda expression evaluates to true."
+        )
+        typeDecl.appendMethodPrimitive(
+            MethodName("transitiveClosure"),
+            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
+            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
+            "A list created by performing a transitiveClosure over elements with the given lambda expression."
         )
     }
 

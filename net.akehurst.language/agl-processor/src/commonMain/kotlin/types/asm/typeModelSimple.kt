@@ -767,11 +767,18 @@ abstract class TypesNamespaceAbstract(
                         val targs = listOf(ti.asTypeArgument)
                         this.createTypeInstance(null, otherEnd.collectionTypeName, targs, false)
                     }
-                    val pd = thisEndDef.appendPropertyStored(otherEnd.endName, otherEndType, otherEnd.characteristics)
+                    val byEval = thisEnd.byEvaluation
+                    val pd = when(byEval) {
+                        null -> thisEndDef.appendPropertyStored(otherEnd.endName, otherEndType, otherEnd.characteristics)
+                        else ->  thisEndDef.appendPropertyPrimitive(otherEnd.endName, otherEndType, "").also {
+                            (it as PropertyDeclarationAbstract).execution = byEval.invoke(it)
+                        }
+                    }
                     props.add(pd)
                 }
             }
         }
+        props.forEach { p -> (p as PropertyDeclarationAbstract).setOpposite(props - p) }
         return props
     }
 
@@ -1615,6 +1622,8 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
     override val isStored: Boolean get() = characteristics.contains(PropertyCharacteristic.STORED)
     override val isPrimitive: Boolean get() = characteristics.contains(PropertyCharacteristic.PRIMITIVE)
 
+    override var opposite: List<PropertyDeclaration> = emptyList()
+
     override var execution: ((self:Any) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
@@ -1642,6 +1651,10 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
             else -> this.characteristics.joinToString(prefix = " {", postfix = "}")
         }
         return "${owner.name}.$name: ${typeInstance.signature(this.owner.namespace, 0)}$nullable [$index]$chrsStr"
+    }
+
+    internal fun setOpposite(value:List<PropertyDeclaration>) {
+        this.opposite = value
     }
 }
 

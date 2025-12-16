@@ -21,15 +21,9 @@ import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
 import net.akehurst.language.api.processor.EvaluationContext
-import net.akehurst.language.asm.api.AsmValue
-import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.asm.simple.AsmListSimple
-import net.akehurst.language.asm.simple.AsmNothingSimple
-import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
@@ -38,17 +32,27 @@ import kotlin.test.assertEquals
 
 class test_StdLibPrimitiveExecutionsForReflection_eval {
 
-    companion object Companion {
+    private companion object Companion {
         data class TestObj(
             val list: List<String>
+        )
+
+        data class TestObjSet(
+            val set: Set<String>
+        )
+
+        data class TestContainer(
+            val id: String,
+            val list: List<TestContainer>
         )
 
         fun test(typesDomain: TypesDomain, self: Any, selfType: String, expression: String, expected: Any) {
             val st = typesDomain.findByQualifiedNameOrNull(selfType.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = StdLibPrimitiveExecutionsForReflection(issues)), issues)
+            val og = ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = StdLibPrimitiveExecutionsForReflection(issues))
+            val interpreter = ExpressionsInterpreterOverTypedObject(og, issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
-            assertEquals(expected, actual.self)
+            assertEquals(expected, og.untyped(actual))
         }
     }
 
@@ -155,5 +159,74 @@ class test_StdLibPrimitiveExecutionsForReflection_eval {
         }
         val self = TestObj(listOf("A", "B", "C", "D"))
         test(tm, self, "ns.TestObj", "list.join", "ABCD")
+    }
+
+    @Test
+    fun collection_List_map() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("Test") {
+                    propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
+                }
+            }
+        }
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.map() { it + '1' }", listOf("A1", "B1", "C1", "D1"))
+    }
+
+    @Test
+    fun collection_Set_map() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("TestObjSet") {
+                    propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
+                }
+            }
+        }
+        val self = TestObjSet(setOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObjSet", "set.map() { it + '1' }", listOf("A1", "B1", "C1", "D1"))
+    }
+
+    @Test
+    fun collection_List_filter() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("Test") {
+                    propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
+                }
+            }
+        }
+        val self = TestObj(listOf("A", "B", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.filter() { it != 'B' }", listOf("A", "C", "D"))
+    }
+
+    @Test
+    fun collection_List_transitiveClosure() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("TestContainer") {
+                    propertyOf(setOf(VAR), "list", "TestContainer", false, TestContainer::list)
+                }
+            }
+        }
+        val self = TestContainer(
+            "1",
+            listOf(
+                TestContainer(
+                    "1.1",
+                    listOf(TestContainer("1.1.1", emptyList()))
+                ),
+                TestContainer(
+                    "1.2",
+                    emptyList()
+                ),
+                TestContainer(
+                    "1.3",
+                    listOf(TestContainer("1.3.1", emptyList()))
+                )
+            )
+        )
+        val expected = listOf("")
+        test(tm, self, "ns.TestContainer", "list.transitiveClosure() { it.list }.map(){it.id}", listOf("1.1", "1.2", "1.3", "1.1.1", "1.3.1"))
     }
 }

@@ -55,6 +55,7 @@ interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
 
     fun typeFor(obj: SelfType?): TypeInstance
     fun toTypedObject(obj: SelfType?): TypedObject<SelfType>
+    fun untyped(typedObj: TypedObject<SelfType>): Any
 
     fun isNothing(obj: TypedObject<SelfType>): Boolean
     fun equalTo(lhs: TypedObject<SelfType>, rhs: TypedObject<SelfType>): Boolean
@@ -74,14 +75,14 @@ interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject<SelfType>
     fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<SelfType>
     fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<SelfType>>): TypedObject<SelfType>
-    fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<SelfType>>): TypedObject<SelfType>
 
     fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject<SelfType>>): ObjectGraph<SelfType>
 }
 
-interface ExternalGetter<T : Any>  {
+interface ExternalGetter<T : Any> {
     fun typeFor(obj: T): TypeInstance
-    fun getProperty(obj: T, propertyName: String): Pair<Any?, TypeInstance?>
+    fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): T?
+    fun getProperty(obj: T, propertyName: String): Any?
 }
 
 interface ObjectGraphAccessorMutator<SelfType : Any> : ObjectGraphAccessorMutatorCommon<SelfType> {
@@ -89,6 +90,8 @@ interface ObjectGraphAccessorMutator<SelfType : Any> : ObjectGraphAccessorMutato
     val externalGetter: ExternalGetter<SelfType>
 
     fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
+
+    fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<Any>>): TypedObject<SelfType>
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists
@@ -101,9 +104,10 @@ interface ObjectGraphAccessorMutator<SelfType : Any> : ObjectGraphAccessorMutato
 
 }
 
-interface ExternalGetterSuspending<T : Any>  {
+interface ExternalGetterSuspending<T : Any> {
     fun typeFor(obj: T): TypeInstance
-    suspend fun getProperty(obj: T, propertyName: String): Pair<Any?, TypeInstance?>
+    suspend fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
+    suspend fun getProperty(obj: T, propertyName: String): Any?
 }
 
 interface PrimitiveExecutorSuspending<T : Any> {
@@ -117,6 +121,8 @@ interface ObjectGraphAccessorMutatorSuspending<SelfType : Any> : ObjectGraphAcce
     val externalGetter: ExternalGetterSuspending<SelfType>
 
     fun createLambdaValue(lambda: suspend (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
+
+    suspend fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<Any>>): TypedObject<SelfType>
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists

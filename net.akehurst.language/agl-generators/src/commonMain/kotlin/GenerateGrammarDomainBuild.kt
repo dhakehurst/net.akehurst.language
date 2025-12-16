@@ -119,7 +119,7 @@ class GenerateGrammarDomainBuild(
 
     fun generateFromAsm(grammarDomain: GrammarDomain): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
-        val og = ObjectGraphByReflection<Any>(AglGrammar.typesDomain, issues)
+        val og = ObjectGraphByReflection(AglGrammar.typesDomain, issues)
         val formatter = FormatterOverTypedObject<Any>(formatDomain, og,issues)
 
         val tp = grammarTypesDomain.findFirstDefinitionByNameOrNull(SimpleName("GrammarDomain"))!!.type()

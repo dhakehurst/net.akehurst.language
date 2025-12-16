@@ -64,18 +64,20 @@ class test_ExpressionsInterpreter_ByReflection {
         fun test(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = executor), issues)
+            val og = ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = executor)
+            val interpreter = ExpressionsInterpreterOverTypedObject(og, issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
-            assertEquals(expected, actual.self)
+            assertEquals(expected, og.untyped(actual))
         }
 
         fun test_fail(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any, expectedIssues: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = executor), issues)
+            val og = ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = executor)
+            val interpreter = ExpressionsInterpreterOverTypedObject(og, issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
-            assertEquals(expected, actual.self)
+            assertEquals(expected, og.untyped(actual))
             assertEquals(expectedIssues, interpreter.issues.all.toList())
         }
 

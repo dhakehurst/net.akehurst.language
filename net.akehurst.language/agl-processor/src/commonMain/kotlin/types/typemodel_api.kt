@@ -44,7 +44,9 @@ data class AssociationEnd(
     val collectionTypeName: PossiblyQualifiedName?,
     val characteristics: Set<PropertyCharacteristic>,
     val navigable: Boolean,
-)
+) {
+    var byEvaluation: ((PropertyDeclaration) -> ((Any)->Any?)?)? = null
+}
 
 interface TypesNamespace : Namespace<TypeDefinition> {
 
@@ -110,7 +112,7 @@ interface TypesNamespace : Namespace<TypeDefinition> {
      * ends must be 'DataType' types
      * TODO: support directionality and
      */
-    fun findOrCreateAssociation(ends:List<AssociationEnd>): List<PropertyDeclaration>
+    fun findOrCreateAssociation(ends: List<AssociationEnd>): List<PropertyDeclaration>
 
     fun createTypeInstance(
         contextQualifiedTypeName: QualifiedName?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
@@ -385,6 +387,8 @@ interface PropertyDeclaration {
     val characteristics: Set<PropertyCharacteristic>
     val description: String
 
+    val opposite: List<PropertyDeclaration>
+
     // Important: indicates the child number in an SPPT,
     // assists SimpleAST generation,
     // indicates order of constructor params
@@ -418,7 +422,7 @@ interface PropertyDeclaration {
     val isPrimitive: Boolean
 
     // to assist execution by reflection without having MPP reflection support
-    val execution: ((self:Any) -> Any?)?
+    val execution: ((self: Any) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 
@@ -499,6 +503,7 @@ data class MethodName(override val value: String) : PublicValueType
 interface MethodDeclaration {
     val owner: TypeDefinition
     val name: MethodName
+
     //TODO: Method TypeArgs
     val parameters: List<ParameterDeclaration>
     val returnType: TypeInstance

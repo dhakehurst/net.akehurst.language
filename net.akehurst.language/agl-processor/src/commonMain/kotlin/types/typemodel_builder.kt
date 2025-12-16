@@ -172,7 +172,8 @@ class AssociationBuilder(
             val characteristics: Set<PropertyCharacteristic>,
             val endName: String,
             val isNullable: Boolean,
-            val collectionTypeName: String?
+            val collectionTypeName: String?,
+            val byEvaluation: ((PropertyDeclaration) -> ((Any)->Any?)?)?
         )
     }
 
@@ -188,9 +189,10 @@ class AssociationBuilder(
         characteristics: Set<PropertyCharacteristic>,
         endName: String,
         isNullable: Boolean = false,
-        collectionTypeName: String? = null
+        collectionTypeName: String? = null,
+        byEvaluation: ((PropertyDeclaration) -> ((Any)->Any?)?)? = null
     ) {
-        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName))
+        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluation))
     }
 
     fun build(): List<PropertyDeclaration> {
@@ -205,6 +207,7 @@ class AssociationBuilder(
             val characteristics = thisEnd.characteristics
             val navigable = true //TODO
             val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable)
+            ae.byEvaluation = thisEnd.byEvaluation
             assocEnds.add(ae)
         }
         val props = _namespace.findOrCreateAssociation(assocEnds)
@@ -236,7 +239,7 @@ abstract class StructuredTypeBuilder(
         propertyName: String,
         typeName: String,
         isNullable: Boolean = false,
-        execution: KProperty<Any>? = null,
+        execution: KProperty1<*,*>? = null,
         init: TypeArgumentBuilder.() -> Unit = {}
     ): PropertyDeclaration {
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
@@ -244,7 +247,7 @@ abstract class StructuredTypeBuilder(
         val targs = tab.build()
         val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
         return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics).also {
-            (it as PropertyDeclarationStored).execution = execution as KProperty1<Any, Any?>?
+            (it as PropertyDeclarationStored).execution = execution as KProperty1<Any, out Any?>?
         }
     }
 

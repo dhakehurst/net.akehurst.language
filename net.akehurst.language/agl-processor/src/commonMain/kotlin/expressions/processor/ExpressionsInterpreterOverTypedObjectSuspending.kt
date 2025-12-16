@@ -249,7 +249,19 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
 
             else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
         }
+        "!=" -> when {
+            lhs.type == rhs.type -> {
+                val lhsv = objectGraph.valueOf(lhs)
+                val rhsv = objectGraph.valueOf(rhs)
+                if (lhsv != rhsv) {
+                    objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
+                } else {
+                    objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
+                }
+            }
 
+            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
+        }
         "+" -> when {
             objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
             objectGraph.isNothing(lhs) -> rhs

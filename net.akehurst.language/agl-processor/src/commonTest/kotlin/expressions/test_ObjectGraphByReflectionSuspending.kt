@@ -30,7 +30,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_ObjectGraphByReflection {
+class test_ObjectGraphByReflectionSuspending {
 
     private companion object {
         data class TestClass(
@@ -53,7 +53,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun nothing() {
-        val og = ObjectGraphByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphByReflectionSuspending(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
 
         val actual = og.nothing()
         val expected = Unit
@@ -70,8 +70,8 @@ class test_ObjectGraphByReflection {
     }
 
     @Test
-    fun createTupleValue() {
-        val og = ObjectGraphByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+    fun createTupleValue() =runTest {
+        val og = ObjectGraphByReflectionSuspending(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
 
         val actual = og.createTupleValue(listOf())
         og.setProperty(actual, "a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
@@ -85,7 +85,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun getIndex() {
-        val og = ObjectGraphByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphByReflectionSuspending(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val list = TypedObjectAny(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), listOf("Adam", "Betty", "Charles"))
 
         val actual1 = og.getIndex(list, 0)
@@ -110,8 +110,8 @@ class test_ObjectGraphByReflection {
     }
 
     @Test
-    fun object_getProperty()  {
-        val og = ObjectGraphByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+    fun object_getProperty() = runTest {
+        val og = ObjectGraphByReflectionSuspending(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = TestClass("A", 1, TestClass("B", 2, null))
         val tp = testTypeModel.findFirstDefinitionByNameOrNull(SimpleName("TestClass"))!!.type()
         val tobj = TypedObjectAny(tp, obj)
@@ -130,8 +130,8 @@ class test_ObjectGraphByReflection {
     }
 
     @Test
-    fun tuple_getProperty()  {
-        val og = ObjectGraphByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+    fun tuple_getProperty() = runTest {
+        val og = ObjectGraphByReflectionSuspending(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = mapOf(
             "prop1" to "A",
             "prop2" to 1,
@@ -154,9 +154,9 @@ class test_ObjectGraphByReflection {
     }
 
     @Test
-    fun executeMethod_Primitive_map() {
+    fun executeMethod_Primitive_map() =runTest {
         //given
-        val og = ObjectGraphByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphByReflectionSuspending(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val tObj = TypedObjectAny<Any>(
             StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument)), listOf(
                 TypedObjectAny(StdLibDefault.Integer, 1L),
@@ -164,9 +164,8 @@ class test_ObjectGraphByReflection {
                 TypedObjectAny(StdLibDefault.Integer, 3L)
             )
         )
-        val lambda = TypedObjectAny<Any>(StdLibDefault.Lambda, { it: Any ->
-            it.toString()
-        })
+        val sl: suspend (Any) ->String = { it: Any -> it.toString() }
+        val lambda = TypedObjectAny<Any>(StdLibDefault.Lambda, sl)
         //when
         val actual = og.executeMethod(tObj, "map", listOf(lambda))
 
