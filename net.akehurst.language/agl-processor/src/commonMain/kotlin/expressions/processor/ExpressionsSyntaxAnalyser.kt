@@ -20,6 +20,7 @@ import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrati
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.asSimpleName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.*
@@ -115,7 +116,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return NavigationExpressionDefault(navigationRoot, parts)
     }
 
-    // navigationRoot = root | literal | group;
+    // navigationRoot = root | literal | functionCall | group;
     private fun navigationRoot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
@@ -135,11 +136,11 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return InfixExpressionDefault(expressions, operators)
     }
 
-    // functionCall = possiblyQualifiedName '(' argumentList ')' ;
+    // functionCall = IDENTIFIER '(' argumentList ')' ;
     private fun functionCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FunctionCall {
-        val pqn = children[0] as PossiblyQualifiedName
+        val n = children[0] as String
         val args = children[2] as List<Expression>
-        return FunctionCallDefault(pqn, args)
+        return FunctionCallDefault(n.asSimpleName, args)
     }
 
     // object = possiblyQualifiedName constructorArguments assignmentBlock ;

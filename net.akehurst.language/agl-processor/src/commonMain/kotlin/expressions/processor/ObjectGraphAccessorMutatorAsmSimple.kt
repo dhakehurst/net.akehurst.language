@@ -280,7 +280,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
 
     override fun valueOf(value: TypedObject<AsmValue>): Any = value.self.raw
 
-    override fun getIndex(tobj: TypedObject<AsmValue>, index: Int): TypedObject<AsmValue> {
+    override fun getFromListWithIndex(tobj: TypedObject<AsmValue>, index: Int): TypedObject<AsmValue> {
         val asmValue = tobj.self
         return when (asmValue) {
             is AsmList -> {
@@ -300,6 +300,10 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                 nothing()
             }
         }
+    }
+
+    override fun getFromMapWithKey(tobj: TypedObject<Any>, key: TypedObject<Any>): TypedObject<AsmValue> {
+       TODO()
     }
 
     override fun forEachIndexed(tobj: TypedObject<AsmValue>, body: (index: Int, value: TypedObject<AsmValue>) -> Unit) {

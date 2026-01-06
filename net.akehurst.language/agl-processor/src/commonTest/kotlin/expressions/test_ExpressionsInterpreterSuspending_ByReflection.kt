@@ -126,6 +126,19 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
     }
 
     @Test
+    fun Map_of_string_integer() = runTest {
+        val expression = $$"List(Pair('a', 1), Pair('b', 2), Pair('c', 3), Pair('d', 4)).asMap['b']"
+        val tm = typesDomain("test", true) {
+        }
+        val self = Unit
+
+        test(
+            tm, self, StdLibDefault.NothingType.qualifiedTypeName.value, expression,
+            2L
+        )
+    }
+
+    @Test
     fun structure_self() = runTest {
         val expression = $$"$self"
         val tm = typesDomain("test", true) {
@@ -276,7 +289,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "In getIndex argument index '4' out of range"
+                "In getFromListWithIndex argument index '4' out of range"
             )
         )
         test_fail(tm, self, "ns.TestObj", "propList[4]", Unit, expectedIssues)

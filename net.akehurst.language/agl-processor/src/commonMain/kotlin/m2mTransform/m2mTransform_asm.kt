@@ -177,6 +177,9 @@ data class M2MTransformRelationDefault(
 
     override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
     override val domainTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
+
+    override var when_: Expression? = null
+    override var where: Expression? = null
 }
 
 data class M2MTransformMappingDefault(
@@ -189,6 +192,9 @@ data class M2MTransformMappingDefault(
     override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
     override val domainTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
     override val expression: Map<DomainReference, Expression?> = mutableMapOf()
+
+    override var when_: Expression? = null
+    override var where: Expression? = null
 }
 
 data class M2MTransformTableDefault(

@@ -81,7 +81,7 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
     fun addImportType(value: Import)
     fun setRule(rule: M2mTransformRule)
 
-    fun resolveDomainParameter(ref:DomainReference, typesDomain: TypesDomain)
+    fun resolveDomainParameter(ref: DomainReference, typesDomain: TypesDomain)
 
     fun merge(value: M2mTransformRuleSet)
 }
@@ -113,6 +113,9 @@ interface M2mTransformAbstractRule : M2mTransformRule {
 interface M2mTransformPatternRule : M2mTransformRule {
     val pivot: Map<SimpleName, VariableDefinition>
     val domainTemplate: Map<DomainReference, PropertyTemplateRhs>
+
+    val when_: Expression?
+    val where: Expression?
 }
 
 interface M2MTransformRelation : M2mTransformPatternRule {
@@ -133,7 +136,7 @@ interface M2MTransformTable : M2mTransformRule {
     val values: List<Map<DomainReference, Expression>>
 }
 
-interface ObjectTemplate :  PropertyTemplateRhs {
+interface ObjectTemplate : PropertyTemplateRhs {
 
     val type: TypeInstance
     val propertyTemplate: Map<SimpleName, PropertyTemplate>
@@ -156,11 +159,11 @@ interface PropertyTemplateRhs {
     fun setIdentifierValue(value: SimpleName)
 }
 
-interface PropertyTemplateExpression :  PropertyTemplateRhs {
+interface PropertyTemplateExpression : PropertyTemplateRhs {
     val expression: Expression
 }
 
-interface M2mTransformTest  {
+interface M2mTransformTest {
     val namespace: M2mTransformNamespace
     val name: SimpleName
     val qualifiedName: QualifiedName
@@ -168,7 +171,7 @@ interface M2mTransformTest  {
     val options: OptionHolder
 
     val domainParameters: Map<DomainReference, SimpleName>
-    val testCase : Map<SimpleName, M2mTransformTestCase>
+    val testCase: Map<SimpleName, M2mTransformTestCase>
 
     fun merge(value: M2mTransformTest)
 }

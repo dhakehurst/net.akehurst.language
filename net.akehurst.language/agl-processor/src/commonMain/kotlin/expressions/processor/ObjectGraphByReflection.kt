@@ -185,7 +185,12 @@ class StdLibPrimitiveExecutionsForReflection<T : Any>(
 
     override fun functionCall(functionName: String, args: List<TypedObject<T>>): ExecutionResult? {
         return when (functionName) {
+            "Pair" -> {
+                check(2 == args.size) { "The Pair function only takes 2 arguments." }
+                ExecutionResult(Pair(args[0], args[1]))
+            }
             "Set" -> ExecutionResult(args.map { it.self }.toSet())
+            "List" -> ExecutionResult(args.map { it.self })
             else -> error("Unsupported function '$functionName'")
         }
     }
@@ -351,8 +356,8 @@ open class ObjectGraphByReflection(
             null -> {
                 //try reflection on untyped object, FIXME: will not work currently for JS and wasmJS
                 val obj = untyped(tobj)
-                val arguments = args.map { untyped(it) }
-                val value = obj.reflect().call(methodName, arguments)
+                val arguments = args.map { untyped(it) }.toTypedArray()
+                val value = obj.reflect().call(methodName, *arguments)
                 value?.let { toTypedObject(it) } ?: nothing()
             }
 
@@ -443,8 +448,10 @@ open class ObjectGraphByReflection(
                                 is PropertyDeclarationDerived -> TODO()
                                 is PropertyDeclarationPrimitive -> {
                                     // should have found execution if there is one
-                                    issues.error(null, "using StdLibPrimitiveExecutionsForReflection not found for property '${propRes}'")
-                                    nothing()
+                                    //issues.error(null, "using StdLibPrimitiveExecutionsForReflection not found for property '${propRes}'")
+                                    val obj = tobj.self
+                                    val value = externalGetter.getProperty(obj, propertyName)
+                                    value?.let { toTypedObject(value) } ?: nothing()
                                 }
 
                                 is PropertyDeclarationStored -> {
@@ -476,8 +483,12 @@ open class ObjectGraphByReflection(
             }
 
             else -> {
-                val obj = tobj.self
-                obj.reflect().setProperty(propertyName, untyped(value))
+                try {
+                    val obj = tobj.self
+                    obj.reflect().setProperty(propertyName, untyped(value))
+                } catch (t:Throwable){
+                    issues.error(null, "Could not set property $propertyName to $value")
+                }
             }
         }
     }

@@ -154,14 +154,14 @@ abstract class ObjectGraphByReflectionAbstract<StructureType : Any>(
 
     override fun valueOf(value: TypedObject<Any>): Any = untyped(value)
 
-    override fun getIndex(tobj: TypedObject<Any>, index: Int): TypedObject<Any> {
+    override fun getFromListWithIndex(tobj: TypedObject<Any>, index: Int): TypedObject<Any> {
         val self = untyped(tobj)
         return when (self) {
             is List<*> -> {
                 val el = self.getOrNull(index.toInt())
                 when (el) {
                     null -> {
-                        issues.error(null, "In getIndex argument index '$index' out of range")
+                        issues.error(null, "In getFromListWithIndex argument index '$index' out of range")
                         nothing()
                     }
 
@@ -170,7 +170,26 @@ abstract class ObjectGraphByReflectionAbstract<StructureType : Any>(
             }
 
             else -> {
-                issues.error(null, "getIndex not supported on type '${tobj.type.typeName}'")
+                issues.error(null, "getFromListWithIndex not supported on type '${tobj.type.typeName}'")
+                nothing()
+            }
+        }
+    }
+
+    override fun getFromMapWithKey(tobj: TypedObject<Any>, key: TypedObject<Any>): TypedObject<Any> {
+        val self = untyped(tobj)
+        val k = untyped(key)
+        return when (self) {
+            is Map<*,*> -> {
+                val el = self.get(k)
+                when (el) {
+                    null -> nothing()
+                    else -> toTypedObject(el)
+                }
+            }
+
+            else -> {
+                issues.error(null, "getFromMapWithKey not supported on type '${tobj.type.typeName}'")
                 nothing()
             }
         }

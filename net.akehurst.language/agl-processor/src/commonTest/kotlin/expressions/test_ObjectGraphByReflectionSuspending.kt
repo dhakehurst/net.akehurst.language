@@ -88,21 +88,21 @@ class test_ObjectGraphByReflectionSuspending {
         val og = ObjectGraphByReflectionSuspending(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val list = TypedObjectAny(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), listOf("Adam", "Betty", "Charles"))
 
-        val actual1 = og.getIndex(list, 0)
+        val actual1 = og.getFromListWithIndex(list, 0)
         assertEquals("Adam", actual1.self)
 
-        val actual2 = og.getIndex(list, 1)
+        val actual2 = og.getFromListWithIndex(list, 1)
         assertEquals("Betty", actual2.self)
 
-        val actual3 = og.getIndex(list, 2)
+        val actual3 = og.getFromListWithIndex(list, 2)
         assertEquals("Charles", actual3.self)
 
-        val actual4 = og.getIndex(list, -1)
+        val actual4 = og.getFromListWithIndex(list, -1)
         assertEquals(Unit, actual4.self)
         assertEquals(1, og.issues.size)
         assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getIndex argument index '-1' out of range", null)), og.issues.toString())
 
-        val actual5 = og.getIndex(list, 5)
+        val actual5 = og.getFromListWithIndex(list, 5)
         assertEquals(Unit, actual5.self)
         assertEquals(2, og.issues.size)
         assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getIndex argument index '5' out of range", null)), og.issues.toString())

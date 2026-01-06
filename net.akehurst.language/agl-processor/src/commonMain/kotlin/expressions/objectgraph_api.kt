@@ -17,12 +17,10 @@
 
 package net.akehurst.language.objectgraph.api
 
-import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.types.api.*
-import net.akehurst.language.types.asm.StdLibDefault
 
 interface TypedObject<out SelfType : Any> {
     val self: SelfType
@@ -66,7 +64,8 @@ interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
     fun valueOf(value: TypedObject<SelfType>): Any
 
     // would like to use Long as index to be compatible with Integer implemented as Long - but index in underlying kotlin is always an Int
-    fun getIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType>
+    fun getFromListWithIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType>
+    fun getFromMapWithKey(tobj: TypedObject<Any>, key: TypedObject<Any>): TypedObject<SelfType>
     fun forEachIndexed(tobj: TypedObject<SelfType>, body: (index: Int, value: TypedObject<SelfType>) -> Unit)
 
     fun callFunction(functionName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>

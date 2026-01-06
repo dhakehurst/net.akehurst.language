@@ -50,11 +50,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
             expression
               = rootExpression
               | literalExpression
+              | functionCall
               | navigationExpression
               | infixExpression
               | tuple
               | object
-              | functionCall
               | with
               | when
               | cast
@@ -68,6 +68,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
             navigationRoot 
              = rootExpression
              | literalExpression
+             | functionCall
              | group
             ;
             navigationPart
@@ -83,7 +84,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
               | '/' | '*' | '%' | '+' | '-' // arithmetic
               ;
             
-            functionCall = possiblyQualifiedName '(' argumentList ')' ;
+            functionCall = IDENTIFIER '(' argumentList ')' ;
             tuple = 'tuple' assignmentBlock ;
             object = possiblyQualifiedName constructorArguments assignmentBlock ;
             constructorArguments = '(' [assignment / ',']* ')' ;
@@ -209,11 +210,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     choice("expression") {
                         ref("rootExpression")
                         ref("literalExpression")
+                        ref("functionCall")
                         ref("navigationExpression")
                         ref("infixExpression")
                         ref("tuple")
                         ref("object")
-                        ref("functionCall")
                         ref("with")
                         ref("when")
                         ref("cast")
@@ -230,6 +231,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     choice("navigationRoot") {
                         ref("rootExpression")
                         ref("literalExpression")
+                        ref("functionCall")
                         ref("group")
                     }
                     choice("navigationPart") {
@@ -249,7 +251,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                         lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
                     }
                     concatenation("functionCall") {
-                        ref("possiblyQualifiedName"); lit("("); ref("argumentList"); lit(")")
+                        ref("IDENTIFIER"); lit("("); ref("argumentList"); lit(")")
                     }
                     concatenation("object") {
                         ref("possiblyQualifiedName"); ref("constructorArguments"); ref("assignmentBlock")

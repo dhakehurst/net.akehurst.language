@@ -54,6 +54,9 @@ internal fun <T> Set<T>.transitiveClosure_old(function: (T) -> Set<T>): Set<T> {
     return result
 }
 
+/**
+ * inline so it can be used with a suspend function as argument
+ */
 inline fun <T> List<T>.transitiveClosure(function: (T) -> List<T>): List<T> {
     val result: MutableList<T> = this.toMutableList()
     val newThings: MutableList<T> = this.toMutableList()

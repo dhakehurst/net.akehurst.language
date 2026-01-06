@@ -183,8 +183,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val pivots = children[5] as List<VariableDefinition>
         val primDomains = children[6] as List<VariableDefinition>
         val relDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
-        val whenNode = children[8]
-        val whereNode = children[9]
+        val whenExpression = children[8] as Expression
+        val whereExpression = children[9] as Expression
         return M2MTransformRelationDefault(isTop, name).also { rel ->
             pivots.forEach { (rel.pivot as MutableMap)[it.name] = it }
             (rel.primitiveDomains as MutableList).addAll(primDomains)
@@ -192,6 +192,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
                 (rel.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
                 (rel.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
             }
+            rel.when_ = whenExpression
+            rel.where = whereExpression
         }
     }
 
@@ -203,16 +205,18 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val primDomains = children[5] as List<VariableDefinition>
         val inputDomains = children[6] as List<Pair<DomainSignature, ObjectTemplate>>
         val outputDomain = children[7] as Pair<DomainSignature, Expression?>
-        val whenNode = children[8]
-        val whereNode = children[9]
-        return M2MTransformMappingDefault(isTop, name).also {
-            (it.primitiveDomains as MutableList).addAll(primDomains)
+        val whenExpression = children[8] as Expression
+        val whereExpression = children[9] as Expression
+        return M2MTransformMappingDefault(isTop, name).also { mp ->
+            (mp.primitiveDomains as MutableList).addAll(primDomains)
             inputDomains.forEach { rd ->
-                (it.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
-                (it.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
+                (mp.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
+                (mp.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
             }
-            (it.domainSignature as MutableMap)[outputDomain.first.domainRef] = outputDomain.first
-            (it.expression as MutableMap)[outputDomain.first.domainRef] = outputDomain.second
+            (mp.domainSignature as MutableMap)[outputDomain.first.domainRef] = outputDomain.first
+            (mp.expression as MutableMap)[outputDomain.first.domainRef] = outputDomain.second
+            mp.when_ = whenExpression
+            mp.where = whereExpression
         }
     }
 
@@ -224,8 +228,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val primDomains = children[5] as List<VariableDefinition>
         val sigDomains = children[6] as List<DomainSignature>
         val values = children[7] as List<List<Expression>>
-        val whenNode = children[8]
-        val whereNode = children[9]
+        val whenExpression = children[8] as Expression
+        val whereExpression = children[9] as Expression
         return M2MTransformTableDefault(isTop, name).also { rel ->
             (rel.primitiveDomains as MutableList).addAll(primDomains)
             sigDomains.forEach { rd ->
