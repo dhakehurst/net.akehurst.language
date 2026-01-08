@@ -240,13 +240,11 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return PropertyCallDefault(id)
     }
 
-    // methodCall = '.' methodReference '(' argumentList ')' lambda? ;
+    // methodCall = '.' methodReference '(' argumentList ')'  ;
     private fun methodCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): MethodCall {
         val methodReference = children[1] as String
         val argumentList = children[3] as List<Expression>
-        val lambda = children[5] as LambdaExpression?
-        val args = argumentList + (lambda?.let { listOf(it) } ?: emptyList())
-        return MethodCallDefault(methodReference, args)
+        return MethodCallDefault(methodReference, argumentList)
     }
 
     // argumentList = [expression / ',']* ;

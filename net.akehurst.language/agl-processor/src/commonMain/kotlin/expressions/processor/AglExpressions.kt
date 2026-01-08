@@ -59,6 +59,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
               | when
               | cast
               | typeTest
+              | lambda
               | group
               ;
             rootExpression = propertyReference ;
@@ -107,7 +108,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
             group = '(' expression ')' ;
             
             propertyCall = '.' propertyReference ;
-            methodCall = '.' methodReference '(' argumentList ')' lambda? ;
+            methodCall = '.' methodReference '(' argumentList ')' ;
             argumentList = [expression / ',']* ;
             
             lambda = '{' expression '}' ;
@@ -219,6 +220,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                         ref("when")
                         ref("cast")
                         ref("typeTest")
+                        ref("lambda")
                         ref("group")
                     }
                     concatenation("rootExpression") {
@@ -301,7 +303,6 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     concatenation("methodCall") {
                         lit("."); ref("methodReference")
                         lit("("); ref("argumentList"); lit(")")
-                        opt { ref("lambda") }
                     }
                     separatedList("argumentList", 0, -1) {
                         ref("expression"); lit(",")

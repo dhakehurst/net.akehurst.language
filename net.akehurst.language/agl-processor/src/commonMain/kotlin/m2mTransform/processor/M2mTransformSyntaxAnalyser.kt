@@ -183,8 +183,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val pivots = children[5] as List<VariableDefinition>
         val primDomains = children[6] as List<VariableDefinition>
         val relDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
-        val whenExpression = children[8] as Expression
-        val whereExpression = children[9] as Expression
+        val whenExpression = children[8] as Expression?
+        val whereExpression = children[9] as Expression?
         return M2MTransformRelationDefault(isTop, name).also { rel ->
             pivots.forEach { (rel.pivot as MutableMap)[it.name] = it }
             (rel.primitiveDomains as MutableList).addAll(primDomains)
@@ -205,8 +205,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val primDomains = children[5] as List<VariableDefinition>
         val inputDomains = children[6] as List<Pair<DomainSignature, ObjectTemplate>>
         val outputDomain = children[7] as Pair<DomainSignature, Expression?>
-        val whenExpression = children[8] as Expression
-        val whereExpression = children[9] as Expression
+        val whenExpression = children[8] as Expression?
+        val whereExpression = children[9] as Expression?
         return M2MTransformMappingDefault(isTop, name).also { mp ->
             (mp.primitiveDomains as MutableList).addAll(primDomains)
             inputDomains.forEach { rd ->
@@ -228,8 +228,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val primDomains = children[5] as List<VariableDefinition>
         val sigDomains = children[6] as List<DomainSignature>
         val values = children[7] as List<List<Expression>>
-        val whenExpression = children[8] as Expression
-        val whereExpression = children[9] as Expression
+        val whenExpression = children[8] as Expression?
+        val whereExpression = children[9] as Expression?
         return M2MTransformTableDefault(isTop, name).also { rel ->
             (rel.primitiveDomains as MutableList).addAll(primDomains)
             sigDomains.forEach { rd ->
