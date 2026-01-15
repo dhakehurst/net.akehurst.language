@@ -358,6 +358,6 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
                 AsmPrimitiveSimple.stdString("v3")
             )
         )
-        test(tm, self, "aList.map() {it.prop1}", expected)
+        test(tm, self, "aList.map({it.prop1})", expected)
     }
 }

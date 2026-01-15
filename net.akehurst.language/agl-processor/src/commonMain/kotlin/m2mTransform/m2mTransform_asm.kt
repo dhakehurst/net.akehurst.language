@@ -160,10 +160,31 @@ class M2mTransformRuleSetDefault(
     }
 }
 
+data class M2mTransformRuleReferenceDefault(
+    override val nameOrQName: PossiblyQualifiedName
+) : M2mTransformRuleReference {
+    override var resolved: M2mTransformRule? = null
+
+    override fun resolveAs(resolved: M2mTransformRule) {
+        this.resolved = resolved
+    }
+}
+
+abstract class M2mTransformRuleAbstract(
+) : M2mTransformRule {
+    override val extends: List<M2mTransformRuleReference> = mutableListOf()
+
+    override fun conformsTo(other: M2mTransformRule): Boolean = when {
+        other === this -> true
+        other == this -> true
+        else -> this.extends.any { it.resolved?.conformsTo(other) ?: error("M2mTransformRule '${this.name}' is not Resolved") }
+    }
+}
+
 data class M2MTransformAbstractRuleDefault(
     override val isTop: Boolean,
     override val name: SimpleName
-) : M2mTransformAbstractRule {
+) : M2mTransformAbstractRule, M2mTransformRuleAbstract() {
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 }
@@ -171,7 +192,7 @@ data class M2MTransformAbstractRuleDefault(
 data class M2MTransformRelationDefault(
     override val isTop: Boolean,
     override val name: SimpleName
-) : M2MTransformRelation {
+) : M2MTransformRelation, M2mTransformRuleAbstract() {
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 
@@ -185,7 +206,7 @@ data class M2MTransformRelationDefault(
 data class M2MTransformMappingDefault(
     override val isTop: Boolean,
     override val name: SimpleName
-) : M2MTransformMapping {
+) : M2MTransformMapping, M2mTransformRuleAbstract() {
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 
@@ -200,7 +221,7 @@ data class M2MTransformMappingDefault(
 data class M2MTransformTableDefault(
     override val isTop: Boolean,
     override val name: SimpleName
-) : M2MTransformTable {
+) : M2MTransformTable, M2mTransformRuleAbstract() {
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
     override val values: List<Map<DomainReference, Expression>> = mutableListOf()

@@ -86,11 +86,21 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
     fun merge(value: M2mTransformRuleSet)
 }
 
+interface M2mTransformRuleReference {
+    val nameOrQName: PossiblyQualifiedName
+    var resolved: M2mTransformRule?
+
+    fun resolveAs(resolved: M2mTransformRule)
+}
+
 interface M2mTransformRule {
     val isTop: Boolean
     val name: SimpleName
+    val extends: List<M2mTransformRuleReference>
     val primitiveDomains: List<VariableDefinition>
     val domainSignature: Map<DomainReference, DomainSignature>
+
+    fun conformsTo(other: M2mTransformRule): Boolean
 }
 
 interface DomainSignature {

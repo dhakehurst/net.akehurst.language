@@ -440,31 +440,38 @@ open class ObjectGraphByReflection(
                     }
 
                     else -> {
-                        // try execution
-                        val type = tobj.type.resolvedDeclaration
-                        val execResult = primitiveExecutor.propertyValue(untyped(tobj), type, propRes.original)
-                        when (execResult) {
-                            null -> when (propRes.original) {
-                                is PropertyDeclarationDerived -> TODO()
-                                is PropertyDeclarationPrimitive -> {
-                                    // should have found execution if there is one
-                                    //issues.error(null, "using StdLibPrimitiveExecutionsForReflection not found for property '${propRes}'")
-                                    val obj = tobj.self
-                                    val value = externalGetter.getProperty(obj, propertyName)
-                                    value?.let { toTypedObject(value) } ?: nothing()
-                                }
-
-                                is PropertyDeclarationStored -> {
-                                    //try reflection
-                                    val obj = tobj.self
-                                    val value = externalGetter.getProperty(obj, propertyName)
-                                    value?.let { toTypedObject(value) } ?: nothing()
-                                }
-
-                                else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
+                        when {
+                            null!=propRes.original.execution -> {
+                                val value =  propRes.original.execution!!.invoke(tobj.self)
+                                value?.let { toTypedObject(value) } ?: nothing()
                             }
+                            else -> {
+                                val type = tobj.type.resolvedDeclaration
+                                val execResult = primitiveExecutor.propertyValue(untyped(tobj), type, propRes.original)
+                                when (execResult) {
+                                    null -> when (propRes.original) {
+                                        is PropertyDeclarationDerived -> TODO()
+                                        is PropertyDeclarationPrimitive -> {
+                                            // should have found execution if there is one
+                                            //issues.error(null, "using StdLibPrimitiveExecutionsForReflection not found for property '${propRes}'")
+                                            val obj = tobj.self
+                                            val value = externalGetter.getProperty(obj, propertyName)
+                                            value?.let { toTypedObject(value) } ?: nothing()
+                                        }
 
-                            else -> toTypedObject(execResult.value)
+                                        is PropertyDeclarationStored -> {
+                                            //try reflection
+                                            val obj = tobj.self
+                                            val value = externalGetter.getProperty(obj, propertyName)
+                                            value?.let { toTypedObject(value) } ?: nothing()
+                                        }
+
+                                        else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
+                                    }
+
+                                    else -> toTypedObject(execResult.value)
+                                }
+                            }
                         }
                     }
                 }

@@ -361,8 +361,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
 
                             else -> {
                                 val allVars = alt.values.merge()
-                                // do 'where'
-                                rule.where?.let { executeWhere(it, targetTransform, targetDomainRef, allVars.matchedVariables, objectGraph) }
+                                val varsAfterWhere = rule.where?.let { executeWhere(it, targetTransform, targetDomainRef, allVars.matchedVariables, objectGraph) }
                                 //TODO: add target of where to variables with correct name
 
                                 // create output
@@ -409,6 +408,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
                     altSources.isEmpty() -> error("Should not happen as this is indicate no match")
                     else -> altSources.map { alt ->
                         val allVars = alt.values.merge()
+                        val varsAfterWhere = rule.where?.let { executeWhere(it, targetTransform, targetDomainRef, allVars.matchedVariables, objectGraph) }
                         val objPat = rule.domainTemplate[targetDomainRef] ?: error("No object pattern found for domain '$targetDomainRef'")
                         val r = createFromRhs(allVars.matchedVariables, objPat, tgtOg)
                         val srcs = alt.entries.associate { (srcDomainRef, v) ->
@@ -590,14 +590,17 @@ class M2mTransformInterpreterSuspending<OT : Any>(
     }
 
 
+    /*
+     * returns matchedVariables + variables set by executing the where
+     */
     suspend fun executeWhere(
         where: Expression,
         targetTransform: M2mTransformRuleSet,
         targetDomainRef: DomainReference,
         matchedVariables: Map<String, TypedObject<OT>>,
         objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending<OT>>,
-    ): Any? {
-       return when (where) { //TODO: support more complex expressions - override the expression interpreter to intercept function calls as rule-calls
+    ): Map<String, TypedObject<OT>> {
+        return when (where) { //TODO: support more complex expressions - override the expression interpreter to intercept function calls as rule-calls
             is FunctionCall -> {
                 val rule = targetTransform.rule[where.possiblyQualifiedName]
                 when {
@@ -613,18 +616,50 @@ class M2mTransformInterpreterSuspending<OT : Any>(
                             val res = exprInterp.evaluateExpression(evc, v)
                             listOf(res)
                         }
-                        executeRule(targetTransform, rule, targetDomainRef, source, objectGraph)
-                        TODO("find target")
+                        val rec = executeRule(targetTransform, rule, targetDomainRef, source, objectGraph)
+                        val targetDomainRefIdx = rule.domainSignature.keys.indexOf(targetDomainRef)
+                        val targetArg = where.arguments.getOrNull(targetDomainRefIdx)
+                        when (targetArg) {
+                            null -> {
+                                _issues.error(null, "Argument for target domain '${targetDomainRef.value}' not found in rule call '${where.possiblyQualifiedName}' in 'where' clause of TransformRuleSet '${targetTransform.name}'.")
+                                matchedVariables
+                            }
+
+                            is RootExpression -> {
+                                when (rec.alternatives.size) {
+                                    0 -> TODO()
+                                    1 -> {
+                                        val tgtValue = rec.alternatives.first()[targetDomainRef]
+                                        when (tgtValue) {
+                                            null -> TODO()
+                                            else -> matchedVariables + Pair(targetArg.name, tgtValue)
+                                        }
+                                    }
+
+                                    else -> TODO()
+                                }
+                            }
+
+                            else -> {
+                                _issues.warn(null, "Argument for target domain '${targetDomainRef.value}' is not a variable rule call '${where.possiblyQualifiedName}' in 'where' clause of TransformRuleSet '${targetTransform.name}'.")
+                                matchedVariables
+                            }
+                        }
                     }
 
-                    else -> _issues.error(null, "In 'where' clause, cannot find rule '${where.possiblyQualifiedName}' in TransformRuleSet '${targetTransform.name}'.")
+                    else -> {
+                        _issues.error(null, "In 'where' clause, cannot find rule '${where.possiblyQualifiedName}' in TransformRuleSet '${targetTransform.name}'.")
+                        matchedVariables
+                    }
                 }
             }
 
-            else -> _issues.error(null, "Cannot execute the 'where' clause.")
+            else -> {
+                _issues.error(null, "Cannot execute the 'where' clause.")
+                matchedVariables
+            }
         }
     }
-
 
     suspend fun createFromRhs(variables: Map<String, TypedObject<OT>>, rhs: PropertyTemplateRhs, tgtObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>): TypedObject<OT> = when (rhs) {
         is PropertyTemplateExpression -> createFromPropertyPatternExpression(variables, rhs, tgtObjectGraph)
@@ -635,11 +670,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
     /**
      * returns value of expression evaluated in context of provided variables
      */
-    suspend fun createFromPropertyPatternExpression(
-        variables: Map<String, TypedObject<OT>>,
-        ppe: PropertyTemplateExpression,
-        tgtObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>
-    ): TypedObject<OT> {
+    suspend fun createFromPropertyPatternExpression(variables: Map<String, TypedObject<OT>>, ppe: PropertyTemplateExpression, tgtObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>): TypedObject<OT> {
         val expr = ppe.expression
         val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending<OT>(tgtObjectGraph, _issues)
         val evc = EvaluationContext.of(variables)
@@ -663,6 +694,5 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         }
         return obj
     }
-
 
 }

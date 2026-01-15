@@ -85,11 +85,11 @@ grammar $NAME : Base {
     when = 'when' '{' expression '}' ;
     where = 'where' '{' expression '}' ;
 
-    propertyTemplateRhs = expression | objectTemplate | collectionTemplate ;
+    propertyTemplateRhs =  objectTemplate | collectionTemplate | expression ;
     objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
     propertyTemplateBlock = '{' propertyTemplate*  '}';
     propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
-    collectionTemplate = '[' ('...')? propertyTemplateRhs* ']' ;
+    collectionTemplate = '[' ('...')? [propertyTemplateRhs / ',' ]* ']' ;
 
     leaf DOMAIN_NAME := IDENTIFIER ;
     leaf domainReference := IDENTIFIER ;
@@ -236,15 +236,15 @@ grammar $NAME : Base {
                     concatenation("where") { lit("where"); lit("{"); ref("expression"); lit("}") }
 
                     choice("propertyTemplateRhs") {
-                        ref("expression")
                         ref("objectTemplate")
                         ref("collectionTemplate")
+                        ref("expression")
                     }
                     concatenation("objectTemplate") { opt { grp { ref("variableName"); lit(":") } }; ref("typeReference"); ref("propertyTemplateBlock") }
                     concatenation("propertyTemplateBlock") { lit("{"); lst(0, -1) { ref("propertyTemplate") }; lit("}") }
                     concatenation("propertyTemplate") { ref("propertyReference"); lit("=="); ref("propertyTemplateRhs") }
                     concatenation("collectionTemplate") {
-                        lit("["); opt { lit("...") }; lst(0, -1) { ref("propertyTemplateRhs") }; lit("]")
+                        lit("["); opt { lit("...") }; spLst(0, -1) { ref("propertyTemplateRhs"); lit(",") }; lit("]")
                     }
 
                     concatenation("domainReference", isLeaf = true) { ref("IDENTIFIER") }

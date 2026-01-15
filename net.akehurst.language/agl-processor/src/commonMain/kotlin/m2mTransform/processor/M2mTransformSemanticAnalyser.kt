@@ -56,6 +56,11 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                         }
                     }
                     def.rule.forEach { (k, v) ->
+                        v.extends.forEach { e ->
+                            def.rule[e.nameOrQName.simpleName]?.let { //TODO: support qnames !
+                                e.resolveAs(it)
+                            }
+                        }
                         v.domainSignature.forEach { (dk, dv) ->
                             val typesDomain = def.domainParameterResolved[dv.domainRef]
                             if (null == typesDomain) {

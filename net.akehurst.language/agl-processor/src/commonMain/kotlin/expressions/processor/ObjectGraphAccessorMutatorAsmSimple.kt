@@ -406,7 +406,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                 }
 
                 else -> {
-                    issues.error(null, "getProperty property '$propertyName' not found on object of type '${tobj.type.typeName}'")
+                    issues.warn(null, $$"getProperty property '$$propertyName' not found on object of type '$${tobj.type.typeName}', using value '$nothing'")
                     nothing()
                 }
             }

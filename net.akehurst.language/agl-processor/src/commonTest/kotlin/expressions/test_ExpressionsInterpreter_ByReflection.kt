@@ -367,6 +367,6 @@ class test_ExpressionsInterpreter_ByReflection {
         val self = TestObj("strValue", listOf("A", "B", "C"), listOf(TestObjA("A"), TestObjA("B"), TestObjA("C")))
         val expected = listOf("A", "B", "C")
 
-        test(tm, self, "ns.TestObj", "propListA.map() {it.prop1}", expected)
+        test(tm, self, "ns.TestObj", "propListA.map({it.prop1})", expected)
     }
 }

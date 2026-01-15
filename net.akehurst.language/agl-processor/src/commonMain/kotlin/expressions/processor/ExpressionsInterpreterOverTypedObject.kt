@@ -81,7 +81,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
             else -> evc.getOrInParent(expression.name)
                 ?: evc.self?.let { evaluatePropertyName(it, PropertyName(expression.name)) }
                 ?: let {
-                    issues.error(null, "Evaluation Context does not contain '${expression.name}' and there is no 'self' object with that property name")
+                    issues.warn(null, $$"Evaluation Context does not contain root expression '$${expression.name}' and there is no '$self' object with that property name, using value '$nothing'")
                     objectGraph.nothing()
                 }
         }
@@ -91,7 +91,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         // the name must exist as a property of the self which must be a tuple
         return evc.getOrInParent(name)
             ?: evc.self?.let { evaluatePropertyName(it, PropertyName(name)) }
-            ?: error("Evaluation Context does not contain '$name' and there is no 'self' object with that property name")
+            ?: error($$"Evaluation Context does not contain special value '$$name' and there is no '$self' object with that property name")
     }
 
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject<SelfType> =
