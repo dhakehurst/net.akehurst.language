@@ -10,7 +10,8 @@ jsIntegration = "2.2.21-SNAPSHOT"
 vanniktech = "0.35.0"
 
 korlibs = "6.0.2"
-kotest = "6.0.4"
+kotest = "6.0.7"
+ksp = "2.2.21-2.0.4"
 kotlinx-coroutines = "1.10.2"
 
 [libraries]
@@ -29,9 +30,11 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotest = { id = "io.kotest", version.ref = "kotest" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" } # needed for kotest
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 exportPublic = { id = "net.akehurst.kotlin.gradle.plugin.exportPublic", version.ref = "exportPublic" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
-reflex = { id ="net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref="nak-kotlinx" }
-jsIntegration =  { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }
-vanniktech-maven-publish = { id="com.vanniktech.maven.publish", version.ref="vanniktech" }
+reflex = { id = "net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref = "nak-kotlinx" }
+jsIntegration = { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech" }

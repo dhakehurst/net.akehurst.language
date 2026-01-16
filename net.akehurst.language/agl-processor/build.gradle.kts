@@ -1,5 +1,7 @@
 plugins {
     id("project-conventions")
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotest)
     //alias(libs.plugins.reflex)
 }
 
@@ -44,7 +46,11 @@ kotlin {
                 api(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
             }
         }
-
+        commonTest {
+            dependencies {
+                implementation(libs.kotest.framework.engine)
+            }
+        }
 
         commonTest.configure {
             // add language repository so we can test the grammars with specific sentences here

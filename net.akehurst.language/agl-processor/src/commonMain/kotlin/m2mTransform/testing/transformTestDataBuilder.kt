@@ -86,7 +86,7 @@ class M2MTransformTestSuitBuilder(
 
     fun testCase(description: String, init: M2MTransformTestCaseBuilder.() -> Unit) {
         check(_testCase.containsKey(description).not()) { "Duplicate test suit: '$description'" }
-        val b = M2MTransformTestCaseBuilder(description)
+        val b = M2MTransformTestCaseBuilder(description,_typeDomains)
         b.init()
         _testCase[description] = b.build()
     }
@@ -100,7 +100,8 @@ class M2MTransformTestSuitBuilder(
 
 @M2MTransformTestSuitDslMarker
 class M2MTransformTestCaseBuilder(
-    val description: String
+    val description: String,
+    val typeDomains: Map<DomainReference, TypesDomain>
 ) {
 
     private val _input = mutableMapOf<DomainReference, Asm>()
@@ -108,7 +109,7 @@ class M2MTransformTestCaseBuilder(
     private var _expected:Asm? = null
 
     fun input(
-        domainReference: String, typesDomain: TypesDomain = typesDomain("StdLib", false) {},
+        domainReference: String,
         defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
         crossReferenceDomain: CrossReferenceDomain = CrossReferenceDomainDefault(SimpleName("CrossReference")),
         sentenceId: Any? = null,
@@ -119,14 +120,16 @@ class M2MTransformTestCaseBuilder(
         resolvedReferences: MutableList<ResolvedReference> = mutableListOf(),
         init: AsmSimpleBuilder.() -> Unit
     ) {
+        val dr = DomainReference(domainReference)
+        val typesDomain: TypesDomain = this.typeDomains[dr]!!
         val defNs = typesDomain.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
         val b = AsmSimpleBuilder(typesDomain, defNs, crossReferenceDomain, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
         b.init()
-        _input[DomainReference(domainReference)] = b.build()
+        _input[dr] = b.build()
     }
 
     fun target(
-        domainReference: String, typesDomain: TypesDomain = typesDomain("StdLib", false) {},
+        domainReference: String,
         defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
         crossReferenceDomain: CrossReferenceDomain = CrossReferenceDomainDefault(SimpleName("CrossReference")),
         sentenceId: Any? = null,
@@ -137,10 +140,12 @@ class M2MTransformTestCaseBuilder(
         resolvedReferences: MutableList<ResolvedReference> = mutableListOf(),
         init: AsmSimpleBuilder.() -> Unit
     ) {
+        val dr = DomainReference(domainReference)
+        val typesDomain: TypesDomain = this.typeDomains[dr]!!
         val defNs = typesDomain.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
         val b = AsmSimpleBuilder(typesDomain, defNs, crossReferenceDomain, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
         b.init()
-        _target = DomainReference(domainReference)
+        _target = dr
         _expected = b.build()
     }
 

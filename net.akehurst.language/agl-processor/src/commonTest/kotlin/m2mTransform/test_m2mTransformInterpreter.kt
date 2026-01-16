@@ -17,28 +17,46 @@
 
 package net.akehurst.language.m2mTransform.processor
 
+import io.kotest.core.spec.style.FunSpec
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.m2mTransform.testing.TransformTestCase
+import net.akehurst.language.agl.m2mTransform.testing.TransformTestSuit
 import net.akehurst.language.agl.m2mTransform.testing.m2mTransformTestSuits
 import net.akehurst.language.agl.simple.SentenceContextAny
-import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.expressions.processor.TypedObjectAsmValue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.types.api.PropertyCharacteristic
-import net.akehurst.language.types.api.TypesDomain
-import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_m2mTransformInterpreter {
+class test_m2mTransformInterpreter : FunSpec({
+    testSuits.forEach { (_, suite) ->
+        context(suite.description) {
+            suite.testCase.forEach { (_, case) ->
+                test(case.description) {
+                    doTest2(suite, case)
+                }
+            }
+        }
+    }
+
+    test("single") {
+        val suite = testSuits["Full umlRdbms QVT example"]
+        val case = suite!!.testCase.values.first()
+        doTest2(suite, case)
+    }
+
+}) {
+
+//class test_m2mTransformInterpreter {
     private companion object Companion {
 
-        val testSuit2 = m2mTransformTestSuits {
+        val testSuits = m2mTransformTestSuits {
             testSuit("1 matching top mapping to 1 String input 1 gives literal String result") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
@@ -63,7 +81,7 @@ class test_m2mTransformInterpreter {
                     input("d1") {
                         string("Any")
                     }
-                    target("dr2") {
+                    target("d2") {
                         string("Hello World!")
                     }
                 }
@@ -93,18 +111,18 @@ class test_m2mTransformInterpreter {
                         string("Any1")
                         string("Any2")
                     }
-                    target("dr2") {
+                    target("d2") {
                         string("Hello Any1")
                         string("Hello Any2")
                     }
                 }
             }
             testSuit("2 matching top mapping to 2 String input 2 give 4 results") {
-                typesDomain("dr1", "Domain1", true) {
+                typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                     }
                 }
-                typesDomain("dr2", "Domain2", true) {
+                typesDomain("d2", "Domain2", true) {
                     namespace("n2") {
                     }
                 }
@@ -128,7 +146,7 @@ class test_m2mTransformInterpreter {
                         string("Any1")
                         string("Any2")
                     }
-                    target("dr2") {
+                    target("d2") {
                         string("Hello Any1 from A")
                         string("Hello Any2 from A")
                         string("Hello Any1 from B")
@@ -137,15 +155,16 @@ class test_m2mTransformInterpreter {
                 }
             }
             testSuit("2 matching top mapping to one of each 2 String input 2 gives 2 literal String result") {
-                typesDomain("d1","Domain1", true) {
+                typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                     }
                 }
-                typesDomain("d2","Domain2", true) {
+                typesDomain("d2", "Domain2", true) {
                     namespace("n2") {
                     }
                 }
-                transform($$"""
+                transform(
+                    $$"""
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A {
@@ -157,34 +176,36 @@ class test_m2mTransformInterpreter {
                             domain d2 a2:String := 'Hello World B!'
                         }
                     }
-                """)
+                """
+                )
                 testCase("") {
                     input("d1") {
                         string("A")
                         string("B")
                     }
-                    target("dr2") {
+                    target("d2") {
                         string("Hello World A!")
                         string("Hello World B!")
                     }
                 }
             }
             testSuit("simple mapping") {
-                typesDomain("d2","Domain1", true) {
+                typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("A1") {
                             propertyOf(emptySet(), "prop1", "String")
                         }
                     }
                 }
-                typesDomain("d1","Domain2", true) {
+                typesDomain("d2", "Domain2", true) {
                     namespace("n2") {
                         data("A2") {
                             propertyOf(emptySet(), "prop2", "String")
                         }
                     }
                 }
-                transform($$"""
+                transform(
+                    $$"""
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A12A2 {
@@ -192,14 +213,15 @@ class test_m2mTransformInterpreter {
                             domain d2 a2:A2 := A2() { prop2 := v }
                         }
                     }
-                """)
+                """
+                )
                 testCase("") {
                     input("d1") {
                         element("A1") {
                             propertyString("prop1", "value1")
                         }
                     }
-                    target("d2"){
+                    target("d2") {
                         element("A2") {
                             propertyString("prop2", "value1")
                         }
@@ -207,21 +229,22 @@ class test_m2mTransformInterpreter {
                 }
             }
             testSuit("simple mapping set from navigation") {
-                typesDomain("d1","Domain1", true) {
+                typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("A1") {
                             propertyOf(emptySet(), "prop1", "String")
                         }
                     }
                 }
-                typesDomain("d2","Domain2", true) {
+                typesDomain("d2", "Domain2", true) {
                     namespace("n2") {
                         data("A2") {
                             propertyOf(emptySet(), "prop2", "String")
                         }
                     }
                 }
-                transform($$"""
+                transform(
+                    $$"""
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A12A2 {
@@ -229,47 +252,23 @@ class test_m2mTransformInterpreter {
                             domain d2 a2:A2 := A2() { prop2 := a1.prop1 }
                         }
                     }
-                """)
+                """
+                )
                 testCase("") {
                     input("d1") {
                         element("A1") {
                             propertyString("prop1", "value1")
                         }
                     }
-                    target("d2"){
+                    target("d2") {
                         element("A2") {
                             propertyString("prop2", "value1")
                         }
                     }
                 }
             }
-            testSuit("") {
-                typesDomain(){}
-                typesDomain(){}
-                transform($$"""
-                    """)
-                testCase("") {
-                    input("d1") {}
-                    target("d2"){}
-                }
-            }
-            testSuit("") {
-                typesDomain(){}
-                typesDomain(){}
-                transform($$"""
-                    """)
-                testCase("") {
-                    input("d1") {}
-                    target("d2"){}
-                }
-            }
-        }
-
-        val testSuitList = listOf(
-            TestDataTransform("nested match").also {
-                val dr1 = DomainReference("d1")
-                val dr2 = DomainReference("d2")
-                val tm1 = typesDomain("Domain1", true) {
+            testSuit("nested match") {
+                typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("A1") {
                             propertyOf(emptySet(), "prop1", "B1")
@@ -282,16 +281,15 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                val tm2 = typesDomain("Domain2", true) {
+                typesDomain("d2", "Domain2", true) {
                     namespace("n2") {
                         data("A2") {
                             propertyOf(emptySet(), "prop2", "String")
                         }
                     }
                 }
-                it.typeDomains[dr1] = tm1
-                it.typeDomains[dr2] = tm2
-                it.transform = """
+                transform(
+                    $$"""
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A12A2 {
@@ -306,27 +304,27 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 """
-                it.input[dr1] = asmSimple(tm1) {
-                    element("A1") {
-                        propertyElementExplicitType("prop1", "B1") {
-                            propertyElementExplicitType("prop2", "C1") {
-                                propertyString("prop3", "value")
+                )
+                testCase("") {
+                    input("d1") {
+                        element("A1") {
+                            propertyElementExplicitType("prop1", "B1") {
+                                propertyElementExplicitType("prop2", "C1") {
+                                    propertyString("prop3", "value")
+                                }
                             }
                         }
                     }
-                }
-                it.target = dr2
-                it.expected = asmSimple(tm2) {
-                    element("A2") {
-                        propertyString("prop2", "value")
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value")
+                        }
                     }
                 }
-            },
+            }
             // collections
-            TestDataTransform("match 1 from Set").also {
-                val dr1 = DomainReference("d1")
-                val dr2 = DomainReference("d2")
-                val tm1 = typesDomain("Domain1", true) {
+            testSuit("match 1 from Set") {
+                typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("Class") {
                             propertyOf(emptySet(), "name", "String")
@@ -341,13 +339,12 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                val tm2 = typesDomain("Domain2", true) {
+                typesDomain("d2", "Domain2", true) {
                     namespace("n2") {
                     }
                 }
-                it.typeDomains[dr1] = tm1
-                it.typeDomains[dr2] = tm2
-                it.transform = """
+                transform(
+                    $$"""
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A12A2 {
@@ -365,41 +362,41 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 """
-                it.input[dr1] = asmSimple(tm1) {
-                    element("Class") {
-                        propertyString("name", "c1")
-                        propertyString("kind", "P")
-                        propertyListOfElement("attribute") {
-                            element("Attribute") {
-                                propertyString("name", "a1")
+                )
+                testCase("") {
+                    input("d1") {
+                        element("Class") {
+                            propertyString("name", "c1")
+                            propertyString("kind", "P")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a1")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a2")
+                                }
                             }
-                            element("Attribute") {
-                                propertyString("name", "a2")
+                        }
+                        element("Class") {
+                            propertyString("name", "c2")
+                            propertyString("kind", "T")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a3")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a4")
+                                }
                             }
                         }
                     }
-                    element("Class") {
-                        propertyString("name", "c2")
-                        propertyString("kind", "T")
-                        propertyListOfElement("attribute") {
-                            element("Attribute") {
-                                propertyString("name", "a3")
-                            }
-                            element("Attribute") {
-                                propertyString("name", "a4")
-                            }
-                        }
+                    target("d2") {
+                        string("c1 contains a1")
                     }
                 }
-                it.target = dr2
-                it.expected = asmSimple(tm2) {
-                    string("c1 contains a1")
-                }
-            },
-            TestDataTransform("match 2 from Set").also {
-                val dr1 = DomainReference("d1")
-                val dr2 = DomainReference("d2")
-                val tm1 = typesDomain("Domain1", true) {
+            }
+            testSuit("match 2 from Set") {
+                typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("Class") {
                             propertyOf(emptySet(), "name", "String")
@@ -414,13 +411,12 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                val tm2 = typesDomain("Domain2", true) {
+                typesDomain("d2", "Domain2", true) {
                     namespace("n2") {
                     }
                 }
-                it.typeDomains[dr1] = tm1
-                it.typeDomains[dr2] = tm2
-                it.transform = """
+                transform(
+                    $$"""
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A12A2 {
@@ -438,42 +434,42 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 """
-                it.input[dr1] = asmSimple(tm1) {
-                    element("Class") {
-                        propertyString("name", "c1")
-                        propertyString("kind", "P")
-                        propertyListOfElement("attribute") {
-                            element("Attribute") {
-                                propertyString("name", "a1")
+                )
+                testCase("") {
+                    input("d1") {
+                        element("Class") {
+                            propertyString("name", "c1")
+                            propertyString("kind", "P")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a1")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a2")
+                                }
                             }
-                            element("Attribute") {
-                                propertyString("name", "a2")
+                        }
+                        element("Class") {
+                            propertyString("name", "c2")
+                            propertyString("kind", "T")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a3")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a4")
+                                }
                             }
                         }
                     }
-                    element("Class") {
-                        propertyString("name", "c2")
-                        propertyString("kind", "T")
-                        propertyListOfElement("attribute") {
-                            element("Attribute") {
-                                propertyString("name", "a3")
-                            }
-                            element("Attribute") {
-                                propertyString("name", "a4")
-                            }
-                        }
+                    target("d2") {
+                        string("c1 contains a1")
+                        string("c1 contains a2")
                     }
                 }
-                it.target = dr2
-                it.expected = asmSimple(tm2) {
-                    string("c1 contains a1")
-                    string("c1 contains a2")
-                }
-            },
-            TestDataTransform("match exact Collection").also {
-                val dr1 = DomainReference("d1")
-                val dr2 = DomainReference("d2")
-                val tm1 = typesDomain("Domain1", true) {
+            }
+            testSuit("match exact Collection") {
+                typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("Class") {
                             propertyOf(emptySet(), "name", "String")
@@ -488,67 +484,66 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                val tm2 = typesDomain("Domain2", true) {
+                typesDomain("d2", "Domain2", true) {
                     namespace("n2") {
                     }
                 }
-                it.typeDomains[dr1] = tm1
-                it.typeDomains[dr2] = tm2
-                it.transform = """
-                    namespace test
-                    transform Test(d1:Domain1, d2:Domain2) {
+                transform(
+                    $$"""
+                            namespace test
+                            transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A12A2 {
                             domain d1 c1:Class {
-                               name == X
-                               attribute == [
-                                 a3:Attribute {
-                                   name == 'a3'
-                                 },
-                                 a4:Attribute {
-                                   name == 'a4'
-                                 }
-                               ]
-                            }
+                            name == X
+                            attribute == [
+                                a3:Attribute {
+                            name == 'a3'
+                        },
+                            a4:Attribute {
+                            name == 'a4'
+                        }
+                            ]
+                        }
                             domain d2 a2:String := c1.name + a3.name + a4.name
                         }
                     }
-                """
-                it.input[dr1] = asmSimple(tm1) {
-                    element("Class") {
-                        propertyString("name", "c1")
-                        propertyString("kind", "P")
-                        propertyListOfElement("attribute") {
-                            element("Attribute") {
-                                propertyString("name", "a1")
+                    """
+                )
+                testCase("") {
+                    input("d1") {
+                        element("Class") {
+                            propertyString("name", "c1")
+                            propertyString("kind", "P")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a1")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a2")
+                                }
                             }
-                            element("Attribute") {
-                                propertyString("name", "a2")
+                        }
+                        element("Class") {
+                            propertyString("name", "c2")
+                            propertyString("kind", "T")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a3")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a4")
+                                }
                             }
                         }
                     }
-                    element("Class") {
-                        propertyString("name", "c2")
-                        propertyString("kind", "T")
-                        propertyListOfElement("attribute") {
-                            element("Attribute") {
-                                propertyString("name", "a3")
-                            }
-                            element("Attribute") {
-                                propertyString("name", "a4")
-                            }
-                        }
+                    target("d2") {
+                        string("c2a3a4")
                     }
                 }
-                it.target = dr2
-                it.expected = asmSimple(tm2) {
-                    string("c2a3a4")
-                }
-            },
+            }
             // qvt example
-            TestDataTransform("umlRdbms QVT example - PackageToSchema").also {
-                val dr1 = DomainReference("uml")
-                val dr2 = DomainReference("rdbms")
-                val tm1 = typesDomain("SimpleUML", true) {
+            testSuit("umlRdbms QVT example - PackageToSchema") {
+                typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
                             propertyOf(setOf(CMP, VAR), "name", "String")
@@ -602,7 +597,7 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                val tm2 = typesDomain("SimpleRDBMS", true) {
+                typesDomain("rdbms", "SimpleRDBMS", true) {
                     namespace("rdbms") {
                         data("RModelElement") {
                             propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
@@ -649,9 +644,8 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                it.typeDomains[dr1] = tm1
-                it.typeDomains[dr2] = tm2
-                it.transform = """
+                transform(
+                    $$"""
                     namespace test
                     transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
                         /* map each package to a schema */
@@ -661,23 +655,23 @@ class test_m2mTransformInterpreter {
                             domain rdbms s:Schema { name==pn }
                         }
                     }
-                """.trimIndent()
-                it.input[dr1] = asmSimple(tm1) {
-                    element("Package") {
-                        propertyString("name", "pkg1")
+                """
+                )
+                testCase("") {
+                    input("uml") {
+                        element("Package") {
+                            propertyString("name", "pkg1")
+                        }
+                    }
+                    target("rdbms") {
+                        element("Schema") {
+                            propertyString("name", "pkg1")
+                        }
                     }
                 }
-                it.target = dr2
-                it.expected = asmSimple(tm2) {
-                    element("Schema") {
-                        propertyString("name", "pkg1")
-                    }
-                }
-            },
-            TestDataTransform("umlRdbms QVT example - top table PrimitiveUmlTypeToSqlType").also {
-                val dr1 = DomainReference("uml")
-                val dr2 = DomainReference("rdbms")
-                val tm1 = typesDomain("SimpleUML", true) {
+            }
+            testSuit("umlRdbms QVT example - top table PrimitiveUmlTypeToSqlType") {
+                typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
                             propertyOf(setOf(CMP, VAR), "name", "String")
@@ -731,7 +725,7 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                val tm2 = typesDomain("SimpleRDBMS", true) {
+                typesDomain("rdbms", "SimpleRDBMS", true) {
                     namespace("rdbms") {
                         data("RModelElement") {
                             propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
@@ -778,9 +772,8 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                it.typeDomains[dr1] = tm1
-                it.typeDomains[dr2] = tm2
-                it.transform = """
+                transform(
+                    $$"""
                     namespace test
                     transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
                         top table PrimitiveUmlTypeToSqlType {
@@ -791,21 +784,21 @@ class test_m2mTransformInterpreter {
                             values uml.PrimitiveDataType(){ name := 'String'}  to  'VARCHAR'
                         }
                     }
-                """.trimIndent()
-                it.input[dr1] = asmSimple(tm1) {
-                    element("PrimitiveDataType") {
-                        propertyString("name", "Boolean")
+                """
+                )
+                testCase("") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "Boolean")
+                        }
+                    }
+                    target("rdbms") {
+                        string("BOOLEAN")
                     }
                 }
-                it.target = dr2
-                it.expected = asmSimple(tm2) {
-                    string("BOOLEAN")
-                }
-            },
-            TestDataTransform("umlRdbms QVT example - abstract PrimitiveUmlTypeToSqlType").also {
-                val dr1 = DomainReference("uml")
-                val dr2 = DomainReference("rdbms")
-                val tm1 = typesDomain("SimpleUML", true) {
+            }
+            testSuit("umlRdbms QVT example - abstract PrimitiveUmlTypeToSqlType") {
+                typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
                             propertyOf(setOf(CMP, VAR), "name", "String")
@@ -859,7 +852,7 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                val tm2 = typesDomain("SimpleRDBMS", true) {
+                typesDomain("rdbms", "SimpleRDBMS", true) {
                     namespace("rdbms") {
                         data("RModelElement") {
                             propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
@@ -906,9 +899,8 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                it.typeDomains[dr1] = tm1
-                it.typeDomains[dr2] = tm2
-                it.transform = """
+                transform(
+                    $$"""
                     namespace test
                     transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
                         abstract top rule PrimitiveUmlTypeToSqlType {
@@ -928,21 +920,21 @@ class test_m2mTransformInterpreter {
                             domain rdbms ct:String == 'VARCHAR'
                         }
                     }
-                """.trimIndent()
-                it.input[dr1] = asmSimple(tm1) {
-                    element("PrimitiveDataType") {
-                        propertyString("name", "Boolean")
+                """
+                )
+                testCase("") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "Boolean")
+                        }
+                    }
+                    target("rdbms") {
+                        string("BOOLEAN")
                     }
                 }
-                it.target = dr2
-                it.expected = asmSimple(tm2) {
-                    string("BOOLEAN")
-                }
-            },
-            TestDataTransform("umlRdbms QVT example").also {
-                val dr1 = DomainReference("uml")
-                val dr2 = DomainReference("rdbms")
-                val tm1 = typesDomain("SimpleUML", true) {
+            }
+            testSuit("Full umlRdbms QVT example") {
+                typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
                             propertyOf(setOf(CMP, VAR), "name", "String")
@@ -996,7 +988,7 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                val tm2 = typesDomain("SimpleRDBMS", true) {
+                typesDomain("rdbms", "SimpleRDBMS", true) {
                     namespace("rdbms") {
                         data("RModelElement") {
                             propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
@@ -1043,9 +1035,8 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                it.typeDomains[dr1] = tm1
-                it.typeDomains[dr2] = tm2
-                it.transform = """
+                transform(
+                    $$"""
                     namespace test
                     transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
                         /* map each package to a schema */
@@ -1129,21 +1120,79 @@ class test_m2mTransformInterpreter {
                             values uml.PrimitiveDataType(){ name := 'String'}  to  'VARCHAR'
                         }
                     }
-                """.trimIndent()
-                it.input[dr1] = asmSimple(tm1) {
-                    element("Package") {
-                        propertyString("name", "pkg1")
+                """
+                )
+                testCase("empty package") {
+                    input("uml") {
+                        element("Package") {
+                            propertyString("name", "pkg1")
+                        }
                     }
-                }
-                it.target = dr2
-                it.expected = asmSimple(tm2) {
-                    element("Schema") {
-                        propertyString("name", "pkg1")
+                    target("rdbms") {
+                        element("Schema") {
+                            propertyString("name", "pkg1")
+                        }
                     }
                 }
             }
-        )
+        }
 
+        fun doTest2(suite: TransformTestSuit, case: TransformTestCase) {
+            println("****** ${suite.description} : ${case.description} ******")
+            suite.typeDomains.forEach { (k, v) ->
+                println("----- ${k.value} : ${v.name.value} -----")
+                println(v.asString())
+            }
+            val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+            val context = SentenceContextAny()
+            suite.typeDomains.forEach { (k, v) ->
+                context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
+            }
+            val res = Agl.registry.agl.m2mTransform.processor!!.process(
+                suite.transform,
+                options = Agl.options {
+                    semanticAnalysis {
+                        context(context)
+                    }
+                }
+            )
+            val m2m = res.let {
+                check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
+                it.asm!!
+            }
+            val ogs = suite.typeDomains.entries.associate { (k, v) ->
+                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues))
+            }
+            val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
+
+            val source = case.input.entries.associate { (k, v) ->
+                println("----- Source ${k.value} -----")
+                val sourceObjects = v.root.map { obj ->
+                    println(obj.asString())
+                    val srcTypeDomain = suite.typeDomains[k]!!
+                    ogs[srcTypeDomain.name]!!.let {
+                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
+                        TypedObjectAsmValue(td.type(), obj)
+                    }
+                }
+                Pair(k, sourceObjects)
+            }
+            val tgtTransform = m2m.allTransformRuleSet.first()
+            val trRes = interpreter.transform(tgtTransform, case.target!!, source)
+            println("----- M2M Transform Result -----")
+            println(trRes.asString())
+            assertTrue(trRes.issues.errors.isEmpty(), trRes.issues.toString())
+            val expected = case.expected
+            if (null != expected) {
+                for (i in expected.root.indices) {
+                    val exp = expected.root[i]
+                    val act = trRes.targets[i]
+                    assertEquals(exp.asString(), act.asString())
+                }
+            }
+        }
+
+/*
         fun doTest(index: Int) {
             val testData = testSuitList[index]!!
             println("****** [$index] ${testData.description} ******")
@@ -1199,18 +1248,23 @@ class test_m2mTransformInterpreter {
                 }
             }
         }
+*/
 
     }
 
-    @Test
+/*    @Test
     fun testAll() {
-        testSuitList.forEachIndexed { idx, it ->
-            doTest(idx)
+        testSuits.values.forEach { suite ->
+            suite.testCase.values.forEach { case ->
+                doTest2(suite, case)
+            }
         }
     }
 
     @Test
     fun single() {
-        doTest(13)
-    }
+        val suite = testSuits["Full umlRdbms QVT example"]
+        val case = suite!!.testCase.values.first()
+        doTest2(suite, case)
+    }*/
 }
