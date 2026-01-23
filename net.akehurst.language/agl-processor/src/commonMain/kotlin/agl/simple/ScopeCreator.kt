@@ -202,8 +202,12 @@ class ScopeCreator<ItemInScopeType : Any>(
         }
         val notSameLocation = existingItems.filter { it.location != this.locationMap[el]?.sentenceIdentity }
         when {
-            notSameLocation.isEmpty() -> scope.addToScope(referableName, el.qualifiedTypeName, this.locationMap[el]?.sentenceIdentity, scopeItem, replaceIfItemAlreadyExistsInScope)
-            //existingItems.all { it.item != scopeItem } -> scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
+            notSameLocation.isEmpty() -> {
+                scope.addToScope(referableName, el.qualifiedTypeName, this.locationMap[el]?.sentenceIdentity, scopeItem, replaceIfItemAlreadyExistsInScope)
+                // can also set the semantic identity of the AsmStructure
+                el.setSemanticQualifiedPath(scope.scopePath+referableName)
+            }
+                //existingItems.all { it.item != scopeItem } -> scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
             else -> {
                 this.ifItemAlreadyExistsInScopeIssueKind?.let {
                     issues.raise(

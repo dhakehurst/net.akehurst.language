@@ -21,6 +21,7 @@ import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.asm.StdLibDefault
@@ -215,10 +216,13 @@ val AsmValue.raw: Any
         is AsmNothing -> Unit
         is AsmAny -> this.value
         is AsmPrimitive -> this.value
-        is AsmList -> this.elements.map { it.raw }
-        else -> {
-            TODO()
-        }
+        is AsmListSeparated -> this.elements.map { it.raw }.toSeparatedList()
+        is AsmListSimple -> this.elements.map { it.raw }
+        is AsmStructure -> this.property.values
+            .sortedBy { it.index }
+            .associate { pv -> Pair(pv.name.value,pv.value.raw) }
+        is AsmLambda -> TODO()
+        else -> error("Unknown subtype of AsmValue '${this::class.simpleName}'")
     }
 
 class AsmReferenceSimple(
@@ -268,6 +272,7 @@ class AsmStructureSimple(
 
     override var parsePath: String = "??"
     override var semanticPath: AsmPath? = null
+    override var semanticQualifiedPath: List<String>? = null ; private set
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
     override val propertyOrdered
@@ -290,6 +295,14 @@ class AsmStructureSimple(
             .filterNot { it.isReference }
             .flatMap { if (it.value is List<*>) it.value as List<*> else listOf(it.value) }
             .filterIsInstance<AsmStructureSimple>()
+
+
+    override fun qualifiedName(separator: String): String? =
+        semanticQualifiedPath?.joinToString(separator)
+
+    override fun setSemanticQualifiedPath(segments: List<String>) {
+        semanticQualifiedPath  = segments
+    }
 
     override fun hasProperty(name: PropertyValueName): Boolean = property.containsKey(name)
 

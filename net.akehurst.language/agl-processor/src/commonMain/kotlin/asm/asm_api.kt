@@ -81,6 +81,7 @@ interface AsmStructure : AsmValue {
     /** '/' separated String representation of ParsePath */
     val parsePath: String
     var semanticPath: AsmPath?
+    val semanticQualifiedPath:List<String>?
 
     val property: Map<PropertyValueName, AsmStructureProperty>
 
@@ -90,6 +91,12 @@ interface AsmStructure : AsmValue {
      * The value of the properties that are not references
      */
     val children: List<AsmValue>
+
+    fun setSemanticQualifiedPath(segments:List<String>)
+    /*
+        this will return null if the semanticQualifiedPath has not been set
+     */
+    fun qualifiedName(separator:String): String?
 
     /**
      * true if the value has the named property

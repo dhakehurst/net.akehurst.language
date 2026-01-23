@@ -153,7 +153,9 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private  fun identifyingValueInFor(inScopeNamed: SimpleName, self: AsmStructure): Any? =
-        identifyingValueInFor(_interpreter, crossReferenceDomain, inScopeNamed, self)
+    private  fun identifyingValueInFor(inScopeNamed: SimpleName, self: AsmStructure): Any? {
+        val id = identifyingValueInFor(_interpreter, crossReferenceDomain, inScopeNamed, self)
+        return id
+    }
 
 }

@@ -25,12 +25,13 @@ import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
 
-fun aut(rrs: RuleSet,
-        automatonKind: AutomatonKind,
-        userGoalRule: String,
-        isSkip: Boolean,
-        init: AutomatonBuilder.() -> Unit
-):Automaton = automaton(rrs as RuntimeRuleSet, automatonKind, userGoalRule, isSkip, init)
+fun aut(
+    rrs: RuleSet,
+    automatonKind: AutomatonKind,
+    userGoalRule: String,
+    isSkip: Boolean,
+    init: AutomatonBuilder.() -> Unit
+): Automaton = automaton(rrs as RuntimeRuleSet, automatonKind, userGoalRule, isSkip, init)
 
 internal fun automaton(
     rrs: RuntimeRuleSet,
@@ -62,14 +63,20 @@ internal class AutomatonBuilderDefault(
 
     override fun state(ruleNumber: Int, option: OptionNum, position: Int) { //TODO: maybe use OptionNum in the signature?
         when {
-            RuntimeRuleSet.GOAL_RULE_NUMBER == ruleNumber -> state(result.goalRule, option, position)
-            else -> state(rrs.runtimeRules[ruleNumber],  option, position)
+            RuntimeRuleSet.GOAL_RULE_NUMBER == ruleNumber -> result.createState(
+                listOf(
+                    RulePositionRuntime(result.goalRule, option, position)
+                )
+            )
+
+            else -> result.createState(
+                listOf(
+                    RulePositionRuntime(rrs.runtimeRules[ruleNumber], option, position)
+                )
+            )
         }
     }
 
-    override fun state(rp: RulePosition) {
-        result.createState(listOf(rp as RulePositionRuntime))
-    }
     internal fun state(rule: Rule) = state(rule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
     internal fun state(rule: Rule, option: OptionNum, position: Int) = result.createState(listOf(RulePositionRuntime(rule as RuntimeRule, option, position)))
 

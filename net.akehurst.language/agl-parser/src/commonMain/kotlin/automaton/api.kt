@@ -42,7 +42,6 @@ internal annotation class AglAutomatonDslMarker
 
 @AglAutomatonDslMarker
 interface AutomatonBuilder {
-    fun state(rp:RulePosition)
     fun state(ruleNumber:Int, option: OptionNum, position:Int)
     fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
 }

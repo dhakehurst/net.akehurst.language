@@ -406,7 +406,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                 }
 
                 else -> {
-                    issues.warn(null, $$"getProperty property '$$propertyName' not found on object of type '$${tobj.type.typeName}', using value '$nothing'")
+                    issues.warn(null, $$"in getProperty, property '$$propertyName' not found on object of type '$${tobj.type.typeName}', using value '$nothing'")
                     nothing()
                 }
             }
@@ -444,20 +444,28 @@ open class ObjectGraphAccessorMutatorAsmSimple(
 
     override fun executeMethod(tobj: TypedObject<AsmValue>, methodName: String, args: List<TypedObject<AsmValue>>): TypedObject<AsmValue> {
         //TODO: use executor
-        val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]!!
-        val type = tobj.type.resolvedDeclaration
-        val stdMeths = StdLibPrimitiveExecutionsForAsmSimple.method[type]
-        val ao = when (stdMeths) {
-            null -> TODO()
+        val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]
+        return when (methRes) {
+            null -> {
+                issues.warn(null, $$"in executeMethod, Method '$$methodName' not found on object of type '$${tobj.type.typeName}', using value '$nothing'")
+                nothing()
+            }
             else -> {
-                val methExec = stdMeths[methRes.original]
-                    ?: error("StdLibPrimitiveExecutionsForAsmSimple, not found for method '${methRes.name.value}' of TypeDeclaration '${type.qualifiedName}'")
-                val self = tobj.self
-                // val arguments = args.map { it.asmValue }
-                methExec.invoke(self, methRes, args)
+                val type = tobj.type.resolvedDeclaration
+                val stdMeths = StdLibPrimitiveExecutionsForAsmSimple.method[type]
+                val ao = when (stdMeths) {
+                    null -> TODO()
+                    else -> {
+                        val methExec = stdMeths[methRes.original]
+                            ?: error("StdLibPrimitiveExecutionsForAsmSimple, not found for method '${methRes.name.value}' of TypeDeclaration '${type.qualifiedName}'")
+                        val self = tobj.self
+                        // val arguments = args.map { it.asmValue }
+                        methExec.invoke(self, methRes, args)
+                    }
+                }
+                TypedObjectAsmValue(methRes.returnType, ao)
             }
         }
-        return TypedObjectAsmValue(methRes.returnType, ao)
     }
 
     override fun callFunction(functionName: String, args: List<TypedObject<AsmValue>>): TypedObject<AsmValue> {

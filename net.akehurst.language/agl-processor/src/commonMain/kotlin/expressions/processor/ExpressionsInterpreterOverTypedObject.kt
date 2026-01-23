@@ -509,7 +509,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
         val res = exprResult.type.conformsTo(tgtType)
-        return objectGraph.toTypedObject(res as SelfType)
+        return objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, res)
     }
 
     private fun evaluateGroup(evc: EvaluationContext<SelfType>, expression: GroupExpression): TypedObject<SelfType> {
