@@ -463,13 +463,14 @@ class M2mTransformInterpreter<OT : Any>(
                                 } ?: true
 
                                 if (whenResult) {
-                                    val varsAfterWhere = rule.where.map {
+                                    val varsAfterWhereList = rule.where.map {
                                         executeWhere(targetTransform, rule, it, targetDomainRef, allVars.matchedVariables, objectGraph)
                                     }
+                                    val varsAfterWhere = varsAfterWhereList.fold(mapOf<String, TypedObject<OT>>()) { acc, it -> acc + it }
                                     //TODO: add target of where to variables with correct name
 
                                     val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtOg, _issues)
-                                    val evc = EvaluationContext.of(allVars.matchedVariables)
+                                    val evc = EvaluationContext.of(varsAfterWhere)
                                     val r = exprInterp.evaluateExpression(evc, expression)
                                     val srcs = alt.entries.associate { (srcDomainRef, mr) ->
                                         val srcObjPat = rule.domainTemplate[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")

@@ -425,9 +425,9 @@ class test_m2mTransformInterpreter {
                             }
                         }
                         table StringConvert {
-                            domain  d1 :String  /**/ domain d1 :String
+                            domain  d1 :String  /**/ domain d2 :String
                             /*=======================================*/ 
-                            values 'value1'      to   'value1'
+                            values 'value1'      to   'value2'
                         } 
                     }
                 """
@@ -440,7 +440,7 @@ class test_m2mTransformInterpreter {
                     }
                     target("d2") {
                         element("A2") {
-                            propertyString("prop2", "value1")
+                            propertyString("prop2", "value2")
                         }
                     }
                 }
