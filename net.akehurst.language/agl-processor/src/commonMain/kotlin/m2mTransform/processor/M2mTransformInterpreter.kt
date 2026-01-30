@@ -34,6 +34,7 @@ import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutatorSuspending
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.collections.get
 
 data class M2MTransformResult<OT : Any>(
@@ -413,7 +414,7 @@ class M2mTransformInterpreter<OT : Any>(
         source: Map<DomainReference, List<TypedObject<OT>>>,
         objectGraph: Map<DomainReference, ObjectGraphAccessorMutator<OT>>,
     ): List<MappingRecord<OT>> {
-        val subrules = targetTransform.rule.values.filter { r -> r !is M2mTransformAbstractRule &&  r.conformsTo(rule) }
+        val subrules = targetTransform.rule.values.filter { r -> r !is M2mTransformAbstractRule && r.conformsTo(rule) }
         val records = subrules.flatMap { sr ->
             executeRule(targetTransform, sr, targetDomainRef, source, objectGraph)
         }
@@ -431,6 +432,7 @@ class M2mTransformInterpreter<OT : Any>(
         // for each domain reference get the match alternatives for each source object
         // Map of DomainReference -> List< TemplateMatchAlternatives per object >
         val domToListOfAlts = matchSourceVariables(rule, targetDomainRef, source, objectGraph)
+
         val res = when {
             domToListOfAlts.isEmpty() -> {
                 _issues.warn(null, "No matches found in source domains for rule '${rule.name}'.")
@@ -455,19 +457,31 @@ class M2mTransformInterpreter<OT : Any>(
 
                             else -> {
                                 val allVars = alt.values.merge()
-                                val varsAfterWhere = rule.where?.let { executeWhere( targetTransform, rule, it,targetDomainRef, allVars.matchedVariables, objectGraph) }
-                                //TODO: add target of where to variables with correct name
 
-                                val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtOg, _issues)
-                                val evc = EvaluationContext.of(allVars.matchedVariables)
-                                val r = exprInterp.evaluateExpression(evc, expression)
-                                val srcs = alt.entries.associate { (srcDomainRef, mr) ->
-                                    val srcObjPat = rule.domainTemplate[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")
-                                    val srcId = srcObjPat.identifier?.value ?: error("No identifier found for matched object in domain '$srcDomainRef'")
-                                    val src = mr.getValueNamed(srcId) ?: error("No matched object found for identifier '$srcId'")
-                                    Pair(srcDomainRef, src)
+                                val whenResult = rule.when_?.let {
+                                    executeWhen(targetTransform, rule, it, targetDomainRef, allVars.matchedVariables, objectGraph)
+                                } ?: true
+
+                                if (whenResult) {
+                                    val varsAfterWhere = rule.where.map {
+                                        executeWhere(targetTransform, rule, it, targetDomainRef, allVars.matchedVariables, objectGraph)
+                                    }
+                                    //TODO: add target of where to variables with correct name
+
+                                    val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtOg, _issues)
+                                    val evc = EvaluationContext.of(allVars.matchedVariables)
+                                    val r = exprInterp.evaluateExpression(evc, expression)
+                                    val srcs = alt.entries.associate { (srcDomainRef, mr) ->
+                                        val srcObjPat = rule.domainTemplate[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")
+                                        val srcId = srcObjPat.identifier?.value ?: error("No identifier found for matched object in domain '$srcDomainRef'")
+                                        val src = mr.getValueNamed(srcId) ?: error("No matched object found for identifier '$srcId'")
+                                        Pair(srcDomainRef, src)
+                                    }
+                                    srcs + Pair(targetDomainRef, r)
+                                } else {
+                                    _issues.info(null, "when clause evaluated to false for target domain ref '$targetDomainRef' of rule '${rule.name}'.")
+                                    emptyMap()
                                 }
-                                srcs + Pair(targetDomainRef, r)
                             }
                         }
                     }
@@ -501,7 +515,9 @@ class M2mTransformInterpreter<OT : Any>(
                     altSources.isEmpty() -> emptyList() //no match for this rule - a valid situation
                     else -> altSources.map { alt ->
                         val allVars = alt.values.merge()
-                        val varsAfterWhere = rule.where?.let { executeWhere( targetTransform, rule, it, targetDomainRef, allVars.matchedVariables, objectGraph) }
+                        val varsAfterWhere = rule.where.map {
+                            executeWhere(targetTransform, rule, it, targetDomainRef, allVars.matchedVariables, objectGraph)
+                        }
                         val objPat = rule.domainTemplate[targetDomainRef] ?: error("No object pattern found for domain '$targetDomainRef'")
                         val r = createFromRhs(allVars.matchedVariables, objPat, tgtOg)
                         val srcs = alt.entries.associate { (srcDomainRef, v) ->
@@ -682,93 +698,127 @@ class M2mTransformInterpreter<OT : Any>(
         return TemplateMatchAlternatives(result)
     }
 
+    fun executeWhen(
+        targetTransform: M2mTransformRuleSet,
+        owningRule: M2mTransformRule,
+        when_: Expression,
+        targetDomainRef: DomainReference,
+        matchedVariables: Map<String, TypedObject<OT>>,
+        objectGraph: Map<DomainReference, ObjectGraphAccessorMutator<OT>>,
+    ): Boolean {
+        // TODO: use an extended Expression evaluator that handles the RuleWhen options, so we can have compound when-expressions
+        return when (when_) {
+            is RuleWhenRelationHolds -> TODO()
+            is RuleWhenRelationHoldsForAll -> TODO()
+            is RuleWhenMappingHolds -> TODO()
+            is RuleWhenMappingHoldsForAll -> TODO()
+            else -> {
+                val srcOg = objectGraph.entries.filterNot { it.key == targetDomainRef }.first().value //should never be null!
+                val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(srcOg, _issues) //FIXME: which og to use? all might be needed!
+                val evc = EvaluationContext.of(matchedVariables)
+                val res = exprInterp.evaluateExpression(evc, when_)
+                when {
+                    res.type.conformsTo(StdLibDefault.Boolean) -> {
+                        srcOg.untyped(res) as Boolean
+                    }
+
+                    else -> TODO()
+                }
+            }
+        }
+    }
+
     /*
      * returns matchedVariables + variables set by executing the where
      */
     fun executeWhere(
         targetTransform: M2mTransformRuleSet,
         owningRule: M2mTransformRule,
-        where: Expression,
+        where: RuleWhere,
         targetDomainRef: DomainReference,
         matchedVariables: Map<String, TypedObject<OT>>,
         objectGraph: Map<DomainReference, ObjectGraphAccessorMutator<OT>>,
     ): Map<String, TypedObject<OT>> {
         return when (where) { //TODO: support more complex expressions - override the expression interpreter to intercept function calls as rule-calls
-            is FunctionCall -> {
-                val rule = targetTransform.rule[where.possiblyQualifiedName]
-                when {
-                    null != rule -> {
-                        val argsValues = where.arguments.mapIndexed { idx, argExpr ->
-                            val domainRef = rule.domainSignature.keys.elementAt(idx)
-                            Pair(domainRef, argExpr)
-                        }.associate { it }
-                        val source = (argsValues - targetDomainRef).mapValues { (k, v) ->
-                            val og = objectGraph[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-                            val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(og, _issues)
-                            val evc = EvaluationContext.of(matchedVariables)
-                            val res = exprInterp.evaluateExpression(evc, v)
-                            listOf(res)
-                        }
-                        val recList = executeRule(targetTransform, rule, targetDomainRef, source, objectGraph)
-                        val merged = recList.merge(rule)
-                        when(merged.alternatives.size) {
-                            0 -> {
-                                _issues.warn(null, "In rule '${owningRule.name.value}' the 'where' clause matched nothing.")
+            is RuleWhereCallRelation, is RuleWhereCallMapping -> where.resolved?.let { rule ->
+                val source = getSource(rule, targetDomainRef, where.arguments, matchedVariables, objectGraph)
+                val recList = executeRule(targetTransform, rule, targetDomainRef, source, objectGraph)
+                val merged = recList.merge(rule)
+                when (merged.alternatives.size) {
+                    0 -> {
+                        _issues.warn(null, "In rule '${owningRule.name.value}' the 'where' clause matched nothing.")
+                        matchedVariables
+                    }
+
+                    1 -> {
+                        val rec = merged
+                        val targetDomainRefIdx = rule.domainSignature.keys.indexOf(targetDomainRef)
+                        val targetArg = where.arguments.getOrNull(targetDomainRefIdx)
+                        when (targetArg) {
+                            null -> {
+                                _issues.error(
+                                    null,
+                                    "Argument for target domain '${targetDomainRef.value}' not found in rule call '${where.ruleName.value}' in 'where' clause of TransformRuleSet '${targetTransform.name}'."
+                                )
                                 matchedVariables
                             }
 
-                            1 -> {
-                                val rec = merged
-                                val targetDomainRefIdx = rule.domainSignature.keys.indexOf(targetDomainRef)
-                                val targetArg = where.arguments.getOrNull(targetDomainRefIdx)
-                                when (targetArg) {
-                                    null -> {
-                                        _issues.error(
-                                            null,
-                                            "Argument for target domain '${targetDomainRef.value}' not found in rule call '${where.possiblyQualifiedName}' in 'where' clause of TransformRuleSet '${targetTransform.name}'."
-                                        )
-                                        matchedVariables
-                                    }
-
-                                    is RootExpression -> {
-                                        when (rec.alternatives.size) {
-                                            0 -> TODO()
-                                            1 -> {
-                                                val tgtValue = rec.alternatives.first()[targetDomainRef]
-                                                when (tgtValue) {
-                                                    null -> TODO()
-                                                    else -> matchedVariables + Pair(targetArg.name, tgtValue)
-                                                }
-                                            }
-
-                                            else -> TODO()
+                            is RootExpression -> {
+                                when (rec.alternatives.size) {
+                                    0 -> TODO()
+                                    1 -> {
+                                        val tgtValue = rec.alternatives.first()[targetDomainRef]
+                                        when (tgtValue) {
+                                            null -> TODO()
+                                            else -> matchedVariables + Pair(targetArg.name, tgtValue)
                                         }
                                     }
 
-                                    else -> {
-                                        _issues.warn(
-                                            null,
-                                            "Argument for target domain '${targetDomainRef.value}' must be a variable, in rule call '${where.possiblyQualifiedName}' in 'where' clause of rule '${targetTransform.name.value}.${owningRule.name.value}'."
-                                        )
-                                        matchedVariables
-                                    }
+                                    else -> TODO()
                                 }
                             }
-                            else -> TODO("handle multiple matches from where")
+
+                            else -> {
+                                _issues.warn(
+                                    null,
+                                    "Argument for target domain '${targetDomainRef.value}' must be a variable, in rule call '${where.ruleName.value}' in 'where' clause of rule '${targetTransform.name.value}.${owningRule.name.value}'."
+                                )
+                                matchedVariables
+                            }
                         }
                     }
 
-                    else -> {
-                        _issues.error(null, "In 'where' clause, cannot find rule '${where.possiblyQualifiedName}' in TransformRuleSet '${targetTransform.name}'.")
-                        matchedVariables
-                    }
+                    else -> TODO("handle multiple matches from where")
                 }
+            } ?: run {
+                _issues.error(null, "In 'where' clause of rule '${owningRule.name.value}', rule '${where.ruleName.value}' is unresolved in '${targetTransform.name}'.")
+                matchedVariables
             }
 
             else -> {
                 _issues.error(null, "Cannot execute the 'where' clause.")
                 matchedVariables
             }
+        }
+    }
+
+    fun getSource(
+        rule: M2mTransformRule,
+        targetDomainRef: DomainReference,
+        arguments: List<Expression>,
+        matchedVariables: Map<String, TypedObject<OT>>,
+        objectGraph: Map<DomainReference, ObjectGraphAccessorMutator<OT>>,
+    ): Map<DomainReference, List<TypedObject<OT>>> {
+        val argsValues = arguments.mapIndexed { idx, argExpr ->
+            val domainRef = rule.domainSignature.keys.elementAt(idx)
+            Pair(domainRef, argExpr)
+        }.associate { it }
+        return (argsValues - targetDomainRef).mapValues { (k, v) ->
+            val og = objectGraph[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
+            val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(og, _issues)
+            val evc = EvaluationContext.of(matchedVariables)
+            val res = exprInterp.evaluateExpression(evc, v)
+            listOf(res)
         }
     }
 

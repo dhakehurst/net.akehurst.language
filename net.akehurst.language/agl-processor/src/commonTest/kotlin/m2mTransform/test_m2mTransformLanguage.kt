@@ -375,17 +375,18 @@ class test_m2mTransformLanguage {
                 typeDomains[dr2] = tm2
                 typeDomains[dr3] = tm3
             },
-            // where
+
+            // when
             TestData(
-                testName = "where",
+                testName = "when related",
                 sentence = """
                     namespace test
                     transform Test(d1:D1, d2:D2) {
                       top relation Rel1 {
                         domain d1 x:X {}
                         domain d2 y:Y {}
-                        where {
-                          Rel2(x,y)
+                        when {
+                          related Rel2(x,y)
                         }
                       }
                     }
@@ -410,6 +411,247 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+            TestData(
+                testName = "where related all",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        when {
+                          related all Rel2(x,y)
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "when mapped ",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        when {
+                          mapped Map2(x,y)
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "when mapped all",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        when {
+                          mapped all Map2(x,y)
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+
+            // where
+            TestData(
+                testName = "where relate",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          relate Rel2(x,y)
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "where relate all",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          relate all Rel2(x,y)
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "where map ",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          map Map2(x,y)
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "where map all",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          map all Map2(x,y)
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+
             // Templates - primitive
             TestData(
                 testName = "Pattern Template literal expression",
@@ -473,6 +715,7 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+
             // Templates - object
             TestData(
                 testName = "Pattern Template property literal string ",
@@ -606,6 +849,7 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+
             // collection template
             TestData(
                 testName = "Pattern Template collection template empty",
@@ -647,7 +891,7 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                       mapping Map1 {
                         domain d1 x:X {
-                          prop == ['a' 'b' 'c']
+                          prop == ['a', 'b', 'c']
                         }
                         domain d2 y:Y := A() {}
                       }
@@ -681,8 +925,8 @@ class test_m2mTransformLanguage {
                       mapping Map1 {
                         domain d1 x:X {
                           prop == [
-                            Object { p==b }
-                            o2: Object { p==b }
+                            Object { p==b },
+                            o2: Object { p==b },
                             Object { p==b }
                           ]
                         }
@@ -719,7 +963,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {
                           prop == [
                             ...
-                            o2: Object { p==b }
+                            o2: Object { p==b },
                             Object { p==b }
                           ]
                         }
@@ -851,7 +1095,6 @@ class test_m2mTransformLanguage {
 
     @Test
     fun parse() {
-        val processor = Agl.registry.agl.m2mTransform.processor!!
         for (td in testData) {
             println()
             println("--- ${td.testName} ---")

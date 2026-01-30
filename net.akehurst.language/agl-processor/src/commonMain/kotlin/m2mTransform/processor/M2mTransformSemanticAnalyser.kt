@@ -26,6 +26,10 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
+import net.akehurst.language.m2mTransform.api.M2mTransformPatternRule
+import net.akehurst.language.m2mTransform.api.RuleCall
+import net.akehurst.language.m2mTransform.api.RuleWhen
+import net.akehurst.language.m2mTransform.api.RuleWhere
 import net.akehurst.language.types.api.TypesDomain
 
 class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContextAny> {
@@ -56,6 +60,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                         }
                     }
                     def.rule.forEach { (k, v) ->
+                        // resolve extends references
                         v.extends.forEach { e ->
                             def.rule[e.nameOrQName.simpleName]?.let { //TODO: support qnames !
                                 e.resolveAs(it)
@@ -66,7 +71,21 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                             if (null == typesDomain) {
                                 _issues.error(null, "TypesDomain '${dv.domainRef}' not found in rule '${k}'")
                             } else {
-                                 dv.variable.resolveType(typesDomain)
+                                dv.variable.resolveType(typesDomain)
+                            }
+                        }
+                        // resolve where and when rule refs
+                        when (v) {
+                            is M2mTransformPatternRule -> {
+                                val wn = v.when_
+                                when(wn) {
+                                    is RuleCall -> def.rule[wn.ruleName]?.let { wn.resolveAs(it) }
+                                }
+                                v.where.forEach { w ->
+                                    when (w) {
+                                        is RuleCall -> def.rule[w.ruleName]?.let { w.resolveAs(it) }
+                                    }
+                                }
                             }
                         }
                     }

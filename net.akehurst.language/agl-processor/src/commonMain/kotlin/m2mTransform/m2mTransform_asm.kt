@@ -200,7 +200,7 @@ data class M2MTransformRelationDefault(
     override val domainTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
 
     override var when_: Expression? = null
-    override var where: Expression? = null
+    override val where = mutableListOf<RuleWhere>()
 }
 
 data class M2MTransformMappingDefault(
@@ -215,7 +215,7 @@ data class M2MTransformMappingDefault(
     override val expression: Map<DomainReference, Expression?> = mutableMapOf()
 
     override var when_: Expression? = null
-    override var where: Expression? = null
+    override val where = mutableListOf<RuleWhere>()
 }
 
 data class M2MTransformTableDefault(
@@ -247,6 +247,80 @@ data class VariableDefinitionDefault(
         _resolvedType = td?.type()
     }
 }
+
+
+abstract class RuleCallAbstract() : RuleCall {
+    override var resolved: M2mTransformRule? = null
+
+    override fun resolveAs(resolved: M2mTransformRule) {
+        this.resolved = resolved
+    }
+}
+
+data class RuleWhenRelationHoldsDefault(
+    override val ruleName: SimpleName,
+    override val arguments: List<Expression>,
+) : RuleWhenRelationHolds, Expression, RuleCallAbstract() {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "related ${ruleName.value}(...)"
+}
+
+data class RuleWhenRelationHoldsForAllDefault(
+    override val ruleName: SimpleName,
+    override val arguments: List<Expression>,
+) : RuleWhenRelationHoldsForAll, Expression, RuleCallAbstract() {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "related all ${ruleName.value}(...)"
+}
+
+data class RuleWhenMappingHoldsDefault(
+    override val ruleName: SimpleName,
+    override val arguments: List<Expression>,
+) : RuleWhenMappingHolds, Expression, RuleCallAbstract() {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "mapped ${ruleName.value}(...)"
+}
+
+data class RuleWhenMappingHoldsForAllDefault(
+    override val ruleName: SimpleName,
+    override val arguments: List<Expression>,
+) : RuleWhenMappingHoldsForAll, Expression, RuleCallAbstract() {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "mapped all ${ruleName.value}(...)"
+}
+
+data class RuleWhereCallRelationDefault(
+    override val ruleName: SimpleName,
+    override val arguments: List<Expression>,
+) : RuleWhereCallRelation, Expression, RuleCallAbstract() {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "relate ${ruleName.value}(...)"
+}
+
+data class RuleWhereCallRelationForAllDefault(
+    override val ruleName: SimpleName,
+    override val arguments: List<Expression>,
+) : RuleWhereCallRelationForAll, Expression, RuleCallAbstract() {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "relate all ${ruleName.value}(...)"
+}
+
+data class RuleWhereCallMappingDefault(
+    override val ruleName: SimpleName,
+    override val arguments: List<Expression>,
+) : RuleWhereCallMapping, Expression, RuleCallAbstract() {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "map ${ruleName.value}(...)"
+}
+
+data class RuleWhereCallMappingForAllDefault(
+    override val ruleName: SimpleName,
+    override val arguments: List<Expression>,
+) : RuleWhereCallMappingForAll, Expression, RuleCallAbstract() {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "map all ${ruleName.value}(...)"
+}
+
 
 data class ObjectTemplateDefault(
     val typeRef: TypeReference,

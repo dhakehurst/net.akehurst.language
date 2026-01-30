@@ -30,7 +30,6 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
-import net.akehurst.language.grammar.api.SeparatedList
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.m2mTransform.asm.*
 import net.akehurst.language.parser.api.OptionNum
@@ -74,8 +73,19 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::typeReference)
         super.register(this::expression)
         super.registerFor("when", this::when_)
+        super.register(this::whenExpression)
+        super.register(this::relationHolds)
+        super.register(this::relationHoldsForAll)
+        super.register(this::mappingHolds)
+        super.register(this::mappingHoldsForAll)
         super.register(this::where)
-
+        super.register(this::whereExpression)
+        super.register(this::callRelation)
+        super.register(this::callRelationForAll)
+        super.register(this::callMapping)
+        super.register(this::callMappingForAll)
+        super.register(this::ruleCall)
+        super.register(this::ruleArguments)
         super.register(this::propertyTemplateRhs)
         super.register(this::objectTemplate)
         super.register(this::propertyTemplateBlock)
@@ -188,7 +198,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val primDomains = children[6] as List<VariableDefinition>
         val relDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
         val whenExpression = children[8] as Expression?
-        val whereExpression = children[9] as Expression?
+        val whereExpression = children[9] as RuleWhere?
         return M2MTransformRelationDefault(isTop, name).also { rel ->
             (rel.extends as MutableList).addAll(extends)
             pivots.forEach { (rel.pivot as MutableMap)[it.name] = it }
@@ -198,7 +208,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
                 (rel.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
             }
             rel.when_ = whenExpression
-            rel.where = whereExpression
+            whereExpression?.let { (rel.where as MutableList).add(whereExpression) }
         }
     }
 
@@ -211,7 +221,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val inputDomains = children[6] as List<Pair<DomainSignature, ObjectTemplate>>
         val outputDomain = children[7] as Pair<DomainSignature, Expression?>
         val whenExpression = children[8] as Expression?
-        val whereExpression = children[9] as Expression?
+        val whereExpression = children[9] as RuleWhere?
         return M2MTransformMappingDefault(isTop, name).also { mp ->
             (mp.extends as MutableList).addAll(extends)
             (mp.primitiveDomains as MutableList).addAll(primDomains)
@@ -222,7 +232,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
             (mp.domainSignature as MutableMap)[outputDomain.first.domainRef] = outputDomain.first
             (mp.expression as MutableMap)[outputDomain.first.domainRef] = outputDomain.second
             mp.when_ = whenExpression
-            mp.where = whereExpression
+            whereExpression?.let { (mp.where as MutableList).add(whereExpression) }
         }
     }
 
@@ -332,13 +342,81 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeReference =
         children[0] as TypeReference
 
-    // when = 'when' '{' expression '}' ;
+    // when = 'when' '{' whenExpression '}' ;
     private fun when_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[2] as Expression
 
-    // where = 'where' '{' expression '}' ;
+    // whenExpression = expression | relationHolds | relationHoldsForAll | mappingHolds | mappingHoldsForAll ;
+    private fun whenExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+        children[0] as Expression
+
+    // relationHolds = 'related' ruleCall ;
+    private fun relationHolds(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhenRelationHolds {
+        val (ruleName, arguments) = children[1] as Pair<SimpleName, List<Expression>>
+        return RuleWhenRelationHoldsDefault(ruleName, arguments)
+    }
+
+    // relationHoldsForAll = 'related' 'all' ruleCall ;
+    private fun relationHoldsForAll(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhenRelationHoldsForAll {
+        val (ruleName, arguments) = children[2] as Pair<SimpleName, List<Expression>>
+        return RuleWhenRelationHoldsForAllDefault(ruleName, arguments)
+    }
+
+    // mappingHolds = 'mapped' ruleCall ;
+    private fun mappingHolds(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhenMappingHolds {
+        val (ruleName, arguments) = children[1] as Pair<SimpleName, List<Expression>>
+        return RuleWhenMappingHoldsDefault(ruleName, arguments)
+    }
+
+    // mappingHoldsForAll = 'mapped' 'all' ruleCall ;
+    private fun mappingHoldsForAll(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhenMappingHoldsForAll {
+        val (ruleName, arguments) = children[2] as Pair<SimpleName, List<Expression>>
+        return RuleWhenMappingHoldsForAllDefault(ruleName, arguments)
+    }
+
+    // where = 'where' '{' whereExpression '}' ;
     private fun where(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[2] as Expression
+
+    // whereExpression = callRelation | callRelationForAll | callMapping | callMappingForAll ;
+    private fun whereExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhere =
+        children[0] as RuleWhere
+
+    // callRelation = 'relate' ruleCall ;
+    private fun callRelation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhereCallRelation {
+        val (ruleName, arguments) = children[1] as Pair<SimpleName, List<Expression>>
+        return RuleWhereCallRelationDefault(ruleName, arguments)
+    }
+
+    // callRelationForAll = 'relate' 'all' ruleCall ;
+    private fun callRelationForAll(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhereCallRelationForAll {
+        val (ruleName, arguments) = children[2] as Pair<SimpleName, List<Expression>>
+        return RuleWhereCallRelationForAllDefault(ruleName, arguments)
+    }
+
+    // callMapping = 'map' ruleCall ;
+    private fun callMapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhereCallMapping {
+        val (ruleName, arguments) = children[1] as Pair<SimpleName, List<Expression>>
+        return RuleWhereCallMappingDefault(ruleName, arguments)
+    }
+
+    // callMappingForAll = 'map' 'all' ruleCall ;
+    private fun callMappingForAll(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhereCallMappingForAll {
+        val (ruleName, arguments) = children[2] as Pair<SimpleName, List<Expression>>
+        return RuleWhereCallMappingForAllDefault(ruleName, arguments)
+    }
+
+    // ruleCall = ruleName '(' ruleArguments ')' ;
+    private fun ruleCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<SimpleName, List<Expression>> {
+        val ruleName = SimpleName(children[0] as String)
+        val arguments = children[2] as List<Expression>
+        return Pair(ruleName, arguments)
+    }
+
+    // ruleArguments = [expression / ',']* ;
+    private fun ruleArguments(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> {
+        return (children as List<Any>).toSeparatedList<Any, Expression, String>().items
+    }
 
     // propertyTemplateRhs =  objectTemplate | collectionTemplate | expression ;
     private fun propertyTemplateRhs(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyTemplateRhs =

@@ -125,8 +125,29 @@ interface M2mTransformPatternRule : M2mTransformRule {
     val domainTemplate: Map<DomainReference, PropertyTemplateRhs>
 
     val when_: Expression?
-    val where: Expression?
+    val where: List<RuleWhere>
 }
+
+interface RuleCall {
+    val ruleName: SimpleName
+    val arguments: List<Expression>
+
+    var resolved: M2mTransformRule?
+
+    fun resolveAs(resolved: M2mTransformRule)
+}
+
+interface RuleWhen : Expression, RuleCall
+interface RuleWhenRelationHolds : RuleWhen
+interface RuleWhenRelationHoldsForAll : RuleWhen
+interface RuleWhenMappingHolds : RuleWhen
+interface RuleWhenMappingHoldsForAll : RuleWhen
+
+interface RuleWhere : RuleCall
+interface RuleWhereCallRelation : RuleWhere
+interface RuleWhereCallRelationForAll : RuleWhere
+interface RuleWhereCallMapping : RuleWhere
+interface RuleWhereCallMappingForAll : RuleWhere
 
 interface M2MTransformRelation : M2mTransformPatternRule {
 

@@ -361,7 +361,9 @@ class M2mTransformInterpreterSuspending<OT : Any>(
 
                             else -> {
                                 val allVars = alt.values.merge()
-                                val varsAfterWhere = rule.where?.let { executeWhere(it, targetTransform, targetDomainRef, allVars.matchedVariables, objectGraph) }
+                                val varsAfterWhere = rule.where.map {
+                                    executeWhere(it, targetTransform, targetDomainRef, allVars.matchedVariables, objectGraph)
+                                }
                                 //TODO: add target of where to variables with correct name
 
                                 // create output
@@ -408,7 +410,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
                     altSources.isEmpty() -> error("Should not happen as this is indicate no match")
                     else -> altSources.map { alt ->
                         val allVars = alt.values.merge()
-                        val varsAfterWhere = rule.where?.let { executeWhere(it, targetTransform, targetDomainRef, allVars.matchedVariables, objectGraph) }
+                        val varsAfterWhere = rule.where.map { executeWhere(it, targetTransform, targetDomainRef, allVars.matchedVariables, objectGraph) }
                         val objPat = rule.domainTemplate[targetDomainRef] ?: error("No object pattern found for domain '$targetDomainRef'")
                         val r = createFromRhs(allVars.matchedVariables, objPat, tgtOg)
                         val srcs = alt.entries.associate { (srcDomainRef, v) ->
@@ -594,7 +596,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
      * returns matchedVariables + variables set by executing the where
      */
     suspend fun executeWhere(
-        where: Expression,
+        where: RuleWhere,
         targetTransform: M2mTransformRuleSet,
         targetDomainRef: DomainReference,
         matchedVariables: Map<String, TypedObject<OT>>,

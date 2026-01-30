@@ -82,8 +82,22 @@ grammar $NAME : Base {
     typeReference = Expressions::typeReference ;
     expression = Expressions::expression ;
     
-    when = 'when' '{' expression '}' ;
-    where = 'where' '{' expression '}' ;
+    when = 'when' '{' whenExpression '}' ;
+    whenExpression = expression | relationHolds | relationHoldsForAll | mappingHolds | mappingHoldsForAll ;
+    relationHolds = 'related' ruleCall ;
+    relationHoldsForAll = 'related' 'all' ruleCall ; 
+    mappingHolds = 'mapped' ruleCall ;
+    mappingHoldsForAll = 'mapped' 'all' ruleCall ;
+    
+    where = 'where' '{' whereExpression '}' ;
+    whereExpression = callRelation | callRelationForAll | callMapping | callMappingForAll ;
+    callRelation = 'relate' ruleCall ;
+    callRelationForAll = 'relate' 'all' ruleCall ;
+    callMapping = 'map' ruleCall ;
+    callMappingForAll = 'map' 'all' ruleCall ;
+
+    ruleCall = ruleName '(' ruleArguments ')' ;
+    ruleArguments = [expression / ',']* ;
 
     propertyTemplateRhs =  objectTemplate | collectionTemplate | expression ;
     objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
@@ -232,8 +246,33 @@ grammar $NAME : Base {
                     concatenation("values") { lit("values"); spLst(2, -1) { ref("expression"); lit("to") } }
                     concatenation("typeReference") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "typeReference") }
                     concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
-                    concatenation("when") { lit("when"); lit("{"); ref("expression"); lit("}") }
-                    concatenation("where") { lit("where"); lit("{"); ref("expression"); lit("}") }
+                    concatenation("when") { lit("when"); lit("{"); ref("whenExpression"); lit("}") }
+                    choice("whenExpression") {
+                        ref("relationHolds")
+                        ref("relationHoldsForAll")
+                        ref("mappingHolds")
+                        ref("mappingHoldsForAll")
+                        ref("expression")
+                    }
+                    concatenation("relationHolds") { lit("related"); ref("ruleCall") }
+                    concatenation("relationHoldsForAll") { lit("related"); lit("all"); ref("ruleCall") }
+                    concatenation("mappingHolds") { lit("mapped"); ref("ruleCall") }
+                    concatenation("mappingHoldsForAll") { lit("mapped"); lit("all"); ref("ruleCall") }
+
+                    concatenation("where") { lit("where"); lit("{"); ref("whereExpression"); lit("}") }
+                    choice("whereExpression") {
+                        ref("callRelationForAll")
+                        ref("callRelation")
+                        ref("callMappingForAll")
+                        ref("callMapping")
+                    }
+                    concatenation("callRelation") { lit("relate"); ref("ruleCall") }
+                    concatenation("callRelationForAll") { lit("relate"); lit("all"); ref("ruleCall") }
+                    concatenation("callMapping") { lit("map"); ref("ruleCall") }
+                    concatenation("callMappingForAll") { lit("map"); lit("all"); ref("ruleCall") }
+
+                    concatenation("ruleCall") { ref("ruleName"); lit("("); ref("ruleArguments"); lit(")") }
+                    separatedList("ruleArguments", 0, -1) { ref("expression"); lit(",") }
 
                     choice("propertyTemplateRhs") {
                         ref("objectTemplate")

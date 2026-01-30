@@ -34,6 +34,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+/* can't debug this way!
 class test_m2mTransformInterpreter : FunSpec({
     testSuits.forEach { (_, suite) ->
         context(suite.description) {
@@ -51,12 +52,13 @@ class test_m2mTransformInterpreter : FunSpec({
         doTest2(suite, case)
     }
 
-}) {
+}) {*/
 
-//class test_m2mTransformInterpreter {
+class test_m2mTransformInterpreter {
     private companion object Companion {
 
         val testSuits = m2mTransformTestSuits {
+            // mapping
             testSuit("1 matching top mapping to 1 String input 1 gives literal String result") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
@@ -169,23 +171,39 @@ class test_m2mTransformInterpreter : FunSpec({
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A {
                             domain d1 a1:String == 'A'
-                            domain d2 a2:String := 'Hello World A!'
+                            domain d2 a2:String := 'Hello A!'
                         }
                         top mapping B {
                             domain d1 a1:String == 'B'
-                            domain d2 a2:String := 'Hello World B!'
+                            domain d2 a2:String := 'Hello B!'
                         }
                     }
                 """
                 )
-                testCase("") {
+                testCase("'A' -> Hello A!") {
+                    input("d1") {
+                        string("A")
+                    }
+                    target("d2") {
+                        string("Hello A!")
+                    }
+                }
+                testCase("'B' -> HelloBA!") {
+                    input("d1") {
+                        string("B")
+                    }
+                    target("d2") {
+                        string("Hello B!")
+                    }
+                }
+                testCase("['A', 'B'] -> [Hello A!,  Hello B!]") {
                     input("d1") {
                         string("A")
                         string("B")
                     }
                     target("d2") {
-                        string("Hello World A!")
-                        string("Hello World B!")
+                        string("Hello A!")
+                        string("Hello B!")
                     }
                 }
             }
@@ -215,7 +233,7 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("") {
+                testCase("A1 -> A2") {
                     input("d1") {
                         element("A1") {
                             propertyString("prop1", "value1")
@@ -254,7 +272,7 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("") {
+                testCase("A1 -> A2") {
                     input("d1") {
                         element("A1") {
                             propertyString("prop1", "value1")
@@ -305,7 +323,7 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("") {
+                testCase("A1.B1.C1 -> A2") {
                     input("d1") {
                         element("A1") {
                             propertyElementExplicitType("prop1", "B1") {
@@ -322,6 +340,124 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 }
             }
+
+            // mapping when
+            testSuit("simple mapping when expression") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top mapping A12A2 {
+                            domain d1 a1:A1 { prop1 == v }
+                            domain d2 a2:A2 := A2() { prop2 := v }
+                            when {
+                              v == 'value1'
+                            }
+                        }
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                }
+            }
+
+            // mapping where
+            testSuit("simple mapping where map String vai table") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top mapping A1_to_A2 {
+                            domain d1 a1:A1 { prop1 == s1 }
+                            domain d2 a2:A2 := A2() { prop2 := s2 }
+                            where {
+                              map StringConvert(s1,s2)
+                            }
+                        }
+                        table StringConvert {
+                            domain  d1 :String  /**/ domain d1 :String
+                            /*=======================================*/ 
+                            values 'value1'      to   'value1'
+                        } 
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                }
+            }
+
             // collections
             testSuit("match 1 from Set") {
                 typesDomain("d1", "Domain1", true) {
@@ -363,7 +499,7 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("") {
+                testCase("c1 or c2 contains e1?") {
                     input("d1") {
                         element("Class") {
                             propertyString("name", "c1")
@@ -435,7 +571,7 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("") {
+                testCase("c1 contains both") {
                     input("d1") {
                         element("Class") {
                             propertyString("name", "c1")
@@ -490,26 +626,26 @@ class test_m2mTransformInterpreter : FunSpec({
                 }
                 transform(
                     $$"""
-                            namespace test
-                            transform Test(d1:Domain1, d2:Domain2) {
-                        top mapping A12A2 {
-                            domain d1 c1:Class {
-                            name == X
-                            attribute == [
-                                a3:Attribute {
-                            name == 'a3'
-                        },
-                            a4:Attribute {
-                            name == 'a4'
+                        namespace test
+                        transform Test(d1:Domain1, d2:Domain2) {
+                            top mapping A12A2 {
+                                domain d1 c1:Class {
+                                    name == X
+                                    attribute == [
+                                        a3:Attribute {
+                                            name == 'a3'
+                                        },
+                                        a4:Attribute {
+                                            name == 'a4'
+                                        }
+                                    ]
+                                }
+                                domain d2 a2:String := c1.name + a3.name + a4.name
+                            }
                         }
-                            ]
-                        }
-                            domain d2 a2:String := c1.name + a3.name + a4.name
-                        }
-                    }
                     """
                 )
-                testCase("") {
+                testCase("c2 contains both") {
                     input("d1") {
                         element("Class") {
                             propertyString("name", "c1")
@@ -541,6 +677,7 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 }
             }
+
             // qvt example
             testSuit("umlRdbms QVT example - PackageToSchema") {
                 typesDomain("uml", "SimpleUML", true) {
@@ -657,7 +794,7 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("") {
+                testCase("Pkg okg1 -> Schm pkg1") {
                     input("uml") {
                         element("Package") {
                             propertyString("name", "pkg1")
@@ -786,7 +923,17 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("") {
+                testCase("primitive Int -> NUMBER") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "Int")
+                        }
+                    }
+                    target("rdbms") {
+                        string("NUMBER")
+                    }
+                }
+                testCase("primitive Boolean -> BOOLEAN") {
                     input("uml") {
                         element("PrimitiveDataType") {
                             propertyString("name", "Boolean")
@@ -794,6 +941,16 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                     target("rdbms") {
                         string("BOOLEAN")
+                    }
+                }
+                testCase("primitive String -> VARCHAR") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "String")
+                        }
+                    }
+                    target("rdbms") {
+                        string("VARCHAR")
                     }
                 }
             }
@@ -922,7 +1079,17 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("") {
+                testCase("primitive Int -> NUMBER") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "Int")
+                        }
+                    }
+                    target("rdbms") {
+                        string("NUMBER")
+                    }
+                }
+                testCase("primitive Boolean -> BOOLEAN") {
                     input("uml") {
                         element("PrimitiveDataType") {
                             propertyString("name", "Boolean")
@@ -930,6 +1097,16 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                     target("rdbms") {
                         string("BOOLEAN")
+                    }
+                }
+                testCase("primitive String -> VARCHAR") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "String")
+                        }
+                    }
+                    target("rdbms") {
+                        string("VARCHAR")
                     }
                 }
             }
@@ -1043,15 +1220,15 @@ class test_m2mTransformInterpreter : FunSpec({
                         top relation PackageToSchema {
                             pivot pn: String
                             domain uml p:Package {
-                              name==pn
+                              name == pn
                               elements == p_els
                             }
                             domain rdbms s:Schema {
-                              name==pn
-                              table==s_tbl
+                              name == pn
+                              table == s_tbl
                             }
                             where {
-                                ClassToTable(p_els, s_tbl)
+                                relate all ClassToTable(p_els, s_tbl)
                             }
                         }
                         relation ClassToTable {
@@ -1075,9 +1252,9 @@ class test_m2mTransformInterpreter : FunSpec({
                                     kind=='primary'
                                 }
                             }
-                            when { PackageToSchema(p, s) }
+                            when {  related PackageToSchema(p, s)  }
                             where {
-                                AttributeToColumn(c.attribute, t.column)
+                                 relate all AttributeToColumn(c.attribute, t.column)
                             }
                         }
                         abstract rule AttributeToColumn {
@@ -1095,7 +1272,7 @@ class test_m2mTransformInterpreter : FunSpec({
                                 type==ct:String{}
                             }
                             where {
-                                PrimitiveUmlTypeToSqlType(at, ct)
+                                relate PrimitiveUmlTypeToSqlType(at, ct)
                             }
                         }
                         relation AttributeToColumnComplex {
@@ -1109,7 +1286,7 @@ class test_m2mTransformInterpreter : FunSpec({
                                 type=='NUMBER'
                             }
                             where {
-                                ComplexUmlTypeToSqlType(at, ct)
+                                relate ComplexUmlTypeToSqlType(at, ct)
                             }
                         }                        
                         table PrimitiveUmlTypeToSqlType {
@@ -1122,7 +1299,7 @@ class test_m2mTransformInterpreter : FunSpec({
                     }
                 """
                 )
-                testCase("empty package") {
+                testCase("Package with no elements property") {
                     input("uml") {
                         element("Package") {
                             propertyString("name", "pkg1")
@@ -1131,6 +1308,81 @@ class test_m2mTransformInterpreter : FunSpec({
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
+                            propertyNothing("table")
+                        }
+                    }
+                }
+                testCase("Package with empty List elements") {
+                    input("uml") {
+                        element("Package") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("elements") {}
+                        }
+                    }
+                    target("rdbms") {
+                        element("Schema") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("table") {}
+                        }
+                    }
+                }
+                testCase("1 Class with no name or kind or properties") {
+                    input("uml") {
+                        element("Package") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("elements") {
+                                element("Class") {
+
+                                }
+                            }
+                        }
+                    }
+                    target("rdbms") {
+                        element("Schema") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("table") {}
+                        }
+                    }
+                }
+                testCase("1 Class with no name or properties") {
+                    input("uml") {
+                        element("Package") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("elements") {
+                                element("Class") {
+                                    propertyString("kind","Persistent")
+                                }
+                            }
+                        }
+                    }
+                    target("rdbms") {
+                        element("Schema") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("table") {}
+                        }
+                    }
+                }
+                testCase("1 Class with no properties") {
+                    input("uml") {
+                        element("Package") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("elements") {
+                                element("Class") {
+                                    reference("namespace","pkg1")
+                                    propertyString("kind","Persistent")
+                                    propertyString("name","Cls1")
+                                }
+                            }
+                        }
+                    }
+                    target("rdbms") {
+                        element("Schema") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("table") {
+                                element("Table") {
+                                    reference("schema","pkg1")
+                                }
+                            }
                         }
                     }
                 }
@@ -1252,7 +1504,7 @@ class test_m2mTransformInterpreter : FunSpec({
 
     }
 
-/*    @Test
+    @Test
     fun testAll() {
         testSuits.values.forEach { suite ->
             suite.testCase.values.forEach { case ->
@@ -1263,8 +1515,8 @@ class test_m2mTransformInterpreter : FunSpec({
 
     @Test
     fun single() {
-        val suite = testSuits["Full umlRdbms QVT example"]
-        val case = suite!!.testCase.values.first()
+        val suite = testSuits["simple mapping where map String vai table"]!!
+        val case = suite.testCase["A1 with value1 -> A2"]!!
         doTest2(suite, case)
-    }*/
+    }
 }
