@@ -27,6 +27,7 @@ import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.expressions.processor.TypedObjectAsmValue
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.PropertyCharacteristic
@@ -386,19 +387,16 @@ class test_m2mTransformInterpreter {
                 testCase("A1 with value2 -> nothing") {
                     input("d1") {
                         element("A1") {
-                            propertyString("prop1", "value1")
+                            propertyString("prop1", "value2")
                         }
                     }
                     target("d2") {
-                        element("A2") {
-                            propertyString("prop2", "value1")
-                        }
                     }
                 }
             }
 
             // mapping where
-            testSuit("simple mapping where map String vai table") {
+            testSuit("simple mapping where map String via table") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("A1") {
@@ -447,12 +445,12 @@ class test_m2mTransformInterpreter {
                 testCase("A1 with value2 -> nothing") {
                     input("d1") {
                         element("A1") {
-                            propertyString("prop1", "value1")
+                            propertyString("prop1", "value2")
                         }
                     }
                     target("d2") {
                         element("A2") {
-                            propertyString("prop2", "value1")
+                            propertyNothing("prop2")
                         }
                     }
                 }
@@ -1252,7 +1250,7 @@ class test_m2mTransformInterpreter {
                                     kind=='primary'
                                 }
                             }
-                            when {  related PackageToSchema(p, s)  }
+                            when { related PackageToSchema(p, s) }
                             where {
                                  relate all AttributeToColumn(c.attribute, t.column)
                             }
@@ -1305,6 +1303,7 @@ class test_m2mTransformInterpreter {
                             propertyString("name", "pkg1")
                         }
                     }
+                    expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'PackageToSchema' in 'umlRdbms', the all call to rule 'ClassToTable' is expecting a collection.")
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
@@ -1332,11 +1331,11 @@ class test_m2mTransformInterpreter {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
                                 element("Class") {
-
                                 }
                             }
                         }
                     }
+                    expectIssue(LanguageIssueKind.WARNING,"In rule 'PackageToSchema' the 'where' clause matched nothing.")
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
@@ -1433,9 +1432,10 @@ class test_m2mTransformInterpreter {
             val trRes = interpreter.transform(tgtTransform, case.target!!, source)
             println("----- M2M Transform Result -----")
             println(trRes.asString())
-            assertTrue(trRes.issues.errors.isEmpty(), trRes.issues.toString())
+            assertEquals(case.expectedIssues,trRes.issues.all)
             val expected = case.expected
             if (null != expected) {
+                assertEquals(expected.root.size, trRes.targets.size)
                 for (i in expected.root.indices) {
                     val exp = expected.root[i]
                     val act = trRes.targets[i]
@@ -1443,65 +1443,6 @@ class test_m2mTransformInterpreter {
                 }
             }
         }
-
-/*
-        fun doTest(index: Int) {
-            val testData = testSuitList[index]!!
-            println("****** [$index] ${testData.description} ******")
-            testData.typeDomains.forEach { (k, v) ->
-                println("----- ${k.value} : ${v.name.value} -----")
-                println(v.asString())
-            }
-            val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val context = SentenceContextAny()
-            testData.typeDomains.forEach { (k, v) ->
-                context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
-            }
-            val res = Agl.registry.agl.m2mTransform.processor!!.process(
-                testData.transform,
-                options = Agl.options {
-                    semanticAnalysis {
-                        context(context)
-                    }
-                }
-            )
-            val m2m = res.let {
-                check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
-                it.asm!!
-            }
-            val ogs = testData.typeDomains.entries.associate { (k, v) ->
-                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues))
-            }
-            val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
-
-            val source = testData.input.entries.associate { (k, v) ->
-                println("----- Source ${k.value} -----")
-                val sourceObjects = v.root.map { obj ->
-                    println(obj.asString())
-                    val srcTypeDomain = testData.typeDomains[k]!!
-                    ogs[srcTypeDomain.name]!!.let {
-                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
-                        TypedObjectAsmValue(td.type(), obj)
-                    }
-                }
-                Pair(k, sourceObjects)
-            }
-            val tgtTransform = m2m.allTransformRuleSet.first()
-            val trRes = interpreter.transform(tgtTransform, testData.target!!, source)
-            println("----- M2M Transform Result -----")
-            println(trRes.asString())
-            assertTrue(trRes.issues.errors.isEmpty(), trRes.issues.toString())
-            val expected = testData.expected
-            if (null != expected) {
-                for (i in expected.root.indices) {
-                    val exp = expected.root[i]
-                    val act = trRes.targets[i]
-                    assertEquals(exp.asString(), act.asString())
-                }
-            }
-        }
-*/
-
     }
 
     @Test
@@ -1515,8 +1456,8 @@ class test_m2mTransformInterpreter {
 
     @Test
     fun single() {
-        val suite = testSuits["simple mapping where map String vai table"]!!
-        val case = suite.testCase["A1 with value1 -> A2"]!!
+        val suite = testSuits["Full umlRdbms QVT example"]!!
+        val case = suite.testCase["1 Class with no name or properties"]!!
         doTest2(suite, case)
     }
 }

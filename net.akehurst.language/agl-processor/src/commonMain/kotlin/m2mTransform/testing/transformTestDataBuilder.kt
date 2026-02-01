@@ -1,14 +1,19 @@
 package net.akehurst.language.agl.m2mTransform.testing
 
+import net.akehurst.kotlinx.issues.api.Issue
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.AsmSimpleBuilder
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.api.TypesNamespace
 import net.akehurst.language.types.asm.StdLibDefault
@@ -29,6 +34,7 @@ data class TransformTestCase(
     val input = mutableMapOf<DomainReference, Asm>()
     var target: DomainReference? = null
     var expected: Asm? = null
+    val expectedIssues: Set<LanguageIssue> = mutableSetOf<LanguageIssue>()
 }
 
 fun m2mTransformTestSuits(init: M2MTransformTestSuitListBuilder.() -> Unit): Map<String, TransformTestSuit> {
@@ -86,7 +92,7 @@ class M2MTransformTestSuitBuilder(
 
     fun testCase(description: String, init: M2MTransformTestCaseBuilder.() -> Unit) {
         check(_testCase.containsKey(description).not()) { "Duplicate test suit: '$description'" }
-        val b = M2MTransformTestCaseBuilder(description,_typeDomains)
+        val b = M2MTransformTestCaseBuilder(description, _typeDomains)
         b.init()
         _testCase[description] = b.build()
     }
@@ -106,7 +112,8 @@ class M2MTransformTestCaseBuilder(
 
     private val _input = mutableMapOf<DomainReference, Asm>()
     private lateinit var _target: DomainReference
-    private var _expected:Asm? = null
+    private var _expected: Asm? = null
+    private val _expectedIssues = mutableSetOf<LanguageIssue>()
 
     fun input(
         domainReference: String,
@@ -126,6 +133,10 @@ class M2MTransformTestCaseBuilder(
         val b = AsmSimpleBuilder(typesDomain, defNs, crossReferenceDomain, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
         b.init()
         _input[dr] = b.build()
+    }
+
+    fun expectIssue(kind: LanguageIssueKind, message: String, phase: LanguageProcessorPhase = LanguageProcessorPhase.INTERPRET, location: InputLocation? = null, data: Any? = null) {
+        _expectedIssues.add(LanguageIssue(kind, phase, location, message, data))
     }
 
     fun target(
@@ -153,5 +164,6 @@ class M2MTransformTestCaseBuilder(
         it.target = _target
         it.input.putAll(_input)
         it.expected = _expected
+        (it.expectedIssues as MutableSet).addAll(_expectedIssues)
     }
 }

@@ -61,6 +61,9 @@ interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
     fun nothing(): TypedObject<SelfType>
     fun any(value: Any): TypedObject<SelfType>
 
+    /**
+     * kotlin value of value (as opposed to untyped which returns something of type SelfType)
+     */
     fun valueOf(value: TypedObject<SelfType>): Any
 
     // would like to use Long as index to be compatible with Integer implemented as Long - but index in underlying kotlin is always an Int
