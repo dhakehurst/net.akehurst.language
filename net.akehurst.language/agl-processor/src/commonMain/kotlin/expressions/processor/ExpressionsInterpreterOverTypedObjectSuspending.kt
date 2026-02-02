@@ -19,6 +19,7 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.CastExpression
 import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.expressions.api.CreateTupleExpression
@@ -561,8 +562,20 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
     }
 
     private suspend fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
-        val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName) ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
+        return constructObject(evc, expression).also { self ->
+            val selfEvc = evc.childSelf(self)
+            propertyAssignmentBlock(selfEvc, expression.propertyAssignments)
+        }
+    }
+
+    /**
+     * Only construct the object, do not execute the property assignment block.
+     * Separation of construct and setProperties needed for M2m interpreter
+     */
+    suspend fun constructObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
+        val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
         return when (typeDef) {
+            null -> error("Type not found ${expression.possiblyQualifiedTypeName}")
             is DataType, is ValueType -> {
                 val args = expression.constructorArguments.map { evaluateExpression(evc, it.rhs) }
                 val constructorArgs = when {
@@ -584,18 +597,24 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
 
                     else -> emptyMap()
                 }
-
-                val obj = objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
-                expression.propertyAssignments.forEach {
-                    val value = evaluateExpression(evc, it.rhs)
-                    objectGraph.setProperty(obj, it.lhsPropertyName, value)
-                }
-                return obj
+                objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
             }
 
             else -> error("Cannot create an object of type '${typeDef.qualifiedName.value}'")
         }
     }
 
-
+    /**
+     * Execute a property assignment block for self.
+     * Separation of construct and setProperties needed for M2m interpreter
+     */
+    suspend fun propertyAssignmentBlock(evc: EvaluationContext<SelfType>, propertyAssignments: List<AssignmentStatement>) {
+        val self = evc.self
+        self?.let {
+            propertyAssignments.forEach {
+                val value = evaluateExpression(evc, it.rhs)
+                objectGraph.setProperty(self, it.lhsPropertyName, value)
+            }
+        }
+    }
 }

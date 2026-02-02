@@ -390,6 +390,7 @@ class test_m2mTransformInterpreter {
                             propertyString("prop1", "value2")
                         }
                     }
+                    expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'd2' of rule 'A12A2'.")
                     target("d2") {
                     }
                 }
@@ -448,6 +449,7 @@ class test_m2mTransformInterpreter {
                             propertyString("prop1", "value2")
                         }
                     }
+                    expectIssue(LanguageIssueKind.WARNING,"In rule 'A1_to_A2' the 'where' clause matched nothing.")
                     target("d2") {
                         element("A2") {
                             propertyNothing("prop2")
@@ -1303,6 +1305,7 @@ class test_m2mTransformInterpreter {
                             propertyString("name", "pkg1")
                         }
                     }
+                    expectIssue(LanguageIssueKind.WARNING, "Evaluation Context does not contain root expression 's_tbl' and there is no '\$self' object with that property name, using value '\$nothing'")
                     expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'PackageToSchema' in 'umlRdbms', the all call to rule 'ClassToTable' is expecting a collection.")
                     target("rdbms") {
                         element("Schema") {
@@ -1390,10 +1393,10 @@ class test_m2mTransformInterpreter {
 
         fun doTest2(suite: TransformTestSuit, case: TransformTestCase) {
             println("****** ${suite.description} : ${case.description} ******")
-            suite.typeDomains.forEach { (k, v) ->
-                println("----- ${k.value} : ${v.name.value} -----")
-                println(v.asString())
-            }
+//            suite.typeDomains.forEach { (k, v) ->
+//                println("----- ${k.value} : ${v.name.value} -----")
+//                println(v.asString())
+//            }
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val context = SentenceContextAny()
             suite.typeDomains.forEach { (k, v) ->
@@ -1432,7 +1435,7 @@ class test_m2mTransformInterpreter {
             val trRes = interpreter.transform(tgtTransform, case.target!!, source)
             println("----- M2M Transform Result -----")
             println(trRes.asString())
-            assertEquals(case.expectedIssues,trRes.issues.all)
+            assertEquals(case.expectedIssues,trRes.issues.all, trRes.issues.toString())
             val expected = case.expected
             if (null != expected) {
                 assertEquals(expected.root.size, trRes.targets.size)
@@ -1457,7 +1460,7 @@ class test_m2mTransformInterpreter {
     @Test
     fun single() {
         val suite = testSuits["Full umlRdbms QVT example"]!!
-        val case = suite.testCase["1 Class with no name or properties"]!!
+        val case = suite.testCase["Package with empty List elements"]!!
         doTest2(suite, case)
     }
 }

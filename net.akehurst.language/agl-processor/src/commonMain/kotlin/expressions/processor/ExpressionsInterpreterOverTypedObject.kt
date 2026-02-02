@@ -381,11 +381,13 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
                 val rhsv = objectGraph.valueOf(rhs) as Long
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv * rhsv)
             }
+
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
                 val lhsv = objectGraph.valueOf(lhs) as Double
                 val rhsv = objectGraph.valueOf(rhs) as Double
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv * rhsv)
             }
+
             else -> {
                 issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
@@ -398,11 +400,13 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
                 val rhsv = objectGraph.valueOf(rhs) as Long
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv % rhsv)
             }
+
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
                 val lhsv = objectGraph.valueOf(lhs) as Double
                 val rhsv = objectGraph.valueOf(rhs) as Double
                 objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv % rhsv)
             }
+
             else -> {
                 issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
@@ -418,16 +422,19 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
                 val rhsv = objectGraph.valueOf(rhs) as String
                 objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, lhsv + rhsv)
             }
+
             lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
                 val lhsv = objectGraph.valueOf(lhs) as Long
                 val rhsv = objectGraph.valueOf(rhs) as Long
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv + rhsv)
             }
+
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
                 val lhsv = objectGraph.valueOf(lhs) as Double
                 val rhsv = objectGraph.valueOf(rhs) as Double
                 objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv + rhsv)
             }
+
             else -> {
                 issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
@@ -440,6 +447,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
                 val rhsv = objectGraph.valueOf(rhs) as Long
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv - rhsv)
             }
+
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
                 val lhsv = objectGraph.valueOf(lhs) as Double
                 val rhsv = objectGraph.valueOf(rhs) as Double
@@ -536,6 +544,17 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
     }
 
     private fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
+        return constructObject(evc, expression).also { self ->
+            val selfEvc = evc.childSelf(self)
+            propertyAssignmentBlock(selfEvc, expression.propertyAssignments)
+        }
+    }
+
+    /**
+     * Only construct the object, do not execute the property assignment block.
+     * Separation of construct and setProperties needed for M2m interpreter
+     */
+    fun constructObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
         val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
         return when (typeDef) {
             null -> error("Type not found ${expression.possiblyQualifiedTypeName}")
@@ -560,19 +579,26 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
 
                     else -> emptyMap()
                 }
-
-                val obj = objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
-                expression.propertyAssignments.forEach {
-                    val value = evaluateExpression(evc, it.rhs)
-                    objectGraph.setProperty(obj, it.lhsPropertyName, value)
-                }
-                return obj
+                objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
             }
 
             else -> error("Cannot create an object of type '${typeDef.qualifiedName.value}'")
         }
     }
 
+    /**
+     * Execute a property assignment block for self.
+     * Separation of construct and setProperties needed for M2m interpreter
+     */
+    fun propertyAssignmentBlock(evc: EvaluationContext<SelfType>, propertyAssignments: List<AssignmentStatement>) {
+        val self = evc.self
+        self?.let {
+            propertyAssignments.forEach {
+                val value = evaluateExpression(evc, it.rhs)
+                objectGraph.setProperty(self, it.lhsPropertyName, value)
+            }
+        }
+    }
 
 }
 
