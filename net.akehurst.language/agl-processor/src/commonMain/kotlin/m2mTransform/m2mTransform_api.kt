@@ -17,9 +17,11 @@
 
 package net.akehurst.language.m2mTransform.api
 
+import net.akehurst.kotlinx.issues.api.Issue
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 
@@ -167,12 +169,15 @@ interface M2MTransformTable : M2mTransformRule {
     val values: List<Map<DomainReference, Expression>>
 }
 
-interface ObjectTemplate : PropertyTemplateRhs {
+interface PropertyTemplateRhs {
+    val identifier: SimpleName?
+    fun setIdentifierValue(value: SimpleName)
+    fun resolveTypes(tm: TypesDomain): List<LanguageIssue> //TODO: use generic Issues ! and move this to semanticAnalyser
+}
 
+interface ObjectTemplate : PropertyTemplateRhs {
     val type: TypeInstance
     val propertyTemplate: Map<SimpleName, PropertyTemplate>
-
-    fun resolveType(tm: TypesDomain)
 }
 
 interface CollectionTemplate : PropertyTemplateRhs {
@@ -185,10 +190,7 @@ interface PropertyTemplate {
     val rhs: PropertyTemplateRhs
 }
 
-interface PropertyTemplateRhs {
-    val identifier: SimpleName?
-    fun setIdentifierValue(value: SimpleName)
-}
+
 
 interface PropertyTemplateExpression : PropertyTemplateRhs {
     val expression: Expression

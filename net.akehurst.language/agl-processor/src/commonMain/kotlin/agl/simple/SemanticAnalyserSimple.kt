@@ -55,7 +55,7 @@ class SemanticAnalyserSimple(
                             when {
                                 value is AsmPrimitive && value.isStdString -> value.value as String
                                 value is AsmList && value.elements.all { it is AsmPrimitive && it.isStdString } -> value.elements.map { (it as AsmPrimitive).value as String }
-                                else -> error("Cannot get identifying value for $value")
+                                else -> null//error("Cannot get identifying value for $value")
                             }
                         }
                     }

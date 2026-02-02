@@ -103,7 +103,7 @@ grammar $NAME : Base {
     objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
     propertyTemplateBlock = '{' propertyTemplate*  '}';
     propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
-    collectionTemplate = '[' ('...')? [propertyTemplateRhs / ',' ]* ']' ;
+    collectionTemplate = (variableName ':')? '[' ('...')? [propertyTemplateRhs / ',' ]* ']' ;
 
     leaf DOMAIN_NAME := IDENTIFIER ;
     leaf domainReference := IDENTIFIER ;
@@ -283,7 +283,7 @@ grammar $NAME : Base {
                     concatenation("propertyTemplateBlock") { lit("{"); lst(0, -1) { ref("propertyTemplate") }; lit("}") }
                     concatenation("propertyTemplate") { ref("propertyReference"); lit("=="); ref("propertyTemplateRhs") }
                     concatenation("collectionTemplate") {
-                        lit("["); opt { lit("...") }; spLst(0, -1) { ref("propertyTemplateRhs"); lit(",") }; lit("]")
+                        opt { grp { ref("variableName"); lit(":") } }; lit("["); opt { lit("...") }; spLst(0, -1) { ref("propertyTemplateRhs"); lit(",") }; lit("]")
                     }
 
                     concatenation("domainReference", isLeaf = true) { ref("IDENTIFIER") }

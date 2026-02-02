@@ -17,14 +17,14 @@
 
 package net.akehurst.language.m2mTransform.processor
 
-import io.kotest.core.spec.style.FunSpec
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.m2mTransform.testing.TransformTestCase
 import net.akehurst.language.agl.m2mTransform.testing.TransformTestSuit
 import net.akehurst.language.agl.m2mTransform.testing.m2mTransformTestSuits
 import net.akehurst.language.agl.simple.SentenceContextAny
-import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.expressions.processor.ExternalGetterAsmSimple
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.expressions.processor.TypedObjectAsmValue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -33,7 +33,6 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.PropertyCharacteristic
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /* can't debug this way!
 class test_m2mTransformInterpreter : FunSpec({
@@ -449,7 +448,7 @@ class test_m2mTransformInterpreter {
                             propertyString("prop1", "value2")
                         }
                     }
-                    expectIssue(LanguageIssueKind.WARNING,"In rule 'A1_to_A2' the 'where' clause matched nothing.")
+                    expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
                     target("d2") {
                         element("A2") {
                             propertyNothing("prop2")
@@ -1172,9 +1171,15 @@ class test_m2mTransformInterpreter {
                         }
                         data("Schema") {
                             supertypes("RModelElement")
+                            constructor_ {
+                                this.parameter("name", "String")
+                            }
                         }
                         data("Table") {
                             supertypes("RModelElement")
+                            constructor_ {
+                                this.parameter("name", "String")
+                            }
                         }
                         data("Column") {
                             supertypes("RModelElement")
@@ -1187,7 +1192,7 @@ class test_m2mTransformInterpreter {
                         }
                         association {
                             end("Schema", setOf(REF, VAR), "schema")
-                            end("Table", setOf(CMP, VAR), "tables", false, "Set")
+                            end("Table", setOf(CMP, VAR), "table", false, "Set")
                         }
                         association {
                             end("Table", setOf(REF, VAR), "owner")
@@ -1212,6 +1217,29 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
+                crossReferenceDomain("uml", "SimpleUML") {
+                    declarationsFor("uml") {
+                        identify("Package", "name")
+                        reference("Class") {
+                            property("namespace", listOf("Package"), null)
+                        }
+                        scope("Package") {
+                            identify("Class", "name")
+                        }
+                    }
+                }
+                crossReferenceDomain("rdbms", "SimpleRDBMS") {
+                    declarationsFor("rdbms") {
+                        identify("Schema", "name")
+                        identify("Table", "schema.name+'.'+name")
+                        reference("Table") {
+                            property("schema", listOf("Schema"), null)
+                        }
+                        scope("Schema") {
+                            identify("Table", "name")
+                        }
+                    }
+                }
                 transform(
                     $$"""
                     namespace test
@@ -1233,28 +1261,31 @@ class test_m2mTransformInterpreter {
                         }
                         relation ClassToTable {
                             pivot cn: String
-                            pivot prefix:String
                             domain uml c:Class {
-                                namespace==p:Package {}
+                                namespace==p
                                 kind=='Persistent'
                                 name==cn
+                                attribute==c_atts
                             }
                             domain rdbms t:Table {
-                                schema==s:Schema {}
+                                schema==s
                                 name==cn
-                                column==cl:Column {
+                                column==t_cols:[
+                                  ...
+                                  pk_col:Column {
                                     name=='_id'
                                     type=='NUMBER'
-                                }
+                                  }
+                                ]
                                 key==k:Key {
                                     name=='_pk'
-                                    column==cl
+                                    column==pk_col
                                     kind=='primary'
                                 }
                             }
                             when { related PackageToSchema(p, s) }
                             where {
-                                 relate all AttributeToColumn(c.attribute, t.column)
+                                 relate all AttributeToColumn(c_atts, t_cols)
                             }
                         }
                         abstract rule AttributeToColumn {
@@ -1305,7 +1336,6 @@ class test_m2mTransformInterpreter {
                             propertyString("name", "pkg1")
                         }
                     }
-                    expectIssue(LanguageIssueKind.WARNING, "Evaluation Context does not contain root expression 's_tbl' and there is no '\$self' object with that property name, using value '\$nothing'")
                     expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'PackageToSchema' in 'umlRdbms', the all call to rule 'ClassToTable' is expecting a collection.")
                     target("rdbms") {
                         element("Schema") {
@@ -1328,7 +1358,7 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                testCase("1 Class with no name or kind or properties") {
+                testCase("1 Class with no name, namespace, kind or properties") {
                     input("uml") {
                         element("Package") {
                             propertyString("name", "pkg1")
@@ -1338,7 +1368,7 @@ class test_m2mTransformInterpreter {
                             }
                         }
                     }
-                    expectIssue(LanguageIssueKind.WARNING,"In rule 'PackageToSchema' the 'where' clause matched nothing.")
+                    expectIssue(LanguageIssueKind.WARNING, "In rule 'PackageToSchema' the 'where' clause matched nothing.")
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
@@ -1346,17 +1376,18 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                testCase("1 Class with no name or properties") {
+                testCase("1 Class with kind, but no name, namespace, or properties") { //when clause of ClassToSchema fails
                     input("uml") {
                         element("Package") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
                                 element("Class") {
-                                    propertyString("kind","Persistent")
+                                    propertyString("kind", "Persistent")
                                 }
                             }
                         }
                     }
+                    expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'rdbms' of rule 'ClassToTable'.")
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
@@ -1364,15 +1395,35 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                testCase("1 Class with no properties") {
-                    input("uml") {
+                testCase("1 Class with kind & namespace, but no name, or properties") {
+                    input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
                         element("Package") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
                                 element("Class") {
-                                    reference("namespace","pkg1")
-                                    propertyString("kind","Persistent")
-                                    propertyString("name","Cls1")
+                                    propertyString("kind", "Persistent")
+                                    reference("namespace", "pkg1")
+                                }
+                            }
+                        }
+                    }
+                    expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'ClassToTable' in 'umlRdbms', the all call to rule 'AttributeToColumn' is expecting a collection.")
+                    target("rdbms") {
+                        element("Schema") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("table") {}
+                        }
+                    }
+                }
+                testCase("1 Class with kind, namespace & name, but no properties") {
+                    input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
+                        element("Package") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("elements") {
+                                element("Class") {
+                                    reference("namespace", "pkg1")
+                                    propertyString("kind", "Persistent")
+                                    propertyString("name", "Cls1")
                                 }
                             }
                         }
@@ -1382,7 +1433,7 @@ class test_m2mTransformInterpreter {
                             propertyString("name", "pkg1")
                             propertyListOfElement("table") {
                                 element("Table") {
-                                    reference("schema","pkg1")
+                                    reference("schema", "pkg1")
                                 }
                             }
                         }
@@ -1415,7 +1466,8 @@ class test_m2mTransformInterpreter {
                 it.asm!!
             }
             val ogs = suite.typeDomains.entries.associate { (k, v) ->
-                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues))
+                val cdr = suite.crossReferenceDomains[k]
+                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, ExternalGetterAsmSimple(v, cdr, issues)))
             }
             val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
 
@@ -1435,7 +1487,7 @@ class test_m2mTransformInterpreter {
             val trRes = interpreter.transform(tgtTransform, case.target!!, source)
             println("----- M2M Transform Result -----")
             println(trRes.asString())
-            assertEquals(case.expectedIssues,trRes.issues.all, trRes.issues.toString())
+            assertEquals(case.expectedIssues, trRes.issues.all, trRes.issues.toString())
             val expected = case.expected
             if (null != expected) {
                 assertEquals(expected.root.size, trRes.targets.size)
@@ -1460,7 +1512,7 @@ class test_m2mTransformInterpreter {
     @Test
     fun single() {
         val suite = testSuits["Full umlRdbms QVT example"]!!
-        val case = suite.testCase["Package with empty List elements"]!!
+        val case = suite.testCase["1 Class with kind & namespace, but no name, or properties"]!!
         doTest2(suite, case)
     }
 }

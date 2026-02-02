@@ -578,6 +578,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 //            target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SEPARATED
 //            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE
 //        }
+
         val self = objectGraph.createTupleValue(
             listOf(
                 TypeArgumentNamedSimple(AsmTransformInterpreter.PATH, parsePath.type),
@@ -596,6 +597,18 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         //TODO: use factory, requires TransformInterpreter to be generic on SelfType
         val typedSelf = self //TypedObjectAsmValue(selfType, self as AsmValue) //asmFactory.toTypedObject(self, selfType)
         val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to typedSelf))
+
+
+
+//        val evcValues = mapOf(
+//            AsmTransformInterpreter.PATH.value to parsePath,
+//            AsmTransformInterpreter.ALTERNATIVE.value to alternative,
+//            AsmTransformInterpreter.CHILDREN.value to childrenAsmList,
+//            AsmTransformInterpreter.CHILD.value to childrenAsmList,
+//            AsmTransformInterpreter.MATCHED_TEXT.value to asmMatchedText
+//        )
+//        val evc = EvaluationContext.of(evcValues)
+
         val tr = downData.trRule.forNode
         _trf.clear()
         val asm = _trf.evaluate(evc, tr)

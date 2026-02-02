@@ -686,7 +686,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
             val value = createFromRhs(variables, v.rhs, tgtObjectGraph)
             propValues[k.value] = value
         }
-        objectTemplate.resolveType(tgtObjectGraph.typesDomain)
+    //    objectTemplate.resolveTypes(tgtObjectGraph.typesDomain)
         val obj = tgtObjectGraph.createStructureValue(objectTemplate.type.qualifiedTypeName, propValues)
         propValues.forEach { (k, v) ->
             val pn = PropertyName(k)

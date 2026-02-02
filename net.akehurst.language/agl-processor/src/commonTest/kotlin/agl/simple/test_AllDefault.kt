@@ -259,7 +259,6 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a") }
             literal("a", "a")
-
         }
         val expectedTm = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {

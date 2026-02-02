@@ -66,10 +66,10 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                                 e.resolveAs(it)
                             }
                         }
-                        v.domainSignature.forEach { (dk, dv) ->
-                            val typesDomain = def.domainParameterResolved[dv.domainRef]
+                        v.domainSignature.forEach { (dr, dv) ->
+                            val typesDomain = def.domainParameterResolved[dr]
                             if (null == typesDomain) {
-                                _issues.error(null, "TypesDomain '${dv.domainRef}' not found in rule '${k}'")
+                                _issues.error(null, "TypesDomain '$dr' not found in rule '${k}'")
                             } else {
                                 dv.variable.resolveType(typesDomain)
                             }
@@ -77,14 +77,21 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                         // resolve where and when rule refs
                         when (v) {
                             is M2mTransformPatternRule -> {
-                                val wn = v.when_
-                                when(wn) {
+                                v.domainTemplate.forEach { (dr,rhs) ->
+                                    val typesDomain = def.domainParameterResolved[dr]
+                                    if (null == typesDomain) {
+                                        _issues.error(null, "TypesDomain '${dr.value}' not found in rule '${k.value}'")
+                                    } else {
+                                         val typeIssues = rhs.resolveTypes(typesDomain)
+                                         _issues.addAll(typeIssues)
+                                    }
+                                }
+
+                                when (val wn = v.when_) {
                                     is RuleCall -> def.rule[wn.ruleName]?.let { wn.resolveAs(it) }
                                 }
                                 v.where.forEach { w ->
-                                    when (w) {
-                                        is RuleCall -> def.rule[w.ruleName]?.let { w.resolveAs(it) }
-                                    }
+                                    def.rule[w.ruleName]?.let { w.resolveAs(it) }
                                 }
                             }
                         }

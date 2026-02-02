@@ -24,9 +24,13 @@ import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
+import kotlin.math.exp
 
 class M2mTransformDomainDefault(
     override val name: SimpleName,
@@ -336,9 +340,16 @@ data class ObjectTemplateDefault(
         this.identifier = value
     }
 
-    override fun resolveType(tm: TypesDomain) {
+    override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
         val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.typeRef.possiblyQualifiedName)
-        _resolvedType = td?.type()
+        val issues = if (null == td) {
+            val msg = "In ObjectTemplate, cannot resolveType '${this.typeRef.possiblyQualifiedName.value}' in TypesDomain '${tm.name.value}'."
+            listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, null, msg, null))
+        } else {
+            _resolvedType = td.type()
+            emptyList()
+        }
+        return issues + propertyTemplate.values.flatMap { it.rhs.resolveTypes(tm) }
     }
 }
 
@@ -349,6 +360,10 @@ data class CollectionTemplateDefault(
     override var identifier: SimpleName? = null
     override fun setIdentifierValue(value: SimpleName) {
         this.identifier = value
+    }
+
+    override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
+        return elements.flatMap { it.resolveTypes(tm) }
     }
 }
 
@@ -365,6 +380,11 @@ class PropertyTemplateExpressionDefault(
     override var identifier: SimpleName? = null
     override fun setIdentifierValue(value: SimpleName) {
         this.identifier = value
+    }
+
+    override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
+        //TODO:
+        return emptyList()
     }
 }
 
@@ -385,8 +405,8 @@ data class M2MTransformTestDefault(
 
     override fun merge(value: M2mTransformTest) {
         check(this.domainParameters == value.domainParameters) { "Domain parameters must match" }
-       // (extends as MutableList).addAll(value.extends)
-       // (importTypes as MutableList).addAll(value.importTypes)
+        // (extends as MutableList).addAll(value.extends)
+        // (importTypes as MutableList).addAll(value.importTypes)
         value.testCase.forEach {
             if (this.testCase.containsKey(it.key)) {
                 error("M2mTransformTest '${qualifiedName}' already contains a test-case named '${it.key}', cannot merge another")

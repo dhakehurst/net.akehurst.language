@@ -342,17 +342,23 @@ class AsmStructureSimple(
         other !is AsmStructure -> false
         this.qualifiedTypeName != other.qualifiedTypeName -> false
         //this.parsePath != other.parsePath -> false
-        this.property.size != other.property.size -> false
-        else -> {
-            this.property.all { (k, v) ->
-                val o = other.property[k]
-                if (null == o) {
-                    false
-                } else {
-                    v.equalTo(o)
+        else -> when {
+            null != this.semanticQualifiedPath && null != other.semanticQualifiedPath -> this.semanticQualifiedPath == other.semanticQualifiedPath
+            else -> when {
+                this.property.size != other.property.size -> false
+                else -> {
+                    this.property.all { (k, v) ->
+                        val o = other.property[k]
+                        if (null == o) {
+                            false
+                        } else {
+                            v.equalTo(o)
+                        }
+                    }
                 }
             }
         }
+
     }
 
     override fun hashCode(): Int = parsePath.hashCode()

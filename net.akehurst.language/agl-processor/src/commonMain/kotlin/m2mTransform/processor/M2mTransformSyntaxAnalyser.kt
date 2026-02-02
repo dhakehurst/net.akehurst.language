@@ -429,11 +429,11 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
 
     // objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
     private fun objectTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ObjectTemplate {
-        val id = (children[0] as? List<Any>)?.getOrNull(0) as? String
-        val tr = children[1] as TypeReference
-        val pt = children[2] as Map<SimpleName, PropertyTemplate>
-        return ObjectTemplateDefault(tr, pt).apply {
-            id?.let { setIdentifierValue(SimpleName(id)) }
+        val variableName = (children[0] as? List<Any>)?.getOrNull(0) as? String
+        val typeReference = children[1] as TypeReference
+        val propertyTemplateBlock = children[2] as Map<SimpleName, PropertyTemplate>
+        return ObjectTemplateDefault(typeReference, propertyTemplateBlock).apply {
+            variableName?.let { setIdentifierValue(SimpleName(variableName)) }
         }
     }
 
@@ -450,11 +450,14 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return PropertyTemplateDefault(SimpleName(id), rhs)
     }
 
-    // collectionTemplate = '[' ('...')? [propertyPatternRhs / ',']* ']' ;
+    // collectionTemplate = (variableName ':')? '[' ('...')? [propertyPatternRhs / ',']* ']' ;
     private fun collectionTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionTemplate {
-        val isSubset = children[1] != null
-        val els = (children[2] as List<Any>).toSeparatedList<Any, PropertyTemplateRhs, String>()
-        return CollectionTemplateDefault(isSubset, els.items)
+        val variableName = (children[0] as? List<Any>)?.getOrNull(0) as? String
+        val isSubset = children[2] != null
+        val els = (children[3] as List<Any>).toSeparatedList<Any, PropertyTemplateRhs, String>()
+        return CollectionTemplateDefault(isSubset, els.items).apply {
+            variableName?.let { setIdentifierValue(SimpleName(variableName)) }
+        }
     }
 
     // testUnit = option* import* testNamespace* ;

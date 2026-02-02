@@ -48,7 +48,7 @@ class CrossReferenceDomainBuilder(
         val ns = CrossReferenceNamespaceDefault(QualifiedName(namespaceQualifiedName))
         val b = DeclarationsForNamespaceBuilder(ns)
         b.init()
-        val (def, imps) =b.build()
+        val (_, imps) =b.build()
         imps.forEach { ns.addImport(it) }
         _namespaces.add(ns)
     }
@@ -64,12 +64,21 @@ class DeclarationsForNamespaceBuilder(
     private val namespace: CrossReferenceNamespace
 ) {
     private val _importedNamespaces = mutableListOf<Import>()
+    private val _rootIdentifiables = mutableListOf<Identifiable>()
     private val _references = mutableListOf<ReferenceDefinition>()
     private val _scopes = mutableListOf<ScopeDefinition>()
 
 
     fun import(namespaceQualifiedName: String) {
         _importedNamespaces.add(Import(namespaceQualifiedName))
+    }
+
+    fun identify(typeName: String, expressionStr: String) {
+        val exprResult = Agl.registry.agl.expressions.processor!!.process(expressionStr)
+        check(exprResult.allIssues.errors.isEmpty()) { exprResult.allIssues.toString() }
+        val expression = exprResult.asm ?: error("No expression created from given expressionStr")
+        val i = IdentifiableDefault(SimpleName(typeName), expression)
+        _rootIdentifiables.add(i)
     }
 
     fun scope(forTypeName: String, init: ScopeDefinitionBuilder.() -> Unit) {
@@ -86,6 +95,7 @@ class DeclarationsForNamespaceBuilder(
 
     fun build(): Pair<DeclarationsForNamespace, List<Import>> {
         val result = DeclarationsForNamespaceDefault(namespace)
+        (result.scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.identifiables as MutableList?)?.addAll(_rootIdentifiables)
         _scopes.forEach { result.scopeDefinition[it.scopeForTypeName] = it }
         result.references.addAll(_references)
         return Pair(result,_importedNamespaces)

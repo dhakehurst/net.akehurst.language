@@ -17,6 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.Indent
@@ -26,6 +27,8 @@ import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 
@@ -165,7 +168,14 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor<AsmValue> {
     }
 }
 
-class ExternalGetterAsmSimple() : ExternalGetter<AsmValue> {
+class ExternalGetterAsmSimple(
+    val typesDomain: TypesDomain,
+    val crossReferenceDomain: CrossReferenceDomain?,
+    val issues: IssueHolder,
+) : ExternalGetter<AsmValue> {
+
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, this), issues)
+
     override fun typeFor(obj: AsmValue): TypeInstance {
         TODO("not implemented")
     }
@@ -173,6 +183,14 @@ class ExternalGetterAsmSimple() : ExternalGetter<AsmValue> {
     override fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): AsmValue {
         val obj = AsmStructureSimple(qualifiedName)
         constructorArgs.forEach { (k, v) -> obj.setProperty(PropertyValueName(k), v as AsmValue, obj.property.size) }
+
+        crossReferenceDomain?.let {
+            val id = SemanticAnalyserSimple.identifyingValueInFor(_interpreter, crossReferenceDomain, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last, obj)
+            when (id) {
+                is String -> obj.setSemanticQualifiedPath( listOf(id))
+            }
+        }
+
         return obj
     }
 
@@ -200,7 +218,7 @@ class TypedObjectAsmValue(
 open class ObjectGraphAccessorMutatorAsmSimple(
     override var typesDomain: TypesDomain,
     val issues: IssueHolder,
-    override val externalGetter: ExternalGetter<AsmValue> = ExternalGetterAsmSimple(),
+    override val externalGetter: ExternalGetter<AsmValue> = ExternalGetterAsmSimple(typesDomain, null, issues),
     override val primitiveExecutor: PrimitiveExecutor<AsmValue> = StdLibPrimitiveExecutionsForAsmSimple
 ) : ObjectGraphAccessorMutator<AsmValue> {
 
@@ -230,8 +248,17 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     override fun toTypedObject(obj: AsmValue?): TypedObject<AsmValue> = obj?.toTypedObject() ?: nothing()
 
     override fun isNothing(obj: TypedObject<AsmValue>): Boolean = obj.self == AsmNothingSimple
-    override fun equalTo(lhs: TypedObject<AsmValue>, rhs: TypedObject<AsmValue>): Boolean =
-        lhs.self.equalTo(rhs.self)
+    override fun equalTo(lhs: TypedObject<AsmValue>, rhs: TypedObject<AsmValue>): Boolean {
+        val lhsResolved = when (lhs.self) {
+            is AsmReference -> (lhs.self as AsmReference).value ?: lhs.self
+            else -> lhs.self
+        }
+        val rhsResolved = when (rhs.self) {
+            is AsmReference -> (rhs.self as AsmReference).value ?: rhs.self
+            else -> rhs.self
+        }
+        return lhsResolved.equalTo(rhsResolved)
+    }
 
     override fun nothing() = AsmNothingSimple.toTypedObject()
     override fun any(value: Any) = AsmAnySimple(value).toTypedObject()
@@ -254,7 +281,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         val typeDecl = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Type not found ${possiblyQualifiedTypeName}")
         //val asmPath = AsmPathSimple("??") //TODO:
-        val obj = externalGetter.createStructure(possiblyQualifiedTypeName.asQualifiedName(null), constructorArgs.map {(k,v) -> Pair(k,v.self)}.toMap()) ?: AsmNothingSimple
+        val obj = externalGetter.createStructure(possiblyQualifiedTypeName.asQualifiedName(null), constructorArgs.map { (k, v) -> Pair(k, v.self) }.toMap()) ?: AsmNothingSimple
         val type = typeDecl.type()
         addCreatedStructure(type, obj)
         return TypedObjectAsmValue(type, obj)
@@ -303,7 +330,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     }
 
     override fun getFromMapWithKey(tobj: TypedObject<Any>, key: TypedObject<Any>): TypedObject<AsmValue> {
-       TODO()
+        TODO()
     }
 
     override fun forEachIndexed(tobj: TypedObject<AsmValue>, body: (index: Int, value: TypedObject<AsmValue>) -> Unit) {
@@ -439,7 +466,27 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     override fun setProperty(tobj: TypedObject<AsmValue>, propertyName: String, value: TypedObject<AsmValue>) {
         //TODO: use executor
         val obj = tobj.self as AsmStructure
-        obj.setProperty(PropertyValueName(propertyName), value.self, obj.property.size)
+        val asmValue = value.self
+        // if property is a reference && value is a structure && semanticPath is available THEN set a reference rather than composition
+        when (asmValue) {
+            is AsmStructureSimple -> {
+                val prop = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                val refStr = asmValue.semanticQualifiedPath?.joinToString(separator = ".")
+                when (prop) {
+                    null -> obj.setProperty(PropertyValueName(propertyName), asmValue, obj.property.size)
+                    else -> when {
+                        prop.isReference && null != refStr -> {
+                            val ref = AsmReferenceSimple(refStr, asmValue)
+                            obj.setProperty(PropertyValueName(propertyName), ref, obj.property.size)
+                        }
+
+                        else -> obj.setProperty(PropertyValueName(propertyName), asmValue, obj.property.size)
+                    }
+                }
+            }
+
+            else -> obj.setProperty(PropertyValueName(propertyName), asmValue, obj.property.size)
+        }
     }
 
     override fun executeMethod(tobj: TypedObject<AsmValue>, methodName: String, args: List<TypedObject<AsmValue>>): TypedObject<AsmValue> {
@@ -450,6 +497,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                 issues.warn(null, $$"in executeMethod, Method '$$methodName' not found on object of type '$${tobj.type.typeName}', using value '$nothing'")
                 nothing()
             }
+
             else -> {
                 val type = tobj.type.resolvedDeclaration
                 val stdMeths = StdLibPrimitiveExecutionsForAsmSimple.method[type]
