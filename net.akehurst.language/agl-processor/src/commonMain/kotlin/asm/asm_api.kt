@@ -80,7 +80,7 @@ data class PropertyValueName(override val value: String) : PublicValueType {
 interface AsmStructure : AsmValue {
     /** '/' separated String representation of ParsePath */
     val parsePath: String
-    var semanticPath: AsmPath?
+    var syntaxAnalyserPath: AsmPath? //TODO: not sure we still need this, maybe it is useful?
     val semanticQualifiedPath:List<String>?
 
     val property: Map<PropertyValueName, AsmStructureProperty>
@@ -161,6 +161,13 @@ interface AsmStructureProperty {
     fun convertToReferenceTo(referredValue: AsmStructure?)
 
     fun equalTo(other: AsmStructureProperty): Boolean
+}
+
+interface AsmSet : AsmValue {
+    val elements: Set<AsmValue>
+
+    val isEmpty: Boolean
+    val isNotEmpty: Boolean
 }
 
 interface AsmList : AsmValue {

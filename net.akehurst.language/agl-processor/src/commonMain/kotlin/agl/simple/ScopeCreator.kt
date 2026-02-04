@@ -64,7 +64,7 @@ class ScopeCreator<ItemInScopeType : Any>(
         val chScope = createScope(scope, value)
         currentScope.push(chScope)
 
-        value.semanticPath = chScope.scopePath.fold(AsmPathSimple.ROOT) { acc, it -> acc.plus(it) }
+        value.syntaxAnalyserPath = chScope.scopePath.fold(AsmPathSimple.ROOT) { acc, it -> acc.plus(it) }
     }
 
     override  fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {}

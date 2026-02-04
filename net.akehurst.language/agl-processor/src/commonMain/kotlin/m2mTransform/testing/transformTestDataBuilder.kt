@@ -155,7 +155,6 @@ class M2MTransformTestCaseBuilder(
     fun target(
         domainReference: String,
         defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
-        crossReferenceDomain: CrossReferenceDomain = CrossReferenceDomainDefault(SimpleName("CrossReference")),
         sentenceId: Any? = null,
         context: SentenceContextAny? = null,
         /** need to pass in a context if you want to resolveReferences */
@@ -167,7 +166,8 @@ class M2MTransformTestCaseBuilder(
         val dr = DomainReference(domainReference)
         val typesDomain: TypesDomain = this.typeDomains[dr]!!
         val defNs = typesDomain.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
-        val b = AsmSimpleBuilder(typesDomain, defNs, crossReferenceDomain, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
+        val crd = crossReferenceDomain[dr] ?: CrossReferenceDomainDefault(SimpleName("CrossReference"))
+        val b = AsmSimpleBuilder(typesDomain, defNs, crd, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
         b.init()
         _target = dr
         _expected = b.build()

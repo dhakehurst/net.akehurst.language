@@ -76,7 +76,7 @@ class test_CrossReferenceLanguage {
     @Test
     fun check_typeModel() {
         val actual = aglProc.typesDomain
-        val expected = grammarTypeModel("net.akehurst.language.agl.language", "References") {
+        val expected = grammarTypeModel("net.akehurst.language.Base", "References") {
             // declarations = rootIdentifiables scopes references?
             dataFor("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)

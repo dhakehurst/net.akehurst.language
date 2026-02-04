@@ -17,7 +17,6 @@
 
 package net.akehurst.language.asm.builder
 
-import net.akehurst.kotlinx.utils.asyncLazy
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
@@ -182,7 +181,7 @@ class AsmElementSimpleBuilder(
         }
     }
     private val _element = _asm.createStructure("/", _elementQualifiedTypeName).also {
-        it.semanticPath = _asmPath
+        it.syntaxAnalyserPath = _asmPath
         if (_isRoot) _asm.addRoot(it)
     }
     private val _elementScope by lazy {
@@ -247,7 +246,7 @@ class AsmElementSimpleBuilder(
 
      fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, name, init)
      fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
-        val newPath = _element.semanticPath!!.plus(name)
+        val newPath = _element.syntaxAnalyserPath!!.plus(name)
         val ns = _typesDomain.findNamespaceOrNull(_elementQualifiedTypeName.front)
             ?: _defaultNamespace
         val b = AsmElementSimpleBuilder(_typesDomain, ns, _crossReferenceDomain, _context, _scopeMap, this._asm, _identifyingValueInFor, newPath, typeName, false, _elementScope)
@@ -263,7 +262,7 @@ class AsmElementSimpleBuilder(
         this.propertyListOfElement(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, init)
 
      fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
-        val newPath = _element.semanticPath!! + name
+        val newPath = _element.syntaxAnalyserPath!! + name
         val ns = _typesDomain.findNamespaceOrNull(_elementQualifiedTypeName.front)
             ?: _defaultNamespace
         val b = ListAsmElementSimpleBuilder(_typesDomain, ns, _crossReferenceDomain, _context, _scopeMap, this._asm, newPath, _elementScope, _identifyingValueInFor)

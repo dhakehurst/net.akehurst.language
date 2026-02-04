@@ -19,7 +19,7 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult

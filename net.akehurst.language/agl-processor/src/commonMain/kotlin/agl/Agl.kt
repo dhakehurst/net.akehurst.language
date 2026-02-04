@@ -40,6 +40,7 @@ import net.akehurst.language.grammar.asm.GrammarDomainDefault
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.parser.api.ParseOptions

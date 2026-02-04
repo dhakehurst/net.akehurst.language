@@ -307,6 +307,9 @@ class ExternalGetterByReflection<SelfType : Any>(
         }
     }
 
+    override fun setProperty(obj: SelfType, propertyName: String, value: Any?) {
+        TODO()
+    }
 }
 
 open class ObjectGraphByReflection(

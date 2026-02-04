@@ -260,7 +260,7 @@ class AsmReferenceSimple(
 
     override fun toString(): String = when (value) {
         null -> "<unresolved> &$reference"
-        else -> "&{'${value!!.semanticPath?.value ?: value!!.parsePath.toString()}' : ${value!!.typeName}}"
+        else -> "&{'${ value!!.qualifiedName(".") ?: value!!.syntaxAnalyserPath?.value ?: value!!.parsePath}' : ${value!!.typeName}}"
     }
 }
 
@@ -271,7 +271,7 @@ class AsmStructureSimple(
     private var _properties = mutableMapOf<PropertyValueName, AsmStructurePropertySimple>()
 
     override var parsePath: String = "??"
-    override var semanticPath: AsmPath? = null
+    override var syntaxAnalyserPath: AsmPath? = null //TODO: not sure if still need this
     override var semanticQualifiedPath: List<String>? = null ; private set
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
@@ -367,7 +367,7 @@ class AsmStructureSimple(
         else -> false
     }
 
-    override fun toString(): String = ":$typeName[${semanticPath?.value ?: parsePath.toString()}] { ${this.property.values.joinToString()}} }"
+    override fun toString(): String = ":$typeName[${qualifiedName(".") ?: syntaxAnalyserPath?.value ?: parsePath}]"
 
 }
 
@@ -442,6 +442,39 @@ class AsmStructurePropertySimple(
             else -> "$name = ${v}"
         }
     }
+}
+
+class AsmSetSimple(
+    override val elements: Set<AsmValue>
+) : AsmValueAbstract(), AsmSet {
+    override val qualifiedTypeName get() = StdLibDefault.List.qualifiedName
+
+    override val isEmpty: Boolean get() = elements.isEmpty()
+    override val isNotEmpty: Boolean get() = elements.isNotEmpty()
+
+    override fun asString(indent: Indent): String = when {
+        elements.isEmpty() -> "[]"
+        1 == elements.size -> "[ ${elements.first().asString(indent.inc)} ]"
+        else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
+    }
+
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmSet -> false
+        other.elements.size != this.elements.size -> false
+        else -> {
+            this.elements.all { tEl ->
+                other.elements.any { othEl -> tEl.equalTo(othEl) }
+            }
+        }
+    }
+
+    override fun hashCode(): Int = elements.hashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is AsmList -> false
+        else -> this.elements == other.elements
+    }
+
+    override fun toString(): String = elements.toString()
 }
 
 class AsmListSimple(

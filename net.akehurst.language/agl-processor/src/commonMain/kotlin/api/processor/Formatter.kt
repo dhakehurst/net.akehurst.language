@@ -17,53 +17,8 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.formatter.api.AglFormatDomain
-import net.akehurst.language.objectgraph.api.TypedObject
-
-data class EvaluationContext<SelfType : Any>(
-    val parent: EvaluationContext<SelfType>?,
-    val namedValues: Map<String, TypedObject<SelfType>>
-) {
-    companion object {
-        fun <SelfType : Any> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
-        fun <SelfType : Any> ofSelf(
-            self: TypedObject<SelfType>,
-            namedValues: Map<String, TypedObject<SelfType>> = emptyMap(),
-            parent: EvaluationContext<SelfType>? = null
-        ): EvaluationContext<SelfType> {
-            val env = namedValues.toMutableMap()
-            env[RootExpressionDefault.SELF.name] = self
-            return of(env, parent = parent)
-        }
-    }
-
-    val self = namedValues[RootExpressionDefault.SELF.name]
-
-    fun getOrInParent(name: String): TypedObject<SelfType>? = namedValues[name] ?: parent?.getOrInParent(name)
-
-    fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
-
-    fun childSelf(self: TypedObject<SelfType>) = ofSelf(self, this.namedValues, parent = this)
-
-    override fun toString(): String {
-        val sb = StringBuilder()
-        this.parent?.let {
-            sb.append(it.toString())
-            sb.append("----------\n")
-        } ?: run {
-            sb.append("\n")
-        }
-        this.namedValues.forEach {
-            sb.append("  ")
-            sb.append(it.key)
-            sb.append(" := ")
-            sb.append(it.value.toString())
-            sb.append("\n")
-        }
-        return sb.toString()
-    }
-}
+import net.akehurst.language.objectgraph.api.EvaluationContext
 
 interface Formatter<SelfType : Any> {
     val formatDomain: AglFormatDomain

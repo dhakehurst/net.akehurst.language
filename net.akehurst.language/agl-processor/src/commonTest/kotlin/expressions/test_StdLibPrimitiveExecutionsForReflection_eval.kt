@@ -20,7 +20,7 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder

@@ -100,8 +100,8 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
 
     override val crossReferenceString = """
         namespace $NAMESPACE_NAME
-          // TODO
-    """.trimIndent()
+            scope §root { }
+    """.trimIndent() //TODO:
 
     override val styleString: String = """
         namespace $NAMESPACE_NAME
@@ -110,13 +110,21 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
               foreground: darkgreen;
               font-weight: bold;
             }
+            MULTI_LINE_COMMENT {
+              foreground: gray;
+              font-style: italic;
+            }
+            SINGLE_LINE_COMMENT {
+              foreground: darkgray;
+              font-style: italic;
+            }
           }
       """
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
-          // TODO
-    """.trimIndent()
+        
+    """.trimIndent() //TODO:
 
     override val grammarDomain: GrammarDomain by lazy {
         grammarDomain(NAME) {
@@ -308,13 +316,17 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            declarationsFor(NAMESPACE_NAME) {
+
+            }
         }
     }
 
     override val formatDomain: AglFormatDomain by lazy {
         formatDomain(NAME) {
-            //TODO("not implemented")
+            namespace(NAMESPACE_NAME) {
+                //TODO("not implemented")
+            }
         }
     }
 

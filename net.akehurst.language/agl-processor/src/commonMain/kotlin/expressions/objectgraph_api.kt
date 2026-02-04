@@ -20,12 +20,63 @@ package net.akehurst.language.objectgraph.api
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.types.api.*
 
 interface TypedObject<out SelfType : Any> {
     val self: SelfType
     val type: TypeInstance
     fun asString(indent: Indent = Indent()): String
+}
+
+data class EvaluationContext<SelfType : Any>(
+    val parent: EvaluationContext<SelfType>?,
+    val namedValues: Map<String, TypedObject<SelfType>>
+) {
+    companion object {
+        fun <SelfType : Any> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
+        fun <SelfType : Any> ofSelf(
+            self: TypedObject<SelfType>,
+            namedValues: Map<String, TypedObject<SelfType>> = emptyMap(),
+            parent: EvaluationContext<SelfType>? = null
+        ): EvaluationContext<SelfType> {
+            val env = namedValues.toMutableMap()
+            env[RootExpressionDefault.SELF.name] = self
+            return of(env, parent = parent)
+        }
+    }
+
+    val self = namedValues[RootExpressionDefault.SELF.name]
+
+    val executionTrace:List<String> = mutableListOf()
+
+    fun getOrInParent(name: String): TypedObject<SelfType>? = namedValues[name] ?: parent?.getOrInParent(name)
+
+    fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
+
+    fun childSelf(self: TypedObject<SelfType>) = ofSelf(self, this.namedValues, parent = this)
+
+    fun addExecutionTrace(trace:String) {
+        (executionTrace as MutableList).add(trace)
+    }
+
+    override fun toString(): String {
+        val sb = StringBuilder()
+        this.parent?.let {
+            sb.append(it.toString())
+            sb.append("----------\n")
+        } ?: run {
+            sb.append("\n")
+        }
+        this.namedValues.forEach {
+            sb.append("  ")
+            sb.append(it.key)
+            sb.append(" := ")
+            sb.append(it.value.toString())
+            sb.append("\n")
+        }
+        return sb.toString()
+    }
 }
 
 data class ExecutionResult(val value: Any?)
@@ -85,6 +136,7 @@ interface ExternalGetter<T : Any> {
     fun typeFor(obj: T): TypeInstance
     fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): T?
     fun getProperty(obj: T, propertyName: String): Any?
+    fun setProperty(obj: T, propertyName: String, value: Any?)
 }
 
 interface ObjectGraphAccessorMutator<SelfType : Any> : ObjectGraphAccessorMutatorCommon<SelfType> {
@@ -93,7 +145,7 @@ interface ObjectGraphAccessorMutator<SelfType : Any> : ObjectGraphAccessorMutato
 
     fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
 
-    fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<Any>>): TypedObject<SelfType>
+    fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<SelfType>>): TypedObject<SelfType>
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists

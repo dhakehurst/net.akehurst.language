@@ -17,7 +17,7 @@
 
 package net.akehurst.language.m2mTransform.processor
 
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.FunctionCall

@@ -23,7 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple

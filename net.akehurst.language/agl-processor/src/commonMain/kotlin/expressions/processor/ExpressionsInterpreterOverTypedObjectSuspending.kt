@@ -18,7 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.CastExpression
 import net.akehurst.language.expressions.api.CreateObjectExpression

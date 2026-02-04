@@ -68,7 +68,6 @@ class DeclarationsForNamespaceBuilder(
     private val _references = mutableListOf<ReferenceDefinition>()
     private val _scopes = mutableListOf<ScopeDefinition>()
 
-
     fun import(namespaceQualifiedName: String) {
         _importedNamespaces.add(Import(namespaceQualifiedName))
     }

@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.kotlinx.collections.mutableStackOf
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*

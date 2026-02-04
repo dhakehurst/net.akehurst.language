@@ -17,7 +17,7 @@
 
 package net.akehurst.language.asmTransform.processor
 
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.base.api.QualifiedName
