@@ -1192,6 +1192,10 @@ class test_m2mTransformInterpreter {
                         }
                         data("Key") {
                             supertypes("RModelElement")
+                            constructor_ {
+                                parameter("owner", "Table")
+                                parameter("name", "String")
+                            }
                         }
                         data("ForeignKey") {
                             supertypes("RModelElement")
@@ -1247,6 +1251,7 @@ class test_m2mTransformInterpreter {
                         }
                         scope("Table") {
                             identify("Column", "name")
+                            identify("Key", "name")
                         }
                     }
                 }
@@ -1289,6 +1294,7 @@ class test_m2mTransformInterpreter {
                                   }
                                 ]
                                 key==k:Key {
+                                    owner==t
                                     name=='_pk'
                                     column==pk_col
                                     kind=='primary'
