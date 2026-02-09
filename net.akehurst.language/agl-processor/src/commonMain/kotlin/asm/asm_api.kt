@@ -163,15 +163,19 @@ interface AsmStructureProperty {
     fun equalTo(other: AsmStructureProperty): Boolean
 }
 
-interface AsmSet : AsmValue {
-    val elements: Set<AsmValue>
+interface AsmCollection : AsmValue {
+    val elements: Collection<AsmValue>
+}
+
+interface AsmSet : AsmCollection {
+    override val elements: Set<AsmValue>
 
     val isEmpty: Boolean
     val isNotEmpty: Boolean
 }
 
-interface AsmList : AsmValue {
-    val elements: List<AsmValue>
+interface AsmList : AsmCollection {
+    override val elements: List<AsmValue>
 
     val isEmpty: Boolean
     val isNotEmpty: Boolean

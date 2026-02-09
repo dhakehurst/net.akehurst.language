@@ -24,12 +24,15 @@ import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.expressions.asm.TypeReferenceDefault
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.math.exp
 
 class M2mTransformDomainDefault(
@@ -331,6 +334,11 @@ data class ObjectTemplateDefault(
     override val propertyTemplate: Map<SimpleName, PropertyTemplate>
 ) : ObjectTemplate {
 
+    // used when type is known
+    constructor(type: TypeInstance, propertyTemplate: Map<SimpleName, PropertyTemplate>) : this(TypeReferenceDefault(type.qualifiedTypeName,emptyList(),type.isNullable),propertyTemplate) {
+        _resolvedType = type
+    }
+
     override var identifier: SimpleName? = null
 
     private var _resolvedType: TypeInstance? = null
@@ -351,6 +359,19 @@ data class ObjectTemplateDefault(
         }
         return issues + propertyTemplate.values.flatMap { it.rhs.resolveTypes(tm) }
     }
+
+    override fun asString(indent: Indent): String {
+        val id = identifier?.let { "${it.value}:" } ?: ""
+        val propIndent = indent.inc
+        val props = propertyTemplate.entries.joinToString(separator = "\n") { (k,v) -> "$propIndent${k.value}==${v.rhs.asString(propIndent)}" }
+        return when {
+            propertyTemplate.isEmpty() -> "$id$type { }"
+            else -> """$id$type {
+            $props
+            $indent}
+            """.trimIndent()
+        }
+    }
 }
 
 data class CollectionTemplateDefault(
@@ -364,6 +385,18 @@ data class CollectionTemplateDefault(
 
     override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
         return elements.flatMap { it.resolveTypes(tm) }
+    }
+    override fun asString(indent: Indent): String {
+        val id = identifier?.let { "${it.value}:" } ?: ""
+        val elIndent = indent.inc
+        val elems = elements.joinToString(separator = "\n") { el -> "$elIndent${el.asString(elIndent)}" }
+        return when{
+            elements.isEmpty() -> "$id[ ]"
+            else -> """$id[
+            $elems
+            $indent]
+            """.trimIndent()
+        }
     }
 }
 
@@ -385,6 +418,12 @@ class PropertyTemplateExpressionDefault(
     override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
         //TODO:
         return emptyList()
+    }
+
+    override fun asString(indent: Indent): String {
+        val id = identifier?.let { "${it.value}:" } ?: ""
+        val exp = expression.asString(indent)
+        return "$id$exp"
     }
 }
 

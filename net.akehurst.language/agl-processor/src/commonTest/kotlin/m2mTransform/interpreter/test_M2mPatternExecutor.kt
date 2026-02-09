@@ -1,0 +1,294 @@
+package net.akehurst.language.agl.m2mTransform.processor.interpreter
+
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.asm.RootExpressionDefault
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.m2mTransform.api.ObjectTemplate
+import net.akehurst.language.m2mTransform.api.PropertyTemplate
+import net.akehurst.language.m2mTransform.api.PropertyTemplateRhs
+import net.akehurst.language.m2mTransform.asm.CollectionTemplateDefault
+import net.akehurst.language.m2mTransform.asm.ObjectTemplateDefault
+import net.akehurst.language.m2mTransform.asm.PropertyTemplateDefault
+import net.akehurst.language.m2mTransform.asm.PropertyTemplateExpressionDefault
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class test_M2mPatternExecutor {
+
+    private companion object {
+        fun doTest(types: TypesDomain, lhsType: TypeInstance, template: PropertyTemplateRhs, expected: List<String>) {
+            val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+            val accessorMutator = ObjectGraphAccessorMutatorAsmSimple(types, issues)
+            val sut = M2mPatternExecutor(issues, accessorMutator)
+
+            sut.build(template, lhsType)
+            val actual = sut.executionPlan().map { it.toString() }
+            println(actual.joinToString("\n"))
+
+            assertEquals(expected, actual)
+
+        }
+    }
+
+    @Test
+    fun executionPlan_unnamed_x() {
+        val types = typesDomain("Test", true) { }
+        val template = PropertyTemplateExpressionDefault(
+            RootExpressionDefault("x")
+        )
+
+        val expected = listOf(
+            "Execute expression: x [x] -> [] ^ null"
+        )
+
+        doTest(types, StdLibDefault.String, template, expected)
+    }
+
+    @Test
+    fun executionPlan_named_x() {
+        val types = typesDomain("Test", true) { }
+        val template = PropertyTemplateExpressionDefault(
+            RootExpressionDefault("x")
+        ).also {
+            it.setIdentifierValue(SimpleName("y"))
+        }
+
+        val expected = listOf(
+            "Execute expression: x [x] -> [y] ^ null"
+        )
+        doTest(types, StdLibDefault.String, template, expected)
+    }
+
+    @Test
+    fun executionPlan_unnamed_empty_nonSusbset_collection() {
+        val types = typesDomain("Test", true) { }
+        val template = CollectionTemplateDefault(false, emptyList())
+
+        val expected = listOf(
+            "Create Collection 'List' [] -> [] ^ null"
+        )
+
+        doTest(types, StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), template, expected)
+    }
+
+    @Test
+    fun executionPlan_named_empty_nonSusbset_collection() {
+        val types = typesDomain("Test", true) { }
+        val template = CollectionTemplateDefault(false, emptyList()).also {
+            it.setIdentifierValue(SimpleName("y"))
+        }
+
+
+        val expected = listOf(
+            "Create Collection 'List' [] -> [y] ^ null"
+        )
+
+        doTest(types, StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), template, expected)
+    }
+
+    @Test
+    fun executionPlan_named_nonSusbset_collection_of_unamed() {
+        val types = typesDomain("Test", true) { }
+        val elms = listOf(
+            PropertyTemplateExpressionDefault(RootExpressionDefault("a")),
+            PropertyTemplateExpressionDefault(RootExpressionDefault("b")),
+            PropertyTemplateExpressionDefault(RootExpressionDefault("c"))
+        )
+        val template = CollectionTemplateDefault(false, elms).also {
+            it.setIdentifierValue(SimpleName("y"))
+        }
+
+        val expected = listOf(
+            "Execute expression: a [a] -> [] ^ Create Collection 'List'",
+            "Execute expression: b [b] -> [] ^ Create Collection 'List'",
+            "Execute expression: c [c] -> [] ^ Create Collection 'List'",
+            "Create Collection 'List' [] -> [y] ^ null"
+        )
+
+        doTest(types, StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), template, expected)
+    }
+
+    @Test
+    fun executionPlan_named_nonSusbset_collection_of_named() {
+        val types = typesDomain("Test", true) { }
+        val elms = listOf(
+            PropertyTemplateExpressionDefault(RootExpressionDefault("a")).also { it.setIdentifierValue(SimpleName("p")) },
+            PropertyTemplateExpressionDefault(RootExpressionDefault("b")).also { it.setIdentifierValue(SimpleName("q")) },
+            PropertyTemplateExpressionDefault(RootExpressionDefault("c")).also { it.setIdentifierValue(SimpleName("r")) },
+        )
+        val template = CollectionTemplateDefault(false, elms).also {
+            it.setIdentifierValue(SimpleName("y"))
+        }
+
+        val expected = listOf(
+            "Execute expression: a [a] -> [p] ^ Create Collection 'List'",
+            "Execute expression: b [b] -> [q] ^ Create Collection 'List'",
+            "Execute expression: c [c] -> [r] ^ Create Collection 'List'",
+            "Create Collection 'List' [] -> [y] ^ null"
+        )
+
+        doTest(types, StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), template, expected)
+    }
+
+    @Test
+    fun executionPlan_named_nonSusbset_collection_of_named_and_interdependent() {
+        val types = typesDomain("Test", true) { }
+        val elms = listOf(
+            PropertyTemplateExpressionDefault(RootExpressionDefault("r")).also { it.setIdentifierValue(SimpleName("p")) },
+            PropertyTemplateExpressionDefault(RootExpressionDefault("p")).also { it.setIdentifierValue(SimpleName("q")) },
+            PropertyTemplateExpressionDefault(RootExpressionDefault("c")).also { it.setIdentifierValue(SimpleName("r")) },
+        )
+        val template = CollectionTemplateDefault(false, elms).also {
+            it.setIdentifierValue(SimpleName("y"))
+        }
+
+        val expected = listOf(
+            "Execute expression: c [c] -> [r] ^ Create Collection 'List'",
+            "Execute expression: r [r] -> [p] ^ Create Collection 'List'",
+            "Execute expression: p [p] -> [q] ^ Create Collection 'List'",
+            "Create Collection 'List' [] -> [y] ^ null"
+        )
+
+        doTest(types, StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), template, expected)
+    }
+
+    @Test
+    fun executionPlan_object_unnamed_empty() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    constructor_ { parameter("p1", "String") }
+                }
+            }
+        }
+        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
+        val template = ObjectTemplateDefault(objType, emptyMap())
+
+        val expected = listOf(
+            "Create object: 'A' [] -> [] ^ Set properties for: 'A'",
+            "Set properties for: 'A' [] -> [] ^ null"
+        )
+
+        doTest(types, objType, template, expected)
+    }
+
+    @Test
+    fun executionPlan_object_named_empty() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    constructor_ { parameter("p1", "String") }
+                }
+            }
+        }
+        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
+        val template = ObjectTemplateDefault(objType, emptyMap()).also { it.setIdentifierValue(SimpleName("a")) }
+
+        val expected = listOf(
+            "Create object: 'A' [] -> [a] ^ Set properties for: 'A'",
+            "Set properties for: 'A' [] -> [] ^ null"
+        )
+
+        doTest(types, objType, template, expected)
+    }
+
+    @Test
+    fun executionPlan_object_named_noconstructor_with_props() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A")
+            }
+        }
+        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
+        val props = listOf(
+            PropertyTemplateDefault(SimpleName("p1"), PropertyTemplateExpressionDefault(RootExpressionDefault("p"))),
+            PropertyTemplateDefault(SimpleName("p2"), PropertyTemplateExpressionDefault(RootExpressionDefault("q"))),
+            PropertyTemplateDefault(SimpleName("p3"), PropertyTemplateExpressionDefault(RootExpressionDefault("r"))),
+        ).associateBy { it.propertyName }
+        val template = ObjectTemplateDefault(objType, props).also { it.setIdentifierValue(SimpleName("a")) }
+
+        val expected = listOf(
+            "Create object: 'A' [] -> [a] ^ Set properties for: 'A'",
+            "Execute expression: p [p] -> [] ^ Set property 'p1'",
+            "Execute expression: q [q] -> [] ^ Set property 'p2'",
+            "Execute expression: r [r] -> [] ^ Set property 'p3'",
+            "Set property 'p1' [] -> [] ^ Set properties for: 'A'",
+            "Set property 'p2' [] -> [] ^ Set properties for: 'A'",
+            "Set property 'p3' [] -> [] ^ Set properties for: 'A'",
+            "Set properties for: 'A' [] -> [] ^ null"
+        )
+
+        doTest(types, objType, template, expected)
+    }
+
+    @Test
+    fun executionPlan_object_named_constructor_with_props() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    constructor_ { parameter("p1", "String") }
+                }
+            }
+        }
+        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
+
+        val props = listOf(
+            PropertyTemplateDefault(SimpleName("p1"), PropertyTemplateExpressionDefault(RootExpressionDefault("p"))),
+            PropertyTemplateDefault(SimpleName("p2"), PropertyTemplateExpressionDefault(RootExpressionDefault("q"))),
+            PropertyTemplateDefault(SimpleName("p3"), PropertyTemplateExpressionDefault(RootExpressionDefault("r"))),
+        ).associateBy { it.propertyName }
+        val template = ObjectTemplateDefault(objType, props).also { it.setIdentifierValue(SimpleName("a")) }
+
+        val expected = listOf(
+            "Execute expression: p [p] -> [] ^ Set property 'p1'",
+            "Execute expression: q [q] -> [] ^ Set property 'p2'",
+            "Execute expression: r [r] -> [] ^ Set property 'p3'",
+            "Set property 'p1' [] -> [] ^ Create object: 'A'",
+            "Set property 'p2' [] -> [] ^ Set properties for: 'A'",
+            "Set property 'p3' [] -> [] ^ Set properties for: 'A'",
+            "Create object: 'A' [] -> [a] ^ Set properties for: 'A'",
+            "Set properties for: 'A' [] -> [] ^ null"
+        )
+
+        doTest(types, objType, template, expected)
+    }
+
+    @Test
+    fun executionPlan_object_named_constructor_with_props_interdependent() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    constructor_ { parameter("p1", "String") }
+                }
+            }
+        }
+        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
+
+        val props = listOf(
+            PropertyTemplateDefault(SimpleName("p1"), PropertyTemplateExpressionDefault(RootExpressionDefault("p"))),
+            PropertyTemplateDefault(SimpleName("p2"), PropertyTemplateExpressionDefault(RootExpressionDefault("q"))),
+            PropertyTemplateDefault(SimpleName("p3"), PropertyTemplateExpressionDefault(RootExpressionDefault("a"))),
+        ).associateBy { it.propertyName }
+        val template = ObjectTemplateDefault(objType, props).also { it.setIdentifierValue(SimpleName("a")) }
+
+        val expected = listOf(
+            "Execute expression: p [p] -> [] ^ Set property 'p1'",
+            "Execute expression: q [q] -> [] ^ Set property 'p2'",
+            "Set property 'p1' [] -> [] ^ Create object: 'A'",
+            "Set property 'p2' [] -> [] ^ Set properties for: 'A'",
+            "Create object: 'A' [] -> [a] ^ Set properties for: 'A'",
+            "Execute expression: a [a] -> [] ^ Set property 'p3'",
+            "Set property 'p3' [] -> [] ^ Set properties for: 'A'",
+            "Set properties for: 'A' [] -> [] ^ null"
+        )
+
+        doTest(types, objType, template, expected)
+    }
+}

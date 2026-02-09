@@ -173,6 +173,8 @@ interface PropertyTemplateRhs {
     val identifier: SimpleName?
     fun setIdentifierValue(value: SimpleName)
     fun resolveTypes(tm: TypesDomain): List<LanguageIssue> //TODO: use generic Issues ! and move this to semanticAnalyser
+
+    fun asString(indent: Indent = Indent()): String
 }
 
 interface ObjectTemplate : PropertyTemplateRhs {
