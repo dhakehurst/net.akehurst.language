@@ -1,5 +1,7 @@
 package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
+import net.akehurst.kotlinx.collections.MutableStack
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.kotlinx.collections.topologicalSort
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.CreateObjectExpression
@@ -35,18 +37,23 @@ class M2mPatternExecution<OT : Any>(
     val doMeBeforeThis: M2mPatternExecution<OT>?,
     val inputs: List<String>,
     val outputs: List<String>,
-    val execution: (variables: Map<String, TypedObject<OT>>, src: TypedObject<OT>) -> Map<String, TypedObject<OT>>
+    val execution: (variables: Map<String, TypedObject<OT>>, valStack: MutableStack<TypedObject<OT>>) -> Map<String, TypedObject<OT>>
 ) {
     override fun toString(): String = "${description} ${inputs} -> ${outputs} ^ ${doMeBeforeThis?.description}"
 }
 
 class M2mPatternExecutor<OT : Any>(
     val issues: IssueHolder,
-    val accessorMutator: ObjectGraphAccessorMutator<OT>
+    val accessorMutator: ObjectGraphAccessorMutator<OT>,
+    initialExes: List<M2mPatternExecution<OT>>
 ) {
 
+    companion object {
+        const val RESULT = $$"$result"
+    }
+
     internal var _nextTempVarNum = 0
-    internal val _executions = mutableListOf<M2mPatternExecution<OT>>()
+    internal val _executions = initialExes.toMutableList()
     internal lateinit var _simplifiedTemplate: PropertyTemplateRhs
 
     fun executionPlan(): List<M2mPatternExecution<OT>> = _executions.topologicalSort(::compareExecutions)
@@ -60,13 +67,15 @@ class M2mPatternExecutor<OT : Any>(
         _simplifiedTemplate = constructExecutions(null, template, lhsType)
     }
 
-    fun execute(variables: Map<String, TypedObject<OT>>, src: TypedObject<OT>) {
+    fun execute(variables: Map<String, TypedObject<OT>>, src: TypedObject<OT>): Map<String, TypedObject<OT>> {
         val sorted = executionPlan()
         val matchedVars = variables.toMutableMap()
+        val valStack = mutableStackOf<TypedObject<OT>>()
         for (pe in sorted) {
-            val mv = pe.execution.invoke(matchedVars, src)
+            val mv = pe.execution.invoke(matchedVars, valStack)
             matchedVars.putAll(mv)
         }
+        return matchedVars + Pair(RESULT, valStack.pop())
     }
 
     internal fun createTempVariable() = SimpleName("temp${_nextTempVarNum++}")
@@ -90,9 +99,10 @@ class M2mPatternExecutor<OT : Any>(
             else -> emptyList()
         }
         val (id, outputs) = template.identifier?.let { Pair(it, listOf(it.value)) } ?: Pair(createTempVariable(), emptyList())
-        val exe = M2mPatternExecution("Execute expression: ${template.expression}", parent, inputs, outputs) { vars, src ->
+        val exe = M2mPatternExecution("Execute expression: ${template.expression}", parent, inputs, outputs) { vars, valStack ->
             val lhsType = StdLibDefault.AnyType // maybe not used!
             val (o, mv) = createFromRhs(vars, lhsType, template)
+            valStack.push(o)
             mv + Pair(id.value, o)
         }
         _executions.add(exe)
@@ -105,12 +115,16 @@ class M2mPatternExecutor<OT : Any>(
         val inputs = emptyList<String>()
         val (id, outputs) = template.identifier?.let { Pair(it, listOf(it.value)) } ?: Pair(createTempVariable(), emptyList())
 
-        val setProperties = M2mPatternExecution("Set properties for: '${decl.name.value}'", parent, emptyList(), emptyList()) { variables, src ->
-            setPropertiesFromRhs(src, variables, template)
+        val setProperties = M2mPatternExecution("Set properties for: '${decl.name.value}'", parent, emptyList(), emptyList()) { vars, valStack ->
+//            val pv = valStack.pop()
+//            val src = valStack.peek()
+//            setPropertiesFromRhs(src, variables, template)
+            emptyMap()
         }
-        val creation = M2mPatternExecution("Create object: '${decl.name.value}'", setProperties, inputs, outputs) { vars, src ->
-            val (value, mv) = createFromRhs(vars, template.type, template)
-            mv + Pair(id.value, value)
+        val creation = M2mPatternExecution("Create object: '${decl.name.value}'", setProperties, inputs, outputs) { vars, valStack ->
+            val (r, mv) = createFromRhs(vars, template.type, template)
+            valStack.push(r)
+            mv + Pair(id.value, r)
         }
         _executions.add(setProperties)
         _executions.add(creation)
@@ -138,8 +152,10 @@ class M2mPatternExecutor<OT : Any>(
     internal fun constructExecutionsFromPropertyTemplate(parent: M2mPatternExecution<OT>, template: PropertyTemplate, lhsType: TypeInstance): PropertyTemplate {
         val inputs = emptyList<String>()
         val outputs = emptyList<String>()
-        val setProperty = M2mPatternExecution("Set property '${template.propertyName.value}'", parent, inputs, outputs) { vars, src ->
-            setPropertyIfNothing(src, vars, template)
+        val setProperty = M2mPatternExecution("Set property '${template.propertyName.value}'", parent, inputs, outputs) { vars, valStack ->
+            val pv = valStack.pop()
+            val obj = valStack.peek()
+            setPropertyIfNothing(obj, vars, template)
         }
         _executions.add(setProperty)
         val pn = template.propertyName.value
@@ -151,9 +167,10 @@ class M2mPatternExecutor<OT : Any>(
     internal fun constructExecutionsFromCollectionTemplate(parent: M2mPatternExecution<OT>?, template: CollectionTemplate, lhsType: TypeInstance): CollectionTemplate {
         val inputs = emptyList<String>()
         val (id, outputs) = template.identifier?.let { Pair(it, listOf(it.value)) } ?: Pair(createTempVariable(), emptyList())
-        val createCollection = M2mPatternExecution("Create Collection '${lhsType.typeName.value}'", parent, inputs, outputs) { vars, src ->
-            val (value, mv) = createFromRhs(vars, lhsType, template)
-            mv + Pair(id.value, value)
+        val createCollection = M2mPatternExecution("Create Collection '${lhsType.typeName.value}'", parent, inputs, outputs) { vars, valStack ->
+            val (r, mv) = createFromRhs(vars, lhsType, template)
+            valStack.push(r)
+            mv + Pair(id.value, r)
         }
         val simpleEls = template.elements.map { elT ->
             constructExecutions(createCollection, elT, lhsType)

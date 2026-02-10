@@ -6,8 +6,6 @@ import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.m2mTransform.api.ObjectTemplate
-import net.akehurst.language.m2mTransform.api.PropertyTemplate
 import net.akehurst.language.m2mTransform.api.PropertyTemplateRhs
 import net.akehurst.language.m2mTransform.asm.CollectionTemplateDefault
 import net.akehurst.language.m2mTransform.asm.ObjectTemplateDefault
@@ -26,7 +24,7 @@ class test_M2mPatternExecutor {
         fun doTest(types: TypesDomain, lhsType: TypeInstance, template: PropertyTemplateRhs, expected: List<String>) {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val accessorMutator = ObjectGraphAccessorMutatorAsmSimple(types, issues)
-            val sut = M2mPatternExecutor(issues, accessorMutator)
+            val sut = M2mPatternExecutor(issues, accessorMutator, emptyList())
 
             sut.build(template, lhsType)
             val actual = sut.executionPlan().map { it.toString() }

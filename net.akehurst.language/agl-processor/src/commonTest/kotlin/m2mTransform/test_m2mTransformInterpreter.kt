@@ -59,7 +59,7 @@ class test_m2mTransformInterpreter {
     private companion object Companion {
 
         val testSuits = m2mTransformTestSuits {
-            // mapping
+            // simple mapping
             testSuit("1 matching top mapping to 1 String input 1 gives literal String result") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
@@ -286,7 +286,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
-            testSuit("nested match") {
+            testSuit("mapping with nested match") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("A1") {
@@ -320,6 +320,297 @@ class test_m2mTransformInterpreter {
                                }
                             }
                             domain d2 a2:A2 := A2() { prop2 := v }
+                        }
+                    }
+                """
+                )
+                testCase("A1.B1.C1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyElementExplicitType("prop1", "B1") {
+                                propertyElementExplicitType("prop2", "C1") {
+                                    propertyString("prop3", "value")
+                                }
+                            }
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value")
+                        }
+                    }
+                }
+            }
+
+            // simple relation
+            testSuit("1 matching top relation to 1 String input 1 gives literal String result") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A12A2 {
+                            domain d1 a1:String == 'Any'
+                            domain d2 a2:String == 'Hello World!'
+                        }
+                    }
+                """
+                )
+                testCase("Any -> Hello World!") {
+                    input("d1") {
+                        string("Any")
+                    }
+                    target("d2") {
+                        string("Hello World!")
+                    }
+                }
+                testCase("Any <- Hello World!") {
+                    input("d2") {
+                        string("Hello World!")
+                    }
+                    target("d1") {
+                        string("Any")
+                    }
+                }
+            }
+            testSuit("1 matching top relation to 2 String input 2 gives 2 literal String result") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A12A2 {
+                            domain d1 a1:String {}
+                            domain d2 a2:String == 'Hello ' + a1
+                        }
+                    }
+                """
+                )
+                testCase("Any1 -> Hello Any1 && Any2 -> Hello Any2") {
+                    input("d1") {
+                        string("Any1")
+                        string("Any2")
+                    }
+                    target("d2") {
+                        string("Hello Any1")
+                        string("Hello Any2")
+                    }
+                }
+            }
+            testSuit("2 matching top relation to 2 String input 2 give 4 results") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A {
+                            domain d1 a1:String {}
+                            domain d2 a2:String == 'Hello '+ a1 +' from A'
+                        }
+                        top relation B {
+                            domain d1 a1:String {}
+                            domain d2 a2:String == 'Hello '+ a1 +' from B'
+                        }
+                    }
+                """
+                )
+                testCase("2x AnyN -> 4x Hello AnyN from X") {
+                    input("d1") {
+                        string("Any1")
+                        string("Any2")
+                    }
+                    target("d2") {
+                        string("Hello Any1 from A")
+                        string("Hello Any2 from A")
+                        string("Hello Any1 from B")
+                        string("Hello Any2 from B")
+                    }
+                }
+            }
+            testSuit("2 matching top relation to one of each 2 String input 2 gives 2 literal String result") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A {
+                            domain d1 a1:String == 'A'
+                            domain d2 a2:String == 'Hello A!'
+                        }
+                        top relation B {
+                            domain d1 a1:String == 'B'
+                            domain d2 a2:String == 'Hello B!'
+                        }
+                    }
+                """
+                )
+                testCase("'A' -> Hello A!") {
+                    input("d1") {
+                        string("A")
+                    }
+                    target("d2") {
+                        string("Hello A!")
+                    }
+                }
+                testCase("'B' -> HelloBA!") {
+                    input("d1") {
+                        string("B")
+                    }
+                    target("d2") {
+                        string("Hello B!")
+                    }
+                }
+                testCase("['A', 'B'] -> [Hello A!,  Hello B!]") {
+                    input("d1") {
+                        string("A")
+                        string("B")
+                    }
+                    target("d2") {
+                        string("Hello A!")
+                        string("Hello B!")
+                    }
+                }
+            }
+            testSuit("simple relation") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A12A2 {
+                            domain d1 a1:A1 { prop1 == v }
+                            domain d2 a2:A2 { prop2 == v }
+                        }
+                    }
+                """
+                )
+                testCase("A1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                }
+            }
+            testSuit("simple relation set from navigation") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A12A2 {
+                            domain d1 a1:A1 {}
+                            domain d2 a2:A2 { prop2 == a1.prop1 }
+                        }
+                    }
+                """
+                )
+                testCase("A1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                }
+            }
+            testSuit("relation with nested match") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "B1")
+                        }
+                        data("B1") {
+                            propertyOf(emptySet(), "prop1", "C1")
+                        }
+                        data("C1") {
+                            propertyOf(emptySet(), "prop3", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A12A2 {
+                            domain d1 a1:A1 {
+                               prop1 == B1 {
+                                 prop2 == C1 {
+                                   prop3 == v
+                                 }
+                               }
+                            }
+                            domain d2 a2:A2 { prop2 == v }
                         }
                     }
                 """
@@ -1515,7 +1806,7 @@ class test_m2mTransformInterpreter {
         }
 
         fun doTest2(suite: TransformTestSuit, case: TransformTestCase) {
-            println("****** ${suite.description} : ${case.description} ******")
+            println("****** Suit '${suite.description}' : Case '${case.description}' ******")
 //            suite.typeDomains.forEach { (k, v) ->
 //                println("----- ${k.value} : ${v.name.value} -----")
 //                println(v.asString())
@@ -1584,8 +1875,8 @@ class test_m2mTransformInterpreter {
 
     @Test
     fun single() {
-        val suite = testSuits["Full umlRdbms QVT example"]!!
-        val case = suite.testCase["1 Class with kind, namespace & name and empty attributes"]!!
+        val suite = testSuits["simple relation"]!!
+        val case = suite.testCase["A1 -> A2"]!!
         doTest2(suite, case)
     }
 }
