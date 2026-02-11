@@ -537,6 +537,18 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
+                testCase("A1 <- A2") {
+                    input("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                    target("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                }
             }
             testSuit("simple relation set from navigation") {
                 typesDomain("d1", "Domain1", true) {
@@ -687,6 +699,72 @@ class test_m2mTransformInterpreter {
                 }
             }
 
+            // relation when
+            testSuit("simple relation when expression") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A12A2 {
+                            domain d1 a1:A1 { prop1 == v }
+                            domain d2 a2:A2 { prop2 == v }
+                            when {
+                              v == 'value1'
+                            }
+                        }
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                }
+                testCase("A1 with value1 <- A2") {
+                    input("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                    target("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value2")
+                        }
+                    }
+                    expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'd2' of rule 'A12A2'.")
+                    target("d2") {
+                    }
+                }
+            }
+
             // mapping where
             testSuit("simple mapping where map String via table") {
                 typesDomain("d1", "Domain1", true) {
@@ -749,8 +827,83 @@ class test_m2mTransformInterpreter {
                 }
             }
 
-            // collections
-            testSuit("match 1 from Set") {
+            // relation where
+            testSuit("simple relation where map String via table") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A1_to_A2 {
+                            domain d1 a1:A1 { prop1 == s1 }
+                            domain d2 a2:A2 { prop2 == s2 }
+                            where {
+                              map StringConvert(s1,s2)
+                            }
+                        }
+                        table StringConvert {
+                            domain  d1 :String  /**/ domain d2 :String
+                            /*=======================================*/ 
+                            values 'value1'      to   'value2'
+                        } 
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value2")
+                        }
+                    }
+                }
+                testCase("A1 with value1 <- A2") {
+                    input("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value2")
+                        }
+                    }
+                    target("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value2")
+                        }
+                    }
+                    expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
+                    target("d2") {
+                        element("A2") {
+                            propertyNothing("prop2")
+                        }
+                    }
+                }
+            }
+
+
+            // mapping collections
+            testSuit("mapping match 1 from Set") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("Class") {
@@ -822,7 +975,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
-            testSuit("match 2 from Set") {
+            testSuit("mapping match 2 from Set") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("Class") {
@@ -895,7 +1048,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
-            testSuit("match exact Collection") {
+            testSuit("mapping match exact Collection") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("Class") {
@@ -969,7 +1122,228 @@ class test_m2mTransformInterpreter {
                 }
             }
 
-            // qvt example
+            // relation collections
+            testSuit("relation match 1 from Set") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("Class") {
+                            propertyOf(emptySet(), "name", "String")
+                            propertyOf(emptySet(), "kind", "String")
+                        }
+                        data("Attribute") {
+                            propertyOf(emptySet(), "name", "String")
+                        }
+                        association {
+                            end("Class", emptySet(), "class")
+                            end("Attribute", emptySet(), "attribtute")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A12A2 {
+                            domain d1 c1:Class {
+                               name == X
+                               kind == 'P'
+                               attribute == [
+                                 ...
+                                 a1:Attribute {
+                                   name == 'a1'
+                                 }
+                               ]
+                            }
+                            domain d2 a2:String == X + ' contains a1'
+                        }
+                    }
+                """
+                )
+                testCase("c1 or c2 contains e1?") {
+                    input("d1") {
+                        element("Class") {
+                            propertyString("name", "c1")
+                            propertyString("kind", "P")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a1")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a2")
+                                }
+                            }
+                        }
+                        element("Class") {
+                            propertyString("name", "c2")
+                            propertyString("kind", "T")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a3")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a4")
+                                }
+                            }
+                        }
+                    }
+                    target("d2") {
+                        string("c1 contains a1")
+                    }
+                }
+            }
+            testSuit("relation match 2 from Set") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("Class") {
+                            propertyOf(emptySet(), "name", "String")
+                            propertyOf(emptySet(), "kind", "String")
+                        }
+                        data("Attribute") {
+                            propertyOf(emptySet(), "name", "String")
+                        }
+                        association {
+                            end("Class", emptySet(), "class")
+                            end("Attribute", emptySet(), "attribtute")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation A12A2 {
+                            domain d1 c1:Class {
+                               name == X
+                               kind == 'P'
+                               attribute == [
+                                 ...
+                                 Attribute {
+                                   name == Y
+                                 }
+                               ]
+                            }
+                            domain d2 a2:String == X + ' contains ' + Y
+                        }
+                    }
+                """
+                )
+                testCase("c1 contains both") {
+                    input("d1") {
+                        element("Class") {
+                            propertyString("name", "c1")
+                            propertyString("kind", "P")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a1")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a2")
+                                }
+                            }
+                        }
+                        element("Class") {
+                            propertyString("name", "c2")
+                            propertyString("kind", "T")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a3")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a4")
+                                }
+                            }
+                        }
+                    }
+                    target("d2") {
+                        string("c1 contains a1")
+                        string("c1 contains a2")
+                    }
+                }
+            }
+            testSuit("relation match exact Collection") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("Class") {
+                            propertyOf(emptySet(), "name", "String")
+                            propertyOf(emptySet(), "kind", "String")
+                        }
+                        data("Attribute") {
+                            propertyOf(emptySet(), "name", "String")
+                        }
+                        association {
+                            end("Class", emptySet(), "class")
+                            end("Attribute", emptySet(), "attribtute")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                transform(
+                    $$"""
+                        namespace test
+                        transform Test(d1:Domain1, d2:Domain2) {
+                            top relation A12A2 {
+                                domain d1 c1:Class {
+                                    name == X
+                                    attribute == [
+                                        a3:Attribute {
+                                            name == 'a3'
+                                        },
+                                        a4:Attribute {
+                                            name == 'a4'
+                                        }
+                                    ]
+                                }
+                                domain d2 a2:String == c1.name + a3.name + a4.name
+                            }
+                        }
+                    """
+                )
+                testCase("c2 contains both") {
+                    input("d1") {
+                        element("Class") {
+                            propertyString("name", "c1")
+                            propertyString("kind", "P")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a1")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a2")
+                                }
+                            }
+                        }
+                        element("Class") {
+                            propertyString("name", "c2")
+                            propertyString("kind", "T")
+                            propertyListOfElement("attribute") {
+                                element("Attribute") {
+                                    propertyString("name", "a3")
+                                }
+                                element("Attribute") {
+                                    propertyString("name", "a4")
+                                }
+                            }
+                        }
+                    }
+                    target("d2") {
+                        string("c2a3a4")
+                    }
+                }
+            }
+            //TODO: collections on target side !
+
+            // relation qvt example
             testSuit("umlRdbms QVT example - PackageToSchema") {
                 typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {
@@ -1875,8 +2249,8 @@ class test_m2mTransformInterpreter {
 
     @Test
     fun single() {
-        val suite = testSuits["simple relation"]!!
-        val case = suite.testCase["A1 -> A2"]!!
+        val suite = testSuits["Full umlRdbms QVT example"]!!
+        val case = suite.testCase["Package with no elements property"]!!
         doTest2(suite, case)
     }
 }

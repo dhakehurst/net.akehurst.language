@@ -84,11 +84,11 @@ class M2mPatternExecutor<OT : Any>(
      * returns a simplified template where all property assignments are from variables
      * any non-identified template is given an artificial id.
      */
-    internal fun constructExecutions(parent: M2mPatternExecution<OT>?, template: PropertyTemplateRhs, lhsType: TypeInstance): PropertyTemplateRhs {
+    internal fun constructExecutions(doMeBeforeThis: M2mPatternExecution<OT>?, template: PropertyTemplateRhs, lhsType: TypeInstance): PropertyTemplateRhs {
         return when (template) {
-            is PropertyTemplateExpression -> constructExecutionsFromPropertyTemplateExpression(parent, template, lhsType)
-            is ObjectTemplate -> constructExecutionsFromObjectTemplate(parent, template, lhsType)
-            is CollectionTemplate -> constructExecutionsFromCollectionTemplate(parent, template, lhsType)
+            is PropertyTemplateExpression -> constructExecutionsFromPropertyTemplateExpression(doMeBeforeThis, template, lhsType)
+            is ObjectTemplate -> constructExecutionsFromObjectTemplate(doMeBeforeThis, template, lhsType)
+            is CollectionTemplate -> constructExecutionsFromCollectionTemplate(doMeBeforeThis, template, lhsType)
             else -> error("Unknown rhs type ${template::class}")
         }
     }
@@ -109,13 +109,13 @@ class M2mPatternExecutor<OT : Any>(
         return PropertyTemplateExpressionDefault(RootExpressionDefault(id.value))
     }
 
-    internal fun constructExecutionsFromObjectTemplate(parent: M2mPatternExecution<OT>?, template: ObjectTemplate, lhsType: TypeInstance): ObjectTemplate {
+    internal fun constructExecutionsFromObjectTemplate(doMeBeforeThis: M2mPatternExecution<OT>?, template: ObjectTemplate, lhsType: TypeInstance): ObjectTemplate {
         val decl = template.type.resolvedDeclaration
 
         val inputs = emptyList<String>()
         val (id, outputs) = template.identifier?.let { Pair(it, listOf(it.value)) } ?: Pair(createTempVariable(), emptyList())
 
-        val setProperties = M2mPatternExecution("Set properties for: '${decl.name.value}'", parent, emptyList(), emptyList()) { vars, valStack ->
+        val setProperties = M2mPatternExecution("Set properties for: '${decl.name.value}'", doMeBeforeThis, emptyList(), emptyList()) { vars, valStack ->
 //            val pv = valStack.pop()
 //            val src = valStack.peek()
 //            setPropertiesFromRhs(src, variables, template)
@@ -137,7 +137,7 @@ class M2mPatternExecutor<OT : Any>(
         val simpleProps = template.propertyTemplate.entries.associate { (k, v) ->
             val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
             val pt = if (possibleConArgNames.contains(k.value)) {
-                constructExecutionsFromPropertyTemplate(creation, v, propType)
+                constructExecutionForConstructorArg(creation, v, propType)
             } else {
                 constructExecutionsFromPropertyTemplate(setProperties, v, propType)
             }
@@ -147,6 +147,20 @@ class M2mPatternExecutor<OT : Any>(
         return ObjectTemplateDefault(template.type, simpleProps).also {
             it.setIdentifierValue(id)
         }
+    }
+
+    internal fun constructExecutionForConstructorArg(constructionExe: M2mPatternExecution<OT>, template: PropertyTemplate, lhsType: TypeInstance): PropertyTemplate {
+        val inputs = emptyList<String>()
+        val outputs = emptyList<String>()
+        val computeArgument = M2mPatternExecution("Constructor argument '${template.propertyName.value}'", constructionExe, inputs, outputs) { vars, valStack ->
+            // placeholder for expression evaluations to depend on
+            emptyMap()
+        }
+        _executions.add(computeArgument)
+        val pn = template.propertyName.value
+        val propType = lhsType.allResolvedProperty[PropertyName(pn)]?.typeInstance ?: StdLibDefault.AnyType
+        val simpleRhs = constructExecutions(computeArgument, template.rhs, propType)
+        return PropertyTemplateDefault(template.propertyName, simpleRhs)
     }
 
     internal fun constructExecutionsFromPropertyTemplate(parent: M2mPatternExecution<OT>, template: PropertyTemplate, lhsType: TypeInstance): PropertyTemplate {

@@ -248,7 +248,7 @@ class test_M2mPatternExecutor {
             "Execute expression: p [p] -> [] ^ Set property 'p1'",
             "Execute expression: q [q] -> [] ^ Set property 'p2'",
             "Execute expression: r [r] -> [] ^ Set property 'p3'",
-            "Set property 'p1' [] -> [] ^ Create object: 'A'",
+            "Constructor argument 'p1' [] -> [] ^ Create object: 'A'",
             "Set property 'p2' [] -> [] ^ Set properties for: 'A'",
             "Set property 'p3' [] -> [] ^ Set properties for: 'A'",
             "Create object: 'A' [] -> [a] ^ Set properties for: 'A'",
@@ -279,7 +279,7 @@ class test_M2mPatternExecutor {
         val expected = listOf(
             "Execute expression: p [p] -> [] ^ Set property 'p1'",
             "Execute expression: q [q] -> [] ^ Set property 'p2'",
-            "Set property 'p1' [] -> [] ^ Create object: 'A'",
+            "Constructor argument 'p1' [] -> [] ^ Create object: 'A'",
             "Set property 'p2' [] -> [] ^ Set properties for: 'A'",
             "Create object: 'A' [] -> [a] ^ Set properties for: 'A'",
             "Execute expression: a [a] -> [] ^ Set property 'p3'",
