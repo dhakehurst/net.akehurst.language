@@ -1625,6 +1625,7 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
     override var opposite: List<PropertyDeclaration> = emptyList()
 
     override var execution: ((self:Any) -> Any?)? = null
+    override var executionSuspend: (suspend (self:Any) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
         this,

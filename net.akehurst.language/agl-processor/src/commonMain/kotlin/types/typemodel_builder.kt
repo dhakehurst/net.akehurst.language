@@ -251,6 +251,38 @@ abstract class StructuredTypeBuilder(
         }
     }
 
+    fun derivedPropertyOf(
+        propertyName: String,
+        typeName: String,
+        isNullable: Boolean = false,
+        execution: ((self:Any?) -> Any?)? = null,
+        init: TypeArgumentBuilder.() -> Unit = {}
+    ): PropertyDeclaration {
+        val tab = TypeArgumentBuilder(_structuredType, _namespace)
+        tab.init()
+        val targs = tab.build()
+        val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        return _structuredType.appendPropertyDerived(PropertyName(propertyName), ti, "","").also {
+            (it as PropertyDeclarationDerived).execution = execution
+        }
+    }
+
+    fun derivedPropertyOfSuspend(
+        propertyName: String,
+        typeName: String,
+        isNullable: Boolean = false,
+        execution: (suspend (self:Any?) -> Any?)? = null,
+        init: TypeArgumentBuilder.() -> Unit = {}
+    ): PropertyDeclaration {
+        val tab = TypeArgumentBuilder(_structuredType, _namespace)
+        tab.init()
+        val targs = tab.build()
+        val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        return _structuredType.appendPropertyDerived(PropertyName(propertyName), ti, "","").also {
+            (it as PropertyDeclarationDerived).executionSuspend = execution
+        }
+    }
+
     fun propertyPrimitiveType(propertyName: String, typeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
         property(propertyName, this._namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, emptyList(), isNullable), childIndex)
 

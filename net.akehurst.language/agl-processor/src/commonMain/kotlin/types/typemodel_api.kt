@@ -423,6 +423,7 @@ interface PropertyDeclaration {
 
     // to assist execution by reflection without having MPP reflection support
     val execution: ((self: Any) -> Any?)?
+    val executionSuspend: (suspend (self: Any) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 

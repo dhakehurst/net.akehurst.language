@@ -235,7 +235,7 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
 
     /** returns null if execution is not found for the given property on the typeDef */
     private fun propertyValueDirect(obj: T, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
-        val propExec = property.execution
+        val propExec = property.execution ?: property.executionSuspend
         return when {
             null == propExec -> {
                 val typeProps = this._property[typeDef]
@@ -458,6 +458,10 @@ open class ObjectGraphByReflectionSuspending(
                         when {
                             null!=propRes.original.execution -> {
                                 val value =  propRes.original.execution!!.invoke(tobj.self)
+                                value?.let { toTypedObject(value) } ?: nothing()
+                            }
+                            null!=propRes.original.executionSuspend -> {
+                                val value =  propRes.original.executionSuspend!!.invoke(tobj.self)
                                 value?.let { toTypedObject(value) } ?: nothing()
                             }
                             else -> {

@@ -443,9 +443,10 @@ open class ObjectGraphByReflection(
                     }
 
                     else -> {
+                        val propExec = propRes.original.execution
                         when {
-                            null!=propRes.original.execution -> {
-                                val value =  propRes.original.execution!!.invoke(tobj.self)
+                            null!=propExec -> {
+                                val value =  propExec.invoke(tobj.self)
                                 value?.let { toTypedObject(value) } ?: nothing()
                             }
                             else -> {
