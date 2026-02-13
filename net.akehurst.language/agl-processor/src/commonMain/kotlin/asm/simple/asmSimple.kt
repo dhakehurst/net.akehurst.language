@@ -66,8 +66,8 @@ open class AsmSimple(
 ) : Asm {
 
     companion object {
-         fun traverseDepthFirst(roots: List<AsmValue>, walker: AsmTreeWalker) {
-             fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
+        fun traverseDepthFirst(roots: List<AsmValue>, walker: AsmTreeWalker) {
+            fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
                 when (value) {
                     is AsmNothing -> walker.onNothing(owningProperty, value)
                     is AsmPrimitive -> walker.onPrimitive(owningProperty, value)
@@ -108,7 +108,7 @@ open class AsmSimple(
     override val elementIndex = mutableMapOf<AsmPath, AsmStructure>()
 
     fun addRoot(root: AsmValue) = (this.root as MutableList).add(root)
-    fun removeRoot(root: Any)= (this.root as MutableList).remove(root)
+    fun removeRoot(root: Any) = (this.root as MutableList).remove(root)
 
     fun createStructure(parsePath: String, typeName: QualifiedName): AsmStructureSimple {
         val obj = objectGraph.createStructureValue(typeName, emptyMap())
@@ -122,7 +122,7 @@ open class AsmSimple(
         this.elementIndex[AsmPathSimple(value.parsePath.toString())] = value //FIXME: should use asmPath !
     }
 
-    override  fun traverseDepthFirst(walker: AsmTreeWalker) = traverseDepthFirst(this.root, walker)
+    override fun traverseDepthFirst(walker: AsmTreeWalker) = traverseDepthFirst(this.root, walker)
 
     override fun asString(indent: Indent): String = this.root.joinToString(separator = "\n") {
         it.asString(indent)
@@ -220,9 +220,24 @@ val AsmValue.raw: Any
         is AsmListSimple -> this.elements.map { it.raw }
         is AsmStructure -> this.property.values
             .sortedBy { it.index }
-            .associate { pv -> Pair(pv.name.value,pv.value.raw) }
+            .associate { pv -> Pair(pv.name.value, pv.value.raw) }
+
         is AsmLambda -> TODO()
         else -> error("Unknown subtype of AsmValue '${this::class.simpleName}'")
+    }
+
+val Any.toAsmSimple: AsmValue
+    get() = when (this) {
+        is AsmValue -> this
+        is String -> AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, this)
+        is Boolean -> AsmPrimitiveSimple(StdLibDefault.Boolean.qualifiedTypeName, this)
+        is Int -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this.toLong())
+        is Long -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this)
+        is Float -> AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, this.toDouble())
+        is Double -> AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, this)
+        is ListSeparated<*,*,*> -> AsmListSeparatedSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple }.toSeparatedList())
+        is List<*> -> AsmListSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple })
+        else -> error("Type cannot be converted to AsmValue '${this::class.simpleName}'")
     }
 
 class AsmReferenceSimple(
@@ -260,7 +275,7 @@ class AsmReferenceSimple(
 
     override fun toString(): String = when (value) {
         null -> "<unresolved> &$reference"
-        else -> "&{'${ value!!.qualifiedName(".") ?: value!!.syntaxAnalyserPath?.value ?: value!!.parsePath}' : ${value!!.typeName}}"
+        else -> "&{'${value!!.qualifiedName(".") ?: value!!.syntaxAnalyserPath?.value ?: value!!.parsePath}' : ${value!!.typeName}}"
     }
 }
 
@@ -272,7 +287,7 @@ class AsmStructureSimple(
 
     override var parsePath: String = "??"
     override var syntaxAnalyserPath: AsmPath? = null //TODO: not sure if still need this
-    override var semanticQualifiedPath: List<String>? = null ; private set
+    override var semanticQualifiedPath: List<String>? = null; private set
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
     override val propertyOrdered
@@ -301,7 +316,7 @@ class AsmStructureSimple(
         semanticQualifiedPath?.joinToString(separator)
 
     override fun setSemanticQualifiedPath(segments: List<String>) {
-        semanticQualifiedPath  = segments
+        semanticQualifiedPath = segments
     }
 
     override fun hasProperty(name: PropertyValueName): Boolean = property.containsKey(name)
@@ -419,7 +434,7 @@ class AsmStructurePropertySimple(
                         error("Cannot compare property values: ${t} and ${o}")
                     }
                 } else {
-                        t.equalTo(o)
+                    t.equalTo(o)
                 }
             }
         }
@@ -523,6 +538,7 @@ class AsmListSeparatedSimple(
         1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
         else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
+
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmListSeparated -> false
         other.elements.size != this.elements.size -> false
@@ -543,12 +559,12 @@ class AsmListSeparatedSimple(
 }
 
 class AsmLambdaSimple(
-    val lambda:  (it: AsmValue) -> AsmValue
+    val lambda: (it: AsmValue) -> AsmValue
 ) : AsmValueAbstract(), AsmLambda {
 
     override val qualifiedTypeName = StdLibDefault.Lambda.qualifiedTypeName
 
-    override  fun invoke(args: Map<String, AsmValue>): AsmValue {
+    override fun invoke(args: Map<String, AsmValue>): AsmValue {
         val it = args["it"]!!
         return this.lambda.invoke(it)
     }

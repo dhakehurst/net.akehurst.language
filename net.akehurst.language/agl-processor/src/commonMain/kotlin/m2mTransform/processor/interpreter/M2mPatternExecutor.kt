@@ -37,9 +37,9 @@ class M2mPatternExecution<OT : Any>(
     val doMeBeforeThis: M2mPatternExecution<OT>?,
     val inputs: List<String>,
     val outputs: List<String>,
-    val execution: (variables: Map<String, TypedObject<OT>>, valStack: MutableStack<TypedObject<OT>>) -> Map<String, TypedObject<OT>>
+    val execution: (evc: EvaluationContext<OT>) -> EvaluationContext<OT>
 ) {
-    override fun toString(): String = "${description} ${inputs} -> ${outputs} ^ ${doMeBeforeThis?.description}"
+    override fun toString(): String = "${description} | ${inputs} -> ${outputs} ^ ${doMeBeforeThis?.description}"
 }
 
 class M2mPatternExecutor<OT : Any>(
@@ -54,7 +54,7 @@ class M2mPatternExecutor<OT : Any>(
 
     internal var _nextTempVarNum = 0
     internal val _executions = initialExes.toMutableList()
-    internal lateinit var _simplifiedTemplate: PropertyTemplateRhs
+    //internal lateinit var _simplifiedTemplate: PropertyTemplateRhs
 
     fun executionPlan(): List<M2mPatternExecution<OT>> = _executions.topologicalSort(::compareExecutions)
 
@@ -64,67 +64,59 @@ class M2mPatternExecutor<OT : Any>(
     }
 
     fun build(template: PropertyTemplateRhs, lhsType: TypeInstance) {
-        _simplifiedTemplate = constructExecutions(null, template, lhsType)
+        constructExecutions(RESULT,null, template, lhsType)
     }
 
-    fun execute(variables: Map<String, TypedObject<OT>>, src: TypedObject<OT>): Map<String, TypedObject<OT>> {
+    fun execute(variables: Map<String, TypedObject<OT>>, src: TypedObject<OT>): EvaluationContext<OT> {
         val sorted = executionPlan()
-        val matchedVars = variables.toMutableMap()
-        val valStack = mutableStackOf<TypedObject<OT>>()
+        var evc = EvaluationContext.of(variables)
         for (pe in sorted) {
-            val mv = pe.execution.invoke(matchedVars, valStack)
-            matchedVars.putAll(mv)
+            evc = pe.execution.invoke(evc)
         }
-        return matchedVars + Pair(RESULT, valStack.pop())
+        return evc
     }
 
-    internal fun createTempVariable() = SimpleName("temp${_nextTempVarNum++}")
+    private fun createTempVariable() = SimpleName("temp${_nextTempVarNum++}")
 
     /**
      * returns a simplified template where all property assignments are from variables
      * any non-identified template is given an artificial id.
      */
-    internal fun constructExecutions(doMeBeforeThis: M2mPatternExecution<OT>?, template: PropertyTemplateRhs, lhsType: TypeInstance): PropertyTemplateRhs {
-        return when (template) {
-            is PropertyTemplateExpression -> constructExecutionsFromPropertyTemplateExpression(doMeBeforeThis, template, lhsType)
-            is ObjectTemplate -> constructExecutionsFromObjectTemplate(doMeBeforeThis, template, lhsType)
-            is CollectionTemplate -> constructExecutionsFromCollectionTemplate(doMeBeforeThis, template, lhsType)
+    private fun constructExecutions(tgtName:String, doMeBeforeThis: M2mPatternExecution<OT>?, template: PropertyTemplateRhs, lhsType: TypeInstance) {
+        when (template) {
+            is PropertyTemplateExpression -> constructExecutionsFromPropertyTemplateExpression(tgtName,doMeBeforeThis, template, lhsType)
+            is ObjectTemplate -> constructExecutionsFromObjectTemplate(tgtName,doMeBeforeThis, template, lhsType)
+            is CollectionTemplate -> constructExecutionsFromCollectionTemplate(tgtName,doMeBeforeThis, template, lhsType)
             else -> error("Unknown rhs type ${template::class}")
         }
     }
 
-    internal fun constructExecutionsFromPropertyTemplateExpression(parent: M2mPatternExecution<OT>?, template: PropertyTemplateExpression, lhsType: TypeInstance): PropertyTemplateExpression {
+    private fun constructExecutionsFromPropertyTemplateExpression(tgtName:String, parent: M2mPatternExecution<OT>?, template: PropertyTemplateExpression, lhsType: TypeInstance) {
         val inputs = when {
             template.expression is RootExpression -> listOf((template.expression as RootExpression).name)
             else -> emptyList()
         }
-        val (id, outputs) = template.identifier?.let { Pair(it, listOf(it.value)) } ?: Pair(createTempVariable(), emptyList())
-        val exe = M2mPatternExecution("Execute expression: ${template.expression}", parent, inputs, outputs) { vars, valStack ->
+        val outputs = template.identifier?.let { listOf(it.value) } ?:  emptyList()
+        val exe = M2mPatternExecution("Execute expression: $tgtName := ${template.expression}", parent, inputs, outputs) { evc ->
             val lhsType = StdLibDefault.AnyType // maybe not used!
-            val (o, mv) = createFromRhs(vars, lhsType, template)
-            valStack.push(o)
-            mv + Pair(id.value, o)
+            val v = createFromExpression(evc, lhsType, template.expression)
+            evc.child(mapOf(tgtName to v))
         }
         _executions.add(exe)
-        return PropertyTemplateExpressionDefault(RootExpressionDefault(id.value))
     }
 
-    internal fun constructExecutionsFromObjectTemplate(doMeBeforeThis: M2mPatternExecution<OT>?, template: ObjectTemplate, lhsType: TypeInstance): ObjectTemplate {
+    private fun constructExecutionsFromObjectTemplate(tgtName:String, doMeBeforeThis: M2mPatternExecution<OT>?, template: ObjectTemplate, lhsType: TypeInstance) {
         val decl = template.type.resolvedDeclaration
 
         val inputs = emptyList<String>()
         val (id, outputs) = template.identifier?.let { Pair(it, listOf(it.value)) } ?: Pair(createTempVariable(), emptyList())
 
-        val setProperties = M2mPatternExecution("Set properties for: '${decl.name.value}'", doMeBeforeThis, emptyList(), emptyList()) { vars, valStack ->
-//            val pv = valStack.pop()
-//            val src = valStack.peek()
-//            setPropertiesFromRhs(src, variables, template)
-            emptyMap()
+        val setProperties = M2mPatternExecution("Set properties for: '${decl.name.value}'", doMeBeforeThis, emptyList(), emptyList()) { evc ->
+           evc
         }
-        val creation = M2mPatternExecution("Create object: '${decl.name.value}'", setProperties, inputs, outputs) { vars, valStack ->
-            val (r, mv) = createFromRhs(vars, template.type, template)
-            valStack.push(r)
-            mv + Pair(id.value, r)
+        val creation = M2mPatternExecution("Create object $tgtName := ${decl.name.value}(...) {...}", setProperties, inputs, outputs) { evc ->
+            val rhsEvc = createFromRhs(evc, template.type, template)
+            rhsEvc.self?.let { evc.child( mapOf(tgtName to it) ) } ?: rhsEvc
         }
         _executions.add(setProperties)
         _executions.add(creation)
@@ -134,66 +126,55 @@ class M2mPatternExecutor<OT : Any>(
             else -> error("Type '${decl.qualifiedName.value}' has no constructors")
         }
         val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-        val simpleProps = template.propertyTemplate.entries.associate { (k, v) ->
+        template.propertyTemplate.forEach { (k, v) ->
             val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
-            val pt = if (possibleConArgNames.contains(k.value)) {
-                constructExecutionForConstructorArg(creation, v, propType)
+            if (possibleConArgNames.contains(k.value)) {
+                constructExecutionForConstructorArg(k.value,creation, v, propType)
             } else {
-                constructExecutionsFromPropertyTemplate(setProperties, v, propType)
+                constructExecutionsFromPropertyTemplate(k.value,setProperties, v, propType)
             }
-            Pair(k, pt)
-        }
-
-        return ObjectTemplateDefault(template.type, simpleProps).also {
-            it.setIdentifierValue(id)
         }
     }
 
-    internal fun constructExecutionForConstructorArg(constructionExe: M2mPatternExecution<OT>, template: PropertyTemplate, lhsType: TypeInstance): PropertyTemplate {
+    private fun constructExecutionForConstructorArg(tgtName:String, constructionExe: M2mPatternExecution<OT>, template: PropertyTemplate, lhsType: TypeInstance) {
         val inputs = emptyList<String>()
         val outputs = emptyList<String>()
-        val computeArgument = M2mPatternExecution("Constructor argument '${template.propertyName.value}'", constructionExe, inputs, outputs) { vars, valStack ->
-            // placeholder for expression evaluations to depend on
-            emptyMap()
+        val computeArgument = M2mPatternExecution("Constructor argument $tgtName := '${template.propertyName.value}'", constructionExe, inputs, outputs) { evc ->
+            evc
         }
         _executions.add(computeArgument)
         val pn = template.propertyName.value
         val propType = lhsType.allResolvedProperty[PropertyName(pn)]?.typeInstance ?: StdLibDefault.AnyType
-        val simpleRhs = constructExecutions(computeArgument, template.rhs, propType)
-        return PropertyTemplateDefault(template.propertyName, simpleRhs)
+        constructExecutions(tgtName,computeArgument, template.rhs, propType)
     }
 
-    internal fun constructExecutionsFromPropertyTemplate(parent: M2mPatternExecution<OT>, template: PropertyTemplate, lhsType: TypeInstance): PropertyTemplate {
+    private fun constructExecutionsFromPropertyTemplate(tgtName:String, parent: M2mPatternExecution<OT>, template: PropertyTemplate, lhsType: TypeInstance) {
         val inputs = emptyList<String>()
         val outputs = emptyList<String>()
-        val setProperty = M2mPatternExecution("Set property '${template.propertyName.value}'", parent, inputs, outputs) { vars, valStack ->
-            val pv = valStack.pop()
-            val obj = valStack.peek()
-            setPropertyIfNothing(obj, vars, template)
+        val setProperty = M2mPatternExecution($$"Set property $self.$$tgtName := '$${template.propertyName.value}'", parent, inputs, outputs) { evc->
+            val obj = evc.self!! //FIXME
+            setPropertyIfNothing(obj, evc, template)
+            evc
         }
         _executions.add(setProperty)
         val pn = template.propertyName.value
         val propType = lhsType.allResolvedProperty[PropertyName(pn)]?.typeInstance ?: StdLibDefault.AnyType
-        val simpleRhs = constructExecutions(setProperty, template.rhs, propType)
-        return PropertyTemplateDefault(template.propertyName, simpleRhs)
+        constructExecutions(tgtName,setProperty, template.rhs, propType)
     }
 
-    internal fun constructExecutionsFromCollectionTemplate(parent: M2mPatternExecution<OT>?, template: CollectionTemplate, lhsType: TypeInstance): CollectionTemplate {
+    private fun constructExecutionsFromCollectionTemplate(tgtName:String, parent: M2mPatternExecution<OT>?, template: CollectionTemplate, lhsType: TypeInstance) {
         val inputs = emptyList<String>()
-        val (id, outputs) = template.identifier?.let { Pair(it, listOf(it.value)) } ?: Pair(createTempVariable(), emptyList())
-        val createCollection = M2mPatternExecution("Create Collection '${lhsType.typeName.value}'", parent, inputs, outputs) { vars, valStack ->
-            val (r, mv) = createFromRhs(vars, lhsType, template)
-            valStack.push(r)
-            mv + Pair(id.value, r)
+        val outputs = template.identifier?.let {  listOf(it.value) } ?:  emptyList()
+        val createCollection = M2mPatternExecution("Create Collection: $tgtName := ${lhsType.typeName.value}(...)", parent, inputs, outputs) { evc ->
+            val rhcEvc = createFromRhs(evc, lhsType, template)
+            rhcEvc
         }
-        val simpleEls = template.elements.map { elT ->
-            constructExecutions(createCollection, elT, lhsType)
+        template.elements.forEach { elT ->
+            val id = elT.identifier?.value ?: createTempVariable().value
+            constructExecutions(id,createCollection, elT, lhsType)
         }
-        val simpleTemplate = CollectionTemplateDefault(template.isSubset, simpleEls)
         _executions.add(createCollection)
-        return simpleTemplate.also {
-            it.setIdentifierValue(id)
-        }
+
     }
 
     /**
@@ -203,7 +184,7 @@ class M2mPatternExecutor<OT : Any>(
      *  exe1.input contains any of exe2.outputs
      *  exe2.parent == exe1
      */
-    internal fun compareExecutions(exe1: M2mPatternExecution<OT>, exe2: M2mPatternExecution<OT>): Int {
+    private fun compareExecutions(exe1: M2mPatternExecution<OT>, exe2: M2mPatternExecution<OT>): Int {
         return when {
             exe2.doMeBeforeThis == exe1 -> 1 // do parent after child
             exe1.doMeBeforeThis == exe2 -> -1 // do parent after child
@@ -214,28 +195,24 @@ class M2mPatternExecutor<OT : Any>(
     }
 
     // --- creation ---
-    fun createFromRhs(
-        variables: Map<String, TypedObject<OT>>,
-        lhsType: TypeInstance,
-        rhs: PropertyTemplateRhs
-    ): Pair<TypedObject<OT>, Map<String, TypedObject<OT>>> = when (rhs) {
-        is PropertyTemplateExpression -> createFromPropertyTemplateExpression(variables, lhsType, rhs)
-        is ObjectTemplate -> createFromObjectTemplate(variables, lhsType, rhs)
-        is CollectionTemplate -> createFromCollectionTemplate(variables, lhsType, rhs)
+    private fun createFromRhs(evc: EvaluationContext<OT>, lhsType: TypeInstance, rhs: PropertyTemplateRhs): EvaluationContext<OT> = when (rhs) {
+        is PropertyTemplateExpression -> createFromPropertyTemplateExpression(evc, lhsType, rhs)
+        is ObjectTemplate -> createFromObjectTemplate(evc, lhsType, rhs)
+        is CollectionTemplate -> createFromCollectionTemplate(evc, lhsType, rhs)
         else -> error("Unknown rhs type ${rhs::class}")
     }
 
-    fun createFromPropertyTemplateExpression(variables: Map<String, TypedObject<OT>>, lhsType: TypeInstance, rhs: PropertyTemplateExpression): Pair<TypedObject<OT>, Map<String, TypedObject<OT>>> {
+    private fun createFromPropertyTemplateExpression(evc: EvaluationContext<OT>, lhsType: TypeInstance, rhs: PropertyTemplateExpression): EvaluationContext<OT> {
         val id = rhs.identifier?.value
-        val existing = variables[id]
+        val existing = evc.namedValues[id]
         return when (existing) {
             null -> {
-                val o = createFromExpression(variables, lhsType, rhs.expression)
+                val o = createFromExpression(evc, lhsType, rhs.expression)
                 val mv = rhs.identifier?.let { mapOf(it.value to o) } ?: emptyMap()
-                Pair(o, mv)
+                evc.childSelf(o,mv)
             }
 
-            else -> Pair(existing, emptyMap())
+            else -> evc
         }
 
     }
@@ -243,29 +220,23 @@ class M2mPatternExecutor<OT : Any>(
     /**
      * returns value of expression evaluated in context of provided variables
      */
-    fun createFromExpression(variables: Map<String, TypedObject<OT>>, lhsType: TypeInstance, expression: Expression): TypedObject<OT> {
+    private fun createFromExpression(evc: EvaluationContext<OT>, lhsType: TypeInstance, expression: Expression): TypedObject<OT> {
         val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(accessorMutator, issues)
         return when (expression) {
             is CreateObjectExpression -> {
-                val evc = EvaluationContext.of(variables)
                 exprInterp.constructObject(evc, expression)
             }
 
             else -> {
-                val evc = EvaluationContext.of(variables)
                 val value = exprInterp.evaluateExpression(evc, expression)
                 value
             }
         }
     }
 
-    fun createFromObjectTemplate(
-        variables: Map<String, TypedObject<OT>>,
-        lhsType: TypeInstance,
-        template: ObjectTemplate
-    ): Pair<TypedObject<OT>, Map<String, TypedObject<OT>>> {
+    private fun createFromObjectTemplate(evc: EvaluationContext<OT>, lhsType: TypeInstance, template: ObjectTemplate): EvaluationContext<OT> {
         val id = template.identifier?.value
-        val existing = variables[id]
+        val existing = evc.namedValues[id]
         return when (existing) {
             null -> {
                 val decl = template.type.resolvedDeclaration
@@ -282,44 +253,40 @@ class M2mPatternExecutor<OT : Any>(
                         template.propertyTemplate.forEach { (k, v) ->
                             if (possibleConArgNames.contains(k.value)) {
                                 val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
-                                val (value, mv) = createFromRhs(variables, propType, v.rhs) //TODO: Ideally fetch from variable !
-                                matchedVars.putAll(mv)
-                                conArgs[k.value] = value
+                                val rhsEvc = createFromRhs(evc, propType, v.rhs) //TODO: Ideally fetch from variable !
+                                matchedVars.putAll(rhsEvc.namedValues)
+                                rhsEvc.self?.let { conArgs[k.value] = it}
                             }
                         }
                         //.resolveType(tgtObjectGraph.typesDomain)
                         val o = accessorMutator.createStructureValue(template.type.qualifiedTypeName, conArgs)
                         val mv = template.identifier?.let { matchedVars + Pair(it.value, o) } ?: matchedVars
-                        Pair(o, mv)
+                        evc.childSelf(o, mv)
                     }
 
                     else -> error("Cannot construct object of type ${decl.qualifiedName.value}")
                 }
             }
 
-            else -> Pair(existing, variables)
+            else -> evc
         }
     }
 
-    fun createFromCollectionTemplate(
-        variables: Map<String, TypedObject<OT>>,
-        lhsType: TypeInstance,
-        collectionTemplate: CollectionTemplate
-    ): Pair<TypedObject<OT>, Map<String, TypedObject<OT>>> {
+    private fun createFromCollectionTemplate(evc: EvaluationContext<OT>, lhsType: TypeInstance, collectionTemplate: CollectionTemplate): EvaluationContext<OT> {
         //collection may already have been created, (via when/where/etc) and be a captured variable
-        val existing = collectionTemplate.identifier?.let { variables[it.value] }
+        val existing = collectionTemplate.identifier?.let { evc.namedValues[it.value] }
         return when {
             null == existing -> {
                 // create new collection from template elements
                 val matchedVars = mutableMapOf<String, TypedObject<OT>>()
                 val elements = collectionTemplate.elements.map {
-                    val (o, mv) = createFromRhs(variables, lhsType.typeArguments[0].type, it)
-                    matchedVars.putAll(mv)
-                    o
+                    val rhsEvc = createFromRhs(evc, lhsType.typeArguments[0].type, it)
+                    matchedVars.putAll(rhsEvc.namedValues)
+                    rhsEvc.self!! //FIXME
                 }
                 val col = accessorMutator.createCollection(lhsType.qualifiedTypeName, elements)
                 val mv = collectionTemplate.identifier?.let { matchedVars + Pair(it.value, col) } ?: matchedVars
-                Pair(col, mv)
+                evc.childSelf(col)
             }
 
             else -> {
@@ -332,13 +299,13 @@ class M2mPatternExecutor<OT : Any>(
     }
 
     //
-    fun setPropertiesFromRhs(obj: TypedObject<OT>, variables: Map<String, TypedObject<OT>>, rhs: PropertyTemplateRhs) = when (rhs) {
-        is PropertyTemplateExpression -> variables
-        is ObjectTemplate -> setPropertiesFromObjectTemplate(obj, variables, rhs)
-        is CollectionTemplate -> variables
-        else -> error("Unknown rhs type ${rhs::class}")
-    }
-
+//    fun setPropertiesFromRhs(obj: TypedObject<OT>, variables: Map<String, TypedObject<OT>>, rhs: PropertyTemplateRhs) = when (rhs) {
+//        is PropertyTemplateExpression -> variables
+//        is ObjectTemplate -> setPropertiesFromObjectTemplate(obj, variables, rhs)
+//        is CollectionTemplate -> variables
+//        else -> error("Unknown rhs type ${rhs::class}")
+//    }
+/*
     fun setPropertiesFromObjectTemplate(obj: TypedObject<OT>, variables: Map<String, TypedObject<OT>>, template: ObjectTemplate): Map<String, TypedObject<OT>> {
         val decl = template.type.resolvedDeclaration
         return when (decl) {
@@ -364,23 +331,24 @@ class M2mPatternExecutor<OT : Any>(
             else -> variables
         }
     }
-
+*/
     /**
      * sets the property value from the template (which should be a simple variable reference)
      * returns any new variable matches - I think none
      */
-    fun setPropertyIfNothing(obj: TypedObject<OT>, variables: Map<String, TypedObject<OT>>, template: PropertyTemplate): Map<String, TypedObject<OT>> {
+    private fun setPropertyIfNothing(obj: TypedObject<OT>, evc:EvaluationContext<OT>, template: PropertyTemplate): EvaluationContext<OT> {
         val pn = template.propertyName.value
         val possiblePv = accessorMutator.getProperty(obj, pn)
         return when {
             accessorMutator.isNothing(possiblePv) -> {
                 val propType = obj.type.allResolvedProperty[PropertyName(pn)]?.typeInstance ?: StdLibDefault.AnyType
-                val (pv, vars) = createFromRhs(variables, propType, template.rhs) //TODO: really just want to set to a variable !
+                val rhsEvc = createFromRhs(evc, propType, template.rhs) //TODO: really just want to set to a variable !
+                val pv = evc.namedValues[pn] !! //FIXME
                 accessorMutator.setProperty(obj, pn, pv)
-                vars
+                evc
             }
 
-            else -> emptyMap()
+            else -> evc
         }
     }
 

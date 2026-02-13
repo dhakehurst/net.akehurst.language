@@ -48,15 +48,15 @@ data class EvaluationContext<SelfType : Any>(
 
     val self = namedValues[RootExpressionDefault.SELF.name]
 
-    val executionTrace:List<String> = mutableListOf()
+    val executionTrace: List<String> = mutableListOf()
 
     fun getOrInParent(name: String): TypedObject<SelfType>? = namedValues[name] ?: parent?.getOrInParent(name)
 
     fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
 
-    fun childSelf(self: TypedObject<SelfType>) = ofSelf(self, this.namedValues, parent = this)
+    fun childSelf(self: TypedObject<SelfType>, namedValues: Map<String, TypedObject<SelfType>> = emptyMap()) = ofSelf(self, namedValues, parent = this)
 
-    fun addExecutionTrace(trace:String) {
+    fun addExecutionTrace(trace: String) {
         (executionTrace as MutableList).add(trace)
     }
 

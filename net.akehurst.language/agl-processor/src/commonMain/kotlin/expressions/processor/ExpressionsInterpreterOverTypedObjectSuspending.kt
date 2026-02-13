@@ -190,7 +190,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
                         when {
                             objectGraph.nothing() == elem -> objectGraph.nothing()
                             else -> {
-                                val elemType = typeModel.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type()
+                                val elemType = typeModel.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type(elem.type.typeArguments)
                                 when {
                                     null == elemType -> {
                                         issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of List element '$elem'")
