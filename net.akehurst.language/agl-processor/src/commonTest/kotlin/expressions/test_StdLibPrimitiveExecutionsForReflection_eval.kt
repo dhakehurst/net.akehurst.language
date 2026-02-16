@@ -17,7 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
+import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
 import net.akehurst.language.objectgraph.api.EvaluationContext
@@ -49,7 +49,7 @@ class test_StdLibPrimitiveExecutionsForReflection_eval {
         fun test(typesDomain: TypesDomain, self: Any, selfType: String, expression: String, expected: Any) {
             val st = typesDomain.findByQualifiedNameOrNull(selfType.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphByReflection(typesDomain, issues, primitiveExecutor = StdLibPrimitiveExecutionsForReflection(issues))
+            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, primitiveExecutor = StdLibPrimitiveExecutionsForReflection(issues))
             val interpreter = ExpressionsInterpreterOverTypedObject(og, issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
             assertEquals(expected, og.untyped(actual))

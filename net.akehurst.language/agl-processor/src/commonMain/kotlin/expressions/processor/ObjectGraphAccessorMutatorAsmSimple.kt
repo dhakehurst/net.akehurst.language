@@ -560,3 +560,4 @@ data class ObjectGraphEdgeSimple(
     override val target: TypedObject<AsmValue>,
     override val property: PropertyDeclaration
 ) : ObjectGraphEdge<AsmValue>
+

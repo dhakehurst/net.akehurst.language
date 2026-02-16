@@ -324,12 +324,12 @@ class ExternalGetterByReflectionSuspending<SelfType : Any>(
 
 }
 
-open class ObjectGraphByReflectionSuspending(
+open class ObjectGraphAccessorMutatorSuspendingByReflection(
     typesDomain: TypesDomain,
     issues: IssueHolder,
     override val externalGetter: ExternalGetterSuspending<Any> = ExternalGetterByReflectionSuspending(typesDomain, issues),
     override val primitiveExecutor: PrimitiveExecutorSuspending<Any> = StdLibPrimitiveExecutionsForReflectionSuspending()
-) : ObjectGraphByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutatorSuspending<Any> {
+) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutatorSuspending<Any> {
 
     override fun typeFor(obj: Any?): TypeInstance {
         return when (obj) {

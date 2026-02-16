@@ -312,12 +312,12 @@ class ExternalGetterByReflection<SelfType : Any>(
     }
 }
 
-open class ObjectGraphByReflection(
+open class ObjectGraphAccessorMutatorByReflection(
     typesDomain: TypesDomain,
     issues: IssueHolder,
     override val externalGetter: ExternalGetter<Any> = ExternalGetterByReflection(typesDomain, issues),
     override val primitiveExecutor: PrimitiveExecutor<Any> = StdLibPrimitiveExecutionsForReflection()
-) : ObjectGraphByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutator<Any> {
+) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutator<Any> {
 
     override fun typeFor(obj: Any?): TypeInstance {
         return when (obj) {

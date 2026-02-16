@@ -23,13 +23,16 @@ import net.akehurst.language.agl.m2mTransform.testing.TransformTestSuit
 import net.akehurst.language.agl.m2mTransform.testing.m2mTransformTestSuits
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.simple.contextAsmSimple
+import net.akehurst.language.api.processor.M2mTransformString
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExternalGetterAsmSimple
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.expressions.processor.TypedObjectAsmValue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.types.api.PropertyCharacteristic
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -2179,6 +2182,52 @@ class test_m2mTransformInterpreter {
             }
         }
 
+        fun doTest(suite: TransformTestSuit, case: TransformTestCase) {
+            println("****** Suit '${suite.description}' : Case '${case.description}' ******")
+//            suite.typeDomains.forEach { (k, v) ->
+//                println("----- ${k.value} : ${v.name.value} -----")
+//                println(v.asString())
+//            }
+            val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+            val transform = M2mTransformString(suite.transform)
+            val accMuts = suite.typeDomains.entries.associate { (k, v) ->
+                val cdr = suite.crossReferenceDomains[k]
+                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, ExternalGetterAsmSimple(v, cdr, issues)))
+            }
+            val domains = case.input.entries.associate { (k, v) ->
+                println("----- Source ${k.value} -----")
+                val sourceObjects = v.root.map { obj ->
+                    println(obj.asString())
+                    val srcTypeDomain = suite.typeDomains[k]!!
+                    accMuts[srcTypeDomain.name]!!.let {
+                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
+                        TypedObjectAsmValue(td.type(), obj)
+                    }
+                }
+                Pair(k, sourceObjects)
+            }
+            val trRes = Agl.transform(
+                transform,
+                suite.typeDomains,
+                accMuts as Map<SimpleName,ObjectGraphAccessorMutator<Any>>,
+                domains,
+                case.target!!
+            )
+            println("----- M2M Transform Result -----")
+            trRes.targets.forEach { println(it.asString()) }
+            println(trRes.asString())
+            assertEquals(case.expectedIssues, trRes.issues.all, trRes.issues.toString())
+            val expected = case.expected
+            if (null != expected) {
+                assertEquals(expected.root.size, trRes.targets.size)
+                for (i in expected.root.indices) {
+                    val exp = expected.root[i]
+                    val act = trRes.targets[i]
+                    assertEquals(exp.asString(), act.asString())
+                }
+            }
+        }
+
         fun doTest2(suite: TransformTestSuit, case: TransformTestCase) {
             println("****** Suit '${suite.description}' : Case '${case.description}' ******")
 //            suite.typeDomains.forEach { (k, v) ->
@@ -2240,11 +2289,23 @@ class test_m2mTransformInterpreter {
 
     @Test
     fun testAll() {
+        val total = testSuits.values.sumOf { it.testCase.size }
+        var count = 0
+        var passes = 0
         testSuits.values.forEach { suite ->
             suite.testCase.values.forEach { case ->
-                doTest2(suite, case)
+                count++
+                try {
+                    print("$count: ")
+                    doTest2(suite, case)
+                    passes++
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                }
             }
         }
+        println("$passes / $total")
+        assertEquals(total, passes)
     }
 
     @Test

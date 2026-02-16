@@ -18,16 +18,10 @@
 package net.akehurst.language.expressions.processor
 
 import kotlinx.coroutines.test.runTest
-import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflectionSuspending
-import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
+import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorSuspendingByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflectionSuspending
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
 import net.akehurst.language.objectgraph.api.EvaluationContext
-import net.akehurst.language.asm.api.AsmValue
-import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.asm.simple.AsmListSimple
-import net.akehurst.language.asm.simple.AsmNothingSimple
-import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
@@ -65,7 +59,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
         suspend fun test(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphByReflectionSuspending(typesDomain, issues, primitiveExecutor=executor)
+            val og = ObjectGraphAccessorMutatorSuspendingByReflection(typesDomain, issues, primitiveExecutor=executor)
             val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og, issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
@@ -75,7 +69,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
         suspend fun test_fail(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any, expectedIssues: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphByReflectionSuspending(typesDomain, issues, primitiveExecutor=executor)
+            val og = ObjectGraphAccessorMutatorSuspendingByReflection(typesDomain, issues, primitiveExecutor=executor)
             val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og, issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
             assertEquals(expected,og.untyped(actual))

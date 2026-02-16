@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl
 
-import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
+import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
@@ -30,7 +30,10 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectSuspending
 import net.akehurst.language.format.asm.AglFormatDomainDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.formatter.api.AglFormatDomain
@@ -40,8 +43,13 @@ import net.akehurst.language.grammar.asm.GrammarDomainDefault
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.m2mTransform.api.DomainReference
+import net.akehurst.language.m2mTransform.processor.M2MTransformResult
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterSuspending
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutatorSuspending
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -51,6 +59,8 @@ import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.asm.AglStyleDomainDefault
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.TypesDomainSimple
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 object Agl {
 
@@ -335,12 +345,17 @@ object Agl {
         return AglFormatDomainDefault.fromString(contextFromTypesDomain(typesDomain), template)
     }
 
-     fun <SelfType : Any> format(formatDomain: AglFormatDomain, objectGraph: ObjectGraphAccessorMutator<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+    fun <SelfType : Any> format(
+        formatDomain: AglFormatDomain,
+        objectGraph: ObjectGraphAccessorMutator<SelfType>,
+        self: SelfType,
+        options: FormatOptions<SelfType> = FormatOptionsDefault()
+    ): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
         val formatter = FormatterOverTypedObject(formatDomain, objectGraph, issueHolder)
         val formatSetName = formatDomain.allDefinitions.lastOrNull()?.qualifiedName ?: error("No FormatSet found.")
         val namedValues = mutableMapOf<String, TypedObject<SelfType>>()
-        options.environment.forEach { (k,v) ->
+        options.environment.forEach { (k, v) ->
             namedValues[k] = objectGraph.toTypedObject(v)
         }
         val evc = EvaluationContext.ofSelf(objectGraph.toTypedObject(self), namedValues)
@@ -348,16 +363,107 @@ object Agl {
         return result
     }
 
-     fun <SelfType : Any> formatWithTemplate(template: FormatString, typesDomain: TypesDomain, objectGraph: ObjectGraphAccessorMutator<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+    fun <SelfType : Any> formatWithTemplate(
+        template: FormatString,
+        typesDomain: TypesDomain,
+        objectGraph: ObjectGraphAccessorMutator<SelfType>,
+        self: SelfType,
+        options: FormatOptions<SelfType> = FormatOptionsDefault()
+    ): FormatResult {
         val formatResult = formatDomain(template, typesDomain)
         val formatDomain = formatResult.asm ?: error("AglFormatDomain not created from template.")
         val result = format(formatDomain, objectGraph, self, options)
         return result
     }
 
-     fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<Any> = FormatOptionsDefault()): FormatResult {
+    fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<Any> = FormatOptionsDefault()): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
-        val objectGraph = ObjectGraphByReflection(typesDomain, issueHolder)
+        val objectGraph = ObjectGraphAccessorMutatorByReflection(typesDomain, issueHolder)
         return formatWithTemplate(template, typesDomain, objectGraph, self, options)
+    }
+
+    fun executeExpression(accessorMutator:ObjectGraphAccessorMutator<Any>, self:Any?, expression:String): TypedObject<Any> {
+        val typedSelf = accessorMutator.toTypedObject(self)
+        val evc = EvaluationContext.ofSelf(typedSelf)
+        return executeExpressionWithEvaluationContext(accessorMutator, evc, expression)
+    }
+
+    fun executeExpressionWithEvaluationContext(accessorMutator:ObjectGraphAccessorMutator<Any>, evc:EvaluationContext<Any>, expression:String): TypedObject<Any> {
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        val interpreter = ExpressionsInterpreterOverTypedObject(accessorMutator, issueHolder)
+        val result = interpreter.evaluateStr(evc, expression)
+        return result
+    }
+
+    suspend fun executeExpressionSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending<Any>, self:Any?, expression:String): TypedObject<Any> {
+        val typedSelf = accessorMutator.toTypedObject(self)
+        val evc = EvaluationContext.ofSelf(typedSelf)
+        return executeExpressionWithEvaluationContextSuspend(accessorMutator, evc, expression)
+    }
+    suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending<Any>, evc:EvaluationContext<Any>, expression:String): TypedObject<Any> {
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(accessorMutator, issueHolder)
+        val result = interpreter.evaluateStr(evc, expression)
+        return result
+    }
+
+    fun transform(
+        m2m: M2mTransformString,
+        typeDomains: Map<DomainReference, TypesDomain>,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator<Any>>,
+        domains: Map<DomainReference, List<TypedObject<Any>>>,
+        targetDomainReference: DomainReference
+    ): M2MTransformResult<Any> {
+        val context = SentenceContextAny()
+        typeDomains.forEach { (k, v) ->
+            context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
+        }
+        val res = Agl.registry.agl.m2mTransform.processor!!.process(
+            m2m.value,
+            options = Agl.options {
+                semanticAnalysis {
+                    context(context)
+                }
+            }
+        )
+        val m2m = res.let {
+            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
+            it.asm!!
+        }
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        val interpreter = M2mTransformInterpreter(m2m, accessorMutators, issueHolder)
+        val tgtTransform = m2m.allTransformRuleSet.first() //TODO: allow caller to choose
+        val transResult = interpreter.transform(tgtTransform, targetDomainReference, domains)
+        return transResult
+    }
+
+    suspend fun transformSuspend(
+        m2m: M2mTransformString,
+        typeDomains: Map<DomainReference, TypesDomain>,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutatorSuspending<Any>>,
+        domains: Map<DomainReference, List<TypedObject<Any>>>,
+        targetDomainReference: DomainReference
+    ): M2MTransformResult<Any> {
+        val context = SentenceContextAny()
+        typeDomains.forEach { (k, v) ->
+            context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
+        }
+        val res = Agl.registry.agl.m2mTransform.processor!!.process(
+            m2m.value,
+            options = Agl.options {
+                semanticAnalysis {
+                    context(context)
+                }
+            }
+        )
+        val m2m = res.let {
+            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
+            it.asm!!
+        }
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        val interpreter = M2mTransformInterpreterSuspending(m2m, accessorMutators, issueHolder)
+        val tgtTransform = m2m.allTransformRuleSet.first() //TODO: allow caller to choose
+        val transResult = interpreter.transform(tgtTransform, targetDomainReference, domains)
+        return transResult
     }
 }

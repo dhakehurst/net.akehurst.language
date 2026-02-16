@@ -25,6 +25,8 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 
+
+
 interface M2mTransformDomain : Domain<M2mTransformNamespace, M2mTransformRuleSet> {
     override val namespace: List<M2mTransformNamespace>
     val allTransformRuleSet: List<M2mTransformRuleSet>

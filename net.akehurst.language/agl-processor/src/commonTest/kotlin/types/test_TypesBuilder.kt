@@ -17,7 +17,7 @@
 
 package net.akehurst.language.types.builder
 
-import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
+import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.EvaluationContext
@@ -42,7 +42,7 @@ class test_TypesBuilder {
             }
         }
         val issues = IssueHolder()
-        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphByReflection(types, issues),issues)
+        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues),issues)
 
         val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"))),$$"$self.derProp")
         assertEquals("Hello World!", actual.self)

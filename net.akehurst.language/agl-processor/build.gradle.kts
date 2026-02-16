@@ -56,6 +56,11 @@ kotlin {
             // add language repository so we can test the grammars with specific sentences here
             resources.srcDir(projectDir.resolve("../language-repository/languages"))
         }
+        jvmMain {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
     }
 }
 /*

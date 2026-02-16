@@ -18,9 +18,7 @@
 package net.akehurst.language.agl.expressions.processor
 
 import net.akehurst.language.base.api.Indent
-import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
@@ -56,7 +54,7 @@ data class ObjectGraphEdgeAny<SelfType : Any>(
     override val property: PropertyDeclaration
 ) : ObjectGraphEdge<SelfType>
 
-abstract class ObjectGraphByReflectionAbstract<StructureType : Any>(
+abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureType : Any>(
     override var typesDomain: TypesDomain,
     val issues: IssueHolder,
 ) : ObjectGraphAccessorMutatorCommon<Any> {

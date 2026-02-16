@@ -71,6 +71,11 @@ data class StyleString(override val value: String) : PublicValueType
 // TODO: value classes don't work (fully) in js and wasm
 data class FormatString(override val value: String) : PublicValueType
 
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class M2mTransformString(override val value: String) : PublicValueType
+
+
 interface LanguageRegistry : GrammarRegistry {
 
     val agl: AglLanguages

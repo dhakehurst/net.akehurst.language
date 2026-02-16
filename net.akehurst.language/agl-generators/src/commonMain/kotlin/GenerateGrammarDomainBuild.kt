@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
+import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.api.processor.FormatString
@@ -119,7 +119,7 @@ class GenerateGrammarDomainBuild(
 
     fun generateFromAsm(grammarDomain: GrammarDomain): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
-        val og = ObjectGraphByReflection(AglGrammar.typesDomain, issues)
+        val og = ObjectGraphAccessorMutatorByReflection(AglGrammar.typesDomain, issues)
         val formatter = FormatterOverTypedObject<Any>(formatDomain, og,issues)
 
         val tp = grammarTypesDomain.findFirstDefinitionByNameOrNull(SimpleName("GrammarDomain"))!!.type()
