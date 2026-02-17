@@ -617,7 +617,7 @@ class M2mTransformInterpreter<OT : Any>(
                                         else -> error("not handled") //FIXME:
                                     }
                                 } - whereOutputs
-                                M2mPatternExecution("where ${rw}", null, whereInputs, whereOutputs) { evc ->
+                                M2mPatternExecution("where ${rw}",  whereInputs, whereOutputs) { evc ->
                                     val mv = executeWhere(m2mExecution, rule, rw, evc.namedValues)
                                     evc.child(mv)
                                 }
@@ -625,8 +625,8 @@ class M2mTransformInterpreter<OT : Any>(
 
                             val executor = M2mPatternExecutor(m2mExecution.issues, m2mExecution.targetAccessorMutator, whereExes) //TODO: construct and build this during semantic analysis
                             executor.build(template, lhsType)
-                            val varsAfterExe = executor.execute(varsAfterWhen, m2mExecution.targetAccessorMutator.nothing())
-                            val tgtObj = varsAfterExe.self ?: m2mExecution.targetAccessorMutator.nothing()
+                            val tgtObj = executor.execute(varsAfterWhen, m2mExecution.targetAccessorMutator.nothing())
+                            //val tgtObj = varsAfterExe.getOrInParent(M2mPatternExecutor.RESULT) ?: m2mExecution.targetAccessorMutator.nothing()
 
                             /*
                             val (tgtObj, varsAfterCreate) = createFromRhs(m2mExecution, varsAfterWhen, lhsType, template)

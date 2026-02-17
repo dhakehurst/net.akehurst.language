@@ -77,12 +77,10 @@ class FormatterOverTypedObject<SelfType : Any>(
 
     override  fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<SelfType>): FormatResult {
         _formatSet = formatDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
-        val evc2 = if (evc.namedValues.contains(EOL_NAME).not()) {
-            evc.copy(namedValues = evc.namedValues + Pair(EOL_NAME, objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "\n")))
-        } else {
-            evc
+        if (evc.namedValues.contains(EOL_NAME).not()) {
+            evc.setNamedValue(EOL_NAME, objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "\n"))
         }
-        val str = formatEvc(evc2)
+        val str = formatEvc(evc)
         return FormatResultDefault(str, issues)
     }
 

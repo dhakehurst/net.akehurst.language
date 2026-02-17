@@ -29,9 +29,9 @@ interface TypedObject<out SelfType : Any> {
     fun asString(indent: Indent = Indent()): String
 }
 
-data class EvaluationContext<SelfType : Any>(
+class EvaluationContext<SelfType : Any>(
     val parent: EvaluationContext<SelfType>?,
-    val namedValues: Map<String, TypedObject<SelfType>>
+    initialNamedValues: Map<String, TypedObject<SelfType>>
 ) {
     companion object {
         fun <SelfType : Any> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
@@ -46,6 +46,7 @@ data class EvaluationContext<SelfType : Any>(
         }
     }
 
+    val namedValues: Map<String, TypedObject<SelfType>> = initialNamedValues.toMutableMap()
     val self = namedValues[RootExpressionDefault.SELF.name]
 
     val executionTrace: List<String> = mutableListOf()
@@ -55,6 +56,10 @@ data class EvaluationContext<SelfType : Any>(
     fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
 
     fun childSelf(self: TypedObject<SelfType>, namedValues: Map<String, TypedObject<SelfType>> = emptyMap()) = ofSelf(self, namedValues, parent = this)
+
+    fun setNamedValue(name:String, value: TypedObject<SelfType>) {
+        (namedValues as MutableMap)[name] = value
+    }
 
     fun addExecutionTrace(trace: String) {
         (executionTrace as MutableList).add(trace)
