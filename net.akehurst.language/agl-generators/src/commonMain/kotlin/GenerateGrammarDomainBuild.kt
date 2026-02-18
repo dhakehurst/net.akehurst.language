@@ -123,7 +123,7 @@ class GenerateGrammarDomainBuild(
         val formatter = FormatterOverTypedObject<Any>(formatDomain, og,issues)
 
         val tp = grammarTypesDomain.findFirstDefinitionByNameOrNull(SimpleName("GrammarDomain"))!!.type()
-        val tobj = TypedObjectAny(tp, grammarDomain)
+        val tobj = og.toTypedObjectAny(tp, grammarDomain)
         val res = formatter.formatSelf(formatSet.qualifiedName, tobj)
         check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
         //val str = grammarModel.namespace.joinToString(separator = "\n\n") { generateNamespace(it) }

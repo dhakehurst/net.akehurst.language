@@ -54,9 +54,9 @@ data class ReferenceExpressionContext<ItemInScopeType>(
 class ReferenceResolverSimple<ItemInScopeType : Any>(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain,
-    val context: ContextWithScope<Any,ItemInScopeType>, //TODO: use interface or something more abstract
+    val context: ContextWithScope<Any, ItemInScopeType>, //TODO: use interface or something more abstract
     val sentenceIdentity: Any?,
-    val identifyingValueInFor:  (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
     val resolveFunction: ResolveScopedItem<Any, ItemInScopeType>?,
     private val _locationMap: LocationMap,
     private val _issues: IssueHolder
@@ -75,7 +75,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         )
     }
 
-    override  fun beforeRoot(root: AsmValue) {
+    override fun beforeRoot(root: AsmValue) {
         when (root) {
             is AsmStructure -> {
                 //val ref = createReferableFunction.invoke()
@@ -88,15 +88,15 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         }
     }
 
-    override  fun afterRoot(root: AsmValue) {
+    override fun afterRoot(root: AsmValue) {
 
     }
 
-    override  fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
+    override fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
 
-    override  fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
+    override fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
 
-    override  fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
+    override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         val parentScope = scopeStack.peek()
         val inTypeName = parentScope.forTypeName.last
         val refInParent = identifyingValueInFor.invoke(inTypeName, value)
@@ -126,19 +126,19 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         }
     }
 
-    override  fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {
+    override fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {
 
     }
 
-    override  fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
+    override fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         scopeStack.pop()
     }
 
-    override  fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+    override fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    override  fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+    override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    private  fun handleReferenceExpression(refExpr: ReferenceExpression, context: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
+    private fun handleReferenceExpression(refExpr: ReferenceExpression, context: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
         when (refExpr) {
             is ReferenceExpressionPropertyDefault -> handlePropertyReferenceExpression(refExpr, context, self)
             is ReferenceExpressionCollectionDefault -> handleCollectionReferenceExpression(refExpr, context, self)
@@ -146,7 +146,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         }
     }
 
-    private  fun handlePropertyReferenceExpression(refExpr: ReferenceExpressionPropertyDefault, exprContext: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
+    private fun handlePropertyReferenceExpression(refExpr: ReferenceExpressionPropertyDefault, exprContext: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
         // 'in' typeReference '{' referenceExpression* '}'
         // 'property' navigation 'refers-to' typeReferences from? ;
         //check referred to item exists
@@ -157,7 +157,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                 //scope for result of navigation
                 val elType = typesDomain.findByQualifiedNameOrNull(exprContext.element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
                 val fromEl = _interpreter.evaluateExpression(
-                    EvaluationContext.ofSelf(TypedObjectAsmValue(elType, exprContext.element)), refExpr.fromNavigation
+                    EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(exprContext.element, elType)), refExpr.fromNavigation
                 ).self
                 when (fromEl) {
                     is AsmNothing -> error("Cannot get scope for result of '${exprContext.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
@@ -171,8 +171,8 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
 
                     is AsmReference -> {
                         val v = fromEl.value // ?: error("'${fromEl.reference}' not resolved, therefore cannot determine it's scope")
-                        if(null==v) {
-                            raiseError(self,"Cannot resolve reference to ${fromEl.reference}")
+                        if (null == v) {
+                            raiseError(self, "Cannot resolve reference to ${fromEl.reference}")
                             null
                         } else {
                             val fromElId =
@@ -187,9 +187,9 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                 }
             }
         }
-        if(null!=scope) {
+        if (null != scope) {
             val elType = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-            var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType, self)), refExpr.referringPropertyNavigation).self
+            var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, elType)), refExpr.referringPropertyNavigation).self
             if (referringValue is AsmReference) {
                 referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
             }
@@ -214,14 +214,14 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                             raiseError(self, "Reference '$referringStr' not resolved, to type(s) ${refExpr.refersToTypeName} in scope '${scope.scopeIdentity}'")//of element '$selfId'")
                             //raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '$referringStr' in scope of element '$self'")
                             val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                            createReference(self,referringProperty, null)
+                            createReference(self, referringProperty, null)
                         }
 
                         1 < targets.size -> {
                             val msg = "Multiple target of type(s) ${refExpr.refersToTypeName} found for referring value '${referringValue.value}' in scope of element '$self': $targets"
                             raiseError(self, msg)
                             val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                            createReference(self,referringProperty, null)
+                            createReference(self, referringProperty, null)
                         }
 
                         else -> {
@@ -243,7 +243,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
 
                                         is AsmStructure -> {
                                             val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                                            createReference(self,referringProperty, ref)
+                                            createReference(self, referringProperty, ref)
                                         }
 
                                         else -> this.raiseError(self, "Asm element '$referred' is not a reference to a structured element of the asm")
@@ -254,7 +254,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                                     // no resolve function so do not resolve, maybe intentional so do not warn or error
                                     // create reference but do not resolve it
                                     val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                                    createReference(self,referringProperty, null)
+                                    createReference(self, referringProperty, null)
                                 }
                             }
                         }
@@ -280,14 +280,14 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                             raiseError(self, "Reference '$qname' not resolved, to type(s) ${refExpr.refersToTypeName} in scope '${scope.scopeIdentity}'")//of element '$selfId'")
                             //raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '${list}' in scope of element '$self'")
                             val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                            createReference(self,referringProperty, null)
+                            createReference(self, referringProperty, null)
                         }
 
                         1 < targets.size -> {
                             val msg = "Multiple target of type(s) ${refExpr.refersToTypeName} found for referring value '${qname}' in scope of element '$self': $targets"
                             raiseError(self, msg)
                             val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                            createReference(self,referringProperty, null)
+                            createReference(self, referringProperty, null)
                         }
 
                         else -> {
@@ -309,7 +309,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
 
                                         is AsmStructure -> {
                                             val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                                            createReference(self,referringProperty, ref)
+                                            createReference(self, referringProperty, ref)
                                         }
 
                                         else -> this.raiseError(self, "Asm element '$referred' is not a reference to a structured element of the asm")
@@ -320,7 +320,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                                     // no resolve function so do not resolve, maybe intentional so do not warn or error
                                     // create reference but do not resolve it
                                     val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                                    createReference(self,referringProperty, null)
+                                    createReference(self, referringProperty, null)
                                 }
                             }
                         }
@@ -334,9 +334,9 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         }
     }
 
-    private  fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, context: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
+    private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, context: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
         val elType = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-        val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType, self)), refExpr.expression)
+        val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, elType)), refExpr.expression)
         for (re in refExpr.referenceExpressionList) {
             when (coll.self) {
                 is AsmNothing -> Unit //do nothing
@@ -356,17 +356,19 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         }
     }
 
-    private fun createReference(source:AsmValue, referringProperty: AsmStructureProperty, refersTo: AsmStructure?) {
+    private fun createReference(source: AsmValue, referringProperty: AsmStructureProperty, refersTo: AsmStructure?) {
         referringProperty.convertToReferenceTo(refersTo)
-        if (null!=refersTo) {
+        if (null != refersTo) {
             val srcLocation = _locationMap[source]
             val tgtLocation = _locationMap[refersTo]
-            resolvedReferences.add(ResolvedReference(
-                source = source,
-                sourceLocation = srcLocation,
-                target = refersTo,
-                targetLocation = tgtLocation
-            ))
+            resolvedReferences.add(
+                ResolvedReference(
+                    source = source,
+                    sourceLocation = srcLocation,
+                    target = refersTo,
+                    targetLocation = tgtLocation
+                )
+            )
         }
     }
 
@@ -380,7 +382,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)
             ?: error("Type '${self.qualifiedTypeName}' not found in types domain '${this.name}'")
 
-    private  fun NavigationExpression.propertyFor(root: AsmValue): AsmStructureProperty {
+    private fun NavigationExpression.propertyFor(root: AsmValue): AsmStructureProperty {
         return when {
             root is AsmNothing -> error("Cannot navigate '$this' from '$root' value")
             this.parts.isEmpty() -> {
@@ -403,7 +405,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                 //val exprEval = ExpressionsInterpreterOverTypedObject(typeModel)
                 val selfType = typesDomain.typeOf(root).type()
                 val front = NavigationExpressionDefault(this.start, this.parts.dropLast(1))
-                val evc = EvaluationContext(null, mapOf(RootExpressionDefault.SELF.name to TypedObjectAsmValue(selfType, root)))
+                val evc = EvaluationContext(null, mapOf(RootExpressionDefault.SELF.name to _interpreter.objectGraph.typedAs(root, selfType)))
                 val v = _interpreter.evaluateExpression(evc, front).self
                 val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {

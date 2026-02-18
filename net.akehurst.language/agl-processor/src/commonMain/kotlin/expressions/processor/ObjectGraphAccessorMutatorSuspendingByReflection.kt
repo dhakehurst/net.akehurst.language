@@ -364,7 +364,7 @@ open class ObjectGraphAccessorMutatorSuspendingByReflection(
     override fun createLambdaValue(lambda: suspend (it: TypedObject<Any>) -> TypedObject<Any>): TypedObject<Any> {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
         val lmb: suspend (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it))) }
-        return TypedObjectAny(lambdaType, lmb)
+        return typedAs(lmb,lambdaType)
     }
 
     override suspend fun executeMethod(tobj: TypedObject<Any>, methodName: String, args: List<TypedObject<Any>>): TypedObject<Any> {
@@ -422,7 +422,7 @@ open class ObjectGraphAccessorMutatorSuspendingByReflection(
         }
         val type = typeDef.type()
         addCreatedStructure(type, obj)
-        return TypedObjectAny(type, obj)
+        return typedAs(obj, type)
     }
 
     /**

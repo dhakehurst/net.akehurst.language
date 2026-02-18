@@ -20,8 +20,6 @@ package net.akehurst.language.expressions.processor
 import kotlinx.coroutines.test.runTest
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorSuspendingByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflectionSuspending
-import net.akehurst.language.agl.expressions.processor.TypedObjectAny
-import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
@@ -30,6 +28,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
@@ -59,9 +58,9 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
         suspend fun test(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphAccessorMutatorSuspendingByReflection(typesDomain, issues, primitiveExecutor=executor)
+            val og = ObjectGraphAccessorMutatorSuspendingByReflection(typesDomain, issues, primitiveExecutor = executor)
             val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og, issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
             assertEquals(expected, og.untyped(actual))
         }
@@ -69,10 +68,10 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
         suspend fun test_fail(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any, expectedIssues: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphAccessorMutatorSuspendingByReflection(typesDomain, issues, primitiveExecutor=executor)
+            val og = ObjectGraphAccessorMutatorSuspendingByReflection(typesDomain, issues, primitiveExecutor = executor)
             val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og, issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
-            assertEquals(expected,og.untyped(actual))
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
+            assertEquals(expected, og.untyped(actual))
             assertEquals(expectedIssues, interpreter.issues.all.toList())
         }
 
@@ -225,7 +224,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"))
+        val self = TestObj("strValue", listOf("A", "B", "C"))
 
         val expectedIssues = listOf(
             LanguageIssue(
@@ -251,7 +250,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"))
+        val self = TestObj("strValue", listOf("A", "B", "C"))
 
         val expectedIssues = listOf(
             LanguageIssue(
@@ -277,7 +276,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"))
+        val self = TestObj("strValue", listOf("A", "B", "C"))
 
         val expectedIssues = listOf(
             LanguageIssue(
@@ -303,7 +302,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"))
+        val self = TestObj("strValue", listOf("A", "B", "C"))
 
         val expected = "A"
         test(tm, self, "ns.TestObj", "propList[0]", expected)
@@ -331,7 +330,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"), listOf(TestObjA("A"),TestObjA("B"),TestObjA("C")))
+        val self = TestObj("strValue", listOf("A", "B", "C"), listOf(TestObjA("A"), TestObjA("B"), TestObjA("C")))
 
         val expected = "B"
         test(tm, self, "ns.TestObj", "propListA.get(1).prop1", expected)
@@ -359,8 +358,8 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
                 }
             }
         }
-        val self = TestObj("strValue", listOf("A","B","C"), listOf(TestObjA("A"),TestObjA("B"),TestObjA("C")))
-        val expected =listOf("A","B","C")
+        val self = TestObj("strValue", listOf("A", "B", "C"), listOf(TestObjA("A"), TestObjA("B"), TestObjA("C")))
+        val expected = listOf("A", "B", "C")
 
         test(tm, self, "ns.TestObj", "propListA.map({it.prop1})", expected)
     }

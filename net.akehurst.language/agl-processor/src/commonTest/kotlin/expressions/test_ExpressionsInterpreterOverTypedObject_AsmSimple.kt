@@ -40,7 +40,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues), issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, actual.self)
         }
 
@@ -48,7 +48,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues), issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(AsmNothingSimple, actual.self)
             assertEquals(expected, interpreter.issues.all.toList())
         }
@@ -101,11 +101,15 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
         }
         val self = AsmNothingSimple
 
-        test(tm, self, expression, AsmListSimple(listOf(
-            AsmPrimitiveSimple.stdString("Hello"),
-            AsmPrimitiveSimple.stdString("World"),
-            AsmPrimitiveSimple.stdString("!")
-        )))
+        test(
+            tm, self, expression, AsmListSimple(
+                listOf(
+                    AsmPrimitiveSimple.stdString("Hello"),
+                    AsmPrimitiveSimple.stdString("World"),
+                    AsmPrimitiveSimple.stdString("!")
+                )
+            )
+        )
     }
 
     @Test

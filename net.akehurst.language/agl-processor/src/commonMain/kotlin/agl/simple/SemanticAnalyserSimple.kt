@@ -51,7 +51,7 @@ class SemanticAnalyserSimple(
                         null -> null
                         else -> {
                             val elType = interpreter.typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-                            val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType, self)), exp).self
+                            val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, elType)), exp).self
                             when {
                                 value is AsmPrimitive && value.isStdString -> value.value as String
                                 value is AsmList && value.elements.all { it is AsmPrimitive && it.isStdString } -> value.elements.map { (it as AsmPrimitive).value as String }

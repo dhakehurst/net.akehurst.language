@@ -18,38 +18,11 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.objectgraph.api.EvaluationContext
-import net.akehurst.language.expressions.api.AssignmentStatement
-import net.akehurst.language.expressions.api.CastExpression
-import net.akehurst.language.expressions.api.CreateObjectExpression
-import net.akehurst.language.expressions.api.CreateTupleExpression
-import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.api.FunctionCall
-import net.akehurst.language.expressions.api.GroupExpression
-import net.akehurst.language.expressions.api.IndexOperation
-import net.akehurst.language.expressions.api.InfixExpression
-import net.akehurst.language.expressions.api.LambdaExpression
-import net.akehurst.language.expressions.api.LiteralExpression
-import net.akehurst.language.expressions.api.MethodCall
-import net.akehurst.language.expressions.api.NavigationExpression
-import net.akehurst.language.expressions.api.OnExpression
-import net.akehurst.language.expressions.api.PropertyCall
-import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.expressions.api.TypeReference
-import net.akehurst.language.expressions.api.TypeTestExpression
-import net.akehurst.language.expressions.api.WhenExpression
-import net.akehurst.language.expressions.api.WithExpression
+import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutatorSuspending
-import net.akehurst.language.objectgraph.api.TypedObject
-import net.akehurst.language.types.api.DataType
-import net.akehurst.language.types.api.MethodName
-import net.akehurst.language.types.api.PropertyName
-import net.akehurst.language.types.api.TupleType
-import net.akehurst.language.types.api.TypeArgumentNamed
-import net.akehurst.language.types.api.TypeInstance
-import net.akehurst.language.types.api.ValueType
+import net.akehurst.language.objectgraph.api.*
+import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
@@ -282,7 +255,6 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         }
     }
 
-
     private suspend fun evaluateInfix(evc: EvaluationContext<SelfType>, expression: InfixExpression): TypedObject<SelfType> {
         //TODO: Operator precedence
         var result = evaluateExpression(evc, expression.expressions.first())
@@ -497,7 +469,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         return when {
             objectGraph.nothing() == newSelf -> newSelf
             else -> {
-                val newEvc = evc.child(mapOf(RootExpressionDefault.Companion.SELF.name to newSelf))
+                val newEvc = evc.child(mapOf(RootExpressionDefault.SELF.name to newSelf))
                 val result = evaluateExpression(newEvc, expression.expression)
                 result
             }

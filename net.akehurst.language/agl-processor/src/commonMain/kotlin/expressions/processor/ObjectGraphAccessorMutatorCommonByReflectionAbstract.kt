@@ -25,7 +25,8 @@ import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 
-class TypedObjectAny<SelfType : Any>(
+private class TypedObjectAny<SelfType : Any>(
+    override val accessor: ObjectGraphAccessorMutatorCommon<Any>,
     override val type: TypeInstance,
     override val self: SelfType
 ) : TypedObject<SelfType> {
@@ -77,12 +78,12 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         Unit == obj -> nothing()
         obj is TypedObject<*> -> obj as TypedObject<Any>
         else -> when (obj) {
-            is Boolean -> TypedObjectAny(StdLibDefault.Boolean, obj)
-            is Int -> TypedObjectAny(StdLibDefault.Integer, obj)
-            is Long -> TypedObjectAny(StdLibDefault.Integer, obj)
-            is Float -> TypedObjectAny(StdLibDefault.Real, obj)
-            is Double -> TypedObjectAny(StdLibDefault.Real, obj)
-            is String -> TypedObjectAny(StdLibDefault.String, obj)
+            is Boolean -> typedAs(obj,StdLibDefault.Boolean)
+            is Int -> typedAs(obj,StdLibDefault.Integer)
+            is Long -> typedAs(obj,StdLibDefault.Integer)
+            is Float -> typedAs(obj,StdLibDefault.Real)
+            is Double -> typedAs(obj,StdLibDefault.Real)
+            is String -> typedAs(obj,StdLibDefault.String)
             is List<*> -> createCollection(StdLibDefault.List.qualifiedName, obj.map { toTypedObject(it) })
             is Set<*> -> createCollection(StdLibDefault.Set.qualifiedName, obj.map { toTypedObject(it) }.toSet())
             is Map<*, *> -> createCollection(
@@ -91,11 +92,11 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
                     val key = toTypedObject(k)
                     val value = toTypedObject(v)
                     val p = Pair(key, value)
-                    TypedObjectAny(StdLibDefault.Pair.type(listOf(key.type.asTypeArgument, value.type.asTypeArgument)), p)
+                    typedAs(p, StdLibDefault.Pair.type(listOf(key.type.asTypeArgument, value.type.asTypeArgument)))
                 }
             )
 
-            else -> TypedObjectAny(typeFor(obj), obj)
+            else -> typedAs(obj, typeFor(obj))
         }
     }
 
@@ -103,18 +104,20 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return untypedAny(typedObj.self)
     }
 
+    override fun typedAs(obj: Any, type: TypeInstance): TypedObject<Any> = TypedObjectAny(this,type, obj)
+
     override fun isNothing(obj: TypedObject<Any>): Boolean = obj.self == Unit
     override fun equalTo(lhs: TypedObject<Any>, rhs: TypedObject<Any>): Boolean = lhs.self == rhs.self
 
-    override fun nothing(): TypedObject<Any> = TypedObjectAny(StdLibDefault.NothingType, Unit)
-    override fun any(value: Any): TypedObject<Any> = TypedObjectAny(StdLibDefault.AnyType, value)
+    override fun nothing(): TypedObject<Any> = typedAs(Unit, StdLibDefault.NothingType)
+    override fun any(value: Any): TypedObject<Any> = typedAs(value,StdLibDefault.AnyType)
 
     override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value)
 
     override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<Any> {
         val tupleType = StdLibDefault.TupleType
         val tuple = mutableMapOf<String, Any>()
-        return TypedObjectAny(tupleType.type(typeArgs), tuple)
+        return typedAs(tuple, tupleType.type(typeArgs))
     }
 
     override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<Any>>): TypedObject<Any> {
@@ -122,20 +125,20 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             StdLibDefault.List.qualifiedName -> {
                 val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType //TODO: should really take comon supertype !
                 val type = StdLibDefault.List.type(listOf(elType.asTypeArgument))
-                TypedObjectAny(type, collection.toList())
+                typedAs( collection.toList(),type)
             }
 
             StdLibDefault.ListSeparated.qualifiedName -> {
                 val list = collection.toList()
                 val elType = list.getOrNull(0)?.type ?: StdLibDefault.AnyType
                 val sepType = list.getOrNull(1)?.type ?: StdLibDefault.AnyType
-                TypedObjectAny(StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)), list.toSeparatedList())
+                typedAs(list.toSeparatedList(),StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)))
             }
 
             StdLibDefault.Set.qualifiedName -> {
                 val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType //TODO: should really take comon supertype !
                 val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
-                TypedObjectAny(type, collection.toSet())
+                typedAs(collection.toSet(),type)
             }
 
             StdLibDefault.Map.qualifiedName -> {
@@ -143,7 +146,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
                 val keyType = fstElType.typeArguments[0]
                 val valType = fstElType.typeArguments[1]
                 val map = collection.associate { it.self as Pair<Any, Any> }
-                TypedObjectAny(StdLibDefault.Map.type(listOf(keyType, valType)), map)
+                typedAs(map,StdLibDefault.Map.type(listOf(keyType, valType)))
             }
 
             else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
@@ -208,7 +211,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     }
 
     override fun cast(tobj: TypedObject<Any>, newType: TypeInstance): TypedObject<Any> {
-        return TypedObjectAny(newType, tobj.self)
+        return typedAs( tobj.self,newType)
     }
 
     protected fun addCreatedStructure(type: TypeInstance, obj: StructureType) {

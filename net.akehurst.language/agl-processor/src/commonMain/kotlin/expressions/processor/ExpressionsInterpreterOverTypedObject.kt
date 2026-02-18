@@ -17,9 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
-//import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
@@ -595,6 +593,4 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
             objectGraph.setProperty(self, it.lhsPropertyName, value)
         }
     }
-
 }
-

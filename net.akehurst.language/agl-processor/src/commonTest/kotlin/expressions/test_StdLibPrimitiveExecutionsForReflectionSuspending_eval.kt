@@ -20,11 +20,10 @@ package net.akehurst.language.expressions.processor
 import kotlinx.coroutines.test.runTest
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorSuspendingByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflectionSuspending
-import net.akehurst.language.agl.expressions.processor.TypedObjectAny
-import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
@@ -52,7 +51,7 @@ class test_StdLibPrimitiveExecutionsForReflectionSuspending_eval {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorSuspendingByReflection(typesDomain, issues, primitiveExecutor = StdLibPrimitiveExecutionsForReflectionSuspending(issues))
             val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og, issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertEquals(expected, og.untyped(actual))
         }
     }

@@ -38,7 +38,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, primitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple), issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, actual.self)
         }
     }
@@ -225,7 +225,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
     }
 
     @Test
-    fun collection_List_transitiveClosure()  {
+    fun collection_List_transitiveClosure() {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestContainer") {
@@ -263,7 +263,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        val expected = AsmListSimple(listOf("1.1","1.2","1.3","1.1.1","1.3.1").map { AsmPrimitiveSimple.stdString(it) })
+        val expected = AsmListSimple(listOf("1.1", "1.2", "1.3", "1.1.1", "1.3.1").map { AsmPrimitiveSimple.stdString(it) })
         test(tm, self, "list.transitiveClosure({ it.list }).map({it.id})", expected)
     }
 }

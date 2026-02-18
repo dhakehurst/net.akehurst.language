@@ -24,10 +24,17 @@ import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.types.api.*
 
 interface TypedObject<out SelfType : Any> {
+    val accessor: ObjectGraphAccessorMutatorCommon<Any>
     val self: SelfType
     val type: TypeInstance
     fun asString(indent: Indent = Indent()): String
 }
+
+interface BoundValue<SelfType : Any> {
+    val accessorMutator: ObjectGraphAccessorMutator<SelfType>
+    val value: TypedObject<SelfType>
+}
+
 
 class EvaluationContext<SelfType : Any>(
     val parent: EvaluationContext<SelfType>?,
@@ -110,6 +117,7 @@ interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
     fun typeFor(obj: SelfType?): TypeInstance
     fun toTypedObject(obj: SelfType?): TypedObject<SelfType>
     fun untyped(typedObj: TypedObject<SelfType>): Any
+    fun typedAs(obj:Any, type:TypeInstance): TypedObject<SelfType>
 
     fun isNothing(obj: TypedObject<SelfType>): Boolean
     fun equalTo(lhs: TypedObject<SelfType>, rhs: TypedObject<SelfType>): Boolean

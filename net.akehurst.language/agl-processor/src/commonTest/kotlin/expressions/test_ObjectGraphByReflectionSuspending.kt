@@ -70,7 +70,7 @@ class test_ObjectGraphByReflectionSuspending {
     }
 
     @Test
-    fun createTupleValue() =runTest {
+    fun createTupleValue() = runTest {
         val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
 
         val actual = og.createTupleValue(listOf())
@@ -86,7 +86,7 @@ class test_ObjectGraphByReflectionSuspending {
     @Test
     fun getIndex() {
         val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
-        val list = TypedObjectAny(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), listOf("Adam", "Betty", "Charles"))
+        val list = og.typedAs(listOf("Adam", "Betty", "Charles"), StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)))
 
         val actual1 = og.getFromListWithIndex(list, 0)
         assertEquals("Adam", actual1.self)
@@ -114,7 +114,7 @@ class test_ObjectGraphByReflectionSuspending {
         val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = TestClass("A", 1, TestClass("B", 2, null))
         val tp = testTypeModel.findFirstDefinitionByNameOrNull(SimpleName("TestClass"))!!.type()
-        val tobj = TypedObjectAny(tp, obj)
+        val tobj =  og.typedAs(obj,tp)
 
         val actual1 = og.getProperty(tobj, "prop1")
         assertEquals("A", actual1.self)
@@ -138,7 +138,7 @@ class test_ObjectGraphByReflectionSuspending {
             "prop3" to TestClass("B", 2, null)
         )
         val tp = StdLibDefault.TupleType.type()
-        val tobj = TypedObjectAny(tp, obj)
+        val tobj =  og.typedAs(obj,tp)
 
         val actual1 = og.getProperty(tobj, "prop1")
         assertEquals("A", actual1.self)
@@ -154,18 +154,19 @@ class test_ObjectGraphByReflectionSuspending {
     }
 
     @Test
-    fun executeMethod_Primitive_map() =runTest {
+    fun executeMethod_Primitive_map() = runTest {
         //given
         val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
-        val tObj = TypedObjectAny<Any>(
-            StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument)), listOf(
-                TypedObjectAny(StdLibDefault.Integer, 1L),
-                TypedObjectAny(StdLibDefault.Integer, 2L),
-                TypedObjectAny(StdLibDefault.Integer, 3L)
-            )
+        val tObj = og.typedAs(
+            listOf(
+                og.typedAs(1L, StdLibDefault.Integer),
+                og.typedAs(2L, StdLibDefault.Integer),
+                og.typedAs(3L, StdLibDefault.Integer)
+            ),
+            StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument))
         )
-        val sl: suspend (Any) ->String = { it: Any -> it.toString() }
-        val lambda = TypedObjectAny<Any>(StdLibDefault.Lambda, sl)
+        val sl: suspend (Any) -> String = { it: Any -> it.toString() }
+        val lambda = og.typedAs(sl, StdLibDefault.Lambda)
         //when
         val actual = og.executeMethod(tObj, "map", listOf(lambda))
 

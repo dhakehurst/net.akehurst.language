@@ -28,7 +28,6 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExternalGetterAsmSimple
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
-import net.akehurst.language.expressions.processor.TypedObjectAsmValue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -2199,9 +2198,9 @@ class test_m2mTransformInterpreter {
                 val sourceObjects = v.root.map { obj ->
                     println(obj.asString())
                     val srcTypeDomain = suite.typeDomains[k]!!
-                    accMuts[srcTypeDomain.name]!!.let {
+                    accMuts[srcTypeDomain.name]!!.let { am ->
                         val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
-                        TypedObjectAsmValue(td.type(), obj)
+                        am.typedAs(obj, td.type())
                     }
                 }
                 Pair(k, sourceObjects)
@@ -2262,9 +2261,9 @@ class test_m2mTransformInterpreter {
                 val sourceObjects = v.root.map { obj ->
                     println(obj.asString())
                     val srcTypeDomain = suite.typeDomains[k]!!
-                    ogs[srcTypeDomain.name]!!.let {
+                    ogs[srcTypeDomain.name]!!.let { am ->
                         val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
-                        TypedObjectAsmValue(td.type(), obj)
+                        am.typedAs(obj,td.type())
                     }
                 }
                 Pair(k, sourceObjects)

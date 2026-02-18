@@ -598,8 +598,6 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         val typedSelf = self //TypedObjectAsmValue(selfType, self as AsmValue) //asmFactory.toTypedObject(self, selfType)
         val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to typedSelf))
 
-
-
 //        val evcValues = mapOf(
 //            AsmTransformInterpreter.PATH.value to parsePath,
 //            AsmTransformInterpreter.ALTERNATIVE.value to alternative,

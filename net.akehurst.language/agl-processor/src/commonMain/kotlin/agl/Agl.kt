@@ -400,6 +400,7 @@ object Agl {
         val evc = EvaluationContext.ofSelf(typedSelf)
         return executeExpressionWithEvaluationContextSuspend(accessorMutator, evc, expression)
     }
+
     suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending<Any>, evc:EvaluationContext<Any>, expression:String): TypedObject<Any> {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
         val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(accessorMutator, issueHolder)

@@ -20,8 +20,6 @@ package net.akehurst.language.expressions.processor
 import kotlinx.coroutines.test.runTest
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
-import net.akehurst.language.agl.expressions.processor.TypedObjectAny
-import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
@@ -30,6 +28,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
@@ -61,7 +60,7 @@ class test_ExpressionsInterpreter_ByReflection {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, primitiveExecutor = executor)
             val interpreter = ExpressionsInterpreterOverTypedObject(og, issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs( self,st)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
             assertEquals(expected, og.untyped(actual))
         }
@@ -71,7 +70,7 @@ class test_ExpressionsInterpreter_ByReflection {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, primitiveExecutor = executor)
             val interpreter = ExpressionsInterpreterOverTypedObject(og, issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAny(st, self)), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertEquals(expected, og.untyped(actual))
             assertEquals(expectedIssues, interpreter.issues.all.toList())
         }
