@@ -2312,6 +2312,6 @@ class test_m2mTransformInterpreter {
     fun single() {
         val suite = testSuits["Full umlRdbms QVT example"]!!
         val case = suite.testCase["1 Class with kind & namespace, but no name, or attributes"]!!
-        doTest2(suite, case)
+        doTest(suite, case)
     }
 }

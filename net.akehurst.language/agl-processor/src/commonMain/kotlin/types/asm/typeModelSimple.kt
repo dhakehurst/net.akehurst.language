@@ -27,6 +27,7 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.builder.typesDomain
 import net.akehurst.language.util.cached
+import kotlin.reflect.KClass
 
 class TypesDomainSimple(
     override val name: SimpleName,
@@ -886,6 +887,8 @@ abstract class TypeDefinitionSimpleAbstract(
      * information about this type
      */
     override var metaInfo = mutableMapOf<String, String>()
+
+    override var implementation: KClass<*>? = null
 
     override fun type(typeArguments: List<TypeArgument>, isNullable: Boolean): TypeInstance =
         namespace.createTypeInstance(this.qualifiedName, this.name, typeArguments, isNullable)

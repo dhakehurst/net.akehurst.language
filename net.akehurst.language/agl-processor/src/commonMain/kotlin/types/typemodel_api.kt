@@ -18,6 +18,7 @@
 package net.akehurst.language.types.api
 
 import net.akehurst.language.base.api.*
+import kotlin.reflect.KClass
 
 interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
 
@@ -244,6 +245,9 @@ interface TypeDefinition : Definition<TypeDefinition> {
      * information about this type
      */
     val metaInfo: Map<String, String>
+
+    // to assist execution by reflection without having MPP reflection support
+    val implementation: KClass<*>?
 
     fun signature(context: TypesNamespace?, currentDepth: Int = 0): String
 

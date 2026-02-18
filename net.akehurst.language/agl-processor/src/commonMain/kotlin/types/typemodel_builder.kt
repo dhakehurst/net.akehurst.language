@@ -20,6 +20,7 @@ package net.akehurst.language.types.builder
 import net.akehurst.language.base.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
@@ -85,29 +86,33 @@ open class TypeNamespaceBuilder(
         imports.forEach { _namespace.addImport(Import(it)) }
     }
 
-    fun singleton(typeName: String): SingletonType =
+    fun singleton(typeName: String, implementation: KClass<*>? = null): SingletonType =
         _namespace.findOwnedOrCreateSingletonTypeNamed(SimpleName(typeName))
+            .also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
 
-    fun primitive(typeName: String): PrimitiveType =
+    fun primitive(typeName: String, implementation: KClass<*>? = null): PrimitiveType =
         _namespace.findOwnedOrCreatePrimitiveTypeNamed(SimpleName(typeName))
+            .also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
 
-    fun value(typeName: String, init: ValueTypeBuilder.() -> Unit = {}) {
+    fun value(typeName: String, implementation: KClass<*>? = null, init: ValueTypeBuilder.() -> Unit = {}) {
         val b = ValueTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
-        b.build()
+        b.build().also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
     }
 
-    fun interface_(typeName: String, init: InterfaceTypeBuilder.() -> Unit = {}): InterfaceType {
+    fun interface_(typeName: String, implementation: KClass<*>? = null, init: InterfaceTypeBuilder.() -> Unit = {}): InterfaceType {
         val b = InterfaceTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
-        return b.build()
+        return b.build().also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
     }
 
-    fun enum(typeName: String, literals: List<String>): EnumType =
+    fun enum(typeName: String, literals: List<String>, implementation: KClass<*>? = null): EnumType =
         _namespace.findOwnedOrCreateEnumTypeNamed(SimpleName(typeName), literals)
+            .also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
 
-    fun collection(typeName: String, typeParams: List<String>): CollectionType =
+    fun collection(typeName: String, typeParams: List<String>, implementation: KClass<*>? = null): CollectionType =
         _namespace.findOwnedOrCreateCollectionTypeNamed(SimpleName(typeName)).also {
+            (it as TypeDefinitionSimpleAbstract).implementation = implementation
             (it.typeParameters as MutableList).addAll(typeParams.map { tp -> TypeParameterSimple(SimpleName(tp)) })
         }
 
@@ -133,10 +138,10 @@ open class TypeNamespaceBuilder(
         }
     */
 
-    fun data(typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
+    fun data(typeName: String, implementation: KClass<*>? = null, init: DataTypeBuilder.() -> Unit = {}): DataType {
         val b = DataTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
-        val et = b.build()
+        val et = b.build().also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
         return et
     }
 

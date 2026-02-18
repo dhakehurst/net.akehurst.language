@@ -133,6 +133,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
     }
 
     private fun createProperties() {
+        createPropertiesForCollection()
         createPropertiesForList()
         createPropertiesForListSeparated()
     }
@@ -156,9 +157,12 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
         )
     }
 
+    private fun createPropertiesForCollection() {
+        val typeDecl = Collection
+        typeDecl.appendPropertyPrimitive(PropertyName("size"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), "Number of elements in the Collection.")
+    }
     private fun createPropertiesForList() {
         val typeDecl = List
-        typeDecl.appendPropertyPrimitive(PropertyName("size"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), "Number of elements in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("first"), TypeParameterReference(typeDecl, SimpleName("E")), "First element in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("last"), TypeParameterReference(typeDecl, SimpleName("E")), "Last element in the list.")
         typeDecl.appendPropertyPrimitive(

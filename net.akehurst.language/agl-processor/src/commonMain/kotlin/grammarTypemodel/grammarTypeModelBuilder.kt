@@ -38,7 +38,7 @@ fun TypeDomainBuilder.grammarTypeNamespace(
     _domain.addNamespace(ns)
 }
 
-@Deprecated("does not allow namespaces",ReplaceWith("typeModel(..) { grammarTypeNamespace(..){...} }"))
+@Deprecated("does not allow namespaces",ReplaceWith("typeModel(...) { grammarTypeNamespace(...){...} }"))
 fun grammarTypeModel(
     namespaceQualifiedName: String,
     modelName: String,
@@ -107,12 +107,12 @@ class GrammarTypeNamespaceBuilder(
     }
 
     fun interfaceFor(grammarRuleName: String, typeName: String, init: InterfaceTypeBuilder.() -> Unit = {}) {
-        val tp = super.interface_(typeName, init)
+        val tp = super.interface_(typeName, null,init)
         _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), tp.type())
     }
 
     fun dataFor(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
-        val tp = super.data(typeName,init)
+        val tp = super.data(typeName,null,init)
         _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), tp.type())
         return tp
     }

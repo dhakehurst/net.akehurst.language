@@ -36,11 +36,31 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
 ) : PrimitiveExecutorSuspending<T> {
 
     private val _property = mutableMapOf<TypeDefinition, MutableMap<PropertyDeclaration, ((Any, PropertyDeclaration) -> Any?)>>(
-        StdLibDefault.List to mutableMapOf(
-            StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
-                check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+        StdLibDefault.Collection to mutableMapOf(
+            StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
+                check(self is Collection<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.size.toLong()
             },
+            StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("asMap"))!! to { self, prop ->
+                check(self is Collection<*>) { "Method '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.associate {
+                    val el = when (it) {
+                        is TypedObject<*> -> it.self
+                        else -> it
+                    }
+                    when (el) {
+                        is Pair<*, *> -> el
+                        is Map<*, *> -> when {
+                            el.containsKey("key") && el.containsKey("value") -> Pair(el["key"], el["value"])
+                            else -> error("To convert a List<Map> via 'asMap' there must be a 'key' and a 'value' entry")
+                        }
+
+                        else -> error("To convert a List via 'asMap' the elements must be either Pairs or Maps with key and value entries")
+                    }
+                }
+            },
+        ),
+        StdLibDefault.List to mutableMapOf(
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("first"))!! to { self, prop ->
                 check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.first() as Any
@@ -63,24 +83,6 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
                     when (it) {
                         is TypedObject<*> -> it.self.toString()
                         else -> it.toString()
-                    }
-                }
-            },
-            StdLibDefault.List.findAllPropertyOrNull(PropertyName("asMap"))!! to { self, prop ->
-                check(self is List<*>) { "Method '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                self.associate {
-                    val el = when (it) {
-                        is TypedObject<*> -> it.self
-                        else -> it
-                    }
-                    when (el) {
-                        is Pair<*, *> -> el
-                        is Map<*, *> -> when {
-                            el.containsKey("key") && el.containsKey("value") -> Pair(el["key"], el["value"])
-                            else -> error("To convert a List<Map> via 'asMap' there must be a 'key' and a 'value' entry")
-                        }
-
-                        else -> error("To convert a List via 'asMap' the elements must be either Pairs or Maps with key and value entries")
                     }
                 }
             },
