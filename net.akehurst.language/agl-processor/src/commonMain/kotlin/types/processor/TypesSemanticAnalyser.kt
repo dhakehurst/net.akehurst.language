@@ -30,7 +30,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 
-internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypesDomain, SentenceContextAny> {
+internal class TypesSemanticAnalyser : SemanticAnalyser<TypesDomain, SentenceContextAny> {
 
     companion object {
         const val OPTION_INCLUDE_STD = "include-std"

@@ -855,7 +855,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContextAny>() {
     override val defaultTargetGoalRule = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<TypesDomain> by lazy { TypesSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<TypesDomain, SentenceContextAny>? by lazy { TypemodelSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<TypesDomain, SentenceContextAny>? by lazy { TypemodelCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<TypesDomain, SentenceContextAny>? by lazy { TypesSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<TypesDomain, SentenceContextAny>? by lazy { TypesCompletionProvider() }
 
 }

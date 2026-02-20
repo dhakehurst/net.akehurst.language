@@ -20,13 +20,14 @@ package net.akehurst.language.types.builder
 import net.akehurst.language.base.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
 @DslMarker
 annotation class TypeModelDslMarker
 
+@JvmOverloads //ensure the Java has overloads using the default values
 fun typesDomain(
     name: String,
     resolveImports: Boolean,
@@ -52,6 +53,7 @@ class TypeDomainBuilder(
     }
     private val _assocBuilders = mutableListOf<AssociationBuilder>()
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun namespace(qualifiedName: String, imports: List<String> = listOf(StdLibDefault.qualifiedName.value), init: TypeNamespaceBuilder.() -> Unit): TypesNamespace {
         val b = TypeNamespaceBuilder(QualifiedName(qualifiedName), imports.map { Import(it) })
         b.init()
@@ -86,30 +88,36 @@ open class TypeNamespaceBuilder(
         imports.forEach { _namespace.addImport(Import(it)) }
     }
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun singleton(typeName: String, implementation: KClass<*>? = null): SingletonType =
         _namespace.findOwnedOrCreateSingletonTypeNamed(SimpleName(typeName))
             .also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun primitive(typeName: String, implementation: KClass<*>? = null): PrimitiveType =
         _namespace.findOwnedOrCreatePrimitiveTypeNamed(SimpleName(typeName))
             .also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun value(typeName: String, implementation: KClass<*>? = null, init: ValueTypeBuilder.() -> Unit = {}) {
         val b = ValueTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
         b.build().also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
     }
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun interface_(typeName: String, implementation: KClass<*>? = null, init: InterfaceTypeBuilder.() -> Unit = {}): InterfaceType {
         val b = InterfaceTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
         return b.build().also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
     }
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun enum(typeName: String, literals: List<String>, implementation: KClass<*>? = null): EnumType =
         _namespace.findOwnedOrCreateEnumTypeNamed(SimpleName(typeName), literals)
             .also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun collection(typeName: String, typeParams: List<String>, implementation: KClass<*>? = null): CollectionType =
         _namespace.findOwnedOrCreateCollectionTypeNamed(SimpleName(typeName)).also {
             (it as TypeDefinitionSimpleAbstract).implementation = implementation
@@ -138,6 +146,7 @@ open class TypeNamespaceBuilder(
         }
     */
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun data(typeName: String, implementation: KClass<*>? = null, init: DataTypeBuilder.() -> Unit = {}): DataType {
         val b = DataTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
@@ -239,6 +248,7 @@ abstract class StructuredTypeBuilder(
     val STR = PropertyCharacteristic.STORED
     val DER = PropertyCharacteristic.DERIVED
 
+    @JvmOverloads //ensure the Java has overloads using the default values
     fun propertyOf(
         characteristics: Set<PropertyCharacteristic>,
         propertyName: String,

@@ -104,7 +104,7 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, SentenceContextAny>
     override val semanticAnalyser: SemanticAnalyser<Asm, SentenceContextAny> = SemanticAnalyserSimple(typesDomain, crossReferenceDomain)
     override val completionProvider: CompletionProvider<Asm, SentenceContextAny>?
         get() = TODO("not implemented")
-    val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatDomain, typesDomain, this.issues)
+    val formatter: Formatter = FormatterOverAsmSimple(formatDomain, typesDomain, this.issues)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )

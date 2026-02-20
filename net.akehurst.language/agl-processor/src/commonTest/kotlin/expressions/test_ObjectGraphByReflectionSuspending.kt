@@ -74,8 +74,8 @@ class test_ObjectGraphByReflectionSuspending {
         val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
 
         val actual = og.createTupleValue(listOf())
-        og.setProperty(actual, "a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
-        og.setProperty(actual, "b", og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true))
+        actual.setPropertySuspend( "a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
+        actual.setPropertySuspend( "b", og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true))
         val expected = mapOf(
             "a" to 1L,
             "b" to true
@@ -114,18 +114,18 @@ class test_ObjectGraphByReflectionSuspending {
         val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = TestClass("A", 1, TestClass("B", 2, null))
         val tp = testTypeModel.findFirstDefinitionByNameOrNull(SimpleName("TestClass"))!!.type()
-        val tobj =  og.typedAs(obj,tp)
+        val tobj = og.typedAs(obj, tp)
 
-        val actual1 = og.getProperty(tobj, "prop1")
+        val actual1 = tobj.getPropertySuspend("prop1")
         assertEquals("A", actual1.self)
 
-        val actual2 = og.getProperty(tobj, "prop2")
+        val actual2 = tobj.getPropertySuspend("prop2")
         assertEquals(1, actual2.self)
 
-        val actual3 = og.getProperty(tobj, "prop3")
+        val actual3 = tobj.getPropertySuspend("prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)
 
-        val actual4 = og.getProperty(og.getProperty(tobj, "prop3"), "prop1")
+        val actual4 = tobj.getPropertySuspend("prop3").getPropertySuspend("prop1")
         assertEquals("B", actual4.self)
     }
 
@@ -138,18 +138,18 @@ class test_ObjectGraphByReflectionSuspending {
             "prop3" to TestClass("B", 2, null)
         )
         val tp = StdLibDefault.TupleType.type()
-        val tobj =  og.typedAs(obj,tp)
+        val tobj = og.typedAs(obj, tp)
 
-        val actual1 = og.getProperty(tobj, "prop1")
+        val actual1 = tobj.getPropertySuspend( "prop1")
         assertEquals("A", actual1.self)
 
-        val actual2 = og.getProperty(tobj, "prop2")
+        val actual2 = tobj.getPropertySuspend( "prop2")
         assertEquals(1, actual2.self)
 
-        val actual3 = og.getProperty(tobj, "prop3")
+        val actual3 = tobj.getPropertySuspend( "prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)
 
-        val actual4 = og.getProperty(og.getProperty(tobj, "prop3"), "prop1")
+        val actual4 = tobj.getPropertySuspend( "prop3").getPropertySuspend("prop1")
         assertEquals("B", actual4.self)
     }
 
@@ -168,7 +168,7 @@ class test_ObjectGraphByReflectionSuspending {
         val sl: suspend (Any) -> String = { it: Any -> it.toString() }
         val lambda = og.typedAs(sl, StdLibDefault.Lambda)
         //when
-        val actual = og.executeMethod(tObj, "map", listOf(lambda))
+        val actual = tObj.executeMethodSuspend( "map", listOf(lambda))
 
         //then
         assertTrue(actual.self is List<*>)

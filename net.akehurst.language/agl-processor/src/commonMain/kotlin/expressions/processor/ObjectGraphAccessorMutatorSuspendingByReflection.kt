@@ -29,11 +29,12 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KProperty1
 
-class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
+class StdLibPrimitiveExecutionsForReflectionSuspending(
     val issues: IssueHolder = IssueHolder(LanguageProcessorPhase.INTERPRET)
-) : PrimitiveExecutorSuspending<T> {
+) : PrimitiveExecutorSuspending {
 
     private val _property = mutableMapOf<TypeDefinition, MutableMap<PropertyDeclaration, ((Any, PropertyDeclaration) -> Any?)>>(
         StdLibDefault.Collection to mutableMapOf(
@@ -41,11 +42,19 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
                 check(self is Collection<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.size.toLong()
             },
+            StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("isEmpty"))!! to { self, prop ->
+                check(self is Collection<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.isEmpty()
+            },
+            StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("isNotEmpty"))!! to { self, prop ->
+                check(self is Collection<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.isNotEmpty()
+            },
             StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("asMap"))!! to { self, prop ->
                 check(self is Collection<*>) { "Method '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.associate {
                     val el = when (it) {
-                        is TypedObject<*> -> it.self
+                        is TypedObject -> it.self
                         else -> it
                     }
                     when (el) {
@@ -81,7 +90,7 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
                 check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.joinToString(separator = "") {
                     when (it) {
-                        is TypedObject<*> -> it.self.toString()
+                        is TypedObject -> it.self.toString()
                         else -> it.toString()
                     }
                 }
@@ -99,7 +108,7 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
         )
     )
 
-    private val _method = mutableMapOf<TypeDefinition, MutableMap<MethodDeclaration, (suspend (Any, MethodDeclaration, List<TypedObject<Any>>) -> Any?)>>(
+    private val _method = mutableMapOf<TypeDefinition, MutableMap<MethodDeclaration, (suspend (Any, MethodDeclaration, List<*>) -> Any?)>>(
         StdLibDefault.String.resolvedDeclaration to mutableMapOf(
             StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("toBoolean"))!! to { self, meth, args ->
                 check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -115,29 +124,43 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
             },
             StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("removeSurrounding"))!! to { self, meth, args ->
                 check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
-                val arg1 = args[0].self as String
+                val arg1 = args[0] as String
                 self.removeSurrounding(arg1)
             }
         ),
 
         StdLibDefault.Collection to mutableMapOf(
+            StdLibDefault.Collection.findAllMethodOrNull(MethodName("contains"))!! to { self, meth, args ->
+                check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
+                //check(args[0].self is Long) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+               // check(StdLibDefault.AnyType.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.AnyType.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val element = args[0]
+                self.contains(element)
+            },
+            StdLibDefault.Collection.findAllMethodOrNull(MethodName("intersect"))!! to { self, meth, args ->
+                check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
+                check(args[0] is Collection<*>) { "Method '${meth.name}' takes an '${StdLibDefault.Collection.qualifiedName.value}' as its argument, received '${args[0]?.let {it::class.simpleName}}'." }
+                //check(StdLibDefault.Collection.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val other = args[0] as Collection<*>
+                self.intersect(other.toSet())
+            },
             StdLibDefault.Collection.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
                 check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                check(args[0].self is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda: suspend (Any) -> Any = args[0].self as suspend (Any) -> Any
+                check(args[0] is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                val lambda: suspend (Any) -> Any = args[0] as suspend (Any) -> Any
                 (self as Collection<Any>).map {
-                    //val args = mapOf("it" to it)
                     lambda.invoke(it)
                 }
             },
             StdLibDefault.Collection.findAllMethodOrNull(MethodName("filter"))!! to { self, meth, args ->
                 check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                check(args[0].self is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda: suspend (Any) -> Boolean = args[0].self as suspend (Any) -> Boolean
+                check(args[0] is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                val lambda: suspend (Any) -> Boolean = args[0] as suspend (Any) -> Boolean
                 (self as Collection<Any>).filter {
-                    //val args = mapOf("it" to it)
                     lambda.invoke(it)
                 }
             }
@@ -147,9 +170,9 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
             StdLibDefault.List.findAllMethodOrNull(MethodName("get"))!! to { self, meth, args ->
                 check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
-                check(args[0].self is Long) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
-                check(StdLibDefault.Integer.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
-                val idx = args[0].self as Long
+                check(args[0] is Long) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0]?.let {it::class.simpleName}}" }
+                //check(StdLibDefault.Integer.qualifiedTypeName == args[0].qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val idx = args[0] as Long
                 self[idx.toInt()] as Any
             },
             StdLibDefault.List.findAllMethodOrNull(MethodName("separate"))!! to { self, meth, args ->
@@ -157,34 +180,12 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
                 check(0 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 0, received ${args.size}" }
                 self.toSeparatedList()
             },
-            StdLibDefault.List.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
-                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
-                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                // Lambda has extra paramter for coroutine (becasue it is a suspend function)
-                check(args[0].self is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda: suspend (Any) -> Any = args[0].self as suspend (Any) -> Any
-                (self as List<Any>).map {
-                    //val args = mapOf("it" to it)
-                    lambda.invoke(it)
-                }
-            },
-            StdLibDefault.List.findAllMethodOrNull(MethodName("filter"))!! to { self, meth, args ->
-                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
-                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                // Lambda has extra paramter for coroutine (becasue it is a suspend function)
-                check(args[0].self is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda: suspend (Any) -> Boolean = args[0].self as suspend (Any) -> Boolean
-                (self as List<Any>).filter {
-                    //val args = mapOf("it" to it)
-                    lambda.invoke(it)
-                }
-            },
             StdLibDefault.List.findAllMethodOrNull(MethodName("transitiveClosure"))!! to { self, meth, args ->
                 check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
                 // Lambda has extra paramter for coroutine (becasue it is a suspend function)
-                check(args[0].self is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda: suspend (Any) -> List<Any> = args[0].self as suspend (Any) -> List<Any>
+                check(args[0] is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                val lambda: suspend (Any) -> List<Any> = args[0] as suspend (Any) -> List<Any>
                 (self as List<Any>).transitiveClosure {
                     //val args = mapOf("it" to it)
                     lambda.invoke(it)
@@ -193,20 +194,20 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
         ),
     )
 
-    override fun propertyValue(obj: T, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? =
+    override fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? =
         propertyValueDirectOrSuperType(obj, typeDef, property)
 
-    override suspend fun methodCall(obj: T, typeDef: TypeDefinition, method: MethodDeclaration, args: List<TypedObject<T>>): ExecutionResult? =
+    override suspend fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? =
         methodDirectOrSuperType(obj, typeDef, method, args)
 
-    override fun functionCall(functionName: String, args: List<TypedObject<T>>): ExecutionResult? {
+    override fun functionCall(functionName: String, args: List<*>): ExecutionResult? {
         return when (functionName) {
             "Pair" -> {
                 check(2 == args.size) { "The Pair function only takes 2 arguments." }
                 ExecutionResult(Pair(args[0], args[1]))
             }
-            "Set" -> ExecutionResult(args.map { it.self }.toSet())
-            "List" -> ExecutionResult(args.map { it.self })
+            "Set" -> ExecutionResult(args.toSet())
+            "List" -> ExecutionResult(args)
             else -> error("StdLibPrimitiveExecutionsForReflectionSuspending, unsupported function '$functionName'")
         }
     }
@@ -225,7 +226,7 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
     }
 
     /** returns null if execution is not found for the given property on the typeDef or its supertypes */
-    private fun propertyValueDirectOrSuperType(obj: T, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
+    private fun propertyValueDirectOrSuperType(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
         val result = propertyValueDirect(obj, typeDef, property)
         return if (null != result) {
             result
@@ -236,7 +237,7 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
     }
 
     /** returns null if execution is not found for the given property on the typeDef */
-    private fun propertyValueDirect(obj: T, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
+    private fun propertyValueDirect(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
         val propExec = property.execution ?: property.executionSuspend
         return when {
             null == propExec -> {
@@ -244,7 +245,7 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
                 typeProps?.let {
                     val propExec = typeProps[property]
                     propExec?.let {
-                        val v = propExec.invoke(obj, property) as T
+                        val v = propExec.invoke(obj, property)
                         ExecutionResult(v)
                     }
                 }
@@ -264,7 +265,7 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
         }
     }
 
-    private suspend fun methodDirectOrSuperType(obj: T, typeDef: TypeDefinition, method: MethodDeclaration, args: List<TypedObject<T>>): ExecutionResult? {
+    private suspend fun methodDirectOrSuperType(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? {
         val result = methodDirect(obj, typeDef, method, args)
         return if (null != result) {
             result
@@ -274,24 +275,24 @@ class StdLibPrimitiveExecutionsForReflectionSuspending<T : Any>(
         }
     }
 
-    private suspend fun methodDirect(obj: T, typeDef: TypeDefinition, method: MethodDeclaration, args: List<TypedObject<T>>): ExecutionResult? {
+    private suspend fun methodDirect(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? {
         val typeMeths = this._method[typeDef]
         return typeMeths?.let {
             val methExec = typeMeths[method]
             methExec?.let {
-                val v = methExec.invoke(obj, method, args) as T
+                val v = methExec.invoke(obj, method, args)
                 ExecutionResult(v)
             }
         }
     }
 }
 
-class ExternalGetterByReflectionSuspending<SelfType : Any>(
+class ExternalGetterByReflectionSuspending(
     val typesDomain: TypesDomain,
     val issues: IssueHolder,
-) : ExternalGetterSuspending<SelfType> {
+) : ExternalGetterSuspending {
 
-    override fun typeFor(obj: SelfType): TypeInstance {
+    override fun typeFor(obj: Any): TypeInstance {
         val tp = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
         return when (tp) {
             null -> {
@@ -315,7 +316,7 @@ class ExternalGetterByReflectionSuspending<SelfType : Any>(
         }
     }
 
-    override suspend fun getProperty(obj: SelfType, propertyName: String): Any? {
+    override suspend fun getProperty(obj: Any, propertyName: String): Any? {
         return try {
             obj.reflect().getProperty(propertyName)
         } catch (t: Throwable) {
@@ -326,12 +327,14 @@ class ExternalGetterByReflectionSuspending<SelfType : Any>(
 
 }
 
-open class ObjectGraphAccessorMutatorSuspendingByReflection(
+open class ObjectGraphAccessorMutatorSuspendingByReflection
+@JvmOverloads //ensure the Java has overloads using the default values
+constructor(
     typesDomain: TypesDomain,
     issues: IssueHolder,
-    override val externalGetter: ExternalGetterSuspending<Any> = ExternalGetterByReflectionSuspending(typesDomain, issues),
-    override val primitiveExecutor: PrimitiveExecutorSuspending<Any> = StdLibPrimitiveExecutionsForReflectionSuspending()
-) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutatorSuspending<Any> {
+    override val externalGetter: ExternalGetterSuspending = ExternalGetterByReflectionSuspending(typesDomain, issues),
+    override val primitiveExecutor: PrimitiveExecutorSuspending = StdLibPrimitiveExecutionsForReflectionSuspending()
+) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutatorSuspending {
 
     override fun typeFor(obj: Any?): TypeInstance {
         return when (obj) {
@@ -361,13 +364,13 @@ open class ObjectGraphAccessorMutatorSuspendingByReflection(
         }
     }
 
-    override fun createLambdaValue(lambda: suspend (it: TypedObject<Any>) -> TypedObject<Any>): TypedObject<Any> {
+    override fun createLambdaValue(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
         val lmb: suspend (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it))) }
         return typedAs(lmb,lambdaType)
     }
 
-    override suspend fun executeMethod(tobj: TypedObject<Any>, methodName: String, args: List<TypedObject<Any>>): TypedObject<Any> {
+    override suspend fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject {
         val meth = tobj.type.allResolvedMethod[MethodName(methodName)]
         return when (meth) {
             null -> {
@@ -381,7 +384,8 @@ open class ObjectGraphAccessorMutatorSuspendingByReflection(
             else -> {
                 // first try execution
                 val type = tobj.type.resolvedDeclaration
-                val execResult = primitiveExecutor.methodCall(untyped(tobj), type, meth.original, args)
+                val arguments = args.map { untyped(it) }
+                val execResult = primitiveExecutor.methodCall(untyped(tobj), type, meth.original, arguments)
                 when (execResult) {
                     null -> when (meth.original) {
                         is MethodDeclarationDerived -> TODO()
@@ -400,13 +404,13 @@ open class ObjectGraphAccessorMutatorSuspendingByReflection(
         }
     }
 
-    override fun callFunction(functionName: String, args: List<TypedObject<Any>>): TypedObject<Any> {
+    override fun callFunction(functionName: String, args: List<TypedObject>): TypedObject {
         return primitiveExecutor.functionCall(functionName, args)?.let {
             toTypedObject(it.value)
         } ?: nothing()
     }
 
-    override suspend fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<Any>>): TypedObject<Any> {
+    override suspend fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject {
         val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
         val obj = when (typeDef) {
@@ -432,7 +436,7 @@ open class ObjectGraphAccessorMutatorSuspendingByReflection(
      *   type has resolved property -> try primitiveExecutor or reflection if executor fails
      * }
      */
-    override suspend fun getProperty(tobj: TypedObject<Any>, propertyName: String): TypedObject<Any> {
+    override suspend fun getProperty(tobj: TypedObject, propertyName: String): TypedObject {
         return when {
             StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
                 val obj = untyped(tobj)
@@ -457,9 +461,10 @@ open class ObjectGraphAccessorMutatorSuspendingByReflection(
                     }
 
                     else -> {
+                        val propExec = propRes.original.execution
                         when {
-                            null!=propRes.original.execution -> {
-                                val value =  propRes.original.execution!!.invoke(tobj.self)
+                            null!=propExec -> {
+                                val value =  propExec.invoke(tobj.self)
                                 value?.let { toTypedObject(value) } ?: nothing()
                             }
                             null!=propRes.original.executionSuspend -> {
@@ -500,7 +505,7 @@ open class ObjectGraphAccessorMutatorSuspendingByReflection(
         }
     }
 
-    override suspend fun setProperty(tobj: TypedObject<Any>, propertyName: String, value: TypedObject<Any>) {
+    override suspend fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) {
         when {
             StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
                 when (tobj.self) {

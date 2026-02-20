@@ -20,8 +20,8 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.objectgraph.api.EvaluationContext
 
-interface Formatter<SelfType : Any> {
+interface Formatter {
     val formatDomain: AglFormatDomain
-    fun formatSelf(formatSetName: PossiblyQualifiedName, self: SelfType): FormatResult
-    fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<SelfType>): FormatResult
+    fun formatSelf(formatSetName: PossiblyQualifiedName, self: Any): FormatResult
+    fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): FormatResult
 }

@@ -73,18 +73,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
 
     val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
-        typeDecl.appendPropertyPrimitive(
-            PropertyName("asMap"),
-            this.createTypeInstance(
-                typeDecl.qualifiedName, QualifiedName("std.Map"),
-                listOf(
-                    AnyType.asTypeArgument, //TODO: should be type of Pair.first
-                    AnyType.asTypeArgument //TODO: should be type of Pair.second
-                ),
-                false
-            ),
-            "A Map object with elements being the Pairs of this List."
-        )
+
     }
 
     val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName).also { typeDecl ->
@@ -160,6 +149,20 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
     private fun createPropertiesForCollection() {
         val typeDecl = Collection
         typeDecl.appendPropertyPrimitive(PropertyName("size"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), "Number of elements in the Collection.")
+        typeDecl.appendPropertyPrimitive(PropertyName("isEmpty"), this.createTypeInstance(typeDecl.qualifiedName, Boolean.typeName), "True if the Collection has no elements.")
+        typeDecl.appendPropertyPrimitive(PropertyName("isNotEmpty"), this.createTypeInstance(typeDecl.qualifiedName, Boolean.typeName), "True if the Collection has some elements.")
+        typeDecl.appendPropertyPrimitive(
+            PropertyName("asMap"),
+            this.createTypeInstance(
+                typeDecl.qualifiedName, QualifiedName("std.Map"),
+                listOf(
+                    AnyType.asTypeArgument, //TODO: should be type of Pair.first
+                    AnyType.asTypeArgument //TODO: should be type of Pair.second
+                ),
+                false
+            ),
+            "A Map object with elements being the Pairs of this List."
+        )
     }
     private fun createPropertiesForList() {
         val typeDecl = List
@@ -197,6 +200,18 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             ""
         )
         typeDecl.appendMethodPrimitive(
+            MethodName("contains"),
+            listOf(ParameterDefinitionSimple(TmParameterName("element"),AnyType, null)),
+            Boolean,
+            "True if this Collection contains the element"
+        )
+        typeDecl.appendMethodPrimitive(
+            MethodName("intersect"),
+            listOf(ParameterDefinitionSimple(TmParameterName("other"),this.createTypeInstance(typeDecl.qualifiedName, Collection_typeName, listOf(AnyType.asTypeArgument)), null)),
+            Boolean,
+            "True if other Collection intersects this Collection."
+        )
+        typeDecl.appendMethodPrimitive(
             MethodName("map"),
             listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
             List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
@@ -228,18 +243,18 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             ),
             ""
         )
-        typeDecl.appendMethodPrimitive(
-            MethodName("map"),
-            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
-            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
-            "A list created by mapping each element using the given lambda expression."
-        )
-        typeDecl.appendMethodPrimitive(
-            MethodName("filter"),
-            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
-            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
-            "A list created by filtering the elements to those for which the given lambda expression evaluates to true."
-        )
+//        typeDecl.appendMethodPrimitive(
+//            MethodName("map"),
+//            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
+//            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
+//            "A list created by mapping each element using the given lambda expression."
+//        )
+//        typeDecl.appendMethodPrimitive(
+//            MethodName("filter"),
+//            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
+//            List.type(listOf(AnyType.asTypeArgument)), //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
+//            "A list created by filtering the elements to those for which the given lambda expression evaluates to true."
+//        )
         typeDecl.appendMethodPrimitive(
             MethodName("transitiveClosure"),
             listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),

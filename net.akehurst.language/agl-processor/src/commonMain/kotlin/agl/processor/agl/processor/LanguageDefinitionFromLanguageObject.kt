@@ -66,7 +66,7 @@ internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType :
     override val formatString: FormatString? get() = FormatString(languageObject.formatString)
 
     //val formatterModel:AglFormatterModel?
-    override val formatter: Formatter<AsmType>? get() = TODO()
+    override val formatter: Formatter? get() = TODO()
 
     /** the options for parsing/processing the grammarStr for this language */
     //var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?

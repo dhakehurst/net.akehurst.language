@@ -32,7 +32,7 @@ import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 
-object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor<AsmValue> {
+object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor {
     val property = mapOf<TypeDefinition, Map<PropertyDeclaration, ((AsmValue, PropertyDeclaration) -> AsmValue)>>(
         StdLibDefault.List to mapOf(
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
@@ -91,22 +91,22 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor<AsmValue> {
         )
     )
 
-    val method = mapOf<TypeDefinition, Map<MethodDeclaration, ((AsmValue, MethodDeclaration, List<TypedObject<AsmValue>>) -> AsmValue)>>(
+    val method = mapOf<TypeDefinition, Map<MethodDeclaration, ((AsmValue, MethodDeclaration, List<*>) -> AsmValue)>>(
         StdLibDefault.List to mapOf(
             StdLibDefault.List.findAllMethodOrNull(MethodName("get"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
-                check(args[0].self is AsmPrimitive) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
-                check(StdLibDefault.Integer.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
-                val arg1 = args[0].self as AsmPrimitive
+                check(args[0] is AsmPrimitive) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0]?.let {it::class.simpleName}}" }
+                //check(StdLibDefault.Integer.qualifiedTypeName == args[0].qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val arg1 = args[0] as AsmPrimitive
                 val idx = arg1.value as Long
                 self.elements.get(idx.toInt())
             },
             StdLibDefault.List.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                check(args[0].self is AsmLambda) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda = args[0].self as AsmLambda
+                check(args[0] is AsmLambda) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                val lambda = args[0] as AsmLambda
                 val mapped = self.elements.map {
                     val args = mapOf("it" to it)
                     lambda.invoke(args)
@@ -116,8 +116,8 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor<AsmValue> {
             StdLibDefault.List.findAllMethodOrNull(MethodName("filter"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                check(args[0].self is AsmLambda) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda = args[0].self as AsmLambda
+                check(args[0] is AsmLambda) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                val lambda = args[0] as AsmLambda
                 val mapped = self.elements.filter {
                     val args = mapOf("it" to it)
                     val v = lambda.invoke(args)
@@ -128,8 +128,8 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor<AsmValue> {
             StdLibDefault.List.findAllMethodOrNull(MethodName("transitiveClosure"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                check(args[0].self is AsmLambda) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda = args[0].self as AsmLambda
+                check(args[0] is AsmLambda) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                val lambda = args[0] as AsmLambda
                 val mapped = self.elements.transitiveClosure {
                     val args = mapOf("it" to it)
                     val v = lambda.invoke(args)
@@ -140,28 +140,28 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor<AsmValue> {
         ),
     )
 
-    override fun propertyValue(obj: AsmValue, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
+    override fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
         val typeProps = this.property[typeDef] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for TypeDeclaration '${typeDef.qualifiedName.value}'")
         val propExec = typeProps[property] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for property '${property.name.value}' of TypeDeclaration '${typeDef.qualifiedName.value}'")
-        return ExecutionResult(propExec.invoke(obj, property))
+        return ExecutionResult(propExec.invoke(obj as AsmValue, property))
     }
 
-    override fun methodCall(obj: AsmValue, typeDef: TypeDefinition, method: MethodDeclaration, args: List<TypedObject<AsmValue>>): ExecutionResult? {
+    override fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? {
         val methProps = this.method[typeDef] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for TypeDeclaration '${typeDef.qualifiedName.value}'")
         val methExec = methProps[method] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for method '${method.name.value}' of TypeDeclaration '${typeDef.qualifiedName.value}'")
-        return ExecutionResult(methExec.invoke(obj, method, args) as AsmValue)
+        return ExecutionResult(methExec.invoke(obj as AsmValue, method, args) as AsmValue)
     }
 
-    override fun functionCall(functionName: String, args: List<TypedObject<AsmValue>>): ExecutionResult? {
+    override fun functionCall(functionName: String, args: List<*>): ExecutionResult? {
         return when (functionName) {
             "List" -> {
-                val elts = args.map { it.self }
-                ExecutionResult(AsmListSimple(elts))
+                val elts = args
+                ExecutionResult(AsmListSimple(elts as List<AsmValue>))
             }
 
             "Set" -> {
-                val elts = args.map { it.self }.toSet().toList()
-                ExecutionResult(AsmListSimple(elts))
+                val elts = args.toSet()
+                ExecutionResult(AsmSetSimple(elts as Set<AsmValue>))
             }
 
             else -> error("Unknown function '$functionName'")
@@ -173,11 +173,11 @@ class ExternalGetterAsmSimple(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain?,
     val issues: IssueHolder,
-) : ExternalGetter<AsmValue> {
+) : ExternalGetter {
 
     private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, this), issues)
 
-    override fun typeFor(obj: AsmValue): TypeInstance {
+    override fun typeFor(obj: Any): TypeInstance {
         TODO("not implemented")
     }
 
@@ -197,26 +197,35 @@ class ExternalGetterAsmSimple(
         return obj
     }
 
-    override fun getProperty(obj: AsmValue, propertyName: String): Any? {
+    override fun getProperty(obj: Any, propertyName: String): Any? {
         TODO("not implemented")
     }
 
-    override fun setProperty(obj: AsmValue, propertyName: String, value: Any?) {
+    override fun setProperty(obj: Any, propertyName: String, value: Any?) {
         TODO("not implemented")
     }
 }
 
 private class TypedObjectAsmValue(
-    override val accessor: ObjectGraphAccessorMutatorCommon<Any>,
+    override val accessor: ObjectGraphAccessorMutatorCommon,
     override val type: TypeInstance,
     override val self: AsmValue
-) : TypedObject<AsmValue> {
+) : TypedObject {
+
+    override fun getProperty(name:String) = (accessor as ObjectGraphAccessorMutator).getProperty(this, name)
+    override  suspend fun getPropertySuspend(name:String) = (accessor as ObjectGraphAccessorMutatorSuspending).getProperty(this, name)
+
+    override fun setProperty(name: String, value: TypedObject) = (accessor as ObjectGraphAccessorMutator).setProperty(this, name, value)
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = (accessor as ObjectGraphAccessorMutatorSuspending).setProperty(this, name, value)
+
+    override  fun executeMethod(name: String, argValues: List<TypedObject>) = (accessor as ObjectGraphAccessorMutator).executeMethod(this, name, argValues)
+    override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = (accessor as ObjectGraphAccessorMutatorSuspending).executeMethod(this, name, argValues)
 
     override fun asString(indent: Indent): String = self.asString(indent)
 
     override fun hashCode(): Int = self.hashCode()
     override fun equals(other: Any?): Boolean = when {
-        other !is TypedObject<*> -> false
+        other !is TypedObjectAsmValue -> false
         else -> self == other.self
     }
 
@@ -226,16 +235,16 @@ private class TypedObjectAsmValue(
 open class ObjectGraphAccessorMutatorAsmSimple(
     override var typesDomain: TypesDomain,
     val issues: IssueHolder,
-    override val externalGetter: ExternalGetter<AsmValue> = ExternalGetterAsmSimple(typesDomain, null, issues),
-    override val primitiveExecutor: PrimitiveExecutor<AsmValue> = StdLibPrimitiveExecutionsForAsmSimple
-) : ObjectGraphAccessorMutator<AsmValue> {
+    override val externalGetter: ExternalGetter = ExternalGetterAsmSimple(typesDomain, null, issues),
+    override val primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple
+) : ObjectGraphAccessorMutator {
 
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<AsmValue>>()
 
     private fun AsmValue.asmToTypedObject() = typedAs(this, typeFor(this))
 
-    override fun typeFor(obj: AsmValue?): TypeInstance {
-        return obj?.let { o ->
+    override fun typeFor(obj: Any?): TypeInstance {
+        return (obj as? AsmValue)?.let { o ->
             typesDomain.findByQualifiedNameOrNull(o.qualifiedTypeName)?.type() ?: let {
                 issues.error(null, "Cannot find type definition '${o.qualifiedTypeName.value}'")
                 StdLibDefault.AnyType
@@ -243,8 +252,8 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         } ?: StdLibDefault.NothingType
     }
 
-    override fun toTypedObject(obj: AsmValue?): TypedObject<AsmValue> = obj?.asmToTypedObject() ?: nothing()
-    override fun untyped(typedObj: TypedObject<AsmValue>): Any {
+    override fun toTypedObject(obj: Any?): TypedObject = (obj as? AsmValue )?.asmToTypedObject() ?: nothing()
+    override fun untyped(typedObj: TypedObject): Any {
         val self = typedObj.self
         return when (self) {
             is AsmPrimitive, is AsmAny, is AsmNothing, is AsmStructure -> self
@@ -256,10 +265,10 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override fun typedAs(obj: Any, type: TypeInstance): TypedObject<AsmValue> = TypedObjectAsmValue(this as ObjectGraphAccessorMutatorCommon<Any>,type, obj as AsmValue)
+    override fun typedAs(obj: Any, type: TypeInstance): TypedObject = TypedObjectAsmValue(this as ObjectGraphAccessorMutatorCommon,type, obj as AsmValue)
 
-    override fun isNothing(obj: TypedObject<AsmValue>): Boolean = obj.self == AsmNothingSimple
-    override fun equalTo(lhs: TypedObject<AsmValue>, rhs: TypedObject<AsmValue>): Boolean {
+    override fun isNothing(obj: TypedObject): Boolean = obj.self == AsmNothingSimple
+    override fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean {
         val lhsResolved = when (lhs.self) {
             is AsmReference -> (lhs.self as AsmReference).value ?: lhs.self
             else -> lhs.self
@@ -268,7 +277,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
             is AsmReference -> (rhs.self as AsmReference).value ?: rhs.self
             else -> rhs.self
         }
-        return lhsResolved.equalTo(rhsResolved)
+        return (lhsResolved as AsmValue).equalTo(rhsResolved as AsmValue)
     }
 
     override fun nothing() = AsmNothingSimple.asmToTypedObject()
@@ -282,49 +291,49 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         else -> error("should not happen")
     }
 
-    override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<AsmValue> {
+    override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject {
         val tupleType = StdLibDefault.TupleType
         val tuple = AsmStructureSimple(tupleType.qualifiedName)
         return typedAs(tuple, tupleType.type(typeArgs))
     }
 
-    override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<AsmValue>>): TypedObject<AsmValue> {
+    override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject {
         val typeDecl = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Type not found ${possiblyQualifiedTypeName}")
         val type = typeDecl.type()
         //val asmPath = AsmPathSimple("??") //TODO:
         val cargs = constructorArgs.map { (k, v) -> Pair(k, convertValue(type, k, v)) }.toMap()
         val obj = externalGetter.createStructure(possiblyQualifiedTypeName.asQualifiedName(null), cargs) ?: AsmNothingSimple
-        addCreatedStructure(type, obj)
+        addCreatedStructure(type, obj as AsmValue)
         return typedAs(obj,type)
     }
 
-    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<AsmValue>>): TypedObject<AsmValue> {
+    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject {
         return when (qualifiedTypeName) {
             StdLibDefault.Set.qualifiedName -> {
                 val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType
-                typedAs(AsmSetSimple(collection.map { it.self }.toSet()), StdLibDefault.Set.type(listOf(elType.asTypeArgument)))
+                typedAs(AsmSetSimple(collection.map { it.self as AsmValue }.toSet()), StdLibDefault.Set.type(listOf(elType.asTypeArgument)))
             }
 
             StdLibDefault.List.qualifiedName -> {
                 val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType
-                typedAs(AsmListSimple(collection.map { it.self }), StdLibDefault.List.type(listOf(elType.asTypeArgument)))
+                typedAs(AsmListSimple(collection.map { it.self as AsmValue }), StdLibDefault.List.type(listOf(elType.asTypeArgument)))
             }
 
             StdLibDefault.ListSeparated.qualifiedName -> {
                 val list = collection.toList()
                 val elType = list.getOrNull(0)?.type ?: StdLibDefault.AnyType
                 val sepType = list.getOrNull(1)?.type ?: StdLibDefault.AnyType
-                typedAs(AsmListSeparatedSimple(collection.map { it.self }.toSeparatedList()), StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)))
+                typedAs(AsmListSeparatedSimple(collection.map { it.self as AsmValue }.toSeparatedList()), StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)))
             }
 
             else -> nothing()
         }
     }
 
-    override fun valueOf(value: TypedObject<AsmValue>): Any = value.self.raw
+    override fun valueOf(value: TypedObject): Any = (value.self as AsmValue).raw
 
-    override fun getFromListWithIndex(tobj: TypedObject<AsmValue>, index: Int): TypedObject<AsmValue> {
+    override fun getFromListWithIndex(tobj: TypedObject, index: Int): TypedObject {
         val asmValue = tobj.self
         return when (asmValue) {
             is AsmList -> {
@@ -346,11 +355,11 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override fun getFromMapWithKey(tobj: TypedObject<Any>, key: TypedObject<Any>): TypedObject<AsmValue> {
+    override fun getFromMapWithKey(tobj: TypedObject, key: TypedObject): TypedObject {
         TODO()
     }
 
-    override fun forEachIndexed(tobj: TypedObject<AsmValue>, body: (index: Int, value: TypedObject<AsmValue>) -> Unit) {
+    override fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit) {
         val asmValue = tobj.self
         when (asmValue) {
             is AsmList -> {
@@ -364,7 +373,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override fun cast(tobj: TypedObject<AsmValue>, newType: TypeInstance): TypedObject<AsmValue> {
+    override fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject {
         val rtd = newType.resolvedDeclaration
         return when (rtd) {
             is TupleType -> {
@@ -377,7 +386,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                 typedAs(tobj.self, tp)
             }
 
-            else -> tobj.self.asmToTypedObject()
+            else -> (tobj.self as AsmValue).asmToTypedObject()
         }
     }
 
@@ -391,11 +400,11 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject<AsmValue>>): ObjectGraph<AsmValue> {
-        val nodes = mutableSetOf<TypedObject<AsmValue>>()
-        val edges = mutableSetOf<ObjectGraphEdge<AsmValue>>()
+    override fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject>): ObjectGraph {
+        val nodes = mutableSetOf<TypedObject>()
+        val edges = mutableSetOf<ObjectGraphEdge>()
 
-        AsmSimple.traverseDepthFirst(roots.map { it.self }, object : AsmTreeWalker {
+        AsmSimple.traverseDepthFirst(roots.map { it.self as AsmValue}, object : AsmTreeWalker {
             override fun beforeRoot(root: AsmValue) {}
             override fun afterRoot(root: AsmValue) {}
 
@@ -414,7 +423,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                     issues.error(null, "Cannot find property '${property.name.value}' on type definition '${ownerTypeDef.qualifiedName.value}'")
                 } else {
                     val edge = ObjectGraphEdgeSimple(src, tgt, propDef)
-                    edges.add(edge)
+                    edges.add(edge as ObjectGraphEdge)
                 }
             }
 
@@ -432,15 +441,15 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     }
 
     //
-    override fun createLambdaValue(lambda: (it: TypedObject<AsmValue>) -> TypedObject<AsmValue>): TypedObject<AsmValue> {
+    override fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
-        val lmb = AsmLambdaSimple { lambda.invoke(it.asmToTypedObject()).self }
+        val lmb = AsmLambdaSimple { lambda.invoke((it as AsmValue).asmToTypedObject()).self as AsmValue }
         return typedAs(lmb, lambdaType)
     }
 
-    override fun getProperty(tobj: TypedObject<AsmValue>, propertyName: String): TypedObject<AsmValue> {
+    override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject {
         //TODO: use executor
-        val asmValue = tobj.self
+        val asmValue = tobj.self as AsmValue
         val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
         return when (propRes) {
             null -> when {
@@ -481,7 +490,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override fun setProperty(tobj: TypedObject<AsmValue>, propertyName: String, value: TypedObject<AsmValue>) {
+    override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) {
         val obj = tobj.self as AsmStructure
         // if property is a reference && value is a structure && semanticPath is available THEN set a reference rather than composition
         val v = convertValue(tobj.type, propertyName, value)
@@ -489,7 +498,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         obj.setProperty(PropertyValueName(propertyName), v, obj.property.size)
     }
 
-    override fun executeMethod(tobj: TypedObject<AsmValue>, methodName: String, args: List<TypedObject<AsmValue>>): TypedObject<AsmValue> {
+    override fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject {
         //TODO: use executor
         val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]
         return when (methRes) {
@@ -506,9 +515,9 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                     else -> {
                         val methExec = stdMeths[methRes.original]
                             ?: error("StdLibPrimitiveExecutionsForAsmSimple, not found for method '${methRes.name.value}' of TypeDeclaration '${type.qualifiedName}'")
-                        val self = tobj.self
-                        // val arguments = args.map { it.asmValue }
-                        methExec.invoke(self, methRes, args)
+                        val self = tobj.self as AsmValue
+                         val arguments = args.map { it.self }
+                        methExec.invoke(self, methRes, arguments)
                     }
                 }
                 typedAs(ao,methRes.returnType)
@@ -516,14 +525,15 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override fun callFunction(functionName: String, args: List<TypedObject<AsmValue>>): TypedObject<AsmValue> {
-        return primitiveExecutor.functionCall(functionName, args)?.let {
+    override fun callFunction(functionName: String, args: List<TypedObject>): TypedObject {
+        val arguments = args.map { untyped(it) }
+        return primitiveExecutor.functionCall(functionName, arguments)?.let {
             toTypedObject(it.value as AsmValue)
         } ?: nothing()
     }
 
-    private fun convertValue(ownerType: TypeInstance, propertyName: String, value: TypedObject<AsmValue>): AsmValue {
-        val asmValue = value.self
+    private fun convertValue(ownerType: TypeInstance, propertyName: String, value: TypedObject): AsmValue {
+        val asmValue = value.self as AsmValue
         return when (asmValue) {
             is AsmStructureSimple -> {
                 val prop = ownerType.allResolvedProperty[PropertyName(propertyName)]
@@ -545,9 +555,9 @@ open class ObjectGraphAccessorMutatorAsmSimple(
 
 class ObjectGraphAsmSimple(
     val identity: String,
-    override val nodes: Set<TypedObject<AsmValue>>,
-    override val edges: Set<ObjectGraphEdge<AsmValue>>
-) : ObjectGraph<AsmValue> {
+    override val nodes: Set<TypedObject>,
+    override val edges: Set<ObjectGraphEdge>
+) : ObjectGraph {
 
     override fun hashCode(): Int = identity.hashCode()
     override fun equals(other: Any?): Boolean = when {
@@ -559,8 +569,8 @@ class ObjectGraphAsmSimple(
 }
 
 data class ObjectGraphEdgeSimple(
-    override val source: TypedObject<AsmValue>,
-    override val target: TypedObject<AsmValue>,
+    override val source: TypedObject,
+    override val target: TypedObject,
     override val property: PropertyDeclaration
-) : ObjectGraphEdge<AsmValue>
+) : ObjectGraphEdge
 

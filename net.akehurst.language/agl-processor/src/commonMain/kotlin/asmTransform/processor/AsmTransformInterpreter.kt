@@ -35,9 +35,9 @@ import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 
-class AsmTransformInterpreter<AsmValueType:Any>(
+class AsmTransformInterpreter(
     val typesDomain: TypesDomain,
-    val objectGraph: ObjectGraphAccessorMutator<AsmValueType>,
+    val objectGraph: ObjectGraphAccessorMutator,
 ) {
 
     companion object {
@@ -132,26 +132,26 @@ class AsmTransformInterpreter<AsmValueType:Any>(
         this.issues.clear()
     }
 
-     fun evaluate(evc: EvaluationContext<AsmValueType>,trRule: AsmTransformationRule): TypedObject<AsmValueType> {
+     fun evaluate(evc: EvaluationContext,trRule: AsmTransformationRule): TypedObject {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
         return asm
     }
 
-    private  fun evaluateSelfStatement(evc: EvaluationContext<AsmValueType>, expression: Expression): TypedObject<AsmValueType> {
+    private  fun evaluateSelfStatement(evc: EvaluationContext, expression: Expression): TypedObject {
         return exprInterpreter.evaluateExpression(evc, expression)
     }
 
-    private  fun executeStatementOn(evc: EvaluationContext<AsmValueType>, st: AssignmentStatement, asm: AsmStructure) {
+    private  fun executeStatementOn(evc: EvaluationContext, st: AssignmentStatement, asm: AsmStructure) {
         val propertyName = st.lhsPropertyName
         val propValue = evaluateExpressionOver(st.rhs, evc)
-        val tObj = objectGraph.toTypedObject(asm as AsmValueType)
+        val tObj = objectGraph.toTypedObject(asm )
         val pv = objectGraph.toTypedObject(propValue)
-        objectGraph.setProperty(tObj, propertyName, pv)
+        tObj.setProperty( propertyName, pv)
         //asm.setProperty(PropertyValueName(st.lhsPropertyName), propValue, asm.property.size)
     }
 
-    private  fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext<AsmValueType>): AsmValueType {
+    private  fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext): Any {
         val res = exprInterpreter.evaluateExpression(evc, expr)
         return res.self
     }

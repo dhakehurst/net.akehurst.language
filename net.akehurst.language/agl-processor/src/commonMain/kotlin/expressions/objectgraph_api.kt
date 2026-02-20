@@ -23,48 +23,52 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.types.api.*
 
-interface TypedObject<out SelfType : Any> {
-    val accessor: ObjectGraphAccessorMutatorCommon<Any>
-    val self: SelfType
+interface TypedObject {
+    val accessor: ObjectGraphAccessorMutatorCommon
+    val self: Any
     val type: TypeInstance
+
+    fun getProperty(name:String): TypedObject
+    suspend fun getPropertySuspend(name:String) : TypedObject
+
+    fun setProperty(name:String, value: TypedObject)
+    suspend fun setPropertySuspend(name:String, value: TypedObject)
+
+    fun executeMethod(name: String, argValues: List<TypedObject>): TypedObject
+    suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>): TypedObject
+
     fun asString(indent: Indent = Indent()): String
 }
 
-interface BoundValue<SelfType : Any> {
-    val accessorMutator: ObjectGraphAccessorMutator<SelfType>
-    val value: TypedObject<SelfType>
-}
-
-
-class EvaluationContext<SelfType : Any>(
-    val parent: EvaluationContext<SelfType>?,
-    initialNamedValues: Map<String, TypedObject<SelfType>>
+class EvaluationContext(
+    val parent: EvaluationContext?,
+    initialNamedValues: Map<String, TypedObject>
 ) {
     companion object {
-        fun <SelfType : Any> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
-        fun <SelfType : Any> ofSelf(
-            self: TypedObject<SelfType>,
-            namedValues: Map<String, TypedObject<SelfType>> = emptyMap(),
-            parent: EvaluationContext<SelfType>? = null
-        ): EvaluationContext<SelfType> {
+        fun of(namedValues: Map<String, TypedObject>, parent: EvaluationContext? = null) = EvaluationContext(parent, namedValues)
+        fun ofSelf(
+            self: TypedObject,
+            namedValues: Map<String, TypedObject> = emptyMap(),
+            parent: EvaluationContext? = null
+        ): EvaluationContext {
             val env = namedValues.toMutableMap()
             env[RootExpressionDefault.SELF.name] = self
             return of(env, parent = parent)
         }
     }
 
-    val namedValues: Map<String, TypedObject<SelfType>> = initialNamedValues.toMutableMap()
+    val namedValues: Map<String, TypedObject> = initialNamedValues.toMutableMap()
     val self = namedValues[RootExpressionDefault.SELF.name]
 
     val executionTrace: List<String> = mutableListOf()
 
-    fun getOrInParent(name: String): TypedObject<SelfType>? = namedValues[name] ?: parent?.getOrInParent(name)
+    fun getOrInParent(name: String): TypedObject? = namedValues[name] ?: parent?.getOrInParent(name)
 
-    fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
+    fun child(namedValues: Map<String, TypedObject>) = of(namedValues, this)
 
-    fun childSelf(self: TypedObject<SelfType>, namedValues: Map<String, TypedObject<SelfType>> = emptyMap()) = ofSelf(self, namedValues, parent = this)
+    fun childSelf(self: TypedObject, namedValues: Map<String, TypedObject> = emptyMap()) = ofSelf(self, namedValues, parent = this)
 
-    fun setNamedValue(name:String, value: TypedObject<SelfType>) {
+    fun setNamedValue(name:String, value: TypedObject) {
         (namedValues as MutableMap)[name] = value
     }
 
@@ -93,111 +97,111 @@ class EvaluationContext<SelfType : Any>(
 
 data class ExecutionResult(val value: Any?)
 
-interface PrimitiveExecutor<T : Any> {
-    fun propertyValue(obj: T, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult?
-    fun methodCall(obj: T, typeDef: TypeDefinition, method: MethodDeclaration, args: List<TypedObject<T>>): ExecutionResult?
-    fun functionCall(functionName: String, args: List<TypedObject<T>>): ExecutionResult?
+interface PrimitiveExecutor {
+    fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult?
+    fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult?
+    fun functionCall(functionName: String, args: List<*>): ExecutionResult?
 }
 
-interface ObjectGraph<SelfType : Any> {
-    val nodes: Set<TypedObject<SelfType>>
-    val edges: Set<ObjectGraphEdge<SelfType>>
+interface ObjectGraph {
+    val nodes: Set<TypedObject>
+    val edges: Set<ObjectGraphEdge>
 }
 
-interface ObjectGraphEdge<SelfType : Any> {
-    val source: TypedObject<SelfType>
-    val target: TypedObject<SelfType>
+interface ObjectGraphEdge {
+    val source: TypedObject
+    val target: TypedObject
     val property: PropertyDeclaration
 }
 
-interface ObjectGraphAccessorMutatorCommon<SelfType : Any> {
+interface ObjectGraphAccessorMutatorCommon {
     var typesDomain: TypesDomain
-    val createdStructuresByType: Map<TypeInstance, List<SelfType>>
+    val createdStructuresByType: Map<TypeInstance, List<Any>>
 
-    fun typeFor(obj: SelfType?): TypeInstance
-    fun toTypedObject(obj: SelfType?): TypedObject<SelfType>
-    fun untyped(typedObj: TypedObject<SelfType>): Any
-    fun typedAs(obj:Any, type:TypeInstance): TypedObject<SelfType>
+    fun typeFor(obj: Any?): TypeInstance
+    fun toTypedObject(obj: Any?): TypedObject
+    fun untyped(typedObj: TypedObject): Any
+    fun typedAs(obj:Any, type:TypeInstance): TypedObject
 
-    fun isNothing(obj: TypedObject<SelfType>): Boolean
-    fun equalTo(lhs: TypedObject<SelfType>, rhs: TypedObject<SelfType>): Boolean
+    fun isNothing(obj: TypedObject): Boolean
+    fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean
 
-    fun nothing(): TypedObject<SelfType>
-    fun any(value: Any): TypedObject<SelfType>
+    fun nothing(): TypedObject
+    fun any(value: Any): TypedObject
 
     /**
      * kotlin value of value (as opposed to untyped which returns something of type SelfType)
      */
-    fun valueOf(value: TypedObject<SelfType>): Any
+    fun valueOf(value: TypedObject): Any
 
     // would like to use Long as index to be compatible with Integer implemented as Long - but index in underlying kotlin is always an Int
-    fun getFromListWithIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType>
-    fun getFromMapWithKey(tobj: TypedObject<Any>, key: TypedObject<Any>): TypedObject<SelfType>
-    fun forEachIndexed(tobj: TypedObject<SelfType>, body: (index: Int, value: TypedObject<SelfType>) -> Unit)
+    fun getFromListWithIndex(tobj: TypedObject, index: Int): TypedObject
+    fun getFromMapWithKey(tobj: TypedObject, key: TypedObject): TypedObject
+    fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit)
 
-    fun callFunction(functionName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>
-    fun cast(tobj: TypedObject<SelfType>, newType: TypeInstance): TypedObject<SelfType>
+    fun callFunction(functionName: String, args: List<TypedObject>): TypedObject
+    fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject
 
-    fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject<SelfType>
-    fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<SelfType>
-    fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<SelfType>>): TypedObject<SelfType>
+    fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject
+    fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject
+    fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject
 
-    fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject<SelfType>>): ObjectGraph<SelfType>
+    fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject>): ObjectGraph
 }
 
-interface ExternalGetter<T : Any> {
-    fun typeFor(obj: T): TypeInstance
-    fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): T?
-    fun getProperty(obj: T, propertyName: String): Any?
-    fun setProperty(obj: T, propertyName: String, value: Any?)
+interface ExternalGetter {
+    fun typeFor(obj: Any): TypeInstance
+    fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
+    fun getProperty(obj: Any, propertyName: String): Any?
+    fun setProperty(obj: Any, propertyName: String, value: Any?)
 }
 
-interface ObjectGraphAccessorMutator<SelfType : Any> : ObjectGraphAccessorMutatorCommon<SelfType> {
-    val primitiveExecutor: PrimitiveExecutor<SelfType>
-    val externalGetter: ExternalGetter<SelfType>
+interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
+    val primitiveExecutor: PrimitiveExecutor
+    val externalGetter: ExternalGetter
 
-    fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
+    fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject
 
-    fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<SelfType>>): TypedObject<SelfType>
+    fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists
      */
-    fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType>
+    fun getProperty(tobj: TypedObject, propertyName: String): TypedObject
 
-    fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>
+    fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
 
-    fun setProperty(tobj: TypedObject<SelfType>, propertyName: String, value: TypedObject<SelfType>)
+    fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject)
 
 }
 
-interface ExternalGetterSuspending<T : Any> {
-    fun typeFor(obj: T): TypeInstance
+interface ExternalGetterSuspending {
+    fun typeFor(obj: Any): TypeInstance
     suspend fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
-    suspend fun getProperty(obj: T, propertyName: String): Any?
+    suspend fun getProperty(obj: Any, propertyName: String): Any?
 }
 
-interface PrimitiveExecutorSuspending<T : Any> {
-    fun propertyValue(obj: T, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult?
-    suspend fun methodCall(obj: T, typeDef: TypeDefinition, method: MethodDeclaration, args: List<TypedObject<T>>): ExecutionResult?
-    fun functionCall(functionName: String, args: List<TypedObject<T>>): ExecutionResult?
+interface PrimitiveExecutorSuspending {
+    fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult?
+    suspend fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult?
+    fun functionCall(functionName: String, args: List<*>): ExecutionResult?
 }
 
-interface ObjectGraphAccessorMutatorSuspending<SelfType : Any> : ObjectGraphAccessorMutatorCommon<SelfType> {
-    val primitiveExecutor: PrimitiveExecutorSuspending<SelfType>
-    val externalGetter: ExternalGetterSuspending<SelfType>
+interface ObjectGraphAccessorMutatorSuspending : ObjectGraphAccessorMutatorCommon {
+    val primitiveExecutor: PrimitiveExecutorSuspending
+    val externalGetter: ExternalGetterSuspending
 
-    fun createLambdaValue(lambda: suspend (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
+    fun createLambdaValue(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject
 
-    suspend fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<Any>>): TypedObject<SelfType>
+    suspend fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists
      */
-    suspend fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType>
+    suspend fun getProperty(tobj: TypedObject, propertyName: String): TypedObject
 
-    suspend fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType>
+    suspend fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
 
-    suspend fun setProperty(tobj: TypedObject<SelfType>, propertyName: String, value: TypedObject<SelfType>)
+    suspend fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject)
 
 }

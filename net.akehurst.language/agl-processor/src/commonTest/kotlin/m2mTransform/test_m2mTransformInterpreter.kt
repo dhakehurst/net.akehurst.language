@@ -2208,7 +2208,7 @@ class test_m2mTransformInterpreter {
             val trRes = Agl.transform(
                 transform,
                 suite.typeDomains,
-                accMuts as Map<SimpleName,ObjectGraphAccessorMutator<Any>>,
+                accMuts as Map<SimpleName,ObjectGraphAccessorMutator>,
                 domains,
                 case.target!!
             )

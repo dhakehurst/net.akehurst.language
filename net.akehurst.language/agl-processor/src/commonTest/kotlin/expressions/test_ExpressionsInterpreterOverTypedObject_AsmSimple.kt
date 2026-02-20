@@ -23,6 +23,7 @@ import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.asm.simple.AsmSetSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -102,8 +103,8 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
         val self = AsmNothingSimple
 
         test(
-            tm, self, expression, AsmListSimple(
-                listOf(
+            tm, self, expression, AsmSetSimple(
+                setOf(
                     AsmPrimitiveSimple.stdString("Hello"),
                     AsmPrimitiveSimple.stdString("World"),
                     AsmPrimitiveSimple.stdString("!")

@@ -49,7 +49,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             val prop1: String
         )
 
-        val executor = StdLibPrimitiveExecutionsForReflectionSuspending<Any>().also {
+        val executor = StdLibPrimitiveExecutionsForReflectionSuspending().also {
             val qn = AglBase.typesDomain.findFirstDefinitionByNameOrNull(SimpleName("QualifiedName"))!!
             val qn_v = qn.property.first { it.name.value == "value" }
             it.addPropertyExecution1(qn_v, QualifiedName::value)

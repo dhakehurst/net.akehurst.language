@@ -136,13 +136,13 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
-    override val formatter: Formatter<AsmType>? by lazy {
+    override val formatter: Formatter? by lazy {
         val res = configuration.formatResolver?.invoke(this)
         res?.let {
             this.allIssues.addAllFrom(res.allIssues)
             res.asm?.let {
                 //TODO: make a formatter Resolver !
-                FormatterOverAsmSimple(it, typesDomain, this.allIssues) as Formatter<AsmType>
+                FormatterOverAsmSimple(it, typesDomain, this.allIssues) as Formatter
             }
         }
     }

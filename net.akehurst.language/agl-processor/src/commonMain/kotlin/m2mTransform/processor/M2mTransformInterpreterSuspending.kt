@@ -31,9 +31,9 @@ import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutatorSuspendin
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyName
 
-class M2mTransformInterpreterSuspending<OT : Any>(
+class M2mTransformInterpreterSuspending(
     val m2m: M2mTransformDomain,
-    val domainObjectGraph: Map<SimpleName, ObjectGraphAccessorMutatorSuspending<OT>>,
+    val domainObjectGraph: Map<SimpleName, ObjectGraphAccessorMutatorSuspending>,
     val _issues: IssueHolder = IssueHolder(LanguageProcessorPhase.INTERPRET)
 ) {
 
@@ -213,7 +213,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
             return subsetsOfTail + subsetsWithHead
         }
 
-        fun <OT : Any> List<TemplateMatchAlternatives<OT>>.cartesianProduct(): TemplateMatchAlternatives<OT> {
+        fun <OT : Any> List<TemplateMatchAlternatives>.cartesianProduct(): TemplateMatchAlternatives {
             val lists = this.map { it.alternatives }
             val cp = lists.cartesianProduct()
             val alts = cp.map { it.merge() }
@@ -272,13 +272,13 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         }
     }
 
-    val records = mutableMapOf<M2mTransformRule, MappingRecord<OT>>()
+    val records = mutableMapOf<M2mTransformRule, MappingRecord>()
 
     /**
      * @param targetDomainRef reference to the domain that is the target of the transformation
      * @param domainGraphs the objects for each source domain, keyed by the domain reference
      */
-    suspend fun transform(targetTransform: M2mTransformRuleSet, targetDomainRef: DomainReference, domainGraphs: Map<DomainReference, List<TypedObject<OT>>>): M2MTransformResult<OT> {
+    suspend fun transform(targetTransform: M2mTransformRuleSet, targetDomainRef: DomainReference, domainGraphs: Map<DomainReference, List<TypedObject>>): M2MTransformResult {
         val objectGraphHandler = targetTransform.domainParameters.entries.associate { (k, v) ->
             Pair(k, domainObjectGraph[v] ?: error("Domain ObjectGraph not found for domain $k"))
         }
@@ -303,9 +303,9 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         targetTransform: M2mTransformRuleSet,
         rule: M2mTransformRule,
         targetDomainRef: DomainReference,
-        source: Map<DomainReference, List<TypedObject<OT>>>,
-        sourceObjectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending<OT>>,
-    ): MappingRecord<OT> = when (rule) {
+        source: Map<DomainReference, List<TypedObject>>,
+        sourceObjectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending>,
+    ): MappingRecord = when (rule) {
         is M2mTransformAbstractRule -> executeAbstract(targetTransform, rule, targetDomainRef, source, sourceObjectGraph)
         is M2MTransformRelation -> executeRelation(targetTransform, rule, targetDomainRef, source, sourceObjectGraph)
         is M2MTransformMapping -> executeMapping(targetTransform, rule, targetDomainRef, source, sourceObjectGraph)
@@ -317,9 +317,9 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         targetTransform: M2mTransformRuleSet,
         rule: M2mTransformAbstractRule,
         targetDomainRef: DomainReference,
-        source: Map<DomainReference, List<TypedObject<OT>>>,
-        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending<OT>>,
-    ): MappingRecord<OT> {
+        source: Map<DomainReference, List<TypedObject>>,
+        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending>,
+    ): MappingRecord {
         TODO()
     }
 
@@ -327,9 +327,9 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         targetTransform: M2mTransformRuleSet,
         rule: M2MTransformMapping,
         targetDomainRef: DomainReference,
-        source: Map<DomainReference, List<TypedObject<OT>>>,
-        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending<OT>>,
-    ): MappingRecord<OT> {
+        source: Map<DomainReference, List<TypedObject>>,
+        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending>,
+    ): MappingRecord {
         val tgtOg = objectGraph[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
         // for each domain reference get the match alternatives for each source object
         // Map of DomainReference -> List< TemplateMatchAlternatives per object >
@@ -367,7 +367,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
                                 //TODO: add target of where to variables with correct name
 
                                 // create output
-                                val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending<OT>(tgtOg, _issues)
+                                val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtOg, _issues)
                                 val evc = EvaluationContext.of(allVars.matchedVariables)
                                 val r = exprInterp.evaluateExpression(evc, expression)
                                 val srcs = alt.entries.associate { (srcDomainRef, mr) ->
@@ -390,9 +390,9 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         targetTransform: M2mTransformRuleSet,
         rule: M2MTransformRelation,
         targetDomainRef: DomainReference,
-        source: Map<DomainReference, List<TypedObject<OT>>>,
-        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending<OT>>,
-    ): MappingRecord<OT> {
+        source: Map<DomainReference, List<TypedObject>>,
+        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending>,
+    ): MappingRecord {
         val tgtOg = objectGraph[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
         val domToListOfAlts = matchSourceVariables(rule, targetDomainRef, source, objectGraph)
         val res = when {
@@ -431,15 +431,15 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         targetTransform: M2mTransformRuleSet,
         rule: M2MTransformTable,
         targetDomainRef: DomainReference,
-        source: Map<DomainReference, List<TypedObject<OT>>>,
-        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending<OT>>,
-    ): MappingRecord<OT> {
+        source: Map<DomainReference, List<TypedObject>>,
+        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending>,
+    ): MappingRecord {
         val matchingValues = source.cartesianProduct().mapNotNull { srcAlt ->
             rule.values.firstNotNullOfOrNull { vs ->
                 val srcValues = srcAlt.mapNotNull { (srcDomainRef, v) ->
                     val srcObjectGraph = objectGraph[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
-                    val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending<OT>(srcObjectGraph, _issues)
-                    val evc = EvaluationContext.of(emptyMap<String, TypedObject<OT>>()) //TODO: are there any variables !
+                    val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(srcObjectGraph, _issues)
+                    val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[srcDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
                     val match = srcObjectGraph.equalTo(v, value)
@@ -454,8 +454,8 @@ class M2mTransformInterpreterSuspending<OT : Any>(
                     null
                 } else {
                     val tgtObjectGraph = objectGraph[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
-                    val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending<OT>(tgtObjectGraph, _issues)
-                    val evc = EvaluationContext.of(emptyMap<String, TypedObject<OT>>()) //TODO: are there any variables !
+                    val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtObjectGraph, _issues)
+                    val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[targetDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
                     srcValues + Pair(targetDomainRef, value)
@@ -468,9 +468,9 @@ class M2mTransformInterpreterSuspending<OT : Any>(
     private suspend fun matchSourceVariables(
         rule: M2mTransformPatternRule,
         targetDomainRef: DomainReference,
-        source: Map<DomainReference, List<TypedObject<OT>>>,
-        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending<OT>>,
-    ): Map<DomainReference, TemplateMatchAlternatives<OT>> {
+        source: Map<DomainReference, List<TypedObject>>,
+        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending>,
+    ): Map<DomainReference, TemplateMatchAlternatives> {
         val srcDomainRefs = rule.domainSignature.filterKeys { k -> k != targetDomainRef }
         val results = srcDomainRefs.map { (srcDomainRef, srcDomainItem) ->
             val srcOg = objectGraph[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
@@ -487,11 +487,11 @@ class M2mTransformInterpreterSuspending<OT : Any>(
     }
 
     suspend fun matchVariablesFromRhs(
-        variables: Map<String, TypedObject<OT>>,
-        srcObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>,
-        src: TypedObject<OT>,
+        variables: Map<String, TypedObject>,
+        srcObjectGraph: ObjectGraphAccessorMutatorSuspending,
+        src: TypedObject,
         rhs: PropertyTemplateRhs
-    ): TemplateMatchAlternatives<OT> =
+    ): TemplateMatchAlternatives =
         when (rhs) {
             is PropertyTemplateExpression -> {
                 val mr = matchVariablesFromPropertyTemplateExpression(variables, srcObjectGraph, src, rhs)
@@ -512,11 +512,11 @@ class M2mTransformInterpreterSuspending<OT : Any>(
      * always returns isMatch==true
      */
     suspend fun matchVariablesFromPropertyTemplateExpression(
-        variables: Map<String, TypedObject<OT>>,
-        srcObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>,
-        lhs: TypedObject<OT>,
+        variables: Map<String, TypedObject>,
+        srcObjectGraph: ObjectGraphAccessorMutatorSuspending,
+        lhs: TypedObject,
         rhs: PropertyTemplateExpression
-    ): TemplateMatchResult<OT> {
+    ): TemplateMatchResult {
         // either :
         // 1) rhs is a free-variable with no value set, in which case set it to the lhs
         // 2) rhs is an expression with a value that matches the lhs
@@ -527,7 +527,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending<OT>(srcObjectGraph, _issues)
+                val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(srcObjectGraph, _issues)
                 val evc = EvaluationContext.of(variables)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = srcObjectGraph.equalTo(lhs, value)
@@ -537,17 +537,17 @@ class M2mTransformInterpreterSuspending<OT : Any>(
     }
 
     suspend fun matchVariablesFromObjectTemplate(
-        variables: Map<String, TypedObject<OT>>,
+        variables: Map<String, TypedObject>,
         objectTemplate: ObjectTemplate,
-        srcObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>,
-        src: TypedObject<OT>
-    ): TemplateMatchAlternatives<OT> {
+        srcObjectGraph: ObjectGraphAccessorMutatorSuspending,
+        src: TypedObject
+    ): TemplateMatchAlternatives {
         return when {
             objectTemplate.propertyTemplate.isEmpty() -> TemplateMatchAlternatives(listOf(TemplateMatchResult.EMPTY()))
             else -> {
                 val propTemplateMatches = objectTemplate.propertyTemplate.map { (k, v) ->
                     val rhsPat = v.rhs
-                    val lhs = srcObjectGraph.getProperty(src, k.value)
+                    val lhs = src.getPropertySuspend( k.value)
                     matchVariablesFromRhs(variables, srcObjectGraph, lhs, rhsPat)
                 } //TODO: determine no match before cartesianProduct
                 val result = propTemplateMatches.map { it.alternatives }.cartesianProduct()
@@ -558,15 +558,15 @@ class M2mTransformInterpreterSuspending<OT : Any>(
     }
 
     suspend fun matchVariablesFromCollectionTemplate(
-        variables: Map<String, TypedObject<OT>>,
+        variables: Map<String, TypedObject>,
         collectionTemplate: CollectionTemplate,
-        srcObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>,
-        src: TypedObject<OT>
-    ): TemplateMatchAlternatives<OT> {
+        srcObjectGraph: ObjectGraphAccessorMutatorSuspending,
+        src: TypedObject
+    ): TemplateMatchAlternatives {
         val result = when {
             src.type.isCollection -> {
                 // TODO: maybe a faster way to do it if NOT isSubset!
-                val elements = mutableListOf<TypedObject<OT>>()
+                val elements = mutableListOf<TypedObject>()
                 srcObjectGraph.forEachIndexed(src) { idx, el -> elements.add(el) } //TODO: find a way not to 'collect' the list
                 if (collectionTemplate.isSubset.not() && elements.size != collectionTemplate.elements.size) {
                     // TODO: should return a no match not error!
@@ -599,9 +599,9 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         where: RuleWhere,
         targetTransform: M2mTransformRuleSet,
         targetDomainRef: DomainReference,
-        matchedVariables: Map<String, TypedObject<OT>>,
-        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending<OT>>,
-    ): Map<String, TypedObject<OT>> {
+        matchedVariables: Map<String, TypedObject>,
+        objectGraph: Map<DomainReference, ObjectGraphAccessorMutatorSuspending>,
+    ): Map<String, TypedObject> {
         return when (where) { //TODO: support more complex expressions - override the expression interpreter to intercept function calls as rule-calls
             is FunctionCall -> {
                 val rule = targetTransform.rule[where.possiblyQualifiedName]
@@ -613,7 +613,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
                         }.associate { it }
                         val source = (argsValues - targetDomainRef).mapValues { (k, v) ->
                             val og = objectGraph[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-                            val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending<OT>(og, _issues)
+                            val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(og, _issues)
                             val evc = EvaluationContext.of(matchedVariables)
                             val res = exprInterp.evaluateExpression(evc, v)
                             listOf(res)
@@ -663,7 +663,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         }
     }
 
-    suspend fun createFromRhs(variables: Map<String, TypedObject<OT>>, rhs: PropertyTemplateRhs, tgtObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>): TypedObject<OT> = when (rhs) {
+    suspend fun createFromRhs(variables: Map<String, TypedObject>, rhs: PropertyTemplateRhs, tgtObjectGraph: ObjectGraphAccessorMutatorSuspending): TypedObject = when (rhs) {
         is PropertyTemplateExpression -> createFromPropertyPatternExpression(variables, rhs, tgtObjectGraph)
         is ObjectTemplate -> createFromObjectPattern(variables, rhs, tgtObjectGraph)
         else -> error("Unknown rhs type ${rhs::class}")
@@ -672,16 +672,16 @@ class M2mTransformInterpreterSuspending<OT : Any>(
     /**
      * returns value of expression evaluated in context of provided variables
      */
-    suspend fun createFromPropertyPatternExpression(variables: Map<String, TypedObject<OT>>, ppe: PropertyTemplateExpression, tgtObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>): TypedObject<OT> {
+    suspend fun createFromPropertyPatternExpression(variables: Map<String, TypedObject>, ppe: PropertyTemplateExpression, tgtObjectGraph: ObjectGraphAccessorMutatorSuspending): TypedObject {
         val expr = ppe.expression
-        val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending<OT>(tgtObjectGraph, _issues)
+        val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtObjectGraph, _issues)
         val evc = EvaluationContext.of(variables)
         val value = exprInterp.evaluateExpression(evc, expr)
         return value
     }
 
-    suspend fun createFromObjectPattern(variables: Map<String, TypedObject<OT>>, objectTemplate: ObjectTemplate, tgtObjectGraph: ObjectGraphAccessorMutatorSuspending<OT>): TypedObject<OT> {
-        val propValues = mutableMapOf<String, TypedObject<OT>>()
+    suspend fun createFromObjectPattern(variables: Map<String, TypedObject>, objectTemplate: ObjectTemplate, tgtObjectGraph: ObjectGraphAccessorMutatorSuspending): TypedObject {
+        val propValues = mutableMapOf<String, TypedObject>()
         objectTemplate.propertyTemplate.forEach { (k, v) ->
             val value = createFromRhs(variables, v.rhs, tgtObjectGraph)
             propValues[k.value] = value
@@ -691,7 +691,7 @@ class M2mTransformInterpreterSuspending<OT : Any>(
         propValues.forEach { (k, v) ->
             val pn = PropertyName(k)
             if (true == objectTemplate.type.allResolvedProperty[pn]?.isReadWrite) {
-                tgtObjectGraph.setProperty(obj, k, v)
+                obj.setPropertySuspend( k, v)
             }
         }
         return obj

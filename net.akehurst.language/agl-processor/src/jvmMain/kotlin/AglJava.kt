@@ -30,22 +30,23 @@ import net.akehurst.language.types.api.TypesDomain
 object AglJava {
 
     @JvmStatic
-    fun executeExpressionSuspendBlocking(accessorMutator: ObjectGraphAccessorMutatorSuspending<Any>, self: Any?, expression: String): TypedObject<Any> = runBlocking {
+    fun executeExpressionSuspendBlocking(accessorMutator: ObjectGraphAccessorMutatorSuspending, self: Any?, expression: String): TypedObject = runBlocking {
         Agl.executeExpressionSuspend(accessorMutator, self, expression)
     }
 
     @JvmStatic
-    fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending<Any>, evc: EvaluationContext<Any>, expression: String): TypedObject<Any> = runBlocking {
+    fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending, evc: EvaluationContext, expression: String): TypedObject = runBlocking {
         Agl.executeExpressionWithEvaluationContextSuspend(accessorMutator, evc, expression)
     }
 
+    @JvmStatic
     fun transformSuspendBlocking(
         m2m: M2mTransformString,
         typeDomains: Map<DomainReference, TypesDomain>,
-        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutatorSuspending<Any>>,
-        domains: Map<DomainReference, List<TypedObject<Any>>>,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutatorSuspending>,
+        domains: Map<DomainReference, List<TypedObject>>,
         targetDomainReference: DomainReference
-    ): M2MTransformResult<Any> = runBlocking {
+    ): M2MTransformResult = runBlocking {
         Agl.transformSuspend(m2m, typeDomains, accessorMutators, domains, targetDomainReference)
     }
 }

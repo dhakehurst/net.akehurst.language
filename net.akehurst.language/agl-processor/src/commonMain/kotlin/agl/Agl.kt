@@ -347,14 +347,14 @@ object Agl {
 
     fun <SelfType : Any> format(
         formatDomain: AglFormatDomain,
-        objectGraph: ObjectGraphAccessorMutator<SelfType>,
+        objectGraph: ObjectGraphAccessorMutator,
         self: SelfType,
         options: FormatOptions<SelfType> = FormatOptionsDefault()
     ): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
         val formatter = FormatterOverTypedObject(formatDomain, objectGraph, issueHolder)
         val formatSetName = formatDomain.allDefinitions.lastOrNull()?.qualifiedName ?: error("No FormatSet found.")
-        val namedValues = mutableMapOf<String, TypedObject<SelfType>>()
+        val namedValues = mutableMapOf<String, TypedObject>()
         options.environment.forEach { (k, v) ->
             namedValues[k] = objectGraph.toTypedObject(v)
         }
@@ -366,7 +366,7 @@ object Agl {
     fun <SelfType : Any> formatWithTemplate(
         template: FormatString,
         typesDomain: TypesDomain,
-        objectGraph: ObjectGraphAccessorMutator<SelfType>,
+        objectGraph: ObjectGraphAccessorMutator,
         self: SelfType,
         options: FormatOptions<SelfType> = FormatOptionsDefault()
     ): FormatResult {
@@ -382,26 +382,26 @@ object Agl {
         return formatWithTemplate(template, typesDomain, objectGraph, self, options)
     }
 
-    fun executeExpression(accessorMutator:ObjectGraphAccessorMutator<Any>, self:Any?, expression:String): TypedObject<Any> {
+    fun executeExpression(accessorMutator:ObjectGraphAccessorMutator, self:Any?, expression:String): TypedObject {
         val typedSelf = accessorMutator.toTypedObject(self)
         val evc = EvaluationContext.ofSelf(typedSelf)
         return executeExpressionWithEvaluationContext(accessorMutator, evc, expression)
     }
 
-    fun executeExpressionWithEvaluationContext(accessorMutator:ObjectGraphAccessorMutator<Any>, evc:EvaluationContext<Any>, expression:String): TypedObject<Any> {
+    fun executeExpressionWithEvaluationContext(accessorMutator:ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
         val interpreter = ExpressionsInterpreterOverTypedObject(accessorMutator, issueHolder)
         val result = interpreter.evaluateStr(evc, expression)
         return result
     }
 
-    suspend fun executeExpressionSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending<Any>, self:Any?, expression:String): TypedObject<Any> {
+    suspend fun executeExpressionSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending, self:Any?, expression:String): TypedObject {
         val typedSelf = accessorMutator.toTypedObject(self)
         val evc = EvaluationContext.ofSelf(typedSelf)
         return executeExpressionWithEvaluationContextSuspend(accessorMutator, evc, expression)
     }
 
-    suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending<Any>, evc:EvaluationContext<Any>, expression:String): TypedObject<Any> {
+    suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending, evc:EvaluationContext, expression:String): TypedObject {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
         val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(accessorMutator, issueHolder)
         val result = interpreter.evaluateStr(evc, expression)
@@ -411,10 +411,10 @@ object Agl {
     fun transform(
         m2m: M2mTransformString,
         typeDomains: Map<DomainReference, TypesDomain>,
-        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator<Any>>,
-        domains: Map<DomainReference, List<TypedObject<Any>>>,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
+        domains: Map<DomainReference, List<TypedObject>>,
         targetDomainReference: DomainReference
-    ): M2MTransformResult<Any> {
+    ): M2MTransformResult {
         val context = SentenceContextAny()
         typeDomains.forEach { (k, v) ->
             context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
@@ -441,10 +441,10 @@ object Agl {
     suspend fun transformSuspend(
         m2m: M2mTransformString,
         typeDomains: Map<DomainReference, TypesDomain>,
-        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutatorSuspending<Any>>,
-        domains: Map<DomainReference, List<TypedObject<Any>>>,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutatorSuspending>,
+        domains: Map<DomainReference, List<TypedObject>>,
         targetDomainReference: DomainReference
-    ): M2MTransformResult<Any> {
+    ): M2MTransformResult {
         val context = SentenceContextAny()
         typeDomains.forEach { (k, v) ->
             context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)

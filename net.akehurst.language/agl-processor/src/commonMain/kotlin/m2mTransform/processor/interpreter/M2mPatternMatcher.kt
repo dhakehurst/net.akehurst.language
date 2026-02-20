@@ -38,16 +38,16 @@ import net.akehurst.language.objectgraph.api.TypedObject
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-class M2mPatternMatcher<OT : Any>(
+class M2mPatternMatcher(
     val issues: IssueHolder,
-    val accessorMutator: ObjectGraphAccessorMutator<OT>
+    val accessorMutator: ObjectGraphAccessorMutator
 ) {
 
     fun matchVariablesFromRhs(
-        variables: Map<String, TypedObject<OT>>,
-        src: TypedObject<OT>,
+        variables: Map<String, TypedObject>,
+        src: TypedObject,
         rhs: PropertyTemplateRhs
-    ): TemplateMatchAlternatives<OT> {
+    ): TemplateMatchAlternatives {
 
 
 
@@ -74,10 +74,10 @@ class M2mPatternMatcher<OT : Any>(
      * always returns isMatch==true
      */
     fun matchVariablesFromPropertyTemplateExpression(
-        variables: Map<String, TypedObject<OT>>,
+        variables: Map<String, TypedObject>,
         template: PropertyTemplateExpression,
-        src: TypedObject<OT>
-    ): TemplateMatchResult<OT> {
+        src: TypedObject
+    ): TemplateMatchResult {
         // either :
         // 1) rhs is a free-variable with no value set, in which case set it to the lhs
         // 2) rhs is an expression with a value that matches the lhs
@@ -88,7 +88,7 @@ class M2mPatternMatcher<OT : Any>(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(accessorMutator, issues)
+                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator, issues)
                 val evc = EvaluationContext.of(variables)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = accessorMutator.equalTo(src, value)
@@ -98,16 +98,16 @@ class M2mPatternMatcher<OT : Any>(
     }
 
     fun matchVariablesFromObjectTemplate(
-        variables: Map<String, TypedObject<OT>>,
+        variables: Map<String, TypedObject>,
         template: ObjectTemplate,
-        src: TypedObject<OT>
-    ): TemplateMatchAlternatives<OT> {
+        src: TypedObject
+    ): TemplateMatchAlternatives {
         return when {
             template.propertyTemplate.isEmpty() -> TemplateMatchAlternatives(listOf(TemplateMatchResult.EMPTY()))
             else -> {
                 val propTemplateMatches = template.propertyTemplate.map { (k, v) ->
                     val rhsPat = v.rhs
-                    val lhs = accessorMutator.getProperty(src, k.value)
+                    val lhs = src.getProperty(k.value)
                     matchVariablesFromRhs(variables, lhs, rhsPat)
                 } //TODO: determine no match before cartesianProduct
                 val result = propTemplateMatches.map { it.alternatives }.cartesianProduct()
@@ -118,14 +118,14 @@ class M2mPatternMatcher<OT : Any>(
     }
 
     fun matchVariablesFromCollectionTemplate(
-        variables: Map<String, TypedObject<OT>>,
+        variables: Map<String, TypedObject>,
         template: CollectionTemplate,
-        src: TypedObject<OT>
-    ): TemplateMatchAlternatives<OT> {
+        src: TypedObject
+    ): TemplateMatchAlternatives {
         val result = when {
             src.type.isCollection -> {
                 // TODO: maybe a faster way to do it if NOT isSubset!
-                val elements = mutableListOf<TypedObject<OT>>()
+                val elements = mutableListOf<TypedObject>()
                 accessorMutator.forEachIndexed(src) { idx, el -> elements.add(el) } //TODO: find a way not to 'collect' the list
                 if (template.isSubset.not() && elements.size != template.elements.size) {
                     // TODO: should return a no match not error!
@@ -142,10 +142,10 @@ class M2mPatternMatcher<OT : Any>(
     // get the different alternative combinations of objects from elements that (cover) match the defined templates
     // Set(  List(element-match per template)  )
     fun matchVariablesFromCollectionTemplateToElementsIn(
-        variables: Map<String, TypedObject<OT>>,
+        variables: Map<String, TypedObject>,
         collectionTemplate: CollectionTemplate,
-        elements: List<TypedObject<OT>>
-    ): List<TemplateMatchResult<OT>> {
+        elements: List<TypedObject>
+    ): List<TemplateMatchResult> {
         val options = findCoveringSubsets2(
             cover = collectionTemplate.elements,
             bySubsetsOf = elements

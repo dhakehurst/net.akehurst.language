@@ -26,8 +26,8 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
-open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
-    val objectGraph: ObjectGraphAccessorMutatorSuspending<SelfType>,
+open class ExpressionsInterpreterOverTypedObjectSuspending(
+    val objectGraph: ObjectGraphAccessorMutatorSuspending,
     val issues: IssueHolder
 ) {
     val typeModel = objectGraph.typesDomain
@@ -37,7 +37,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    suspend fun evaluateStr(evc: EvaluationContext<SelfType>, expression: String): TypedObject<SelfType> {
+    suspend fun evaluateStr(evc: EvaluationContext, expression: String): TypedObject {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
         check(result.allIssues.errors.isEmpty()) { result.allIssues.toString() }
         val asm = result.asm!!
@@ -48,7 +48,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    open suspend fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
+    open suspend fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject = when (expression) {
         is RootExpression -> this.evaluateRootExpression(evc, expression)
         is LiteralExpression -> this.evaluateLiteralExpression(expression)
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
@@ -66,7 +66,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
     }
 
-    private suspend fun evaluateRootExpression(evc: EvaluationContext<SelfType>, expression: RootExpression): TypedObject<SelfType> {
+    private suspend fun evaluateRootExpression(evc: EvaluationContext, expression: RootExpression): TypedObject {
         return when {
             expression.isNothing -> objectGraph.nothing()
             expression.isSelf -> {
@@ -85,24 +85,24 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         }
     }
 
-    private suspend fun evaluateSpecial(evc: EvaluationContext<SelfType>, name: String): TypedObject<SelfType> {
+    private suspend fun evaluateSpecial(evc: EvaluationContext, name: String): TypedObject {
         // the name must exist as a property of the self which must be a tuple
         return evc.getOrInParent(name)
             ?: evc.self?.let { evaluatePropertyName(it, PropertyName(name)) }
             ?: error("Evaluation Context does not contain '$name' and there is no 'self' object with that property name")
     }
 
-    private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject<SelfType> =
+    private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject =
         objectGraph.createPrimitiveValue(expression.qualifiedTypeName, expression.value)
 
-    private suspend fun evaluateFunctionCall(evc: EvaluationContext<SelfType>, expression: FunctionCall): TypedObject<SelfType> {
+    private suspend fun evaluateFunctionCall(evc: EvaluationContext, expression: FunctionCall): TypedObject {
         val argValues = expression.arguments.map {
             evaluateExpression(evc, it)
         }
         return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues)
     }
 
-    private suspend fun evaluateNavigation(evc: EvaluationContext<SelfType>, expression: NavigationExpression): TypedObject<SelfType> {
+    private suspend fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject {
         // start should be a RootExpression or LiteralExpression
         val st = expression.start
         val start = evaluateExpression(evc, st)
@@ -117,11 +117,11 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         return result
     }
 
-    private suspend fun evaluatePropertyName(obj: TypedObject<SelfType>, propertyName: PropertyName): TypedObject<SelfType> {
-        return objectGraph.getProperty(obj, propertyName.value)
+    private suspend fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
+        return obj.getPropertySuspend(propertyName.value)
     }
 
-    private suspend fun evaluateMethodCall(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, methodName: MethodName, args: List<Expression>): TypedObject<SelfType> {
+    private suspend fun evaluateMethodCall(evc: EvaluationContext, obj: TypedObject, methodName: MethodName, args: List<Expression>): TypedObject {
 //        val type = obj.type
 //        val md = type.resolvedDeclaration.findAllMethodOrNull(methodName)
 //        return when (md) {
@@ -134,12 +134,12 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         val argValues = args.map {
             evaluateExpression(evc, it)
         }
-        return objectGraph.executeMethod(obj, methodName.value, argValues)
+        return obj.executeMethodSuspend(methodName.value, argValues)
 //            }
 //        }
     }
 
-    private suspend fun evaluateIndexOperation(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, indices: List<Expression>): TypedObject<SelfType> {
+    private suspend fun evaluateIndexOperation(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
         return when {
             obj.type.resolvedDeclaration.conformsTo(StdLibDefault.List) -> evaluateIndexOperationOnList(evc, obj, indices)
             obj.type.resolvedDeclaration.conformsTo(StdLibDefault.Map) -> evaluateIndexOperationOnMap(evc, obj, indices)
@@ -150,7 +150,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         }
     }
 
-    private suspend fun evaluateIndexOperationOnList(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, indices: List<Expression>): TypedObject<SelfType> {
+    private suspend fun evaluateIndexOperationOnList(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
         return when (indices.size) {
             1 -> {
                 val idx = evaluateExpression(evc, indices[0])
@@ -198,7 +198,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         }
     }
 
-    private suspend fun evaluateIndexOperationOnMap(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, indices: List<Expression>): TypedObject<SelfType> {
+    private suspend fun evaluateIndexOperationOnMap(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
         return when (indices.size) {
             1 -> {
                 val idx = evaluateExpression(evc, indices[0])
@@ -255,7 +255,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         }
     }
 
-    private suspend fun evaluateInfix(evc: EvaluationContext<SelfType>, expression: InfixExpression): TypedObject<SelfType> {
+    private suspend fun evaluateInfix(evc: EvaluationContext, expression: InfixExpression): TypedObject {
         //TODO: Operator precedence
         var result = evaluateExpression(evc, expression.expressions.first())
         for (i in expression.operators.indices) {
@@ -268,7 +268,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
     }
 
     //TODO: add operator functions to StdLib
-    private fun evaluateInfixOperator(lhs: TypedObject<SelfType>, op: String, rhs: TypedObject<SelfType>): TypedObject<SelfType> = when (op) {
+    private fun evaluateInfixOperator(lhs: TypedObject, op: String, rhs: TypedObject): TypedObject = when (op) {
         // logical
         "and" -> when {
             // both nothing -> nothing
@@ -464,7 +464,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         }
     }
 
-    private suspend fun evaluateWith(evc: EvaluationContext<SelfType>, expression: WithExpression): TypedObject<SelfType> {
+    private suspend fun evaluateWith(evc: EvaluationContext, expression: WithExpression): TypedObject {
         val newSelf = evaluateExpression(evc, expression.withContext)
         return when {
             objectGraph.nothing() == newSelf -> newSelf
@@ -476,7 +476,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         }
     }
 
-    private suspend fun evaluateWhen(evc: EvaluationContext<SelfType>, expression: WhenExpression): TypedObject<SelfType> {
+    private suspend fun evaluateWhen(evc: EvaluationContext, expression: WhenExpression): TypedObject {
         for (opt in expression.options) {
             val condValue = evaluateExpression(evc, opt.condition)
             when (condValue.type) {
@@ -495,7 +495,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         return evaluateExpression(evc, expression.elseOption.expression)
     }
 
-    private suspend fun evaluateLambda(evc: EvaluationContext<SelfType>, expression: LambdaExpression): TypedObject<SelfType> {
+    private suspend fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValue { it ->
             val newEvc = evc.child(mapOf("it" to it))
             evaluateExpression(newEvc, expression.expression)
@@ -503,14 +503,14 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         return lambda
     }
 
-    private suspend fun evaluateCast(evc: EvaluationContext<SelfType>, expression: CastExpression): TypedObject<SelfType> {
+    private suspend fun evaluateCast(evc: EvaluationContext, expression: CastExpression): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
         return objectGraph.cast(exprResult, tgtType)
     }
 
-    private suspend fun evaluateTypeTest(evc: EvaluationContext<SelfType>, expression: TypeTestExpression): TypedObject<SelfType> {
+    private suspend fun evaluateTypeTest(evc: EvaluationContext, expression: TypeTestExpression): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
@@ -518,7 +518,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
         return objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, res)
     }
 
-    private suspend fun evaluateGroup(evc: EvaluationContext<SelfType>, expression: GroupExpression): TypedObject<SelfType> {
+    private suspend fun evaluateGroup(evc: EvaluationContext, expression: GroupExpression): TypedObject {
         return evaluateExpression(evc, expression.expression)
     }
 
@@ -530,18 +530,18 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
     }
 
     // mutation
-    private suspend fun evaluateCreateTuple(evc: EvaluationContext<SelfType>, expression: CreateTupleExpression): TypedObject<SelfType> {
+    private suspend fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
         val typeArgs = mutableListOf<TypeArgumentNamed>()
         val tuple = objectGraph.createTupleValue(typeArgs)
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            objectGraph.setProperty(tuple, it.lhsPropertyName, value)
+            tuple.setPropertySuspend(it.lhsPropertyName, value)
             typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
         }
         return tuple
     }
 
-    private suspend fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
+    private suspend fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
         return constructObject(evc, expression).also { self ->
             propertyAssignmentBlock(evc, self, expression.propertyAssignments)
         }
@@ -551,7 +551,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
      * Only construct the object, do not execute the property assignment block.
      * Separation of construct and setProperties needed for M2m interpreter
      */
-    suspend fun constructObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
+    suspend fun constructObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
         val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
         return when (typeDef) {
             null -> error("Type not found ${expression.possiblyQualifiedTypeName}")
@@ -587,10 +587,10 @@ open class ExpressionsInterpreterOverTypedObjectSuspending<SelfType : Any>(
      * Execute a property assignment block for self.
      * Separation of construct and setProperties needed for M2m interpreter
      */
-    suspend fun propertyAssignmentBlock(evc: EvaluationContext<SelfType>, self: TypedObject<SelfType>, propertyAssignments: List<AssignmentStatement>) {
+    suspend fun propertyAssignmentBlock(evc: EvaluationContext, self: TypedObject, propertyAssignments: List<AssignmentStatement>) {
         propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            objectGraph.setProperty(self, it.lhsPropertyName, value)
+            self.setPropertySuspend( it.lhsPropertyName, value)
         }
     }
 }

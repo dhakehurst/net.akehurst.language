@@ -42,7 +42,7 @@ class SemanticAnalyserSimple(
 ) : SemanticAnalyser<Asm, SentenceContextAny> {
 
     companion object {
-         fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject<AsmValue>, crossReferenceDomain: CrossReferenceDomain, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
+         fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject, crossReferenceDomain: CrossReferenceDomain, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
             return when {
                 //crossReferenceModel.isScopeDefinedFor(self.qualifiedTypeName).not() -> null
                 else -> {

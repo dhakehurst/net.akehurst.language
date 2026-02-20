@@ -18,6 +18,7 @@
 package net.akehurst.language.types.api
 
 import net.akehurst.language.base.api.*
+import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
 
 interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {

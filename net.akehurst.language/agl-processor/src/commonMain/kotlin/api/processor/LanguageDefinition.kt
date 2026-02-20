@@ -134,7 +134,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val formatString: FormatString?
 
     //val formatterModel:AglFormatterModel?
-    val formatter: Formatter<AsmType>?
+    val formatter: Formatter?
 
     /** the options for parsing/processing the grammarStr for this language */
     //var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?

@@ -489,7 +489,7 @@ class AsmSetSimple(
         else -> this.elements == other.elements
     }
 
-    override fun toString(): String = elements.toString()
+    override fun toString(): String = "Set(${elements.joinToString()})"
 }
 
 class AsmListSimple(
@@ -522,7 +522,7 @@ class AsmListSimple(
         else -> this.elements == other.elements
     }
 
-    override fun toString(): String = elements.toString()
+    override fun toString(): String = "List(${elements.joinToString()})"
 }
 
 class AsmListSeparatedSimple(

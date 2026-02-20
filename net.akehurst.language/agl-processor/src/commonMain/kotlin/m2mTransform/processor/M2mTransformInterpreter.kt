@@ -39,12 +39,12 @@ import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.ValueType
 import net.akehurst.language.types.asm.StdLibDefault
 
-data class M2MTransformResult<OT : Any>(
+data class M2MTransformResult(
     val issues: IssueHolder,
-    val record: Map<M2mTransformRule, MappingRecord<OT>>,
+    val record: Map<M2mTransformRule, MappingRecord>,
     val targetDomainRef: DomainReference
 ) {
-    val targets: List<TypedObject<OT>>
+    val targets: List<TypedObject>
         get() = record.values.flatMap {
             if (it.rule.isTop) {
                 it.alternatives.mapNotNull { it[targetDomainRef] }
@@ -65,57 +65,57 @@ data class M2MTransformResult<OT : Any>(
     }
 }
 
-data class TemplateMatchAlternatives<OT : Any>(
-    val alternatives: List<TemplateMatchResult<OT>>
+data class TemplateMatchAlternatives(
+    val alternatives: List<TemplateMatchResult>
 ) {
     val isMatch: Boolean get() = alternatives.isNotEmpty()
 
-    fun merge(): TemplateMatchResult<OT> = this.alternatives.merge()
+    fun merge(): TemplateMatchResult = this.alternatives.merge()
 
-    fun withVariable(name: String, value: TypedObject<OT>): TemplateMatchAlternatives<OT> {
+    fun withVariable(name: String, value: TypedObject): TemplateMatchAlternatives {
         return TemplateMatchAlternatives(
             this.alternatives.map { it.withVariable(name, value) }
         )
     }
 }
 
-data class TemplateMatchResult<OT : Any>(
+data class TemplateMatchResult(
     val isMatch: Boolean,
-    val matchedVariables: Map<String, TypedObject<OT>>
+    val matchedVariables: Map<String, TypedObject>
 ) {
     companion object {
-        fun <OT : Any> EMPTY() = TemplateMatchResult<OT>(true, emptyMap())
-        fun <OT : Any> Collection<TemplateMatchResult<OT>>.merge() = this.fold(TemplateMatchResult.EMPTY<OT>()) { acc, it -> acc.merge(it) }
+        fun  EMPTY() = TemplateMatchResult(true, emptyMap())
+        fun Collection<TemplateMatchResult>.merge() = this.fold(TemplateMatchResult.EMPTY()) { acc, it -> acc.merge(it) }
     }
 
-    fun getValueNamed(name: String): TypedObject<OT>? {
+    fun getValueNamed(name: String): TypedObject? {
         return this.matchedVariables[name]
     }
 
-    fun withVariable(name: String, value: TypedObject<OT>): TemplateMatchResult<OT> =
+    fun withVariable(name: String, value: TypedObject): TemplateMatchResult =
         TemplateMatchResult(
             this.isMatch,
             matchedVariables + Pair(name, value)
         )
 
-    fun merge(other: TemplateMatchResult<OT>): TemplateMatchResult<OT> {
+    fun merge(other: TemplateMatchResult): TemplateMatchResult {
         return TemplateMatchResult(this.isMatch && other.isMatch, this.matchedVariables + other.matchedVariables)
     }
 }
 
-data class MappingRecord<OT : Any>(
+data class MappingRecord(
     val rule: M2mTransformRule,
     /**
      * multiple source objects (or combinations of sources) could be matched by each top rule
      */
-    val alternatives: List<Map<DomainReference, TypedObject<OT>>>
+    val alternatives: List<Map<DomainReference, TypedObject>>
 ) {
     companion object {
-        fun <OT : Any> EMPTY(rule: M2mTransformRule) = MappingRecord<OT>(rule, emptyList())
-        fun <OT : Any> Collection<MappingRecord<OT>>.merge(rule: M2mTransformRule) = this.fold(MappingRecord.EMPTY<OT>(rule)) { acc, it -> acc.merge(it) }
+        fun EMPTY(rule: M2mTransformRule) = MappingRecord(rule, emptyList())
+        fun Collection<MappingRecord>.merge(rule: M2mTransformRule) = this.fold(MappingRecord.EMPTY(rule)) { acc, it -> acc.merge(it) }
     }
 
-    fun merge(other: MappingRecord<OT>): MappingRecord<OT> {
+    fun merge(other: MappingRecord): MappingRecord {
         check(rule == other.rule) { "Can only merge MappingRecord if rules are the same." }
         return MappingRecord(rule, alternatives + other.alternatives)
     }
@@ -142,33 +142,33 @@ class M2mTransformExecutionContext(
 
 }
 
-class M2mTransformExecution<OT : Any>(
+class M2mTransformExecution(
     val targetTransform: M2mTransformRuleSet,
     val targetDomainRef: DomainReference,
-    val domainAccessorMutator: Map<DomainReference, ObjectGraphAccessorMutator<OT>>,
+    val domainAccessorMutator: Map<DomainReference, ObjectGraphAccessorMutator>,
     val issues: IssueHolder
 ) {
 
     val executionContext = M2mTransformExecutionContext()
 
-    val records: Map<M2mTransformRule, MappingRecord<OT>> = mutableMapOf()
+    val records: Map<M2mTransformRule, MappingRecord> = mutableMapOf()
     val targetAccessorMutator = domainAccessorMutator[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
 
-    fun addRecord(rule: M2mTransformRule, alternatives: List<Map<DomainReference, TypedObject<OT>>>) {
+    fun addRecord(rule: M2mTransformRule, alternatives: List<Map<DomainReference, TypedObject>>) {
         val rec = records[rule]
         if (null == rec) {
-            (records as MutableMap)[rule] = MappingRecord<OT>(rule, alternatives)
+            (records as MutableMap)[rule] = MappingRecord(rule, alternatives)
         } else {
-            (records as MutableMap)[rule] = rec.merge(MappingRecord<OT>(rule, alternatives))
+            (records as MutableMap)[rule] = rec.merge(MappingRecord(rule, alternatives))
         }
     }
 
-    fun addRecord(rule: M2mTransformRule, mapping: Map<DomainReference, TypedObject<OT>>) {
+    fun addRecord(rule: M2mTransformRule, mapping: Map<DomainReference, TypedObject>) {
         val rec = records[rule]
         if (null == rec) {
-            (records as MutableMap)[rule] = MappingRecord<OT>(rule, listOf(mapping))
+            (records as MutableMap)[rule] = MappingRecord(rule, listOf(mapping))
         } else {
-            (records as MutableMap)[rule] = rec.merge(MappingRecord<OT>(rule, listOf(mapping)))
+            (records as MutableMap)[rule] = rec.merge(MappingRecord(rule, listOf(mapping)))
         }
     }
 
@@ -195,9 +195,9 @@ class M2mTransformExecution<OT : Any>(
     fun evaluationTrace(msg: String) {}
 }
 
-class M2mTransformInterpreter<OT : Any>(
+class M2mTransformInterpreter(
     val m2m: M2mTransformDomain,
-    val domainAccessorMutatorByDomainName: Map<SimpleName, ObjectGraphAccessorMutator<OT>>,
+    val domainAccessorMutatorByDomainName: Map<SimpleName, ObjectGraphAccessorMutator>,
     val issues: IssueHolder = IssueHolder(LanguageProcessorPhase.INTERPRET)
 ) {
 
@@ -377,7 +377,7 @@ class M2mTransformInterpreter<OT : Any>(
             return subsetsOfTail + subsetsWithHead
         }
 
-        fun <OT : Any> List<TemplateMatchAlternatives<OT>>.cartesianProduct(): TemplateMatchAlternatives<OT> {
+        fun <OT : Any> List<TemplateMatchAlternatives>.cartesianProduct(): TemplateMatchAlternatives {
             val lists = this.map { it.alternatives }
             val cp = lists.cartesianProduct()
             val alts = cp.map { it.merge() }
@@ -440,7 +440,7 @@ class M2mTransformInterpreter<OT : Any>(
      * @param targetDomainRef reference to the domain that is the target of the transformation
      * @param domainGraphs the objects for each source domain, keyed by the domain reference
      */
-    fun transform(targetTransform: M2mTransformRuleSet, targetDomainRef: DomainReference, domainGraphs: Map<DomainReference, List<TypedObject<OT>>>): M2MTransformResult<OT> {
+    fun transform(targetTransform: M2mTransformRuleSet, targetDomainRef: DomainReference, domainGraphs: Map<DomainReference, List<TypedObject>>): M2MTransformResult {
         val domainAccessorMutator = targetTransform.domainParameters.entries.associate { (k, v) ->
             Pair(k, domainAccessorMutatorByDomainName[v] ?: error("Domain ObjectGraph not found for domain $k"))
         }
@@ -461,10 +461,10 @@ class M2mTransformInterpreter<OT : Any>(
      * returns the MappingRecord made specifically by executing this rule
      */
     private fun executeRule(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         rule: M2mTransformRule,
-        source: Map<DomainReference, List<TypedObject<OT>>>
-    ): List<MappingRecord<OT>> = when (rule) {
+        source: Map<DomainReference, List<TypedObject>>
+    ): List<MappingRecord> = when (rule) {
         is M2mTransformAbstractRule -> executeAbstract(m2mExecution, rule, source)
         is M2MTransformRelation -> executeRelation(m2mExecution, rule, source)
         is M2MTransformMapping -> executeMapping(m2mExecution, rule, source)
@@ -473,10 +473,10 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     private fun executeAbstract(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         rule: M2mTransformAbstractRule,
-        source: Map<DomainReference, List<TypedObject<OT>>>,
-    ): List<MappingRecord<OT>> {
+        source: Map<DomainReference, List<TypedObject>>,
+    ): List<MappingRecord> {
         val subrules = m2mExecution.targetTransform.rule.values.filter { r -> r !is M2mTransformAbstractRule && r.conformsTo(rule) }
         val records = subrules.flatMap { sr ->
             executeRule(m2mExecution, sr, source)
@@ -490,10 +490,10 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     private fun executeMapping(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         rule: M2MTransformMapping,
-        source: Map<DomainReference, List<TypedObject<OT>>>
-    ): List<MappingRecord<OT>> {
+        source: Map<DomainReference, List<TypedObject>>
+    ): List<MappingRecord> {
         m2mExecution.evaluationStep("Executing mapping rule '${rule.name.value}'.")
         // for each domain reference get the match alternatives for each source object
         // Map of DomainReference -> List< TemplateMatchAlternatives per object >
@@ -569,10 +569,10 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     private fun executeRelation(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         rule: M2MTransformRelation,
-        source: Map<DomainReference, List<TypedObject<OT>>>
-    ): List<MappingRecord<OT>> {
+        source: Map<DomainReference, List<TypedObject>>
+    ): List<MappingRecord> {
         m2mExecution.evaluationStep("Executing relation rule '${rule.name.value}'.")
         val domToListOfAlts = matchSourceVariables(m2mExecution, rule, source)
         val res = when {
@@ -646,7 +646,7 @@ class M2mTransformInterpreter<OT : Any>(
                                 rule.where.isEmpty() -> varsAfterCreation
                                 else -> rule.where.map {
                                     executeWhere(m2mExecution, rule, it, varsAfterCreation)
-                                }.fold(mapOf<String, TypedObject<OT>>()) { acc, it -> acc + it }
+                                }.fold(mapOf<String, TypedObject>()) { acc, it -> acc + it }
                             }
 
                             // setProperties
@@ -672,14 +672,14 @@ class M2mTransformInterpreter<OT : Any>(
         return listOf(MappingRecord(rule, res))
     }
 
-    private fun executeTable(m2mExecution: M2mTransformExecution<OT>, rule: M2MTransformTable, source: Map<DomainReference, List<TypedObject<OT>>>): List<MappingRecord<OT>> {
+    private fun executeTable(m2mExecution: M2mTransformExecution, rule: M2MTransformTable, source: Map<DomainReference, List<TypedObject>>): List<MappingRecord> {
         m2mExecution.evaluationStep("Executing table rule '${rule.name.value}'.")
         val alternatives = source.cartesianProduct().mapNotNull { srcAlt ->
             val mapping = rule.values.firstNotNullOfOrNull { vs ->
                 val srcValues = srcAlt.mapNotNull { (srcDomainRef, v) ->
                     val srcObjectGraph = m2mExecution.domainAccessorMutator[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
-                    val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(srcObjectGraph, m2mExecution.issues)
-                    val evc = EvaluationContext.of(emptyMap<String, TypedObject<OT>>()) //TODO: are there any variables !
+                    val exprInterp = ExpressionsInterpreterOverTypedObject(srcObjectGraph, m2mExecution.issues)
+                    val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[srcDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
                     val match = srcObjectGraph.equalTo(v, value)
@@ -693,8 +693,8 @@ class M2mTransformInterpreter<OT : Any>(
                 if (srcValues.isEmpty()) {
                     null
                 } else {
-                    val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(m2mExecution.targetAccessorMutator, m2mExecution.issues)
-                    val evc = EvaluationContext.of(emptyMap<String, TypedObject<OT>>()) //TODO: are there any variables !
+                    val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator, m2mExecution.issues)
+                    val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[m2mExecution.targetDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
                     srcValues + Pair(m2mExecution.targetDomainRef, value)
@@ -709,10 +709,10 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     private fun matchSourceVariables(
-        m2mExecution: M2mTransformExecution<OT>, //FIXME: only needed for 'issues' - just pass issues!
+        m2mExecution: M2mTransformExecution, //FIXME: only needed for 'issues' - just pass issues!
         rule: M2mTransformPatternRule,
-        source: Map<DomainReference, List<TypedObject<OT>>>,
-    ): Map<DomainReference, TemplateMatchAlternatives<OT>> {
+        source: Map<DomainReference, List<TypedObject>>,
+    ): Map<DomainReference, TemplateMatchAlternatives> {
         val srcDomainRefs = rule.domainSignature.filterKeys { k -> k != m2mExecution.targetDomainRef }
         val results = srcDomainRefs.map { (srcDomainRef, srcDomainItem) ->
             val srcOg = m2mExecution.domainAccessorMutator[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
@@ -729,12 +729,12 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun matchVariablesFromRhs(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
-        accessorMutator: ObjectGraphAccessorMutator<OT>,
-        src: TypedObject<OT>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
+        accessorMutator: ObjectGraphAccessorMutator,
+        src: TypedObject,
         rhs: PropertyTemplateRhs
-    ): TemplateMatchAlternatives<OT> =
+    ): TemplateMatchAlternatives =
         when (rhs) {
             is PropertyTemplateExpression -> {
                 val mr = matchVariablesFromPropertyTemplateExpression(m2mExecution, variables, accessorMutator, src, rhs)
@@ -755,12 +755,12 @@ class M2mTransformInterpreter<OT : Any>(
      * always returns isMatch==true
      */
     fun matchVariablesFromPropertyTemplateExpression(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
-        accessorMutator: ObjectGraphAccessorMutator<OT>,
-        lhs: TypedObject<OT>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
+        accessorMutator: ObjectGraphAccessorMutator,
+        lhs: TypedObject,
         rhs: PropertyTemplateExpression
-    ): TemplateMatchResult<OT> {
+    ): TemplateMatchResult {
         // either :
         // 1) rhs is a free-variable with no value set, in which case set it to the lhs
         // 2) rhs is an expression with a value that matches the lhs
@@ -771,7 +771,7 @@ class M2mTransformInterpreter<OT : Any>(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(accessorMutator, m2mExecution.issues)
+                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator, m2mExecution.issues)
                 val evc = EvaluationContext.of(variables)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = accessorMutator.equalTo(lhs, value)
@@ -781,18 +781,18 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun matchVariablesFromObjectTemplate(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
         objectTemplate: ObjectTemplate,
-        accessorMutator: ObjectGraphAccessorMutator<OT>,
-        src: TypedObject<OT>
-    ): TemplateMatchAlternatives<OT> {
+        accessorMutator: ObjectGraphAccessorMutator,
+        src: TypedObject
+    ): TemplateMatchAlternatives {
         return when {
             objectTemplate.propertyTemplate.isEmpty() -> TemplateMatchAlternatives(listOf(TemplateMatchResult.EMPTY()))
             else -> {
                 val propTemplateMatches = objectTemplate.propertyTemplate.map { (k, v) ->
                     val rhsPat = v.rhs
-                    val lhs = accessorMutator.getProperty(src, k.value)
+                    val lhs = src.getProperty(k.value)
                     matchVariablesFromRhs(m2mExecution, variables, accessorMutator, lhs, rhsPat)
                 } //TODO: determine no match before cartesianProduct
                 val result = propTemplateMatches.map { it.alternatives }.cartesianProduct()
@@ -803,16 +803,16 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun matchVariablesFromCollectionTemplate(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
         collectionTemplate: CollectionTemplate,
-        accessorMutator: ObjectGraphAccessorMutator<OT>,
-        src: TypedObject<OT>
-    ): TemplateMatchAlternatives<OT> {
+        accessorMutator: ObjectGraphAccessorMutator,
+        src: TypedObject
+    ): TemplateMatchAlternatives {
         val result = when {
             src.type.isCollection -> {
                 // TODO: maybe a faster way to do it if NOT isSubset!
-                val elements = mutableListOf<TypedObject<OT>>()
+                val elements = mutableListOf<TypedObject>()
                 accessorMutator.forEachIndexed(src) { idx, el -> elements.add(el) } //TODO: find a way not to 'collect' the list
                 if (collectionTemplate.isSubset.not() && elements.size != collectionTemplate.elements.size) {
                     // TODO: should return a no match not error!
@@ -829,12 +829,12 @@ class M2mTransformInterpreter<OT : Any>(
     // get the different alternative combinations of objects from elements that (cover) match the defined templates
     // Set(  List(element-match per template)  )
     fun matchVariablesFromCollectionTemplateToElementsIn(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
         collectionTemplate: CollectionTemplate,
-        accessorMutator: ObjectGraphAccessorMutator<OT>,
-        elements: List<TypedObject<OT>>
-    ): List<TemplateMatchResult<OT>> {
+        accessorMutator: ObjectGraphAccessorMutator,
+        elements: List<TypedObject>
+    ): List<TemplateMatchResult> {
         val options = findCoveringSubsets2(
             cover = collectionTemplate.elements,
             bySubsetsOf = elements
@@ -849,11 +849,11 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun executeWhen(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         owningRule: M2mTransformRule,
         when_: Expression,
-        matchedVariables: Map<String, TypedObject<OT>>,
-    ): Pair<Boolean, Map<String, TypedObject<OT>>> {
+        matchedVariables: Map<String, TypedObject>,
+    ): Pair<Boolean, Map<String, TypedObject>> {
         // TODO: use an extended Expression evaluator that handles the RuleWhen options, so we can have compound when-expressions
         return when (when_) {
             is RuleWhenRelationHolds, is RuleWhenMappingHolds -> when_.resolved?.let { rule ->
@@ -878,7 +878,7 @@ class M2mTransformInterpreter<OT : Any>(
                     val targetDomainRefIdx = rule.domainSignature.keys.indexOf(m2mExecution.targetDomainRef)
                     val targetArg = when_.arguments.getOrNull(targetDomainRefIdx)
                     val tgtValue = found[m2mExecution.targetDomainRef]
-                    val vars: Map<String, TypedObject<OT>> = when (targetArg) {
+                    val vars: Map<String, TypedObject> = when (targetArg) {
                         null -> TODO()
                         is RootExpression -> when (tgtValue) {
                             null -> TODO()
@@ -896,14 +896,14 @@ class M2mTransformInterpreter<OT : Any>(
                 } ?: Pair(false, emptyMap())
             } ?: run {
                 m2mExecution.errorIssue("In 'when' clause of rule '${owningRule.name.value}', rule '${when_.ruleName.value}' is unresolved in '${m2mExecution.targetTransform.name.value}'.")
-                Pair(false, emptyMap<String, TypedObject<OT>>())
+                Pair(false, emptyMap<String, TypedObject>())
             }
 
             is RuleWhenRelationHoldsForAll -> TODO()
             is RuleWhenMappingHoldsForAll -> TODO()
             else -> {
                 val srcOg = m2mExecution.domainAccessorMutator.entries.filterNot { it.key == m2mExecution.targetDomainRef }.first().value //should never be null!
-                val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(srcOg, m2mExecution.issues) //FIXME: which og to use? all might be needed!
+                val exprInterp = ExpressionsInterpreterOverTypedObject(srcOg, m2mExecution.issues) //FIXME: which og to use? all might be needed!
                 val evc = EvaluationContext.of(matchedVariables)
                 val res = exprInterp.evaluateExpression(evc, when_)
                 val v: Boolean = when {
@@ -922,11 +922,11 @@ class M2mTransformInterpreter<OT : Any>(
      * returns matchedVariables + variables set by executing the where
      */
     fun executeWhere(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         owningRule: M2mTransformRule,
         where: RuleWhere,
-        matchedVariables: Map<String, TypedObject<OT>>,
-    ): Map<String, TypedObject<OT>> {
+        matchedVariables: Map<String, TypedObject>,
+    ): Map<String, TypedObject> {
         return when (where) { //TODO: support more complex expressions - override the expression interpreter to intercept function calls as rule-calls
             is RuleWhereCallRelation, is RuleWhereCallMapping -> where.resolved?.let { rule ->
                 val source = getSource(m2mExecution, rule, where.arguments, matchedVariables)
@@ -962,7 +962,7 @@ class M2mTransformInterpreter<OT : Any>(
                 val source = getSource(m2mExecution, rule, where.arguments, matchedVariables)
                 val tgtValue = when {
                     source.all { (k, v) -> v.all { it.type.isCollection } } -> {
-                        val sourceElements = mutableListOf<Map<DomainReference, List<TypedObject<OT>>>>()
+                        val sourceElements = mutableListOf<Map<DomainReference, List<TypedObject>>>()
                         val sourceCollType = mutableListOf<TypeInstance>()
                         source.entries.forEach { (dr, alts) ->
                             alts.forEach { to ->
@@ -1031,11 +1031,11 @@ class M2mTransformInterpreter<OT : Any>(
      * returns null if the where-rule matches nothing
      */
     fun executeRuleWhere(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         owningRule: M2mTransformRule,
         rule: M2mTransformRule,
-        source: Map<DomainReference, List<TypedObject<OT>>>
-    ): TypedObject<OT>? {
+        source: Map<DomainReference, List<TypedObject>>
+    ): TypedObject? {
         val recList = executeRule(m2mExecution, rule, source)
         val merged = recList.merge(rule)
         return when (merged.alternatives.size) {
@@ -1051,18 +1051,18 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun getSource(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         rule: M2mTransformRule,
         arguments: List<Expression>,
-        matchedVariables: Map<String, TypedObject<OT>>,
-    ): Map<DomainReference, List<TypedObject<OT>>> {
+        matchedVariables: Map<String, TypedObject>,
+    ): Map<DomainReference, List<TypedObject>> {
         val argsValues = arguments.mapIndexed { idx, argExpr ->
             val domainRef = rule.domainSignature.keys.elementAt(idx)
             Pair(domainRef, argExpr)
         }.associate { it }
         return (argsValues - m2mExecution.targetDomainRef).mapValues { (k, v) ->
             val og = m2mExecution.domainAccessorMutator[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-            val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(og, m2mExecution.issues)
+            val exprInterp = ExpressionsInterpreterOverTypedObject(og, m2mExecution.issues)
             val evc = EvaluationContext.of(matchedVariables)
             val res = exprInterp.evaluateExpression(evc, v)
             listOf(res)
@@ -1071,18 +1071,18 @@ class M2mTransformInterpreter<OT : Any>(
 
     //TODO: merge code with above efficiently
     fun evaluateArgs(
-        m2mExecution: M2mTransformExecution<OT>,
+        m2mExecution: M2mTransformExecution,
         rule: M2mTransformRule,
         arguments: List<Expression>,
-        matchedVariables: Map<String, TypedObject<OT>>,
-    ): Map<DomainReference, List<TypedObject<OT>>> {
+        matchedVariables: Map<String, TypedObject>,
+    ): Map<DomainReference, List<TypedObject>> {
         val argsValues = arguments.mapIndexed { idx, argExpr ->
             val domainRef = rule.domainSignature.keys.elementAt(idx)
             Pair(domainRef, argExpr)
         }.associate { it }
         return argsValues.mapValues { (k, v) ->
             val og = m2mExecution.domainAccessorMutator[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-            val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(og, m2mExecution.issues)
+            val exprInterp = ExpressionsInterpreterOverTypedObject(og, m2mExecution.issues)
             val evc = EvaluationContext.of(matchedVariables)
             val res = exprInterp.evaluateExpression(evc, v)
             listOf(res)
@@ -1090,11 +1090,11 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun createFromRhs(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
         lhsType: TypeInstance,
         rhs: PropertyTemplateRhs
-    ): Pair<TypedObject<OT>, Map<String, TypedObject<OT>>> = when (rhs) {
+    ): Pair<TypedObject, Map<String, TypedObject>> = when (rhs) {
         is PropertyTemplateExpression -> createFromPropertyTemplateExpression(m2mExecution, variables, lhsType, rhs)
         is ObjectTemplate -> createFromObjectTemplate(m2mExecution, variables, lhsType, rhs)
         is CollectionTemplate -> createFromCollectionTemplate(m2mExecution, variables, lhsType, rhs)
@@ -1102,11 +1102,11 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun createFromPropertyTemplateExpression(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
         lhsType: TypeInstance,
         rhs: PropertyTemplateExpression
-    ): Pair<TypedObject<OT>, Map<String, TypedObject<OT>>> {
+    ): Pair<TypedObject, Map<String, TypedObject>> {
         val o = createFromExpression(m2mExecution, variables, lhsType, rhs.expression)
         val mv = rhs.identifier?.let { mapOf(it.value to o) } ?: emptyMap()
         return Pair(o, mv)
@@ -1116,12 +1116,12 @@ class M2mTransformInterpreter<OT : Any>(
      * returns value of expression evaluated in context of provided variables
      */
     fun createFromExpression(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
         lhsType: TypeInstance,
         expression: Expression
-    ): TypedObject<OT> {
-        val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(m2mExecution.targetAccessorMutator, m2mExecution.issues)
+    ): TypedObject {
+        val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator, m2mExecution.issues)
         return when (expression) {
             is CreateObjectExpression -> {
                 val evc = EvaluationContext.of(variables)
@@ -1137,22 +1137,22 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun createFromObjectTemplate(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
         lhsType: TypeInstance,
         objectTemplate: ObjectTemplate
-    ): Pair<TypedObject<OT>, Map<String, TypedObject<OT>>> {
+    ): Pair<TypedObject, Map<String, TypedObject>> {
         val decl = objectTemplate.type.resolvedDeclaration
         return when (decl) {
             is DataType, is ValueType -> {
-                val matchedVars = mutableMapOf<String, TypedObject<OT>>()
+                val matchedVars = mutableMapOf<String, TypedObject>()
                 val constructors = when (decl) {
                     is DataType -> decl.constructors
                     is ValueType -> decl.constructors
                     else -> error("Type '${decl.qualifiedName.value}' has no constructors")
                 }
                 val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-                val conArgs = mutableMapOf<String, TypedObject<OT>>()
+                val conArgs = mutableMapOf<String, TypedObject>()
                 objectTemplate.propertyTemplate.forEach { (k, v) ->
                     if (possibleConArgNames.contains(k.value)) {
                         val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
@@ -1171,17 +1171,17 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun createFromCollectionTemplate(
-        m2mExecution: M2mTransformExecution<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        variables: Map<String, TypedObject>,
         lhsType: TypeInstance,
         collectionTemplate: CollectionTemplate
-    ): Pair<TypedObject<OT>, Map<String, TypedObject<OT>>> {
+    ): Pair<TypedObject, Map<String, TypedObject>> {
         //collection may already have been created, (via when/where/etc) and be a captured variable
         val existing = collectionTemplate.identifier?.let { variables[it.value] }
         return when {
             null == existing -> {
                 // create new collection from template elements
-                val matchedVars = mutableMapOf<String, TypedObject<OT>>()
+                val matchedVars = mutableMapOf<String, TypedObject>()
                 val elements = collectionTemplate.elements.map {
                     val (o, mv) = createFromRhs(m2mExecution, variables, lhsType.typeArguments[0].type, it)
                     matchedVars.putAll(mv)
@@ -1194,14 +1194,14 @@ class M2mTransformInterpreter<OT : Any>(
 
             else -> {
                 // try to match template elements against existing collection elements, if not matched then create them.
-                val elements = mutableListOf<TypedObject<OT>>()
+                val elements = mutableListOf<TypedObject>()
                 m2mExecution.targetAccessorMutator.forEachIndexed(existing) { idx, el -> elements.add(el) } //TODO: find a way not to 'collect' the list
                 val matches = matchVariablesFromCollectionTemplateToElementsIn(m2mExecution, variables, collectionTemplate, m2mExecution.targetAccessorMutator, elements)
 
                 when {
                     matches.isEmpty() -> {
                         // create new collection from template elements
-                        val matchedVars = mutableMapOf<String, TypedObject<OT>>()
+                        val matchedVars = mutableMapOf<String, TypedObject>()
                         val elements = collectionTemplate.elements.map {
                             val (o, mv) = createFromRhs(m2mExecution, variables, lhsType.typeArguments[0].type, it)
                             matchedVars.putAll(mv)
@@ -1225,9 +1225,9 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun setPropertiesFromRhs(
-        m2mExecution: M2mTransformExecution<OT>,
-        obj: TypedObject<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        obj: TypedObject,
+        variables: Map<String, TypedObject>,
         rhs: PropertyTemplateRhs
     ) = when (rhs) {
         is PropertyTemplateExpression -> setPropertiesFromExpression(m2mExecution, obj, variables, rhs.expression)
@@ -1237,12 +1237,12 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun setPropertiesFromExpression(
-        m2mExecution: M2mTransformExecution<OT>,
-        obj: TypedObject<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        obj: TypedObject,
+        variables: Map<String, TypedObject>,
         expression: Expression
     ) {
-        val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(m2mExecution.targetAccessorMutator, m2mExecution.issues)
+        val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator, m2mExecution.issues)
         when (expression) {
             is CreateObjectExpression -> {
                 val evc = EvaluationContext.of(variables)
@@ -1256,23 +1256,23 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun setPropertiesFromObjectTemplate(
-        m2mExecution: M2mTransformExecution<OT>,
-        obj: TypedObject<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        obj: TypedObject,
+        variables: Map<String, TypedObject>,
         objectTemplate: ObjectTemplate
     ) {
         val decl = objectTemplate.type.resolvedDeclaration
         return when (decl) {
             // only DataTypes have properties that can be set
             is DataType -> {
-                val propValues = mutableMapOf<String, TypedObject<OT>>()
+                val propValues = mutableMapOf<String, TypedObject>()
                 objectTemplate.propertyTemplate.forEach { (k, v) ->
                     val propType = obj.type.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
 
                     // TODO: if property is a constructor arg, it is already set, else it will have no value yet
                     // can we deduce this rather than getting all properties and just checking for nothing
 
-                    val possiblePv = m2mExecution.targetAccessorMutator.getProperty(obj, k.value)
+                    val possiblePv = obj.getProperty(k.value)
                     val pv = when {
                         m2mExecution.targetAccessorMutator.isNothing(possiblePv) -> {
                             val (o, vars) = createFromRhs(m2mExecution, variables, propType, v.rhs)
@@ -1301,12 +1301,12 @@ class M2mTransformInterpreter<OT : Any>(
     }
 
     fun setPropertiesFromCollectionTemplate(
-        m2mExecution: M2mTransformExecution<OT>,
-        obj: TypedObject<OT>,
-        variables: Map<String, TypedObject<OT>>,
+        m2mExecution: M2mTransformExecution,
+        obj: TypedObject,
+        variables: Map<String, TypedObject>,
         collectionTemplate: CollectionTemplate
     ) {
-        val elements = mutableListOf<TypedObject<OT>>()
+        val elements = mutableListOf<TypedObject>()
         m2mExecution.targetAccessorMutator.forEachIndexed(obj) { i, el ->
             elements.add(el)
         }

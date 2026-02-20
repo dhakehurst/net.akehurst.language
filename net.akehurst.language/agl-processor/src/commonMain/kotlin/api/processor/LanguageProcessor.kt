@@ -105,7 +105,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
 
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
-    val formatter: Formatter<AsmType>?
+    val formatter: Formatter?
 
     val completionProvider: CompletionProvider<AsmType, ContextType>?
 
