@@ -32,6 +32,8 @@ interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
 
     fun findByQualifiedNameOrNull(qualifiedName: QualifiedName): TypeDefinition?
 
+    fun findFirstTypeFor(kclass: KClass<*>): TypeDefinition?
+
     fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypesNamespace>)
 
     // --- DefinitionBlock ---
@@ -48,6 +50,7 @@ data class AssociationEnd(
     val navigable: Boolean,
 ) {
     var byEvaluation: ((PropertyDeclaration) -> ((Any)->Any?)?)? = null
+    var byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any)->Any?)?)? = null
 }
 
 interface TypesNamespace : Namespace<TypeDefinition> {

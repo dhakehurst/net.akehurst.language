@@ -187,7 +187,8 @@ class AssociationBuilder(
             val endName: String,
             val isNullable: Boolean,
             val collectionTypeName: String?,
-            val byEvaluation: ((PropertyDeclaration) -> ((Any)->Any?)?)?
+            val byEvaluation: ((PropertyDeclaration) -> ((Any)->Any?)?)? = null,
+            val byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any)->Any?)?)? = null
         )
     }
 
@@ -209,6 +210,17 @@ class AssociationBuilder(
         _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluation))
     }
 
+    fun endSuspend(
+        possiblyQualifiedTypeName: String,
+        characteristics: Set<PropertyCharacteristic>,
+        endName: String,
+        isNullable: Boolean = false,
+        collectionTypeName: String? = null,
+        byEvaluation: ((PropertyDeclaration) -> (suspend (Any)->Any?)?)? = null
+    ) {
+        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluationSuspend = byEvaluation))
+    }
+
     fun build(): List<PropertyDeclaration> {
         val assocEnds = mutableListOf<AssociationEnd>()
         for (i in _ends.indices) {
@@ -222,6 +234,7 @@ class AssociationBuilder(
             val navigable = true //TODO
             val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable)
             ae.byEvaluation = thisEnd.byEvaluation
+            ae.byEvaluationSuspend = thisEnd.byEvaluationSuspend
             assocEnds.add(ae)
         }
         val props = _namespace.findOrCreateAssociation(assocEnds)

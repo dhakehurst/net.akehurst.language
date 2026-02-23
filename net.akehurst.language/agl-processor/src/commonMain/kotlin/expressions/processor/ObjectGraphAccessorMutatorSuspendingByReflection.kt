@@ -360,7 +360,7 @@ constructor(
                 }
             }
 
-            else -> externalGetter.typeFor(obj)
+            else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj)
         }
     }
 

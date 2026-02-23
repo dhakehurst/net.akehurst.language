@@ -119,6 +119,12 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
         return _namespace.value[nsn]?.findOwnedTypeNamed(tn)
     }
 
+    override fun findFirstTypeFor(kclass: KClass<*>): TypeDefinition? {
+        return namespace.firstNotNullOfOrNull { ns ->
+            ns.ownedTypes.firstOrNull{ it.implementation == kclass } //TODO: maybe create a cache for performance
+        }
+    }
+
     override fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypesNamespace>) {
         namespaces.forEach { this.addNamespace(it) }
         this.resolveImports()
@@ -768,13 +774,9 @@ abstract class TypesNamespaceAbstract(
                 } else {
                     val otherEnd = ends[j]
                     val otherEndDef = otherEnd.endType
-                    val byEval = thisEnd.byEvaluation
-                    val pd = when(byEval) {
-                        null -> otherEndDef.appendPropertyStored(thisEnd.endName,thisEndType, thisEnd.characteristics)
-                        else ->  otherEndDef.appendPropertyPrimitive(thisEnd.endName, thisEndType, "").also {
-                            (it as PropertyDeclarationAbstract).execution = byEval.invoke(it)
-                        }
-                    }
+                    val pd = otherEndDef.appendPropertyStored(thisEnd.endName,thisEndType, thisEnd.characteristics)
+                    thisEnd.byEvaluation?.let { (pd  as PropertyDeclarationAbstract).execution = it.invoke(pd) }
+                    thisEnd.byEvaluationSuspend?.let { (pd  as PropertyDeclarationAbstract).executionSuspend = it.invoke(pd) }
                     props.add(pd)
                 }
             }
