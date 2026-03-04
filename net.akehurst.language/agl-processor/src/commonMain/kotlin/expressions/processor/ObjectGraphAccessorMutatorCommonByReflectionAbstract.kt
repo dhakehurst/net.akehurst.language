@@ -26,19 +26,19 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 
 private class TypedObjectAny(
-    override val accessor: ObjectGraphAccessorMutatorCommon,
+    override val accessor: ObjectGraphAccessorMutator,
     override val type: TypeInstance,
     override val self: Any
 ) : TypedObject {
 
-    override fun getProperty(name: String) = (accessor as ObjectGraphAccessorMutator).getProperty(this, name)
-    override suspend fun getPropertySuspend(name: String) = (accessor as ObjectGraphAccessorMutatorSuspending).getProperty(this, name)
+    override fun getProperty(name: String) = accessor.getProperty(this, name)
+    override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
 
-    override fun setProperty(name: String, value: TypedObject) = (accessor as ObjectGraphAccessorMutator).setProperty(this, name, value)
-    override suspend fun setPropertySuspend(name: String, value: TypedObject) = (accessor as ObjectGraphAccessorMutatorSuspending).setProperty(this, name, value)
+    override fun setProperty(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setProperty(this, name, value) //TODO: Suspend version
 
-    override fun executeMethod(name: String, argValues: List<TypedObject>) = (accessor as ObjectGraphAccessorMutator).executeMethod(this, name, argValues)
-    override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = (accessor as ObjectGraphAccessorMutatorSuspending).executeMethod(this, name, argValues)
+    override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
+    override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
 
     override fun asString(indent: Indent): String = "$indent$self"
 
@@ -67,7 +67,7 @@ data class ObjectGraphEdgeAny(
 abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureType : Any>(
     override var typesDomain: TypesDomain,
     val issues: IssueHolder,
-) : ObjectGraphAccessorMutatorCommon {
+) : ObjectGraphAccessorMutator {
 
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<StructureType>>()
 
@@ -93,9 +93,9 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             is Float -> typedAs(obj, StdLibDefault.Real)
             is Double -> typedAs(obj, StdLibDefault.Real)
             is String -> typedAs(obj, StdLibDefault.String)
-            is List<*> -> createCollection(StdLibDefault.List.qualifiedName, obj.map { toTypedObject(it) })
-            is Set<*> -> createCollection(StdLibDefault.Set.qualifiedName, obj.map { toTypedObject(it) }.toSet())
-            is Map<*, *> -> createCollection(
+            is List<*> -> createCollectionFromQualifiedName(StdLibDefault.List.qualifiedName, obj.map { toTypedObject(it) })
+            is Set<*> -> createCollectionFromQualifiedName(StdLibDefault.Set.qualifiedName, obj.map { toTypedObject(it) }.toSet())
+            is Map<*, *> -> createCollectionFromQualifiedName(
                 StdLibDefault.Map.qualifiedName,
                 obj.map { (k, v) ->
                     val key = toTypedObject(k)
@@ -129,37 +129,62 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return typedAs(tuple, tupleType.type(typeArgs))
     }
 
-    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject {
-        return when (qualifiedTypeName) {
+    override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {
+        return when (collectionType.qualifiedTypeName) {
             StdLibDefault.List.qualifiedName -> {
-                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType //TODO: should really take comon supertype !
-                val type = StdLibDefault.List.type(listOf(elType.asTypeArgument))
+                val elTypeArg = collectionType.typeArguments.firstOrNull()
+                /* this computes the 'real' list type, but it is expensive !
+               val elType = when (elTypeArg) {
+                    null -> {
+                        val first = collection.firstOrNull()
+                        when (first) {
+                            null -> StdLibDefault.AnyType
+                            else -> collection
+                                .runningFold(first.type) { acc, it -> acc.commonSuperType(it.type) }
+                                .takeWhile { it != StdLibDefault.AnyType }
+                                .last()
+                        }
+                    }
+
+                    else -> elTypeArg.type
+                }*/
+                val type = StdLibDefault.List.type(listOf(elTypeArg ?: StdLibDefault.AnyType.asTypeArgument))
                 typedAs(collection.toList(), type)
             }
 
             StdLibDefault.ListSeparated.qualifiedName -> {
                 val list = collection.toList()
-                val elType = list.getOrNull(0)?.type ?: StdLibDefault.AnyType
-                val sepType = list.getOrNull(1)?.type ?: StdLibDefault.AnyType
+                val elType = collectionType.typeArguments.getOrNull(0)?.type ?: StdLibDefault.AnyType
+                val sepType = collectionType.typeArguments.getOrNull(1)?.type ?: StdLibDefault.AnyType
                 typedAs(list.toSeparatedList(), StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)))
             }
 
             StdLibDefault.Set.qualifiedName -> {
-                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType //TODO: should really take comon supertype !
+                val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
                 val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
                 typedAs(collection.toSet(), type)
             }
 
             StdLibDefault.Map.qualifiedName -> {
-                val fstElType = collection.firstOrNull()?.type ?: StdLibDefault.Pair.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
-                val keyType = fstElType.typeArguments[0]
-                val valType = fstElType.typeArguments[1]
+                val keyType = collectionType.typeArguments.getOrNull(0)?.type ?: StdLibDefault.AnyType
+                val valType = collectionType.typeArguments.getOrNull(1)?.type ?: StdLibDefault.AnyType
                 val map = collection.associate { it.self as Pair<Any, Any> }
-                typedAs(map, StdLibDefault.Map.type(listOf(keyType, valType)))
+                typedAs(map, StdLibDefault.Map.type(listOf(keyType.asTypeArgument, valType.asTypeArgument)))
             }
 
+            else -> error("Unsupported collection type: '${collectionType.qualifiedTypeName.value}'")
+        }
+    }
+
+    override fun createCollectionFromQualifiedName(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject {
+        val colType = when (qualifiedTypeName) {
+            StdLibDefault.List.qualifiedName -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.ListSeparated.qualifiedName -> StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.Set.qualifiedName -> StdLibDefault.Set.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.Map.qualifiedName -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
             else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
         }
+        return createCollection(colType, collection)
     }
 
     override fun valueOf(value: TypedObject): Any = untyped(value)
@@ -240,5 +265,6 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         TODO("Needs a Komposite walker!")
         return ObjectGraphAny(nodes, edges)
     }
+
 }
 

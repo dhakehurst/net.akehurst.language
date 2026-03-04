@@ -118,25 +118,32 @@ open class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
-        return obj.getProperty(propertyName.value)
+        return when {
+            objectGraph.isNothing(obj) -> {
+                issues.warn(null, $$"Cannot get property '$${propertyName.value}' on $nothing, returning $nothing.")
+                objectGraph.nothing()
+            }
+
+            else -> {
+                obj.getProperty(propertyName.value)
+            }
+        }
     }
 
     private fun evaluateMethodCall(evc: EvaluationContext, obj: TypedObject, methodName: MethodName, args: List<Expression>): TypedObject {
-//        val type = obj.type
-//        val md = type.resolvedDeclaration.findAllMethodOrNull(methodName)
-//        return when (md) {
-//            null -> {
-//                issues.error(null, "Trying to evaluate MethodCall, but method '${methodName.value}' not found on type '${obj.type.typeName}'")
-//                objectGraph.nothing()
-//            }
-//
-//            else -> {
-        val argValues = args.map {
-            evaluateExpression(evc, it)
+        return when {
+            objectGraph.isNothing(obj) -> {
+                issues.warn(null, $$"Cannot call method '$${methodName.value}' on on $nothing, returning $nothing.")
+                objectGraph.nothing()
+            }
+
+            else -> {
+                val argValues = args.map {
+                    evaluateExpression(evc, it)
+                }
+                obj.executeMethod(methodName.value, argValues)
+            }
         }
-        return obj.executeMethod( methodName.value, argValues)
-//            }
-//        }
     }
 
     private fun evaluateIndexOperation(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
@@ -230,9 +237,9 @@ open class ExpressionsInterpreterOverTypedObject(
                                     elemType.resolvedDeclaration is TupleType -> objectGraph.cast(elem, elemType)
                                     elemType.conformsTo(valueType) -> objectGraph.cast(elem, elemType)
                                     else -> {
-                                        issues.error(
+                                        issues.warn(
                                             null,
-                                            "Map element '$elem' of type '${elem.type.qualifiedTypeName}' does not conform to the expected Map element type of '${valueType}'"
+                                            "Map element '$elem' does not conform to the expected Map element value type of '${valueType}', using '$elemType'."
                                         )
                                         objectGraph.cast(elem, elemType)
                                     }
@@ -535,7 +542,7 @@ open class ExpressionsInterpreterOverTypedObject(
         val tuple = objectGraph.createTupleValue(typeArgs)
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            tuple.setProperty( it.lhsPropertyName, value)
+            tuple.setProperty(it.lhsPropertyName, value)
             typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
         }
         return tuple
@@ -590,7 +597,7 @@ open class ExpressionsInterpreterOverTypedObject(
     fun propertyAssignmentBlock(evc: EvaluationContext, self: TypedObject, propertyAssignments: List<AssignmentStatement>) {
         propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            self.setProperty( it.lhsPropertyName, value)
+            self.setProperty(it.lhsPropertyName, value)
         }
     }
 }

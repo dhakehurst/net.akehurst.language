@@ -86,15 +86,15 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
               ;
             
             functionCall = IDENTIFIER '(' argumentList ')' ;
-            tuple = 'tuple' assignmentBlock ;
             object = possiblyQualifiedName constructorArguments assignmentBlock ;
             constructorArguments = '(' [assignment / ',']* ')' ;
+            tuple = 'tuple' assignmentBlock ;
             assignmentBlock = '{' assignmentList  '}' ;
             assignmentList = assignment* ;
             assignment = propertyName grammarRuleIndex? ASSIGN_OP expression ;
+            leaf ASSIGN_OP = ':=' | '+=' ;
             propertyName = SPECIAL | IDENTIFIER ;
             grammarRuleIndex = '$' POSITIVE_INTEGER ;
-            leaf ASSIGN_OP = ':=' | '+=' ;
                 
             with = 'with' '(' expression ')' expression ;
             

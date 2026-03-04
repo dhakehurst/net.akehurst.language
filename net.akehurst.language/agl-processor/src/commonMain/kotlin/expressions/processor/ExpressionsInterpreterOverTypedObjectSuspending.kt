@@ -27,7 +27,7 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
 open class ExpressionsInterpreterOverTypedObjectSuspending(
-    val objectGraph: ObjectGraphAccessorMutatorSuspending,
+    val objectGraph: ObjectGraphAccessorMutator,
     val issues: IssueHolder
 ) {
     val typeModel = objectGraph.typesDomain
@@ -118,25 +118,32 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
     }
 
     private suspend fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
-        return obj.getPropertySuspend(propertyName.value)
+        return when {
+            objectGraph.isNothing(obj) -> {
+                issues.warn(null, $$"Cannot get property '$${propertyName.value}' on $nothing, returning $nothing.")
+                objectGraph.nothing()
+            }
+
+            else -> {
+                obj.getPropertySuspend(propertyName.value)
+            }
+        }
     }
 
     private suspend fun evaluateMethodCall(evc: EvaluationContext, obj: TypedObject, methodName: MethodName, args: List<Expression>): TypedObject {
-//        val type = obj.type
-//        val md = type.resolvedDeclaration.findAllMethodOrNull(methodName)
-//        return when (md) {
-//            null -> {
-//                issues.error(null, "Trying to evaluate MethodCall, but method '${methodName.value}' not found on type '${obj.type.typeName}'")
-//                objectGraph.nothing()
-//            }
-//
-//            else -> {
-        val argValues = args.map {
-            evaluateExpression(evc, it)
+        return when {
+            objectGraph.isNothing(obj) -> {
+                issues.warn(null, $$"Cannot call method '$${methodName.value}' on on $nothing, returning $nothing.")
+                objectGraph.nothing()
+            }
+
+            else -> {
+                val argValues = args.map {
+                    evaluateExpression(evc, it)
+                }
+                obj.executeMethodSuspend(methodName.value, argValues)
+            }
         }
-        return obj.executeMethodSuspend(methodName.value, argValues)
-//            }
-//        }
     }
 
     private suspend fun evaluateIndexOperation(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
@@ -230,9 +237,9 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                                     elemType.resolvedDeclaration is TupleType -> objectGraph.cast(elem, elemType)
                                     elemType.conformsTo(valueType) -> objectGraph.cast(elem, elemType)
                                     else -> {
-                                        issues.error(
+                                        issues.warn(
                                             null,
-                                            "Map element '$elem' of type '${elem.type.qualifiedTypeName}' does not conform to the expected Map element type of '${valueType}'"
+                                            "Map element '$elem' does not conform to the expected Map element value type of '${valueType}', using '$elemType'."
                                         )
                                         objectGraph.cast(elem, elemType)
                                     }
@@ -496,7 +503,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
     }
 
     private suspend fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
-        val lambda = objectGraph.createLambdaValue { it ->
+        val lambda = objectGraph.createLambdaValueSuspend { it ->
             val newEvc = evc.child(mapOf("it" to it))
             evaluateExpression(newEvc, expression.expression)
         }
@@ -576,7 +583,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
 
                     else -> emptyMap()
                 }
-                objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
+                objectGraph.createStructureValueSuspend(expression.possiblyQualifiedTypeName, constructorArgs)
             }
 
             else -> error("Cannot create an object of type '${typeDef.qualifiedName.value}'")

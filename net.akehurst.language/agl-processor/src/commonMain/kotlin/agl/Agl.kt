@@ -49,7 +49,6 @@ import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterSuspending
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
-import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutatorSuspending
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -395,13 +394,13 @@ object Agl {
         return result
     }
 
-    suspend fun executeExpressionSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending, self:Any?, expression:String): TypedObject {
+    suspend fun executeExpressionSuspend(accessorMutator: ObjectGraphAccessorMutator, self:Any?, expression:String): TypedObject {
         val typedSelf = accessorMutator.toTypedObject(self)
         val evc = EvaluationContext.ofSelf(typedSelf)
         return executeExpressionWithEvaluationContextSuspend(accessorMutator, evc, expression)
     }
 
-    suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending, evc:EvaluationContext, expression:String): TypedObject {
+    suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
         val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(accessorMutator, issueHolder)
         val result = interpreter.evaluateStr(evc, expression)
@@ -441,7 +440,7 @@ object Agl {
     suspend fun transformSuspend(
         m2m: M2mTransformString,
         typeDomains: Map<DomainReference, TypesDomain>,
-        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutatorSuspending>,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
         domains: Map<DomainReference, List<TypedObject>>,
         targetDomainReference: DomainReference
     ): M2MTransformResult {

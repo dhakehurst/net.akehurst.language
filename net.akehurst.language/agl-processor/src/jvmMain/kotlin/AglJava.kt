@@ -23,19 +23,19 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.m2mTransform.processor.M2MTransformResult
 import net.akehurst.language.objectgraph.api.EvaluationContext
-import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutatorSuspending
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypesDomain
 
 object AglJava {
 
     @JvmStatic
-    fun executeExpressionSuspendBlocking(accessorMutator: ObjectGraphAccessorMutatorSuspending, self: Any?, expression: String): TypedObject = runBlocking {
+    fun executeExpressionSuspendBlocking(accessorMutator: ObjectGraphAccessorMutator, self: Any?, expression: String): TypedObject = runBlocking {
         Agl.executeExpressionSuspend(accessorMutator, self, expression)
     }
 
     @JvmStatic
-    fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutatorSuspending, evc: EvaluationContext, expression: String): TypedObject = runBlocking {
+    fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutator, evc: EvaluationContext, expression: String): TypedObject = runBlocking {
         Agl.executeExpressionWithEvaluationContextSuspend(accessorMutator, evc, expression)
     }
 
@@ -43,7 +43,7 @@ object AglJava {
     fun transformSuspendBlocking(
         m2m: M2mTransformString,
         typeDomains: Map<DomainReference, TypesDomain>,
-        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutatorSuspending>,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
         domains: Map<DomainReference, List<TypedObject>>,
         targetDomainReference: DomainReference
     ): M2MTransformResult = runBlocking {

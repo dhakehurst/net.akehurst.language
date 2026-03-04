@@ -355,7 +355,7 @@ class M2mPatternExecutor(
                     matchedVars.putAll(rhsMv)
                     rhsMv[RESULT]!! //FIXME
                 }
-                val col = accessorMutator.createCollection(lhsType.qualifiedTypeName, elements)
+                val col = accessorMutator.createCollection(lhsType, elements)
                 val mv = collectionTemplate.identifier?.let { matchedVars + Pair(it.value, col) } ?: matchedVars
                 mv
             }

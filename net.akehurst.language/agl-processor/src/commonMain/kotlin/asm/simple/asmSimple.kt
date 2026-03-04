@@ -486,7 +486,7 @@ class AsmSetSimple(
     override fun hashCode(): Int = elements.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
         !is AsmList -> false
-        else -> this.elements == other.elements
+        else -> this.elements == other.elements //TODO: should use equalTo on elements !
     }
 
     override fun toString(): String = "Set(${elements.joinToString()})"
@@ -510,7 +510,7 @@ class AsmListSimple(
         other !is AsmList -> false
         other.elements.size != this.elements.size -> false
         else -> {
-            (0..this.elements.size).all {
+            (0 until this.elements.size).all {
                 this.elements[it].equalTo(other.elements[it])
             }
         }
@@ -543,7 +543,7 @@ class AsmListSeparatedSimple(
         other !is AsmListSeparated -> false
         other.elements.size != this.elements.size -> false
         else -> {
-            (0..this.elements.size).all {
+            (0 until this.elements.size).all {
                 (this.elements[it]).equalTo(other.elements[it])
             }
         }

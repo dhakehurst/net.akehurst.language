@@ -167,6 +167,9 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor {
             else -> error("Unknown function '$functionName'")
         }
     }
+
+    override suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? =
+        methodCall(obj, typeDef, method, args)
 }
 
 class ExternalGetterAsmSimple(
@@ -204,22 +207,26 @@ class ExternalGetterAsmSimple(
     override fun setProperty(obj: Any, propertyName: String, value: Any?) {
         TODO("not implemented")
     }
+
+    override fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? = createStructure(qualifiedName, constructorArgs)
+
+    override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? = getProperty(obj, propertyName)
 }
 
 private class TypedObjectAsmValue(
-    override val accessor: ObjectGraphAccessorMutatorCommon,
+    override val accessor: ObjectGraphAccessorMutator,
     override val type: TypeInstance,
     override val self: AsmValue
 ) : TypedObject {
 
-    override fun getProperty(name:String) = (accessor as ObjectGraphAccessorMutator).getProperty(this, name)
-    override  suspend fun getPropertySuspend(name:String) = (accessor as ObjectGraphAccessorMutatorSuspending).getProperty(this, name)
+    override fun getProperty(name:String) = accessor.getProperty(this, name)
+    override  suspend fun getPropertySuspend(name:String) = accessor.getPropertySuspend(this, name)
 
-    override fun setProperty(name: String, value: TypedObject) = (accessor as ObjectGraphAccessorMutator).setProperty(this, name, value)
-    override suspend fun setPropertySuspend(name: String, value: TypedObject) = (accessor as ObjectGraphAccessorMutatorSuspending).setProperty(this, name, value)
+    override fun setProperty(name: String, value: TypedObject) = accessor .setProperty(this, name, value)
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
 
-    override  fun executeMethod(name: String, argValues: List<TypedObject>) = (accessor as ObjectGraphAccessorMutator).executeMethod(this, name, argValues)
-    override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = (accessor as ObjectGraphAccessorMutatorSuspending).executeMethod(this, name, argValues)
+    override  fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
+    override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
 
     override fun asString(indent: Indent): String = self.asString(indent)
 
@@ -265,7 +272,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override fun typedAs(obj: Any, type: TypeInstance): TypedObject = TypedObjectAsmValue(this as ObjectGraphAccessorMutatorCommon,type, obj as AsmValue)
+    override fun typedAs(obj: Any, type: TypeInstance): TypedObject = TypedObjectAsmValue(this,type, obj as AsmValue)
 
     override fun isNothing(obj: TypedObject): Boolean = obj.self == AsmNothingSimple
     override fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean {
@@ -308,27 +315,67 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         return typedAs(obj,type)
     }
 
-    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject {
-        return when (qualifiedTypeName) {
-            StdLibDefault.Set.qualifiedName -> {
-                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType
-                typedAs(AsmSetSimple(collection.map { it.self as AsmValue }.toSet()), StdLibDefault.Set.type(listOf(elType.asTypeArgument)))
-            }
+    override suspend fun createStructureValueSuspend(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject =
+        createStructureValue(possiblyQualifiedTypeName, constructorArgs) // no need for anything suspend specific
 
+    override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {
+        return when (collectionType.qualifiedTypeName) {
             StdLibDefault.List.qualifiedName -> {
-                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType
-                typedAs(AsmListSimple(collection.map { it.self as AsmValue }), StdLibDefault.List.type(listOf(elType.asTypeArgument)))
-            }
+                val elTypeArg = collectionType.typeArguments.firstOrNull()
+                /* this computes the 'real' list type, but it is expensive !
+               val elType = when (elTypeArg) {
+                    null -> {
+                        val first = collection.firstOrNull()
+                        when (first) {
+                            null -> StdLibDefault.AnyType
+                            else -> collection
+                                .runningFold(first.type) { acc, it -> acc.commonSuperType(it.type) }
+                                .takeWhile { it != StdLibDefault.AnyType }
+                                .last()
+                        }
+                    }
+
+                    else -> elTypeArg.type
+                }*/
+                val type = StdLibDefault.List.type(listOf(elTypeArg ?: StdLibDefault.AnyType.asTypeArgument))
+                typedAs(AsmListSimple(collection.map { it.self as AsmValue }), type)
+             }
 
             StdLibDefault.ListSeparated.qualifiedName -> {
-                val list = collection.toList()
-                val elType = list.getOrNull(0)?.type ?: StdLibDefault.AnyType
-                val sepType = list.getOrNull(1)?.type ?: StdLibDefault.AnyType
-                typedAs(AsmListSeparatedSimple(collection.map { it.self as AsmValue }.toSeparatedList()), StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)))
+                val elType = collectionType.typeArguments.getOrNull(0)?.type ?: StdLibDefault.AnyType
+                val sepType = collectionType.typeArguments.getOrNull(1)?.type ?: StdLibDefault.AnyType
+                val type = StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument))
+                typedAs(AsmListSeparatedSimple(collection.map { it.self as AsmValue }.toSeparatedList()), type)
             }
 
-            else -> nothing()
+            StdLibDefault.Set.qualifiedName -> {
+                val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
+                val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
+                typedAs(AsmSetSimple(collection.map { it.self as AsmValue }.toSet()), type)
+            }
+
+//            StdLibDefault.Map.qualifiedName -> {
+//                val keyType = collectionType.typeArguments.getOrNull(0)?.type ?: StdLibDefault.AnyType
+//                val valType = collectionType.typeArguments.getOrNull(1)?.type ?: StdLibDefault.AnyType
+//                val map = collection.associate { it.self as Pair<Any, Any> }
+//                typedAs(map, StdLibDefault.Map.type(listOf(keyType.asTypeArgument, valType.asTypeArgument)))
+//            }
+            else -> {
+                issues.error(null,"Unsupported collection type: '${collectionType.qualifiedTypeName.value}'")
+                nothing()
+            }
         }
+    }
+
+    override fun createCollectionFromQualifiedName(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject {
+        val colType = when (qualifiedTypeName) {
+            StdLibDefault.List.qualifiedName -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.ListSeparated.qualifiedName -> StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.Set.qualifiedName -> StdLibDefault.Set.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.Map.qualifiedName -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
+            else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
+        }
+        return createCollection(colType, collection)
     }
 
     override fun valueOf(value: TypedObject): Any = (value.self as AsmValue).raw
@@ -447,6 +494,9 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         return typedAs(lmb, lambdaType)
     }
 
+    override suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject =
+        error("Should not be called") //TODO: can we combine this with above using crossinline ?
+
     override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject {
         //TODO: use executor
         val asmValue = tobj.self as AsmValue
@@ -490,6 +540,9 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
+    override suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject =
+        getProperty(tobj,propertyName) // no need for anything suspend specific
+
     override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) {
         val obj = tobj.self as AsmStructure
         // if property is a reference && value is a structure && semanticPath is available THEN set a reference rather than composition
@@ -524,6 +577,9 @@ open class ObjectGraphAccessorMutatorAsmSimple(
             }
         }
     }
+
+    override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
+        executeMethod(tobj, methodName, args) // no need for anything suspend specific
 
     override fun callFunction(functionName: String, args: List<TypedObject>): TypedObject {
         val arguments = args.map { untyped(it) }

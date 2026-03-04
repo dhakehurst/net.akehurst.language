@@ -101,6 +101,9 @@ interface PrimitiveExecutor {
     fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult?
     fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult?
     fun functionCall(functionName: String, args: List<*>): ExecutionResult?
+
+    suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult?
+
 }
 
 interface ObjectGraph {
@@ -144,7 +147,8 @@ interface ObjectGraphAccessorMutatorCommon {
 
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject
     fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject
-    fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject
+    fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject
+    fun createCollectionFromQualifiedName(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject
 
     fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject>): ObjectGraph
 }
@@ -154,6 +158,9 @@ interface ExternalGetter {
     fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     fun getProperty(obj: Any, propertyName: String): Any?
     fun setProperty(obj: Any, propertyName: String, value: Any?)
+
+    fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
+    suspend fun getPropertySuspend(obj: Any, propertyName: String): Any?
 }
 
 interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
@@ -173,6 +180,11 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
 
     fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject)
 
+    suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject
+    suspend fun createStructureValueSuspend(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject
+    suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject
+    suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
+
 }
 
 interface ExternalGetterSuspending {
@@ -186,8 +198,8 @@ interface PrimitiveExecutorSuspending {
     suspend fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult?
     fun functionCall(functionName: String, args: List<*>): ExecutionResult?
 }
-
-interface ObjectGraphAccessorMutatorSuspending : ObjectGraphAccessorMutatorCommon {
+/*
+interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
     val primitiveExecutor: PrimitiveExecutorSuspending
     val externalGetter: ExternalGetterSuspending
 
@@ -205,3 +217,4 @@ interface ObjectGraphAccessorMutatorSuspending : ObjectGraphAccessorMutatorCommo
     suspend fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject)
 
 }
+*/

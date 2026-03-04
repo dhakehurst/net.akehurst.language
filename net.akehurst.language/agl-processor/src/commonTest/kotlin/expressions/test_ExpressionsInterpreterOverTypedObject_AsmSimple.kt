@@ -33,6 +33,7 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
 
@@ -42,7 +43,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues), issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
-            assertEquals(expected, actual.self)
+            assertTrue(expected.equalTo(actual.self as AsmValue), "Expected != Actual:\n$expected\n$actual")
         }
 
         fun test_fail(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: List<LanguageIssue>) {

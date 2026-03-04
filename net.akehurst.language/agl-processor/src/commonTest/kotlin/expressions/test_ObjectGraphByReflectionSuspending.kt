@@ -53,7 +53,7 @@ class test_ObjectGraphByReflectionSuspending {
 
     @Test
     fun nothing() {
-        val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
 
         val actual = og.nothing()
         val expected = Unit
@@ -71,7 +71,7 @@ class test_ObjectGraphByReflectionSuspending {
 
     @Test
     fun createTupleValue() = runTest {
-        val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
 
         val actual = og.createTupleValue(listOf())
         actual.setPropertySuspend( "a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
@@ -85,7 +85,7 @@ class test_ObjectGraphByReflectionSuspending {
 
     @Test
     fun getIndex() {
-        val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val list = og.typedAs(listOf("Adam", "Betty", "Charles"), StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)))
 
         val actual1 = og.getFromListWithIndex(list, 0)
@@ -111,7 +111,7 @@ class test_ObjectGraphByReflectionSuspending {
 
     @Test
     fun object_getProperty() = runTest {
-        val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = TestClass("A", 1, TestClass("B", 2, null))
         val tp = testTypeModel.findFirstDefinitionByNameOrNull(SimpleName("TestClass"))!!.type()
         val tobj = og.typedAs(obj, tp)
@@ -131,7 +131,7 @@ class test_ObjectGraphByReflectionSuspending {
 
     @Test
     fun tuple_getProperty() = runTest {
-        val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = mapOf(
             "prop1" to "A",
             "prop2" to 1,
@@ -156,7 +156,7 @@ class test_ObjectGraphByReflectionSuspending {
     @Test
     fun executeMethod_Primitive_map() = runTest {
         //given
-        val og = ObjectGraphAccessorMutatorSuspendingByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val tObj = og.typedAs(
             listOf(
                 og.typedAs(1L, StdLibDefault.Integer),

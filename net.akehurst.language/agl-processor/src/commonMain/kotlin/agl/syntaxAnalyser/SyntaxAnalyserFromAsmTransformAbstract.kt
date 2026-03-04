@@ -566,8 +566,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         // optional children should have value Nothing, if it is an empty list then it will contain null
         val asmChildren = children.mapNotNull { it.value }
         val childrenAsmList = when {
-            target.node.rule.isListSeparated -> objectGraph.createCollection(StdLibDefault.ListSeparated.qualifiedName, asmChildren)
-            else -> objectGraph.createCollection(StdLibDefault.List.qualifiedName, asmChildren)
+            target.node.rule.isListSeparated -> objectGraph.createCollectionFromQualifiedName(StdLibDefault.ListSeparated.qualifiedName, asmChildren)
+            else -> objectGraph.createCollectionFromQualifiedName(StdLibDefault.List.qualifiedName, asmChildren)
         }
         val asmMatchedText = objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, sentence.matchedTextNoSkip(target.node))
 

@@ -983,7 +983,7 @@ class M2mTransformInterpreter(
                             executeRuleWhere(m2mExecution, owningRule, rule, src)
                         }
                         //if(sourceCollType.all { it. }) //TODO: check all colls are type of tgt
-                        m2mExecution.targetAccessorMutator!!.createCollection(sourceCollType.first().qualifiedTypeName, tgtList)
+                        m2mExecution.targetAccessorMutator!!.createCollection(sourceCollType.first(), tgtList)
                     }
 
                     else -> {
@@ -1187,7 +1187,7 @@ class M2mTransformInterpreter(
                     matchedVars.putAll(mv)
                     o
                 }
-                val col = m2mExecution.targetAccessorMutator.createCollection(lhsType.qualifiedTypeName, elements)
+                val col = m2mExecution.targetAccessorMutator.createCollection(lhsType, elements)
                 val mv = collectionTemplate.identifier?.let { matchedVars + Pair(it.value, col) } ?: matchedVars
                 Pair(col, mv)
             }
@@ -1207,7 +1207,7 @@ class M2mTransformInterpreter(
                             matchedVars.putAll(mv)
                             o
                         }
-                        val col = m2mExecution.targetAccessorMutator.createCollection(lhsType.qualifiedTypeName, elements)
+                        val col = m2mExecution.targetAccessorMutator.createCollection(lhsType, elements)
                         val mv = collectionTemplate.identifier?.let { matchedVars + Pair(it.value, col) } ?: matchedVars
                         Pair(col, mv)
                     }

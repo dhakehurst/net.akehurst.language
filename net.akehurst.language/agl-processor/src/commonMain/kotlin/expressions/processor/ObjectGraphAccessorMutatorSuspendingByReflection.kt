@@ -31,7 +31,7 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KProperty1
-
+/*
 class StdLibPrimitiveExecutionsForReflectionSuspending(
     val issues: IssueHolder = IssueHolder(LanguageProcessorPhase.INTERPRET)
 ) : PrimitiveExecutorSuspending {
@@ -287,6 +287,8 @@ class StdLibPrimitiveExecutionsForReflectionSuspending(
     }
 }
 
+ */
+/*
 class ExternalGetterByReflectionSuspending(
     val typesDomain: TypesDomain,
     val issues: IssueHolder,
@@ -326,15 +328,17 @@ class ExternalGetterByReflectionSuspending(
     }
 
 }
+*/
 
-open class ObjectGraphAccessorMutatorSuspendingByReflection
+/*
+open class ObjectGraphAccessorMutatorByReflection
 @JvmOverloads //ensure the Java has overloads using the default values
 constructor(
     typesDomain: TypesDomain,
     issues: IssueHolder,
-    override val externalGetter: ExternalGetterSuspending = ExternalGetterByReflectionSuspending(typesDomain, issues),
+    override val externalGetter: ExternalGetter = ExternalGetterByReflection(typesDomain, issues),
     override val primitiveExecutor: PrimitiveExecutorSuspending = StdLibPrimitiveExecutionsForReflectionSuspending()
-) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutatorSuspending {
+) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutator {
 
     override fun typeFor(obj: Any?): TypeInstance {
         return when (obj) {
@@ -454,8 +458,7 @@ constructor(
                 val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
                 when (propRes) {
                     null -> {
-                        //try reflection on untyped object, FIXME: will not work currently for JS and wasmJS
-                        val obj = tobj.self
+                        val obj = untyped(tobj)
                         val value = externalGetter.getProperty(obj, propertyName)
                         value?.let { toTypedObject(value) } ?: nothing()
                     }
@@ -527,3 +530,4 @@ constructor(
     }
 
 }
+*/
