@@ -551,6 +551,10 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         obj.setProperty(PropertyValueName(propertyName), v, obj.property.size)
     }
 
+    override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) {
+        setProperty(tobj, propertyName, value)
+    }
+
     override fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject {
         //TODO: use executor
         val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]

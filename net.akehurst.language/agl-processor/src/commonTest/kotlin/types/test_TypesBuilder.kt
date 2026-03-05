@@ -37,7 +37,7 @@ class test_TypesBuilder {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("DataClass") {
-                    derivedPropertyOf("derProp", "String", false, execution = { "Hello World!" })
+                    propertyPrimitive("derProp", "String", false, execution = { "Hello World!" })
                 }
             }
         }

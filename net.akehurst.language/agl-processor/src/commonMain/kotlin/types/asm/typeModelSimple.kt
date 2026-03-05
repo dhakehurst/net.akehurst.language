@@ -924,8 +924,9 @@ abstract class TypeDefinitionSimpleAbstract(
         (this.typeParameters as MutableList).add(name)
     }
 
-    override fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName) {
-        val ti = namespace.createTypeInstance(this.qualifiedName, qualifiedTypeName, emptyList(), false)
+    override fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName, typeArgNames:List<PossiblyQualifiedName>) {
+        val targs = typeArgNames.map { namespace.createTypeInstance(this.qualifiedName, it).asTypeArgument }
+        val ti = namespace.createTypeInstance(this.qualifiedName, qualifiedTypeName, targs, false)
         addSupertype(ti)
     }
 
@@ -1758,6 +1759,10 @@ class PropertyDeclarationResolvedSimple(
 }
 
 abstract class MethodDeclarationAbstract() : MethodDeclaration {
+
+    override var execution: ((self: Any, args: List<*>) -> Any?)? = null
+    override var executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)? = null
+
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved = MethodDeclarationResolvedSimple(
         this,
         this.owner,

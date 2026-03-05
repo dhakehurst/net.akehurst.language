@@ -277,7 +277,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
     fun addTypeParameter(name: TypeParameter)
 
     @Deprecated("Create a TypeInstance and use addSupertype(TypeInstance). This (deprecated) method does not add TypeArgs to the supertype.")
-    fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName)
+    fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName, typeArgNames:List<PossiblyQualifiedName>)
 
     fun addSupertype(typeInstance: TypeInstance)
     fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String): PropertyDeclaration
@@ -517,6 +517,10 @@ interface MethodDeclaration {
     val parameters: List<ParameterDeclaration>
     val returnType: TypeInstance
     val description: String
+
+    // to assist execution by reflection without having MPP reflection support
+    val execution: ((self: Any, args:List<*>) -> Any?)?
+    val executionSuspend: (suspend (self: Any, args:List<*>) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved
     fun findInOrCloneTo(other: TypesDomain): MethodDeclaration

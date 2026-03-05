@@ -1840,28 +1840,28 @@ class test_m2mTransformInterpreter {
                         data("Schema") {
                             supertypes("RModelElement")
                             constructor_ {
-                                this.parameter("name", "String")
+                                this.parameter(setOf(), "name", "String")
                             }
                         }
                         data("Table") {
                             supertypes("RModelElement")
                             constructor_ {
-                                parameter("schema", "Schema")
-                                parameter("name", "String")
+                                parameter(setOf(), "schema", "Schema")
+                                parameter(setOf(), "name", "String")
                             }
                         }
                         data("Column") {
                             supertypes("RModelElement")
                             constructor_ {
-                                parameter("owner", "Table")
-                                parameter("name", "String")
+                                parameter(setOf(), "owner", "Table")
+                                parameter(setOf(), "name", "String")
                             }
                         }
                         data("Key") {
                             supertypes("RModelElement")
                             constructor_ {
-                                parameter("owner", "Table")
-                                parameter("name", "String")
+                                parameter(setOf(), "owner", "Table")
+                                parameter(setOf(), "name", "String")
                             }
                         }
                         data("ForeignKey") {

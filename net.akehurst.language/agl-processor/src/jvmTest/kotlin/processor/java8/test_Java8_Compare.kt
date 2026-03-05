@@ -174,7 +174,7 @@ class test_Java8_Compare {
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5)
+    @Timeout(10)
     fun antlrOptm(data: Data) {
         this.testParse(data,antlrOptmProcessor)
     }

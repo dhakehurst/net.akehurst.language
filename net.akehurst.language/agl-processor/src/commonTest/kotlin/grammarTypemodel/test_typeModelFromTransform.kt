@@ -58,6 +58,7 @@ class test_typemodelFromTransform {
         val transformStr = """
             namespace test
             asm-transform Test {
+                #override-default-transform
                 S : S2
             }
         """.trimIndent()
@@ -84,7 +85,7 @@ class test_typemodelFromTransform {
         val transformStr = """
             namespace test
             asm-transform Test {
-                import types.*
+                import-types types
 
                 S : S2
             }
@@ -124,7 +125,7 @@ class test_typemodelFromTransform {
         val transformStr = """
             namespace test
             asm-transform Test {
-                import types.*
+                import-types types
 
                 S : S2
             }

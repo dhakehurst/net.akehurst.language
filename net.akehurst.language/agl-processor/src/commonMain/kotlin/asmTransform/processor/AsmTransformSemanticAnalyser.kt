@@ -139,6 +139,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         val rulesToConvert = trs.rules.values.filter { it.expression is RootExpression && (it.expression as RootExpression).isSelf.not() }
         when {
             trs.options.overrideDefault -> {
+                findOrCreateGrammarTypeNamespace(trs.qualifiedName) //ensure type namespace exists
                 rulesToConvert.forEach { trr ->
                     val expr = trr.expression as RootExpression
                     val pqn = expr.name.asPossiblyQualifiedName

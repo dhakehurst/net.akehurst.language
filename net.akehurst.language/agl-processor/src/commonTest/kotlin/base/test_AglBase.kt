@@ -30,6 +30,7 @@ class test_AglBase {
         }
         val tDef = tm.findFirstDefinitionByNameOrNull(SimpleName("TestDefinition"))
         assertNotNull(tDef)
+        assertEquals("TestDefinition",tDef.name.value)
         val nsOfTDef = ns.type(listOf(tDef.type().asTypeArgument))
 
         val resProp = nsOfTDef.allResolvedProperty[PropertyName("_definition")]
@@ -37,7 +38,7 @@ class test_AglBase {
         assertEquals("Map",resProp.typeInstance.typeName.value)
         assertEquals(2, resProp.typeInstance.typeArguments.size)
         assertEquals("SimpleName",resProp.typeInstance.typeArguments[0].type.typeName.value)
-        assertEquals("TestDefinition",resProp.typeInstance.typeArguments[1].type.typeName.value)
+        assertEquals("DefinitionDefault",resProp.typeInstance.typeArguments[1].type.typeName.value)
     }
 
 

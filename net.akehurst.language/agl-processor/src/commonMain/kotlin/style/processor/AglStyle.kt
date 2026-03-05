@@ -243,8 +243,8 @@ interface AglStyleRule {
                 data("AglStyleSelector") {
 
                     constructor_ {
-                        parameter("value", "String", false)
-                        parameter("kind", "AglStyleSelectorKind", false)
+                        parameter(setOf(), "value", "String")
+                        parameter(setOf(), "kind", "AglStyleSelectorKind")
                     }
                     propertyOf(setOf(VAL, REF, STR), "kind", "AglStyleSelectorKind", false)
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
@@ -252,8 +252,8 @@ interface AglStyleRule {
                 data("AglStyleDeclaration") {
 
                     constructor_ {
-                        parameter("name", "String", false)
-                        parameter("value", "String", false)
+                        parameter(setOf(), "name", "String")
+                        parameter(setOf(), "value", "String")
                     }
                     propertyOf(setOf(VAL, REF, STR), "name", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
@@ -263,8 +263,8 @@ interface AglStyleRule {
                 data("StyleSetReferenceDefault") {
                     supertype("StyleSetReference")
                     constructor_ {
-                        parameter("localNamespace", "StyleNamespace", false)
-                        parameter("nameOrQName", "PossiblyQualifiedName", false)
+                        parameter(setOf(), "localNamespace", "StyleNamespace")
+                        parameter(setOf(), "nameOrQName", "PossiblyQualifiedName")
                     }
                     propertyOf(setOf(VAL, REF, STR), "localNamespace", "StyleNamespace", false)
                     propertyOf(setOf(VAL, REF, STR), "nameOrQName", "PossiblyQualifiedName", false)
@@ -274,8 +274,8 @@ interface AglStyleRule {
                     supertype("StyleNamespace")
                     supertype("NamespaceAbstract") { ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
-                        parameter("qualifiedName", "QualifiedName", false)
-                        parameter("import", "List", false)
+                        parameter(setOf(), "qualifiedName", "QualifiedName")
+                        parameter(setOf(), "import", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "import", "List", false) {
                         typeArgument("Import")
@@ -285,9 +285,9 @@ interface AglStyleRule {
                 data("AglStyleSetDefault") {
                     supertype("StyleSet")
                     constructor_ {
-                        parameter("namespace", "StyleNamespace", false)
-                        parameter("name", "SimpleName", false)
-                        parameter("extends", "List", false)
+                        parameter(setOf(), "namespace", "StyleNamespace")
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "extends", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "extends", "List", false) {
                         typeArgument("StyleSetReference")
@@ -301,7 +301,7 @@ interface AglStyleRule {
                 data("AglStyleRuleDefault") {
                     supertype("AglStyleRule")
                     constructor_ {
-                        parameter("selector", "List", false)
+                        parameter(setOf(), "selector", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "declaration", "Map", false) {
                         typeArgument("String")
@@ -315,8 +315,8 @@ interface AglStyleRule {
                     supertype("AglStyleDomain")
                     supertype("DomainAbstract") { ref("net.akehurst.language.style.api.StyleNamespace"); ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
-                        parameter("name", "SimpleName", false)
-                        parameter("namespace", "List", false)
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "namespace", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {

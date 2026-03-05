@@ -138,6 +138,7 @@ tasks.named("publish").get().dependsOn("javadocJar")
 
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
+    maxHeapSize = "4g"
     filter {
         isFailOnNoMatchingTests = false
     }

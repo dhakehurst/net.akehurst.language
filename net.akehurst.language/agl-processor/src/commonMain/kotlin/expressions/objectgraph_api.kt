@@ -183,6 +183,7 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
     suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject
     suspend fun createStructureValueSuspend(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject
     suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject
+    suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject)
     suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
 
 }

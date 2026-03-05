@@ -163,26 +163,26 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                     supertype("PossiblyQualifiedName")
                     supertype("PublicValueType")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String",false, SimpleName::value)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, SimpleName::value)
+                   // propertyOf(setOf(VAL, REF, STR), "value", "String", false, SimpleName::value)
                 }
                 // TODO: value classes don't work (fully) in js and wasm
                 data("QualifiedName") {
                     supertype("PossiblyQualifiedName")
                     supertype("PublicValueType")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String", false, QualifiedName::value)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, QualifiedName::value)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "String", false, QualifiedName::value)
                 }
                 // TODO: value classes don't work (fully) in js and wasm
                 data("Import") {
                     supertype("PublicValueType")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String", false, Import::value)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, Import::value)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "String", false, Import::value)
                 }
                 interface_("PublicValueType") {
                 }
@@ -216,41 +216,44 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                 }
                 data("Indent") {
                     constructor_ {
-                        parameter("value", "String", false)
-                        parameter("increment", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String")
+                        parameter(setOf(VAL, REF), "increment", "String")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "increment", "String", false)
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                    //propertyOf(setOf(VAL, REF, STR), "increment", "String", false)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
             }
             namespace("net.akehurst.language.base.asm", listOf("net.akehurst.language.base.api", "std")) {
                 data("OptionHolderDefault") {
                     supertype("OptionHolder")
                     constructor_ {
-                        parameter("parent", "OptionHolder", false)
-                        parameter("options", "Map", false)
+                        parameter(setOf(VAL, REF), "parent", "OptionHolder")
+                        parameter(setOf(VAL, REF), "options", "Map"){
+                            typeArgument("String")
+                            typeArgument("String")
+                        }
                     }
-                    propertyOf(setOf(VAR, REF, STR), "options", "Map", false) {
-                        typeArgument("String")
-                        typeArgument("String")
-                    }
-                    propertyOf(setOf(VAR, REF, STR), "parent", "OptionHolder", false)
+//                    propertyOf(setOf(VAR, REF, STR), "options", "Map", false) {
+//                        typeArgument("String")
+//                        typeArgument("String")
+//                    }
+//                    propertyOf(setOf(VAR, REF, STR), "parent", "OptionHolder", false)
                 }
                 data("NamespaceDefault") {
                     supertype("NamespaceAbstract") { ref("DefinitionDefault") }
                     constructor_ {
-                        parameter("qualifiedName", "QualifiedName", false)
-                        parameter("options", "OptionHolder", false)
-                        parameter("import", "List", false)
+                        parameter(setOf(VAL, CMP), "qualifiedName", "QualifiedName")
+                        parameter(setOf(), "options", "OptionHolder")
+                        parameter(setOf(), "import", "List")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
                 data("NamespaceAbstract") {
                     typeParameters("DT")
                     supertype("Namespace") { ref("DT") }
                     constructor_ {
-                        parameter("options", "OptionHolder", false)
-                        parameter("argImport", "List", false)
+                        parameter(setOf(VAL, CMP), "options", "OptionHolder")
+                        parameter(setOf(), "argImport", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "_definition", "Map", false) {
                         typeArgument("SimpleName")
@@ -259,41 +262,43 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                     propertyOf(setOf(VAR, CMP, STR), "import", "List", false) {
                         typeArgument("Import")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("DomainDefault") {
                     supertype("DomainAbstract") { ref("NamespaceDefault"); ref("DefinitionDefault") }
                     constructor_ {
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "OptionHolder", false)
-                        parameter("namespace", "List", false)
+                        parameter(setOf(VAL, CMP), "name", "SimpleName")
+                        parameter(setOf(), "options", "OptionHolder")
+                        parameter(setOf(), "namespace", "List")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                 }
                 data("DomainAbstract") {
                     typeParameters("NT", "DT")
                     supertype("Domain") { ref("NT"); ref("DT") }
                     constructor_ {
-                        parameter("namespace", "List", false)
-                        parameter("options", "OptionHolder", false)
+                        parameter(setOf(VAR, CMP), "namespace", "List"){
+                            typeArgument("NT")
+                        }
+                        parameter(setOf(VAR, CMP), "options", "OptionHolder")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
-                        typeArgument("NT")
-                    }
-                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+//                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
+//                        typeArgument("NT")
+//                    }
+//                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("DefinitionDefault") {
                     supertype("DefinitionAbstract") { ref("DefinitionDefault") }
                     constructor_ {
-                        parameter("namespace", "Namespace", false)
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "OptionHolder", false)
+                        parameter(setOf(VAL, CMP), "namespace", "Namespace")
+                        parameter(setOf(VAL, REF), "name", "SimpleName")
+                        parameter(setOf(VAL, CMP), "options", "OptionHolder")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "Namespace", false) {
-                        typeArgument("DefinitionDefault")
-                    }
-                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+//                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+//                    propertyOf(setOf(VAL, REF, STR), "namespace", "Namespace", false) {
+//                        typeArgument("DefinitionDefault")
+//                    }
+//                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("DefinitionAbstract") {
                     typeParameters("DT")

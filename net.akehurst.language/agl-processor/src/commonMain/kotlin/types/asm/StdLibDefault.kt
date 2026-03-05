@@ -17,10 +17,16 @@
 
 package net.akehurst.language.types.asm
 
+import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.*
+import net.akehurst.language.types.builder.TypeNamespaceBuilder
+import net.akehurst.language.types.builder.typesDomain
+import kotlin.time.Instant
 
 object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
 
@@ -43,10 +49,12 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
 
     val String = super.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("String")).type()
     val Boolean = super.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("Boolean")).type()
+
     /**
      * 64 bit Integer (Long)
      */
     val Integer = super.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("Integer")).type()
+
     /**
      * 64 bit Real (Double)
      */
@@ -164,6 +172,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             "A Map object with elements being the Pairs of this List."
         )
     }
+
     private fun createPropertiesForList() {
         val typeDecl = List
         typeDecl.appendPropertyPrimitive(PropertyName("first"), TypeParameterReference(typeDecl, SimpleName("E")), "First element in the List.")
@@ -180,6 +189,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
         )
         typeDecl.appendPropertyPrimitive(PropertyName("join"), this.createTypeInstance(typeDecl.qualifiedName, String.typeName), "The String value of all elements concatenated.")
     }
+
     private fun createMethodsForCollection() {
         val typeDecl = Collection
         typeDecl.appendMethodPrimitive(
@@ -201,13 +211,13 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
         )
         typeDecl.appendMethodPrimitive(
             MethodName("contains"),
-            listOf(ParameterDefinitionSimple(TmParameterName("element"),AnyType, null)),
+            listOf(ParameterDefinitionSimple(TmParameterName("element"), AnyType, null)),
             Boolean,
             "True if this Collection contains the element"
         )
         typeDecl.appendMethodPrimitive(
             MethodName("intersect"),
-            listOf(ParameterDefinitionSimple(TmParameterName("other"),this.createTypeInstance(typeDecl.qualifiedName, Collection_typeName, listOf(AnyType.asTypeArgument)), null)),
+            listOf(ParameterDefinitionSimple(TmParameterName("other"), this.createTypeInstance(typeDecl.qualifiedName, Collection_typeName, listOf(AnyType.asTypeArgument)), null)),
             Boolean,
             "True if other Collection intersects this Collection."
         )
@@ -224,6 +234,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             "A list created by filtering the elements to those for which the given lambda expression evaluates to true."
         )
     }
+
     private fun createMethodsForList() {
         val typeDecl = List
         typeDecl.appendMethodPrimitive(
@@ -279,4 +290,132 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
     }
 }
 
+//In work
+object StdLibDefault2 : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
 
+    init {
+        val nsb = TypeNamespaceBuilder(QualifiedName("std"), emptyList(), this)
+        nsb.apply {
+            special("Any", Any::class)
+            special("Nothing", Unit::class)
+            special("Lambda")
+
+            primitive("String", String::class) {
+                methodPrimitive("toBoolean", "Boolean", true) {
+                    execution { self, args -> (self as String).toBooleanStrictOrNull() }
+                }
+                methodPrimitive("toInteger", "Integer", true) {
+                    execution { self, args -> (self as String).toLongOrNull() }
+                }
+                methodPrimitive("toReal", "Real", true) {
+                    execution { self, args -> (self as String).toDoubleOrNull() }
+                }
+                methodPrimitive("removeSurrounding", "String", true) {
+                    parameter("delimiter", "String")
+                    description("Remove the given string value from the start and end of this string, if present.")
+                    execution { self, args -> (self as String).removeSurrounding(args[0] as CharSequence) }
+                }
+            }
+            primitive("Boolean", Boolean::class)
+            primitive("Integer", Long::class)
+            primitive("Real", Double::class)
+            primitive("Timestamp", Instant::class)
+            primitive("Exception", Throwable::class)
+
+            data("Pair", Pair::class)
+
+            collection("Collection", listOf("E"), Collection::class) {
+                propertyPrimitive("size", "Integer", false, "Number of elements in the Collection.", execution = { self -> (self as Collection<*>).size })
+                propertyPrimitive("isEmpty", "Boolean", false, "True if the Collection has no elements.", execution = { self -> (self as Collection<*>).isEmpty() })
+                propertyPrimitive("isNotEmpty", "Boolean", false, "True if the Collection has some elements.", execution = { self -> (self as Collection<*>).isNotEmpty() })
+                propertyPrimitive(
+                    "asMap", "Map", true,
+                    "Returns a Map object with elements being the Pairs of this Collection. If elements are not Pairs, or Map with 'key' and 'value' entry, then returns nothing.",
+                    execution = { self -> self?.let { Collection_asMap(self) } }
+                ) {
+                    typeArgument("Any")
+                    typeArgument("Any")
+                }
+                propertyPrimitive("separate", "ListSeparated") {
+                    typeArgument("Any")
+                    typeArgument("Any")
+                }
+
+                methodPrimitive("contains", "Boolean") {
+                    description("Returns true if this Collection contains the element")
+                    parameter("element", "E")
+                }
+                methodPrimitive("intersect", "Boolean") {
+                    description("Returns true other Collection intersects this Collection.")
+                    parameter("other", "Collection") { typeArgument("Any") }
+                }
+                methodPrimitive("filter", "List") {
+                    description("A list created by filtering the elements to those for which the given lambda expression evaluates to true.")
+                    parameter("lambda", "Lambda") // TODO: lambda must return Boolean
+                }
+                methodPrimitive("map", "List") {
+                    description("Returns true other Collection intersects this Collection.")
+                    returnTypeArgument("Any") //TODO: should be return type of lambda !
+                    parameter("lambda", "Lambda")
+                }
+            }
+            collection("Set", listOf("E"), Set::class) {
+                supertype("Collection"){ ref("E") }
+
+                methodPrimitive("transitiveClosure","Set", false) {
+                    description("")
+                    returnTypeArgument("E")
+                    parameter("lambda", "Lambda") // TODO: lambda should return Set<E>
+                }
+            }
+            collection("List", listOf("E"), List::class) {
+                supertype("Collection"){ ref("E") }
+                propertyPrimitive("first", "E", false, "First element in the List.", execution = { self -> (self as Collection<*>).size })
+                propertyPrimitive("last", "E", false, "Last element in the List.", execution = { self -> (self as Collection<*>).size })
+                propertyPrimitive("front", "List<E>", false, "All elements in the List except the last one.", execution = { self -> (self as Collection<*>).size })
+                propertyPrimitive("back", "List<E>", false, "All elements in the List except the first one.", execution = { self -> (self as Collection<*>).size })
+                propertyPrimitive("join", "String", false, "The String value of all elements (toString) concatenated.", execution = { self -> (self as Collection<*>).size })
+
+                methodPrimitive("get", "E", true) {
+                    description("Returns the element at the given index.")
+                    parameter("index", "Integer")
+                }
+                methodPrimitive("transitiveClosure","List", false) {
+                    description("")
+                    returnTypeArgument("E")
+                    parameter("lambda", "Lambda") // TODO: lambda should return List<E>
+                }
+            }
+            collection("ListSeparated", listOf("E", "I", "S"), ListSeparated::class) {
+                supertype("List") { ref("E") }
+            }
+            collection("Map", listOf("K", "V"), Map::class) {
+                supertype("Collection") { ref("Pair") }
+            }
+        }
+        nsb.build()
+    }
+
+    override val qualifiedName: QualifiedName = QualifiedName("std")
+    override fun findInOrCloneTo(other: TypesDomain): TypesNamespace = this
+
+
+    private fun Collection_asMap(self: Any): Map<Any, Any>? {
+        check(self is Collection<*>) { "Property 'asMap' is not applicable to '${self::class.simpleName}' objects." }
+        return self.associate {
+            val el = when (it) {
+                is TypedObject -> it.self
+                else -> it
+            }
+            when (el) {
+                is Pair<*, *> -> el as Pair<Any, Any>
+                is Map<*, *> -> when {
+                    el.containsKey("key") && el.containsKey("value") -> Pair(el["key"]!!, el["value"]!!)
+                    else -> error("To convert a Collection<Map> via 'asMap' there must be a 'key' and a 'value' entry")
+                }
+
+                else -> error("To convert a Collection via 'asMap' the elements must be either Pairs or Maps with key and value entries")
+            }
+        }
+    }
+}

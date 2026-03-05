@@ -1,6 +1,5 @@
 package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
-import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.simple.toAsmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -13,7 +12,6 @@ import net.akehurst.language.m2mTransform.asm.CollectionTemplateDefault
 import net.akehurst.language.m2mTransform.asm.ObjectTemplateDefault
 import net.akehurst.language.m2mTransform.asm.PropertyTemplateDefault
 import net.akehurst.language.m2mTransform.asm.PropertyTemplateExpressionDefault
-import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
@@ -54,7 +52,7 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Execute expression: $result := x | [x] -> [] ^ null"
+            $$"Execute expression: push EVC with $self := x | [x] -> [] ^ []"
         )
         val expectedResult = 1
         doTest(types, lhsType, template, input, expectedPlan, expectedResult)
@@ -74,7 +72,7 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Execute expression: $result := x | [x] -> [y] ^ null"
+            $$"Execute expression: push EVC with $self := x | [x] -> [y] ^ []"
         )
         val expectedResult = 1
 
@@ -91,7 +89,7 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Create Collection: $result := List(...) | [] -> [] ^ null"
+            $$"Create Collection: $result := List(...) | [] -> [] ^ []"
         )
         val expectedResult = 1
 
@@ -108,7 +106,7 @@ class test_M2mPatternExecutor {
         val input = mapOf<String,Any>()
 
         val expectedPlan = listOf(
-            $$"Create Collection: $result := List(...) | [] -> [y] ^ null"
+            $$"Create Collection: $result := List(...) | [] -> [y] ^ []"
         )
         val expectedResult = 1
 
@@ -134,10 +132,10 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            "Execute expression: temp0 := a | [a] -> [] ^ Create Collection 'List'",
-            "Execute expression: temp1 := b | [b] -> [] ^ Create Collection 'List'",
-            "Execute expression: temp3 := c | [c] -> [] ^ Create Collection 'List'",
-            $$"Create Collection: $result := List(...) | [] -> [y] ^ null"
+            $$"Execute expression: temp0 := a | [a] -> [] ^ [Create Collection: $result := List(...)]",
+            $$"Execute expression: temp1 := b | [b] -> [] ^ [Create Collection: $result := List(...)]",
+            $$"Execute expression: temp3 := c | [c] -> [] ^ [Create Collection: $result := List(...)]",
+            $$"Create Collection: $result := List(...) | [] -> [y] ^ []"
         )
         val expectedResult = 1
 
@@ -163,10 +161,10 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            "Execute expression: temp0 := a | [a] -> [] ^ Create Collection 'List'",
-            "Execute expression: temp1 := b | [b] -> [] ^ Create Collection 'List'",
-            "Execute expression: temp3 := c | [c] -> [] ^ Create Collection 'List'",
-            $$"Create Collection: $result := List(...) | [] -> [y] ^ null"
+            $$"Execute expression: temp0 := a | [a] -> [p] ^ [Create Collection: $result := List(...)]",
+            $$"Execute expression: temp1 := b | [b] -> [q] ^ [Create Collection: $result := List(...)]",
+            $$"Execute expression: temp3 := c | [c] -> [r] ^ [Create Collection: $result := List(...)]",
+            $$"Create Collection: $result := List(...) | [] -> [y] ^ []"
         )
         val expectedResult = 1
 
@@ -192,10 +190,10 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            "Execute expression: c [c] -> [r] ^ Create Collection 'List'",
-            "Execute expression: r [r] -> [p] ^ Create Collection 'List'",
-            "Execute expression: p [p] -> [q] ^ Create Collection 'List'",
-            "Create Collection 'List' [] -> [y] ^ null"
+            $$"Execute expression: c [c] -> [r] ^ [Create Collection: $result := List(...)]",
+            $$"Execute expression: r [r] -> [p] ^ [Create Collection: $result := List(...)]",
+            $$"Execute expression: p [p] -> [q] ^ [Create Collection: $result := List(...)]",
+            $$"Create Collection 'List' [] -> [y] ^ []"
         )
         val expectedResult = 1
 
@@ -207,7 +205,7 @@ class test_M2mPatternExecutor {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("A") {
-                    constructor_ { parameter("p1", "String") }
+                    constructor_ { parameter(setOf(), "p1", "String") }
                 }
             }
         }
@@ -221,8 +219,10 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            "Create object: 'A' [] -> [] ^ Set properties for: 'A'",
-            "Set properties for: 'A' [] -> [] ^ null"
+            $$"start collect constructor args push new EVC | [] -> [] ^ [Create object: pop EVC; push EVC with $self := A(...) {...}]",
+            $$"Create object: pop EVC; push EVC with $self := A(...) {...} | [] -> [] ^ [{ // Start set properties for A]",
+            $$"{ // Start set properties for A | [] -> [] ^ [} // Finish set properties for A: pop EVC; $result := oldEvc.$self]",
+            $$"} // Finish set properties for A: pop EVC; $result := oldEvc.$self | [] -> [] ^ []"
         )
         val expectedResult = 1
 
@@ -234,7 +234,7 @@ class test_M2mPatternExecutor {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("A") {
-                    constructor_ { parameter("p1", "String") }
+                    constructor_ { parameter(setOf(), "p1", "String") }
                 }
             }
         }
@@ -248,8 +248,10 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            "Create object: 'A' [] -> [a] ^ Set properties for: 'A'",
-            "Set properties for: 'A' [] -> [] ^ null"
+            $$"start collect constructor args push new EVC | [] -> [a] ^ [Create object: pop EVC; push EVC with $self := A(...) {...}]",
+           $$"Create object: pop EVC; push EVC with $self := A(...) {...} | [] -> [a] ^ [{ // Start set properties for A]",
+            $$"{ // Start set properties for A | [] -> [] ^ [} // Finish set properties for A: pop EVC; $result := oldEvc.$self]",
+            $$"} // Finish set properties for A: pop EVC; $result := oldEvc.$self | [] -> [] ^ []"
         )
         val expectedResult = 1
 
@@ -297,7 +299,7 @@ class test_M2mPatternExecutor {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("A") {
-                    constructor_ { parameter("p1", "String") }
+                    constructor_ { parameter(setOf(), "p1", "String") }
                 }
             }
         }
@@ -335,7 +337,7 @@ class test_M2mPatternExecutor {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("A") {
-                    constructor_ { parameter("p1", "String") }
+                    constructor_ { parameter(setOf(), "p1", "String") }
                 }
             }
         }

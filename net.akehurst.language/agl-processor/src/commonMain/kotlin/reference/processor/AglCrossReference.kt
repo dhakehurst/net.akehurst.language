@@ -191,7 +191,7 @@ interface ReferenceExpressionCollection {
                 data("ScopeDefinitionDefault") {
                     supertype("ScopeDefinition")
                     constructor_ {
-                        parameter("scopeForTypeName", "SimpleName", false)
+                        parameter(setOf(), "scopeForTypeName", "SimpleName")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "identifiables", "List", false){
                         typeArgument("Identifiable")
@@ -202,9 +202,9 @@ interface ReferenceExpressionCollection {
                     supertype("ReferenceExpressionAbstract")
                     supertype("ReferenceExpressionProperty")
                     constructor_ {
-                        parameter("referringPropertyNavigation", "NavigationExpression", false)
-                        parameter("refersToTypeName", "List", false)
-                        parameter("fromNavigation", "NavigationExpression", false)
+                        parameter(setOf(), "referringPropertyNavigation", "NavigationExpression")
+                        parameter(setOf(), "refersToTypeName", "List")
+                        parameter(setOf(), "fromNavigation", "NavigationExpression")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", false)
                     propertyOf(setOf(VAL, CMP, STR), "referringPropertyNavigation", "NavigationExpression", false)
@@ -216,9 +216,9 @@ interface ReferenceExpressionCollection {
                     supertype("ReferenceExpressionAbstract")
                     supertype("ReferenceExpressionCollection")
                     constructor_ {
-                        parameter("expression", "Expression", false)
-                        parameter("ofType", "PossiblyQualifiedName", false)
-                        parameter("referenceExpressionList", "List", false)
+                        parameter(setOf(), "expression", "Expression")
+                        parameter(setOf(), "ofType", "PossiblyQualifiedName")
+                        parameter(setOf(), "referenceExpressionList", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
                     propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", false)
@@ -233,8 +233,8 @@ interface ReferenceExpressionCollection {
                 data("ReferenceDefinitionDefault") {
                     supertype("ReferenceDefinition")
                     constructor_ {
-                        parameter("inTypeName", "SimpleName", false)
-                        parameter("referenceExpressionList", "List", false)
+                        parameter(setOf(), "inTypeName", "SimpleName")
+                        parameter(setOf(), "referenceExpressionList", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "inTypeName", "SimpleName", false)
                     propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
@@ -244,8 +244,8 @@ interface ReferenceExpressionCollection {
                 data("IdentifiableDefault") {
                     supertype("Identifiable")
                     constructor_ {
-                        parameter("typeName", "SimpleName", false)
-                        parameter("identifiedBy", "Expression", false)
+                        parameter(setOf(), "typeName", "SimpleName")
+                        parameter(setOf(), "identifiedBy", "Expression")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "identifiedBy", "Expression", false)
                     propertyOf(setOf(VAL, CMP, STR), "typeName", "SimpleName", false)
@@ -254,8 +254,8 @@ interface ReferenceExpressionCollection {
                     supertype("DeclarationsForNamespace")
                     supertype("DefinitionAbstract"){ ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
                     constructor_ {
-                        parameter("namespace", "CrossReferenceNamespace", false)
-                        parameter("options", "OptionHolder", false)
+                        parameter(setOf(), "namespace", "CrossReferenceNamespace")
+                        parameter(setOf(), "options", "OptionHolder")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "CrossReferenceNamespace", false)
@@ -272,9 +272,9 @@ interface ReferenceExpressionCollection {
                     supertype("NamespaceAbstract"){ ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
                     supertype("CrossReferenceNamespace")
                     constructor_ {
-                        parameter("qualifiedName", "QualifiedName", false)
-                        parameter("options", "OptionHolder", false)
-                        parameter("import", "List", false)
+                        parameter(setOf(), "qualifiedName", "QualifiedName")
+                        parameter(setOf(), "options", "OptionHolder")
+                        parameter(setOf(), "import", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
@@ -282,9 +282,9 @@ interface ReferenceExpressionCollection {
                     supertype("ModelAbstract"){ ref("net.akehurst.language.reference.api.CrossReferenceNamespace"); ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
                     supertype("CrossReferenceModel")
                     constructor_ {
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "OptionHolder", false)
-                        parameter("namespace", "List", false)
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "options", "OptionHolder")
+                        parameter(setOf(), "namespace", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                 }

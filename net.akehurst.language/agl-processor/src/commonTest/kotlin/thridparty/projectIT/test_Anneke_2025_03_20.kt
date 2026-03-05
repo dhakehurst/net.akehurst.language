@@ -40,7 +40,7 @@ class test_Anneke_2025_03_20 {
         """.trimIndent()
 
         val actual = proc.parse(sentence).let {
-            check(it.issues.errors.isEmpty())
+            check(it.issues.errors.isEmpty()) {it.issues.toString()}
             it.sppt!!
         }
 
@@ -58,7 +58,7 @@ class test_Anneke_2025_03_20 {
         """.trimIndent()
 
         val actual = proc.parse(sentence).let {
-            check(it.issues.errors.isEmpty())
+            check(it.issues.errors.isEmpty()) {it.issues.toString()}
             it.sppt!!
         }
 
@@ -83,7 +83,7 @@ class test_Anneke_2025_03_20 {
         """.trimIndent()
 
         val actual = proc.parse(sentence).let {
-            check(it.issues.errors.isEmpty())
+            check(it.issues.errors.isEmpty()) { it.issues.toString() }
             it.sppt!!
         }
 
@@ -100,7 +100,7 @@ class test_Anneke_2025_03_20 {
         """
 
         val actual = proc.process(sentence).let {
-            check(it.allIssues.errors.isEmpty())
+            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
             it.asm!!
         }
 
@@ -125,7 +125,7 @@ class test_Anneke_2025_03_20 {
         """
 
         val actual = proc.process(sentence).let {
-            check(it.allIssues.errors.isEmpty())
+            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
             it.asm!!
         }
 

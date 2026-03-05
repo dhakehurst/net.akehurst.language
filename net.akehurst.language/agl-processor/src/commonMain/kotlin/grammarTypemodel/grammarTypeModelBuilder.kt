@@ -62,7 +62,7 @@ class GrammarTypeNamespaceBuilder(
     imports: MutableList<Import>,
     resolveImports:Boolean
 )  : TypeNamespaceBuilder(namespaceQualifiedName,imports) {
-    override val _namespace:TypesNamespace = GrammarTypesNamespaceSimple(namespaceQualifiedName, import =  imports).also {
+    override val _namespace = GrammarTypesNamespaceSimple(namespaceQualifiedName, import =  imports).also {
         if(resolveImports) {
             it.resolveImports(typesDomain as Domain<Namespace<TypeDefinition>, TypeDefinition>)
         }
