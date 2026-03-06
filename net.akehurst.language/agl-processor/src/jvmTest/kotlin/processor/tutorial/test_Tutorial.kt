@@ -19,6 +19,7 @@ package net.akehurst.language.test.processor.tutorial
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.AsmTransformString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -27,6 +28,7 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class test_Tutorial {
@@ -41,7 +43,7 @@ class test_Tutorial {
             for (td in testData) {
                 println(td.sentence)
                 val res = proc.process(td.sentence)
-                assertTrue(res.allIssues.isEmpty(), res.allIssues.toString())
+                assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
                 assertEquals(td.asm.asString(), res.asm!!.asString())
             }
         }
@@ -50,20 +52,30 @@ class test_Tutorial {
     @Test
     fun _00_defaults_from_grammar() {
         val grammarDefinitionStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
         """
 
         val testData = listOf(
             TestData(
-                "",
-                asmSimple { }
+                "a",
+                asmSimple {
+                    element("S") {}
+                }
             )
         )
 
         val proc = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarDefinitionStr)
-        )
-        assertTrue(proc.issues.isEmpty(), proc.issues.toString())
-        test(testData, proc.processor!!)
+        ).let {
+            check(it.issues.errors.isEmpty()) {it.issues.toString()}
+            assertNotNull(it.processor)
+            it.processor
+        }
+        assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
+        test(testData, proc)
     }
 
     @Test
