@@ -59,6 +59,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::relationRule)
         super.register(this::mappingRule)
         super.register(this::tableRule)
+        super.register(this::ruleParameters)
         super.register(this::pivot)
         super.register(this::domainPrimitive)
         super.register(this::domainSignature)
@@ -85,7 +86,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::callMapping)
         super.register(this::callMappingForAll)
         super.register(this::ruleCall)
-        super.register(this::ruleArguments)
+        super.register(this::arguments)
+        super.register(this::argAssignment)
         super.register(this::propertyTemplateRhs)
         super.register(this::objectTemplate)
         super.register(this::propertyTemplateBlock)
@@ -173,36 +175,36 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     private fun transformRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mTransformRule =
         children[0] as M2mTransformRule
 
-    // abstractRule = 'abstract' 'top'? 'rule' ruleName extends? '{' domainPrimitive* domainSignature* '}' ;
+    // abstractRule = 'abstract' 'top'? 'rule' ruleName ruleParameters? extends? '{' domainSignature* '}' ;
     private fun abstractRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mTransformAbstractRule {
         val isTop = children[1] == "top"
         val name = SimpleName(children[3] as String)
-        val extends = children[4] as List<M2mTransformRuleReference>? ?: emptyList()
-        val primDomains = children[6] as List<VariableDefinition>
+        val parameters = children[4] as? List<VariableDefinition> ?: emptyList()
+        val extends = children[5] as? List<M2mTransformRuleReference> ?: emptyList()
         val sigDomains = children[7] as List<DomainSignature>
         return M2MTransformAbstractRuleDefault(isTop, name).also { rel ->
+            (rel.parameters as MutableList).addAll(parameters)
             (rel.extends as MutableList).addAll(extends)
-            (rel.primitiveDomains as MutableList).addAll(primDomains)
             sigDomains.forEach { rd ->
                 (rel.domainSignature as MutableMap)[rd.domainRef] = rd
             }
         }
     }
 
-    // relationRule = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainTemplate{2+} when? where? '}' ;
+    // relationRule = 'top'? 'relation' ruleName ruleParameters? extends? '{' pivot* domainTemplate{2+} when? where? '}' ;
     private fun relationRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformRelation {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
-        val extends = children[3] as List<M2mTransformRuleReference>? ?: emptyList()
-        val pivots = children[5] as List<VariableDefinition>
-        val primDomains = children[6] as List<VariableDefinition>
+        val parameters = children[3] as? List<VariableDefinition> ?: emptyList()
+        val extends = children[4] as? List<M2mTransformRuleReference> ?: emptyList()
+        val pivots = children[6] as List<VariableDefinition>
         val relDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
         val whenExpression = children[8] as Expression?
         val whereExpression = children[9] as RuleWhere?
         return M2MTransformRelationDefault(isTop, name).also { rel ->
+            (rel.parameters as MutableList).addAll(parameters)
             (rel.extends as MutableList).addAll(extends)
             pivots.forEach { (rel.pivot as MutableMap)[it.name] = it }
-            (rel.primitiveDomains as MutableList).addAll(primDomains)
             relDomains.forEach { rd ->
                 (rel.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
                 (rel.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
@@ -212,19 +214,19 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         }
     }
 
-    // mappingRule = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainTemplate+ domainAssignment when? where? '}' ;
+    // mappingRule = 'top'? 'mapping' ruleName ruleParameters? extends? '{' domainTemplate+ domainAssignment when? where? '}' ;
     private fun mappingRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformMapping {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
-        val extends = children[3] as List<M2mTransformRuleReference>? ?: emptyList()
-        val primDomains = children[5] as List<VariableDefinition>
+        val parameters = children[3] as? List<VariableDefinition> ?: emptyList()
+        val extends = children[4] as?List<M2mTransformRuleReference>? ?: emptyList()
         val inputDomains = children[6] as List<Pair<DomainSignature, ObjectTemplate>>
         val outputDomain = children[7] as Pair<DomainSignature, Expression?>
         val whenExpression = children[8] as Expression?
         val whereExpression = children[9] as RuleWhere?
         return M2MTransformMappingDefault(isTop, name).also { mp ->
+            (mp.parameters as MutableList).addAll(parameters)
             (mp.extends as MutableList).addAll(extends)
-            (mp.primitiveDomains as MutableList).addAll(primDomains)
             inputDomains.forEach { rd ->
                 (mp.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
                 (mp.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
@@ -236,19 +238,19 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         }
     }
 
-    // tableRule = 'top'? 'table' ruleName extends? '{' domainPrimitive* unnamedDomainSignature{2+} values+ when? where? '}' ;
+    // tableRule = 'top'? 'table' ruleName ruleParameters? extends? '{' unnamedDomainSignature{2+} values+ when? where? '}' ;
     private fun tableRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformTable {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
-        val extends = children[3] as List<M2mTransformRuleReference>? ?: emptyList()
-        val primDomains = children[5] as List<VariableDefinition>
+        val parameters = children[3] as? List<VariableDefinition> ?:emptyList()
+        val extends = children[4] as List<M2mTransformRuleReference>? ?: emptyList()
         val sigDomains = children[6] as List<DomainSignature>
         val values = children[7] as List<List<Expression>>
         val whenExpression = children[8] as Expression?
         val whereExpression = children[9] as Expression?
         return M2MTransformTableDefault(isTop, name).also { rel ->
+            (rel.parameters as MutableList).addAll(parameters)
             (rel.extends as MutableList).addAll(extends)
-            (rel.primitiveDomains as MutableList).addAll(primDomains)
             sigDomains.forEach { rd ->
                 (rel.domainSignature as MutableMap)[rd.domainRef] = rd
             }
@@ -259,6 +261,9 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         }
     }
 
+    // ruleParameters = '(' [variableDefinition / ',']+ ')' ;
+    private fun ruleParameters(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<VariableDefinition> =
+        children[1] as List<VariableDefinition>
 
     // pivot = 'pivot' variableDefinition ;
     private fun pivot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableDefinition {
@@ -352,26 +357,26 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
 
     // relationHolds = 'related' ruleCall ;
     private fun relationHolds(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhenRelationHolds {
-        val (ruleName, arguments) = children[1] as Pair<SimpleName, List<Expression>>
-        return RuleWhenRelationHoldsDefault(ruleName, arguments)
+        val (ruleName, ruleArguments, domainArguments) = children[1] as Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>>
+        return RuleWhenRelationHoldsDefault(ruleName, ruleArguments, domainArguments)
     }
 
     // relationHoldsForAll = 'related' 'all' ruleCall ;
     private fun relationHoldsForAll(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhenRelationHoldsForAll {
-        val (ruleName, arguments) = children[2] as Pair<SimpleName, List<Expression>>
-        return RuleWhenRelationHoldsForAllDefault(ruleName, arguments)
+        val (ruleName, ruleArguments, domainArguments) = children[2] as Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>>
+        return RuleWhenRelationHoldsForAllDefault(ruleName, ruleArguments, domainArguments)
     }
 
     // mappingHolds = 'mapped' ruleCall ;
     private fun mappingHolds(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhenMappingHolds {
-        val (ruleName, arguments) = children[1] as Pair<SimpleName, List<Expression>>
-        return RuleWhenMappingHoldsDefault(ruleName, arguments)
+        val (ruleName, ruleArguments, domainArguments) = children[1] as Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>>
+        return RuleWhenMappingHoldsDefault(ruleName, ruleArguments, domainArguments)
     }
 
     // mappingHoldsForAll = 'mapped' 'all' ruleCall ;
     private fun mappingHoldsForAll(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhenMappingHoldsForAll {
-        val (ruleName, arguments) = children[2] as Pair<SimpleName, List<Expression>>
-        return RuleWhenMappingHoldsForAllDefault(ruleName, arguments)
+        val (ruleName, ruleArguments, domainArguments) = children[2] as Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>>
+        return RuleWhenMappingHoldsForAllDefault(ruleName, ruleArguments, domainArguments)
     }
 
     // where = 'where' '{' whereExpression '}' ;
@@ -384,38 +389,44 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
 
     // callRelation = 'relate' ruleCall ;
     private fun callRelation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhereCallRelation {
-        val (ruleName, arguments) = children[1] as Pair<SimpleName, List<Expression>>
-        return RuleWhereCallRelationDefault(ruleName, arguments)
+        val (ruleName, ruleArguments, domainArguments) = children[1] as Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>>
+        return RuleWhereCallRelationDefault(ruleName, ruleArguments, domainArguments)
     }
 
     // callRelationForAll = 'relate' 'all' ruleCall ;
     private fun callRelationForAll(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhereCallRelationForAll {
-        val (ruleName, arguments) = children[2] as Pair<SimpleName, List<Expression>>
-        return RuleWhereCallRelationForAllDefault(ruleName, arguments)
+        val (ruleName, ruleArguments, domainArguments) = children[2] as Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>>
+        return RuleWhereCallRelationForAllDefault(ruleName, ruleArguments, domainArguments)
     }
 
     // callMapping = 'map' ruleCall ;
     private fun callMapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhereCallMapping {
-        val (ruleName, arguments) = children[1] as Pair<SimpleName, List<Expression>>
-        return RuleWhereCallMappingDefault(ruleName, arguments)
+        val (ruleName, ruleArguments, domainArguments) = children[1] as Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>>
+        return RuleWhereCallMappingDefault(ruleName, ruleArguments, domainArguments)
     }
 
     // callMappingForAll = 'map' 'all' ruleCall ;
     private fun callMappingForAll(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhereCallMappingForAll {
-        val (ruleName, arguments) = children[2] as Pair<SimpleName, List<Expression>>
-        return RuleWhereCallMappingForAllDefault(ruleName, arguments)
+        val (ruleName, ruleArguments, domainArguments) = children[2] as Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>>
+        return RuleWhereCallMappingForAllDefault(ruleName, ruleArguments, domainArguments)
     }
 
-    // ruleCall = ruleName '(' ruleArguments ')' ;
-    private fun ruleCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<SimpleName, List<Expression>> {
+    // ruleCall = ruleName arguments? '{' argAssignment{2+} '}' ;
+    private fun ruleCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Triple<SimpleName, Map<SimpleName, Expression>, Map<DomainReference, Expression>> {
         val ruleName = SimpleName(children[0] as String)
-        val arguments = children[2] as List<Expression>
-        return Pair(ruleName, arguments)
+        val ruleArguments = (children[1] as? List<Pair<String, Expression>>)?.associate{Pair(SimpleName(it.first), it.second)} ?: emptyMap()
+        val domainArguments = (children[3] as List<Pair<String, Expression>>).associate{Pair(DomainReference(it.first), it.second)} ?: emptyMap()
+        return Triple(ruleName, ruleArguments, domainArguments)
     }
 
-    // ruleArguments = [expression / ',']* ;
-    private fun ruleArguments(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> {
-        return (children as List<Any>).toSeparatedList<Any, Expression, String>().items
+    // arguments = '(' [argAssignment / ',']+ ')' ;
+    private fun arguments(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Pair<String, Expression>> {
+        return (children[1] as List<Any>).toSeparatedList<Any, Pair<String, Expression>, String>().items
+    }
+
+    // argAssignment = variableName ':=' expression ;
+    private fun argAssignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<String, Expression> {
+        return Pair(children[0] as String, children[2] as Expression)
     }
 
     // propertyTemplateRhs =  objectTemplate | collectionTemplate | expression ;

@@ -604,16 +604,15 @@ class M2mTransformInterpreter(
 
                             val whereExes = rule.where.map { rw ->
                                 val whereRule = rw.resolved!! //FIXME: issue when not resolved
-                                val idx = whereRule.domainSignature.keys.indexOf(m2mExecution.targetDomainRef)
-                                val whereOutputs = listOf(rw.arguments.elementAt(idx)).map {
+                                val whereOutputs = listOf(rw.domainArguments[m2mExecution.targetDomainRef]).map {
                                     when (it) {
                                         is RootExpression -> it.name
                                         else -> error("not handled") //FIXME:
                                     }
                                 }
-                                val whereInputs = rw.arguments.map {
-                                    when (it) {
-                                        is RootExpression -> it.name
+                                val whereInputs = rw.domainArguments.map { (k,v) ->
+                                    when (v) {
+                                        is RootExpression -> v.name
                                         else -> error("not handled") //FIXME:
                                     }
                                 } - whereOutputs
@@ -857,7 +856,7 @@ class M2mTransformInterpreter(
         // TODO: use an extended Expression evaluator that handles the RuleWhen options, so we can have compound when-expressions
         return when (when_) {
             is RuleWhenRelationHolds, is RuleWhenMappingHolds -> when_.resolved?.let { rule ->
-                val source = getSource(m2mExecution, rule, when_.arguments, matchedVariables)
+                val source = getSource(m2mExecution, rule, when_.domainArguments, matchedVariables)
                 val rec = m2mExecution.records[rule]
                 val found = rec?.let {
                     rec.alternatives.firstOrNull { mapping ->
@@ -875,8 +874,7 @@ class M2mTransformInterpreter(
                     }
                 }
                 found?.let {
-                    val targetDomainRefIdx = rule.domainSignature.keys.indexOf(m2mExecution.targetDomainRef)
-                    val targetArg = when_.arguments.getOrNull(targetDomainRefIdx)
+                    val targetArg = when_.domainArguments[m2mExecution.targetDomainRef]
                     val tgtValue = found[m2mExecution.targetDomainRef]
                     val vars: Map<String, TypedObject> = when (targetArg) {
                         null -> TODO()
@@ -929,10 +927,9 @@ class M2mTransformInterpreter(
     ): Map<String, TypedObject> {
         return when (where) { //TODO: support more complex expressions - override the expression interpreter to intercept function calls as rule-calls
             is RuleWhereCallRelation, is RuleWhereCallMapping -> where.resolved?.let { rule ->
-                val source = getSource(m2mExecution, rule, where.arguments, matchedVariables)
+                val source = getSource(m2mExecution, rule, where.domainArguments, matchedVariables)
                 val tgtValue = executeRuleWhere(m2mExecution, owningRule, rule, source)
-                val targetDomainRefIdx = rule.domainSignature.keys.indexOf(m2mExecution.targetDomainRef)
-                val targetArg = where.arguments.getOrNull(targetDomainRefIdx)
+                val targetArg = where.domainArguments[m2mExecution.targetDomainRef]
                 when (targetArg) {
                     null -> {
                         m2mExecution.errorIssue(
@@ -959,7 +956,7 @@ class M2mTransformInterpreter(
             }
 
             is RuleWhereCallRelationForAll, is RuleWhereCallMappingForAll -> where.resolved?.let { rule ->
-                val source = getSource(m2mExecution, rule, where.arguments, matchedVariables)
+                val source = getSource(m2mExecution, rule, where.domainArguments, matchedVariables)
                 val tgtValue = when {
                     source.all { (k, v) -> v.all { it.type.isCollection } } -> {
                         val sourceElements = mutableListOf<Map<DomainReference, List<TypedObject>>>()
@@ -993,8 +990,7 @@ class M2mTransformInterpreter(
                         null
                     }
                 }
-                val targetDomainRefIdx = rule.domainSignature.keys.indexOf(m2mExecution.targetDomainRef)
-                val targetArg = where.arguments.getOrNull(targetDomainRefIdx)
+                val targetArg = where.domainArguments[m2mExecution.targetDomainRef]
                 when (targetArg) {
                     null -> {
                         m2mExecution.errorIssue(
@@ -1053,14 +1049,10 @@ class M2mTransformInterpreter(
     fun getSource(
         m2mExecution: M2mTransformExecution,
         rule: M2mTransformRule,
-        arguments: List<Expression>,
+        arguments: Map<DomainReference,Expression>,
         matchedVariables: Map<String, TypedObject>,
     ): Map<DomainReference, List<TypedObject>> {
-        val argsValues = arguments.mapIndexed { idx, argExpr ->
-            val domainRef = rule.domainSignature.keys.elementAt(idx)
-            Pair(domainRef, argExpr)
-        }.associate { it }
-        return (argsValues - m2mExecution.targetDomainRef).mapValues { (k, v) ->
+        return (arguments - m2mExecution.targetDomainRef).mapValues { (k, v) ->
             val og = m2mExecution.domainAccessorMutator[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
             val exprInterp = ExpressionsInterpreterOverTypedObject(og, m2mExecution.issues)
             val evc = EvaluationContext.of(matchedVariables)

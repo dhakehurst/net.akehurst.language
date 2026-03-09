@@ -100,8 +100,8 @@ interface M2mTransformRuleReference {
 interface M2mTransformRule {
     val isTop: Boolean
     val name: SimpleName
+    val parameters: List<VariableDefinition>
     val extends: List<M2mTransformRuleReference>
-    val primitiveDomains: List<VariableDefinition>
     val domainSignature: Map<DomainReference, DomainSignature>
 
     fun conformsTo(other: M2mTransformRule): Boolean
@@ -134,7 +134,8 @@ interface M2mTransformPatternRule : M2mTransformRule {
 
 interface RuleCall {
     val ruleName: SimpleName
-    val arguments: List<Expression>
+    val ruleArguments: Map<SimpleName,Expression>
+    val domainArguments: Map<DomainReference,Expression>
 
     var resolved: M2mTransformRule?
 

@@ -179,6 +179,7 @@ data class M2mTransformRuleReferenceDefault(
 
 abstract class M2mTransformRuleAbstract(
 ) : M2mTransformRule {
+    override val parameters: List<VariableDefinition> = mutableListOf()
     override val extends: List<M2mTransformRuleReference> = mutableListOf()
 
     override fun conformsTo(other: M2mTransformRule): Boolean = when {
@@ -192,7 +193,6 @@ data class M2MTransformAbstractRuleDefault(
     override val isTop: Boolean,
     override val name: SimpleName
 ) : M2mTransformAbstractRule, M2mTransformRuleAbstract() {
-    override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 }
 
@@ -200,7 +200,6 @@ data class M2MTransformRelationDefault(
     override val isTop: Boolean,
     override val name: SimpleName
 ) : M2MTransformRelation, M2mTransformRuleAbstract() {
-    override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 
     override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
@@ -214,7 +213,6 @@ data class M2MTransformMappingDefault(
     override val isTop: Boolean,
     override val name: SimpleName
 ) : M2MTransformMapping, M2mTransformRuleAbstract() {
-    override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 
     override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
@@ -229,7 +227,6 @@ data class M2MTransformTableDefault(
     override val isTop: Boolean,
     override val name: SimpleName
 ) : M2MTransformTable, M2mTransformRuleAbstract() {
-    override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
     override val values: List<Map<DomainReference, Expression>> = mutableListOf()
 }
@@ -256,7 +253,11 @@ data class VariableDefinitionDefault(
 }
 
 
-abstract class RuleCallAbstract() : RuleCall {
+abstract class RuleCallAbstract(
+    override val ruleName: SimpleName,
+    override val ruleArguments: Map<SimpleName, Expression>,
+    override val domainArguments: Map<DomainReference, Expression>,
+) : RuleCall {
     override var resolved: M2mTransformRule? = null
 
     override fun resolveAs(resolved: M2mTransformRule) {
@@ -264,66 +265,74 @@ abstract class RuleCallAbstract() : RuleCall {
     }
 }
 
-data class RuleWhenRelationHoldsDefault(
-    override val ruleName: SimpleName,
-    override val arguments: List<Expression>,
-) : RuleWhenRelationHolds, Expression, RuleCallAbstract() {
+class RuleWhenRelationHoldsDefault(
+    ruleName: SimpleName,
+    ruleArguments: Map<SimpleName, Expression>,
+    domainArguments: Map<DomainReference, Expression>,
+) : RuleWhenRelationHolds, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "related ${ruleName.value}(...)"
 }
 
-data class RuleWhenRelationHoldsForAllDefault(
-    override val ruleName: SimpleName,
-    override val arguments: List<Expression>,
-) : RuleWhenRelationHoldsForAll, Expression, RuleCallAbstract() {
+class RuleWhenRelationHoldsForAllDefault(
+     ruleName: SimpleName,
+     ruleArguments: Map<SimpleName, Expression>,
+    domainArguments: Map<DomainReference, Expression>,
+) : RuleWhenRelationHoldsForAll, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "related all ${ruleName.value}(...)"
 }
 
-data class RuleWhenMappingHoldsDefault(
-    override val ruleName: SimpleName,
-    override val arguments: List<Expression>,
-) : RuleWhenMappingHolds, Expression, RuleCallAbstract() {
+class RuleWhenMappingHoldsDefault(
+    ruleName: SimpleName,
+    ruleArguments: Map<SimpleName, Expression>,
+    domainArguments: Map<DomainReference, Expression>,
+) : RuleWhenMappingHolds, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "mapped ${ruleName.value}(...)"
 }
 
-data class RuleWhenMappingHoldsForAllDefault(
-    override val ruleName: SimpleName,
-    override val arguments: List<Expression>,
-) : RuleWhenMappingHoldsForAll, Expression, RuleCallAbstract() {
+class RuleWhenMappingHoldsForAllDefault(
+    ruleName: SimpleName,
+    ruleArguments: Map<SimpleName, Expression>,
+    domainArguments: Map<DomainReference, Expression>,
+) : RuleWhenMappingHoldsForAll, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "mapped all ${ruleName.value}(...)"
 }
 
-data class RuleWhereCallRelationDefault(
+class RuleWhereCallRelationDefault(
     override val ruleName: SimpleName,
-    override val arguments: List<Expression>,
-) : RuleWhereCallRelation, Expression, RuleCallAbstract() {
+    override val ruleArguments: Map<SimpleName, Expression>,
+    override val domainArguments: Map<DomainReference, Expression>,
+) : RuleWhereCallRelation, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "relate ${ruleName.value}(...)"
 }
 
-data class RuleWhereCallRelationForAllDefault(
-    override val ruleName: SimpleName,
-    override val arguments: List<Expression>,
-) : RuleWhereCallRelationForAll, Expression, RuleCallAbstract() {
+class RuleWhereCallRelationForAllDefault(
+    ruleName: SimpleName,
+    ruleArguments: Map<SimpleName, Expression>,
+    domainArguments: Map<DomainReference, Expression>,
+) : RuleWhereCallRelationForAll, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "relate all ${ruleName.value}(...)"
 }
 
-data class RuleWhereCallMappingDefault(
-    override val ruleName: SimpleName,
-    override val arguments: List<Expression>,
-) : RuleWhereCallMapping, Expression, RuleCallAbstract() {
+class RuleWhereCallMappingDefault(
+    ruleName: SimpleName,
+    ruleArguments: Map<SimpleName, Expression>,
+    domainArguments: Map<DomainReference, Expression>,
+) : RuleWhereCallMapping, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "map ${ruleName.value}(...)"
 }
 
-data class RuleWhereCallMappingForAllDefault(
-    override val ruleName: SimpleName,
-    override val arguments: List<Expression>,
-) : RuleWhereCallMappingForAll, Expression, RuleCallAbstract() {
+class RuleWhereCallMappingForAllDefault(
+    ruleName: SimpleName,
+    ruleArguments: Map<SimpleName, Expression>,
+    domainArguments: Map<DomainReference, Expression>,
+) : RuleWhereCallMappingForAll, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "map all ${ruleName.value}(...)"
 }

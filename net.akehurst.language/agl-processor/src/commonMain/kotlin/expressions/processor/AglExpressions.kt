@@ -204,7 +204,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
               font-weight: bold;
             }
           }
-      """
+      """.trimIndent()
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}

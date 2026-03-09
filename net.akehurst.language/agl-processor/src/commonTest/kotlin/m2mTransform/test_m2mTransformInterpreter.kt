@@ -791,7 +791,7 @@ class test_m2mTransformInterpreter {
                             domain d1 a1:A1 { prop1 == s1 }
                             domain d2 a2:A2 := A2() { prop2 := s2 }
                             where {
-                              map StringConvert(s1,s2)
+                              map StringConvert { d1 := s1 d2 := s2 }
                             }
                         }
                         table StringConvert {
@@ -853,7 +853,7 @@ class test_m2mTransformInterpreter {
                             domain d1 a1:A1 { prop1 == s1 }
                             domain d2 a2:A2 { prop2 == s2 }
                             where {
-                              map StringConvert(s1,s2)
+                              map StringConvert{ d1:=s1 d2:=s2 }
                             }
                         }
                         table StringConvert {
@@ -1938,7 +1938,7 @@ class test_m2mTransformInterpreter {
                               table == s_tbl
                             }
                             where {
-                                relate all ClassToTable(p_els, s_tbl)
+                                relate all ClassToTable { uml := p_els rdbms:= s_tbl }
                             }
                         }
                         relation ClassToTable {
@@ -1967,9 +1967,9 @@ class test_m2mTransformInterpreter {
                                     kind=='primary'
                                 }
                             }
-                            when { related PackageToSchema(p, s) }
+                            when { related PackageToSchema{ uml := p rdbms := s } }
                             where {
-                                 relate all AttributeToColumn(c_atts, t_cols)
+                                 relate all AttributeToColumn{ uml := c_atts rdbms := t_cols }
                             }
                         }
                         abstract rule AttributeToColumn {
@@ -1987,7 +1987,10 @@ class test_m2mTransformInterpreter {
                                 type==ct:String{}
                             }
                             where {
-                                relate PrimitiveUmlTypeToSqlType(at, ct)
+                                relate PrimitiveUmlTypeToSqlType {
+                                  uml := at
+                                  rdbms := ct
+                                }
                             }
                         }
                         relation AttributeToColumnComplex {
@@ -2001,7 +2004,10 @@ class test_m2mTransformInterpreter {
                                 type=='NUMBER'
                             }
                             where {
-                                relate ComplexUmlTypeToSqlType(at, ct)
+                                relate ComplexUmlTypeToSqlType {
+                                  uml := at
+                                  rdbms := ct
+                                }
                             }
                         }                        
                         table PrimitiveUmlTypeToSqlType {
@@ -2091,8 +2097,6 @@ class test_m2mTransformInterpreter {
                             }
                         }
                     }
-                    // the class does not have a name, so the name of the table is $nothing, therefore evaluating the name of the Table gives a warning
-                    expectIssue(LanguageIssueKind.WARNING, $$"in getProperty, property 'name' not found on object of type 'Nothing', using value '$nothing'")
                     // there are no Class attributes so expect this
                     expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'ClassToTable' in 'umlRdbms', the all call to rule 'AttributeToColumn' is expecting a collection.")
                     target("rdbms", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
