@@ -1856,6 +1856,7 @@ class test_m2mTransformInterpreter {
                                 parameter(setOf(), "owner", "Table")
                                 parameter(setOf(), "name", "String")
                             }
+                            propertyOf(setOf(CMP,VAR), "type", "String")
                         }
                         data("Key") {
                             supertypes("RModelElement")
@@ -1863,6 +1864,7 @@ class test_m2mTransformInterpreter {
                                 parameter(setOf(), "owner", "Table")
                                 parameter(setOf(), "name", "String")
                             }
+                            propertyOf(setOf(CMP,VAR), "kind", "String")
                         }
                         data("ForeignKey") {
                             supertypes("RModelElement")
@@ -1887,6 +1889,10 @@ class test_m2mTransformInterpreter {
                             end("Key", setOf(REF, VAR), "refersTo", false, "Set")
                             //TODO: refersToOpposite is not navigable!
                             end("ForeignKey", setOf(REF, VAR), "refersToOpposite", false, "Set")
+                        }
+                        association {
+                            end("Column",setOf(REF, VAR), "column",false,"Set")
+                            end("Key",setOf(REF, VAR),"key",false,"Set")
                         }
                         association {
                             end("Column", setOf(REF, VAR), "column", false, "Set")
@@ -2058,6 +2064,7 @@ class test_m2mTransformInterpreter {
                             }
                         }
                     }
+                    // because the Class.kind is not set, the ClassToTable uml domain matches nothing, and the PackageToSchema.where will match nothing
                     expectIssue(LanguageIssueKind.WARNING, "In rule 'PackageToSchema' the 'where' clause matched nothing.")
                     target("rdbms") {
                         element("Schema") {
@@ -2077,7 +2084,10 @@ class test_m2mTransformInterpreter {
                             }
                         }
                     }
+                    // because the Class.namespace is not set, variable p will be $nothing, and the ClassToTable.when clause will fail
                     expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'rdbms' of rule 'ClassToTable'.")
+                    // because the ClassToTable.when clause fails, the PackageToSchema.where will match nothing
+                    expectIssue(LanguageIssueKind.WARNING, "In rule 'PackageToSchema' the 'where' clause matched nothing.")
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
@@ -2233,6 +2243,7 @@ class test_m2mTransformInterpreter {
 
         fun doTest2(suite: TransformTestSuit, case: TransformTestCase) {
             println("****** Suit '${suite.description}' : Case '${case.description}' ******")
+            println(suite.transform)
 //            suite.typeDomains.forEach { (k, v) ->
 //                println("----- ${k.value} : ${v.name.value} -----")
 //                println(v.asString())
@@ -2315,6 +2326,6 @@ class test_m2mTransformInterpreter {
     fun single() {
         val suite = testSuits["Full umlRdbms QVT example"]!!
         val case = suite.testCase["1 Class with kind & namespace, but no name, or attributes"]!!
-        doTest(suite, case)
+        doTest2(suite, case)
     }
 }

@@ -271,16 +271,24 @@ class RuleWhenRelationHoldsDefault(
     domainArguments: Map<DomainReference, Expression>,
 ) : RuleWhenRelationHolds, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "related ${ruleName.value}(...)"
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val ruleArgs = ruleArguments.entries.joinToString(separator = ", ") { "${it.key.value} := ${it.value.asString(indent, imports)}" }
+        val domArgs = domainArguments.entries.joinToString(separator = " ") { "${it.key.value} := ${it.value.asString(indent, imports)}" }
+        return "related ${ruleName.value}($ruleArgs) { $domArgs }"
+    }
+
+    override fun toString(): String = "related ${ruleName.value}(...)"
 }
 
 class RuleWhenRelationHoldsForAllDefault(
-     ruleName: SimpleName,
-     ruleArguments: Map<SimpleName, Expression>,
+    ruleName: SimpleName,
+    ruleArguments: Map<SimpleName, Expression>,
     domainArguments: Map<DomainReference, Expression>,
 ) : RuleWhenRelationHoldsForAll, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "related all ${ruleName.value}(...)"
+    override fun asString(indent: Indent, imports: List<Import>): String = "related all ${ruleName.value}(...)" //TODO: complete it
+
+    override fun toString(): String = "related all ${ruleName.value}(...)"
 }
 
 class RuleWhenMappingHoldsDefault(
@@ -289,7 +297,9 @@ class RuleWhenMappingHoldsDefault(
     domainArguments: Map<DomainReference, Expression>,
 ) : RuleWhenMappingHolds, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "mapped ${ruleName.value}(...)"
+    override fun asString(indent: Indent, imports: List<Import>): String = "mapped ${ruleName.value}(...)" //TODO: complete it
+
+    override fun toString(): String = "mapped ${ruleName.value}(...)"
 }
 
 class RuleWhenMappingHoldsForAllDefault(
@@ -298,7 +308,9 @@ class RuleWhenMappingHoldsForAllDefault(
     domainArguments: Map<DomainReference, Expression>,
 ) : RuleWhenMappingHoldsForAll, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "mapped all ${ruleName.value}(...)"
+    override fun asString(indent: Indent, imports: List<Import>): String = "mapped all ${ruleName.value}(...)" //TODO: complete it
+
+    override fun toString(): String = "mapped all ${ruleName.value}(...)"
 }
 
 class RuleWhereCallRelationDefault(
@@ -307,7 +319,9 @@ class RuleWhereCallRelationDefault(
     override val domainArguments: Map<DomainReference, Expression>,
 ) : RuleWhereCallRelation, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "relate ${ruleName.value}(...)"
+    override fun asString(indent: Indent, imports: List<Import>): String = "relate ${ruleName.value}(...)" //TODO: complete it
+
+    override fun toString(): String = "relate ${ruleName.value}(...)"
 }
 
 class RuleWhereCallRelationForAllDefault(
@@ -316,7 +330,9 @@ class RuleWhereCallRelationForAllDefault(
     domainArguments: Map<DomainReference, Expression>,
 ) : RuleWhereCallRelationForAll, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "relate all ${ruleName.value}(...)"
+    override fun asString(indent: Indent, imports: List<Import>): String = "relate all ${ruleName.value}(...)" //TODO: complete it
+
+    override fun toString(): String = "relate all ${ruleName.value}(...)"
 }
 
 class RuleWhereCallMappingDefault(
@@ -325,7 +341,9 @@ class RuleWhereCallMappingDefault(
     domainArguments: Map<DomainReference, Expression>,
 ) : RuleWhereCallMapping, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "map ${ruleName.value}(...)"
+    override fun asString(indent: Indent, imports: List<Import>): String = "map ${ruleName.value}(...)" //TODO: complete it
+
+    override fun toString(): String = "map ${ruleName.value}(...)"
 }
 
 class RuleWhereCallMappingForAllDefault(
@@ -334,7 +352,9 @@ class RuleWhereCallMappingForAllDefault(
     domainArguments: Map<DomainReference, Expression>,
 ) : RuleWhereCallMappingForAll, Expression, RuleCallAbstract(ruleName, ruleArguments, domainArguments) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "map all ${ruleName.value}(...)"
+    override fun asString(indent: Indent, imports: List<Import>): String = "map all ${ruleName.value}(...)" //TODO: complete it
+
+    override fun toString(): String = "map all ${ruleName.value}(...)"
 }
 
 
@@ -344,7 +364,7 @@ data class ObjectTemplateDefault(
 ) : ObjectTemplate {
 
     // used when type is known
-    constructor(type: TypeInstance, propertyTemplate: Map<SimpleName, PropertyTemplate>) : this(TypeReferenceDefault(type.qualifiedTypeName,emptyList(),type.isNullable),propertyTemplate) {
+    constructor(type: TypeInstance, propertyTemplate: Map<SimpleName, PropertyTemplate>) : this(TypeReferenceDefault(type.qualifiedTypeName, emptyList(), type.isNullable), propertyTemplate) {
         _resolvedType = type
     }
 
@@ -372,7 +392,7 @@ data class ObjectTemplateDefault(
     override fun asString(indent: Indent): String {
         val id = identifier?.let { "${it.value}:" } ?: ""
         val propIndent = indent.inc
-        val props = propertyTemplate.entries.joinToString(separator = "\n") { (k,v) -> "$propIndent${k.value}==${v.rhs.asString(propIndent)}" }
+        val props = propertyTemplate.entries.joinToString(separator = "\n") { (k, v) -> "$propIndent${k.value}==${v.rhs.asString(propIndent)}" }
         return when {
             propertyTemplate.isEmpty() -> "$id$type { }"
             else -> """$id$type {
@@ -395,11 +415,12 @@ data class CollectionTemplateDefault(
     override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
         return elements.flatMap { it.resolveTypes(tm) }
     }
+
     override fun asString(indent: Indent): String {
         val id = identifier?.let { "${it.value}:" } ?: ""
         val elIndent = indent.inc
         val elems = elements.joinToString(separator = "\n") { el -> "$elIndent${el.asString(elIndent)}" }
-        return when{
+        return when {
             elements.isEmpty() -> "$id[ ]"
             else -> """$id[
             $elems

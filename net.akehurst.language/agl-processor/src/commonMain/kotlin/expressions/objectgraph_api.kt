@@ -68,8 +68,9 @@ class EvaluationContext(
 
     fun childSelf(self: TypedObject, namedValues: Map<String, TypedObject> = emptyMap()) = ofSelf(self, namedValues, parent = this)
 
-    fun setNamedValue(name:String, value: TypedObject) {
+    fun setNamedValue(name:String, value: TypedObject): EvaluationContext {
         (namedValues as MutableMap)[name] = value
+        return this
     }
 
     fun addExecutionTrace(trace: String) {

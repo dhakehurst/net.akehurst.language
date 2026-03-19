@@ -12,6 +12,7 @@ import net.akehurst.language.m2mTransform.asm.CollectionTemplateDefault
 import net.akehurst.language.m2mTransform.asm.ObjectTemplateDefault
 import net.akehurst.language.m2mTransform.asm.PropertyTemplateDefault
 import net.akehurst.language.m2mTransform.asm.PropertyTemplateExpressionDefault
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
@@ -27,13 +28,14 @@ class test_M2mPatternExecutor {
             val accessorMutator = ObjectGraphAccessorMutatorAsmSimple(types, issues)
             val sut = M2mPatternExecutor(issues, accessorMutator, emptyList())
 
-            sut.build(template, lhsType)
+            val tgtName = template.identifier?.value ?: M2mPatternExecutor.RESULT
+            sut.build(tgtName,template, lhsType)
             val actualPlan = sut.executionPlan().map { it.toString() }
             println(actualPlan.joinToString("\n"))
             assertEquals(expectedPlan, actualPlan)
 
             val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v.toAsmSimple)) }
-            val res = sut.execute(typedInput, accessorMutator.nothing())
+            val res = sut.execute(EvaluationContext.of(typedInput), tgtName)
             val actualResult = res
             val expectedTypedResult = accessorMutator.toTypedObject(expectedResult.toAsmSimple)
             assertEquals(expectedTypedResult, actualResult)
@@ -42,6 +44,7 @@ class test_M2mPatternExecutor {
 
     @Test
     fun executionPlan_unnamed_x() {
+        // x
         val types = typesDomain("Test", true) { }
         val template = PropertyTemplateExpressionDefault(
             RootExpressionDefault("x")
@@ -52,7 +55,7 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Execute expression: push EVC with $self := x | [x] -> [] ^ []"
+            $$"[0] Execute expression: push EVC with $result := x | [x] -> [$result] ^ []"
         )
         val expectedResult = 1
         doTest(types, lhsType, template, input, expectedPlan, expectedResult)
@@ -60,6 +63,7 @@ class test_M2mPatternExecutor {
 
     @Test
     fun executionPlan_named_x() {
+        // y : x
         val types = typesDomain("Test", true) { }
         val template = PropertyTemplateExpressionDefault(
             RootExpressionDefault("x")
@@ -72,7 +76,7 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Execute expression: push EVC with $self := x | [x] -> [y] ^ []"
+            "[0] Execute expression: push EVC with y := x | [x] -> [y] ^ []"
         )
         val expectedResult = 1
 
@@ -81,6 +85,7 @@ class test_M2mPatternExecutor {
 
     @Test
     fun executionPlan_unnamed_empty_nonSusbset_collection() {
+        // []
         val types = typesDomain("Test", true) { }
         val template = CollectionTemplateDefault(false, emptyList())
         val lhsType = StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument))
@@ -89,15 +94,18 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Create Collection: $result := List(...) | [] -> [] ^ []"
+            $$"[0] { push EVC // Start elements for Collection | [] -> [] ^ [1]",
+            $$"[1] } // Finish elements for Collection | [] -> [] ^ [2]",
+            $$"[2] Create Collection: $result := List( <elements> ) | [] -> [] ^ []",
         )
-        val expectedResult = 1
+        val expectedResult = listOf<String>()
 
         doTest(types, lhsType, template, input, expectedPlan, expectedResult)
     }
 
     @Test
     fun executionPlan_named_empty_nonSusbset_collection() {
+        // y: []
         val types = typesDomain("Test", true) { }
         val template = CollectionTemplateDefault(false, emptyList()).also {
             it.setIdentifierValue(SimpleName("y"))
@@ -106,15 +114,18 @@ class test_M2mPatternExecutor {
         val input = mapOf<String,Any>()
 
         val expectedPlan = listOf(
-            $$"Create Collection: $result := List(...) | [] -> [y] ^ []"
+            "[0] { push EVC // Start elements for Collection | [] -> [] ^ [1]",
+            "[1] } // Finish elements for Collection | [] -> [] ^ [2]",
+            "[2] Create Collection: y := List( <elements> ) | [] -> [y] ^ []",
         )
-        val expectedResult = 1
+        val expectedResult = listOf<String>()
 
         doTest(types, lhsType, template, input, expectedPlan, expectedResult)
     }
 
     @Test
     fun executionPlan_named_nonSusbset_collection_of_unamed() {
+        // y: [ a, b, c]
         val types = typesDomain("Test", true) { }
         val elms = listOf(
             PropertyTemplateExpressionDefault(RootExpressionDefault("a")),
@@ -132,12 +143,14 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Execute expression: temp0 := a | [a] -> [] ^ [Create Collection: $result := List(...)]",
-            $$"Execute expression: temp1 := b | [b] -> [] ^ [Create Collection: $result := List(...)]",
-            $$"Execute expression: temp3 := c | [c] -> [] ^ [Create Collection: $result := List(...)]",
-            $$"Create Collection: $result := List(...) | [] -> [y] ^ []"
+            "[3] { push EVC // Start elements for Collection | [] -> [] ^ [4, 0, 1, 2]",
+            "[0] Execute expression: push EVC with temp0 := a | [a] -> [temp0] ^ [4]",
+            "[1] Execute expression: push EVC with temp1 := b | [b] -> [temp1] ^ [4]",
+            "[2] Execute expression: push EVC with temp2 := c | [c] -> [temp2] ^ [4]",
+            "[4] } // Finish elements for Collection | [] -> [] ^ [5]",
+            "[5] Create Collection: y := List( <elements> ) | [temp0, temp1, temp2] -> [y] ^ []"
         )
-        val expectedResult = 1
+        val expectedResult = listOf(1, 2, 3)
 
         doTest(types, lhsType, template, input, expectedPlan, expectedResult)
     }
@@ -161,12 +174,14 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Execute expression: temp0 := a | [a] -> [p] ^ [Create Collection: $result := List(...)]",
-            $$"Execute expression: temp1 := b | [b] -> [q] ^ [Create Collection: $result := List(...)]",
-            $$"Execute expression: temp3 := c | [c] -> [r] ^ [Create Collection: $result := List(...)]",
-            $$"Create Collection: $result := List(...) | [] -> [y] ^ []"
+            "[3] { push EVC // Start elements for Collection | [] -> [] ^ [4, 0, 1, 2]",
+            "[0] Execute expression: push EVC with p := a | [a] -> [p] ^ [4]",
+            "[1] Execute expression: push EVC with q := b | [b] -> [q] ^ [4]",
+            "[2] Execute expression: push EVC with r := c | [c] -> [r] ^ [4]",
+            "[4] } // Finish elements for Collection | [] -> [] ^ [5]",
+            "[5] Create Collection: y := List( <elements> ) | [p, q, r] -> [y] ^ []"
         )
-        val expectedResult = 1
+        val expectedResult = listOf(1, 2, 3)
 
         doTest(types, lhsType, template, input, expectedPlan, expectedResult)
     }
@@ -190,12 +205,14 @@ class test_M2mPatternExecutor {
         )
 
         val expectedPlan = listOf(
-            $$"Execute expression: c [c] -> [r] ^ [Create Collection: $result := List(...)]",
-            $$"Execute expression: r [r] -> [p] ^ [Create Collection: $result := List(...)]",
-            $$"Execute expression: p [p] -> [q] ^ [Create Collection: $result := List(...)]",
-            $$"Create Collection 'List' [] -> [y] ^ []"
+            "[3] { push EVC // Start elements for Collection | [] -> [] ^ [4, 0, 1, 2]",
+            "[2] Execute expression: push EVC with r := c | [c] -> [r] ^ [4]",
+            "[0] Execute expression: push EVC with p := r | [r] -> [p] ^ [4]",
+            "[1] Execute expression: push EVC with q := p | [p] -> [q] ^ [4]",
+            "[4] } // Finish elements for Collection | [] -> [] ^ [5]",
+            "[5] Create Collection: y := List( <elements> ) | [p, q, r] -> [y] ^ []"
         )
-        val expectedResult = 1
+        val expectedResult =  listOf(1, 2, 3)
 
         doTest(types, lhsType, template, input, expectedPlan, expectedResult)
     }
