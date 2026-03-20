@@ -29,7 +29,6 @@ import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTyp
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
-import net.akehurst.language.m2mTransform.processor.MappingRecord.Companion.merge
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -636,7 +635,7 @@ class M2mTransformInterpreter(
                                     mv
                                 }
                             }
-                            recordMapping.doAfterMe.addAll(whereExes) // called rules may refer to the mapping
+                            recordMapping.doMeBefore.addAll(whereExes) // called rules may refer to the mapping
                             val initExes = listOf(matchedVars, recordMapping) + whereExes
                             val executor = M2mPatternExecutor(m2mExecution.issues, m2mExecution.targetAccessorMutator, initExes) //TODO: construct and build this during semantic analysis
                             val tgtName = template.identifier?.value ?: RESULT

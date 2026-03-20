@@ -58,7 +58,7 @@ class EvaluationContext(
     }
 
     val namedValues: Map<String, TypedObject> = initialNamedValues.toMutableMap()
-    val self = namedValues[RootExpressionDefault.SELF.name]
+    val self get() = getOrInParent(RootExpressionDefault.SELF.name)
 
     val executionTrace: List<String> = mutableListOf()
 
