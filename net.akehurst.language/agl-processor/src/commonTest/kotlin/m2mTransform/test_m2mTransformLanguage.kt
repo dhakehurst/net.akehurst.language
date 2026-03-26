@@ -368,7 +368,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {}
                         domain d2 y:Y {}
                         when {
-                          related Rel2(x,y)
+                          related Rel2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -398,7 +398,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {}
                         domain d2 y:Y {}
                         when {
-                          related all Rel2(x,y)
+                          related all Rel2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -428,7 +428,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {}
                         domain d2 y:Y {}
                         when {
-                          mapped Map2(x,y)
+                          mapped Map2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -458,7 +458,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {}
                         domain d2 y:Y {}
                         when {
-                          mapped all Map2(x,y)
+                          mapped all Map2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -490,7 +490,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {}
                         domain d2 y:Y {}
                         where {
-                          relate Rel2(x,y)
+                          relate Rel2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -520,7 +520,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {}
                         domain d2 y:Y {}
                         where {
-                          relate all Rel2(x,y)
+                          relate all Rel2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -550,7 +550,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {}
                         domain d2 y:Y {}
                         where {
-                          map Map2(x,y)
+                          map Map2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -580,7 +580,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {}
                         domain d2 y:Y {}
                         where {
-                          map all Map2(x,y)
+                          map all Map2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -1110,11 +1110,7 @@ transform T(arch:Source, fmea:Target) {
    }
 
   // map propertes whoes type has a stereotype of engDomain to SystemElements under the EngDomain SystemElement
-  mapping EngDomainProperty2SystemElement {
-    primitive domain root:SystemElement
-    primitive domain engDomain:String
-    primitive domain path:List<String>
-
+  mapping EngDomainProperty2SystemElement( root:SystemElement, engDomain:String, path:List<String> ) {
     domain arch prop:Property {
       name == pn
       type == c:Class {

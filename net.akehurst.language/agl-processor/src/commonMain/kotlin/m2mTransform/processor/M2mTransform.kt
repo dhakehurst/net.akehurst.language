@@ -89,7 +89,7 @@ grammar $NAME : Base {
     mappingHolds = 'mapped' ruleCall ;
     mappingHoldsForAll = 'mapped' 'all' ruleCall ;
     
-    where = 'where' '{' whereExpression '}' ;
+    where = 'where' '{' whereExpression+ '}' ;
     whereExpression = callRelation | callRelationForAll | callMapping | callMappingForAll ;
     callRelation = 'relate' ruleCall ;
     callRelationForAll = 'relate' 'all' ruleCall ;
@@ -191,12 +191,12 @@ grammar $NAME : Base {
                         ref("tableRule")
                     }
                     concatenation("abstractRule") {
-                        lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("ruleParameters")}; opt { ref("extends") }; lit("{")
+                        lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("domainSignature") }
                         lit("}")
                     }
                     concatenation("relationRule") {
-                        opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("ruleParameters")}; opt { ref("extends") }; lit("{")
+                        opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("pivot") }
                         lst(2, -1) { ref("domainTemplate") }
                         opt { ref("when") }
@@ -204,7 +204,7 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("mappingRule") {
-                        opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("ruleParameters")}; opt { ref("extends") }; lit("{")
+                        opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(1, -1) { ref("domainTemplate") }
                         ref("domainAssignment")
                         opt { ref("when") }
@@ -212,7 +212,7 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("tableRule") {
-                        opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("ruleParameters")}; opt { ref("extends") }; lit("{")
+                        opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(2, -1) { ref("unnamedDomainSignature") }
                         lst(1, -1) { ref("values") }
                         opt { ref("when") }
@@ -259,7 +259,7 @@ grammar $NAME : Base {
                     concatenation("mappingHolds") { lit("mapped"); ref("ruleCall") }
                     concatenation("mappingHoldsForAll") { lit("mapped"); lit("all"); ref("ruleCall") }
 
-                    concatenation("where") { lit("where"); lit("{"); ref("whereExpression"); lit("}") }
+                    concatenation("where") { lit("where"); lit("{"); lst(1, -1) { ref("whereExpression") }; lit("}") }
                     choice("whereExpression") {
                         ref("callRelationForAll")
                         ref("callRelation")
@@ -272,9 +272,9 @@ grammar $NAME : Base {
                     concatenation("callMappingForAll") { lit("map"); lit("all"); ref("ruleCall") }
 
                     concatenation("ruleCall") {
-                        ref("ruleName"); opt{ ref("arguments") };  lit("{"); lst(1,-1) { ref("argAssignment") }; lit("}")
+                        ref("ruleName"); opt { ref("arguments") }; lit("{"); lst(1, -1) { ref("argAssignment") }; lit("}")
                     }
-                    concatenation("arguments") { lit("("); spLst(1,-1){ref("argAssignment"); lit(",")}; lit(")"); }
+                    concatenation("arguments") { lit("("); spLst(1, -1) { ref("argAssignment"); lit(",") }; lit(")"); }
                     concatenation("argAssignment") { ref("variableName"); lit(":="); ref("expression") }
 
                     choice("propertyTemplateRhs") {

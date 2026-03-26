@@ -200,7 +200,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val pivots = children[6] as List<VariableDefinition>
         val relDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
         val whenExpression = children[8] as Expression?
-        val whereExpression = children[9] as RuleWhere?
+        val whereExpression = children[9] as List<RuleWhere>?
         return M2MTransformRelationDefault(isTop, name).also { rel ->
             (rel.parameters as MutableList).addAll(parameters)
             (rel.extends as MutableList).addAll(extends)
@@ -210,7 +210,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
                 (rel.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
             }
             rel.when_ = whenExpression
-            whereExpression?.let { (rel.where as MutableList).add(whereExpression) }
+            whereExpression?.let { (rel.where as MutableList).addAll(whereExpression) }
         }
     }
 
@@ -223,7 +223,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val inputDomains = children[6] as List<Pair<DomainSignature, ObjectTemplate>>
         val outputDomain = children[7] as Pair<DomainSignature, Expression?>
         val whenExpression = children[8] as Expression?
-        val whereExpression = children[9] as RuleWhere?
+        val whereExpression = children[9] as List<RuleWhere>?
         return M2MTransformMappingDefault(isTop, name).also { mp ->
             (mp.parameters as MutableList).addAll(parameters)
             (mp.extends as MutableList).addAll(extends)
@@ -234,7 +234,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
             (mp.domainSignature as MutableMap)[outputDomain.first.domainRef] = outputDomain.first
             (mp.expression as MutableMap)[outputDomain.first.domainRef] = outputDomain.second
             mp.when_ = whenExpression
-            whereExpression?.let { (mp.where as MutableList).add(whereExpression) }
+            whereExpression?.let { (mp.where as MutableList).addAll(whereExpression) }
         }
     }
 
@@ -379,9 +379,9 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return RuleWhenMappingHoldsForAllDefault(ruleName, ruleArguments, domainArguments)
     }
 
-    // where = 'where' '{' whereExpression '}' ;
-    private fun where(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
-        children[2] as Expression
+    // where = 'where' '{' whereExpression+ '}' ;
+    private fun where(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<RuleWhere> =
+        children[2] as List<RuleWhere>
 
     // whereExpression = callRelation | callRelationForAll | callMapping | callMappingForAll ;
     private fun whereExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleWhere =
