@@ -244,6 +244,14 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         }
     }
 
+    override fun collectionUnion(collection1: TypedObject, collection2: TypedObject): TypedObject {
+        //TODO: this is inefficient
+        val col1 = untyped(collection1) as Iterable<Any>
+        val col2 = untyped(collection2)as Iterable<Any>
+        val union = toTypedObject(col1 + col2)
+        return union
+    }
+
     override fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject {
         return typedAs(tobj.self, newType)
     }

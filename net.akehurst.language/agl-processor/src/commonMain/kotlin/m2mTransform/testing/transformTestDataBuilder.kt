@@ -6,6 +6,7 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.AsmSimpleBuilder
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -130,7 +131,7 @@ class M2MTransformTestCaseBuilder(
 
     fun input(
         domainReference: String,
-        defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
+        defaultNamespace: String = StdLibDefault.qualifiedName.value,
         sentenceId: Any? = null,
         context: SentenceContextAny? = null,
         /** need to pass in a context if you want to resolveReferences */
@@ -141,7 +142,7 @@ class M2MTransformTestCaseBuilder(
     ) {
         val dr = DomainReference(domainReference)
         val typesDomain: TypesDomain = this.typeDomains[dr]!!
-        val defNs = typesDomain.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
+        val defNs = typesDomain.findNamespaceOrNull( defaultNamespace.asQualifiedName) ?: StdLibDefault
         val crd = crossReferenceDomain[dr] ?: CrossReferenceDomainDefault(SimpleName("CrossReference"))
         val b = AsmSimpleBuilder(typesDomain, defNs, crd, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
         b.init()
@@ -154,7 +155,7 @@ class M2MTransformTestCaseBuilder(
 
     fun target(
         domainReference: String,
-        defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
+        defaultNamespace: String = StdLibDefault.qualifiedName.value,
         sentenceId: Any? = null,
         context: SentenceContextAny? = null,
         /** need to pass in a context if you want to resolveReferences */
@@ -165,7 +166,7 @@ class M2MTransformTestCaseBuilder(
     ) {
         val dr = DomainReference(domainReference)
         val typesDomain: TypesDomain = this.typeDomains[dr]!!
-        val defNs = typesDomain.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
+        val defNs = typesDomain.findNamespaceOrNull(defaultNamespace.asQualifiedName) ?: StdLibDefault
         val crd = crossReferenceDomain[dr] ?: CrossReferenceDomainDefault(SimpleName("CrossReference"))
         val b = AsmSimpleBuilder(typesDomain, defNs, crd, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
         b.init()

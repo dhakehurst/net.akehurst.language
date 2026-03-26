@@ -237,7 +237,7 @@ class test_m2mTransformInterpreter {
                 """
                 )
                 testCase("A1 -> A2") {
-                    input("d1") {
+                    input("d1", "n1") {
                         element("A1") {
                             propertyString("prop1", "value1")
                         }
@@ -1926,6 +1926,9 @@ class test_m2mTransformInterpreter {
                             identify("Column", "name")
                             identify("Key", "name")
                         }
+                        reference("Key") {
+                            property("owner", listOf("Table"), null)
+                        }
                     }
                 }
                 transform(
@@ -1966,7 +1969,7 @@ class test_m2mTransformInterpreter {
                                     type=='NUMBER'
                                   }
                                 ]
-                                key==k:Key {
+                                key==Key {
                                     owner==t
                                     name=='_pk'
                                     column==pk_col
@@ -2073,12 +2076,33 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                testCase("1 Class with kind, but no name, namespace, or attributes") { //when clause of ClassToSchema fails
+                testCase("1 Class with name but no namespace, kind or attributes") {
                     input("uml") {
                         element("Package") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
                                 element("Class") {
+                                    propertyString("name", "Cls1")
+                                }
+                            }
+                        }
+                    }
+                    // because the Class.kind is not set, the ClassToTable uml domain matches nothing, and the PackageToSchema.where will match nothing
+                    expectIssue(LanguageIssueKind.WARNING, "In rule 'PackageToSchema' the 'where' clause matched nothing.")
+                    target("rdbms") {
+                        element("Schema") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("table") {}
+                        }
+                    }
+                }
+                testCase("1 Class with name & kind, but no namespace, or attributes") { //when clause of ClassToSchema fails
+                    input("uml") {
+                        element("Package") {
+                            propertyString("name", "pkg1")
+                            propertyListOfElement("elements") {
+                                element("Class") {
+                                    propertyString("name", "Cls1")
                                     propertyString("kind", "Persistent")
                                 }
                             }
@@ -2095,13 +2119,14 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                testCase("1 Class with kind & namespace, but no name, or attributes") {
+                testCase("1 Class with name, kind & namespace, but no attributes") {
                     input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
                         element("Package") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
                                 element("Class") {
                                     reference("namespace", "pkg1")
+                                    propertyString("name", "Cls1")
                                     propertyString("kind", "Persistent")
                                 }
                             }
@@ -2109,16 +2134,25 @@ class test_m2mTransformInterpreter {
                     }
                     // there are no Class attributes so expect this
                     expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'ClassToTable' in 'umlRdbms', the all call to rule 'AttributeToColumn' is expecting a collection.")
-                    target("rdbms", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
+                    target("rdbms", resolveReferences = true, failIfIssues = true, context = contextAsmSimple(), sentenceId = 0) {
                         element("Schema") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("table") {
                                 element("Table") {
-                                    propertyNothing("name")
                                     reference("schema", "pkg1")
-                                    propertyNothing("column")
+                                    propertyString("name", "Cls1")
                                     propertyElementExplicitType("key", "Key") {
-
+                                        reference("owner", "Cls1")
+                                        propertyString("name", "_pk")
+                                        reference("column", "pkg1.Cls1._id")
+                                        propertyString("kind", "primary")
+                                    }
+                                    propertyListOfElement("column") {
+                                        element("Column") {
+                                            reference("owner", "pkg1.Cls1")
+                                            propertyString("name", "_id")
+                                            propertyString("type", "NUMBER")
+                                        }
                                     }
                                 }
                             }
@@ -2140,7 +2174,7 @@ class test_m2mTransformInterpreter {
                     }
                     // there are no Class attributes so expect this
                     expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'ClassToTable' in 'umlRdbms', the all call to rule 'AttributeToColumn' is expecting a collection.")
-                    target("rdbms", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
+                    target("rdbms", resolveReferences = true, failIfIssues = false, context = contextAsmSimple(), sentenceId = 0) {
                         element("Schema") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("table") {
@@ -2170,22 +2204,25 @@ class test_m2mTransformInterpreter {
                             }
                         }
                     }
-                    target("rdbms", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
+                    target("rdbms", resolveReferences = true, failIfIssues = false, context = contextAsmSimple(), sentenceId = 0) {
                         element("Schema") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("table") {
                                 element("Table") {
                                     reference("schema", "pkg1")
                                     propertyString("name", "Cls1")
+                                    propertyElementExplicitType("key", "Key") {
+                                        reference("owner", "pkg1.Cls1")
+                                        propertyString("name", "_pk")
+                                        reference("column", "pkg1._id")
+                                        propertyString("kind", "primary")
+                                    }
                                     propertyListOfElement("column") {
                                         element("Column") {
                                             reference("owner", "Cls1")
                                             propertyString("name", "_id")
                                             propertyString("type", "NUMBER")
                                         }
-                                    }
-                                    propertyElementExplicitType("key", "Key") {
-
                                     }
                                 }
                             }
@@ -2288,6 +2325,7 @@ class test_m2mTransformInterpreter {
             println("----- M2M Transform Result -----")
             trRes.targets.forEach { println(it.asString()) }
             println(trRes.asString())
+            println(trRes.issues.toString())
             assertEquals(case.expectedIssues, trRes.issues.all, trRes.issues.toString())
             val expected = case.expected
             if (null != expected) {
@@ -2314,6 +2352,7 @@ class test_m2mTransformInterpreter {
                     doTest2(suite, case)
                     passes++
                 } catch (t: Throwable) {
+                    println("Error at $count: ")
                     t.printStackTrace()
                 }
             }
@@ -2325,7 +2364,7 @@ class test_m2mTransformInterpreter {
     @Test
     fun single() {
         val suite = testSuits["Full umlRdbms QVT example"]!!
-        val case = suite.testCase["1 Class with kind & namespace, but no name, or attributes"]!!
+        val case = suite.testCase["1 Class with name, kind & namespace, but no attributes"]!!
         doTest2(suite, case)
     }
 }

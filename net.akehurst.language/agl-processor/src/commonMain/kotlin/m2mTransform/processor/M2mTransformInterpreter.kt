@@ -604,7 +604,6 @@ class M2mTransformInterpreter(
                             }
 
                             val matchedVars = M2mPatternExecution("Matched variables after when clause", emptyList(), varsAfterWhen.namedValues.map { it.key }) {
-                                varsAfterWhen
                             }
 
                             val mappedVars = rule.domainTemplate.map { (k, v) -> v.identifier?.value ?: error("No identifier found for domain '$k'") }

@@ -64,7 +64,7 @@ class EvaluationContext(
 
     fun getOrInParent(name: String): TypedObject? = namedValues[name] ?: parent?.getOrInParent(name)
 
-    fun child(namedValues: Map<String, TypedObject>) = of(namedValues, this)
+    fun child(namedValues: Map<String, TypedObject> = emptyMap()) = of(namedValues, this)
 
     fun childSelf(self: TypedObject, namedValues: Map<String, TypedObject> = emptyMap()) = ofSelf(self, namedValues, parent = this)
 
@@ -150,6 +150,7 @@ interface ObjectGraphAccessorMutatorCommon {
     fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject
     fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject
     fun createCollectionFromQualifiedName(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject
+    fun collectionUnion(collection1: TypedObject, collection2: TypedObject): TypedObject
 
     fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject>): ObjectGraph
 }

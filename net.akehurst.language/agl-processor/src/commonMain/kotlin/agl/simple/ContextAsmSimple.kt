@@ -78,6 +78,15 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         }
     }
 
+    fun getOrCreateScopeForSentence(sentenceIdentity: Any?): Scope<ItemInScopeType> {
+        return if (null == sentenceIdentity) {
+            scopeForSentence[NULL_SENTENCE_IDENTIFIER]
+                ?: newScopeForSentence(NULL_SENTENCE_IDENTIFIER)
+        } else {
+            scopeForSentence[sentenceIdentity] ?: newScopeForSentence(sentenceIdentity)
+        }
+    }
+
     //TODO: location carries sentenceIdentity ! remove duplication
     fun addToScope(sentenceIdentity: Any?, qualifiedName: List<String>, itemTypeName: QualifiedName, location: InputLocation?, item: ItemInScopeType) {
         val rootScope = getScopeForSentenceOrNull(sentenceIdentity) ?: newScopeForSentence(sentenceIdentity)
