@@ -20,6 +20,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.*
@@ -49,7 +50,7 @@ class test_AglGrammarSemanticAnalyser {
         init {
             // grammars are registered in a registry when semantically analysed,
             // thus need to analyse Base grammar first
-            val context = contextFromGrammarRegistry(Agl.registry)
+            val context = contextFromRegistryGrammars(Agl.registry)
             val gm = GrammarDomainDefault(SimpleName("Test"), namespace = listOf(AglBase.defaultTargetGrammar.namespace as GrammarNamespace))
             semanticAnalysis(
                 SyntaxAnalysisResultDefault(
@@ -82,8 +83,8 @@ class test_AglGrammarSemanticAnalyser {
             options: ProcessOptions<GrammarDomain, SentenceContextAny>
         ): SemanticAnalysisResult {
             val semanticAnalyser = AglGrammarSemanticAnalyser()
-            val context = contextFromGrammarRegistry(Agl.registry)
-            options.semanticAnalysis.context = context
+            val context = contextFromRegistryGrammars(Agl.registry)
+            options.semanticAnalysis.sentenceContext = context
             return semanticAnalyser.analyse(null,asmRes.asm!!, asmRes.locationMap, options.semanticAnalysis)
         }
 
@@ -117,7 +118,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
     }
@@ -136,7 +137,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
         val gBase = res.asm!!.allDefinitions[0]
@@ -176,7 +177,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
     }
@@ -196,7 +197,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
     }
@@ -228,7 +229,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
     }
@@ -249,7 +250,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
 
@@ -285,7 +286,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
 
@@ -338,7 +339,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
     }
@@ -360,7 +361,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromRegistryGrammars(Agl.registry))
             }
         })
 
@@ -398,7 +399,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -452,7 +453,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -478,7 +479,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -523,7 +524,7 @@ class test_AglGrammarSemanticAnalyser {
         val res = test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
 
@@ -591,7 +592,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -619,7 +620,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -668,7 +669,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -707,7 +708,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -734,7 +735,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -761,7 +762,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, emptySet(), Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }
@@ -821,7 +822,7 @@ class test_AglGrammarSemanticAnalyser {
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
             }
         })
     }

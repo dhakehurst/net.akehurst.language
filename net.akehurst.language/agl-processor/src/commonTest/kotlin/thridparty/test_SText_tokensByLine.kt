@@ -258,14 +258,14 @@ FQN = ID ('.' ID)*;
         val context = contextAsmSimple {  }
         val exprProcessor = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr1),
-            grammarAglOptions = Agl.options { semanticAnalysis { context(context) } }
+            grammarAglOptions = Agl.options { semanticAnalysis { sentenceContext(context) } }
         ).let {
             check(it.issues.errors.isEmpty()) { it.issues.toString() }
             it.processor!!
         }
         var processor = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr2),
-            grammarAglOptions = Agl.options { semanticAnalysis { context(context) } }
+            grammarAglOptions = Agl.options { semanticAnalysis { sentenceContext(context) } }
         ).let {
             check(it.issues.errors.isEmpty()) { it.issues.toString() }
             it.processor!!

@@ -21,7 +21,9 @@ import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.asQualifiedName
+import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.api.TypesNamespace
 
 // used by other languages that reference rules  in a grammar
 class ContextFromTypesDomainReference(
@@ -49,9 +51,20 @@ class ContextFromTypesDomain(
 fun contextFromTypesDomain(typesDomain: TypesDomain) : SentenceContextAny {
     val context = SentenceContextAny()
     val sentenceIdentity = typesDomain.name.value
+    val qualifiedName = listOf(typesDomain.name.value)
+    val itemTypeName = TypesDomain::class.simpleName!!.asQualifiedName //TODO: use qualified names when supported by kotlin
+    val location = null
+    context.addToScope(sentenceIdentity, qualifiedName, itemTypeName, location, typesDomain)
+
+    typesDomain.namespace.forEach { ns ->
+        val qualifiedName = ns.qualifiedName.parts.map { it.value }
+        val itemTypeName = TypesNamespace::class.simpleName!!.asQualifiedName //TODO: use qualified names when supported by kotlin
+        val location = null
+        context.addToScope(sentenceIdentity, qualifiedName, itemTypeName, location, ns)
+    }
     typesDomain.allDefinitions.forEach { def ->
         val qualifiedName = def.qualifiedName.parts.map { it.value }
-        val itemTypeName = def::class.simpleName!!.asQualifiedName //TODO: use qualified names when supported by kotlin
+        val itemTypeName = TypeDefinition::class.simpleName!!.asQualifiedName //TODO: use qualified names when supported by kotlin
         val location = null
         context.addToScope(sentenceIdentity, qualifiedName, itemTypeName, location, def)
     }

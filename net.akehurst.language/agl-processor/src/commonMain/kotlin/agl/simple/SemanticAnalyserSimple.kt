@@ -81,7 +81,7 @@ class SemanticAnalyserSimple(
         locationMap: LocationMap?,
         options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
-        val context = options.context
+        val context = options.sentenceContext
         this._locationMap = locationMap ?: LocationMapDefault()
         when {
             null == context -> _issues.info(null, "No context provided, references not built, checked or resolved, switch off semanticAnalysis or provide a context.")

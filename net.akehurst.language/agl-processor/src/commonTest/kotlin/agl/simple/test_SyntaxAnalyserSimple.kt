@@ -31,11 +31,13 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@Ignore //"Tests in progress move to test_AllDefault"
 class test_SyntaxAnalyserSimple {
 
     private companion object {

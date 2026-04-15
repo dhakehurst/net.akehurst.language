@@ -18,6 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
+import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -28,10 +29,11 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.ChoiceIndicator
 import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.builder.typesDomain
 
 object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>() {
@@ -192,24 +194,21 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace $NAMESPACE_NAME
-          // TODO
-    """.trimIndent()
+        namespace ${NAMESPACE_NAME}
+            scope §root { }
+    """.trimIndent() //TODO
 
     override val styleString: String = """
         namespace ${NAMESPACE_NAME}
-          styles ${NAME} {
-            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-              foreground: darkgreen;
-              font-weight: bold;
-            }
+          styles ${NAME} : ${AglBase.NAME} {
+
           }
       """.trimIndent()
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
-          // TODO
-    """.trimIndent()
+        
+    """.trimIndent() // TODO
 
     override val grammarDomain by lazy {
         grammarDomain(NAME) {
@@ -690,19 +689,18 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
 
     override val formatDomain by lazy {
         formatDomain(NAME) {
+            namespace(NAMESPACE_NAME) {
+
 //            TODO("not implemented")
+            }
         }
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     extends(AglBase.NAME)
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
-                        declaration("font-weight", "bold")
-                    }
                 }
             }
         }

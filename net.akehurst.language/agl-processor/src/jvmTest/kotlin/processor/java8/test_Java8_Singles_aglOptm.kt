@@ -45,7 +45,7 @@ class test_Java8_Singles_aglOptm {
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
-                        context(contextFromGrammarRegistry(Agl.registry))
+                        sentenceContext(contextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
@@ -97,7 +97,7 @@ class test_Java8_Singles_aglOptm {
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
                     //option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromGrammarRegistry(Agl.registry))
                 }
             }).let {
             check(it.issues.errors.isEmpty()) { it.issues.toString() }

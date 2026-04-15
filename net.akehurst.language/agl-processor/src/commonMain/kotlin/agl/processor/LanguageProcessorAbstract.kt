@@ -179,8 +179,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun buildFor(options: ParseOptions?): LanguageProcessor<AsmType, ContextType> {
-        val opts = options ?: parseOptionsDefault()
-        if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName?.value
+        var opts = options ?: parseOptionsDefault()
+        if (null == opts.goalRuleName) {
+            opts = opts.clone()
+            opts.goalRuleName = this.defaultGoalRuleName?.value
+        }
         this.parser?.buildFor(opts.goalRuleName!!)
         return this
     }
@@ -191,8 +194,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun parse(sentence: String, options: ParseOptions?): ParseResult {//Pair<SharedPackedParseTree?, List<LanguageIssue>> {
-        val opts = options ?: parseOptionsDefault()
-        if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName?.value
+        var opts = options ?: parseOptionsDefault()
+        if (null == opts.goalRuleName) {
+            opts = opts.clone()
+            opts.goalRuleName = this.defaultGoalRuleName?.value
+        }
         return this.parser?.parse(sentence, opts)?.also { scanner?.reset(); parser?.reset() }
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
     }
@@ -321,8 +327,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     internal fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {
-        val opts = options ?: optionsDefault()
-        if (null == opts.parse.goalRuleName) opts.parse.goalRuleName = this.defaultGoalRuleName?.value
+        var opts = options ?: optionsDefault()
+        if (null == opts.parse.goalRuleName) {
+            opts = opts.clone()
+            opts.parse.goalRuleName = this.defaultGoalRuleName?.value
+        }
         return opts
     }
 

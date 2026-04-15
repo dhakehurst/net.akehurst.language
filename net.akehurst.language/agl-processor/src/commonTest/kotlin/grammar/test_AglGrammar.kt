@@ -2,6 +2,7 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.simple.contextAsmSimpleWithAsmPath
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
@@ -25,7 +26,7 @@ class test_AglGrammar {
             AglBase.grammarString + "\n" + AglGrammar.grammarString,
             Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromRegistryGrammars(Agl.registry))
                 }
             }
         )
@@ -43,7 +44,7 @@ class test_AglGrammar {
             AglGrammar.typesString,
             Agl.options {
                 semanticAnalysis {
-                    context(contextAsmSimpleWithAsmPath())
+                    sentenceContext(contextAsmSimpleWithAsmPath())
                 }
             }
         )
@@ -110,10 +111,24 @@ class test_AglGrammar {
 
     @Test
     fun styleModel_EQ_styleString() {
-        val actual = AglGrammar.styleDomain.asString()
-        val expected = AglGrammar.styleString
 
-        assertEquals(expected, actual)
+        val processedStyleString = Agl.registry.agl.style.processor!!.process(
+            AglGrammar.styleString
+        ).let {
+            assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
+            it.asm!!
+        }
+
+        assertEquals(AglGrammar.styleString, AglGrammar.styleDomain.asString())
+        assertEquals(AglGrammar.styleDomain.asString(), processedStyleString.asString())
+
+        AglGrammar.styleDomain.allDefinitions.forEach { def ->
+            def.extends.forEach { ex ->
+                assertNotNull(ex.resolved)
+            }
+            assertEquals(2,def.rules.size)
+            assertEquals(6,def.allRules.size)
+        }
     }
 
     @Test

@@ -195,7 +195,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                 stack.push(ChildDataAny(nodeInfo, null))
             }
 
-            override fun skip(startPosition: Int, nextInputPosition: Int) {
+            override fun skip(skipData: TreeData) {
                 // do nothing
             }
 

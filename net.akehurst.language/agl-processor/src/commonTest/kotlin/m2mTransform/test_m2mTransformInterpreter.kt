@@ -1916,9 +1916,6 @@ class test_m2mTransformInterpreter {
                         identify("Schema", "name")
                         identify("Table", "schema.name+'.'+name")
                         identify("Column", "owner.schema.name+'.'+owner.name+'.'+name")
-                        reference("Table") {
-                            property("schema", listOf("Schema"), null)
-                        }
                         scope("Schema") {
                             identify("Table", "name")
                         }
@@ -1926,7 +1923,14 @@ class test_m2mTransformInterpreter {
                             identify("Column", "name")
                             identify("Key", "name")
                         }
+                        reference("Table") {
+                            property("schema", listOf("Schema"), null)
+                        }
                         reference("Key") {
+                            property("owner", listOf("Table"), null)
+                            property("column", listOf("Column"), null)
+                        }
+                        reference("Column") {
                             property("owner", listOf("Table"), null)
                         }
                     }
@@ -2142,7 +2146,7 @@ class test_m2mTransformInterpreter {
                                     reference("schema", "pkg1")
                                     propertyString("name", "Cls1")
                                     propertyElementExplicitType("key", "Key") {
-                                        reference("owner", "Cls1")
+                                        reference("owner", "pkg1.Cls1")
                                         propertyString("name", "_pk")
                                         reference("column", "pkg1.Cls1._id")
                                         propertyString("kind", "primary")
@@ -2159,38 +2163,7 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
-                testCase("1 Class with kind, namespace & name, but no attributes") {
-                    input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
-                        element("Package") {
-                            propertyString("name", "pkg1")
-                            propertyListOfElement("elements") {
-                                element("Class") {
-                                    reference("namespace", "pkg1")
-                                    propertyString("kind", "Persistent")
-                                    propertyString("name", "Cls1")
-                                }
-                            }
-                        }
-                    }
-                    // there are no Class attributes so expect this
-                    expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'ClassToTable' in 'umlRdbms', the all call to rule 'AttributeToColumn' is expecting a collection.")
-                    target("rdbms", resolveReferences = true, failIfIssues = false, context = contextAsmSimple(), sentenceId = 0) {
-                        element("Schema") {
-                            propertyString("name", "pkg1")
-                            propertyListOfElement("table") {
-                                element("Table") {
-                                    reference("schema", "pkg1")
-                                    propertyString("name", "Cls1")
-                                    propertyNothing("column")
-                                    propertyElementExplicitType("key", "Key") {
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                testCase("1 Class with kind, namespace & name and empty attributes") {
+                testCase("1 Class with name, kind & namespace and empty attributes") {
                     input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
                         element("Package") {
                             propertyString("name", "pkg1")
@@ -2214,12 +2187,12 @@ class test_m2mTransformInterpreter {
                                     propertyElementExplicitType("key", "Key") {
                                         reference("owner", "pkg1.Cls1")
                                         propertyString("name", "_pk")
-                                        reference("column", "pkg1._id")
+                                        reference("column", "pkg1.Cls1._id")
                                         propertyString("kind", "primary")
                                     }
                                     propertyListOfElement("column") {
                                         element("Column") {
-                                            reference("owner", "Cls1")
+                                            reference("owner", "pkg1.Cls1")
                                             propertyString("name", "_id")
                                             propertyString("type", "NUMBER")
                                         }
@@ -2294,7 +2267,7 @@ class test_m2mTransformInterpreter {
                 suite.transform,
                 options = Agl.options {
                     semanticAnalysis {
-                        context(context)
+                        sentenceContext(context)
                     }
                 }
             )
@@ -2364,7 +2337,7 @@ class test_m2mTransformInterpreter {
     @Test
     fun single() {
         val suite = testSuits["Full umlRdbms QVT example"]!!
-        val case = suite.testCase["1 Class with name, kind & namespace, but no attributes"]!!
+        val case = suite.testCase["1 Class with name, kind & namespace and empty attributes"]!!
         doTest2(suite, case)
     }
 }

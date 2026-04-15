@@ -34,7 +34,7 @@ class test_AglTypes {
             AglBase.grammarString + "\n" + AglTypes.grammarString,
             Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromGrammarRegistry(Agl.registry))
                 }
             }
         )

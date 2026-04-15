@@ -46,7 +46,7 @@ fun asmSimple(
     defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
     crossReferenceDomain: CrossReferenceDomain = CrossReferenceDomainDefault(SimpleName("CrossReference")),
     sentenceId: Any? = null,
-    context: SentenceContextAny? = null,
+    sentenceContext: SentenceContextAny? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
     failIfIssues: Boolean = true,
@@ -54,7 +54,7 @@ fun asmSimple(
     init: AsmSimpleBuilder.() -> Unit
 ): Asm {
     val defNs = typesDomain.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
-    val b = AsmSimpleBuilder(typesDomain, defNs, crossReferenceDomain, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
+    val b = AsmSimpleBuilder(typesDomain, defNs, crossReferenceDomain, sentenceId, sentenceContext, resolveReferences, failIfIssues, resolvedReferences)
     b.init()
     return b.build()
 }

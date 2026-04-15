@@ -97,6 +97,11 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         scope.addToScope(qualifiedName.last(), itemTypeName, location, item, false)
     }
 
+    fun merge(sentenceIdentity:Any?, other:Scope<ItemInScopeType>) {
+        val scope = getScopeForSentenceOrNull(sentenceIdentity) ?: newScopeForSentence(sentenceIdentity)
+        scope.merge(other)
+    }
+
     fun findItemsConformingTo(conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>> {
         return scopeForSentence.flatMap { it.value.findItemsConformingTo(conformsToFunc) }
     }
@@ -134,6 +139,14 @@ class SentenceContextAny(
     createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault(),
     resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault()
 ) : ContextWithScope<Any,Any>(createScopedItem, resolveScopedItem) {
+
+    fun union(other: SentenceContextAny): SentenceContextAny {
+        return SentenceContextAny().also { result ->
+            this.scopeForSentence.forEach { (k, v) -> result.merge(k,v) }
+            other.scopeForSentence.forEach { (k, v) -> result.merge(k,v) }
+        }
+    }
+
     override fun hashCode(): Int = 0 //scopeForSentence.hashCode()
 
     override fun equals(other: Any?): Boolean = when {

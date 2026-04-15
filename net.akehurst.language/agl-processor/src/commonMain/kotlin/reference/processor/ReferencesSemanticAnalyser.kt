@@ -18,7 +18,7 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -39,21 +39,18 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 
 class ReferencesSemanticAnalyser(
-) : SemanticAnalyser<CrossReferenceDomain, ContextFromTypesDomain> {
+) : SemanticAnalyser<CrossReferenceDomain, SentenceContextAny> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
-    private var _locationMap: LocationMap = LocationMapDefault()
-
+    // cached
+    private var _locationMap: LocationMap? = null
     private var _grammarNamespace: GrammarTypesNamespace? = null
-
-    private var _context: ContextFromTypesDomain? = null
     private var _typeResolver: ExpressionTypeResolver? = null
 
     override fun clear() {
         _grammarNamespace = null
-        _locationMap.clear()
-        _context = null
+        _locationMap = null
         _issues.clear()
         _resolvedReferences.clear()
     }
@@ -62,33 +59,27 @@ class ReferencesSemanticAnalyser(
         sentenceIdentity:Any?,
         asm: CrossReferenceDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<ContextFromTypesDomain>
+        options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: LocationMapDefault()
-        _context = options.context
+        val typesDomainItem = options.sentenceContext?.findItemsConformingTo { it.value == TypesDomain::class.simpleName } //TODO: use qualified names when supported by kotlin
 
-
-        if (null != _context) {
+        if (typesDomainItem!=null && typesDomainItem.isNotEmpty() && typesDomainItem.first().item is TypesDomain) {
+            val typesDomain = typesDomainItem.first().item as TypesDomain //TODO: maybe not the first ?
             asm.declarationsForNamespace.values.forEach {
                 val importedNamespaces = it.importedNamespaces.mapNotNull { impNs ->
-                    val ns = _context!!.typesDomain.findNamespaceOrNull(impNs.asQualifiedName)
-                    when (ns) {
-                        null -> raiseError(it, "Namespace to import not found")
+                    val ns = typesDomain.findNamespaceOrNull(impNs.asQualifiedName)
+                    when(ns) {
+                       null -> raiseError(it, "Namespace to import not found")
                     }
                     ns
                 }
-
-                val ns = _context!!.typesDomain.findNamespaceOrNull(it.namespace.qualifiedName)
-                when (ns) {
-                    null -> _issues.raise(
-                        LanguageIssueKind.ERROR,
-                        LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                        null,
-                        "Namespace '${it.namespace.qualifiedName}' not found in typeModel."
-                    )
+                val ns = typesDomain.findNamespaceOrNull(it.namespace.qualifiedName)
+                when(ns)  {
+                   null -> raiseError(null, "Namespace '${it.namespace.qualifiedName}' not found in typeModel.")
 
                     else -> {
-                        _typeResolver = _context?.let { ExpressionTypeResolver(it.typesDomain, ns, _issues) }
+                        _typeResolver = ExpressionTypeResolver(typesDomain, ns, _issues)
                         _grammarNamespace = ns as GrammarTypesNamespace
                         it.scopeDefinition.values.forEach {
                             checkScopeDefinition(it as ScopeDefinitionDefault)
@@ -111,8 +102,8 @@ class ReferencesSemanticAnalyser(
         return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
-    private fun raiseError(obj: Any, message: String) {
-        val loc = _locationMap[obj]
+    private fun raiseError(obj: Any?, message: String) {
+        val loc = obj?.let { _locationMap?.get(obj) }
         _issues.error(loc, message)
     }
 
@@ -240,10 +231,7 @@ class ReferencesSemanticAnalyser(
     ) {
         refExpr.refersToTypeName.forEachIndexed { i, n ->
             if (null == findReferredToType(n, importedNamespaces)) {
-                raiseError(
-                    ReferencesSyntaxAnalyser.PropertyValue(ref, "typeReferences[$i]"),
-                    "For references in '${ref.inTypeName}', referred to type '$n' not found"
-                )
+                raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' not found")
             } else {
                 //OK
             }

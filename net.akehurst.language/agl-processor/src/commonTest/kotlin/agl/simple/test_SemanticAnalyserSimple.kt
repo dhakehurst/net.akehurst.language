@@ -46,7 +46,7 @@ class test_SemanticAnalyserSimple {
             val result = processor.process(sentence, options)
             assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
             assertNotNull(result.asm)
-            assertEquals(expected.asString(), options.semanticAnalysis.context!!.asString())
+            assertEquals(expected.asString(), options.semanticAnalysis.sentenceContext!!.asString())
         }
 
         fun test_issues(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, SentenceContextAny
@@ -77,7 +77,7 @@ class test_SemanticAnalyserSimple {
         val context: SentenceContextAny? = null
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -107,7 +107,7 @@ class test_SemanticAnalyserSimple {
         val context = contextAsmSimple {  }
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -133,7 +133,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(false)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -164,7 +164,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -189,7 +189,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -220,7 +220,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -250,7 +250,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -279,7 +279,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -310,7 +310,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -348,7 +348,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -385,7 +385,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -422,7 +422,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 
@@ -459,7 +459,7 @@ class test_SemanticAnalyserSimple {
         val options = Agl.options<Asm, SentenceContextAny> {
             semanticAnalysis {
                 checkReferences(true)
-                context(context)
+                sentenceContext(context)
             }
         }
 

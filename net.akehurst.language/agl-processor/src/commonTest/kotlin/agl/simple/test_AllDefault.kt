@@ -20,7 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.processor.LanguageProcessorAbstract
-import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
@@ -85,7 +85,7 @@ class test_AllDefault {
             grammarDefinitionStr = GrammarString(grammarStr),
             grammarAglOptions = Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromRegistryGrammars())//contextFromGrammarRegistry(Agl.registry))
 //TODO:                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
                 }
             }

@@ -191,7 +191,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(contextAsmSimple())
+                    sentenceContext(contextAsmSimple())
                 }
             }
         )
@@ -235,14 +235,14 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(contextAsmSimple())
+                    sentenceContext(contextAsmSimple())
                 }
             }
         )
         assertNotNull(result.asm)
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
-        val expected = asmSimple(typesDomain = typeModel,crossReferenceDomain = scopeModel, context = contextAsmSimple()) {
+        val expected = asmSimple(typesDomain = typeModel,crossReferenceDomain = scopeModel, sentenceContext = contextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

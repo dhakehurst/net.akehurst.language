@@ -18,19 +18,39 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.language.reference.test_LanguageObjectAbstract
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryStyles
+import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.grammar.processor.contextFromGrammar
+import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.processor.AglStyle
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 
-class test_AglStyle {
+class test_AglStyle : test_LanguageObjectAbstract() {
+
+    override val sut = AglStyle
+    override val processStyleOptions: ProcessOptions<AglStyleDomain, SentenceContextAny> = Agl.options {
+        semanticAnalysis {
+            sentenceContext(contextFromGrammar(AglStyle.grammarDomain).union(contextFromRegistryStyles()))
+        }
+    }
+
+    @Test
+    fun styles() {
+        assertEquals(4,sut.styleDomain.allDefinitions.first().rules.size)
+        assertEquals(8,sut.styleDomain.allDefinitions.first().allRules.size)
+    }
 
     @Test
     fun grammarStr() {
         val combined = AglBase.grammarString +"\n"+AglStyle.grammarString
-        val res = Agl.registry.agl.grammar.processor!!.process(combined, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry()) } })
+        val res = Agl.registry.agl.grammar.processor!!.process(combined, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry()) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
@@ -38,13 +58,6 @@ class test_AglStyle {
     fun styleStr() {
         val res = Agl.registry.agl.style.processor!!.process(AglStyle.styleString)
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
-    }
-
-    @Test
-    fun styleModel() {
-
-        //assertEquals(AglStyle.styleStr, AglStyle.st)
-
     }
 
     @Test

@@ -77,7 +77,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         locationMap: LocationMap?,
         options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
-        val context = options.context
+        val context = options.sentenceContext
         this._locationMap = locationMap ?: LocationMapDefault()
         this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? == true
 
@@ -115,14 +115,8 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
     }
 
     private fun resolveGrammarRefs(context: SentenceContextAny?, grammar: Grammar) {
-        checkGrammarExistsAndResolve(context, grammar.extends)
-        checkGrammarExistsAndResolve(context, grammar.allGrammarReferencesInRules)
-    }
-
-    private fun checkGrammarExistsAndResolve(context: SentenceContextAny?, refs: List<GrammarReference>) {
-        for (it in refs) {
-            checkGrammarExistsAndResolve(context, it)
-        }
+        grammar.extends.forEach { checkGrammarExistsAndResolve(context, it) }
+        grammar.allGrammarReferencesInRules.forEach { checkGrammarExistsAndResolve(context, it) }
     }
 
     private fun checkGrammarExistsAndResolve(context: SentenceContextAny?, ref: GrammarReference) {

@@ -40,7 +40,7 @@ class test_LanguageRegistry {
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromRegistryGrammars(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
@@ -59,7 +59,7 @@ class test_LanguageRegistry {
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromRegistryGrammars(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
@@ -80,7 +80,7 @@ class test_LanguageRegistry {
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromRegistryGrammars(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },

@@ -34,22 +34,24 @@ fun TypesDomain.findTypeForRule(ruleName: GrammarRuleName): TypeInstance? {
     }
 }
 
-fun contextFromGrammar(grammars: GrammarDomain): SentenceContextAny {
+fun contextFromGrammar(vararg grammarDomains: GrammarDomain): SentenceContextAny {
     val proc = Agl.registry.agl.grammar.processor!!
     val aglGrammarTypeModel = proc.typesDomain
     val context = SentenceContextAny()
-    grammars.allDefinitions.forEach { g ->
-        val scope = context.newScopeForSentence(g.qualifiedName.toString())
-        g.allResolvedGrammarRule.forEach {
-            val rType = aglGrammarTypeModel.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
-            scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, null, it.name.value,  false)
-        }
-        g.allResolvedTerminal.forEach {
-            val rTypeName = when {
-                it.isPattern -> "PATTERN" //namespace.findTypeUsageForRule("PATTERN") ?: error("Type not found for rule 'PATTERN'")
-                else -> "LITERAL" //namespace.findTypeUsageForRule("LITERAL") ?: error("Type not found for rule 'LITERAL'")
+    grammarDomains.forEach { dom ->
+        dom.allDefinitions.forEach { g ->
+            val scope = context.newScopeForSentence(g.qualifiedName.toString())
+            g.allResolvedGrammarRule.forEach {
+                val rType = aglGrammarTypeModel.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
+                scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, null, it.name.value, false)
             }
-            scope.addToScope(it.id, QualifiedName(rTypeName), null, it.escapedValue, false)
+            g.allResolvedTerminal.forEach {
+                val rTypeName = when {
+                    it.isPattern -> "PATTERN" //namespace.findTypeUsageForRule("PATTERN") ?: error("Type not found for rule 'PATTERN'")
+                    else -> "LITERAL" //namespace.findTypeUsageForRule("LITERAL") ?: error("Type not found for rule 'LITERAL'")
+                }
+                scope.addToScope(it.id, QualifiedName(rTypeName), null, it.escapedValue, false)
+            }
         }
     }
     return context

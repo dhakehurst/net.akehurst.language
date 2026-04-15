@@ -61,11 +61,11 @@ class CompletionProviderSimple(
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContextAny>): List<CompletionItem> {
-        val context = options.context
+        val sentenceContext = options.sentenceContext
 
         return when {
             options.path.isEmpty() -> {
-                val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
+                val result = if (null == sentenceContext) {// || context.isEmpty || crossReferenceModel.isEmpty) {
                     val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
                     val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
                     expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
@@ -83,7 +83,7 @@ class CompletionProviderSimple(
                                         expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
                                     }
                                     else -> {
-                                        val forTypes = provideForType(type, firstSpineNode, context)
+                                        val forTypes = provideForType(type, firstSpineNode, sentenceContext)
                                         val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
                                         val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
                                         forTypes + expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
@@ -127,7 +127,7 @@ class CompletionProviderSimple(
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)
 
 
-    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: SentenceContextAny): List<CompletionItem> {
+    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, sentenceContext: SentenceContextAny): List<CompletionItem> {
         try {
             val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
             //TODO: lists ?
@@ -151,7 +151,7 @@ class CompletionProviderSimple(
                         val refTypeNames = crossReferenceDomain.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
                         val refTypes = refTypeNames.mapNotNull { typesDomain.findByQualifiedNameOrNull(it) }
                         val items = refTypes.flatMap { refType ->
-                            context.findItemsConformingTo {
+                            sentenceContext.findItemsConformingTo {
                                 val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                                 itemType.conformsTo(refType)
                             }

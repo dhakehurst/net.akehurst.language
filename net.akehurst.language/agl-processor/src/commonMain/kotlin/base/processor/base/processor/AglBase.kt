@@ -18,6 +18,7 @@
 package net.akehurst.language.base.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
+import net.akehurst.language.agl.processor.contextFromRegistryStyles
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -32,12 +33,14 @@ import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
@@ -116,6 +119,10 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
             }
             SINGLE_LINE_COMMENT {
               foreground: darkgray;
+              font-style: italic;
+            }
+            IDENTIFIER {
+              foreground: darkred;
               font-style: italic;
             }
           }
@@ -336,7 +343,7 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
     }
 
     override val styleDomain: AglStyleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME, sentenceContext = contextFromGrammar(AglStyle.grammarDomain)) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     metaRule(CommonRegexPatterns.LITERAL.value) {
@@ -349,6 +356,10 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                     }
                     tagRule("SINGLE_LINE_COMMENT") {
                         declaration("foreground", "darkgray")
+                        declaration("font-style", "italic")
+                    }
+                    tagRule("IDENTIFIER") {
+                        declaration("foreground", "darkred")
                         declaration("font-style", "italic")
                     }
                 }

@@ -28,8 +28,6 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.m2mTransform.api.M2mTransformPatternRule
 import net.akehurst.language.m2mTransform.api.RuleCall
-import net.akehurst.language.m2mTransform.api.RuleWhen
-import net.akehurst.language.m2mTransform.api.RuleWhere
 import net.akehurst.language.types.api.TypesDomain
 
 class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContextAny> {
@@ -46,16 +44,16 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
         locationMap: LocationMap?,
         options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
-        val context = options.context
+        val sentenceContext = options.sentenceContext
         when {
-            null == context -> _issues.warn(null, "No context provided, either provide one or switch off Semantic Analysis.")
+            null == sentenceContext -> _issues.warn(null, "No sentence context provided, either provide one or switch off Semantic Analysis.")
             else -> {
                 asm.allTransformRuleSet.forEach { def ->
                     def.domainParameters.entries.forEach { (k, v) ->
-                        val td = (context.findItemsNamedConformingTo(v.value) { true }).firstOrNull()?.item
+                        val td = (sentenceContext.findItemsNamedConformingTo(v.value) { true }).firstOrNull()?.item
                         when (td) {
-                            null -> _issues.error(null, "TypesDomain '${v.value}' not found in context for parameter '${k}'")
-                            !is TypesDomain -> _issues.error(null, "TypesDomain '${v.value}' is not a TypesDomain in the context, rather a '${td::class.simpleName}'")
+                            null -> _issues.error(null, "TypesDomain '${v.value}' not found in sentence context for parameter '${k}'")
+                            !is TypesDomain -> _issues.error(null, "TypesDomain '${v.value}' is not a TypesDomain in the sentence context, rather a '${td::class.simpleName}'")
                             else -> def.resolveDomainParameter(k, td)
                         }
                     }

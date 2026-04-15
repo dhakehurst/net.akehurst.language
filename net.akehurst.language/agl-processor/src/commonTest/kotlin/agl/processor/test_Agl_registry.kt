@@ -25,6 +25,7 @@ import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammar.processor.contextFromGrammar
+import net.akehurst.language.style.processor.AglStyle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,7 +35,7 @@ class test_Agl_registry_agl {
 
     companion object {
         fun <AsmType : Formatable, ContextType:Any> checkStringEqualsModel(processor: LanguageProcessor<AsmType,ContextType>, expected:String, actual: Formatable, context:ContextType ) {
-            val exp = processor.process(expected,Agl.options { semanticAnalysis { context(context) } }).let {
+            val exp = processor.process(expected,Agl.options { semanticAnalysis { sentenceContext(context) } }).let {
                 assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
                 it.asm!!
             }
@@ -42,7 +43,7 @@ class test_Agl_registry_agl {
          }
 
         fun <AsmType : Formatable, ContextType:Any> checkModelEqualsString(processor: LanguageProcessor<AsmType,ContextType>, expected:Formatable, actual: String, context:ContextType ) {
-            val act = processor.process(actual,Agl.options { semanticAnalysis { context(context) } }).let {
+            val act = processor.process(actual,Agl.options { semanticAnalysis { sentenceContext(context) } }).let {
                 assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
                 it.asm!!
             }
@@ -51,8 +52,8 @@ class test_Agl_registry_agl {
 
         fun <AsmType : Any, ContextType : Any> checkLanguageDefinition(expected: LanguageObject<AsmType, ContextType>, actual: LanguageDefinition<AsmType, ContextType>) {
             assertEquals(expected.identity.value, actual.identity.value)
-            checkStringEqualsModel(Agl.registry.agl.grammar.processor!!, expected.grammarString, actual.grammarDomain!!,contextFromGrammarRegistry(Agl.registry))
-            checkModelEqualsString(Agl.registry.agl.grammar.processor!!, expected.grammarDomain, actual.grammarString!!.value,contextFromGrammarRegistry(Agl.registry))
+            checkStringEqualsModel(Agl.registry.agl.grammar.processor!!, expected.grammarString, actual.grammarDomain!!,contextFromRegistryGrammars())
+            checkModelEqualsString(Agl.registry.agl.grammar.processor!!, expected.grammarDomain, actual.grammarString!!.value,contextFromRegistryGrammars())
 
             assertEquals(expected.allTypesString, actual.typesString?.value, "typesString doesn't match")
 
@@ -60,8 +61,9 @@ class test_Agl_registry_agl {
 
             assertEquals(expected.crossReferenceString, actual.crossReferenceString?.value, "crossReferenceString doesn't match")
 
-            checkStringEqualsModel(Agl.registry.agl.style.processor!!, expected.styleString, actual.styleDomain!!, contextFromGrammar(expected.grammarDomain))
-            checkModelEqualsString(Agl.registry.agl.style.processor!!, expected.styleDomain, actual.styleString!!.value, contextFromGrammar(actual.grammarDomain!!))
+
+            checkStringEqualsModel(Agl.registry.agl.style.processor!!, expected.styleString, actual.styleDomain!!, contextFromGrammar(AglStyle.grammarDomain).union(contextFromRegistryStyles()))
+            checkModelEqualsString(Agl.registry.agl.style.processor!!, expected.styleDomain, actual.styleString!!.value, contextFromGrammar(AglStyle.grammarDomain).union(contextFromRegistryStyles()))
 
             assertEquals((expected.formatString), actual.formatString?.value)
             //TODO

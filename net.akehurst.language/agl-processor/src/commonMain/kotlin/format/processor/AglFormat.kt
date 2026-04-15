@@ -18,6 +18,7 @@ package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatDomain
+import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -32,9 +33,9 @@ import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
@@ -108,11 +109,8 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
 
     override val styleString: String = """
         namespace ${NAMESPACE_NAME}
-          styles ${NAME} {
-            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-              foreground: darkgreen;
-              font-weight: bold;
-            }
+          styles ${NAME} : ${AglBase.NAME} {
+
           }
       """
 
@@ -122,7 +120,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
     """.trimIndent()
 
     override val grammarDomain by lazy {
-        grammarDomain(name = NAME, grammarRegistry = Agl.registry) {
+        grammarDomain(name = NAME, registry = Agl.registry) {
             namespace(NAMESPACE_NAME) {
                 grammar("Template") {
                     concatenation("templateString") {
@@ -219,13 +217,10 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
-                        declaration("font-weight", "bold")
-                    }
+                    extends(AglBase.NAME)
                 }
             }
         }

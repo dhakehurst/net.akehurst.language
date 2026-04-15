@@ -73,7 +73,7 @@ interface SpptWalker {
     fun beginTree()
     fun endTree()
 
-    fun skip(startPosition: Int, nextInputPosition: Int)
+    fun skip(skipData: TreeData)
     fun leaf(nodeInfo: SpptDataNodeInfo)
 
     /**

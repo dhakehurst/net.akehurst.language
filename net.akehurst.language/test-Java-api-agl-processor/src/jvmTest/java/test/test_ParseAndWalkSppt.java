@@ -7,10 +7,7 @@ import net.akehurst.language.api.processor.LanguageProcessor;
 import net.akehurst.language.asm.api.Asm;
 import net.akehurst.language.parser.api.ParseResult;
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault;
-import net.akehurst.language.sppt.api.PathFunction;
-import net.akehurst.language.sppt.api.SharedPackedParseTree;
-import net.akehurst.language.sppt.api.SpptDataNodeInfo;
-import net.akehurst.language.sppt.api.SpptWalker;
+import net.akehurst.language.sppt.api.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,9 +71,8 @@ public class test_ParseAndWalkSppt {
             }
 
             @Override
-            public void skip(int startPosition, int nextInputPosition) {
-                System.out.println("a skip node: ${startPosition}-${nextInputPosition}");
-
+            public void skip(@NotNull TreeData skipData) {
+                System.out.println("a skip node: " + (skipData.getRoot().getStartPosition() - skipData.getUserRoot().getNextInputPosition()));
             }
 
             @Override

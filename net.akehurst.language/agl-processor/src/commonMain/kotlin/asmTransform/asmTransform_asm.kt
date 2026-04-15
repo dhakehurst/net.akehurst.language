@@ -48,7 +48,7 @@ class AsmTransformDomainDefault(
             val res = proc.process(
                 sentence = transformStr.value,
                 Agl.options {
-                    semanticAnalysis { context(context) }
+                    semanticAnalysis { sentenceContext(context) }
                 }
             )
             return when {

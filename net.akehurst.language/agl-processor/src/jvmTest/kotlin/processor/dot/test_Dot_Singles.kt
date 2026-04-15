@@ -1033,7 +1033,7 @@ NAME {
         val result = styleProc.process(
             sentence,
             Agl.options {
-                semanticAnalysis { context(contextFromGrammar(processor.grammarDomain!!)) }
+                semanticAnalysis { sentenceContext(contextFromGrammar(processor.grammarDomain!!)) }
             })
 
         assertNotNull(result.asm, result.allIssues.toString())

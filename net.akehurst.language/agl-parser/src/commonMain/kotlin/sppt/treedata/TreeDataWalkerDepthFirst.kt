@@ -168,7 +168,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                 val walker = TreeDataWalkerDepthFirst<CN>(skipData)
                 walker.traverseSkip(callback, skipDataAsTree)
             } else {
-                callback.skip(skipData.root!!.startPosition, skipData.root!!.nextInputPosition)
+                callback.skip(skipData)//!!.startPosition, skipData.root!!.nextInputPosition)
             }
         }
     }

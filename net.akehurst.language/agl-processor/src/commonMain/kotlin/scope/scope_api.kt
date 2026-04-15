@@ -100,5 +100,8 @@ interface Scope<ItemInScopeType> {
 
     fun removeItemsIf(func:(item:ItemInScope<ItemInScopeType>) -> Boolean)
 
+    /** will overwrite existing items with other if qualifiedTypeName is the same */
+    fun merge(other: Scope<ItemInScopeType>)
+
     fun asString(indent: Indent): String
 }

@@ -17,7 +17,7 @@
 package net.akehurst.language.reference.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
@@ -38,12 +38,12 @@ class CrossReferenceDomainDefault(
         val ROOT_SCOPE_TYPE_NAME = QualifiedName("§root")
         val IDENTIFY_BY_NOTHING = "§nothing"
 
-        fun fromString(context: ContextFromTypesDomain?, crossReferenceString: CrossReferenceString): ProcessResult<CrossReferenceDomain> {
+        fun fromString(context: SentenceContextAny?, crossReferenceString: CrossReferenceString): ProcessResult<CrossReferenceDomain> {
             val proc = Agl.registry.agl.crossReference.processor ?: error("Agl CrossReference language not found!")
             return proc.process(
                 sentence = crossReferenceString.value,
                 Agl.options {
-                    semanticAnalysis { context(context) }
+                    semanticAnalysis { sentenceContext(context) }
                 }
             )
         }

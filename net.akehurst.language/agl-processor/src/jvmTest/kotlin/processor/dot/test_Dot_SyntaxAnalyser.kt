@@ -184,7 +184,7 @@ class test_Dot_SyntaxAnalyser {
         """.trimIndent()
 
         val result = processor.process(sentence, Agl.options {
-            semanticAnalysis { context(contextAsmSimple()) }
+            semanticAnalysis { sentenceContext(contextAsmSimple()) }
         })
         val actual = result.asm?.root?.firstOrNull()
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
@@ -221,7 +221,7 @@ class test_Dot_SyntaxAnalyser {
         """.trimIndent()
 
         val result = processor.process(sentence, Agl.options {
-            semanticAnalysis { context(contextAsmSimple()) }
+            semanticAnalysis { sentenceContext(contextAsmSimple()) }
         })
         val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)

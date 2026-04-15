@@ -95,7 +95,7 @@ class AglFormatDomainDefault(
             val res = proc.process(
                 sentence = formatModelStr.value,
                 Agl.options {
-                    semanticAnalysis { context(context) }
+                    semanticAnalysis { sentenceContext(context) }
                 }
             )
             return when {
@@ -140,6 +140,9 @@ class FormatSetDefault(
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     override val rules: List<AglFormatRule>
 ) : FormatSet, DefinitionAbstract<FormatSet>() {
+
+    override val allRules: List<AglFormatRule> get() = extends.flatMap { allRules } + rules
+
 }
 
 class AglFormatRuleDefault(

@@ -46,7 +46,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
         referenceStr = testData.referenceStr?.let { CrossReferenceString(it) },
         grammarAglOptions = Agl.options {
             semanticAnalysis {
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
 //TODO:                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
             }
         }

@@ -17,6 +17,7 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
+import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -28,6 +29,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
@@ -79,7 +81,14 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
 
     override val kompositeString: String = """
         namespace ${NAMESPACE_NAME}.style.api
-          // TODO
+            interface StyleSet {
+                cmp extends
+                cmp rules
+            }
+            interface AglStyleRule {
+                cmp selector
+                cmp declaration
+            }
     """.trimIndent()
 
     override val asmTransformString: String = """
@@ -98,33 +107,24 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
     """.trimIndent()
 
     override val styleString = """
-        namespace net.akehurst.language
-            styles $NAME {
-                $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-                  foreground: darkgreen;
-                  font-weight: bold;
-                }
-                SPECIAL_IDENTIFIER {
-                  foreground: orange;
-                  font-weight: bold;
-                }
-                IDENTIFIER {
-                  foreground: blue;
-                  font-weight: bold;
-                }
-                LITERAL {
-                  foreground: blue;
-                  font-weight: bold;
-                }
-                PATTERN {
-                  foreground: darkblue;
-                  font-weight: bold;
-                }
-                STYLE_ID {
-                  foreground: darkred;
-                  font-style: italic;
-                }
+        namespace ${NAMESPACE_NAME}
+          styles $NAME : ${AglBase.NAME} {
+            SPECIAL_IDENTIFIER {
+              foreground: orange;
+              font-weight: bold;
             }
+            LITERAL {
+              foreground: blue;
+              font-weight: bold;
+            }
+            PATTERN {
+              foreground: darkblue;
+              font-weight: bold;
+            }
+            STYLE_ID {
+              foreground: purple;
+            }
+          }
         """.trimIndent()
 
     override val formatString: String = """
@@ -190,17 +190,6 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
             }
         }
     }
-
-    const val komposite = """namespace net.akehurst.language.style.api
-interface StyleSet {
-    cmp extends
-    cmp rules
-}
-interface AglStyleRule {
-    cmp selector
-    cmp declaration
-}
-"""
 
     override val typesDomain by lazy {
         typesDomain(NAME, true, AglBase.typesDomain.namespace) {
@@ -328,11 +317,7 @@ interface AglStyleRule {
     }
 
     override val asmTransformDomain by lazy {
-        asmTransform(
-            name = NAME,
-            typesDomain = typesDomain,
-            createTypes = false
-        ) {
+        asmTransform(name = NAME, typesDomain = typesDomain, createTypes = false) {
             namespace(qualifiedName = NAMESPACE_NAME) {
                 ruleSet(NAME) {
                     importTypes("net.akehurst.language.style.api", "net.akehurst.language.base.api")
@@ -370,12 +355,24 @@ interface AglStyleRule {
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
+                    extends(AglBase.NAME)
+                    tagRule("SPECIAL_IDENTIFIER") {
+                        declaration("foreground", "orange")
                         declaration("font-weight", "bold")
+                    }
+                    tagRule("LITERAL") {
+                        declaration("foreground", "blue")
+                        declaration("font-weight", "bold")
+                    }
+                    tagRule("PATTERN") {
+                        declaration("foreground", "darkblue")
+                        declaration("font-weight", "bold")
+                    }
+                    tagRule("STYLE_ID") {
+                        declaration("foreground", "purple")
                     }
                 }
             }

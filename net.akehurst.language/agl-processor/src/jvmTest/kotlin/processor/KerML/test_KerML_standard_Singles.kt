@@ -45,7 +45,7 @@ class test_KerML_standard_Singles {
     @Test
     fun process_grammar() {
         val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
@@ -57,7 +57,7 @@ class test_KerML_standard_Singles {
             grammarStr,
             Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
                 }
             }

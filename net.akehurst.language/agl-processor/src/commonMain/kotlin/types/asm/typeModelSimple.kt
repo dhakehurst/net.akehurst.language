@@ -42,7 +42,7 @@ class TypesDomainSimple(
                     val proc = Agl.registry.agl.types.processor ?: error("Types language not found!")
                     proc.process(
                         sentence = typesString.value,
-                        options = Agl.options { semanticAnalysis { context(context) } }
+                        options = Agl.options { semanticAnalysis { sentenceContext(context) } }
                     )
                 }
             }

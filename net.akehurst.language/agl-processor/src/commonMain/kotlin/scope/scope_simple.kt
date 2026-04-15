@@ -106,6 +106,22 @@ class ScopeSimple<ItemInScopeType>(
         }
     }
 
+    /** will overwrite existing items with other if qualifiedTypeName is the same */
+    override fun merge(other: Scope<ItemInScopeType>) {
+        other.childScopes.forEach { (k,v) ->
+            val newScope = createOrGetChildScope(k,v.forTypeName)
+            newScope.merge(v)
+        }
+        other.items.forEach { (k,v) ->
+            val map = this._items[k]
+            if (null == map) {
+                this._items[k] = v.toMutableMap()
+            } else {
+                map.putAll(v) //TODO: this overwrites ? is that correct
+            }
+        }
+    }
+
     override fun removeItemsWithLocation(location: Any) {
         _items.forEach { (k,v) ->
             val toGo = v.filter { it.value.first == location }

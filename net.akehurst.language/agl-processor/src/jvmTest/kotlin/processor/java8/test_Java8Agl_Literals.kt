@@ -46,7 +46,7 @@ class test_Java8Agl_Literals {
                 Agl.configuration { targetGrammarName(("Literals")); defaultGoalRuleName("Literal") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
-                        context(contextFromGrammarRegistry(Agl.registry))
+                        sentenceContext(contextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }

@@ -83,6 +83,11 @@ interface LanguageRegistry : GrammarRegistry {
     val languages: Map<LanguageIdentity, LanguageDefinition<*, *>>
 
     /**
+     * initialise languages if required.
+     */
+    fun initialise()
+
+    /**
      * create and register a LanguageDefinition as specified
      */
     fun <AsmType : Any, ContextType : Any> register(

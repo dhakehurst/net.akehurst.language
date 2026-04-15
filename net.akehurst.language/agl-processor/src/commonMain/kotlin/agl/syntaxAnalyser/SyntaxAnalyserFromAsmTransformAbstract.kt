@@ -215,7 +215,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 stack.push(ChildData(nodeInfo, objectGraph.toTypedObject(value)))
             }
 
-            override fun skip(startPosition: Int, nextInputPosition: Int) {
+            override fun skip(skipData: TreeData) {
                 // do nothing
             }
 

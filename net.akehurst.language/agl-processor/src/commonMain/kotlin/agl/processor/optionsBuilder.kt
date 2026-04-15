@@ -166,7 +166,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
 
     private var _enabled = base.enabled
     private var _locationMap = base.locationMap
-    private var _context: ContextType? = base.context
+    private var _context: ContextType? = base.sentenceContext
     private var _buildScope = base.buildScope
     private var _replaceIfItemAlreadyExistsInScope = base.replaceIfItemAlreadyExistsInScope
     private var _ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind? = base.ifItemAlreadyExistsInScopeIssueKind
@@ -182,7 +182,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
         _locationMap = value
     }
 
-    fun context(value: ContextType?) {
+    fun sentenceContext(value: ContextType?) {
         _context = value
     }
 
@@ -230,7 +230,7 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
     base: CompletionProviderOptions<ContextType>
 ) {
 
-    private var _context: ContextType? = base.context
+    private var _context: ContextType? = base.sentenceContext
     private var _depth: Int = base.depth
     private var _path: List<Pair<Int,Int>> = base.path
     private var _showOptionalItems = base.showOptionalItems
@@ -263,7 +263,7 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
 
     fun build(): CompletionProviderOptions<ContextType> {
         return CompletionProviderOptionsDefault<ContextType>(
-            context = _context,
+            sentenceContext = _context,
             depth = _depth,
             path = _path,
             showOptionalItems = _showOptionalItems,

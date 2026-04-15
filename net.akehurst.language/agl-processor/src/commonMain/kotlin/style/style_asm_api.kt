@@ -42,6 +42,8 @@ interface StyleSet : Definition<StyleSet> {
     val rules : List<AglStyleRule>
     val metaRules: List<AglStyleMetaRule>
     val tagRules: List<AglStyleTagRule>
+
+    val allRules: List<AglStyleRule>
 }
 
 interface AglStyleRule : Formatable {

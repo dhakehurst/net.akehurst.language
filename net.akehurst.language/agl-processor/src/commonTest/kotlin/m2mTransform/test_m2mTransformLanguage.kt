@@ -1020,7 +1020,7 @@ class test_m2mTransformLanguage {
                         }
                     }
                     semanticAnalysis {
-                        context(context)
+                        sentenceContext(context)
                     }
                 }
             )

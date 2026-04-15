@@ -50,7 +50,7 @@ interface FormatSet : Definition<FormatSet> {
     override val namespace: FormatNamespace
     val extends: List<FormatSetReference>
     val rules: List<AglFormatRule>
-
+    val allRules:List<AglFormatRule>
 }
 
 interface AglFormatRule {

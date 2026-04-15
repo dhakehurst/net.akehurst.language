@@ -36,7 +36,7 @@ interface SyntaxAnalysisOptions<AsmType : Any> {
 interface SemanticAnalysisOptions<ContextType : Any> {
     var enabled: Boolean
     var locationMap: LocationMap
-    var context: ContextType?
+    var sentenceContext: ContextType?
     var buildScope: Boolean
 
     /**
@@ -60,7 +60,7 @@ interface SemanticAnalysisOptions<ContextType : Any> {
 }
 
 interface CompletionProviderOptions<ContextType : Any> {
-    var context: ContextType?
+    var sentenceContext: ContextType?
 
     /**
      * depth of nested rules to search when constructing possible completions

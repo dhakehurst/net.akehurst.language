@@ -23,6 +23,8 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.ParseAction
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
@@ -35,6 +37,7 @@ import net.akehurst.language.types.api.TypesDomain
 
 interface LanguageObject<AsmType : Any, ContextType : Any> {
     val identity: LanguageIdentity
+    val qualifiedName: QualifiedName
     val extends: List<LanguageObject<Any, ContextType>>
     val grammarString: String
     val typesString: String
@@ -80,6 +83,8 @@ abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : Langua
         val GRAFT = ParseAction.GRAFT
         val GOAL = ParseAction.GOAL
     }
+
+    override val qualifiedName get() = identity.value.asQualifiedName
 
     override val kompositeDomain: TypesDomain get() = typesDomain
 

@@ -181,8 +181,8 @@ class TestDataSentenceBuilder(
     }
 
     fun context(value: SentenceContextAny) {
-        _options.semanticAnalysis.context = value
-        _options.completionProvider.context = value
+        _options.semanticAnalysis.sentenceContext = value
+        _options.completionProvider.sentenceContext = value
     }
 
     fun expectedIssues(value: List<LanguageIssue>) {

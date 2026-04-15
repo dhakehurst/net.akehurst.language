@@ -104,7 +104,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         } ?: AsmTransformDomainDefault.fromGrammarDomain(p.grammarDomain!!, p.baseTypesDomain)
     },
     override var crossReferenceResolver: CrossReferenceResolver<AsmType, ContextType>? = { p ->
-        CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), p.configuration.crossReferenceString ?: CrossReferenceString(""))
+        CrossReferenceDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.crossReferenceString ?: CrossReferenceString(""))
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
@@ -156,7 +156,7 @@ internal class LanguageProcessorConfigurationSimple(
         } ?: AsmTransformDomainDefault.fromGrammarDomain(p.grammarDomain!!, p.baseTypesDomain)
     },
     override var crossReferenceResolver: CrossReferenceResolver<Asm, SentenceContextAny>? = { p ->
-        CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), p.configuration.crossReferenceString ?: CrossReferenceString(""))
+        CrossReferenceDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.crossReferenceString ?: CrossReferenceString(""))
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, SentenceContextAny>? = { p ->
         ProcessResultDefault(

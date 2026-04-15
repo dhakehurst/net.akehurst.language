@@ -173,7 +173,9 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
                 kotlin.error(msg)
             }
 
-            override fun skip(startPosition: Int, nextInputPosition: Int) {
+            override fun skip(skipData: TreeData) {
+                val startPosition= skipData.root?.startPosition ?: error("Should not happen")
+                val nextInputPosition= skipData.root?.nextInputPosition ?: error("Should not happen")
                 //TODO: ?
             }
         }

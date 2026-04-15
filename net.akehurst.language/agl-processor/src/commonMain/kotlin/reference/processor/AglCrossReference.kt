@@ -16,127 +16,169 @@
 
 package net.akehurst.language.reference.processor
 
+import net.akehurst.language.agl.format.builder.formatDomain
+import net.akehurst.language.agl.processor.contextFromLanguageObject
+import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.LanguageIdentity
+import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.builder.crossReferenceDomain
+import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.builder.typesDomain
 
-object AglCrossReference {
+object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, SentenceContextAny>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "CrossReferences"
     const val goalRuleName = "unit"
 
-    val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+    override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+    override val extends by lazy { listOf(AglBase) }
 
-    const val grammarStr = """namespace $NAMESPACE_NAME
+    override val grammarString = """
+        namespace $NAMESPACE_NAME
 
-grammar $NAME extends Expressions {
+            grammar $NAME : Expressions {
+            
+                override namespace = 'namespace' possiblyQualifiedName import* declarations ;
+                declarations = rootIdentifiables scopes references? ;
+                rootIdentifiables = identifiable* ;
+                scopes = scope* ;
+                scope = 'scope' simpleTypeName '{' identifiables '}' ;
+                identifiables = identifiable* ;
+                identifiable = 'identify' simpleTypeName 'by' expression ;
+            
+                references = 'references' '{' referenceDefinitions '}' ;
+                referenceDefinitions = referenceDefinition* ;
+                referenceDefinition = 'in' simpleTypeName '{' referenceExpression* '}' ;
+                referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
+                propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
+                from = 'from' navigationExpression ;
+                collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
+                ofType = 'of-type' possiblyQualifiedTypeReference ;
+                
+                rootOrNavigation = rootExpression | navigationExpression ;
+                
+                typeReferences = [possiblyQualifiedTypeReference / '|']+ ;
+                possiblyQualifiedTypeReference = possiblyQualifiedName ;
+                simpleTypeName = IDENTIFIER ;
+            }
+    """.trimIndent()
 
-    override namespace = 'namespace' possiblyQualifiedName import* declarations ;
-    declarations = rootIdentifiables scopes references? ;
-    rootIdentifiables = identifiable* ;
-    scopes = scope* ;
-    scope = 'scope' simpleTypeName '{' identifiables '}' ;
-    identifiables = identifiable* ;
-    identifiable = 'identify' simpleTypeName 'by' expression ;
+    override val typesString: String = """
+    """.trimIndent()
 
-    references = 'references' '{' referenceDefinitions '}' ;
-    referenceDefinitions = referenceDefinition* ;
-    referenceDefinition = 'in' simpleTypeName '{' referenceExpression* '}' ;
-    referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
-    propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
-    from = 'from' navigationExpression ;
-    collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
-    ofType = 'of-type' possiblyQualifiedTypeReference ;
-    
-    rootOrNavigation = rootExpression | navigationExpression ;
-    
-    typeReferences = [possiblyQualifiedTypeReference / '|']+ ;
-    possiblyQualifiedTypeReference = possiblyQualifiedName ;
-    simpleTypeName = IDENTIFIER ;
-}
-"""
+    override val kompositeString = """
+        namespace net.akehurst.language.reference.api
+            interface DeclarationsForNamespace {
+                cmp scopeDefinition
+                cmp references
+                cmp options
+            }
+            
+            interface ScopeDefinition {
+                cmp identifiables
+            }
+            interface Identifiable {
+                cmp identifiedBy
+            }
+            interface ReferenceDefinition {
+                cmp referenceExpressionList
+            }
+            interface ReferenceExpressionProperty {
+                cmp referringPropertyNavigation
+                cmp fromNavigation
+            }
+            interface ReferenceExpressionCollection {
+                cmp expression
+                cmp referenceExpressionList
+            }
+        """.trimIndent()
 
-    val grammar = grammar(
-        namespace = NAMESPACE_NAME,
-        name = NAME
-    ) {
-        extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)
-        concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
-            lit("namespace"); ref("possiblyQualifiedName")
-            lst(0, -1) { ref("import") }
-            ref("declarations")
+    override val asmTransformString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val crossReferenceString = """
+        namespace ${NAMESPACE_NAME}
+           // TODO
+    """.trimIndent()
+
+    override val styleString = """
+        namespace ${NAMESPACE_NAME}
+          styles ${NAME} : ${AglExpressions.NAME} {
+
+          }
+        """.trimIndent()
+
+    override val formatString: String = """
+        namespace ${NAMESPACE_NAME}.reference.api
+          // TODO
+    """.trimIndent()
+
+    override val grammarDomain by lazy {
+        grammarDomain(NAME) {
+            namespace(NAMESPACE_NAME) {
+                grammar(NAME) {
+                    extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)
+                    concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
+                        lit("namespace"); ref("possiblyQualifiedName")
+                        lst(0, -1) { ref("import") }
+                        ref("declarations")
+                    }
+                    concatenation("declarations") {
+                        ref("rootIdentifiables"); ref("scopes"); opt { ref("references") }
+                    }
+                    list("rootIdentifiables", 0, -1) { ref("identifiable") }
+                    list("scopes", 0, -1) { ref("scope") }
+                    concatenation("scope") {
+                        lit("scope"); ref("simpleTypeName"); lit("{"); ref("identifiables"); lit("}")
+                    }
+                    list("identifiables", 0, -1) { ref("identifiable") }
+                    concatenation("identifiable") {
+                        lit("identify"); ref("simpleTypeName"); lit("by"); ref("expression")
+                    }
+                    concatenation("references") {
+                        lit("references"); lit("{"); ref("referenceDefinitions"); lit("}")
+                    }
+                    list("referenceDefinitions", 0, -1) { ref("referenceDefinition") }
+                    concatenation("referenceDefinition") {
+                        lit("in"); ref("simpleTypeName"); lit("{"); ref("referenceExpressionList"); lit("}")
+                    }
+                    list("referenceExpressionList", 0, -1) { ref("referenceExpression") }
+                    choice("referenceExpression") {
+                        ref("propertyReferenceExpression")
+                        ref("collectionReferenceExpression")
+                    }
+                    concatenation("propertyReferenceExpression") {
+                        lit("property"); ref("rootOrNavigation"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }
+                    }
+                    concatenation("from") { lit("from"); ref("navigationExpression") }
+                    concatenation("collectionReferenceExpression") {
+                        lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("{"); ref("referenceExpressionList"); lit("}")
+                    }
+                    concatenation("ofType") { lit("of-type"); ref("possiblyQualifiedTypeReference") }
+                    choice("rootOrNavigation") {
+                        ref("rootExpression")
+                        ref("navigationExpression")
+                    }
+                    separatedList("typeReferences", 1, -1) { ref("possiblyQualifiedTypeReference"); lit("|") }
+                    concatenation("possiblyQualifiedTypeReference") { ref("possiblyQualifiedName") }
+                    concatenation("simpleTypeName") { ref("IDENTIFIER") }
+                }
+            }
         }
-        concatenation("declarations") {
-            ref("rootIdentifiables"); ref("scopes"); opt { ref("references") }
-        }
-        list("rootIdentifiables", 0, -1) { ref("identifiable") }
-        list("scopes", 0, -1) { ref("scope") }
-        concatenation("scope") {
-            lit("scope"); ref("simpleTypeName"); lit("{"); ref("identifiables"); lit("}")
-        }
-        list("identifiables", 0, -1) { ref("identifiable") }
-        concatenation("identifiable") {
-            lit("identify"); ref("simpleTypeName"); lit("by"); ref("expression")
-        }
-        concatenation("references") {
-            lit("references"); lit("{"); ref("referenceDefinitions"); lit("}")
-        }
-        list("referenceDefinitions", 0, -1) { ref("referenceDefinition") }
-        concatenation("referenceDefinition") {
-            lit("in"); ref("simpleTypeName"); lit("{"); ref("referenceExpressionList"); lit("}")
-        }
-        list("referenceExpressionList", 0, -1) { ref("referenceExpression") }
-        choice("referenceExpression") {
-            ref("propertyReferenceExpression")
-            ref("collectionReferenceExpression")
-        }
-        concatenation("propertyReferenceExpression") {
-            lit("property"); ref("rootOrNavigation"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }
-        }
-        concatenation("from") { lit("from"); ref("navigationExpression") }
-        concatenation("collectionReferenceExpression") {
-            lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("{"); ref("referenceExpressionList"); lit("}")
-        }
-        concatenation("ofType") { lit("of-type"); ref("possiblyQualifiedTypeReference") }
-        choice("rootOrNavigation") {
-            ref("rootExpression")
-            ref("navigationExpression")
-        }
-        separatedList("typeReferences", 1, -1) { ref("possiblyQualifiedTypeReference"); lit("|") }
-        concatenation("possiblyQualifiedTypeReference") { ref("possiblyQualifiedName") }
-        concatenation("simpleTypeName") { ref("IDENTIFIER") }
     }
 
-    const val komposite = """namespace net.akehurst.language.reference.api
-interface DeclarationsForNamespace {
-    cmp scopeDefinition
-    cmp references
-    cmp options
-}
-
-interface ScopeDefinition {
-    cmp identifiables
-}
-interface Identifiable {
-    cmp identifiedBy
-}
-interface ReferenceDefinition {
-    cmp referenceExpressionList
-}
-interface ReferenceExpressionProperty {
-    cmp referringPropertyNavigation
-    cmp fromNavigation
-}
-interface ReferenceExpressionCollection {
-    cmp expression
-    cmp referenceExpressionList
-}
-"""
-
-    val typesDomain by lazy {
+    override val typesDomain by lazy {
         typesDomain(NAME, true, AglExpressions.typesDomain.namespace) {
             namespace("net.akehurst.language.reference.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.expressions.api")) {
                 interface_("ScopeDefinition") {
@@ -292,9 +334,45 @@ interface ReferenceExpressionCollection {
         }
     }
 
-    const val styleStr = """namespace $NAMESPACE_NAME
-styles $NAME : Base {
-}"""
+    override val asmTransformDomain by lazy  {
+        asmTransform(name = NAME, typesDomain = typesDomain, createTypes = false) {
+            namespace(qualifiedName = NAMESPACE_NAME) {
+                ruleSet(NAME) {
+                    //TODO
+                }
+            }
+        }
+    }
+
+    override val crossReferenceDomain by lazy {
+        crossReferenceDomain(NAME) {
+            //TODO
+        }
+    }
+
+    override val styleDomain by lazy {
+        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
+            namespace(NAMESPACE_NAME) {
+                styles(NAME) {
+                    extends(AglExpressions.NAME)
+                }
+            }
+        }
+    }
+
+    override val formatDomain by lazy {
+        formatDomain(NAME) {
+//            TODO("not implemented")
+        }
+    }
+
+    override val defaultTargetGrammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGoalRule = "unit"
+
+    override val syntaxAnalyser by lazy { ReferencesSyntaxAnalyser() }
+    override val semanticAnalyser by lazy { ReferencesSemanticAnalyser() }
+    override val completionProvider by lazy { ReferencesCompletionProvider() }
+
 
     const val formatterStr = """
 @TODO
@@ -310,5 +388,4 @@ ReferenceDefinitions -> [referenceDefinition / '\n']
 ReferenceDefinition -> "in §typeReference property §propertyReference refers-to §typeReferences"
     """
 
-    override fun toString(): String = grammarStr.trimIndent()
 }

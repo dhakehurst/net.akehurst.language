@@ -73,7 +73,7 @@ class test_LanguageDefinitionDefault {
             styleStr = null,
             formatterStr = null,
             configurationBase = Agl.configurationSimple(),
-            grammarAglOptions =  Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } },
+            grammarAglOptions =  Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } },
         )
         sut.grammarStrObservers.add(grammarStrObserver)
         sut.grammarObservers.add(grammarObserver)
@@ -119,7 +119,7 @@ class test_LanguageDefinitionDefault {
             styleStr = null,
             formatterStr = null,
             configurationBase = Agl.configurationSimple(),
-            grammarAglOptions =  Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } },
+            grammarAglOptions =  Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } },
         )
         assertNull(def.grammarString)
         assertNull(def.targetGrammar)
@@ -144,7 +144,7 @@ class test_LanguageDefinitionDefault {
             styleStr = null,
             formatterStr = null,
             configurationBase = Agl.configurationSimple(),
-            grammarAglOptions =  Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } },
+            grammarAglOptions =  Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } },
         )
         println("assert")
         assertEquals(g, def.grammarString)
@@ -178,7 +178,7 @@ class test_LanguageDefinitionDefault {
             },
             grammarAglOptions = Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromRegistryGrammars(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
@@ -678,9 +678,9 @@ class test_LanguageDefinitionDefault {
         val crossReferenceModel = sut.crossReferenceDomain
         assertTrue(sut.issues.errors.isEmpty(), sut.issues.toString())
 
-        val result = sut.processor!!.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
+        val result = sut.processor!!.process(sentence, Agl.options { semanticAnalysis { sentenceContext(contextAsmSimple()) } })
 
-        val expected = asmSimple(typesDomain = typeModel!!, crossReferenceDomain = crossReferenceModel!!, context = contextAsmSimple()) {
+        val expected = asmSimple(typesDomain = typeModel!!, crossReferenceDomain = crossReferenceModel!!, sentenceContext = contextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

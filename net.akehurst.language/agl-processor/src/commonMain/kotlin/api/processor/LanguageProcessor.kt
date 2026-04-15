@@ -183,10 +183,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
      *
      * @param sentence text to parse
      * @param position position in the text (from reader) at which to provide expectations
-     * @param goalRuleName name of a rule in the grammar that is the goal rule
      * @return list of possible completion items
-     * @throws ParseFailedException
-     * @throws ParseTreeException
      */
     fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 

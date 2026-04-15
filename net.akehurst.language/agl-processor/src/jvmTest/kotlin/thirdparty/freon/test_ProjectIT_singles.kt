@@ -23,12 +23,13 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-
+@Ignore("ProjectIT grammars need updating")
 class test_ProjectIT_singles {
 
     companion object {

@@ -20,6 +20,7 @@ package net.akehurst.language.agl.generators
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.SimpleName
@@ -107,7 +108,7 @@ class GenerateGrammarDomainBuild(
             sentence = grammarString.value,
             options = Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry())
+                    sentenceContext(contextFromRegistryGrammars())
                 }
             }
         )

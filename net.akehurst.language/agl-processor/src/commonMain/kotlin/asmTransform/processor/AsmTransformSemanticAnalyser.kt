@@ -94,10 +94,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         locationMap: LocationMap?,
         options: SemanticAnalysisOptions<SentenceContextAny>
     ): SemanticAnalysisResult {
-        _context = options.context
+        _context = options.sentenceContext
         __asm = asm
         if (null == _context) {
-            _issues.warn(null, "No context, semantic analysis cannot be performed")
+            _issues.warn(null, "No sentence context provided, semantic analysis cannot be performed")
         } else {
             (asm as AsmTransformDomainDefault).typesDomain = _typesDomain
             for (trns in asm.namespace) {
@@ -117,7 +117,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     for (ref in trs.extends) {
                         val resolved = asm.resolveReference(ref)
                         when (resolved) {
-                            null -> _issues.error(null, "Cannot resolve '${ref.nameOrQName}' in context '${ref.localNamespace.qualifiedName}'")
+                            null -> _issues.error(null, "Cannot resolve '${ref.nameOrQName}' in the context of '${ref.localNamespace.qualifiedName}'")
                         }
                     }
                     for (trr in trs.rules.values) {
@@ -186,7 +186,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         // to define the type for a grammar Rule
         // thus only certain expressions are valid.
         val expr = trr.expression
-        val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Should exist!")
+        val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Namespace '${trs.qualifiedName.value}' Should exist!")
         val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)
         val exprType = when {
             trr.isResolved -> trr.resolvedType

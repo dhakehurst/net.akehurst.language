@@ -19,8 +19,10 @@ package net.akehurst.language.grammar.builder
 
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.GrammarRegistry
+import net.akehurst.language.api.processor.LanguageRegistry
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.grammar.api.*
@@ -32,15 +34,15 @@ import net.akehurst.language.regex.api.UnescapedPattern
 @DslMarker
 annotation class GrammarBuilderMarker
 
-fun grammarDomain(name: String, namespaces: List<GrammarNamespace> = emptyList(), grammarRegistry: GrammarRegistry? = null, init: GrammarDomainBuilder.() -> Unit): GrammarDomain {
+fun grammarDomain(name: String, namespaces: List<GrammarNamespace> = emptyList(), registry: LanguageRegistry? = null, init: GrammarDomainBuilder.() -> Unit): GrammarDomain {
     val b = GrammarDomainBuilder(SimpleName(name), namespaces)
     b.init()
     val gm = b.build()
-    grammarRegistry?.let { gr ->
-        gm.allDefinitions.forEach { gr.registerGrammar(it) }
+    registry?.let { reg ->
+        gm.allDefinitions.forEach { reg.registerGrammar(it) }
         val sa = AglGrammarSemanticAnalyser()
         val opts = SemanticAnalysisOptionsDefault(
-            context = contextFromGrammarRegistry(gr)
+            sentenceContext = contextFromGrammarRegistry() //TODO:
         )
         sa.analyse(null,gm, LocationMapDefault(), opts)
     }

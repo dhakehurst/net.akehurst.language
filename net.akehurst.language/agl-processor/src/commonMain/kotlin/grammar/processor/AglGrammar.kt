@@ -17,6 +17,7 @@
 package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
+import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -38,6 +39,7 @@ import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
@@ -165,28 +167,17 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
 
     override val crossReferenceString: String = """
         namespace $NAMESPACE_NAME
-          // TODO
+
     """
 
     override val styleString: String = """
         namespace $NAMESPACE_NAME
-          styles $NAME {
-            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-              foreground: darkgreen;
-              font-weight: bold;
-            }
+          styles $NAME : ${AglBase.NAME} {
             LITERAL {
               foreground: blue;
             }
             PATTERN {
               foreground: darkblue;
-            }
-            IDENTIFIER {
-              foreground: darkred;
-              font-style: italic;
-            }
-            SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
-              foreground: LightSlateGrey;
             }
           }
       """.trimIndent()
@@ -837,8 +828,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            this.declarationsFor(NAMESPACE_NAME) {
 
+            }
         }
     }
 
@@ -849,25 +841,15 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
     }
 
     override val styleDomain: AglStyleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
-                        declaration("font-weight", "bold")
-                    }
+                    extends(AglBase.NAME)
                     tagRule("LITERAL") {
                         declaration("foreground", "blue")
                     }
                     tagRule("PATTERN") {
                         declaration("foreground", "darkblue")
-                    }
-                    tagRule("IDENTIFIER") {
-                        declaration("foreground", "darkred")
-                        declaration("font-style", "italic")
-                    }
-                    tagRule("SINGLE_LINE_COMMENT", "MULTI_LINE_COMMENT") {
-                        declaration("foreground", "LightSlateGrey")
                     }
                 }
             }

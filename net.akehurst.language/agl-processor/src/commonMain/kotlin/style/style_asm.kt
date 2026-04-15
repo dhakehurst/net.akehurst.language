@@ -50,7 +50,7 @@ class AglStyleDomainDefault(
             val proc = Agl.registry.agl.style.processor ?: error("Styles language not found!")
             return proc.process(
                 sentence = aglStyleModelSentence.value,
-                options = Agl.options { semanticAnalysis { context(context) } }
+                options = Agl.options { semanticAnalysis { sentenceContext(context) } }
             )
         }
     }
@@ -89,13 +89,20 @@ class AglStyleSetDefault(
     override val metaRules: List<AglStyleMetaRule> get() = rules.filterIsInstance<AglStyleMetaRule>()
     override val tagRules: List<AglStyleTagRule> get() = rules.filterIsInstance<AglStyleTagRule>()
 
+    override val allRules: List<AglStyleRule>
+        get() = extends.flatMap { it.resolved?.allRules ?: emptyList() } + rules
+
     init {
         namespace.addDefinition(this)
     }
 
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
-        sb.append("styles ${name.value} {\n")
+        val extends = when{
+            extends.isEmpty() -> ""
+            else -> extends.joinToString(prefix = " : ", separator = ", ") { it.nameOrQName.value }
+        }
+        sb.append("styles ${name.value}$extends {\n")
         val newIndent = indent.inc
         val rules = rules // do not sort, order matters
             .joinToString(separator = "\n") { "$newIndent${it.asString(newIndent)}" }
@@ -103,6 +110,13 @@ class AglStyleSetDefault(
         sb.append("\n$indent}")
         return sb.toString()
     }
+
+    override fun hashCode(): Int = this.qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when(other) {
+        !is StyleSet -> false
+        else -> this.qualifiedName == other.qualifiedName
+    }
+    override fun toString(): String  = "StyleSet(${this.qualifiedName.value})"
 
 }
 

@@ -47,7 +47,7 @@ class test_Java8_Singles_antlrOptm {
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
-                        context(contextFromGrammarRegistry(Agl.registry))
+                        sentenceContext(contextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
