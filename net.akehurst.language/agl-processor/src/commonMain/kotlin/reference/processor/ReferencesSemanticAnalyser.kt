@@ -95,7 +95,7 @@ class ReferencesSemanticAnalyser(
                 LanguageIssueKind.WARNING,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 null,
-                "No context provided, cannot perform semantic analysis. If you do not want to do semantic analysis then switch it off."
+                "No sentence context provided, cannot perform semantic analysis. If you do not want to do semantic analysis then switch it off."
             )
         }
 

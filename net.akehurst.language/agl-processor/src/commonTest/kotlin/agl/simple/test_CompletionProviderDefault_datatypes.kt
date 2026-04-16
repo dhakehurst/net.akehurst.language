@@ -90,7 +90,7 @@ class test_CompletionProviderDefault_datatypes {
 
             val actual = proc.expectedItemsAt(data.sentence, data.sentence.length, Agl.options {
                 completionProvider {
-                    context(data.context)
+                    sentenceContext(data.context)
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())

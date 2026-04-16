@@ -221,6 +221,10 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     extends(AglBase.NAME)
+                    tagRule("DOLLAR_IDENTIFIER") {
+                        declaration("foreground", "darkblue")
+                        declaration("font-style", "italic")
+                    }
                 }
             }
         }

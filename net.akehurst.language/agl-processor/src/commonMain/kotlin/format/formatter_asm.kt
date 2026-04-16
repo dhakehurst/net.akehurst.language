@@ -90,12 +90,12 @@ class AglFormatDomainDefault(
             return ProcessResultDefault(formatModel, processIssues=issues)
         }
 
-        fun fromString(context: SentenceContextAny, formatModelStr: FormatString): ProcessResult<AglFormatDomain> {
+        fun fromString(sentenceContext: SentenceContextAny, formatModelStr: FormatString): ProcessResult<AglFormatDomain> {
             val proc = Agl.registry.agl.format.processor ?: error("Agl Format language not found!")
             val res = proc.process(
                 sentence = formatModelStr.value,
                 Agl.options {
-                    semanticAnalysis { sentenceContext(context) }
+                    semanticAnalysis { sentenceContext(sentenceContext) }
                 }
             )
             return when {

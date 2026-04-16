@@ -140,7 +140,7 @@ class test_StatechartTools_CodeCompletion {
                 //reportErrors(false)
             }
             completionProvider {
-                context(contextAsmSimple())
+                sentenceContext(contextAsmSimple())
             }
         }).items.map { it.text }.toSet().sorted()
 
@@ -167,7 +167,7 @@ class test_StatechartTools_CodeCompletion {
                 //reportErrors(false)
             }
             completionProvider {
-                context(context)
+                sentenceContext(context)
             }
         }).items.map { it.text }.toSet().sorted()
 

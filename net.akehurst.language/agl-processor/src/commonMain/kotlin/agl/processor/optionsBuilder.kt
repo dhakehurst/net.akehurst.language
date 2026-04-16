@@ -166,7 +166,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
 
     private var _enabled = base.enabled
     private var _locationMap = base.locationMap
-    private var _context: ContextType? = base.sentenceContext
+    private var _sentenceContext: ContextType? = base.sentenceContext
     private var _buildScope = base.buildScope
     private var _replaceIfItemAlreadyExistsInScope = base.replaceIfItemAlreadyExistsInScope
     private var _ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind? = base.ifItemAlreadyExistsInScopeIssueKind
@@ -183,7 +183,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
     }
 
     fun sentenceContext(value: ContextType?) {
-        _context = value
+        _sentenceContext = value
     }
 
     fun buildScope(value: Boolean) {
@@ -214,7 +214,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
         return SemanticAnalysisOptionsDefault<ContextType>(
             _enabled,
             _locationMap,
-            _context,
+            _sentenceContext,
             _buildScope,
             _replaceIfItemAlreadyExistsInScope,
             _ifItemAlreadyExistsInScopeIssueKind,
@@ -230,15 +230,15 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
     base: CompletionProviderOptions<ContextType>
 ) {
 
-    private var _context: ContextType? = base.sentenceContext
+    private var _sentenceContext: ContextType? = base.sentenceContext
     private var _depth: Int = base.depth
     private var _path: List<Pair<Int,Int>> = base.path
     private var _showOptionalItems = base.showOptionalItems
     private var _provideValuesForPatternTerminals = base.provideValuesForPatternTerminals
     private val _options = base.other.toMutableMap()
 
-    fun context(value: ContextType?) {
-        _context = value
+    fun sentenceContext(value: ContextType?) {
+        _sentenceContext = value
     }
 
     fun depth(value: Int) {
@@ -263,7 +263,7 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
 
     fun build(): CompletionProviderOptions<ContextType> {
         return CompletionProviderOptionsDefault<ContextType>(
-            sentenceContext = _context,
+            sentenceContext = _sentenceContext,
             depth = _depth,
             path = _path,
             showOptionalItems = _showOptionalItems,

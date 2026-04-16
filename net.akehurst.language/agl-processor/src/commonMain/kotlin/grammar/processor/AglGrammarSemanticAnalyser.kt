@@ -40,8 +40,8 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         private const val ns = "net.akehurst.language.agl.grammar.grammar"
         const val OPTIONS_KEY_AMBIGUITY_ANALYSIS = "$ns.ambiguity.analysis"
 
-        fun findGrammarOrNull(context: SentenceContextAny, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName): Grammar? =
-            context.findItemsByQualifiedNameConformingTo(grammarNameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
+        fun findGrammarOrNull(sentenceContext: SentenceContextAny, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName): Grammar? =
+            sentenceContext.findItemsByQualifiedNameConformingTo(grammarNameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
                 true
             }.firstOrNull()?.item as Grammar?
     }

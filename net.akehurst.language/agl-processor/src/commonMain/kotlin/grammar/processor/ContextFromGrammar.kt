@@ -37,10 +37,10 @@ fun TypesDomain.findTypeForRule(ruleName: GrammarRuleName): TypeInstance? {
 fun contextFromGrammar(vararg grammarDomains: GrammarDomain): SentenceContextAny {
     val proc = Agl.registry.agl.grammar.processor!!
     val aglGrammarTypeModel = proc.typesDomain
-    val context = SentenceContextAny()
+    val sentenceContext = SentenceContextAny()
     grammarDomains.forEach { dom ->
         dom.allDefinitions.forEach { g ->
-            val scope = context.newScopeForSentence(g.qualifiedName.toString())
+            val scope = sentenceContext.newScopeForSentence(g.qualifiedName.toString())
             g.allResolvedGrammarRule.forEach {
                 val rType = aglGrammarTypeModel.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
                 scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, null, it.name.value, false)
@@ -54,7 +54,7 @@ fun contextFromGrammar(vararg grammarDomains: GrammarDomain): SentenceContextAny
             }
         }
     }
-    return context
+    return sentenceContext
 }
 /*
 // used by other languages that reference rules  in a grammar

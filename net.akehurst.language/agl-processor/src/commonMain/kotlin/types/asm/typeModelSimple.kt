@@ -35,14 +35,14 @@ class TypesDomainSimple(
 ) : TypesDomainSimpleAbstract() {
 
     companion object {
-        fun fromString(name: SimpleName, context: SentenceContextAny, typesString: TypesString): ProcessResult<TypesDomain> {
+        fun fromString(name: SimpleName, sentenceContext: SentenceContextAny, typesString: TypesString): ProcessResult<TypesDomain> {
             return when {
                 typesString.value.isBlank() -> ProcessResultDefault(typesDomain(name.value, true) { })
                 else -> {
                     val proc = Agl.registry.agl.types.processor ?: error("Types language not found!")
                     proc.process(
                         sentence = typesString.value,
-                        options = Agl.options { semanticAnalysis { sentenceContext(context) } }
+                        options = Agl.options { semanticAnalysis { sentenceContext(sentenceContext) } }
                     )
                 }
             }
@@ -121,7 +121,7 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
 
     override fun findFirstTypeFor(kclass: KClass<*>): TypeDefinition? {
         return namespace.firstNotNullOfOrNull { ns ->
-            ns.ownedTypes.firstOrNull{ it.implementation == kclass } //TODO: maybe create a cache for performance
+            ns.ownedTypes.firstOrNull { it.implementation == kclass } //TODO: maybe create a cache for performance
         }
     }
 
@@ -385,17 +385,22 @@ class TypeInstanceSimple(
 
     val context: TypeDefinition? get() = contextQualifiedTypeName?.let { namespace.findTypeNamed(it) }
 
-    override val typeName: SimpleName
-        get() = resolvedDeclarationOrNull?.name
-            ?: qualifiedOrImportedTypeName.simpleName
-
-    override val qualifiedTypeName: QualifiedName
+    val qualifiedNameOrNull
         get() = resolvedDeclarationOrNull?.qualifiedName
             ?: when (qualifiedOrImportedTypeName) {
                 is QualifiedName -> qualifiedOrImportedTypeName
                 is SimpleName -> context?.namespace?.qualifiedName?.append(qualifiedOrImportedTypeName)
                     ?: namespace.findTypeNamed(qualifiedOrImportedTypeName)?.qualifiedName
             }
+
+    val qualifiedNameOrSimpleName get() = qualifiedNameOrNull ?: qualifiedOrImportedTypeName
+
+    override val typeName: SimpleName
+        get() = resolvedDeclarationOrNull?.name
+            ?: qualifiedOrImportedTypeName.simpleName
+
+    override val qualifiedTypeName: QualifiedName
+        get() = qualifiedNameOrNull
             ?: error("Cannot construct a Qualified name for '$qualifiedOrImportedTypeName' in context of '$contextQualifiedTypeName'")
 
     override val isNothing: Boolean get() = StdLibDefault.NothingType.resolvedDeclaration == resolvedDeclaration
@@ -446,7 +451,7 @@ class TypeInstanceSimple(
         else -> when {
             null == this.contextQualifiedTypeName || null == other.contextQualifiedTypeName -> this.qualifiedOrImportedTypeName == other.qualifiedOrImportedTypeName
             this.contextQualifiedTypeName == other.contextQualifiedTypeName && this.qualifiedOrImportedTypeName == other.qualifiedOrImportedTypeName -> true
-            else -> this.qualifiedTypeName == other.qualifiedTypeName
+            else -> this.qualifiedNameOrSimpleName == other.qualifiedNameOrSimpleName
         }
     }
 }
@@ -774,9 +779,9 @@ abstract class TypesNamespaceAbstract(
                 } else {
                     val otherEnd = ends[j]
                     val otherEndDef = otherEnd.endType
-                    val pd = otherEndDef.appendPropertyStored(thisEnd.endName,thisEndType, thisEnd.characteristics)
-                    thisEnd.byEvaluation?.let { (pd  as PropertyDeclarationAbstract).execution = it.invoke(pd) }
-                    thisEnd.byEvaluationSuspend?.let { (pd  as PropertyDeclarationAbstract).executionSuspend = it.invoke(pd) }
+                    val pd = otherEndDef.appendPropertyStored(thisEnd.endName, thisEndType, thisEnd.characteristics)
+                    thisEnd.byEvaluation?.let { (pd as PropertyDeclarationAbstract).execution = it.invoke(pd) }
+                    thisEnd.byEvaluationSuspend?.let { (pd as PropertyDeclarationAbstract).executionSuspend = it.invoke(pd) }
                     props.add(pd)
                 }
             }
@@ -924,7 +929,7 @@ abstract class TypeDefinitionSimpleAbstract(
         (this.typeParameters as MutableList).add(name)
     }
 
-    override fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName, typeArgNames:List<PossiblyQualifiedName>) {
+    override fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName, typeArgNames: List<PossiblyQualifiedName>) {
         val targs = typeArgNames.map { namespace.createTypeInstance(this.qualifiedName, it).asTypeArgument }
         val ti = namespace.createTypeInstance(this.qualifiedName, qualifiedTypeName, targs, false)
         addSupertype(ti)
@@ -1506,6 +1511,7 @@ class DataTypeSimple(
                     .also { clone ->
                         super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract)
                         this.constructors.forEach { clone.addConstructor(it.parameters.map { it.findInOrCloneTo(other) }) }
+                        // must not clone the resolves subtype, as this could cause recursion
                         this.subtypes.forEach { clone.addSubtype(it.findInOrCloneTo(other)) }
                     }
             }
@@ -1630,8 +1636,8 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
 
     override var opposite: List<PropertyDeclaration> = emptyList()
 
-    override var execution: ((self:Any) -> Any?)? = null
-    override var executionSuspend: (suspend (self:Any) -> Any?)? = null
+    override var execution: ((self: Any) -> Any?)? = null
+    override var executionSuspend: (suspend (self: Any) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
         this,
@@ -1660,7 +1666,7 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
         return "${owner.name}.$name: ${typeInstance.signature(this.owner.namespace, 0)}$nullable [$index]$chrsStr"
     }
 
-    internal fun setOpposite(value:List<PropertyDeclaration>) {
+    internal fun setOpposite(value: List<PropertyDeclaration>) {
         this.opposite = value
     }
 }

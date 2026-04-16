@@ -41,7 +41,7 @@ class test_CompletionProvider {
             val context = contextFromGrammar(testGrammar)
             val actual = aglProc.expectedItemsAt(sentence, position, Agl.options {
                 completionProvider {
-                    context(context)
+                    sentenceContext(context)
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())

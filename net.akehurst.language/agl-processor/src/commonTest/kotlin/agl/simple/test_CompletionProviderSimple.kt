@@ -56,7 +56,7 @@ class test_CompletionProviderSimple {
 
             val actual = proc.expectedItemsAt(data.sentence, data.position, Agl.options {
                 completionProvider {
-                    context(data.context)
+                    sentenceContext(data.context)
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())

@@ -320,9 +320,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
-                data("CrossReferenceModelDefault") {
-                    supertype("ModelAbstract"){ ref("net.akehurst.language.reference.api.CrossReferenceNamespace"); ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
-                    supertype("CrossReferenceModel")
+                data("CrossReferenceDomainDefault") {
+                    supertype("DomainAbstract"){ ref("net.akehurst.language.reference.api.CrossReferenceNamespace"); ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
+                    supertype("CrossReferenceDomain")
                     constructor_ {
                         parameter(setOf(), "name", "SimpleName")
                         parameter(setOf(), "options", "OptionHolder")

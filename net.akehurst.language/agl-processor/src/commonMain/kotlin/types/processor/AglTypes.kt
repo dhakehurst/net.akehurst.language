@@ -157,11 +157,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContextAny>() {
 
     override val styleString: String = """
         namespace ${NAMESPACE_NAME}
-          styles ${NAME} {
-            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-              foreground: darkgreen;
-              font-weight: bold;
-            }
+            styles ${NAME} : ${AglBase.NAME} {
           }
       """
 
