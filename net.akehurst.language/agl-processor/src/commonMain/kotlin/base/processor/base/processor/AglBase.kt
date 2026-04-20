@@ -25,6 +25,7 @@ import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
@@ -45,13 +46,13 @@ import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 
-object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
+object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
     const val NAMESPACE_NAME = "net.akehurst.language"
     const val NAME = "Base"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
-    override val extends = emptyList<LanguageObject<Any, SentenceContextAny>>()
+    override val extends = emptyList<LanguageObject<Any, SentenceContext>>()
 
     override val grammarString: String = """
         namespace $NAMESPACE_NAME
@@ -371,8 +372,8 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
     override val defaultTargetGrammar: Grammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.Base"))!! }
 
     override val syntaxAnalyser: SyntaxAnalyser<Any>? by lazy { BaseSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<Any, SentenceContextAny>? by lazy { BaseSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<Any, SentenceContextAny>? by lazy { BaseCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<Any, SentenceContext>? by lazy { BaseSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<Any, SentenceContext>? by lazy { BaseCompletionProvider() }
 
 
     //TODO: gen this from the ASM

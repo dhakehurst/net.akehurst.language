@@ -18,6 +18,7 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.base.api.Namespace
@@ -120,7 +121,7 @@ interface AglLanguages {
     val styleLanguageIdentity: LanguageIdentity
     val formatLanguageIdentity: LanguageIdentity
 
-    val base: LanguageDefinition<Any, SentenceContextAny>
+    val base: LanguageDefinition<Any, SentenceContext>
     val expressions: LanguageDefinition<Expression, SentenceContextAny>
 
     /**

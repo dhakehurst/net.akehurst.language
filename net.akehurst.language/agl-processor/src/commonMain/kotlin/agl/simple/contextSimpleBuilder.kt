@@ -51,8 +51,8 @@ import net.akehurst.language.scope.asm.ScopeSimple
 fun contextAsmSimple(
 //    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
 //    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
-    createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault(),
-    resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault(),
+    createScopedItem: CreateScopedItem< Any> = CreateScopedItemDefault(),
+    resolveScopedItem: ResolveScopedItem< Any> = ResolveScopedItemDefault(),
     init: ContextBuilder.() -> Unit = {}
 ): SentenceContextAny {
     val b = ContextBuilder(createScopedItem,resolveScopedItem)
@@ -64,8 +64,8 @@ fun contextAsmSimpleWithAsmPath(
     map: MutableMap<String, Any> = mutableMapOf(),
     init: ContextBuilder.() -> Unit = {}
 ): SentenceContextAny {
-    val createScopedItem:CreateScopedItem<Any,Any> = CreateScopedItem { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path }
-    val resolveScopedItem: ResolveScopedItem<Any,Any> =  ResolveScopedItem { itemInScope -> map[itemInScope] }
+    val createScopedItem:CreateScopedItem<Any> = CreateScopedItem { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path }
+    val resolveScopedItem: ResolveScopedItem<Any> =  ResolveScopedItem { itemInScope -> map[itemInScope] }
     val b = ContextBuilder(createScopedItem, resolveScopedItem)
     b.init()
     return b.build()
@@ -76,8 +76,8 @@ annotation class ContextSimpleDslMarker
 
 @ContextSimpleDslMarker
 class ContextBuilder(
-    createScopedItem: CreateScopedItem<Any, Any>,
-    resolveScopedItem: ResolveScopedItem<Any, Any>,
+    createScopedItem: CreateScopedItem< Any>,
+    resolveScopedItem: ResolveScopedItem< Any>,
 ) {
 
     private val _context = SentenceContextAny(createScopedItem, resolveScopedItem)
@@ -94,8 +94,8 @@ class ContextBuilder(
 @ContextSimpleDslMarker
 class ScopeBuilder<ItemInScopeType : Any>(
     private val _scope: ScopeSimple<ItemInScopeType>,
-    private val _createScopedItem: CreateScopedItem<Any, ItemInScopeType>,
-    private val _resolveScopedItem: ResolveScopedItem<Any, ItemInScopeType>
+    private val _createScopedItem: CreateScopedItem< ItemInScopeType>,
+    private val _resolveScopedItem: ResolveScopedItem< ItemInScopeType>
 ) {
 
     fun item(id: String, qualifiedTypeName: String, location: Any?, itemInScope: ItemInScopeType) {

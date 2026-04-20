@@ -56,10 +56,10 @@ data class ReferenceExpressionContext<ItemInScopeType>(
 class ReferenceResolverSimple<ItemInScopeType : Any>(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain,
-    val sentenceContext: ContextWithScope<Any, ItemInScopeType>, //TODO: use interface or something more abstract
+    val sentenceContext: ContextWithScope<ItemInScopeType>, //TODO: use interface or something more abstract
     val sentenceIdentity: Any?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
-    val resolveFunction: ResolveScopedItem<Any, ItemInScopeType>?,
+    val resolveFunction: ResolveScopedItem<ItemInScopeType>?,
     private val _locationMap: LocationMap,
     private val _issues: IssueHolder
 ) : AsmTreeWalker {

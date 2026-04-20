@@ -20,7 +20,6 @@ package net.akehurst.language.agl
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
-import net.akehurst.language.agl.simple.ContextFromGrammarAndTypesDomain
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.processor.*
@@ -57,8 +56,6 @@ import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.asm.AglStyleDomainDefault
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.TypesDomainSimple
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 object Agl {
 

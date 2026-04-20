@@ -26,29 +26,29 @@ import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.sentence.api.InputLocation
 
-fun interface CreateScopedItem<ItemType, ItemInScopeType> {
-    fun invoke(qualifiedName: List<String>, item: ItemType, location: InputLocation?): ItemInScopeType
+fun interface CreateScopedItem< ItemInScopeType> {
+    fun invoke(qualifiedName: List<String>, item: Any, location: InputLocation?): ItemInScopeType
 }
 
-fun interface ResolveScopedItem<ItemType, ItemInScopeType> {
-    fun invoke(itemInScope: ItemInScopeType): ItemType?
+fun interface ResolveScopedItem<ItemInScopeType> {
+    fun invoke(itemInScope: ItemInScopeType): Any?
 }
 
-class CreateScopedItemDefault<ItemType : Any, ItemInScopeType : Any> : CreateScopedItem<ItemType, ItemInScopeType> {
-    override fun invoke(qualifiedName: List<String>, item: ItemType, location: InputLocation?): ItemInScopeType = item as ItemInScopeType
+class CreateScopedItemDefault<ItemInScopeType : Any> : CreateScopedItem<ItemInScopeType> {
+    override fun invoke(qualifiedName: List<String>, item: Any, location: InputLocation?): ItemInScopeType = item as ItemInScopeType
 }
 
-class ResolveScopedItemDefault<ItemType : Any, ItemInScopeType : Any> : ResolveScopedItem<ItemType, ItemInScopeType> {
-    override fun invoke(itemInScope: ItemInScopeType): ItemType? = itemInScope as ItemType?
+class ResolveScopedItemDefault<ItemInScopeType : Any> : ResolveScopedItem<ItemInScopeType> {
+    override fun invoke(itemInScope: ItemInScopeType): Any? = itemInScope as Any?
 }
 
 object NULL_SENTENCE_IDENTIFIER {
     override fun toString() = "NULL_SENTENCE_IDENTIFIER"
 }
 
-open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
-    val createScopedItem: CreateScopedItem<ItemType, ItemInScopeType> = CreateScopedItemDefault(),
-    val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = ResolveScopedItemDefault()
+open class ContextWithScope<ItemInScopeType : Any>(
+    val createScopedItem: CreateScopedItem< ItemInScopeType> = CreateScopedItemDefault(),
+    val resolveScopedItem: ResolveScopedItem<ItemInScopeType> = ResolveScopedItemDefault()
 ) : SentenceContext {
 
     /**
@@ -126,7 +126,7 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     override fun hashCode(): Int = 0 //scopeForSentence.hashCode()
 
     override fun equals(other: Any?): Boolean = when {
-        other !is ContextWithScope<*, *> -> false
+        other !is ContextWithScope<*> -> false
         this.scopeForSentence != other.scopeForSentence -> false
         else -> true
     }
@@ -136,9 +136,9 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
 
 
 class SentenceContextAny(
-    createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault(),
-    resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault()
-) : ContextWithScope<Any,Any>(createScopedItem, resolveScopedItem) {
+    createScopedItem: CreateScopedItem< Any> = CreateScopedItemDefault(),
+    resolveScopedItem: ResolveScopedItem<Any> = ResolveScopedItemDefault()
+) : ContextWithScope<Any>(createScopedItem, resolveScopedItem) {
 
     fun union(other: SentenceContextAny): SentenceContextAny {
         return SentenceContextAny().also { result ->

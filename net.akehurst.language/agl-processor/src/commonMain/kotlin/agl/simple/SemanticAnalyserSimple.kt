@@ -120,7 +120,7 @@ class SemanticAnalyserSimple(
             val resolver = ReferenceResolverSimple<AsmStructure>(
                 typesDomain,
                 crossReferenceDomain,
-                context as ContextWithScope<Any, AsmStructure>,
+                context as ContextWithScope< AsmStructure>,
                 sentenceId,
                 this::identifyingValueInFor,
                 resFunc,

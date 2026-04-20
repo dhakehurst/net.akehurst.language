@@ -35,7 +35,7 @@ import net.akehurst.language.types.api.TypesDomain
 class ScopeCreator<ItemInScopeType : Any>(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain,
-    val context: ContextWithScope<Any, ItemInScopeType>, //TODO: use interface or something more abstract
+    val context: ContextWithScope< ItemInScopeType>, //TODO: use interface or something more abstract
     val sentenceIdentity: Any?,
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,

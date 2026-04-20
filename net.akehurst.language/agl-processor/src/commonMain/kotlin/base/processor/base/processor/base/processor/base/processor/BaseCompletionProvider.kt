@@ -21,11 +21,12 @@ import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.Spine
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 
-class BaseCompletionProvider() : CompletionProvider<Any, SentenceContextAny> {
+class BaseCompletionProvider() : CompletionProvider<Any, SentenceContext> {
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContextAny>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
         TODO("not implemented")
     }
 

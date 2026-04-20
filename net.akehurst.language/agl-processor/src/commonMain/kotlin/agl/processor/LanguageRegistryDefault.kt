@@ -20,6 +20,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.processor.AsmTransform
@@ -157,7 +158,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val styleLanguageIdentity: LanguageIdentity get() = AglStyle.identity
         override val formatLanguageIdentity: LanguageIdentity get() = AglFormat.identity
 
-        override val base: LanguageDefinition<Any, SentenceContextAny> by lazy {
+        override val base: LanguageDefinition<Any, SentenceContext> by lazy {
             this@LanguageRegistryDefault.registerFromLanguageObject(AglBase)
         }
 
