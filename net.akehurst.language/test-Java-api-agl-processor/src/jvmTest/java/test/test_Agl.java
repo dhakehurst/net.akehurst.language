@@ -19,7 +19,7 @@ package test;
 
 import kotlin.Unit;
 import net.akehurst.language.agl.Agl;
-import net.akehurst.language.agl.simple.SentenceContextAny;
+import net.akehurst.language.api.semanticAnalyser.SentenceContext;
 import net.akehurst.language.api.processor.LanguageProcessor;
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration;
 import net.akehurst.language.asm.api.Asm;
@@ -55,9 +55,9 @@ public class test_Agl {
 
     @Test
     public void processorFromString_withConfigDefault() {
-        LanguageProcessorConfiguration<Asm, SentenceContextAny> config = Agl.INSTANCE.configurationSimple();
+        LanguageProcessorConfiguration<Asm, SentenceContext> config = Agl.INSTANCE.configurationSimple();
 
-        LanguageProcessor<Asm, SentenceContextAny> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
+        LanguageProcessor<Asm, SentenceContext> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }

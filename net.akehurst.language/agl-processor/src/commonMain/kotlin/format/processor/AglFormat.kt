@@ -19,7 +19,7 @@ package net.akehurst.language.format.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -42,7 +42,7 @@ import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
 
-object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>() {
+object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Format"
     const val goalRuleName = "unit"
@@ -240,7 +240,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
     override val defaultTargetGoalRule = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<AglFormatDomain>? by lazy { AglFormatSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<AglFormatDomain, SentenceContextAny>? by lazy { AglFormatSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<AglFormatDomain, SentenceContextAny>? by lazy { AglFormatCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<AglFormatDomain, SentenceContext>? by lazy { AglFormatSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AglFormatDomain, SentenceContext>? by lazy { AglFormatCompletionProvider() }
 
 }

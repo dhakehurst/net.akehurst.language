@@ -19,6 +19,7 @@ package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.m2mTransform.api.DomainReference

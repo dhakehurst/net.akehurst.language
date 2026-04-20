@@ -17,10 +17,13 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
-import net.akehurst.language.agl.simple.*
+import net.akehurst.language.agl.simple.CompletionProviderSimple
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
+import net.akehurst.language.agl.simple.SemanticAnalyserSimple
+import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.SimpleName
@@ -130,7 +133,7 @@ internal class LanguageProcessorConfigurationSimple(
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
-    override val scannerResolver: ScannerResolver<Asm, SentenceContextAny>? = {
+    override val scannerResolver: ScannerResolver<Asm, SentenceContext>? = {
         val regexEngine = when (regexEngineKind) {
             RegexEngineKind.PLATFORM -> RegexEnginePlatform
             RegexEngineKind.AGL -> RegexEngineAgl
@@ -141,42 +144,42 @@ internal class LanguageProcessorConfigurationSimple(
         }
         ProcessResultDefault(scanner)
     },
-    override val parserResolver: ParserResolver<Asm, SentenceContextAny>? = { p ->
+    override val parserResolver: ParserResolver<Asm, SentenceContext>? = { p ->
         ProcessResultDefault(
             p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) },
         )
     },
-    override var typesResolver: TypesResolver<Asm, SentenceContextAny>? = { p ->
+    override var typesResolver: TypesResolver<Asm, SentenceContext>? = { p ->
         TypesDomainSimple.fromString(SimpleName("FromGrammar" + p.grammarDomain!!.name.value), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactorySimple>? = { AsmFactorySimple() },
-    override val transformResolver: TransformResolver<Asm, SentenceContextAny>? = { p ->
+    override val transformResolver: TransformResolver<Asm, SentenceContext>? = { p ->
         p.configuration.asmTransformString?.let {
             AsmTransformDomainDefault.fromString(contextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain), it)
         } ?: AsmTransformDomainDefault.fromGrammarDomain(p.grammarDomain!!, p.baseTypesDomain)
     },
-    override var crossReferenceResolver: CrossReferenceResolver<Asm, SentenceContextAny>? = { p ->
+    override var crossReferenceResolver: CrossReferenceResolver<Asm, SentenceContext>? = { p ->
         CrossReferenceDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.crossReferenceString ?: CrossReferenceString(""))
     },
-    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, SentenceContextAny>? = { p ->
+    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, SentenceContext>? = { p ->
         ProcessResultDefault(
             SyntaxAnalyserSimple(p.typesDomain, p.transformDomain, p.targetTransformRuleSet.qualifiedName), //FIXME
         )
     },
-    override var semanticAnalyserResolver: SemanticAnalyserResolver<Asm, SentenceContextAny>? = { p ->
+    override var semanticAnalyserResolver: SemanticAnalyserResolver<Asm, SentenceContext>? = { p ->
         ProcessResultDefault(
             SemanticAnalyserSimple(p.typesDomain, p.crossReferenceDomain),
         )
     },
-    override var formatResolver: FormatResolver<Asm, SentenceContextAny>? = { p ->
+    override var formatResolver: FormatResolver<Asm, SentenceContext>? = { p ->
         AglFormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.formatString ?: FormatString(""))
     },
-    override var styleResolver: StyleResolver<Asm, SentenceContextAny>? = { p ->
+    override var styleResolver: StyleResolver<Asm, SentenceContext>? = { p ->
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
     },
-    override var completionProviderResolver: CompletionProviderResolver<Asm, SentenceContextAny>? = { p ->
+    override var completionProviderResolver: CompletionProviderResolver<Asm, SentenceContext>? = { p ->
         ProcessResultDefault(
             CompletionProviderSimple(p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typesDomain, p.crossReferenceDomain),
         )
     }
-) : LanguageProcessorConfiguration<Asm, SentenceContextAny>
+) : LanguageProcessorConfiguration<Asm, SentenceContext>

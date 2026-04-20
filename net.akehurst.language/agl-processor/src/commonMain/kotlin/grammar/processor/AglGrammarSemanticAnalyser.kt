@@ -17,7 +17,7 @@
 package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -34,13 +34,13 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
 
-class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceContextAny> {
+class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceContext> {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.grammar.grammar"
         const val OPTIONS_KEY_AMBIGUITY_ANALYSIS = "$ns.ambiguity.analysis"
 
-        fun findGrammarOrNull(sentenceContext: SentenceContextAny, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName): Grammar? =
+        fun findGrammarOrNull(sentenceContext: SentenceContext, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName): Grammar? =
             sentenceContext.findItemsByQualifiedNameConformingTo(grammarNameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
                 true
             }.firstOrNull()?.item as Grammar?
@@ -75,7 +75,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         sentenceIdentity: Any?,
         asm: GrammarDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         val context = options.sentenceContext
         this._locationMap = locationMap ?: LocationMapDefault()
@@ -99,7 +99,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }
 
-    private fun checkGrammar(context: SentenceContextAny?, grammarList: GrammarDomain, automatonKind: AutomatonKind) {
+    private fun checkGrammar(context: SentenceContext?, grammarList: GrammarDomain, automatonKind: AutomatonKind) {
         grammarList.namespace.forEach { ns ->
             ns.definition.forEach { grammar ->
                 this.resolveGrammarRefs(context, grammar)
@@ -114,12 +114,12 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         }
     }
 
-    private fun resolveGrammarRefs(context: SentenceContextAny?, grammar: Grammar) {
+    private fun resolveGrammarRefs(context: SentenceContext?, grammar: Grammar) {
         grammar.extends.forEach { checkGrammarExistsAndResolve(context, it) }
         grammar.allGrammarReferencesInRules.forEach { checkGrammarExistsAndResolve(context, it) }
     }
 
-    private fun checkGrammarExistsAndResolve(context: SentenceContextAny?, ref: GrammarReference) {
+    private fun checkGrammarExistsAndResolve(context: SentenceContext?, ref: GrammarReference) {
         val g = context?.let { findGrammarOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
         if (null == g) {
             this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
@@ -142,7 +142,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         set?.add(rule)
     }
 
-    private fun analyseGrammar(context: SentenceContextAny?, grammar: Grammar) {
+    private fun analyseGrammar(context: SentenceContext?, grammar: Grammar) {
         _unusedRules[grammar] = mutableSetOf()
         // default usage is unused for all rules in this grammar
         grammar.grammarRule.forEach {
@@ -235,7 +235,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         }
     }
 
-    private fun analyseRuleItem(context: SentenceContextAny?, grammar: Grammar, rhs: RuleItem) {
+    private fun analyseRuleItem(context: SentenceContext?, grammar: Grammar, rhs: RuleItem) {
         when (rhs) {
             is EmptyRule -> Unit
             is Terminal -> Unit

@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.style.api.AglStyleDomain
@@ -29,7 +29,7 @@ import kotlin.test.assertTrue
 abstract class test_LanguageObjectAbstract {
 
     abstract val sut:  LanguageObject<*, *>
-    abstract val processStyleOptions: ProcessOptions<AglStyleDomain, SentenceContextAny>
+    abstract val processStyleOptions: ProcessOptions<AglStyleDomain, SentenceContext>
     @Test
     fun styleModel_EQ_styleString() {
 

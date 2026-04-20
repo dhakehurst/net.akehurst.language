@@ -1,6 +1,6 @@
 package net.akehurst.language.agl.m2mTransform.testing
 
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.AsmSimpleBuilder
@@ -133,7 +133,7 @@ class M2MTransformTestCaseBuilder(
         domainReference: String,
         defaultNamespace: String = StdLibDefault.qualifiedName.value,
         sentenceId: Any? = null,
-        context: SentenceContextAny? = null,
+        context: SentenceContext? = null,
         /** need to pass in a context if you want to resolveReferences */
         resolveReferences: Boolean = true,
         failIfIssues: Boolean = true,
@@ -157,7 +157,7 @@ class M2MTransformTestCaseBuilder(
         domainReference: String,
         defaultNamespace: String = StdLibDefault.qualifiedName.value,
         sentenceId: Any? = null,
-        context: SentenceContextAny? = null,
+        context: SentenceContext? = null,
         /** need to pass in a context if you want to resolveReferences */
         resolveReferences: Boolean = true,
         failIfIssues: Boolean = true,

@@ -16,7 +16,6 @@
 
 package net.akehurst.language.base.processor
 
-import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.CompletionProviderOptions

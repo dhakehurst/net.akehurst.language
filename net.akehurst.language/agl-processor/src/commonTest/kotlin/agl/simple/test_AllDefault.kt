@@ -26,6 +26,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
@@ -91,7 +92,7 @@ class test_AllDefault {
             }
         )
 
-        fun testSentence(proc: LanguageProcessor<Asm, SentenceContextAny>, sd: TestDataForSentenceParse) {
+        fun testSentence(proc: LanguageProcessor<Asm, SentenceContext>, sd: TestDataForSentenceParse) {
             println("'${sd.sentence}'")
             val spptRes = proc.parse(sd.sentence)
             assertTrue(spptRes.issues.errors.isEmpty(), spptRes.issues.toString())

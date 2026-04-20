@@ -18,7 +18,7 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -31,13 +31,13 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.style.api.*
 
-class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceContextAny> {
+class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceContext> {
 
     companion object {
         // TODO: AglGrammar.typesModel.findTypeForRule(GrammarRuleName("grammarRule"))
         private val grammarRuleQualifiedName = QualifiedName("net.akehurst.language.grammar.api.GrammarRule")
 
-        fun findStyleSetOrNull(sentenceContext: SentenceContextAny, localNamespace: QualifiedName, nameOrQName: PossiblyQualifiedName): StyleSet? =
+        fun findStyleSetOrNull(sentenceContext: SentenceContext, localNamespace: QualifiedName, nameOrQName: PossiblyQualifiedName): StyleSet? =
             sentenceContext.findItemsByQualifiedNameConformingTo(nameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
                 itemTypeName.value == StyleSet::class.simpleName!! //TODO: use qualified when kotlin.JS supports it
             }.firstOrNull()?.item as StyleSet?
@@ -57,7 +57,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         sentenceIdentity:Any?,
         asm: AglStyleDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: LocationMapDefault()
         val sentenceContext = options.sentenceContext
@@ -85,13 +85,13 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         _issues.error(location, message, data)
     }
 
-    private fun resolveStyleSetRefs(sentenceContext: SentenceContextAny?, styleSet: StyleSet) {
+    private fun resolveStyleSetRefs(sentenceContext: SentenceContext?, styleSet: StyleSet) {
         styleSet.extends.forEach { ref ->
             checkStyleSetExistsAndResolve(sentenceContext,ref)
         }
     }
 
-    private fun checkStyleSetExistsAndResolve(sentenceContext: SentenceContextAny?, ref: StyleSetReference) {
+    private fun checkStyleSetExistsAndResolve(sentenceContext: SentenceContext?, ref: StyleSetReference) {
         val resolvedSS = sentenceContext?.let {
             findStyleSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName)
         }
@@ -102,10 +102,10 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         }
     }
 
-    private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, sentenceContext: SentenceContextAny) {
+    private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, sentenceContext: SentenceContext) {
     }
 
-    private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, sentenceContext: SentenceContextAny) {
+    private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, sentenceContext: SentenceContext) {
         rule.selector.forEach { sel ->
             val loc = locMap[sel]
             // TODO: user types

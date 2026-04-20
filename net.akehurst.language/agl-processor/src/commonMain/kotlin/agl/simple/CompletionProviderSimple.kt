@@ -20,6 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.grammar.api.*
@@ -55,12 +56,12 @@ class CompletionProviderSimple(
     val grammar2TypesDomain: Grammar2TypesDomainMapping,
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain
-) : CompletionProviderAbstract<Asm, SentenceContextAny>() {
+) : CompletionProviderAbstract<Asm, SentenceContext>() {
 
     val targetNamespace = typesDomain.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypesNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContextAny>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
         val sentenceContext = options.sentenceContext
 
         return when {
@@ -127,7 +128,7 @@ class CompletionProviderSimple(
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)
 
 
-    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, sentenceContext: SentenceContextAny): List<CompletionItem> {
+    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, sentenceContext: SentenceContext): List<CompletionItem> {
         try {
             val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
             //TODO: lists ?
@@ -168,7 +169,7 @@ class CompletionProviderSimple(
         }
     }
 /*
-    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: SentenceContextAny): List<CompletionItem> {
+    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: SentenceContext): List<CompletionItem> {
         val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
         //TODO: lists ?
         return when (prop) {

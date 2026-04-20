@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
@@ -37,7 +37,7 @@ import kotlin.test.*
 
 class test_LanguageDefinitionDefault {
 
-    lateinit var sut: LanguageDefinition<Asm, SentenceContextAny>
+    lateinit var sut: LanguageDefinition<Asm, SentenceContext>
 
     val grammarStrObserverCalled = mutableListOf<Pair<GrammarString?, GrammarString?>>()
     val grammarStrObserver: (GrammarString?, GrammarString?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }

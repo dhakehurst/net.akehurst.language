@@ -19,7 +19,7 @@ package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -42,7 +42,7 @@ import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.builder.typesDomain
 
-object AsmTransform : LanguageObjectAbstract<AsmTransformDomain, SentenceContextAny>() {
+object AsmTransform : LanguageObjectAbstract<AsmTransformDomain, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "AsmTransform"
     const val goalRuleName = "unit"
@@ -257,8 +257,8 @@ grammar $NAME : Base {
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmTransformDomain> by lazy { AsmTransformSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<AsmTransformDomain, SentenceContextAny> by lazy { AsmTransformSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<AsmTransformDomain, SentenceContextAny> by lazy { AsmTransformCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<AsmTransformDomain, SentenceContext> by lazy { AsmTransformSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AsmTransformDomain, SentenceContext> by lazy { AsmTransformCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.${NAME}"
 

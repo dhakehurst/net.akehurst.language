@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.SysML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
@@ -39,7 +39,7 @@ class test_SysML_agl_Singles {
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
-        val processor: LanguageProcessor<Asm, SentenceContextAny> by lazy {
+        val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
             val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
@@ -53,7 +53,7 @@ class test_SysML_agl_Singles {
             assertEquals(expIssues, result.issues.all, result.issues.toString())
         }
 
-        fun test_process(sentence: String, context: SentenceContextAny, expIssues: Set<LanguageIssue>) {
+        fun test_process(sentence: String, context: SentenceContext, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
                 semanticAnalysis {
                     sentenceContext(context)

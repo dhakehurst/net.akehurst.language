@@ -24,6 +24,7 @@ import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.isStdString
@@ -39,7 +40,7 @@ import net.akehurst.language.types.asm.StdLibDefault
 class SemanticAnalyserSimple(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain
-) : SemanticAnalyser<Asm, SentenceContextAny> {
+) : SemanticAnalyser<Asm, SentenceContext> {
 
     companion object {
          fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject, crossReferenceDomain: CrossReferenceDomain, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
@@ -79,7 +80,7 @@ class SemanticAnalyserSimple(
         sentenceIdentity: Any?,
         asm: Asm,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         val context = options.sentenceContext
         this._locationMap = locationMap ?: LocationMapDefault()
@@ -93,7 +94,7 @@ class SemanticAnalyserSimple(
         return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
-    private  fun checkAndResolveReferences(options: SemanticAnalysisOptions<SentenceContextAny>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContextAny) {
+    private  fun checkAndResolveReferences(options: SemanticAnalysisOptions<SentenceContext>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContext) {
         when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
             crossReferenceDomain.isEmpty -> _issues.warn(null, "Empty CrossReferenceDomain")
@@ -109,7 +110,7 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private  fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContextAny, resolve: Boolean) {
+    private  fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContext, resolve: Boolean) {
         val resFunc: ((ref: Any) -> AsmStructure?)? = if (resolve) {
             { ref -> context.resolveScopedItem.invoke(ref) as AsmStructure }
         } else {
@@ -117,10 +118,10 @@ class SemanticAnalyserSimple(
         }
         val sentenceScope = context.getScopeForSentenceOrNull(sentenceId)
         if(null!=sentenceScope) {
-            val resolver = ReferenceResolverSimple<AsmStructure>(
+            val resolver = ReferenceResolverSimple(
                 typesDomain,
                 crossReferenceDomain,
-                context as ContextWithScope< AsmStructure>,
+                context,
                 sentenceId,
                 this::identifyingValueInFor,
                 resFunc,
@@ -134,7 +135,7 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private  fun buildScope(options: SemanticAnalysisOptions<SentenceContextAny>, sentenceIdentity: Any?, asm: Asm, context: SentenceContextAny) {
+    private  fun buildScope(options: SemanticAnalysisOptions<SentenceContext>, sentenceIdentity: Any?, asm: Asm, context: SentenceContext) {
         when {
             options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
             else -> {

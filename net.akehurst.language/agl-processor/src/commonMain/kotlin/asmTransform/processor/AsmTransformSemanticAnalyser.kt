@@ -18,7 +18,7 @@
 package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
@@ -53,7 +53,7 @@ import net.akehurst.language.types.asm.PropertyDeclarationStored
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.util.cached
 
-class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, SentenceContextAny> {
+class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, SentenceContext> {
 
     companion object {
         const val OPTION_CREATE_TYPES = "create-missing-types"
@@ -67,7 +67,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
 
-    private var _context: SentenceContextAny? = null
+    private var _context: SentenceContext? = null
     private var __asm: AsmTransformDomain? = null
     private val _asm: AsmTransformDomain get() = __asm!!
     //TODO: rework to allow use of proper items in context
@@ -92,7 +92,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         sentenceIdentity: Any?,
         asm: AsmTransformDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         _context = options.sentenceContext
         __asm = asm

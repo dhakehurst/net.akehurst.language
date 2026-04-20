@@ -17,6 +17,9 @@
 
 package net.akehurst.language.agl.simple
 
+import net.akehurst.language.api.semanticAnalyser.CreateScopedItem
+import net.akehurst.language.api.semanticAnalyser.ResolveScopedItem
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.asm.ScopeSimple
 
@@ -25,7 +28,7 @@ import net.akehurst.language.scope.asm.ScopeSimple
 //    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
 //    sentenceId:Any? = null,
 //    init: ScopeBuilder<Any>.() -> Unit = {}
-//): SentenceContextAny {
+//): SentenceContext {
 //    val context = ContextWithScope(createScopedItem, resolveScopedItem)
 //    val scope = context.newScopeForSentence(sentenceId) as ScopeSimple
 //    val b = ScopeBuilder(scope, context.createScopedItem, context.resolveScopedItem)
@@ -37,8 +40,8 @@ import net.akehurst.language.scope.asm.ScopeSimple
 //    map: MutableMap<String, Any> = mutableMapOf(),
 //    sentenceId:Any? = null,
 //    init: ScopeBuilder<Any>.() -> Unit = {}
-//): SentenceContextAny {
-//    val context = SentenceContextAny(
+//): SentenceContext {
+//    val context = SentenceContext(
 //        { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path },
 //        { itemInScope -> map[itemInScope] }
 //    )
@@ -51,10 +54,10 @@ import net.akehurst.language.scope.asm.ScopeSimple
 fun contextAsmSimple(
 //    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
 //    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
-    createScopedItem: CreateScopedItem< Any> = CreateScopedItemDefault(),
-    resolveScopedItem: ResolveScopedItem< Any> = ResolveScopedItemDefault(),
+    createScopedItem: CreateScopedItem = CreateScopedItemDefault(),
+    resolveScopedItem: ResolveScopedItem = ResolveScopedItemDefault(),
     init: ContextBuilder.() -> Unit = {}
-): SentenceContextAny {
+): SentenceContext {
     val b = ContextBuilder(createScopedItem,resolveScopedItem)
     b.init()
     return b.build()
@@ -63,9 +66,9 @@ fun contextAsmSimple(
 fun contextAsmSimpleWithAsmPath(
     map: MutableMap<String, Any> = mutableMapOf(),
     init: ContextBuilder.() -> Unit = {}
-): SentenceContextAny {
-    val createScopedItem:CreateScopedItem<Any> = CreateScopedItem { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path }
-    val resolveScopedItem: ResolveScopedItem<Any> =  ResolveScopedItem { itemInScope -> map[itemInScope] }
+): SentenceContext {
+    val createScopedItem = CreateScopedItem { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path }
+    val resolveScopedItem =  ResolveScopedItem { itemInScope -> map[itemInScope] }
     val b = ContextBuilder(createScopedItem, resolveScopedItem)
     b.init()
     return b.build()
@@ -76,33 +79,33 @@ annotation class ContextSimpleDslMarker
 
 @ContextSimpleDslMarker
 class ContextBuilder(
-    createScopedItem: CreateScopedItem< Any>,
-    resolveScopedItem: ResolveScopedItem< Any>,
+    createScopedItem: CreateScopedItem,
+    resolveScopedItem: ResolveScopedItem,
 ) {
 
     private val _context = SentenceContextAny(createScopedItem, resolveScopedItem)
 
-    fun forSentence(id:Any?,init: ScopeBuilder<Any>.() -> Unit = {}) {
+    fun forSentence(id:Any?,init: ScopeBuilder.() -> Unit = {}) {
         val scope = _context.newScopeForSentence(id) as ScopeSimple
         val b = ScopeBuilder(scope, _context.createScopedItem, _context.resolveScopedItem)
         b.init()
     }
 
-    fun build(): SentenceContextAny  = _context
+    fun build(): SentenceContext  = _context
 }
 
 @ContextSimpleDslMarker
-class ScopeBuilder<ItemInScopeType : Any>(
-    private val _scope: ScopeSimple<ItemInScopeType>,
-    private val _createScopedItem: CreateScopedItem< ItemInScopeType>,
-    private val _resolveScopedItem: ResolveScopedItem< ItemInScopeType>
+class ScopeBuilder(
+    private val _scope: ScopeSimple,
+    private val _createScopedItem: CreateScopedItem,
+    private val _resolveScopedItem: ResolveScopedItem
 ) {
 
-    fun item(id: String, qualifiedTypeName: String, location: Any?, itemInScope: ItemInScopeType) {
+    fun item(id: String, qualifiedTypeName: String, location: Any?, itemInScope: Any) {
         _scope.addToScope(id, QualifiedName(qualifiedTypeName), location, itemInScope, false)
     }
 
-    fun scope(forReferenceInParent: String, forTypeName: String, init: ScopeBuilder<ItemInScopeType>.() -> Unit = {}) {
+    fun scope(forReferenceInParent: String, forTypeName: String, init: ScopeBuilder.() -> Unit = {}) {
         // val path = AsmPathSimple(pathStr)
         // val itemInScope = _createScopedItem.invoke(forReferenceInParent, item)
         val chScope = _scope.createOrGetChildScope(forReferenceInParent, QualifiedName(forTypeName))
@@ -110,7 +113,7 @@ class ScopeBuilder<ItemInScopeType : Any>(
         b.init()
     }
 
-    fun scopedItem(id: String, qualifiedTypeName: String, location: Any?, itemInScope: ItemInScopeType, init: ScopeBuilder<ItemInScopeType>.() -> Unit = {}) {
+    fun scopedItem(id: String, qualifiedTypeName: String, location: Any?, itemInScope: Any, init: ScopeBuilder.() -> Unit = {}) {
         //val itemInScope = _createScopedItem.invoke(id, item)
         _scope.addToScope(id, QualifiedName(qualifiedTypeName), location, itemInScope, false)
         val forTypeName = qualifiedTypeName.substringAfterLast(".")

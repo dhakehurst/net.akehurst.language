@@ -18,7 +18,7 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -43,7 +43,7 @@ import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
-object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() {
+object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
@@ -905,8 +905,8 @@ namespace net.akehurst.language.Grammar {
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<GrammarDomain> by lazy { AglGrammarSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<GrammarDomain, SentenceContextAny> by lazy { AglGrammarSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<GrammarDomain, SentenceContextAny> by lazy { AglGrammarCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<GrammarDomain, SentenceContext> by lazy { AglGrammarSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<GrammarDomain, SentenceContext> by lazy { AglGrammarCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"
 

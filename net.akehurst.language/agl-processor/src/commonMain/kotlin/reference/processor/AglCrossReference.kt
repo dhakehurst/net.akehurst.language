@@ -18,7 +18,7 @@ package net.akehurst.language.reference.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.asmTransform.builder.asmTransform
@@ -34,7 +34,7 @@ import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.builder.typesDomain
 
-object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, SentenceContextAny>() {
+object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "CrossReferences"
     const val goalRuleName = "unit"

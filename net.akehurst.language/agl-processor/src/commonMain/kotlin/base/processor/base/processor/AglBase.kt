@@ -18,8 +18,6 @@
 package net.akehurst.language.base.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.processor.contextFromRegistryStyles
-import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObject

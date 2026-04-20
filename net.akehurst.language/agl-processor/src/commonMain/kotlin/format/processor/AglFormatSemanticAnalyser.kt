@@ -18,7 +18,7 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
@@ -37,10 +37,10 @@ import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser.Compan
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
-class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceContextAny> {
+class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceContext> {
 
     companion object {
-        fun findFormatSetOrNull(context: SentenceContextAny, localNamespace: QualifiedName, nameOrQName: PossiblyQualifiedName): FormatSet? =
+        fun findFormatSetOrNull(context: SentenceContext, localNamespace: QualifiedName, nameOrQName: PossiblyQualifiedName): FormatSet? =
             context.findItemsByQualifiedNameConformingTo(nameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
                 true
             }.firstOrNull()?.item as? FormatSet
@@ -61,7 +61,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
         sentenceIdentity: Any?,
         asm: AglFormatDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: LocationMapDefault()
         val context = options.sentenceContext
@@ -83,7 +83,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
         _issues.error(location, message, data)
     }
 
-    private fun checkFormatDomain(context: SentenceContextAny?, domain: AglFormatDomain) {
+    private fun checkFormatDomain(context: SentenceContext?, domain: AglFormatDomain) {
         domain.namespace.forEach { ns ->
             ns.definition.forEach { def ->
                 this.resolveRefs(context, def)
@@ -91,11 +91,11 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
         }
     }
 
-    private fun resolveRefs(context: SentenceContextAny?, def: FormatSet) {
+    private fun resolveRefs(context: SentenceContext?, def: FormatSet) {
         def.extends.forEach { checkGrammarExistsAndResolve(context, it) }
     }
 
-    private fun checkGrammarExistsAndResolve(context: SentenceContextAny?, ref: FormatSetReference) {
+    private fun checkGrammarExistsAndResolve(context: SentenceContext?, ref: FormatSetReference) {
         val g = context?.let { findFormatSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
         if (null == g) {
             this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)

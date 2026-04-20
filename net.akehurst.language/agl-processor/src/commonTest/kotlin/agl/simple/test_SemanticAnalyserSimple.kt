@@ -21,6 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.ProcessOptions
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
@@ -33,7 +34,7 @@ class test_SemanticAnalyserSimple {
 
     private companion object {
 
-        fun test(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, SentenceContextAny>, expected: SentenceContextAny) {
+        fun test(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, SentenceContext>, expected: SentenceContext) {
             val processor = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
@@ -49,7 +50,7 @@ class test_SemanticAnalyserSimple {
             assertEquals(expected.asString(), options.semanticAnalysis.sentenceContext!!.asString())
         }
 
-        fun test_issues(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, SentenceContextAny
+        fun test_issues(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, SentenceContext
                 >, expected: List<LanguageIssue>) {
             val processor = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
@@ -74,8 +75,8 @@ class test_SemanticAnalyserSimple {
             }
         """
         val sentence = "a"
-        val context: SentenceContextAny? = null
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val context: SentenceContext? = null
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 sentenceContext(context)
             }
@@ -105,7 +106,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a"
         val context = contextAsmSimple {  }
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 sentenceContext(context)
             }
@@ -130,7 +131,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a"
         val context = contextAsmSimple()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(false)
                 sentenceContext(context)
@@ -161,7 +162,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a"
         val context = contextAsmSimple()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -186,7 +187,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a"
         val context = contextAsmSimple()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -217,7 +218,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a"
         val context = contextAsmSimple()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -247,7 +248,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a"
         val context = contextAsmSimple()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -276,7 +277,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a"
         val context = contextAsmSimple()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -307,7 +308,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a"
         val context = contextAsmSimpleWithAsmPath()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -345,7 +346,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a.a.a"
         val context = contextAsmSimpleWithAsmPath()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -382,7 +383,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a.a.a"
         val context = contextAsmSimpleWithAsmPath()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -419,7 +420,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a.a.a"
         val context = contextAsmSimpleWithAsmPath()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)
@@ -456,7 +457,7 @@ class test_SemanticAnalyserSimple {
         """
         val sentence = "a.a.a"
         val context = contextAsmSimpleWithAsmPath()
-        val options = Agl.options<Asm, SentenceContextAny> {
+        val options = Agl.options<Asm, SentenceContext> {
             semanticAnalysis {
                 checkReferences(true)
                 sentenceContext(context)

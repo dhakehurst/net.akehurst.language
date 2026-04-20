@@ -18,7 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -31,7 +31,7 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
 class ExpressionsSemanticAnalyser(
-) : SemanticAnalyser<Expression, SentenceContextAny> {
+) : SemanticAnalyser<Expression, SentenceContext> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
@@ -50,7 +50,7 @@ class ExpressionsSemanticAnalyser(
         sentenceIdentity: Any?,
         asm: Expression,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }

@@ -20,6 +20,8 @@ package net.akehurst.language.agl.simple
 import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.api.processor.ResolvedReference
+import net.akehurst.language.api.semanticAnalyser.ResolveScopedItem
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmNothingSimple
@@ -44,28 +46,28 @@ import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 
 
-data class ReferenceExpressionContext<ItemInScopeType>(
+data class ReferenceExpressionContext(
     val element: AsmValue,
-    val scope: Scope<ItemInScopeType>
+    val scope: Scope
 )
 
 /**
  * will check and resolve (if resolveFunction is not null) references.
  * Properties in the asm that are references
  */
-class ReferenceResolverSimple<ItemInScopeType : Any>(
+class ReferenceResolverSimple(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain,
-    val sentenceContext: ContextWithScope<ItemInScopeType>, //TODO: use interface or something more abstract
+    val sentenceContext: SentenceContext,
     val sentenceIdentity: Any?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
-    val resolveFunction: ResolveScopedItem<ItemInScopeType>?,
+    val resolveFunction: ResolveScopedItem?,
     private val _locationMap: LocationMap,
     private val _issues: IssueHolder
 ) : AsmTreeWalker {
 
     private val scopeStack = mutableStackOf(sentenceContext.getScopeForSentenceOrNull(sentenceIdentity) ?: sentenceContext.newScopeForSentence(sentenceIdentity))
-    private val scopeForElement = mutableMapOf<AsmStructure, Scope<ItemInScopeType>>()
+    private val scopeForElement = mutableMapOf<AsmStructure, Scope>()
     private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, _issues), _issues)
 
     val resolvedReferences = mutableListOf<ResolvedReference>()
@@ -138,7 +140,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
 
     override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    private fun handleReferenceExpression(refExpr: ReferenceExpression, sentenceContext: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
+    private fun handleReferenceExpression(refExpr: ReferenceExpression, sentenceContext: ReferenceExpressionContext, self: AsmValue) {
         when (refExpr) {
             is ReferenceExpressionPropertyDefault -> handlePropertyReferenceExpression(refExpr, sentenceContext, self)
             is ReferenceExpressionCollectionDefault -> handleCollectionReferenceExpression(refExpr, sentenceContext, self)
@@ -146,7 +148,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         }
     }
 
-    private fun handlePropertyReferenceExpression(refExpr: ReferenceExpressionPropertyDefault, exprContext: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
+    private fun handlePropertyReferenceExpression(refExpr: ReferenceExpressionPropertyDefault, exprContext: ReferenceExpressionContext, self: AsmValue) {
         // 'in' typeReference '{' referenceExpression* '}'
         // 'property' navigation 'refers-to' typeReferences from? ;
         //check referred to item exists
@@ -215,7 +217,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         }
     }
 
-    private fun handleCreateReference(scope: Scope<ItemInScopeType>, self: AsmValue, refExpr: ReferenceExpressionPropertyDefault, qName: List<String>) {
+    private fun handleCreateReference(scope: Scope, self: AsmValue, refExpr: ReferenceExpressionPropertyDefault, qName: List<String>) {
         val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
         val targets = referredToTypes.flatMap { td ->
             // Use context (not scope) because the reference could have been created from a different sentence
@@ -282,7 +284,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         }
     }
 
-    private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, sentenceContext: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
+    private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, sentenceContext: ReferenceExpressionContext, self: AsmValue) {
         val elType = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, elType)), refExpr.expression)
         for (re in refExpr.referenceExpressionList) {

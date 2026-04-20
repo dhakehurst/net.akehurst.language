@@ -18,11 +18,10 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.reference.api.CrossReferenceDomain
 
-class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceDomain, SentenceContextAny>() {
+class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceDomain, SentenceContext>() {
 
         //TODO
 

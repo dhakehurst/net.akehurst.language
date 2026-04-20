@@ -22,7 +22,7 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.agl.simple.Grammar2TypesDomainMapping
 import net.akehurst.language.agl.simple.GrammarDomain2TransformDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asmTransform.api.*
 import net.akehurst.language.base.api.*
@@ -43,7 +43,7 @@ class AsmTransformDomainDefault(
 ) : AsmTransformDomain, DomainAbstract<AsmTransformNamespace, AsmTransformRuleSet>(namespace,options) {
 
     companion object Companion {
-        fun fromString(context: SentenceContextAny, transformStr: AsmTransformString): ProcessResult<AsmTransformDomain> {
+        fun fromString(context: SentenceContext, transformStr: AsmTransformString): ProcessResult<AsmTransformDomain> {
             val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             val res = proc.process(
                 sentence = transformStr.value,

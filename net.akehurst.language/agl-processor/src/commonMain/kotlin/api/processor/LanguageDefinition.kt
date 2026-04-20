@@ -16,7 +16,6 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -94,7 +93,7 @@ interface LanguageRegistry : GrammarRegistry {
      */
     fun <AsmType : Any, ContextType : Any> register(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>?,
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContext>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType>
@@ -105,7 +104,7 @@ interface LanguageRegistry : GrammarRegistry {
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarDomain, SentenceContextAny>? = null,
+        aglOptions: ProcessOptions<GrammarDomain, SentenceContext>? = null,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageDefinition<AsmType, ContextType>
 }
@@ -122,19 +121,19 @@ interface AglLanguages {
     val formatLanguageIdentity: LanguageIdentity
 
     val base: LanguageDefinition<Any, SentenceContext>
-    val expressions: LanguageDefinition<Expression, SentenceContextAny>
+    val expressions: LanguageDefinition<Expression, SentenceContext>
 
     /**
      * Semantic Analysis requires a context containing any other referenced grammars or parts thereof.
      * E.g. contextFromRegistryGrammars()
      */
-    val grammar: LanguageDefinition<GrammarDomain, SentenceContextAny>
+    val grammar: LanguageDefinition<GrammarDomain, SentenceContext>
 
     /**
      * Semantic Analysis requires a context containing any other referenced TypeDefinitions or namespaces.
      * E.g. contextFromRegistryTypes()
      */
-    val types: LanguageDefinition<TypesDomain, SentenceContextAny>
+    val types: LanguageDefinition<TypesDomain, SentenceContext>
 
     /**
      * Semantic Analysis requires a context containing any referenced TypeDefinitions, i.e. the types related to a Grammar.
@@ -143,7 +142,7 @@ interface AglLanguages {
      * typesDomain = AsmTransformDomainDefault.fromGrammarDomain(grammarDomain).asm?.typesDomain!!
      * contextFromTypesDomain(typesDomain)
      */
-    val crossReference: LanguageDefinition<CrossReferenceDomain, SentenceContextAny>
+    val crossReference: LanguageDefinition<CrossReferenceDomain, SentenceContext>
 
     /**
      * Semantic Analysis requires a context containing any referenced Grammar Items or TypeDefinitions.
@@ -151,7 +150,7 @@ interface AglLanguages {
      * E.g.
      * contextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain)
      */
-    val asmTransform: LanguageDefinition<AsmTransformDomain, SentenceContextAny>
+    val asmTransform: LanguageDefinition<AsmTransformDomain, SentenceContext>
 
     /**
      * Semantic Analysis requires a context containing any referenced TypeDefinitions or other M2M RuleSets.
@@ -162,9 +161,9 @@ interface AglLanguages {
      *    context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
      * }
      */
-    val m2mTransform: LanguageDefinition<M2mTransformDomain, SentenceContextAny>
-    val style: LanguageDefinition<AglStyleDomain, SentenceContextAny>
-    val format: LanguageDefinition<AglFormatDomain, SentenceContextAny>
+    val m2mTransform: LanguageDefinition<M2mTransformDomain, SentenceContext>
+    val style: LanguageDefinition<AglStyleDomain, SentenceContext>
+    val format: LanguageDefinition<AglFormatDomain, SentenceContext>
 }
 
 

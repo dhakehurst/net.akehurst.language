@@ -16,7 +16,6 @@
 
 package net.akehurst.language.base.processor
 
-import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser

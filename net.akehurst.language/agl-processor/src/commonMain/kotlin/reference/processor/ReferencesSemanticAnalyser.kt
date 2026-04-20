@@ -18,7 +18,7 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -39,7 +39,7 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 
 class ReferencesSemanticAnalyser(
-) : SemanticAnalyser<CrossReferenceDomain, SentenceContextAny> {
+) : SemanticAnalyser<CrossReferenceDomain, SentenceContext> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
@@ -59,7 +59,7 @@ class ReferencesSemanticAnalyser(
         sentenceIdentity:Any?,
         asm: CrossReferenceDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: LocationMapDefault()
         val typesDomainItem = options.sentenceContext?.findItemsConformingTo { it.value == TypesDomain::class.simpleName } //TODO: use qualified names when supported by kotlin

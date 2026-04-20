@@ -19,7 +19,7 @@ package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromRegistryStyles
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.reference.processor.AglCrossReference
 import net.akehurst.language.style.api.AglStyleDomain
 
@@ -27,7 +27,7 @@ class test_AglCrossReference : test_LanguageObjectAbstract() {
 
     override val sut = AglCrossReference
     val styleContext = contextFromRegistryStyles()
-    override val processStyleOptions = Agl.options<AglStyleDomain, SentenceContextAny> {
+    override val processStyleOptions = Agl.options<AglStyleDomain, SentenceContext> {
         semanticAnalysis {
             sentenceContext(styleContext)
         }

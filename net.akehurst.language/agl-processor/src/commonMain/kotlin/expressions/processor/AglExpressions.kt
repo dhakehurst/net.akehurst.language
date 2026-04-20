@@ -19,7 +19,7 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.asmTransform.builder.asmTransform
@@ -36,7 +36,7 @@ import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.builder.typesDomain
 
-object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>() {
+object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Expressions"
     const val TYPES_API_NS_QN = "${NAMESPACE_NAME}.expressions.api"

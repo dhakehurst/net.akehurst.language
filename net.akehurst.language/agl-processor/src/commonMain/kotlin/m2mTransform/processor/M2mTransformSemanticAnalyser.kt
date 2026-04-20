@@ -18,7 +18,7 @@
 package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -30,7 +30,7 @@ import net.akehurst.language.m2mTransform.api.M2mTransformPatternRule
 import net.akehurst.language.m2mTransform.api.RuleCall
 import net.akehurst.language.types.api.TypesDomain
 
-class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContextAny> {
+class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContext> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
 
@@ -42,7 +42,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
         sentenceIdentity: Any?,
         asm: M2mTransformDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         val sentenceContext = options.sentenceContext
         when {

@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
 import org.junit.jupiter.params.ParameterizedTest
@@ -32,7 +32,7 @@ class test_AnsiC {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/ansiC/ansiC.agl").readText()
-        val processor: LanguageProcessor<Asm, SentenceContextAny> by lazy {
+        val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
             Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         }
         var sourceFiles = arrayOf("/ansiC/expression-valid.txt")

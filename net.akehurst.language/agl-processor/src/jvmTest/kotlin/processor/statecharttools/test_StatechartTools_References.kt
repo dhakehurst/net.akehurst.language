@@ -21,7 +21,7 @@ import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
@@ -51,7 +51,7 @@ class test_StatechartTools_References {
 
         private val grammarModel =
             Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } }).asm!!
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContextAny>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarModel
             val cfg = Agl.configuration {
                 targetGrammarName(grmName) //use default
@@ -74,7 +74,7 @@ class test_StatechartTools_References {
             Agl.processorFromGrammar(grm, cfg)
         }
 
-        fun test(grammar: String, goal: String, sentence: String, context: SentenceContextAny, resolveReferences: Boolean, expectedContext: SentenceContextAny, expectedAsm: Asm? = null) {
+        fun test(grammar: String, goal: String, sentence: String, context: SentenceContext, resolveReferences: Boolean, expectedContext: SentenceContext, expectedAsm: Asm? = null) {
             val result = processors[grammar].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
                 semanticAnalysis {

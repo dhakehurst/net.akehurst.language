@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.kotlinx.collections.mutableStackOf
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
@@ -32,10 +33,10 @@ import net.akehurst.language.types.api.TypesDomain
 /**
  * Creates scopes and sets semantic Path on AsmStructures, based on scopes and identifying expressions from CrossReference definitions
  */
-class ScopeCreator<ItemInScopeType : Any>(
+class ScopeCreator(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain,
-    val context: ContextWithScope< ItemInScopeType>, //TODO: use interface or something more abstract
+    val context: SentenceContext, //TODO: use interface or something more abstract
     val sentenceIdentity: Any?,
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
@@ -77,7 +78,7 @@ class ScopeCreator<ItemInScopeType : Any>(
 
     override  fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    private  fun createScope(parentScope: Scope<ItemInScopeType>, el: AsmStructure): Scope<ItemInScopeType> {
+    private  fun createScope(parentScope: Scope, el: AsmStructure): Scope {
         return if (crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)) {
             val inTypeName = parentScope.forTypeName.last
             val refInParent = identifyingValueInFor.invoke(inTypeName, el)
@@ -130,7 +131,7 @@ class ScopeCreator<ItemInScopeType : Any>(
         }
     }
 
-    private  fun addToScope(scope: Scope<ItemInScopeType>, el: AsmStructure) {
+    private  fun addToScope(scope: Scope, el: AsmStructure) {
         val inTypeName = scope.forTypeName.last
         val scopeLocalReference = identifyingValueInFor.invoke(inTypeName, el)
         when {
@@ -193,7 +194,7 @@ class ScopeCreator<ItemInScopeType : Any>(
         }
     }
 
-    private fun addToScopeAs(scope: Scope<ItemInScopeType>, el: AsmStructure, referableName: String) {
+    private fun addToScopeAs(scope: Scope, el: AsmStructure, referableName: String) {
         val scopeItem = context.createScopedItem.invoke(scope.scopePath + referableName, el, this.locationMap[el])
         val existingItems = context.findItemsNamedConformingTo(referableName) { itemTypeName ->
             val itemType = typesDomain.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")

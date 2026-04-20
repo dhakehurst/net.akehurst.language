@@ -19,7 +19,7 @@ package net.akehurst.language.types.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.NamespaceAbstract
@@ -35,7 +35,7 @@ class TypesDomainSimple(
 ) : TypesDomainSimpleAbstract() {
 
     companion object {
-        fun fromString(name: SimpleName, sentenceContext: SentenceContextAny, typesString: TypesString): ProcessResult<TypesDomain> {
+        fun fromString(name: SimpleName, sentenceContext: SentenceContext, typesString: TypesString): ProcessResult<TypesDomain> {
             return when {
                 typesString.value.isBlank() -> ProcessResultDefault(typesDomain(name.value, true) { })
                 else -> {

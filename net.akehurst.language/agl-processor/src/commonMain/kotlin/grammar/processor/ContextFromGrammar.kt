@@ -18,6 +18,7 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.GrammarRuleName
@@ -34,7 +35,7 @@ fun TypesDomain.findTypeForRule(ruleName: GrammarRuleName): TypeInstance? {
     }
 }
 
-fun contextFromGrammar(vararg grammarDomains: GrammarDomain): SentenceContextAny {
+fun contextFromGrammar(vararg grammarDomains: GrammarDomain): SentenceContext {
     val proc = Agl.registry.agl.grammar.processor!!
     val aglGrammarTypeModel = proc.typesDomain
     val sentenceContext = SentenceContextAny()

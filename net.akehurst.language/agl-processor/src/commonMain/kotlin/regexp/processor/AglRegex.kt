@@ -16,7 +16,7 @@
 
 package net.akehurst.language.regexp.processor
 
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObject
@@ -33,13 +33,13 @@ import net.akehurst.language.regex.api.Regex
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.types.api.TypesDomain
 
-object AglRegex : LanguageObjectAbstract<Regex, SentenceContextAny>() {
+object AglRegex : LanguageObjectAbstract<Regex, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Regex"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
 
-    override val extends by lazy { emptyList<LanguageObject<Any, SentenceContextAny>>() }
+    override val extends by lazy { emptyList<LanguageObject<Any, SentenceContext>>() }
 
     override val grammarString = """
         namespace ${AglGrammar.NAMESPACE_NAME}
@@ -193,7 +193,7 @@ object AglRegex : LanguageObjectAbstract<Regex, SentenceContextAny>() {
     override val defaultTargetGoalRule: String
         get() = TODO("not implemented")
 
-    override val completionProvider: CompletionProvider<Regex, SentenceContextAny>?
+    override val completionProvider: CompletionProvider<Regex, SentenceContext>?
         get() = TODO("not implemented")
 
 

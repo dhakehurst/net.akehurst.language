@@ -17,25 +17,20 @@
 package net.akehurst.language.style.builder
 
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
-import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.processor.contextFromRegistryStyles
-import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
-import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.regex.api.UnescapedPattern
 import net.akehurst.language.style.api.*
 import net.akehurst.language.style.asm.*
-import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.style.processor.AglStyleSemanticAnalyser
 
 @DslMarker
 annotation class StyleModelDslMarker
 
-fun styleDomain(name: String, sentenceContext: SentenceContextAny, init: StyleDomainBuilder.() -> Unit): AglStyleDomain {
+fun styleDomain(name: String, sentenceContext: SentenceContext, init: StyleDomainBuilder.() -> Unit): AglStyleDomain {
     val b = StyleDomainBuilder(SimpleName(name))
     b.init()
     val styles  = b.build()

@@ -20,6 +20,7 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -30,7 +31,7 @@ import kotlin.test.assertEquals
 class test_ContextForGrammarAnalysis {
 
     companion object {
-        fun findGrammarOrNull(context: SentenceContextAny, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName) =
+        fun findGrammarOrNull(context: SentenceContext, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName) =
             context.findItemsByQualifiedNameConformingTo(grammarNameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
                 true
             }.firstOrNull()?.item

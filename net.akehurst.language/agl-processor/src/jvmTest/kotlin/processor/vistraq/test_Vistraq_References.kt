@@ -25,6 +25,7 @@ import net.akehurst.language.agl.simple.*
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -49,7 +50,7 @@ class test_Vistraq_References {
                     check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                     it.asm!!
                 }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContextAny>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarList
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
@@ -77,9 +78,9 @@ class test_Vistraq_References {
             grammar: String,
             goal: String,
             sentence: String,
-            sentenceContext: SentenceContextAny,
+            sentenceContext: SentenceContext,
             resolveReferences: Boolean,
-            expectedContext: SentenceContextAny,
+            expectedContext: SentenceContext,
             expectedAsm: Asm? = null,
             expectedIssues: List<LanguageIssue> = emptyList()
         ) {

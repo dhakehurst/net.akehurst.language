@@ -20,7 +20,7 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
@@ -79,7 +79,7 @@ class test_StatechartTools_Singles {
             .also {
                 assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
             }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContextAny>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarList.asm ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(grmName) //use default

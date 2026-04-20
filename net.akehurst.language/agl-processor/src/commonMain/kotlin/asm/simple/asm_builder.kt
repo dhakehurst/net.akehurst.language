@@ -20,6 +20,7 @@ package net.akehurst.language.asm.builder
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.QualifiedName
@@ -46,7 +47,7 @@ fun asmSimple(
     defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
     crossReferenceDomain: CrossReferenceDomain = CrossReferenceDomainDefault(SimpleName("CrossReference")),
     sentenceId: Any? = null,
-    sentenceContext: SentenceContextAny? = null,
+    sentenceContext: SentenceContext? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
     failIfIssues: Boolean = true,
@@ -65,7 +66,7 @@ class AsmSimpleBuilder(
     private val _defaultNamespace: TypesNamespace,
     private val _crossReferenceDomain: CrossReferenceDomain,
     private val _sentenceId: Any?,
-    private val _context: SentenceContextAny?,
+    private val _context: SentenceContext?,
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean,
     private val resolvedReferences: MutableList<ResolvedReference>
@@ -74,7 +75,7 @@ class AsmSimpleBuilder(
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(_typesDomain, _issues), _issues)
     private val _asm = AsmSimple(ObjectGraphAccessorMutatorAsmSimple(_typesDomain, _issues))
-    private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple<Any>>()
+    private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple>()
     private val _identifyingValueInFor: (SimpleName, AsmStructure) -> Any? = { inTypeName: SimpleName, item: AsmStructure ->
         SemanticAnalyserSimple.identifyingValueInFor(_interpreter, _crossReferenceDomain, inTypeName, item)
     }
@@ -152,14 +153,14 @@ class AsmElementSimpleBuilder(
     private val _typesDomain: TypesDomain,
     private val _defaultNamespace: TypesNamespace,
     private val _crossReferenceDomain: CrossReferenceDomain,
-    private val _context: SentenceContextAny?,
-    private val _scopeMap: MutableMap<AsmPath, ScopeSimple<Any>>,
+    private val _context: SentenceContext?,
+    private val _scopeMap: MutableMap<AsmPath, ScopeSimple>,
     private val _asm: AsmSimple,
     private val _identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
     _asmPath: AsmPath,
     _typeName: String,
     _isRoot: Boolean,
-    _parentScope: ScopeSimple<Any>?
+    _parentScope: ScopeSimple?
 ) {
     private val _elementQualifiedTypeName: QualifiedName = _typeName.let {
         val qtn = it.asPossiblyQualifiedName
@@ -286,11 +287,11 @@ class ListAsmElementSimpleBuilder(
     private val _typesDomain: TypesDomain,
     private val _defaultNamespace: TypesNamespace,
     private val _crossReferenceDomain: CrossReferenceDomain,
-    private val _context: SentenceContextAny?,
-    private val _scopeMap: MutableMap<AsmPath, ScopeSimple<Any>>,
+    private val _context: SentenceContext?,
+    private val _scopeMap: MutableMap<AsmPath, ScopeSimple>,
     private val _asm: AsmSimple,
     private val _asmPath: AsmPath,
-    private val _parentScope: ScopeSimple<Any>?,
+    private val _parentScope: ScopeSimple?,
     private val _identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
 ) {
 
