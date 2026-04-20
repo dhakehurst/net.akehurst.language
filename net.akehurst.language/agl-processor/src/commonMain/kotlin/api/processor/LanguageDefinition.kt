@@ -16,7 +16,6 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.processor.AglLanguages
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -25,11 +24,14 @@ import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.types.api.TypesDomain
@@ -75,7 +77,6 @@ data class FormatString(override val value: String) : PublicValueType
 // TODO: value classes don't work (fully) in js and wasm
 data class M2mTransformString(override val value: String) : PublicValueType
 
-
 interface LanguageRegistry : GrammarRegistry {
 
     val agl: AglLanguages
@@ -107,6 +108,64 @@ interface LanguageRegistry : GrammarRegistry {
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageDefinition<AsmType, ContextType>
 }
+
+interface AglLanguages {
+    val baseLanguageIdentity: LanguageIdentity
+    val expressionsLanguageIdentity: LanguageIdentity
+    val grammarLanguageIdentity: LanguageIdentity
+    val typesLanguageIdentity: LanguageIdentity
+    val crossReferenceLanguageIdentity: LanguageIdentity
+    val asmTransformLanguageIdentity: LanguageIdentity
+    val m2mTransformLanguageIdentity: LanguageIdentity
+    val styleLanguageIdentity: LanguageIdentity
+    val formatLanguageIdentity: LanguageIdentity
+
+    val base: LanguageDefinition<Any, SentenceContextAny>
+    val expressions: LanguageDefinition<Expression, SentenceContextAny>
+
+    /**
+     * Semantic Analysis requires a context containing any other referenced grammars or parts thereof.
+     * E.g. contextFromRegistryGrammars()
+     */
+    val grammar: LanguageDefinition<GrammarDomain, SentenceContextAny>
+
+    /**
+     * Semantic Analysis requires a context containing any other referenced TypeDefinitions or namespaces.
+     * E.g. contextFromRegistryTypes()
+     */
+    val types: LanguageDefinition<TypesDomain, SentenceContextAny>
+
+    /**
+     * Semantic Analysis requires a context containing any referenced TypeDefinitions, i.e. the types related to a Grammar.
+     * Currently this means containing the TypesDomain that references are being defined over TODO: proper context containment of types
+     * E.g.
+     * typesDomain = AsmTransformDomainDefault.fromGrammarDomain(grammarDomain).asm?.typesDomain!!
+     * contextFromTypesDomain(typesDomain)
+     */
+    val crossReference: LanguageDefinition<CrossReferenceDomain, SentenceContextAny>
+
+    /**
+     * Semantic Analysis requires a context containing any referenced Grammar Items or TypeDefinitions.
+     * Currently this means containing the GrammarDomain and the TypesDomain it is mapped to TODO: proper context containment of types and grammar items
+     * E.g.
+     * contextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain)
+     */
+    val asmTransform: LanguageDefinition<AsmTransformDomain, SentenceContextAny>
+
+    /**
+     * Semantic Analysis requires a context containing any referenced TypeDefinitions or other M2M RuleSets.
+     * Currently this means containing the GrammarDomain and the TypesDomain it is mapped to TODO: proper context containment of types and grammar items
+     * E.g.
+     * context = SentenceContextAny()
+     * typeDomains.forEach { (k, v) ->
+     *    context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
+     * }
+     */
+    val m2mTransform: LanguageDefinition<M2mTransformDomain, SentenceContextAny>
+    val style: LanguageDefinition<AglStyleDomain, SentenceContextAny>
+    val format: LanguageDefinition<AglFormatDomain, SentenceContextAny>
+}
+
 
 /**
  * mutable, you can change the language components for a definition

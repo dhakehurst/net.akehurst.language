@@ -173,7 +173,7 @@ object Agl {
             if (null != transformStr) {
                 transformResolver { p: LanguageProcessor<Asm, SentenceContextAny> ->
                     AsmTransformDomainDefault.fromString(
-                        ContextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain),
+                        contextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain),
                         transformStr
                     )
                 }

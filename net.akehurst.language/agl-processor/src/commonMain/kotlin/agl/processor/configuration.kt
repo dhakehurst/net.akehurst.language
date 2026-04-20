@@ -100,7 +100,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>? = null,
     override var transformResolver: TransformResolver<AsmType, ContextType>? = { p ->
         p.configuration.asmTransformString?.let {
-            AsmTransformDomainDefault.fromString(ContextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain), it)
+            AsmTransformDomainDefault.fromString(contextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain), it)
         } ?: AsmTransformDomainDefault.fromGrammarDomain(p.grammarDomain!!, p.baseTypesDomain)
     },
     override var crossReferenceResolver: CrossReferenceResolver<AsmType, ContextType>? = { p ->
@@ -152,7 +152,7 @@ internal class LanguageProcessorConfigurationSimple(
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactorySimple>? = { AsmFactorySimple() },
     override val transformResolver: TransformResolver<Asm, SentenceContextAny>? = { p ->
         p.configuration.asmTransformString?.let {
-            AsmTransformDomainDefault.fromString(ContextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain), it)
+            AsmTransformDomainDefault.fromString(contextFromGrammarAndTypesDomain(p.grammarDomain!!, p.baseTypesDomain), it)
         } ?: AsmTransformDomainDefault.fromGrammarDomain(p.grammarDomain!!, p.baseTypesDomain)
     },
     override var crossReferenceResolver: CrossReferenceResolver<Asm, SentenceContextAny>? = { p ->

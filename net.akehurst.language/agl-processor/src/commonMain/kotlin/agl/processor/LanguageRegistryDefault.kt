@@ -63,6 +63,12 @@ fun contextFromGrammarRegistry(registry: GrammarRegistry = Agl.registry): Senten
     return context
 }
 
+//@Deprecated("Currently no alternative, but to be replaced")
+fun contextFromGrammarAndTypesDomain(grammarDomain: GrammarDomain, typesDomain: TypesDomain)= SentenceContextAny().also {
+    it.addToScope(null, listOf("grammar"), QualifiedName("GrammarDomain"),null, grammarDomain)
+    it.addToScope(null, listOf("types"), QualifiedName("TypesDomain"),null, typesDomain)
+}
+
 fun contextFromRegistryGrammars(registry: LanguageRegistry = Agl.registry): SentenceContextAny = registry.let {
     registry.initialise()
     contextFromLanguageDefinition(registry.languages.values, "Grammar") { lang -> lang.grammarDomain }
@@ -127,28 +133,6 @@ fun SentenceContextAny.addDefinitions(domain: Domain<*, *>?, definitionTypeName:
             }
         }
     }
-}
-
-interface AglLanguages {
-    val baseLanguageIdentity: LanguageIdentity
-    val expressionsLanguageIdentity: LanguageIdentity
-    val grammarLanguageIdentity: LanguageIdentity
-    val typesLanguageIdentity: LanguageIdentity
-    val crossReferenceLanguageIdentity: LanguageIdentity
-    val asmTransformLanguageIdentity: LanguageIdentity
-    val m2mTransformLanguageIdentity: LanguageIdentity
-    val styleLanguageIdentity: LanguageIdentity
-    val formatLanguageIdentity: LanguageIdentity
-
-    val base: LanguageDefinition<Any, SentenceContextAny>
-    val expressions: LanguageDefinition<Expression, SentenceContextAny>
-    val grammar: LanguageDefinition<GrammarDomain, SentenceContextAny>
-    val types: LanguageDefinition<TypesDomain, SentenceContextAny>
-    val crossReference: LanguageDefinition<CrossReferenceDomain, SentenceContextAny>
-    val asmTransform: LanguageDefinition<AsmTransformDomain, SentenceContextAny>
-    val m2mTransform: LanguageDefinition<M2mTransformDomain, SentenceContextAny>
-    val style: LanguageDefinition<AglStyleDomain, SentenceContextAny>
-    val format: LanguageDefinition<AglFormatDomain, SentenceContextAny>
 }
 
 class LanguageRegistryDefault : LanguageRegistry {
