@@ -127,9 +127,8 @@ internal class AutomatonBuilderDefault(
         b.tgt(to)
         b.gpg(prevGuard)
         b.init()
-        val trans = b.build()
-        TODO()
-        //from.outTransitions.addTransition(previousStates, trans)
+        // build() registers the transition with the appropriate cache; no further work needed
+        b.build()
     }
 
     override fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit) {
@@ -162,8 +161,22 @@ internal class AutomatonBuilderDefault(
         }
         val lh = up.map { Lookahead(guard, it) }.toSet()
         val trans = Transition(from, to, action, lh)
-        TODO()
-//        from.outTransitions.addTransition(previousStates, trans)
+        when (action) {
+            ParseAction.WIDTH, ParseAction.EMBED -> {
+                check(!from.isAtEnd) { "$action requires non-at-end source state" }
+                for (prev in previousStates) {
+                    from.outTransitions.addTransitionForIncomplete(prev, trans)
+                }
+            }
+            ParseAction.HEIGHT, ParseAction.GRAFT, ParseAction.GOAL -> {
+                check(from.isAtEnd) { "$action requires at-end source state" }
+                // Sentinel prev²: no explicit prev² provided through this legacy entry point.
+                val sentinelPrevPrev = result.startState
+                for (prev in previousStates) {
+                    from.outTransitions.addTransitionForComplete(prev, sentinelPrevPrev, trans)
+                }
+            }
+        }
     }
 
     internal fun build(): ParserStateSet {
@@ -177,7 +190,20 @@ internal class TransitionBuilderDefault internal constructor(
     val action: ParseAction
 ) : TransitionBuilder {
 
-    private var _context = emptySet<ParserState>()
+    private var _transitionContext = emptySet<ParserState>()
+    /**
+     * Optional prev² context for HEIGHT / GRAFT / GOAL transitions.
+     * `null` means "no explicit prev² supplied" — `build()` falls back to
+     * a single-element set containing [ParserStateSet.startState] as a sentinel.
+     * The same sentinel is used at runtime by `RuntimeParserAgl.growComplete2`
+     * when the GSS triple has no pred-of-pred:
+     *     transitionsComplete(prev.state, prevPrev?.state ?: stateSet.startState)
+     * so DSL-built fixtures and runtime-built automatons coincide for the
+     * common case where prev² discrimination is irrelevant (i.e. `prev` is
+     * not at-start). Tests that need to assert prev²-discriminated behaviour
+     * should call [pctx] explicitly.
+     */
+    private var _prevPrevContext: Set<ParserState>? = null
     private lateinit var _src: ParserState
     private lateinit var _tgt: ParserState
     private val _lhg = mutableSetOf<Lookahead>()
@@ -190,7 +216,7 @@ internal class TransitionBuilderDefault internal constructor(
     override fun target(stateNumber: Int) = this.tgt(stateSet.allBuiltStates[stateNumber])
 
     fun ctx(states: Set<ParserState>) {
-        _context = states
+        _transitionContext = states
     }
 
     fun ctx(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = ctx(RulePositionRuntime(runtimeRule, option, position))
@@ -202,6 +228,33 @@ internal class TransitionBuilderDefault internal constructor(
     fun ctx(vararg rulePositions: Set<RulePositionRuntime>) {
         val states = rulePositions.map { this.stateSet.fetchState(it.toList()) ?: error("State for $it not defined") }.toSet()
         this.ctx(states)
+    }
+
+    /**
+     * prev² context for HEIGHT / GRAFT / GOAL transitions.
+     * Optional — if not called, `build()` defaults to a single-element set
+     * containing [ParserStateSet.startState] as the sentinel prev² (mirroring
+     * the runtime parser's substitution when no pred-of-pred exists). Calling
+     * `pctx(...)` makes the DSL register one cache entry per `(prev, prevPrev)`
+     * pair drawn from the cross-product of [_transitionContext] × the supplied
+     * states, so a test can assert that prev²-discrimination is preserved
+     * where it should be (i.e. when `prev.isAtStart`).
+     *
+     * Has no effect for WIDTH / EMBED transitions.
+     */
+    fun pctx(states: Set<ParserState>) {
+        _prevPrevContext = states
+    }
+
+    fun pctx(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = pctx(RulePositionRuntime(runtimeRule, option, position))
+    fun pctx(vararg rulePositions: RulePositionRuntime) {
+        val states = rulePositions.map { this.stateSet.fetchState(listOf(it)) ?: error("State for $it not defined") }.toSet()
+        this.pctx(states)
+    }
+
+    fun pctx(vararg rulePositions: Set<RulePositionRuntime>) {
+        val states = rulePositions.map { this.stateSet.fetchState(it.toList()) ?: error("State for $it not defined") }.toSet()
+        this.pctx(states)
     }
 
     fun src(runtimeRule: RuntimeRule) {
@@ -264,8 +317,27 @@ internal class TransitionBuilderDefault internal constructor(
 
     internal fun build(): Transition {
         val trans = Transition(_src as ParserState, _tgt as ParserState, action, _lhg)
-        TODO()
-//        (_src as ParserState).outTransitions.addTransition(_context as Set<ParserState>, trans)
-        //      return trans
+        require(_transitionContext.isNotEmpty()) { "ctx(...) must be set before build()" }
+        when (action) {
+            ParseAction.WIDTH, ParseAction.EMBED -> {
+                check(!_src.isAtEnd) { "$action requires non-at-end source state" }
+                check(_prevPrevContext == null) { "pctx(...) is not meaningful for $action transitions" }
+                for (prev in _transitionContext) {
+                    _src.outTransitions.addTransitionForIncomplete(prev, trans)
+                }
+            }
+            ParseAction.HEIGHT, ParseAction.GRAFT, ParseAction.GOAL -> {
+                check(_src.isAtEnd) { "$action requires at-end source state" }
+                // Sentinel prev² when none supplied — matches runtime substitution
+                // in RuntimeParserAgl.growComplete2 (`prevPrev?.state ?: stateSet.startState`).
+                val prevPrevs = _prevPrevContext ?: setOf(stateSet.startState)
+                for (prev in _transitionContext) {
+                    for (prevPrev in prevPrevs) {
+                        _src.outTransitions.addTransitionForComplete(prev, prevPrev, trans)
+                    }
+                }
+            }
+        }
+        return trans
     }
 }

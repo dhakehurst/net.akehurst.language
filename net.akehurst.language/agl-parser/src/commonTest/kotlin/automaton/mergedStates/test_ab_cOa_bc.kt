@@ -86,23 +86,23 @@ class test_ab_cOa_bc : test_AutomatonAbstract() {
             state(RP(a, oN, EOR))      /* a . */
             state(RP(c, oN, EOR))      /* c . */
 
-            trans(WIDTH) { ctx(G, oN, SOR); src(G, oN, SOR); tgt(a); lhg(b) }
-            trans(WIDTH) { ctx(G, oN, SOR); src(a_bc, oN, p1); tgt(b); lhg(c) }
-            trans(WIDTH) { ctx(G, oN, SOR); src(ab, oN, p1); tgt(b); lhg(c) }
-            trans(WIDTH) { ctx(G, oN, SOR); src(ab_c, oN, p1); tgt(c); lhg(EOT) }
-            trans(WIDTH) { ctx(a_bc, oN, p1); src(bc, oN, p1); tgt(c); lhg(EOT) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S); tgt(G); lhg(EOT) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S, o1, EOR); tgt(G); lhg(EOT) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(ab_c); tgt(S); lhg(EOT) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(a_bc); tgt(S, o1, EOR) }
-            trans(GRAFT) { ctx(a_bc, oN, p1); src(bc); tgt(a_bc) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(a); tgt(a_bc, oN, p1) }
-            trans(GRAFT) { ctx(ab, oN, p1); src(b); tgt(ab) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(a); tgt(ab, oN, p1) }
-            trans(GRAFT) { ctx(ab_c, oN, p1); src(c); tgt(ab_c) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(ab); tgt(ab_c, oN, p1) }
-            trans(GRAFT) { ctx(bc, oN, p1); src(c); tgt(bc) }
-            trans(HEIGHT) { ctx(a_bc, oN, p1); src(b); tgt(bc, oN, p1) }
+            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(b); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(a_bc, oN, p1); tgt(b); lhg(c); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(ab, oN, p1); tgt(b); lhg(c); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(ab_c, oN, p1); tgt(c); lhg(EOT); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(bc, oN, p1); tgt(c); lhg(EOT); ctx(a_bc, oN, p1) }
+            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G, oN, SOR); pctx(G, oN, SOR) }
+            trans(GOAL) { src(S, o1, EOR); tgt(G); lhg(EOT); ctx(G, oN, SOR); pctx(G, oN, SOR); }
+            trans(HEIGHT) { src(ab_c); tgt(S); lhg(EOT); ctx(G, oN, SOR); pctx(G, oN, SOR); }
+            trans(HEIGHT) { src(a_bc); tgt(S, o1, EOR); ctx(G, oN, SOR); pctx(G, oN, SOR); }
+            trans(GRAFT) { src(bc); tgt(a_bc); ctx(a_bc, oN, p1); }
+            trans(HEIGHT) { src(a); tgt(a_bc, oN, p1); ctx(G, oN, SOR); }
+            trans(GRAFT) { src(b); tgt(ab); ctx(ab, oN, p1); }
+            trans(HEIGHT) { src(a); tgt(ab, oN, p1); ctx(G, oN, SOR); }
+            trans(GRAFT) { src(c); tgt(ab_c); ctx(ab_c, oN, p1); }
+            trans(HEIGHT) { src(ab); tgt(ab_c, oN, p1); ctx(G, oN, SOR); }
+            trans(GRAFT) { src(c); tgt(bc); ctx(bc, oN, p1); }
+            trans(HEIGHT) { src(b); tgt(bc, oN, p1); ctx(a_bc, oN, p1); }
         }
 
         AutomatonTest.assertEquals(expected, actual)

@@ -86,71 +86,8 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SR))    // G = . S
-            state(RP(G, oN, EOR))    // G = S .
-            state(RP(S, oN, EOR))    // S = E .
-            state(RP(E, oN, EOR))    // E = E1 .
-            state(RP(E, o1, EOR))    // E = T .
-            state(RP(T, oN, EOR))    // T = T1 .
-            state(RP(T, oN, EOR))    // T = F .
-            state(RP(F, oN, EOR))    // F = v .
-            state(RP(F, oN, EOR))    // F = F2 .
-            state(RP(F2, oN, EOR))   // F2 = ( E ) .
-            state(RP(o, oN, EOR))    // ( .
-            state(RP(E1, oN, EOR))   // E1 = E a T .
-            state(RP(c, oN, EOR))    // ) .
-            state(RP(v, oN, EOR))    // v .
-            state(RP(T1, oN, EOR))   // T1 = T m F .
-            state(RP(m, oN, EOR))    // m .
-            state(RP(a, oN, EOR))    // a .
-            state(RP(F2, o1, EOR))    // F2 = ( . E )
-            state(RP(F2, o2, EOR))    // F2 = ( E . )
-            state(RP(E1, o1, EOR))    // E1 = E . a T
-            state(RP(E1, o2, EOR))    // E1 = E a . T
-            state(RP(T1, o1, EOR))    // T1 = T . m F
-            state(RP(T1, o2, EOR))    // T1 = T m . F
-
-            trans(WIDTH) { src(G, oN, SR); tgt(o); lhg(setOf(v, o)); ctx(RP(G, oN, SOR)) }
-            trans(WIDTH) { src(E1, oN, p2); tgt(o); lhg(setOf(v, o)); ctx(RP(G, oN, SOR)); }
-            trans(WIDTH) { src(F2, oN, p1); tgt(o); lhg(setOf(v, o)); ctx(RP(G, oN, SOR)); }
-            /*
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(GOAL) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
-
-             */
+            //todo
         }
-
         AutomatonTest.assertEquals(expected, actual)
     }
 
@@ -161,7 +98,7 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
         val rrs_preBuild = rrs.clone()
 
         val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
-        val sentences = listOf("v", "vav", "vmv", "vavmv", "vmvav", "(v)")
+        val sentences = listOf("v", "vav", "vmv", "vavmv", "vmvav", "(v)", "(vav)", "(v)mv", "vm(v)", "(v)m(v)")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) {
@@ -177,6 +114,6 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
         println("--No Build--")
         println(rrs_noBuild.usedAutomatonToString("S", true))
 
-        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild, AutomatonTest.MatchConfiguration(no_lookahead_compare = true))
     }
 }

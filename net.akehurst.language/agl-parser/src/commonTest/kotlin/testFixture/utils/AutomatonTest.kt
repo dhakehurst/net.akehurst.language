@@ -57,8 +57,8 @@ object AutomatonTest {
         }
     }
 
-    fun assertEquals(expected: Automaton, actual: Automaton) {
-        assertMatches(expected as ParserStateSet, actual as ParserStateSet, MatchConfiguration())
+    fun assertEquals(expected: Automaton, actual: Automaton, config: MatchConfiguration = MatchConfiguration()) {
+        assertMatches(expected as ParserStateSet, actual as ParserStateSet, config)
     }
 
     fun assertMatches(expected: ParserStateSet, actual: ParserStateSet, config: MatchConfiguration = MatchConfiguration()) {

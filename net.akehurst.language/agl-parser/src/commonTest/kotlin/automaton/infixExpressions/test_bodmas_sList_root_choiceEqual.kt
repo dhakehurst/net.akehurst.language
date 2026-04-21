@@ -72,14 +72,14 @@ class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SR))     /* G = . S */
-            val s1 = state(RP(v, oN, ER))     /* v .     */
-            val s2 = state(RP(R, oN, EOR))     /* R = v . */
-            val s3 = state(RP(E, oN, EOR))     /* E = R . */
-            val s4 = state(RP(S, oN, EOR))     /* S = E . */
-            val s5 = state(RP(rA, oSI, PLS))     /* A = [E . a ...]2+ */
-            val s6 = state(RP(rM, oSI, PLS))     /* M = [E . m ...]2+ */
-            val s7 = state(RP(G, oN, EOR))     /* G = . S   */
+            val s0 = state(G,oN,SR)     /* G = . S */
+            val s1 = state(v,oN,ER)     /* v .     */
+            val s2 = state(R,oN,EOR)     /* R = v . */
+            val s3 = state(E,oN,EOR)     /* E = R . */
+            val s4 = state(S,oN,EOR)     /* S = E . */
+            val s5 = state(rA,oSI,PLS)     /* A = [E . a ...]2+ */
+            val s6 = state(rM,oSI,PLS)     /* M = [E . m ...]2+ */
+            val s7 = state(G,oN,EOR)     /* G = . S   */
 
             trans(WIDTH) { ctx(G, oN, SOR); src(G, oN, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
             trans(GOAL) { ctx(G, oN, SOR); src(S); tgt(G); lhg(EOT) }
@@ -105,8 +105,8 @@ class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      /* G = . S   */
-            val s1 = state(RP(v, oN, ER))      /* 'v' .   */
+            val s0 = state(G,oN,SOR)      /* G = . S   */
+            val s1 = state(v,oN,ER)      /* 'v' .   */
 
             //transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
 
@@ -131,22 +131,22 @@ class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SOR))    // G = . S
-            val s1 = state(RP(v, oN, ER))    // v
-            val s2 = state(RP(R, oN, ER))    // R = v .
-            val s3 = state(RP(E, oN, ER))    // E = R .
-            val s4 = state(RP(S, oN, ER))    // S = E .
-            val s5 = state(RP(rA, oSI, PLS))  // A = [E . a...]2+
-            val s6 = state(RP(rM, oSI, PLS))  // M = [E . m...]2+
-            val s7 = state(RP(G, oN, ER))    // G = S .
-            val s8 = state(RP(a, oN, ER))    // a
-            val s9 = state(RP(rA, oSI, PLI))  // A = [E a . E...]2+
-            val s10 = state(RP(rA, oSI, ER)) // A = [E / a]2+ .
-            val s11 = state(RP(E, o2, ER))   // E = A .
-            val s12 = state(RP(m, oN, ER))   // m
-            val s13 = state(RP(rM, oSI, PLI)) // M = [E m . E...]2+
-            val s14 = state(RP(rM, oSI, ER)) // M = [E / m]2+ .
-            val s15 = state(RP(E, o1, ER))   // E = M .
+            val s0 = state(G,oN,SOR)    // G = . S
+            val s1 = state(v,oN,ER)    // v
+            val s2 = state(R,oN,ER)    // R = v .
+            val s3 = state(E,oN,ER)    // E = R .
+            val s4 = state(S,oN,ER)    // S = E .
+            val s5 = state(rA,oSI,PLS)  // A = [E . a...]2+
+            val s6 = state(rM,oSI,PLS)  // M = [E . m...]2+
+            val s7 = state(G,oN,ER)    // G = S .
+            val s8 = state(a,oN,ER)    // a
+            val s9 = state(rA,oSI,PLI)  // A = [E a . E...]2+
+            val s10 = state(rA,oSI,ER) // A = [E / a]2+ .
+            val s11 = state(E,o2,ER)   // E = A .
+            val s12 = state(m,oN,ER)   // m
+            val s13 = state(rM,oSI,PLI) // M = [E m . E...]2+
+            val s14 = state(rM,oSI,ER) // M = [E / m]2+ .
+            val s15 = state(E,o1,ER)   // E = M .
 
             trans(WIDTH) { ctx(RP(G, oN, SOR), RP(rM, oSI, PLI)); src(rA, oSI, PLS); tgt(a); lhg(v) }
             trans(WIDTH) { ctx(RP(G, oN, SOR), RP(rA, oSI, PLI)); src(rM, oSI, PLS); tgt(m); lhg(v) }
@@ -212,22 +212,22 @@ class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SOR))    // G = . S
-            val s1 = state(RP(G, oN, ER))    // G = S .
-            val s2 = state(RP(S, oN, ER))    // S = E .
-            val s3 = state(RP(E, oN, ER))    // E = R .
-            val s4 = state(RP(E, o1, ER))   // E = M .
-            val s5 = state(RP(E, o2, ER))   // E = A .
-            val s6 = state(RP(rA, oSI, ER)) // A = [E / a]2+ .
-            val s7 = state(RP(rM, oSI, ER)) // M = [E / m]2+ .
-            val s8 = state(RP(a, oN, ER))    // a
-            val s9 = state(RP(R, oN, ER))    // R = v .
-            val s10 = state(RP(v, oN, ER))    // v
-            val s11 = state(RP(m, oN, ER))    // m
-            val s12 = state(RP(rA, oSI, PLS)) // A = [E . a...]2+ .
-            val s13 = state(RP(rA, oSI, PLI)) // A = [E a . E...]2+ .
-            val s14 = state(RP(rM, oSI, PLS)) // M = [E . m...]2+ .
-            val s15 = state(RP(rM, oSI, PLI)) // M = [E m . E...]2+ .
+            val s0 = state(G,oN,SOR)    // G = . S
+            val s1 = state(G,oN,ER)    // G = S .
+            val s2 = state(S,oN,ER)    // S = E .
+            val s3 = state(E,oN,ER)    // E = R .
+            val s4 = state(E,o1,ER)   // E = M .
+            val s5 = state(E,o2,ER)   // E = A .
+            val s6 = state(rA,oSI,ER) // A = [E / a]2+ .
+            val s7 = state(rM,oSI,ER) // M = [E / m]2+ .
+            val s8 = state(a,oN,ER)    // a
+            val s9 = state(R,oN,ER)    // R = v .
+            val s10 = state(v,oN,ER)    // v
+            val s11 = state(m,oN,ER)    // m
+            val s12 = state(rA,oSI,PLS) // A = [E . a...]2+ .
+            val s13 = state(rA,oSI,PLI) // A = [E a . E...]2+ .
+            val s14 = state(rM,oSI,PLS) // M = [E . m...]2+ .
+            val s15 = state(rM,oSI,PLI) // M = [E m . E...]2+ .
 
             trans(WIDTH) { ctx(RP(G, oN, SOR), RP(rA, oSI, PLI), RP(rM, oSI, PLI)); src(rA, oSI, PLS); tgt(a); lhg(v) }
             trans(WIDTH) { ctx(RP(G, oN, SOR), RP(rA, oSI, PLI), RP(rM, oSI, PLI)); src(rM, oSI, PLS); tgt(m); lhg(v) }

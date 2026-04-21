@@ -25,7 +25,6 @@ import net.akehurst.language.scanner.common.ScannerOnDemand
 import testFixture.utils.AutomatonTest
 import kotlin.test.Test
 
-
 class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
     private companion object {
@@ -46,14 +45,14 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
-            val s1 = state(RP(G, oN, EOR))      // G = S .
-            val s2 = state(RP(S, oN, EOR))      // S = 'a' .
-            val s3 = state(RP(a, oN, EOR))      // 'a'
+            val s0 = state(G, oN, SOR)      // G = . S
+            val s1 = state(G, oN, EOR)      // G = S .
+            val s2 = state(S, oN, EOR)      // S = 'a' .
+            val s3 = state(a, oN, EOR)      // 'a'
 
-            transition(s0, s0, s3, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s3, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, SOR)))
-            transition(s0, s2, s1, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
+            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -85,26 +84,26 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
-            val s1 = state(RP(a, oN, EOR))      // a
-            val s2 = state(RP(S, oN, 1))   // S = a . b c d
-            val s3 = state(RP(b, oN, EOR))      // b
-            val s4 = state(RP(S, oN,2))   // S = a b . c d
-            val s5 = state(RP(c, oN, EOR))      // c
-            val s6 = state(RP(S, oN, 3))   // S = a b c . d
-            val s7 = state(RP(d, oN, EOR))      // d
-            val s8 = state(RP(S, oN, EOR))      // S = a b c d .
-            val s9 = state(RP(G, oN, EOR))      // G = S .
+            val s0 = state(G, oN, SOR)      // G = . S
+            val s1 = state(a, oN, EOR)      // a
+            val s2 = state(S, oN, 1)        // S = a . b c d
+            val s3 = state(b, oN, EOR)      // b
+            val s4 = state(S, oN, 2)         // S = a b . c d
+            val s5 = state(c, oN, EOR)      // c
+            val s6 = state(S, oN, 3)        // S = a b c . d
+            val s7 = state(d, oN, EOR)      // d
+            val s8 = state(S, oN, EOR)      // S = a b c d .
+            val s9 = state(G, oN, EOR)      // G = S .
 
-            transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, SOR)))
-            transition(s0, s2, s3, WIDTH, setOf(ANY), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, 1)))
-            transition(s0, s4, s5, WIDTH, setOf(ANY), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, 2)))
-            transition(s0, s6, s7, WIDTH, setOf(ANY), setOf(), null)
-            transition(s6, s7, s8, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, 3)))
-            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
+            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(b); tgt(S, oN, 2); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
+            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(c); tgt(S, oN, 3); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
+            trans(WIDTH) { src(S, oN, 3); tgt(d); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(d); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 3) }
+            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -140,29 +139,29 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
-            val s1 = state(RP(a, oN, ER))      // a
-            val s2 = state(RP(b, oN, ER))      // b
-            val s3 = state(RP(c, oN, ER))      // c
-            val s4 = state(RP(d, oN, ER))      // d
-            val s5 = state(RP(S, o0, ER))      // S = a .
-            val s6 = state(RP(S, o1, ER))      // S = b .
-            val s7 = state(RP(S, o2, ER))      // S = c .
-            val s8 = state(RP(S, o3, ER))      // S = d .
-            val s9 = state(RP(G, oN, ER))      // G = S .
+            val s0 = state(G, oN, SOR)      // G = . S
+            val s1 = state(a, oN, ER)      // a
+            val s2 = state(b, oN, ER)      // b
+            val s3 = state(c, oN, ER)      // c
+            val s4 = state(d, oN, ER)      // d
+            val s5 = state(S, o0, ER)      // S = a .
+            val s6 = state(S, o1, ER)      // S = b .
+            val s7 = state(S, o2, ER)      // S = c .
+            val s8 = state(S, o3, ER)      // S = d .
+            val s9 = state(G, oN, ER)      // G = S .
 
-            transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s0, s2, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s0, s3, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s0, s4, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s1, s5, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, o0, SOR)))
-            transition(s0, s2, s6, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, o1, SOR)))
-            transition(s0, s3, s7, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, o2, SOR)))
-            transition(s0, s4, s8, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, o3, SOR)))
-            transition(s0, s5, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
-            transition(s0, s6, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
-            transition(s0, s7, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
-            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
+            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(G, oN, SOR); tgt(b); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(G, oN, SOR); tgt(c); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(G, oN, SOR); tgt(d); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(S, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(b); tgt(S, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(c); tgt(S, o2, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(d); tgt(S, o3, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S, o0, ER); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S, o1, ER); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S, o2, ER); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S, o3, ER); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
 
         }
 
@@ -202,28 +201,28 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
-            val s1 = state(RP(a, oN, ER))      // a
-            val s2 = state(RP(A, oN, ER))      // A = a .
-            val s3 = state(RP(S, oN, 1))   // S = A . B C
-            val s4 = state(RP(b, oN, ER))      // b
-            val s5 = state(RP(B, oN, ER))      // B = b .
-            val s6 = state(RP(S, oN, 2))   // S = A B . C
-            val s7 = state(RP(c, oN, ER))      // c
-            val s8 = state(RP(C, oN, ER))      // C = c .
-            val s9 = state(RP(S, oN, ER))      // S = A B C .
-            val s10 = state(RP(G, oN, ER))      // G = S .
+            val s0 = state(G, oN, SOR)      // G = . S
+            val s1 = state(a, oN, ER)      // a
+            val s2 = state(A, oN, ER)      // A = a .
+            val s3 = state(S, oN, 1)   // S = A . B C
+            val s4 = state(b, oN, ER)      // b
+            val s5 = state(B, oN, ER)      // B = b .
+            val s6 = state(S, oN, 2)   // S = A B . C
+            val s7 = state(c, oN, ER)      // c
+            val s8 = state(C, oN, ER)      // C = c .
+            val s9 = state(S, oN, ER)      // S = A B C .
+            val s10 = state(G, oN, ER)      // G = S .
 
-            transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(A, oN, SOR)))
-            transition(s0, s2, s3, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, SOR)))
-            transition(s0, s3, s4, WIDTH, setOf(ANY), setOf(), null)
-            transition(s3, s4, s5, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(B, oN, SOR)))
-            transition(s3, s5, s6, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, 1)))
-            transition(s0, s6, s7, WIDTH, setOf(ANY), setOf(), null)
-            transition(s6, s7, s8, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(C, oN, SOR)))
-            transition(s6, s8, s9, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, 2)))
-            transition(s0, s9, s10, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
+            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(A); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(A); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(b); tgt(B); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
+            trans(GRAFT) { src(B); tgt(S, oN, 2); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
+            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(c); tgt(C); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
+            trans(GRAFT) { src(C); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
+            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
 
         }
 
@@ -253,14 +252,14 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
-            val s1 = state(RP(eS, oN, ER))      // eS
-            val s2 = state(RP(S, oN, ER))      // S = eS .
-            val s3 = state(RP(G, oN, ER))      // G = S .
+            val s0 = state(G, oN, SOR)      // G = . S
+            val s1 = state(eS, oN, ER)      // eS
+            val s2 = state(S, oN, ER)      // S = eS .
+            val s3 = state(G, oN, ER)      // G = S .
 
-            transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, SOR)))
-            transition(s0, s2, s3, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
+            trans(WIDTH) { src(G, oN, SOR); tgt(eS); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(eS); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
 
         }
 
@@ -300,43 +299,43 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
-            val s1 = state(RP(a, oN, ER))      // a
-            val s2 = state(RP(eoA, oN, ER))    // empty-oA
-            val s3 = state(RP(oA, o0, ER))     // oA = a .
-            val s4 = state(RP(oA, o1, ER))     // oA =  .
-            val s5 = state(RP(S, oN, 1))   // S = oA . oB oC
-            val s6 = state(RP(b, oN, ER))      // b
-            val s7 = state(RP(eoB, oN, ER))    // empty-oB
-            val s8 = state(RP(oB, o0, ER))     // oB = b .
-            val s9 = state(RP(oB, o1, ER))     // oB = .
-            val s10 = state(RP(S, oN, 2))   // S = oA oB . oC
-            val s11 = state(RP(c, oN, ER))      // c
-            val s12 = state(RP(eoC, oN, ER))    // empty-oC
-            val s13 = state(RP(oC, o0, ER))     // oC = c .
-            val s14 = state(RP(oC, o1, ER))     // oC = .
-            val s15 = state(RP(S, oN, ER))      // S = oA oB oC .
-            val s16 = state(RP(G, oN, ER))      // G = S .
+            val s0 = state(G, oN, SOR)      // G = . S
+            val s1 = state(a, oN, ER)      // a
+            val s2 = state(eoA, oN, ER)    // empty-oA
+            val s3 = state(oA, o0, ER)     // oA = a .
+            val s4 = state(oA, o1, ER)     // oA =  .
+            val s5 = state(S, oN, 1)   // S = oA . oB oC
+            val s6 = state(b, oN, ER)      // b
+            val s7 = state(eoB, oN, ER)    // empty-oB
+            val s8 = state(oB, o0, ER)     // oB = b .
+            val s9 = state(oB, o1, ER)     // oB = .
+            val s10 = state(S, oN, 2)   // S = oA oB . oC
+            val s11 = state(c, oN, ER)      // c
+            val s12 = state(eoC, oN, ER)    // empty-oC
+            val s13 = state(oC, o0, ER)     // oC = c .
+            val s14 = state(oC, o1, ER)     // oC = .
+            val s15 = state(S, oN, ER)      // S = oA oB oC .
+            val s16 = state(G, oN, ER)      // G = S .
 
-            transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s0, s2, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s1, s3, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(oA, o0, SOR)))
-            transition(s0, s2, s4, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(oA, o1, SOR)))
-            transition(s0, s3, s5, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN,0)))
-            transition(s0, s4, s5, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, 0)))
-            transition(s0, s5, s6, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s5, s7, WIDTH, setOf(ANY), setOf(), null)
-            transition(s5, s6, s8, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(oB, o0, SOR)))
-            transition(s5, s7, s9, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(oB, o1, SOR)))
-            transition(s5, s8, s10, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN,1)))
-            transition(s5, s9, s10, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN,1)))
-            transition(s0, s10, s11, WIDTH, setOf(ANY), setOf(), null)
-            transition(s0, s10, s12, WIDTH, setOf(ANY), setOf(), null)
-            transition(s10, s11, s13, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(oC, o0, SOR)))
-            transition(s10, s12, s14, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(oC, o1, SOR)))
-            transition(s10, s13, s15, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, 2)))
-            transition(s10, s14, s15, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, 2)))
-            transition(s0, s15, s16, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, 0)))
+            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(G, oN, SOR); tgt(eoA); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(oA, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(eoA); tgt(oA, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(oA, o0, ER); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(oA, o1, ER); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 1); tgt(eoB); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(b); tgt(oB, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
+            trans(HEIGHT) { src(eoB); tgt(oB, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
+            trans(GRAFT) { src(oB, o0, ER); tgt(S, oN, 2); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
+            trans(GRAFT) { src(oB, o1, ER); tgt(S, oN, 2); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
+            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 2); tgt(eoC); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(c); tgt(oC, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
+            trans(HEIGHT) { src(eoC); tgt(oC, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
+            trans(GRAFT) { src(oC, o0, ER); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
+            trans(GRAFT) { src(oC, o1, ER); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
+            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
 
         }
 
@@ -381,15 +380,15 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
-            val s1 = state(RP(a, oN, ER))      // a
-            val s2 = state(RP(ABC1, oN, 1), RP(ABC2, oN, 1))       // ABC1 = a . b c, ABC2 = a . b c
-            val s3 = state(RP(b, oN, SOR))      // b
-            val s4 = state(RP(ABC1, oN, 2), RP(ABC2, oN, 2))      // ABC1 = a b . c, ABC2 = a b . c
-            val s5 = state(RP(c, oN,ER))      // c
-            val s6 = state(RP(ABC1, oN, ER), RP(ABC2, oN, ER))    // ABC1 = a b c ., ABC2 = a b c .
-            val s7 = state(RP(S, oN, ER), RP(S, o1, ER))          // S = ABC1 ., S = ABC2 .
-            val s8 = state(RP(G, oN,SOR))                             // G = S .
+            val s0 = state(G, oN, SOR)                           // G = . S
+            val s1 = state(a, oN, ER)                            // a
+            val s2 = state(RP(ABC1, oN, 1), RP(ABC2, oN, 1))     // ABC1 = a . b c, ABC2 = a . b c
+            val s3 = state(b, oN, SOR)                           // b
+            val s4 = state(RP(ABC1, oN, 2), RP(ABC2, oN, 2))     // ABC1 = a b . c, ABC2 = a b . c
+            val s5 = state(RP(c, oN, ER))                        // c
+            val s6 = state(RP(ABC1, oN, ER), RP(ABC2, oN, ER))   // ABC1 = a b c ., ABC2 = a b c .
+            val s7 = state(RP(S, oN, ER), RP(S, o1, ER))         // S = ABC1 ., S = ABC2 .
+            val s8 = state(RP(G, oN, SOR))                       // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(ABC1, oN, SOR), RP(ABC2, oN, SOR)))
@@ -434,7 +433,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s0 = state(G, oN, SOR)      // G = . S
 
 
         }
@@ -471,7 +470,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s0 = state(G, oN, SOR)      // G = . S
 
 
         }
@@ -508,7 +507,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s0 = state(G, oN, SOR)      // G = . S
 
 
         }
@@ -544,7 +543,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s0 = state(G, oN, SOR)      // G = . S
 
 
         }
@@ -587,7 +586,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s0 = state(G, oN, SOR)      // G = . S
 
 
         }
@@ -641,7 +640,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN,SOR))      // G = . S
+            val s0 = state(RP(G, oN, SOR))      // G = . S
 
 
         }
@@ -685,7 +684,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s0 = state(G, oN, SOR)      // G = . S
 
 
         }
@@ -723,7 +722,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s0 = state(G, oN, SOR)      // G = . S
 
 
         }
@@ -762,13 +761,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
-            val s1 = state(RP(a, oN, ER))      // a
-            val s2 = state(RP(S, oN, ER))      // S = a .
-            val s3 = state(RP(S1, oN, 1))  // S1 = a . S
-            val s4 = state(RP(G, oN, ER))      // G = S .
-            val s5 = state(RP(S1, oN, ER))     // S1 = a S .
-            val s6 = state(RP(S, o1, ER))      // S = S1 .
+            val s0 = state(G, oN, SOR)      // G = . S
+            val s1 = state(a, oN, ER)      // a
+            val s2 = state(S, oN, ER)      // S = a .
+            val s3 = state(S1, oN, 1)  // S1 = a . S
+            val s4 = state(G, oN, ER)      // G = S .
+            val s5 = state(S1, oN, ER)     // S1 = a S .
+            val s6 = state(S, o1, ER)      // S = S1 .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), emptySet(), null)
             transition(setOf(s0, s3), s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, SOR)))
@@ -778,7 +777,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(setOf(s0, s3), s3, s1, WIDTH, setOf(ANY), emptySet(), null)
             transition(setOf(s0, s3), s5, s6, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, o1, SOR)))
             transition(s3, s5, s6, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, o1, SOR)))
-            transition(s3, s6, s5, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S1, oN,1)))
+            transition(s3, s6, s5, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S1, oN, 1)))
             transition(s0, s6, s4, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
 
         }

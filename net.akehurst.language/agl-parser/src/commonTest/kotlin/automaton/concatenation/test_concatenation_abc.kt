@@ -56,14 +56,14 @@ class test_concatenation_abc : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SR))
-            state(RP(a, oN, EOR))
-            state(RP(S, oN, p1))
-            state(RP(b, oN, EOR))
-            state(RP(S, oN, p2))
-            state(RP(c, oN, EOR))
-            state(RP(S, oN, EOR))
-            state(RP(G, oN, EOR))
+            state(G,oN,SR)
+            state(a,oN,EOR)
+            state(S,oN,p1)
+            state(b,oN,EOR)
+            state(S,oN,p2)
+            state(c,oN,EOR)
+            state(S,oN,EOR)
+            state(G,oN,EOR)
 
             trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(b); ctx(G, oN, SOR) }
             trans(WIDTH) { src(S, oN, p1); tgt(b); lhg(c); ctx(G, oN, SOR) }
@@ -88,14 +88,14 @@ class test_concatenation_abc : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))
-            state(RP(S, oN, 1))
-            state(RP(S, oN, 2))
-            state(RP(G, oN, EOR))
-            state(RP(S, oN, EOR))
-            state(RP(a, oN, EOR))
-            state(RP(b, oN, EOR))
-            state(RP(c, oN, EOR))
+            state(G,oN,SOR)
+            state(S,oN,1)
+            state(S,oN,2)
+            state(G,oN,EOR)
+            state(S,oN,EOR)
+            state(a,oN,EOR)
+            state(b,oN,EOR)
+            state(c,oN,EOR)
 
             trans(WIDTH) { ctx(G, oN, SOR); src(G, oN, SOR); tgt(a); lhg(b) }
             trans(WIDTH) { ctx(G, oN, SOR); src(S, oN, p1); tgt(b); lhg(c) }
