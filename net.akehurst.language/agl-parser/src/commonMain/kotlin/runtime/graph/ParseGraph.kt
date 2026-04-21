@@ -373,12 +373,15 @@ internal class ParseGraph(
     }
 
     private fun mergeDecisionOnEmpty(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: ( reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
+        // Reached only when lengths are equal. For an optional this means both sides have length 0
+        // (the EMPTY alternative has length 0 by definition; the content alternative reaches here
+        // only if its content also matched zero input). On a length tie EMPTY wins over zero-length content.
         val newReasonList = reasonList+MergeReason.OPTIONAL_EMPTY
         val extOption = existingParent.option
         val newOption = newParent.option
         when {
-            extOption.isEmpty && newOption.isEmpty.not() -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING,"existing empty, new not")
-            newOption.isEmpty && extOption.isEmpty.not() -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING,"new empty, existing not")
+            extOption.isEmpty && newOption.isEmpty.not() -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING,"existing EMPTY wins over zero-length content")
+            newOption.isEmpty && extOption.isEmpty.not() -> return MergeDecision(newReasonList,MergeChoice.PREFER_NEW,"new EMPTY wins over zero-length content")
         }
         return ifEqual(newReasonList)
     }
@@ -438,7 +441,7 @@ internal class ParseGraph(
                 }
             }
 
-            // optional with content has priority of EMPTY, unless the length of the content is 0
+            // optional: longest match wins; on a length tie EMPTY beats zero-length content
             newParent.rule.isOptional -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
                 mergeDecisionOnEmpty(existingParent, newParent, rl) { rl2->
                     MergeDecision(rl2,MergeChoice.UNDECIDABLE,"both EMPTY or both 0 length")
