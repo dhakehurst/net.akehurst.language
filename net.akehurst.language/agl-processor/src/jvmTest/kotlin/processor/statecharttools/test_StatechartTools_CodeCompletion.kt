@@ -23,7 +23,7 @@ import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.collections.lazyMutableMapNotNull
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import kotlin.test.Ignore
 import kotlin.test.Test

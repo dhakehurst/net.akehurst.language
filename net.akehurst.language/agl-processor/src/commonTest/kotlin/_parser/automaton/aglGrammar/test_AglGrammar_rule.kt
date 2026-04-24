@@ -16,6 +16,7 @@
 
 package net.akehurst.language.automaton.leftcorner
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.grammar.processor.AglGrammar
@@ -57,7 +58,7 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
 
     private val SM = rrs.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
     private val s0 = SM.startState
-    private val G = RuntimeRuleSet.GOAL_RULE_NUMBER//s0.runtimeRules.first()
+    private val rG = RuntimeRuleSet.GOAL_RULE_NUMBER//s0.runtimeRules.first()
 
     // IMPORTANT, notice that userGoal rule is 'rule' (not 'grammar')
 

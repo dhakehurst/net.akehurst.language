@@ -28,7 +28,7 @@ import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.collections.lazyMutableMapNotNull
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.format.asm.AglFormatDomainDefault
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault

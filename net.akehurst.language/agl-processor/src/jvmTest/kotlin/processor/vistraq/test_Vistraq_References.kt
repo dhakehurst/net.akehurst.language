@@ -28,7 +28,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
-import net.akehurst.language.collections.lazyMutableMapNotNull
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
