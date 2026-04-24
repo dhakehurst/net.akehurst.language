@@ -63,6 +63,7 @@ open class ExpressionsInterpreterOverTypedObject(
         is CastExpression -> this.evaluateCast(evc, expression)
         is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
         is GroupExpression -> this.evaluateGroup(evc, expression)
+        is StatementBlockExpression -> this.evaluateStatementBlockExpression(evc, expression)
         else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
     }
 
@@ -527,6 +528,16 @@ open class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateGroup(evc: EvaluationContext, expression: GroupExpression): TypedObject {
         return evaluateExpression(evc, expression.expression)
+    }
+
+    private fun evaluateStatementBlockExpression(evc: EvaluationContext, expression: StatementBlockExpression): TypedObject {
+        val newEvc = evc.child(emptyMap())
+        for (ass in expression.assignment) {
+            val rhsValue = evaluateExpression(newEvc, ass.rhs)
+            newEvc.setNamedValue(ass.lhsPropertyName, rhsValue)
+        }
+        val result = evaluateExpression(newEvc, expression.expression)
+        return result
     }
 
     fun evaluateTypeReference(typeReference: TypeReference): TypeInstance {

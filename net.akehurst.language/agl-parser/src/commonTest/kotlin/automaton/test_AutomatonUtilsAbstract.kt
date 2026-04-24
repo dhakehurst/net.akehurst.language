@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
 
 //FIXME: REPEAT - because no MPP test-fixtures
@@ -101,7 +102,7 @@ abstract class test_AutomatonUtilsAbstract {
         val GOAL = ParseAction.GOAL
 
         fun RP(rr: RuntimeRule): RulePositionRuntime = RP(rr, oN, EOR)
-        fun RP(rr: RuntimeRule, opt: OptionNum, pos: Int): RulePositionRuntime = RulePositionRuntime(rr, opt, pos)
+        fun RP(rule: Rule, opt: OptionNum, pos: Int): RulePositionRuntime = RulePositionRuntime(rule as RuntimeRule, opt, pos)
         fun LHS(content: Set<RuntimeRule>) = LookaheadSetPart(content.contains(RT), content.contains(EOT), false, content.minus(RT).minus(EOT))
         fun LHS(vararg rrs: RuntimeRule) = LHS(rrs.toSet())
     }

@@ -52,17 +52,19 @@ interface TransitionCache {
     fun previousFor(transition: Transition): List<TransitionPrevInfoKey>
 }
 
-interface TransitionPrevInfoKey
+interface TransitionPrevInfoKey {
+    val previous: ParserState
+}
 
 data class CompleteKey(
-    val previous: ParserState,
+    override val previous: ParserState,
     val prevPrev: ParserState
 ) : TransitionPrevInfoKey {
     override fun toString(): String = "${prevPrev.number.value}-${previous.number.value}"
 }
 
 data class IncompleteKey(
-    val previous: ParserState
+    override val previous: ParserState
 ) : TransitionPrevInfoKey {
     override fun toString(): String = "${previous.number.value}"
 }
@@ -71,12 +73,12 @@ class TransitionCacheLC1 : TransitionCache {
 
     companion object {
         private fun merge(automaton: ParserStateSet, set: Set<Transition>): Transition {
-            val grouped = set.groupBy { listOf(it.from, it.action, it.to) }
+            val grouped = set.groupBy { listOf(it.source, it.action, it.target) }
             val merged = grouped.map { me ->
                 val from = me.key[0] as ParserState
                 val action = me.key[1] as ParseAction
                 val to = me.key[2] as ParserState
-                val lhs = Lookahead.merge(automaton, me.value.flatMap { it.lookahead }.toSet())
+                val lhs = Lookahead.merge(automaton, me.value.flatMap { it.lookaheadGuard }.toSet())
                 Transition(from, to, action, lhs)
             }
             return if (merged.size == 1) {
@@ -109,8 +111,8 @@ class TransitionCacheLC1 : TransitionCache {
     override val allPrevious: Set<TransitionPrevInfoKey> get() = (_allPreviousIncomplete + _allPreviousComplete).toSet()
 
     override fun addTransitionForComplete(previous: ParserState, prevPrev: ParserState, tr: Transition): Transition {
-        val automaton = tr.from.stateSet
-        val key = Pair(tr.action, tr.to)
+        val automaton = tr.source.stateSet
+        val key = Pair(tr.action, tr.target)
         val existing = _transitionsCompleteByTo[key]
         val ck = CompleteKey(previous, prevPrev)
         return if (null == existing) {
@@ -131,8 +133,8 @@ class TransitionCacheLC1 : TransitionCache {
     }
 
     override fun addTransitionForIncomplete(previous: ParserState, tr: Transition): Transition {
-        val automaton = tr.from.stateSet
-        val key = Pair(tr.action, tr.to)
+        val automaton = tr.source.stateSet
+        val key = Pair(tr.action, tr.target)
         val existing = _transitionsIncompleteByTo[key]
         return if (null == existing) {
             _transitionsIncompleteByTo[key] = Pair(setOf(previous), tr)
@@ -188,7 +190,7 @@ class TransitionCacheLC1 : TransitionCache {
 
     override fun previousFor(transition: Transition): List<TransitionPrevInfoKey> {
         return when {
-            transition.from.isAtEnd -> _transitionsCompleteByPrevious.entries.filter { it.value.contains(transition) }.map { it.key }
+            transition.source.isAtEnd -> _transitionsCompleteByPrevious.entries.filter { it.value.contains(transition) }.map { it.key }
             else -> _transitionsIncompleteByPrevious.entries.filter { it.value.contains(transition) }.map { IncompleteKey(it.key) }
         }
     }

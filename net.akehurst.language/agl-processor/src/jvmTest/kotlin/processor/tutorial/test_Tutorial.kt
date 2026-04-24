@@ -58,15 +58,6 @@ class test_Tutorial {
             }
         """
 
-        val testData = listOf(
-            TestData(
-                "a",
-                asmSimple {
-                    element("S") {}
-                }
-            )
-        )
-
         val proc = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarDefinitionStr)
         ).let {
@@ -74,6 +65,17 @@ class test_Tutorial {
             assertNotNull(it.processor)
             it.processor
         }
+
+        val testData = listOf(
+            TestData(
+                "a",
+                asmSimple(typesDomain = proc.typesDomain) {
+                    element("S") {}
+                }
+            )
+        )
+
+
         assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
         test(testData, proc)
     }

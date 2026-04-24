@@ -41,11 +41,11 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
             literal("'b'", "b")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
 
-        check_expectedAt(RP(G, oN, SR), LookaheadSetPart.EOT, expected = setOf(EOT, a))
+        check_expectedAt(RP(rG, oN, SR), LookaheadSetPart.EOT, expected = setOf(EOT, a))
         check_expectedAt(RP(S, oSI, SR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, oSE, SR), LookaheadSetPart.EOT, expected = setOf(EOT))
         check_expectedAt(RP(S, oSS, PLS), LookaheadSetPart.EOT, expected = setOf(b))
@@ -65,12 +65,12 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
             concatenation("S1") { ref("S"); literal("a") }
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
 
-        check_expectedAt(RP(G, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        check_expectedAt(RP(G, oN, ER), LookaheadSetPart.EMPTY, expected = emptySet())
+        check_expectedAt(RP(rG, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        check_expectedAt(RP(rG, oN, ER), LookaheadSetPart.EMPTY, expected = emptySet())
 
         check_expectedAt(RP(S, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, oN, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
@@ -95,11 +95,11 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
             }
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
 
-        check_expectedAt(RP(G, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        check_expectedAt(RP(G, oN, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
+        check_expectedAt(RP(rG, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        check_expectedAt(RP(rG, oN, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
 
         check_expectedAt(RP(S, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, oN, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
@@ -132,7 +132,7 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
             concatenation("C") { literal("c") }
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val S1 = rrs.findRuntimeRule("S1")
         val B = rrs.findRuntimeRule("B")
         val Be = rrs.findRuntimeRule("Be")
@@ -141,8 +141,8 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         val c = rrs.findRuntimeRule("'c'")
 
 
-        check_expectedAt(RP(G, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        check_expectedAt(RP(G, oN, ER), LookaheadSetPart.EMPTY, expected = emptySet())
+        check_expectedAt(RP(rG, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        check_expectedAt(RP(rG, oN, ER), LookaheadSetPart.EMPTY, expected = emptySet())
 
         check_expectedAt(RP(S, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, oN, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
@@ -194,12 +194,12 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
             pattern("IDENTIFIER", "[a-zA-Z]+")
         }
         val NavigableExpression = rrs.findRuntimeRule("NavigableExpression")
-        val G = rrs.goalRuleFor[NavigableExpression]
+        val rG = rrs.goalRuleFor[NavigableExpression]
         val IDENTIFIER = rrs.findTerminalRule("IDENTIFIER")
         val oc = rrs.findTerminalRule("'<>'")
 
-        check_expectedAt(RP(G, oN, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER, oc))
-        check_expectedAt(RP(G, oN, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
+        check_expectedAt(RP(rG, oN, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER, oc))
+        check_expectedAt(RP(rG, oN, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
 
         check_expectedAt(RP(NavigableExpression, oN, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER, oc))
         check_expectedAt(RP(NavigableExpression, oN, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
@@ -219,14 +219,14 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
             concatenation("B") { empty() }
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val B = rrs.findRuntimeRule("B")
         val a = rrs.findRuntimeRule("'a'")
 
         // G = . S
-        check_expectedAt(RP(G, oN, SR), LookaheadSetPart.EOT, expected = setOf(a, EOT))
+        check_expectedAt(RP(rG, oN, SR), LookaheadSetPart.EOT, expected = setOf(a, EOT))
         // G = S .
-        check_expectedAt(RP(G, oN, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+        check_expectedAt(RP(rG, oN, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
 
         // S = . 'a'
         check_expectedAt(RP(S, oN, SR), LookaheadSetPart.EOT, expected = setOf(a))
@@ -279,7 +279,7 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
             literal("'v'", "v")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val PD = rrs.findRuntimeRule("PD")
         val PB = rrs.findRuntimeRule("PB")
         val p = rrs.findRuntimeRule("'p'")
@@ -287,9 +287,9 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         val b = rrs.findRuntimeRule("'b'")
 
         /*        // G = . S
-                check_expectedAt(RP(G, o0, SR), LookaheadSetPart.EOT, expected = setOf(p))
+                check_expectedAt(RP(rG, o0, SR), LookaheadSetPart.EOT, expected = setOf(p))
                 // G = S .
-                check_expectedAt(RP(G, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+                check_expectedAt(RP(rG, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
 
                 // S = . PD PB
                 check_expectedAt(RP(S, o0, SR), LookaheadSetPart.EOT, expected = setOf(p))
@@ -311,7 +311,7 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
             concatenation("E") { empty() }
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
 
         // S = . E*
         check_expectedAt(RP(S, oN, SR), LookaheadSetPart.EOT, expected = setOf(EOT))

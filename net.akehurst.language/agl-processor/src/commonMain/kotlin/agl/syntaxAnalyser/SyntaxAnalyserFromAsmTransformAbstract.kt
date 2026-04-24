@@ -212,7 +212,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 val value = rootList(embeddedAsm).last()
                 removeAsmRoot(asm, value)
                 value?.let { setLocationFor(value, nodeInfo, sentence) }
-                stack.push(ChildData(nodeInfo, objectGraph.toTypedObject(value)))
+                stack.push(ChildData(nodeInfo, objectGraph.toTypedObject(value, StdLibDefault.AnyType)))
             }
 
             override fun skip(skipData: TreeData) {
@@ -967,8 +967,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     */
     private fun setPropertyFromDeclaration(el: AsmValueType, declaration: PropertyDeclaration, value: AsmValueType?) {
         // whether it is a reference or not is handled later in Semantic Analysis
-        val v = objectGraph.toTypedObject(value)
-        objectGraph.toTypedObject(el).setProperty(declaration.name.value, v)
+        val v = objectGraph.toTypedObject(value, StdLibDefault.AnyType)
+        objectGraph.toTypedObject(el, StdLibDefault.AnyType).setProperty(declaration.name.value, v)
     }
 
 }

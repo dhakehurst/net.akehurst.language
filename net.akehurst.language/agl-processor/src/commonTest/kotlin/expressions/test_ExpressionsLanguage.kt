@@ -39,8 +39,10 @@ class test_ExpressionsLanguage {
             "true",
             "false",
             "0",
+            "-1",
             "456",
             "3.141",
+            "-7.4309",
             "'hello world!'",
             // navigation
             "aaa.bbb.ccc.ddd.ee",
@@ -89,6 +91,7 @@ class test_ExpressionsLanguage {
             // when
             "when { true -> 1 else -> false }",
             "when{1+1->2 else->3}",
+            "when{1- 1->2 else->3}", //TODO: issue if there is no space after the '-'
             "when { z==1 -> 2  x!=2 -> x.y  a[7].f() -> x.y().d[9] else -> x}",
             "when { a+b-c -> 2 else -> 5 }",
             // cast
@@ -97,12 +100,20 @@ class test_ExpressionsLanguage {
             "a.b.c as D<A>",
             "a.b.c as D<A,B,C>",
             "a.b.c as D<A,B<F>,C<H,H>>",
+            // tyopeTest
+            // lambda
+            "{ it -> true }",
+            "{ it -> a.b.map({it -> 1}) }",
+            "{ i1, i2, i3, i4 -> true }",
             //group
             "(a)",
             "(a+b)-c",
             "(a+b)-(c.fun(d))",
             "(a+b) as C",
-            "(a as C).f"
+            "(a as C).f",
+            // block
+            "{ a:=1 a}",
+            "{ a:=1 b:=2 c:=3 a+b+c}"
         )
     }
 

@@ -42,15 +42,15 @@ class test_abcz_OR_abc : test_AutomatonAbstract() {
         concatenation("ABCZ") { literal("a"); literal("b"); literal("c"); literal("z") }
         concatenation("ABC") { literal("a"); literal("b"); literal("c") }
     }
-    private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
-    private val ABCZ = rrs.findRuntimeRule("ABCZ")
-    private val ABC = rrs.findRuntimeRule("ABC")
-    private val a = rrs.findRuntimeRule("'a'")
-    private val b = rrs.findRuntimeRule("'b'")
-    private val c = rrs.findRuntimeRule("'c'")
-    private val z = rrs.findRuntimeRule("'z'")
+
+    private val S = rrs.rule[0]  // S
+    private val _t1 = rrs.rule[1]  // 'a'
+    private val _t2 = rrs.rule[2]  // 'b'
+    private val _t3 = rrs.rule[3]  // 'c'
+    private val _t4 = rrs.rule[4]  // 'z'
+    private val ABCZ = rrs.rule[5]  // ABCZ
+    private val ABC = rrs.rule[6]  // ABC
+    private val rG = rrs.goalRuleFor[S]
 
     @Test
     fun automaton_parse_abc() {
@@ -63,20 +63,31 @@ class test_abcz_OR_abc : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))                       // G = . S
-            state(RP(a, oN, EOR))                       // a .
-            state(RP(ABCZ, oN, p1), RP(ABC, oN, p1))    // ABCZ = a . b c z , ABC = a . b c
-            state(RP(b, oN, EOR))                       // b .
-            state(RP(ABCZ, oN, p2), RP(ABC, oN, p2))    // ABCZ = a b . c z , ABC = a b . c
-            state(RP(c, oN, EOR))                       // c .
-            state(RP(ABC, oN, EOR))                     // ABC = a b c .
-            state(RP(ABCZ, oN, p3))                     // ABCZ = a b c . z
-            state(RP(S, o1, EOR))                       // S = ABC .
-            state(RP(G, oN, EOR))                       // G = S .
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t1, oN, ER)   // 'a'
+            state(ABCZ, oN, 1)   // ABCZ = 'a' . 'b' 'c' 'z'
+            state(ABC, oN, 1)   // ABC = 'a' . 'b' 'c'
+            state(_t2, oN, ER)   // 'b'
+            state(ABCZ, oN, 2)   // ABCZ = 'a' 'b' . 'c' 'z'
+            state(ABC, oN, 2)   // ABC = 'a' 'b' . 'c'
+            state(_t3, oN, ER)   // 'c'
+            state(ABC, oN, ER)   // ABC = 'a' 'b' 'c' .
+            state(S, o1, ER)   // S = ABC .
+            state(rG, oN, ER)   // <GOAL> = S .
 
-
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(_t2); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(ABCZ, oN, 1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(ABC, oN, 1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABCZ, oN, 1); tgt(_t2, oN, ER); lhg(_t3); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, 1); tgt(_t2, oN, ER); lhg(_t3); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(ABCZ, oN, 2); lhg(_t3); ctx(ABCZ, oN, 1); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(ABC, oN, 2); lhg(_t3); ctx(ABC, oN, 1); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABCZ, oN, 2); tgt(_t3, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, 2); tgt(_t3, oN, ER); lhg(RT); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t3, oN, ER); tgt(ABC, oN, ER); lhg(RT); ctx(ABC, oN, 2); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(ABC, oN, ER); tgt(S, o1, ER); lhg(setOf(RT), setOf(RT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
         }
-
         AutomatonTest.assertEquals(expected, actual)
     }
 
@@ -90,41 +101,37 @@ class test_abcz_OR_abc : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SOR))                                // G = . S
-            val s1 = state(RP(a, oN, ER))                                // a .
-            val s2 = state(RP(ABCZ, oN, 1), RP(ABC, oN, 1))    // ABCZ = a . b c z , ABC = a . b c
-            val s3 = state(RP(b, oN, ER))                                // b .
-            val s4 = state(RP(ABCZ, oN, 2), RP(ABC, oN, 2))    // ABCZ = a b . c z , ABC = a b . c
-            val s5 = state(RP(c, oN, ER))                                // c .
-            val s6 = state(RP(ABCZ, oN, 3))                          // ABCZ = a b c . z
-            val s7 = state(RP(ABC, oN, ER))                                // ABC = a b c .
-            val s8 = state(RP(z, oN, ER))                                // z .
-            val s9 = state(RP(ABCZ, oN, ER))                             // ABCZ = a b c z .
-            val s10 = state(RP(S, oN, ER))                               // S = ABC .
-            val s11 = state(RP(G, oN, ER))                               // G = S .
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t1, oN, ER)   // 'a'
+            state(ABCZ, oN, 1)   // ABCZ = 'a' . 'b' 'c' 'z'
+            state(ABC, oN, 1)   // ABC = 'a' . 'b' 'c'
+            state(_t2, oN, ER)   // 'b'
+            state(ABCZ, oN, 2)   // ABCZ = 'a' 'b' . 'c' 'z'
+            state(ABC, oN, 2)   // ABC = 'a' 'b' . 'c'
+            state(_t3, oN, ER)   // 'c'
+            state(ABCZ, oN, 3)   // ABCZ = 'a' 'b' 'c' . 'z'
+            state(_t4, oN, ER)   // 'z'
+            state(ABCZ, oN, ER)   // ABCZ = 'a' 'b' 'c' 'z' .
+            state(S, o0, ER)   // S = ABCZ .
+            state(rG, oN, ER)   // <GOAL> = S .
 
-            transition(s0, s0, s1, WIDTH, setOf(b), emptySet(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 0), RP(ABC, oN, 0)))
-            transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 1), RP(ABC, oN, 1)))
-            transition(s0, s4, s5, WIDTH, setOf(EOT, z), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(z), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 2)))
-            transition(s4, s5, s7, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABC, oN, 2)))
-            transition(s0, s6, s8, WIDTH, setOf(EOT), setOf(), null)
-            transition(s6, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 3)))
-            transition(s0, s9, s10, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, oN, SOR)))
-            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, oN, SOR)))
-
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(_t2); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(ABCZ, oN, 1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(ABC, oN, 1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABCZ, oN, 1); tgt(_t2, oN, ER); lhg(_t3); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, 1); tgt(_t2, oN, ER); lhg(_t3); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(ABCZ, oN, 2); lhg(_t3); ctx(ABCZ, oN, 1); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(ABC, oN, 2); lhg(_t3); ctx(ABC, oN, 1); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABCZ, oN, 2); tgt(_t3, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, 2); tgt(_t3, oN, ER); lhg(RT); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t3, oN, ER); tgt(ABCZ, oN, 3); lhg(_t4); ctx(ABCZ, oN, 2); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABCZ, oN, 3); tgt(_t4, oN, ER); lhg(RT); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t4, oN, ER); tgt(ABCZ, oN, ER); lhg(RT); ctx(ABCZ, oN, 3); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(ABCZ, oN, ER); tgt(S, o0, ER); lhg(setOf(RT), setOf(RT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
-    }
-
-    @Test
-    fun stateInfo() {
-        val bc = BuildCacheLC1(SM)
-
-        val actual = bc.stateInfo()
     }
 
     @Test
@@ -143,33 +150,39 @@ class test_abcz_OR_abc : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SOR))                                // G = . S
-            val s1 = state(RP(G, oN, ER))                               // G = S .
-            val s2 = state(RP(S, oN, ER))                               // S = ABCZ .
-            val s3 = state(RP(S, o1, ER))                               // S = ABC .
-            val s4 = state(RP(ABC, oN, ER))                                // ABC = a b c .
-            val s5 = state(RP(c, oN, ER))                                // c .
-            val s6 = state(RP(b, oN, ER))                                // b .
-            val s7 = state(RP(a, oN, ER))                                // a .
-            val s8 = state(RP(ABCZ, oN, ER))                             // ABCZ = a b c z .
-            val s9 = state(RP(z, oN, ER))                                // z .
-            val s10 = state(RP(ABCZ, oN, 1), RP(ABC, oN, 1))    // ABCZ = a . b c z , ABC = a . b c
-            val s11 = state(RP(ABCZ, oN, 2), RP(ABC, oN, 2))    // ABCZ = a b . c z , ABC = a b . c
-            val s12 = state(RP(ABCZ, oN, 3))                          // ABCZ = a b c . z
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, o0, ER)   // S = ABCZ .
+            state(S, o1, ER)   // S = ABC .
+            state(ABCZ, oN, 1)   // ABCZ = 'a' . 'b' 'c' 'z'
+            state(ABCZ, oN, 2)   // ABCZ = 'a' 'b' . 'c' 'z'
+            state(ABCZ, oN, 3)   // ABCZ = 'a' 'b' 'c' . 'z'
+            state(ABCZ, oN, ER)   // ABCZ = 'a' 'b' 'c' 'z' .
+            state(ABC, oN, 1)   // ABC = 'a' . 'b' 'c'
+            state(ABC, oN, 2)   // ABC = 'a' 'b' . 'c'
+            state(ABC, oN, ER)   // ABC = 'a' 'b' 'c' .
+            state(_t1, oN, ER)   // 'a'
+            state(_t2, oN, ER)   // 'b'
+            state(_t3, oN, ER)   // 'c'
+            state(_t4, oN, ER)   // 'z'
 
-            transition(s0, s0, s7, WIDTH, setOf(b), emptySet(), null)
-            transition(s0, s2, s1, GOAL, setOf(EOT), setOf(setOf()), null)
-            transition(s0, s3, s1, GOAL, setOf(EOT), setOf(setOf()), null)
-            transition(s0, s4, s3, HEIGHT, setOf(EOT), setOf(setOf(EOT)), null)
-            transition(s11, s5, s4, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 2), RP(ABC, oN, 2)))
-            transition(s11, s5, s12, GRAFT, setOf(z), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 2), RP(ABC, oN, 2)))
-            transition(s10, s6, s11, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 1), RP(ABC, oN, 1)))
-            transition(s0, s7, s10, HEIGHT, setOf(b), setOf(setOf(EOT)), null)
-            transition(s0, s8, s2, HEIGHT, setOf(EOT), setOf(setOf(EOT)), null)
-            transition(s12, s9, s8, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 3)))
-            transition(s0, s10, s6, WIDTH, setOf(c), setOf(), null)
-            transition(s0, s11, s5, WIDTH, setOf(EOT, z), setOf(), null)
-            transition(s0, s12, s9, WIDTH, setOf(EOT), setOf(), null)
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(_t2); ctx(rG, oN, SR) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABCZ, oN, 1); tgt(_t2, oN, ER); lhg(_t3); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABCZ, oN, 2); tgt(_t3, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABCZ, oN, 3); tgt(_t4, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(ABCZ, oN, ER); tgt(S, o0, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, 1); tgt(_t2, oN, ER); lhg(_t3); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, 2); tgt(_t3, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(ABC, oN, ER); tgt(S, o1, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(ABCZ, oN, 1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(ABC, oN, 1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(ABCZ, oN, 2); lhg(_t3); ctx(ABCZ, oN, 1); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(ABC, oN, 2); lhg(_t3); ctx(ABC, oN, 1); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t3, oN, ER); tgt(ABC, oN, ER); lhg(EOT); ctx(ABC, oN, 2); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t3, oN, ER); tgt(ABCZ, oN, 3); lhg(_t4); ctx(ABCZ, oN, 2); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t4, oN, ER); tgt(ABCZ, oN, ER); lhg(EOT); ctx(ABCZ, oN, 3); pctx(rG, oN, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -194,6 +207,6 @@ class test_abcz_OR_abc : test_AutomatonAbstract() {
         println("--No Build--")
         println(rrs_noBuild.usedAutomatonToString("S"))
 
-        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild,config = AutomatonTest.MatchConfiguration(no_lookahead_compare = true))
     }
 }

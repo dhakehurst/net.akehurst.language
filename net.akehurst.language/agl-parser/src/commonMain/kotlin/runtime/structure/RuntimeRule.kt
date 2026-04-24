@@ -23,8 +23,8 @@ import net.akehurst.language.parser.api.RulePosition
  * identified by: (runtimeRuleSetNumber, number, optionIndex)
  */
 class RuntimeRule(
-    val runtimeRuleSetNumber: Int,
-    val ruleNumber: Int,
+    override val ruleSetNumber: Int,
+    override val number: Int,
     val name: String?,
     override val isSkip: Boolean,
     override val isPseudo: Boolean
@@ -52,7 +52,7 @@ class RuntimeRule(
                     error("Internal Error: no tag")
                 }
 
-    val isGoal get() = this.rhs is RuntimeRuleRhsGoal
+    override val isGoal get() = this.rhs is RuntimeRuleRhsGoal
     override val isEndOfText: Boolean get() = this == RuntimeRuleSet.END_OF_TEXT
     override val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
     override val isEmptyListTerminal get() = this.rhs is RuntimeRuleRhsEmptyList
@@ -138,12 +138,12 @@ class RuntimeRule(
         }
 
     // --- Any ---
-    private val _hashCode = arrayOf(this.runtimeRuleSetNumber, this.ruleNumber).contentHashCode()
+    private val _hashCode = arrayOf(this.ruleSetNumber, this.number).contentHashCode()
     override fun hashCode(): Int = _hashCode
     override fun equals(other: Any?): Boolean = when {
         other !is RuntimeRule -> false
-        this.runtimeRuleSetNumber != other.runtimeRuleSetNumber -> false
-        this.ruleNumber != other.ruleNumber -> false
+        this.ruleSetNumber != other.ruleSetNumber -> false
+        this.number != other.number -> false
         else -> true
     }
 

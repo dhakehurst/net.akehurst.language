@@ -51,6 +51,34 @@ class RulePositionRuntime(
             this.rule.rhs.rhsItemsAt(option, position)
         }
 
+    override val asString: String get() {
+        val ps = if (rule.isPseudo) "pseudo " else ""
+        return when {
+            rule.isTerminal -> if (rule.tag == rule.rhs.asString) rule.tag else "${rule.tag}(${rule.rhs.asString})"
+            rule.isChoice -> {
+                val choice = (rule.rhs as RuntimeRuleRhsChoice).options[option.asIndex]
+                val items = choice.rhsItems[0]
+                val pos = when (position) {
+                    -1 -> items.size
+                    else -> position
+                }
+                val before = (0 until pos).joinToString(separator = " ") { items[it].tag }
+                val after = (pos until items.size).joinToString(separator = " ") { items[it].tag }
+                "$ps${rule.tag} = $before . $after"
+            }
+            else -> {
+                val items = rule.rhsItems[0]
+                val pos = when (position) {
+                    -1 -> items.size
+                    else -> position
+                }
+                val before = (0 until pos).joinToString(separator = " ") { items[it].tag }
+                val after = (pos until items.size).joinToString(separator = " ") { items[it].tag }
+                "$ps${rule.tag} = $before . $after"
+            }
+        }
+    }
+
     fun atEnd() = RulePositionRuntime(this.rule, this.option, RulePosition.END_OF_RULE)
     fun next(): Set<RulePositionRuntime> = when {
         isAtEnd -> emptySet()
@@ -132,7 +160,7 @@ class RulePositionRuntime(
                 }
             }
         }
-        return "RP(${rule.runtimeRuleSetNumber}/${r},$o,$p)"
+        return "RP(${rule.ruleSetNumber}/${r},$o,$p)"
     }
 }
 /*

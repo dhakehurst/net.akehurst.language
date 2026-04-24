@@ -38,21 +38,21 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
 
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
-            val s1 = state(G, oN, EOR)      // G = S .
+            val s0 = state(rG, oN, SOR)      // G = . S
+            val s1 = state(rG, oN, EOR)      // G = S .
             val s2 = state(S, oN, EOR)      // S = 'a' .
             val s3 = state(a, oN, EOR)      // 'a'
 
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(a); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(GRAFT) { src(S); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -74,7 +74,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
@@ -84,7 +84,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
             val s1 = state(a, oN, EOR)      // a
             val s2 = state(S, oN, 1)        // S = a . b c d
             val s3 = state(b, oN, EOR)      // b
@@ -93,17 +93,17 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             val s6 = state(S, oN, 3)        // S = a b c . d
             val s7 = state(d, oN, EOR)      // d
             val s8 = state(S, oN, EOR)      // S = a b c d .
-            val s9 = state(G, oN, EOR)      // G = S .
+            val s9 = state(rG, oN, EOR)      // G = S .
 
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(a); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
             trans(GRAFT) { src(b); tgt(S, oN, 2); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
-            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
             trans(GRAFT) { src(c); tgt(S, oN, 3); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
-            trans(WIDTH) { src(S, oN, 3); tgt(d); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 3); tgt(d); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
             trans(GRAFT) { src(d); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 3) }
-            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -129,7 +129,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
@@ -139,7 +139,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
             val s1 = state(a, oN, ER)      // a
             val s2 = state(b, oN, ER)      // b
             val s3 = state(c, oN, ER)      // c
@@ -148,20 +148,20 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             val s6 = state(S, o1, ER)      // S = b .
             val s7 = state(S, o2, ER)      // S = c .
             val s8 = state(S, o3, ER)      // S = d .
-            val s9 = state(G, oN, ER)      // G = S .
+            val s9 = state(rG, oN, ER)      // G = S .
 
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(G, oN, SOR); tgt(b); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(G, oN, SOR); tgt(c); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(G, oN, SOR); tgt(d); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(a); tgt(S, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(b); tgt(S, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(c); tgt(S, o2, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(d); tgt(S, o3, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(GRAFT) { src(S, o0, ER); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(GRAFT) { src(S, o1, ER); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(GRAFT) { src(S, o2, ER); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(GRAFT) { src(S, o3, ER); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(b); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(c); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(d); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(S, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(b); tgt(S, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(c); tgt(S, o2, ER); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(d); tgt(S, o3, ER); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(GRAFT) { src(S, o0, ER); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(GRAFT) { src(S, o1, ER); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(GRAFT) { src(S, o2, ER); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(GRAFT) { src(S, o3, ER); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
 
         }
 
@@ -189,7 +189,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val A = rrs.findRuntimeRule("A")
         val B = rrs.findRuntimeRule("B")
         val C = rrs.findRuntimeRule("C")
@@ -201,7 +201,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
             val s1 = state(a, oN, ER)      // a
             val s2 = state(A, oN, ER)      // A = a .
             val s3 = state(S, oN, 1)   // S = A . B C
@@ -211,18 +211,18 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             val s7 = state(c, oN, ER)      // c
             val s8 = state(C, oN, ER)      // C = c .
             val s9 = state(S, oN, ER)      // S = A B C .
-            val s10 = state(G, oN, ER)      // G = S .
+            val s10 = state(rG, oN, ER)      // G = S .
 
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(a); tgt(A); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(A); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(A); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(A); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
             trans(HEIGHT) { src(b); tgt(B); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
             trans(GRAFT) { src(B); tgt(S, oN, 2); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
-            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
             trans(HEIGHT) { src(c); tgt(C); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
             trans(GRAFT) { src(C); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
-            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
 
         }
 
@@ -245,21 +245,21 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val eS = EMPTY
 
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
             val s1 = state(eS, oN, ER)      // eS
             val s2 = state(S, oN, ER)      // S = eS .
-            val s3 = state(G, oN, ER)      // G = S .
+            val s3 = state(rG, oN, ER)      // G = S .
 
-            trans(WIDTH) { src(G, oN, SOR); tgt(eS); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(eS); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(eS); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(eS); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(GRAFT) { src(S); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
 
         }
 
@@ -284,7 +284,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val oA = rrs.findRuntimeRule("oA")
         val oB = rrs.findRuntimeRule("oB")
         val oC = rrs.findRuntimeRule("oC")
@@ -299,7 +299,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
             val s1 = state(a, oN, ER)      // a
             val s2 = state(eoA, oN, ER)    // empty-oA
             val s3 = state(oA, o0, ER)     // oA = a .
@@ -315,27 +315,27 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             val s13 = state(oC, o0, ER)     // oC = c .
             val s14 = state(oC, o1, ER)     // oC = .
             val s15 = state(S, oN, ER)      // S = oA oB oC .
-            val s16 = state(G, oN, ER)      // G = S .
+            val s16 = state(rG, oN, ER)      // G = S .
 
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(G, oN, SOR); tgt(eoA); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(a); tgt(oA, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(eoA); tgt(oA, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(oA, o0, ER); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(oA, o1, ER); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, 1); tgt(eoB); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(eoA); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(oA, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(eoA); tgt(oA, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(oA, o0, ER); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(oA, o1, ER); tgt(S, oN, 1); lhg(setOf(ANY), setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 1); tgt(eoB); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
             trans(HEIGHT) { src(b); tgt(oB, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
             trans(HEIGHT) { src(eoB); tgt(oB, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
             trans(GRAFT) { src(oB, o0, ER); tgt(S, oN, 2); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
             trans(GRAFT) { src(oB, o1, ER); tgt(S, oN, 2); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 1) }
-            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, 2); tgt(eoC); lhg(setOf(ANY)); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 2); tgt(c); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, 2); tgt(eoC); lhg(setOf(ANY)); ctx(rG, oN, SOR) }
             trans(HEIGHT) { src(c); tgt(oC, o0, ER); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
             trans(HEIGHT) { src(eoC); tgt(oC, o1, ER); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
             trans(GRAFT) { src(oC, o0, ER); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
             trans(GRAFT) { src(oC, o1, ER); tgt(S); lhg(setOf(ANY), setOf(ANY)); ctx(S, oN, 2) }
-            trans(GRAFT) { src(S); tgt(G); lhg(setOf(EOT), setOf(ANY)); ctx(G, oN, SOR) }
+            trans(GRAFT) { src(S); tgt(rG); lhg(setOf(EOT), setOf(ANY)); ctx(rG, oN, SOR) }
 
         }
 
@@ -369,7 +369,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val ABC1 = rrs.findRuntimeRule("ABC1")
         val ABC2 = rrs.findRuntimeRule("ABC2")
         val a = rrs.findRuntimeRule("'a'")
@@ -380,7 +380,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)                           // G = . S
+            val s0 = state(rG, oN, SOR)                           // G = . S
             val s1 = state(a, oN, ER)                            // a
             val s2 = state(RP(ABC1, oN, 1), RP(ABC2, oN, 1))     // ABC1 = a . b c, ABC2 = a . b c
             val s3 = state(b, oN, SOR)                           // b
@@ -388,7 +388,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             val s5 = state(RP(c, oN, ER))                        // c
             val s6 = state(RP(ABC1, oN, ER), RP(ABC2, oN, ER))   // ABC1 = a b c ., ABC2 = a b c .
             val s7 = state(RP(S, oN, ER), RP(S, o1, ER))         // S = ABC1 ., S = ABC2 .
-            val s8 = state(RP(G, oN, SOR))                       // G = S .
+            val s8 = state(RP(rG, oN, SOR))                       // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(ABC1, oN, SOR), RP(ABC2, oN, SOR)))
@@ -397,7 +397,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(s0, s4, s5, WIDTH, setOf(ANY), setOf(setOf(ANY)), null)
             transition(s0, s5, s6, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(ABC1, oN, 2), RP(ABC2, oN, 2)))
             transition(s0, s6, s7, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, SOR), RP(S, o1, SOR)))
-            transition(s0, s7, s8, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
+            transition(s0, s7, s8, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(rG, oN, SOR)))
 
         }
 
@@ -427,13 +427,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val rG = s0.runtimeRules.first()
 
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -464,13 +464,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val rG = s0.runtimeRules.first()
 
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -501,13 +501,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val rG = s0.runtimeRules.first()
 
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -537,13 +537,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val rG = s0.runtimeRules.first()
 
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -580,13 +580,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val rG = s0.runtimeRules.first()
 
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -634,13 +634,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val rG = s0.runtimeRules.first()
 
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s0 = state(RP(rG, oN, SOR))      // G = . S
 
 
         }
@@ -678,13 +678,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val rG = s0.runtimeRules.first()
 
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -716,13 +716,13 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val rG = s0.runtimeRules.first()
 
         //val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -753,7 +753,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
         val S1 = rrs.findRuntimeRule("S1")
 
@@ -761,24 +761,24 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(G, oN, SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
             val s1 = state(a, oN, ER)      // a
             val s2 = state(S, oN, ER)      // S = a .
             val s3 = state(S1, oN, 1)  // S1 = a . S
-            val s4 = state(G, oN, ER)      // G = S .
+            val s4 = state(rG, oN, ER)      // G = S .
             val s5 = state(S1, oN, ER)     // S1 = a S .
             val s6 = state(S, o1, ER)      // S = S1 .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), emptySet(), null)
             transition(setOf(s0, s3), s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, oN, SOR)))
             transition(setOf(s0, s3), s1, s3, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S1, oN, SOR)))
-            transition(s0, s2, s4, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
+            transition(s0, s2, s4, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(rG, oN, SOR)))
             transition(s3, s2, s5, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S1, oN, 1)))
             transition(setOf(s0, s3), s3, s1, WIDTH, setOf(ANY), emptySet(), null)
             transition(setOf(s0, s3), s5, s6, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, o1, SOR)))
             transition(s3, s5, s6, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, o1, SOR)))
             transition(s3, s6, s5, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S1, oN, 1)))
-            transition(s0, s6, s4, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, oN, SOR)))
+            transition(s0, s6, s4, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(rG, oN, SOR)))
 
         }
 

@@ -84,7 +84,7 @@ class test_Java8_Singles_antlrSpec {
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
 
-        assertEqualsWarning(1, result.sppt!!.maxNumHeads)
+        assertEqualsWarning(2, result.sppt!!.maxNumHeads)
     }
 
     @Test

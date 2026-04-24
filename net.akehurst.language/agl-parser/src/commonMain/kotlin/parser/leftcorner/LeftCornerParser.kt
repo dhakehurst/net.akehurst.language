@@ -240,7 +240,7 @@ class LeftCornerParser(
                     when (fr.attemptedAction) {
                         // don't use this unless the transition.to matches text at the current position
                         ParseAction.WIDTH -> {
-                            val rhs = fr.transition.to.firstRule.rhs
+                            val rhs = fr.transition.target.firstRule.rhs
                             when {
                                 rhs.rule.isEmptyTerminal -> true
                                 rhs.rule.isEmptyListTerminal -> true
@@ -259,7 +259,7 @@ class LeftCornerParser(
             when (fr) {
                 is FailedParseReasonWidthTo -> Pair(
                     sentence.locationFor(fr.failedAtPosition, 0),
-                    RuntimeSpineDefault(fr.head, fr.gssSnapshot, setOf(fr.transition.to.firstRule), fr.head.numNonSkipChildren)
+                    RuntimeSpineDefault(fr.head, fr.gssSnapshot, setOf(fr.transition.target.firstRule), fr.head.numNonSkipChildren)
                 )
 
                 is FailedParseExpectedSkipAfter -> TODO()
@@ -272,8 +272,8 @@ class LeftCornerParser(
                 is FailedParseReasonLookahead -> {
                     val expected: Set<RuntimeRule> = fr.possibleEndOfText.flatMap { eot ->
                         fr.runtimeLhs.flatMap { rt ->
-                            fr.transition.lookahead.flatMap { lh ->
-                                lh.guard.resolve(eot, rt).fullContent
+                            fr.transition.lookaheadGuard.flatMap { lh ->
+                                lh.guardLookaheadSet.resolve(eot, rt).fullContent
                             }
                         }
                     }.toSet()
@@ -286,7 +286,7 @@ class LeftCornerParser(
                 is FailedParseReasonEmbedded -> {
                     // Outer skip terms are part of the 'possibleEndOfText' and thus could be in the expected terms
                     // if these skip terms are not part of the embedded 'normal' terms...remove them
-                    val embeddedRhs = fr.transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
+                    val embeddedRhs = fr.transition.target.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
                     val embeddedStateSet = embeddedRhs.embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, automatonKind)
                     val x = findNextExpectedAfterError3(sentence, options, fr.embededFailedParseReasons, automatonKind, embeddedStateSet, failedAtPosition)
                     val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet

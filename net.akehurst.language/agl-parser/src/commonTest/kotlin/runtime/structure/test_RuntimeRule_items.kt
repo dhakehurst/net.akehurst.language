@@ -36,12 +36,12 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("'a'", "a")
         }
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.goalRuleFor[a]
+        val rG = rrs.goalRuleFor[a]
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(a))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(a))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
     }
 
@@ -54,13 +54,13 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             concatenation("S") { literal("a") }
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(2, S.rulePositions.size)
         check(RP(S,oN, SOR),setOf(a))
         check(RP(S,oN, EOR),setOf())
@@ -77,14 +77,14 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("'a'", "a")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
 
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(2, S.rulePositions.size)
         check(RP(S, oLE, SOR),setOf(EMPTY_LIST))
         check(RP(S,oLE, EOR),setOf())
@@ -101,13 +101,13 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("'a'", "a")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(4, S.rulePositions.size)
         check(RP(S, oLE, SOR),setOf(EMPTY_LIST))
         check(RP(S,oLE, EOR),setOf())
@@ -126,13 +126,13 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("'a'", "a")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(5, S.rulePositions.size)
         check(RP(S, oLE, SOR),setOf(EMPTY_LIST))
         check(RP(S,oLE, EOR),setOf())
@@ -154,14 +154,14 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
         val c = rrs.findRuntimeRule("','")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(4, S.rulePositions.size)
         check(RP(S, oSE, SOR),setOf(EMPTY_LIST))
         check(RP(S,oSE, EOR),setOf())
@@ -182,14 +182,14 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
         val c = rrs.findRuntimeRule("','")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(6, S.rulePositions.size)
         check(RP(S, oSE, SOR),setOf(EMPTY_LIST))
         check(RP(S,oSE, EOR),setOf())
@@ -212,14 +212,14 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
         val c = rrs.findRuntimeRule("','")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(6, S.rulePositions.size)
         check(RP(S, oSE, SOR),setOf(EMPTY_LIST))
         check(RP(S,oSE, EOR),setOf())
@@ -242,14 +242,14 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
         val c = rrs.findRuntimeRule("','")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(2, S.rulePositions.size)
         check(RP(S, oSI, SOR),setOf(a))
         check(RP(S,oSI, EOR),setOf())
@@ -268,14 +268,14 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
         val c = rrs.findRuntimeRule("','")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(4, S.rulePositions.size)
         check(RP(S, oSI, SOR),setOf(a))
         check(RP(S, oSI, PLI),setOf(a))
@@ -296,14 +296,14 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
         val c = rrs.findRuntimeRule("','")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(4, S.rulePositions.size)
         check(RP(S, oSI, SOR),setOf(a))
         check(RP(S, oSI, PLI),setOf(a))
@@ -324,13 +324,13 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
-        val G = rrs.goalRuleFor[S]
+        val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
 
         //then
-        assertEquals(2, G.rulePositions.size)
-        check(RP(G,oN, SOR),setOf(S))
-        check(RP(G,oN, EOR),setOf())
+        assertEquals(2, (rG as RuntimeRule).rulePositions.size)
+        check(RP(rG,oN, SOR),setOf(S))
+        check(RP(rG,oN, EOR),setOf())
         assertEquals(5, S.rulePositions.size)
         check(RP(S, oLE, SOR),setOf(EMPTY))
         check(RP(S,oLE, EOR),setOf())

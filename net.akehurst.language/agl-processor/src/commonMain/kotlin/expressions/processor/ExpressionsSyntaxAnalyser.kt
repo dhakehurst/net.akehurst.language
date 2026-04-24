@@ -48,9 +48,8 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::functionCall)
         super.register(this::constructorArguments)
         super.register(this::tuple)
-        super.register(this::assignmentBlock)
-        super.register(this::assignmentList)
-        super.register(this::assignment)
+        super.register(this::propertyAssignmentBlock)
+        super.register(this::propertyAssignment)
         super.register(this::propertyName)
         super.register(this::grammarRuleIndex)
         super.register(this::with)
@@ -64,6 +63,8 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::methodCall)
         super.register(this::argumentList)
         super.register(this::lambda)
+        super.register(this::block)
+        super.register(this::assignment)
         super.register(this::propertyReference)
         super.register(this::methodReference)
         super.register(this::indexOperation)
@@ -163,16 +164,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return CreateTupleExpressionDefault(propertyAssignments)
     }
 
-    // assignmentBlock = '{' assignmentList  '}' ;
-    private fun assignmentBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
+    // propertyAssignmentBlock = '{' propertyAssignment*  '}' ;
+    private fun propertyAssignmentBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
         children[1] as List<AssignmentStatement>
 
-    // assignmentList = assignment* ;
-    private fun assignmentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
-        children as List<AssignmentStatement>
-
-    // assignment = propertyName  grammarRuleIndex? ':=' expression ;
-    private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
+    // propertyAssignment = propertyName  grammarRuleIndex? ':=' expression ;
+    private fun propertyAssignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
         val lhsPropertyName = children[0] as String
         val lhsGrammarRuleIndex = children[1] as Int?
         val rhs = children[3] as Expression
@@ -252,10 +249,25 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return (children as List<Any>).toSeparatedList<Any, Expression, String>().items
     }
 
-    // lambda = '{' expression '}' ;
+    // lambda = '{' [IDENTIFIER / ',']+ '->' expression '}' ;
     private fun lambda(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LambdaExpression {
-        val expression = children[1] as Expression
-        return LambdaExpressionDefault(expression)
+        val idList = (children[1] as List<String>).toSeparatedList<String,String,String>().items
+        val expression = children[3] as Expression
+        return LambdaExpressionDefault(idList, expression)
+    }
+
+    // block = '{' assignment* expression '}' ;
+    private fun block(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StatementBlockExpression {
+        val assignments = children[1] as List<AssignmentStatement>
+        val expression = children[2] as Expression
+        return StatementBlockExpressionDefault(assignments,expression)
+    }
+
+    // assignment = IDENTIFER ':=' expression ;
+    private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
+        val lhsPropertyName = children[0] as String
+        val rhs = children[2] as Expression
+        return AssignmentStatementDefault(lhsPropertyName, -1, rhs)
     }
 
     // indexOperation = '[' indexList ']' ;

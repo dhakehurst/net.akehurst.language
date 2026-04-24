@@ -19,13 +19,15 @@ package net.akehurst.language.automaton.leftcorner
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.AutomatonKind
-import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.automaton.api.AutomatonState
+import net.akehurst.language.automaton.api.StateNumber
+import net.akehurst.language.parser.api.*
 
 class ParserState(
-    val number: StateNumber,
-    val rulePositions: List<RulePositionRuntime>, //must be a list (not a set) so that we can index against Growing children
+    override val number: StateNumber,
+    override val rulePosition: List<RulePositionRuntime>, //must be a list (not a set) so that we can index against Growing children
     val stateSet: ParserStateSet
-) {
+) : AutomatonState {
 
     companion object {
         fun LookaheadSetPart.lhs(stateSet: ParserStateSet): LookaheadSet {
@@ -41,38 +43,22 @@ class ParserState(
 
     //TODO: fast at runtime if not lazy
     //val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
-    val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toList() }
-    val runtimeRulesAsSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
-    val optionList: List<OptionNum> by lazy { this.rulePositions.map { it.option }.toList() }
+    val runtimeRules: List<RuntimeRule> by lazy { this.rulePosition.map { it.rule as RuntimeRule }.toList() }
+    val runtimeRulesAsSet: Set<RuntimeRule> by lazy { this.rulePosition.map { it.rule as RuntimeRule }.toSet() }
+    val optionList: List<OptionNum> by lazy { this.rulePosition.map { it.option }.toList() }
     val priorityList: List<Int> get() = optionList.map { it.value }
-    //val positionList: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
-   // val choiceKindList: List<RuntimeRuleChoiceKind> by lazy {
-   //     this.rulePositions.mapNotNull {
-   //         val rhs = it.rule.rhs
-   //         when (rhs) {
-   //             is RuntimeRuleRhsChoice -> rhs.choiceKind
-   //             else -> null
-    //        }
-    //    }.toSet().toList()
-    //}
     val isChoice: Boolean by lazy { this.firstRule.isChoice }
     val isOptional: Boolean by lazy { this.firstRule.isOptional }
     val isList: Boolean by lazy { this.firstRule.isList }
-
-   // val firstRuleChoiceKind by lazy {
-    //    if (Debug.CHECK) check(1 == this.choiceKindList.size)
-   //     this.choiceKindList[0]
-   // }
 
     val firstRule get() = runtimeRules.first()
 
     val isLeaf: Boolean get() = this.firstRule.isTerminal
 
-    val isAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
-    val isNotAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd.not() } //all in state should be either atEnd or notAtEnd
+    val isAtEnd: Boolean get() = this.rulePosition.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
+    val isNotAtEnd: Boolean get() = this.rulePosition.any { it.isAtEnd.not() } //all in state should be either atEnd or notAtEnd
 
     val isGoal = this.firstRule.isGoal
-   // val isUserGoal = this.firstRule == this.stateSet.userGoalRule
 
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
         this.stateSet.createLookaheadSet(includesUP, includeEOT, matchAny, content)
@@ -122,6 +108,9 @@ class ParserState(
         return trans
     }
 
+    // --- AutomatonState ---
+
+
     // --- Any ---
     override fun hashCode(): Int = this.number.value + this.stateSet.number * 31
 
@@ -133,6 +122,6 @@ class ParserState(
         }
     }
 
-    override fun toString(): String = "State(${this.number.value}/${this.stateSet.number}-${rulePositions})"
+    override fun toString(): String = "State(${this.number.value}/${this.stateSet.number}-${rulePosition})"
 
 }

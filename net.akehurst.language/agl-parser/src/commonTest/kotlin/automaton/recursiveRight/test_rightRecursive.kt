@@ -42,7 +42,7 @@ class test_rightRecursive : test_AutomatonAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
 
@@ -51,7 +51,7 @@ class test_rightRecursive : test_AutomatonAbstract() {
         val s2 = SM.createState(listOf(RulePositionRuntime(S, o0, ER)))
         val s3 = SM.createState(listOf(RulePositionRuntime(S1, oN, 1)))
         val s4 = SM.createState(listOf(RulePositionRuntime(S1, oN, ER)))
-        val s5 = SM.createState(listOf(RulePositionRuntime(G, oN, ER)))
+        val s5 = SM.createState(listOf(RulePositionRuntime(rG, oN, ER)))
         val s6 = SM.createState(listOf(RulePositionRuntime(S, o1, ER)))
 
         val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
@@ -79,8 +79,8 @@ class test_rightRecursive : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)
-            state(G, oN, EOR)
+            state(rG, oN, SR)
+            state(rG, oN, EOR)
             state(S, oN, EOR)
             state(S, o1, EOR)
             state(S1, oN, p1)

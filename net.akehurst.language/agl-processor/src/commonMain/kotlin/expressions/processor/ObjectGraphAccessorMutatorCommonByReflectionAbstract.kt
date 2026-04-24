@@ -82,30 +82,51 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         }
     }
 
-    override fun toTypedObject(obj: Any?): TypedObject = when {
+    override fun toTypedObject(obj: Any?, ifNotFound: TypeInstance): TypedObject = when {
         null == obj -> nothing()
         Unit == obj -> nothing()
         obj is TypedObject -> obj as TypedObject
         else -> when (obj) {
             is Boolean -> typedAs(obj, StdLibDefault.Boolean)
-            is Int -> typedAs(obj, StdLibDefault.Integer)
+            is Int -> typedAs(obj.toLong(), StdLibDefault.Integer)
             is Long -> typedAs(obj, StdLibDefault.Integer)
-            is Float -> typedAs(obj, StdLibDefault.Real)
+            is Float -> typedAs(obj.toDouble(), StdLibDefault.Real)
             is Double -> typedAs(obj, StdLibDefault.Real)
             is String -> typedAs(obj, StdLibDefault.String)
-            is List<*> -> createCollectionFromQualifiedName(StdLibDefault.List.qualifiedName, obj.map { toTypedObject(it) })
-            is Set<*> -> createCollectionFromQualifiedName(StdLibDefault.Set.qualifiedName, obj.map { toTypedObject(it) }.toSet())
+            is List<*> -> {
+                val ifElementTypeNotFound = when {
+                    StdLibDefault.List == ifNotFound.resolvedDeclaration && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type
+                    else -> StdLibDefault.AnyType
+                }
+                val elements = obj.map { toTypedObject(it, ifElementTypeNotFound) }
+                when {
+                    StdLibDefault.List == ifNotFound.resolvedDeclaration -> createCollection(ifNotFound, elements)
+                    else -> createCollection(StdLibDefault.List.type(listOf(ifElementTypeNotFound.asTypeArgument)), elements)
+                }
+            }
+            is Set<*> -> {
+                val ifElementTypeNotFound = when {
+                    StdLibDefault.Set == ifNotFound.resolvedDeclaration && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type
+                    else -> StdLibDefault.AnyType
+                }
+                val elements = obj.map { toTypedObject(it, ifElementTypeNotFound) }.toSet()
+                when {
+                    StdLibDefault.Set == ifNotFound.resolvedDeclaration -> createCollection(ifNotFound, elements)
+                    else -> createCollection(StdLibDefault.Set.type(listOf(ifElementTypeNotFound.asTypeArgument)), elements)
+                }
+            }
+
             is Map<*, *> -> createCollectionFromQualifiedName(
                 StdLibDefault.Map.qualifiedName,
                 obj.map { (k, v) ->
-                    val key = toTypedObject(k)
-                    val value = toTypedObject(v)
+                    val key = toTypedObject(k, ifNotFound)
+                    val value = toTypedObject(v, ifNotFound)
                     val p = Pair(key, value)
                     typedAs(p, StdLibDefault.Pair.type(listOf(key.type.asTypeArgument, value.type.asTypeArgument)))
                 }
             )
 
-            else -> typedAs(obj, typeFor(obj))
+            else -> typedAs(obj, typeFor(obj, ifNotFound))
         }
     }
 
@@ -121,7 +142,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override fun nothing(): TypedObject = typedAs(Unit, StdLibDefault.NothingType)
     override fun any(value: Any): TypedObject = typedAs(value, StdLibDefault.AnyType)
 
-    override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value)
+    override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value, StdLibDefault.AnyType)
 
     override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject {
         val tupleType = StdLibDefault.TupleType
@@ -200,7 +221,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
                         nothing()
                     }
 
-                    else -> toTypedObject(el)
+                    else -> toTypedObject(el, StdLibDefault.AnyType)
                 }
             }
 
@@ -219,7 +240,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
                 val el = self.get(k)
                 when (el) {
                     null -> nothing()
-                    else -> toTypedObject(el)
+                    else -> toTypedObject(el, StdLibDefault.AnyType)
                 }
             }
 
@@ -234,7 +255,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         val self = untyped(tobj)
         when (self) {
             is List<*> -> {
-                self.forEachIndexed { index, el -> body(index, toTypedObject(el)) }
+                self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
             }
 
             else -> {
@@ -247,8 +268,8 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override fun collectionUnion(collection1: TypedObject, collection2: TypedObject): TypedObject {
         //TODO: this is inefficient
         val col1 = untyped(collection1) as Iterable<Any>
-        val col2 = untyped(collection2)as Iterable<Any>
-        val union = toTypedObject(col1 + col2)
+        val col2 = untyped(collection2) as Iterable<Any>
+        val union = toTypedObject(col1 + col2, StdLibDefault.Collection.type(listOf(StdLibDefault.AnyType.asTypeArgument)))
         return union
     }
 

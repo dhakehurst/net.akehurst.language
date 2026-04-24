@@ -61,26 +61,20 @@ internal class AutomatonBuilderDefault(
     val HEIGHT = ParseAction.HEIGHT
     val GRAFT = ParseAction.GRAFT
 
-    override fun state(ruleNumber: Int, option: OptionNum, position: Int) { //TODO: maybe use OptionNum in the signature?
-        when {
-            RuntimeRuleSet.GOAL_RULE_NUMBER == ruleNumber -> result.createState(
-                listOf(
-                    RulePositionRuntime(result.goalRule, option, position)
-                )
-            )
-
-            else -> result.createState(
-                listOf(
-                    RulePositionRuntime(rrs.runtimeRules[ruleNumber], option, position)
-                )
-            )
-        }
-    }
-
-    internal fun state(rule: Rule) = state(rule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
-    internal fun state(rule: Rule, option: OptionNum, position: Int) = result.createState(listOf(RulePositionRuntime(rule as RuntimeRule, option, position)))
+    val G = ParseAction.GOAL
+    val W = ParseAction.WIDTH
+    val H = ParseAction.HEIGHT
+    val F = ParseAction.GRAFT
 
     internal fun state(vararg rulePositions: RulePositionRuntime) = result.createState(rulePositions.toList())
+    internal fun state(rule: Rule, option: OptionNum, position: Int) = state(RulePositionRuntime(rule as RuntimeRule, option, position))
+    internal fun state(rule: Rule) = state(rule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
+    override fun state(ruleNumber: Int, option: OptionNum, position: Int) {
+        when {
+            RuntimeRuleSet.GOAL_RULE_NUMBER == ruleNumber -> state(RulePositionRuntime(result.goalRule as RuntimeRule, option, position))
+            else -> state(RulePositionRuntime(rrs.runtimeRules[ruleNumber], option, position))
+        }
+    }
 
     internal fun transition(
         previousState: ParserState,
@@ -168,6 +162,7 @@ internal class AutomatonBuilderDefault(
                     from.outTransitions.addTransitionForIncomplete(prev, trans)
                 }
             }
+
             ParseAction.HEIGHT, ParseAction.GRAFT, ParseAction.GOAL -> {
                 check(from.isAtEnd) { "$action requires at-end source state" }
                 // Sentinel prev²: no explicit prev² provided through this legacy entry point.
@@ -191,6 +186,7 @@ internal class TransitionBuilderDefault internal constructor(
 ) : TransitionBuilder {
 
     private var _transitionContext = emptySet<ParserState>()
+
     /**
      * Optional prev² context for HEIGHT / GRAFT / GOAL transitions.
      * `null` means "no explicit prev² supplied" — `build()` falls back to
@@ -208,18 +204,22 @@ internal class TransitionBuilderDefault internal constructor(
     private lateinit var _tgt: ParserState
     private val _lhg = mutableSetOf<Lookahead>()
 
-    override fun ctx(vararg stateNumbers: Int) {
-        TODO("not implemented")
+    override fun pctx(vararg stateNumbers: Int) {
+        _prevPrevContext = stateNumbers.toList().map { n -> this.stateSet.allBuiltStates.first { n == it.number.value } }.toSet()
     }
 
-    override fun source(stateNumber: Int) = this.src(stateSet.allBuiltStates[stateNumber])
-    override fun target(stateNumber: Int) = this.tgt(stateSet.allBuiltStates[stateNumber])
+    override fun ctx(vararg stateNumbers: Int) {
+        _transitionContext = stateNumbers.toList().map { n -> this.stateSet.allBuiltStates.first { n == it.number.value } }.toSet()
+    }
+
+    override fun src(stateNumber: Int) = this.src(stateSet.allBuiltStates[stateNumber])
+    override fun tgt(stateNumber: Int) = this.tgt(stateSet.allBuiltStates[stateNumber])
 
     fun ctx(states: Set<ParserState>) {
         _transitionContext = states
     }
 
-    fun ctx(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = ctx(RulePositionRuntime(runtimeRule, option, position))
+    fun ctx(rule: Rule, option: OptionNum, position: Int) = ctx(RulePositionRuntime(rule as RuntimeRule, option, position))
     fun ctx(vararg rulePositions: RulePositionRuntime) {
         val states = rulePositions.map { this.stateSet.fetchState(listOf(it)) ?: error("State for $it not defined") }.toSet()
         this.ctx(states)
@@ -246,7 +246,7 @@ internal class TransitionBuilderDefault internal constructor(
         _prevPrevContext = states
     }
 
-    fun pctx(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = pctx(RulePositionRuntime(runtimeRule, option, position))
+    fun pctx(rule: Rule, option: OptionNum, position: Int) = pctx(RulePositionRuntime(rule as RuntimeRule, option, position))
     fun pctx(vararg rulePositions: RulePositionRuntime) {
         val states = rulePositions.map { this.stateSet.fetchState(listOf(it)) ?: error("State for $it not defined") }.toSet()
         this.pctx(states)
@@ -257,12 +257,12 @@ internal class TransitionBuilderDefault internal constructor(
         this.pctx(states)
     }
 
-    fun src(runtimeRule: RuntimeRule) {
+    fun src(rule: Rule) {
         check(this.action == ParseAction.HEIGHT || this.action == ParseAction.GRAFT || this.action == ParseAction.GOAL)
-        src(runtimeRule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
+        src(rule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
     }
 
-    fun src(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = src(setOf(RulePositionRuntime(runtimeRule, option, position)))
+    fun src(rule: Rule, option: OptionNum, position: Int) = src(setOf(RulePositionRuntime(rule as RuntimeRule, option, position)))
     fun src(rulePositions: Set<RulePositionRuntime>) {
         val state = this.stateSet.fetchState(rulePositions.toList()) ?: error("State for $rulePositions not defined")
         this.src(state)
@@ -272,8 +272,8 @@ internal class TransitionBuilderDefault internal constructor(
         _src = state
     }
 
-    fun tgt(runtimeRule: RuntimeRule) = tgt(runtimeRule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
-    fun tgt(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = tgt(setOf(RulePositionRuntime(runtimeRule, option, position)))
+    fun tgt(rule: Rule) = tgt(rule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
+    fun tgt(rule: Rule, option: OptionNum, position: Int) = tgt(setOf(RulePositionRuntime(rule as RuntimeRule, option, position)))
     fun tgt(rulePositions: Set<RulePositionRuntime>) {
         val state = this.stateSet.fetchState(rulePositions.toList()) ?: error("State for $rulePositions not defined")
         this.tgt(state)
@@ -283,22 +283,41 @@ internal class TransitionBuilderDefault internal constructor(
         _tgt = state
     }
 
-    fun lhg(guard: RuntimeRule) = lhg(setOf(guard))
 
-    fun lhg(guard: RuntimeRule, up: RuntimeRule) = lhg(setOf(guard), setOf(up))
 
-    fun lhg(guard: Set<RuntimeRule>) {
-        this._lhg.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, guard), LookaheadSet.EMPTY))
-    }
-
-    fun lhg(guard: Set<RuntimeRule>, up: Set<RuntimeRule>) {
+    fun lhg(guard: Set<Rule>, up: Set<Rule>) {
         this._lhg.add(
             Lookahead(
-                LookaheadSet.createFromRuntimeRules(this.stateSet, guard),
-                LookaheadSet.createFromRuntimeRules(this.stateSet, up)
+                LookaheadSet.createFromRuntimeRules(this.stateSet, guard as Set<RuntimeRule>),
+                LookaheadSet.createFromRuntimeRules(this.stateSet, up as Set<RuntimeRule>)
             )
         )
     }
+    fun lhg(guard: Set<Rule>) {
+        this._lhg.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, guard as Set<RuntimeRule>), LookaheadSet.EMPTY))
+    }
+    fun lhg(guard: Rule, up: Rule) = lhg(setOf(guard), setOf(up))
+    fun lhg(guard: Rule) = lhg(setOf(guard))
+
+
+
+    fun lh(guard: Set<Int>, up: Set<Int>) {
+        val g = guard.map { rn ->
+            when {
+                RuntimeRuleSet.GOAL_RULE_NUMBER == rn -> stateSet.goalRule
+                else -> stateSet.runtimeRuleSet.runtimeRules[rn]
+            }
+        }.toSet()
+        val u = up.map { rn ->
+            when {
+                RuntimeRuleSet.GOAL_RULE_NUMBER == rn -> stateSet.goalRule
+                else -> stateSet.runtimeRuleSet.runtimeRules[rn]
+            }
+        }.toSet()
+        lhg(g, u)
+    }
+
+    fun lh(vararg guard:Int) = lh(guard.toSet(), emptySet())
 
     /**
      * graft prev guard
@@ -326,6 +345,7 @@ internal class TransitionBuilderDefault internal constructor(
                     _src.outTransitions.addTransitionForIncomplete(prev, trans)
                 }
             }
+
             ParseAction.HEIGHT, ParseAction.GRAFT, ParseAction.GOAL -> {
                 check(_src.isAtEnd) { "$action requires at-end source state" }
                 // Sentinel prev² when none supplied — matches runtime substitution

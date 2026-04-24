@@ -283,7 +283,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 it.isEmptyListTerminal -> null
                 else -> {
                     val rr = it as RuntimeRule
-                    val terminalRuleItem = mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal?
+                    val terminalRuleItem = mapToGrammar(rr.ruleSetNumber, rr.number) as Terminal?
                     terminalRuleItem?.let { CompletionProviderAbstract.provideForTangible(it, opts.completionProvider) }
                     //when {
                     //    it.isLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.unescapedTerminalValue, it.tag)

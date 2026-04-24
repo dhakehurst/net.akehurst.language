@@ -120,7 +120,7 @@ class test_ObjectGraphByReflectionSuspending {
         assertEquals("A", actual1.self)
 
         val actual2 = tobj.getPropertySuspend("prop2")
-        assertEquals(1, actual2.self)
+        assertEquals(1L, actual2.self)
 
         val actual3 = tobj.getPropertySuspend("prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)
@@ -144,7 +144,7 @@ class test_ObjectGraphByReflectionSuspending {
         assertEquals("A", actual1.self)
 
         val actual2 = tobj.getPropertySuspend( "prop2")
-        assertEquals(1, actual2.self)
+        assertEquals(1L, actual2.self)
 
         val actual3 = tobj.getPropertySuspend( "prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)

@@ -86,12 +86,12 @@ internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationA
 
     // templateExpressionProperty = DOLLAR_IDENTIFIER ;
     fun templateExpressionProperty(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionProperty =
-        TemplateElementExpressionPropertyDefault((children[0] as String))
+        TemplateElementExpressionPropertyDefault((children[0] as String)) //do not remove '$' here, it is used in the semantic interpretation
 
     // templateExpressionList = '$[' Format::separatedList ']' ;
     fun templateExpressionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionList {
-        val sepList = children[1] as Pair<Expression, Expression>
-        return TemplateElementExpressionListDefault(sepList.first, sepList.second)
+        val sepList = children[1] as FormatSeparatedList
+        return TemplateElementExpressionListDefault(sepList)
     }
 
     // templateExpressionListSeparator = templateExpressionProperty | Expressions::STRING ;

@@ -183,7 +183,7 @@ class ExternalGetterAsmSimple(
 
     private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, this), issues)
 
-    override fun typeFor(obj: Any): TypeInstance {
+    override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
         TODO("not implemented")
     }
 
@@ -251,9 +251,9 @@ open class ObjectGraphAccessorMutatorAsmSimple(
 
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<AsmValue>>()
 
-    private fun AsmValue.asmToTypedObject() = typedAs(this, typeFor(this))
+    private fun AsmValue.asmToTypedObject() = typedAs(this, typeFor(this, StdLibDefault.AnyType))
 
-    override fun typeFor(obj: Any?): TypeInstance {
+    override fun typeFor(obj: Any?, ifNotFound: TypeInstance): TypeInstance {
         return when (obj) {
             null -> StdLibDefault.NothingType
             is Boolean -> StdLibDefault.Boolean
@@ -269,7 +269,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                     null -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
                     else -> when (me.key) {
                         is String -> {
-                            val ttargs = obj.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k as String), typeFor(v)) }
+                            val ttargs = obj.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k as String), typeFor(v, ifNotFound)) }
                             StdLibDefault.TupleType.type(ttargs)
                         }
 
@@ -283,7 +283,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
                 StdLibDefault.AnyType
             }
 
-            else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj)
+            else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
         }
 
 //        return (obj as? AsmValue)?.let { o ->
@@ -296,7 +296,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
 
     //override fun toTypedObject(obj: Any?): TypedObject = (obj as? AsmValue)?.asmToTypedObject() ?: nothing()
 
-    override fun toTypedObject(obj: Any?): TypedObject = when {
+    override fun toTypedObject(obj: Any?, ifNotFound: TypeInstance): TypedObject = when {
         null == obj -> nothing()
         Unit == obj -> nothing()
         obj is TypedObject -> obj as TypedObject
@@ -307,19 +307,19 @@ open class ObjectGraphAccessorMutatorAsmSimple(
             is Float -> typedAs(obj, StdLibDefault.Real)
             is Double -> typedAs(obj, StdLibDefault.Real)
             is String -> typedAs(obj, StdLibDefault.String)
-            is List<*> -> createCollectionFromQualifiedName(StdLibDefault.List.qualifiedName, obj.map { toTypedObject(it) })
-            is Set<*> -> createCollectionFromQualifiedName(StdLibDefault.Set.qualifiedName, obj.map { toTypedObject(it) }.toSet())
+            is List<*> -> createCollectionFromQualifiedName(StdLibDefault.List.qualifiedName, obj.map { toTypedObject(it,ifNotFound) })
+            is Set<*> -> createCollectionFromQualifiedName(StdLibDefault.Set.qualifiedName, obj.map { toTypedObject(it,ifNotFound) }.toSet())
             is Map<*, *> -> createCollectionFromQualifiedName(
                 StdLibDefault.Map.qualifiedName,
                 obj.map { (k, v) ->
-                    val key = toTypedObject(k)
-                    val value = toTypedObject(v)
+                    val key = toTypedObject(k,ifNotFound)
+                    val value = toTypedObject(v,ifNotFound)
                     val p = Pair(key, value)
                     typedAs(p, StdLibDefault.Pair.type(listOf(key.type.asTypeArgument, value.type.asTypeArgument)))
                 }
             )
 
-            else -> typedAs(obj, typeFor(obj))
+            else -> typedAs(obj, typeFor(obj, ifNotFound))
         }
     }
 
@@ -487,7 +487,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         val asmValue = tobj.self
         when (asmValue) {
             is AsmList -> {
-                asmValue.elements.forEachIndexed { index, el -> body(index, toTypedObject(el)) }
+                asmValue.elements.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
             }
 
             else -> {
@@ -539,8 +539,8 @@ open class ObjectGraphAccessorMutatorAsmSimple(
             override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {}
 
             override fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {
-                val src = toTypedObject(owner)
-                val tgt = toTypedObject(property.value)
+                val src = toTypedObject(owner, StdLibDefault.AnyType)
+                val tgt = toTypedObject(property.value, StdLibDefault.AnyType)
                 val ownerTypeDef = src.type.resolvedDeclaration
                 val propDef = ownerTypeDef.findAllPropertyOrNull(PropertyName(property.name.value))
                 if (null == propDef) {
@@ -552,7 +552,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
             }
 
             override fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
-                val node = toTypedObject(value)
+                val node = toTypedObject(value, StdLibDefault.AnyType)
                 nodes.add(node)
             }
 
@@ -638,7 +638,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         //TODO: this is inefficient
         val col1 = untyped(collection1) as Iterable<Any>
         val col2 = untyped(collection2) as Iterable<Any>
-        val union = toTypedObject(col1 + col2)
+        val union = toTypedObject(col1 + col2, StdLibDefault.Collection.type(listOf(StdLibDefault.AnyType.asTypeArgument)))
         return union
     }
 
@@ -679,7 +679,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     override fun callFunction(functionName: String, args: List<TypedObject>): TypedObject {
         val arguments = args.map { untyped(it) }
         return primitiveExecutor.functionCall(functionName, arguments)?.let {
-            toTypedObject(it.value as AsmValue)
+            toTypedObject(it.value as AsmValue, StdLibDefault.AnyType)
         } ?: nothing()
     }
 

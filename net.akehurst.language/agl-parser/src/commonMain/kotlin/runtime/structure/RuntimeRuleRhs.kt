@@ -83,7 +83,7 @@ class RuntimeRuleRhsCommonTerminal(
 
     //only used if EOT RuntimeRule
     override val matchable by lazy {
-        Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, UnescapedLiteral(""), MatchableKind.EOT)
+        Matchable(rule.ruleSetNumber, rule.number, rule.tag, UnescapedLiteral(""), MatchableKind.EOT)
     }
 
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsCommonTerminal(clonedRules[rule.tag]!!)
@@ -94,7 +94,7 @@ class RuntimeRuleRhsPattern(
     rule: RuntimeRule,
     val patternUnescaped: UnescapedPattern
 ) : RuntimeRuleRhsTerminal(rule) {
-    override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, this.patternUnescaped, MatchableKind.REGEX) }
+    override val matchable by lazy { Matchable(rule.ruleSetNumber, rule.number, rule.tag, this.patternUnescaped, MatchableKind.REGEX) }
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsPattern(clonedRules[rule.tag]!!, patternUnescaped)
     override fun toString(): String = "\"${patternUnescaped.value}\""
 }
@@ -103,7 +103,7 @@ class RuntimeRuleRhsLiteral(
     rule: RuntimeRule,
     val literalUnescaped: UnescapedLiteral
 ) : RuntimeRuleRhsTerminal(rule) {
-    override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, this.literalUnescaped, MatchableKind.LITERAL) }
+    override val matchable by lazy { Matchable(rule.ruleSetNumber, rule.number, rule.tag, this.literalUnescaped, MatchableKind.LITERAL) }
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsLiteral(clonedRules[rule.tag]!!, literalUnescaped)
     override fun toString(): String = "'${literalUnescaped.value}'"
 }
@@ -127,7 +127,7 @@ class RuntimeRuleRhsEmbedded(
 
     override val asString: String get() = "EMBED ::${embeddedStartRule.tag}"
 
-    override fun toString(): String = "EMBED ${embeddedRuntimeRuleSet.number}::${embeddedStartRule.tag}[${embeddedStartRule.ruleNumber}]"
+    override fun toString(): String = "EMBED ${embeddedRuntimeRuleSet.number}::${embeddedStartRule.tag}[${embeddedStartRule.number}]"
 }
 
 sealed class RuntimeRuleRhsNonTerminal(
@@ -164,7 +164,7 @@ class RuntimeRuleRhsGoal(
         clonedRules[userGoalRuleItem.tag]!!
     )
 
-    override fun toString(): String = "GOAL (${userGoalRuleItem.tag}[${userGoalRuleItem.ruleNumber}]"
+    override fun toString(): String = "GOAL (${userGoalRuleItem.tag}[${userGoalRuleItem.number}]"
 }
 
 class RuntimeRuleRhsConcatenation(
@@ -204,7 +204,7 @@ class RuntimeRuleRhsConcatenation(
 
     override val asString: String get() = "CONCAT(${this.concatItems.joinToString(" ") { it.tag }})"
 
-    override fun toString(): String = "CONCAT(${this.concatItems.joinToString(" ") { "${it.tag}[${it.ruleNumber}]" }})"
+    override fun toString(): String = "CONCAT(${this.concatItems.joinToString(" ") { "${it.tag}[${it.number}]" }})"
 }
 
 class RuntimeRuleRhsChoice(

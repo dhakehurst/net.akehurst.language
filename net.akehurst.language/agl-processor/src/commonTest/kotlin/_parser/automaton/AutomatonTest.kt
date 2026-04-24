@@ -92,12 +92,12 @@ internal object AutomatonTest {
         }
     }
 
-    private fun ParserState.matches(other: ParserState): Boolean = this.rulePositions.toSet().matches(other.rulePositions.toSet()) { t, o -> t.matches(o) }
+    private fun ParserState.matches(other: ParserState): Boolean = this.rulePosition.toSet().matches(other.rulePosition.toSet()) { t, o -> t.matches(o) }
     private fun Transition.matches(other: Transition, config: MatchConfiguration): Boolean = when {
-        this.from.matches(other.from).not() -> false
-        this.to.matches(other.to).not() -> false
+        this.source.matches(other.source).not() -> false
+        this.target.matches(other.target).not() -> false
         this.action != other.action -> false
-        (!config.no_lookahead_compare && this.lookahead.matches(other.lookahead) { t, o -> t.matches(o, config) }.not()) -> false
+        (!config.no_lookahead_compare && this.lookaheadGuard.matches(other.lookaheadGuard) { t, o -> t.matches(o, config) }.not()) -> false
         else -> true
     }
 
@@ -108,8 +108,8 @@ internal object AutomatonTest {
     }
 
     private fun Lookahead.matches(other: Lookahead, config: MatchConfiguration): Boolean = when {
-        this.guard.matches(other.guard, config).not() -> false
-        this.up.matches(other.up, config).not() -> false
+        this.guardLookaheadSet.matches(other.guardLookaheadSet, config).not() -> false
+        this.upLookaheadSet.matches(other.upLookaheadSet, config).not() -> false
         else -> true
     }
 
@@ -121,7 +121,7 @@ internal object AutomatonTest {
     }
 
     fun assertEquals(expected: ParserState, actual: ParserState) {
-        kotlin.test.assertEquals(expected.rulePositions.toSet(), actual.rulePositions.toSet(), "RulePositions do not match")
+        kotlin.test.assertEquals(expected.rulePosition.toSet(), actual.rulePosition.toSet(), "RulePositions do not match")
 
         kotlin.test.assertEquals(
             expected.outTransitions.allPrevious.size,
@@ -143,17 +143,17 @@ internal object AutomatonTest {
     }
 
     fun assertEquals(expPrev: ParserState, expected: Transition, actual: Transition) {
-        kotlin.test.assertEquals(expected.from.rulePositions.toSet(), actual.from.rulePositions.toSet(), "From state does not match for ${expPrev} -> $expected")
-        kotlin.test.assertEquals(expected.to.rulePositions.toSet(), actual.to.rulePositions.toSet(), "To state does not match for ${expPrev} -> $expected")
+        kotlin.test.assertEquals(expected.source.rulePosition.toSet(), actual.source.rulePosition.toSet(), "From state does not match for ${expPrev} -> $expected")
+        kotlin.test.assertEquals(expected.target.rulePosition.toSet(), actual.target.rulePosition.toSet(), "To state does not match for ${expPrev} -> $expected")
         kotlin.test.assertEquals(expected.action, actual.action, "Action does not match for ${expPrev} -> $expected")
-        assertEquals(expected, expected.lookahead, actual.lookahead)//, "Lookahead content does not match for ${expPrev} -> $expected")
+        assertEquals(expected, expected.lookaheadGuard, actual.lookaheadGuard)//, "Lookahead content does not match for ${expPrev} -> $expected")
         //TODO kotlin.test.assertEquals(expected.upLookahead.includesUP, actual.upLookahead.includesUP, "Up lookahead content does not match for ${expPrev} -> $expected")
     }
 
     fun assertEquals(expTrans: Transition, expected: Set<Lookahead>, actual: Set<Lookahead>) {
         kotlin.test.assertEquals(expected.size, actual.size, "Lookahead size does not match for \nExpected: ${expTrans}\nActual:$actual")
-        val expSorted = expected.sortedBy { it.guard.fullContent.map { it.tag }.joinToString() }
-        val actSorted = actual.sortedBy { it.guard.fullContent.map { it.tag }.joinToString() }
+        val expSorted = expected.sortedBy { it.guardLookaheadSet.fullContent.map { it.tag }.joinToString() }
+        val actSorted = actual.sortedBy { it.guardLookaheadSet.fullContent.map { it.tag }.joinToString() }
         for (i in expSorted.indices) {
             assertEquals(expTrans, expSorted[i], actSorted[i])
         }
@@ -161,13 +161,13 @@ internal object AutomatonTest {
 
     fun assertEquals(expTrans: Transition, expected: Lookahead, actual: Lookahead) {
         kotlin.test.assertEquals(
-            expected.guard.fullContent.map { it.tag }.toSet(),
-            actual.guard.fullContent.map { it.tag }.toSet(),
+            expected.guardLookaheadSet.fullContent.map { it.tag }.toSet(),
+            actual.guardLookaheadSet.fullContent.map { it.tag }.toSet(),
             "Lookahead guard content does not match for ${expTrans}\n$expected"
         )
         kotlin.test.assertEquals(
-            expected.up.fullContent.map { it.tag }.toSet(),
-            actual.up.fullContent.map { it.tag }.toSet(),
+            expected.upLookaheadSet.fullContent.map { it.tag }.toSet(),
+            actual.upLookaheadSet.fullContent.map { it.tag }.toSet(),
             "Lookahead up content does not match for ${expTrans}\n$expected"
         )
     }

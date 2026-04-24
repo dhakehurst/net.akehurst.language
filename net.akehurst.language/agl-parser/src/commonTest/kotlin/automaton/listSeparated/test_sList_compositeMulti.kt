@@ -47,7 +47,7 @@ class test_sList_compositeMulti : test_AutomatonAbstract() {
         val S = rrs.findRuntimeRule("S")
         val Se = EMPTY
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val nl = rrs.findRuntimeRule("nl")
         val cnm = rrs.findRuntimeRule("cnm")
         val cn = rrs.findRuntimeRule("cn")

@@ -56,6 +56,7 @@ import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.asm.AglStyleDomainDefault
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesDomainSimple
 
 object Agl {
@@ -352,9 +353,9 @@ object Agl {
         val formatSetName = formatDomain.allDefinitions.lastOrNull()?.qualifiedName ?: error("No FormatSet found.")
         val namedValues = mutableMapOf<String, TypedObject>()
         options.environment.forEach { (k, v) ->
-            namedValues[k] = objectGraph.toTypedObject(v)
+            namedValues[k] = objectGraph.toTypedObject(v, StdLibDefault.AnyType)
         }
-        val evc = EvaluationContext.ofSelf(objectGraph.toTypedObject(self), namedValues)
+        val evc = EvaluationContext.ofSelf(objectGraph.toTypedObject(self, StdLibDefault.AnyType), namedValues)
         val result = formatter.format(formatSetName, evc)
         return result
     }
@@ -379,7 +380,7 @@ object Agl {
     }
 
     fun executeExpression(accessorMutator:ObjectGraphAccessorMutator, self:Any?, expression:String): TypedObject {
-        val typedSelf = accessorMutator.toTypedObject(self)
+        val typedSelf = accessorMutator.toTypedObject(self, StdLibDefault.AnyType)
         val evc = EvaluationContext.ofSelf(typedSelf)
         return executeExpressionWithEvaluationContext(accessorMutator, evc, expression)
     }
@@ -392,7 +393,7 @@ object Agl {
     }
 
     suspend fun executeExpressionSuspend(accessorMutator: ObjectGraphAccessorMutator, self:Any?, expression:String): TypedObject {
-        val typedSelf = accessorMutator.toTypedObject(self)
+        val typedSelf = accessorMutator.toTypedObject(self, StdLibDefault.AnyType)
         val evc = EvaluationContext.ofSelf(typedSelf)
         return executeExpressionWithEvaluationContextSuspend(accessorMutator, evc, expression)
     }

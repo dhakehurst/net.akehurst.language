@@ -203,7 +203,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.map({ it + '1' })", AsmListSimple(listOf("A1", "B1", "C1", "D1").map { AsmPrimitiveSimple.stdString(it) }))
+        test(tm, self, "list.map({it -> it + '1' })", AsmListSimple(listOf("A1", "B1", "C1", "D1").map { AsmPrimitiveSimple.stdString(it) }))
     }
 
     @Test
@@ -221,7 +221,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.filter({ it != 'B' })", AsmListSimple(listOf("A", "C", "D").map { AsmPrimitiveSimple.stdString(it) }))
+        test(tm, self, "list.filter({it -> it != 'B' })", AsmListSimple(listOf("A", "C", "D").map { AsmPrimitiveSimple.stdString(it) }))
     }
 
     @Test
@@ -264,6 +264,6 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
         }
         val self = asm.root[0]
         val expected = AsmListSimple(listOf("1.1", "1.2", "1.3", "1.1.1", "1.3.1").map { AsmPrimitiveSimple.stdString(it) })
-        test(tm, self, "list.transitiveClosure({ it.list }).map({it.id})", expected)
+        test(tm, self, "list.transitiveClosure({it -> it.list }).map({it -> it.id})", expected)
     }
 }

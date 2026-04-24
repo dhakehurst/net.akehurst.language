@@ -56,8 +56,7 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
         concatenation("F2") { literal("("); ref("E"); literal(")") }
     }
     private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
+
     private val E = rrs.findRuntimeRule("E")
     private val T = rrs.findRuntimeRule("T")
     private val F = rrs.findRuntimeRule("F")
@@ -70,6 +69,8 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
     private val v = rrs.findRuntimeRule("'v'")
     private val o = rrs.findRuntimeRule("'('")
     private val c = rrs.findRuntimeRule("')'")
+    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+    private val rG = SM.startState.runtimeRules.first()
 
     @Test
     fun buildFor() {

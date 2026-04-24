@@ -34,7 +34,7 @@ class test_buildFor : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
@@ -42,8 +42,8 @@ class test_buildFor : test_AutomatonUtilsAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))   // G = . S
-            state(RP(G, oN, EOR))   // G = S .
+            state(RP(rG, oN, SOR))   // G = . S
+            state(RP(rG, oN, EOR))   // G = S .
             state(RP(S, oN, p1))    // S = a . b c
             state(RP(S, oN, p2))    // S = a b . c
             state(RP(S, oN, EOR))    // S = a b c .
@@ -66,7 +66,7 @@ class test_buildFor : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
 
@@ -74,8 +74,8 @@ class test_buildFor : test_AutomatonUtilsAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))   // G = . S
-            state(RP(G, oN, EOR))   // G = S .
+            state(RP(rG, oN, SOR))   // G = . S
+            state(RP(rG, oN, EOR))   // G = S .
             state(RP(S, oN, EOR))    // S = a .
             state(RP(S, o1, EOR))   // S = S1 .
             state(RP(S1, oN, p1))   // S1 = S . a
@@ -97,7 +97,7 @@ class test_buildFor : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val S1 = rrs.findRuntimeRule("S1")
         val S2 = rrs.findRuntimeRule("S2")
         val S3 = rrs.findRuntimeRule("S3")
@@ -113,8 +113,8 @@ class test_buildFor : test_AutomatonUtilsAbstract() {
         parser.parseForGoal("S", "a")
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))   // G = . S
-            state(RP(G, oN, ER))   // G = S .
+            state(RP(rG, oN, SOR))   // G = . S
+            state(RP(rG, oN, ER))   // G = S .
             state(RP(S, oN, ER))    // S = S1 .
             state(RP(S1, oN, p1))   // S1 = M . S2
             state(RP(S1, oN, ER))  // S1 = M S2 .
@@ -145,7 +145,7 @@ class test_buildFor : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val S2 = rrs.findRuntimeRule("S2")
         val ABCX = rrs.findRuntimeRule("ABCX")
         val ABCopt = rrs.findRuntimeRule("ABCopt")
@@ -164,8 +164,8 @@ class test_buildFor : test_AutomatonUtilsAbstract() {
         parser.parseForGoal("S", "x")
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))     // G = . S
-            state(RP(G, oN, ER))     // G = S .
+            state(RP(rG, oN, SOR))     // G = . S
+            state(RP(rG, oN, ER))     // G = S .
             state(RP(S, oN, ER))     // S = ABCX .
             state(RP(S, o1, ER))     // S = S2 .
             state(RP(S2, oN, p1))     // S2 = S . y S

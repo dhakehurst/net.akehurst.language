@@ -20,7 +20,7 @@ import net.akehurst.language.agl.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_DataTypes {
+class test_DataTypes_expectedAt {
     private data class Data(val sentence: String, val position: Int, val expected: List<String>) {
         override fun toString(): String = "sentence='$sentence'  position=$position    expected=${expected}"
     }

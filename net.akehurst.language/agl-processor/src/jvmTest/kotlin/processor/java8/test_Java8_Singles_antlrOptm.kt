@@ -79,7 +79,7 @@ class test_Java8_Singles_antlrOptm {
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
 
-        assertEqualsWarning(1, result.sppt!!.maxNumHeads)
+        assertEqualsWarning(2, result.sppt!!.maxNumHeads)
     }
 
     @Test

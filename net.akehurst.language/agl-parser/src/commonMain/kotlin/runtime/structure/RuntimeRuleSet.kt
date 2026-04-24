@@ -16,11 +16,13 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.kotlinx.collections.MapNotNull
+import net.akehurst.kotlinx.collections.lazyMapNotNull
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
-import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.parser.api.PrefRule
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RuleSet
 
 class RuntimeRuleSet(
@@ -33,9 +35,9 @@ class RuntimeRuleSet(
     companion object {
         var nextRuntimeRuleSetNumber = 0
 
-        // val numberForGrammar = lazyMutableMapNonNull<Grammar, Int> { nextRuntimeRuleSetNumber++ }
+        // val numberForGrammar by lazyMutableMapNotNull<Grammar, Int> { nextRuntimeRuleSetNumber++ }
         /** Grammar.qualifiedName -> number **/
-        val numberForGrammar = lazyMutableMapNonNull<String, Int> { nextRuntimeRuleSetNumber++ }
+        val numberForGrammar by lazyMapNotNull<String, Int> { nextRuntimeRuleSetNumber++ }
 
         const val NO_RRS = -1
 
@@ -73,8 +75,8 @@ class RuntimeRuleSet(
             .also { it.setRhs(RuntimeRuleRhsEmptyList(it)) }
     }
 
-    val goalRuleFor = lazyMutableMapNonNull<RuntimeRule, RuntimeRule> {
-        val ug = it //this.findRuntimeRule(it)
+    override val goalRuleFor: MapNotNull<Rule,Rule> by lazyMapNotNull<Rule, Rule> {
+        val ug = it as RuntimeRule //this.findRuntimeRule(it)
         val gr = RuntimeRule(this.number, GOAL_RULE_NUMBER, GOAL_TAG, false, false)
         gr.setRhs(RuntimeRuleRhsGoal(gr, ug))
         gr
@@ -107,7 +109,7 @@ class RuntimeRuleSet(
         //    when {
         //        it.isEmbedded -> (it.rhs as RuntimeRuleRhsEmbedded).embeddedRuntimeRuleSet.terminals.toList()
         //        it.isTerminal -> listOf(it)
-         //       else -> emptyList()
+        //       else -> emptyList()
         //    }
         //}
     }
@@ -132,7 +134,7 @@ class RuntimeRuleSet(
     */
     /*
     // used when calculating lookahead
-    val firstTerminals2 = lazyMutableMapNonNull<RulePosition, List<RuntimeRule>> {
+    val firstTerminals2 by lazyMutableMapNotNull<RulePosition, List<RuntimeRule>> {
         val trps = expectedTerminalRulePositions[it] ?: arrayOf()
         trps.flatMap { it.items }.toSet().toList()
     }
@@ -142,13 +144,13 @@ class RuntimeRuleSet(
         runtimeRules.associate { Pair(it.tag, it) }
     }
     private val nonTerminalRuleNumber by lazy {
-        rulesByTag.filter { (k, v) -> v.isNonTerminal }.entries.associate {(k, v) ->  Pair(k, v.ruleNumber) }
+        rulesByTag.filter { (k, v) -> v.isNonTerminal }.entries.associate { (k, v) -> Pair(k, v.number) }
     }
-    private val terminalByTag:Map<String, RuntimeRule> by lazy {
+    private val terminalByTag: Map<String, RuntimeRule> by lazy {
         rulesByTag.filter { (k, v) -> v.isTerminal }
     }
     private val embeddedRuleNumber by lazy {
-        rulesByTag.filter { (k, v) -> v.isEmbedded }.entries.associate {(k, v) ->  Pair(k, v.ruleNumber) }
+        rulesByTag.filter { (k, v) -> v.isEmbedded }.entries.associate { (k, v) -> Pair(k, v.number) }
     }
 
     // userGoalRule -> ParserStateSet
@@ -181,7 +183,7 @@ class RuntimeRuleSet(
 
     /*
     //called from ParserStateSet, which adds the Goal GrammarRule bits
-    internal val parentPosition = lazyMutableMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
+    internal val parentPosition by lazyMutableMapNotNull<RuntimeRule, Set<RulePosition>> { childRR ->
         //TODO: this is slow, is there a better way?
         this.runtimeRules.flatMap { rr ->
             val rps = rr.rulePositions
@@ -311,7 +313,7 @@ class RuntimeRuleSet(
         this.states_cache[userGoalRuleName] = automaton as ParserStateSet
     }
 
-    fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind: AutomatonKind): ParserStateSet =
+    fun fetchStateSetFor(userGoalRule: Rule, automatonKind: AutomatonKind): ParserStateSet =
         fetchStateSetFor(userGoalRule.tag, automatonKind)
 
     internal fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
@@ -324,13 +326,13 @@ class RuntimeRuleSet(
         return stateSet
     }
 
-    fun findEmbeddedRuleSets(found:Set<RuntimeRuleSet> = emptySet()) : Set<RuntimeRuleSet> {
+    fun findEmbeddedRuleSets(found: Set<RuntimeRuleSet> = emptySet()): Set<RuntimeRuleSet> {
         return when {
             found.contains(this) -> found
             else -> {
-                val res = runtimeRules.filter{ it.isEmbedded }.flatMap {
+                val res = runtimeRules.filter { it.isEmbedded }.flatMap {
                     val es = (it.rhs as RuntimeRuleRhsEmbedded).embeddedRuntimeRuleSet
-                    val r = es.findEmbeddedRuleSets(found+this)
+                    val r = es.findEmbeddedRuleSets(found + this)
                     r + es
                 }.toSet()
                 res
@@ -434,11 +436,11 @@ class RuntimeRuleSet(
                 used
             }
 
-            rule.ruleNumber >= 0 && done[rule.ruleNumber] -> used
+            rule.number >= 0 && done[rule.number] -> used
             else -> when {
                 rule.isNonTerminal -> {
                     used.add(rule)
-                    if (rule.ruleNumber >= 0) done[rule.ruleNumber] = true
+                    if (rule.number >= 0) done[rule.number] = true
                     for (sr in rule.rhsItems.flatten()) {
                         calcUsedRules(sr as RuntimeRule, used, done)
                     }
@@ -447,7 +449,7 @@ class RuntimeRuleSet(
 
                 else -> {
                     used.add(rule)
-                    if (rule.ruleNumber > 0) done[rule.ruleNumber] = true
+                    if (rule.number > 0) done[rule.number] = true
                     used
                 }
             }
@@ -455,10 +457,10 @@ class RuntimeRuleSet(
     }
 
     // only used in test
-    fun clone(): RuntimeRuleSet {
+    override fun clone(): RuntimeRuleSet {
         val cloneNumber = nextRuntimeRuleSetNumber++
         val clonedRules = this.runtimeRules.associate { rr ->
-            val cr = RuntimeRule(cloneNumber, rr.ruleNumber, rr.name, rr.isSkip, rr.isPseudo)
+            val cr = RuntimeRule(cloneNumber, rr.number, rr.name, rr.isSkip, rr.isPseudo)
             Pair(rr.tag, cr)
         }
         this.runtimeRules.forEach {
@@ -478,6 +480,9 @@ class RuntimeRuleSet(
         val clone = RuntimeRuleSet(cloneNumber, qualifiedName, rules, clonedPrecedenceRules)
         return clone
     }
+
+    // --- RuleSet ---
+    override val rule: List<Rule> get() = runtimeRules
 
     override fun toString(): String {
         val rulesStr = this.runtimeRules

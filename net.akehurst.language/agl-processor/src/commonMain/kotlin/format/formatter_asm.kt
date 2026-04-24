@@ -87,7 +87,7 @@ class AglFormatDomainDefault(
                     else -> Unit
                 }
             }
-            return ProcessResultDefault(formatModel, processIssues=issues)
+            return ProcessResultDefault(formatModel, processIssues = issues)
         }
 
         fun fromString(sentenceContext: SentenceContext, formatModelStr: FormatString): ProcessResult<AglFormatDomain> {
@@ -173,20 +173,25 @@ class FormatWhenOptionElseDefault(
 }
 
 class FormatExpressionExpressionDefault(
-    override val expression: Expression
+    override val expression: Expression,
+    override val via: PossiblyQualifiedName?
 ) : FormatExpressionExpression {
 
-    override fun asString(indent: Indent, imports: List<Import>): String {
-        TODO("not implemented")
-    }
+    override fun asString(indent: Indent, imports: List<Import>): String = "${expression.asString(indent, imports)}${via?.let { " via ${it.value}" }}"
 }
 
 class FormatExpressionTemplateDefault(
     override val content: List<TemplateElement>
 ) : FormatExpressionTemplate {
-    override fun asString(indent: Indent, imports: List<Import>): String {
-        TODO("not implemented")
-    }
+    override fun asString(indent: Indent, imports: List<Import>): String = content.joinToString(separator = "") { it.toString() }
+}
+
+class FormatSeparatedListDefault(
+    override val listExpression: Expression,
+    override val separator: Expression,
+    override val via: PossiblyQualifiedName?
+) : FormatSeparatedList {
+    override fun toString(): String = "${listExpression.asString(Indent())} sep ${separator.asString(Indent())}${via?.let { " via ${it.value}" }}"
 }
 
 class TemplateElementTextDefault(
@@ -202,16 +207,15 @@ class TemplateElementExpressionPropertyDefault(
 }
 
 class TemplateElementExpressionListDefault(
-    override val listExpression: Expression,
-    override val separator: Expression
+    override val formatSeparatedList: FormatSeparatedList
 ) : TemplateElementExpressionList {
-    override fun toString(): String = "\$[${listExpression.asString(Indent())} sep '${separator.asString(Indent())}']"
+    override fun toString(): String = "\$[$formatSeparatedList]"
 }
 
 data class TemplateElementExpressionListSeparatorDefault(
-    override val value:String,
-    override val isNamedOfValue:Boolean
-):TemplateElementExpressionListSeparator
+    override val value: String,
+    override val isNamedOfValue: Boolean
+) : TemplateElementExpressionListSeparator
 
 class TemplateElementExpressionEmbeddedDefault(
     override val expression: FormatExpression

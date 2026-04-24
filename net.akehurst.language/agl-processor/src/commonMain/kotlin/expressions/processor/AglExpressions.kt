@@ -63,6 +63,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
               | typeTest
               | lambda
               | group
+              | block
               ;
             rootExpression = propertyReference ;
             literalExpression = literal ;
@@ -88,12 +89,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
               ;
             
             functionCall = IDENTIFIER '(' argumentList ')' ;
-            object = possiblyQualifiedName constructorArguments assignmentBlock ;
+            object = possiblyQualifiedName constructorArguments propertyAssignmentBlock ;
             constructorArguments = '(' [assignment / ',']* ')' ;
-            tuple = 'tuple' assignmentBlock ;
-            assignmentBlock = '{' assignmentList  '}' ;
-            assignmentList = assignment* ;
-            assignment = propertyName grammarRuleIndex? ASSIGN_OP expression ;
+            tuple = 'tuple' propertyAssignmentBlock ;
+            propertyAssignmentBlock = '{' propertyAssignment*  '}' ;
+            propertyAssignment = propertyName grammarRuleIndex? ASSIGN_OP expression ;
             leaf ASSIGN_OP = ':=' | '+=' ;
             propertyName = SPECIAL | IDENTIFIER ;
             grammarRuleIndex = '$' POSITIVE_INTEGER ;
@@ -113,7 +113,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             methodCall = '.' methodReference '(' argumentList ')' ;
             argumentList = [expression / ',']* ;
             
-            lambda = '{' expression '}' ;
+            lambda = '{' [IDENTIFIER / ',']+ -> expression '}' ;
+            
+            block = '{' assignemnt* expression '}' ;
             
             propertyReference = SPECIAL | IDENTIFIER ;
             methodReference = IDENTIFIER ;
@@ -127,8 +129,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
         
             leaf SPECIAL = '$' IDENTIFIER ;
             leaf BOOLEAN = "true|false" ;
-            leaf INTEGER = "[0-9]+" ;
-            leaf REAL = "[0-9]+[.][0-9]+" ;
+            leaf INTEGER = "[-]?[0-9]+" ;
+            leaf REAL = "[-]?[0-9]+[.][0-9]+" ;
             leaf STRING = "'([^'\\]|\\.)*'" ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
           }
@@ -229,6 +231,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("typeTest")
                         ref("lambda")
                         ref("group")
+                        ref("block")
                     }
                     concatenation("rootExpression") {
                         ref("propertyReference")
@@ -263,21 +266,18 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("IDENTIFIER"); lit("("); ref("argumentList"); lit(")")
                     }
                     concatenation("object") {
-                        ref("possiblyQualifiedName"); ref("constructorArguments"); ref("assignmentBlock")
+                        ref("possiblyQualifiedName"); ref("constructorArguments"); ref("propertyAssignmentBlock")
                     }
                     concatenation("constructorArguments") {
-                        lit("("); spLst(0, -1) { ref("assignment"); lit(",") }; lit(")");
+                        lit("("); spLst(0, -1) { ref("propertyAssignment"); lit(",") }; lit(")");
                     }
                     concatenation("tuple") {
-                        lit("tuple"); ref("assignmentBlock")
+                        lit("tuple"); ref("propertyAssignmentBlock")
                     }
-                    concatenation("assignmentBlock") {
-                        lit("{"); ref("assignmentList"); lit("}")
+                    concatenation("propertyAssignmentBlock") {
+                        lit("{"); lst(0, -1) { ref("propertyAssignment") }; lit("}")
                     }
-                    list("assignmentList", 0, -1) {
-                        ref("assignment")
-                    }
-                    concatenation("assignment") {
+                    concatenation("propertyAssignment") {
                         ref("propertyName"); opt { ref("grammarRuleIndex") }; ref("ASSIGN_OP"); ref("expression")
                     }
                     choice("ASSIGN_OP", isLeaf = true) {
@@ -314,7 +314,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     separatedList("argumentList", 0, -1) {
                         ref("expression"); lit(",")
                     }
-                    concatenation("lambda") { lit("{"); ref("expression"); lit("}") }
+                    concatenation("lambda") { lit("{"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit ("->"); ref("expression"); lit("}") }
+                    concatenation("block") { lit("{"); lst(0, -1) { ref("assignment") }; ref("expression"); lit("}") }
+                    concatenation("assignment") { ref("IDENTIFIER"); lit(":="); ref("expression"); }
                     choice("propertyReference") {
                         ref("SPECIAL")
                         ref("IDENTIFIER")
@@ -339,8 +341,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     }
                     concatenation("SPECIAL", isLeaf = true) { lit("$"); ref("IDENTIFIER") }
                     concatenation("BOOLEAN", isLeaf = true) { pat("true|false") }
-                    concatenation("INTEGER", isLeaf = true) { pat("[0-9]+") }
-                    concatenation("REAL", isLeaf = true) { pat("[0-9]+[.][0-9]+") }
+                    concatenation("INTEGER", isLeaf = true) { pat("[-]?[0-9]+") }
+                    concatenation("REAL", isLeaf = true) { pat("[-]?[0-9]+[.][0-9]+") }
                     concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
 
@@ -697,7 +699,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
+        styleDomain(NAME, sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     extends(AglBase.NAME)

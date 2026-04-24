@@ -35,10 +35,10 @@ class test_M2mPatternExecutor {
             println(actualPlan.joinToString("\n"))
             assertEquals(expectedPlan, actualPlan)
 
-            val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v.toAsmSimple)) }
+            val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v.toAsmSimple, StdLibDefault.AnyType)) }
             val res = sut.execute(EvaluationContext.of(typedInput), tgtName)
             val actualResult = res
-            val expectedTypedResult = accessorMutator.toTypedObject(expectedResult.toAsmSimple)
+            val expectedTypedResult = accessorMutator.toTypedObject(expectedResult.toAsmSimple, StdLibDefault.AnyType)
             assertEquals(expectedTypedResult.self.toAsmSimple.asString(), actualResult.self.toAsmSimple.asString())
         }
     }

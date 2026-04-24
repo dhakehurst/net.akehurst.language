@@ -34,7 +34,7 @@ import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNotNull
 import net.akehurst.language.format.asm.AglFormatDomainDefault
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import kotlin.test.Ignore
@@ -51,7 +51,7 @@ class test_StatechartTools_References {
 
         private val grammarModel =
             Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } }).asm!!
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
+        private val processors by lazyMutableMapNotNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarModel
             val cfg = Agl.configuration {
                 targetGrammarName(grmName) //use default

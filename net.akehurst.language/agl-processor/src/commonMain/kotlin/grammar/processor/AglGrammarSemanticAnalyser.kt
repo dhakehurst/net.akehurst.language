@@ -331,11 +331,11 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                     val same = trans.filter { tr2 ->
                         when (tr2.action) {
                             ParseAction.WIDTH,
-                            ParseAction.EMBED -> tr1.lookahead == tr2.lookahead && tr1.to == tr2.to && tr1.context.intersect(tr2.context).isNotEmpty()
+                            ParseAction.EMBED -> tr1.lookaheadGuard == tr2.lookaheadGuard && tr1.target == tr2.target && tr1.context.intersect(tr2.context).isNotEmpty()
 
                             ParseAction.GOAL,
                             ParseAction.HEIGHT,
-                            ParseAction.GRAFT -> tr1.lookahead == tr2.lookahead && tr1.context.intersect(tr2.context).isNotEmpty()
+                            ParseAction.GRAFT -> tr1.lookaheadGuard == tr2.lookaheadGuard && tr1.context.intersect(tr2.context).isNotEmpty()
                         }
                     }
                     same.forEach { tr2 ->
@@ -344,13 +344,13 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                             when {
                                 //(tr1.action == Transition.ParseAction.WIDTH && tr2.action == Transition.ParseAction.WIDTH && tr1.to != tr2.to) -> Unit // no error
                                 else -> {
-                                    val lhg1 = tr1.lookahead.map { it.guard.part }.reduce { acc, it -> acc.intersect(it) }
-                                    val lhg2 = tr2.lookahead.map { it.guard.part }.reduce { acc, it -> acc.intersect(it) }
+                                    val lhg1 = tr1.lookaheadGuard.map { it.guardLookaheadSet.part }.reduce { acc, it -> acc.intersect(it) }
+                                    val lhg2 = tr2.lookaheadGuard.map { it.guardLookaheadSet.part }.reduce { acc, it -> acc.intersect(it) }
                                     val lhi = lhg1.intersect(lhg2)
                                     if (lhi.isNotEmpty) {
-                                        val frOr = conv.originalRuleItemFor(tr1.from.runtimeRules.first().runtimeRuleSetNumber, tr1.from.runtimeRules.first().ruleNumber)
-                                        val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber, tr1.to.runtimeRules.first().ruleNumber) //FIXME
-                                        val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber, tr2.to.runtimeRules.first().ruleNumber) //FIXME
+                                        val frOr = conv.originalRuleItemFor(tr1.source.runtimeRules.first().ruleSetNumber, tr1.source.runtimeRules.first().number)
+                                        val ori1 = conv.originalRuleItemFor(tr1.target.runtimeRules.first().ruleSetNumber, tr1.target.runtimeRules.first().number) //FIXME
+                                        val ori2 = conv.originalRuleItemFor(tr2.target.runtimeRules.first().ruleSetNumber, tr2.target.runtimeRules.first().number) //FIXME
                                         val orF = frOr?.owningRule
                                         val or1 = ori1?.owningRule
                                         val or2 = ori2?.owningRule

@@ -357,12 +357,12 @@ class ExternalGetterByReflection(
     val typesDomain: TypesDomain,
     val issues: IssueHolder,
 ) : ExternalGetter {
-    override fun typeFor(obj: Any): TypeInstance {
+    override fun typeFor(obj: Any, ifNotFound:TypeInstance): TypeInstance {
         val tp = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
         return when (tp) {
             null -> {
-                issues.error(null, "ExternalGetterByReflection cannot get type for ${obj::class.simpleName}")
-                StdLibDefault.AnyType
+                issues.warn(null, "ExternalGetterByReflection cannot get type for ${obj::class.simpleName}, using '${ifNotFound.typeName.value}'")
+                ifNotFound
             }
 
             else -> tp.type()
@@ -413,7 +413,7 @@ constructor(
     override val primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForReflection()
 ) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutator {
 
-    override fun typeFor(obj: Any?): TypeInstance {
+    override fun typeFor(obj: Any?, ifNotFound: TypeInstance): TypeInstance {
         return when (obj) {
             null -> StdLibDefault.NothingType
             is Boolean -> StdLibDefault.Boolean
@@ -429,7 +429,7 @@ constructor(
                     null -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
                     else -> when (me.key) {
                         is String -> {
-                            val ttargs = obj.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k as String), typeFor(v)) }
+                            val ttargs = obj.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k as String), typeFor(v, ifNotFound)) }
                             StdLibDefault.TupleType.type(ttargs)
                         }
 
@@ -438,13 +438,13 @@ constructor(
                 }
             }
 
-            else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj)
+            else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
         }
     }
 
     override fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
-        val lmb: (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it))) }
+        val lmb: (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it, StdLibDefault.AnyType))) }
         return typedAs(lmb, lambdaType)
     }
 
@@ -456,7 +456,7 @@ constructor(
     override fun callFunction(functionName: String, args: List<TypedObject>): TypedObject {
         val arguments = args.map { untyped(it) }
         return primitiveExecutor.functionCall(functionName, arguments)?.let {
-            toTypedObject(it.value)
+            toTypedObject(it.value, StdLibDefault.AnyType)
         } ?: nothing()
     }
 
@@ -500,7 +500,7 @@ constructor(
     // --- Suspend ---
     override suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
-        val lmb: suspend (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it))) }
+        val lmb: suspend (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it, StdLibDefault.AnyType))) }
         return typedAs(lmb, lambdaType)
     }
 
@@ -559,7 +559,7 @@ constructor(
                 when (obj) {
                     is Map<*, *> -> {
                         val value = (obj as Map<String, Any>)[propertyName]
-                        value?.let { toTypedObject(it) } ?: nothing()
+                        value?.let { toTypedObject(it, StdLibDefault.AnyType) } ?: nothing()
                     }
 
                     else -> nothing()
@@ -572,7 +572,7 @@ constructor(
                     null -> {
                         val obj = untyped(tobj)
                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
-                        value?.let { toTypedObject(value) } ?: nothing()
+                        value?.let { toTypedObject(value, StdLibDefault.AnyType) } ?: nothing()
                     }
 
                     else -> {
@@ -581,12 +581,12 @@ constructor(
                         when {
                             (null != propResOriginal.execution) -> {
                                 val value = propertyExecution(obj, propResOriginal)
-                                value?.let { toTypedObject(value) } ?: nothing()
+                                value?.let { toTypedObject(value,propRes.typeInstance) } ?: nothing()
                             }
 
                             (null != propResOriginal.executionSuspend) -> {
                                 val value = propertyExecution(obj, propResOriginal)
-                                value?.let { toTypedObject(value) } ?: nothing()
+                                value?.let { toTypedObject(value,propRes.typeInstance) } ?: nothing()
                             }
 
                             else -> {
@@ -595,10 +595,10 @@ constructor(
                                 when (execResult) {
                                     null -> {
                                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
-                                        value?.let { toTypedObject(value) } ?: nothing()
+                                        value?.let { toTypedObject(value,propRes.typeInstance) } ?: nothing()
                                     }
 
-                                    else -> toTypedObject(execResult.value)
+                                    else -> toTypedObject(execResult.value,propRes.typeInstance)
                                 }
                             }
                         }
@@ -621,7 +621,7 @@ constructor(
                 val obj = untyped(tobj)
                 val arguments = args.map { untyped(it) }.toTypedArray()
                 val value = obj.reflect().call(methodName, *arguments)
-                value?.let { toTypedObject(it) } ?: nothing()
+                value?.let { toTypedObject(it, StdLibDefault.AnyType) } ?: nothing()
             }
 
             else -> {
@@ -641,7 +641,7 @@ constructor(
                         else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
                     }
 
-                    else -> toTypedObject(execResult.value)
+                    else -> toTypedObject(execResult.value, meth.original.returnType)
                 }
             }
         }

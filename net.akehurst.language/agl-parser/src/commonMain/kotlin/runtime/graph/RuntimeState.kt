@@ -39,7 +39,7 @@ internal class RuntimeState(
 
     val uncompressed: Set<StateInfoUncompressed> by lazy {
         //TODO: Maybe runtimeLookahead should be indexed by RulePosition
-        this.state.rulePositions.flatMap { rp ->
+        this.state.rulePosition.flatMap { rp ->
             this.runtimeLookaheadSet.map { grd ->
                 StateInfoUncompressed(rp, grd.fullContent)
             }
@@ -66,5 +66,5 @@ internal class RuntimeState(
         else -> true
     }
 
-    override fun toString(): String = "RS{${state.rulePositions}[${runtimeLookaheadSet.joinToString(separator = "|") { it.fullContent.joinToString { it.tag } }}]}"
+    override fun toString(): String = "RS{${state.rulePosition}[${runtimeLookaheadSet.joinToString(separator = "|") { it.fullContent.joinToString { it.tag } }}]}"
 }

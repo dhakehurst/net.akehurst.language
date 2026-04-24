@@ -119,7 +119,7 @@ class test_ObjectGraphByReflection {
         assertEquals("A", actual1.self)
 
         val actual2 = tobj.getProperty("prop2")
-        assertEquals(1, actual2.self)
+        assertEquals(1L, actual2.self)
 
         val actual3 = tobj.getProperty("prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)
@@ -143,7 +143,7 @@ class test_ObjectGraphByReflection {
         assertEquals("A", actual1.self)
 
         val actual2 = tobj.getProperty("prop2")
-        assertEquals(1, actual2.self)
+        assertEquals(1L, actual2.self)
 
         val actual3 = tobj.getProperty("prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)

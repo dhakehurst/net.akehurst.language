@@ -195,14 +195,39 @@ data class MethodCallDefault(
 }
 
 data class LambdaExpressionDefault(
+    override val variables: List<String>,
     override val expression: Expression
 ) : LambdaExpression {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
-        return "{ ${expression.asString(indent, imports)}} }"
+        val vars = variables.joinToString()
+        return "{ $vars -> ${expression.asString(indent, imports)}} }"
     }
 
-    override fun toString(): String = "{ $expression }"
+    override fun toString(): String = "{ ${variables.joinToString()} -> $expression }"
+}
+
+data class StatementBlockExpressionDefault(
+    override val assignment: List<AssignmentStatement>,
+    override val expression: Expression
+) : StatementBlockExpression {
+
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        return when {
+            assignment.isEmpty() -> "{ ${expression.asString(Indent(), imports)} }"
+            else -> {
+                val ass = assignment.joinToString(separator = "\n") { it.asString(indent.inc, imports) }
+                """
+                $indent{
+                $ass
+                ${expression.asString(indent.inc, imports)}
+                $indent}
+                """.trimIndent()
+            }
+        }
+    }
+
+    override fun toString(): String = "{ ... }"
 }
 
 data class IndexOperationDefault(
@@ -241,6 +266,7 @@ class CastExpressionDefault(
         val ttn = targetType.asString(indent, imports)
         return "${expression.asString(indent, imports)} as $ttn"
     }
+
     override fun toString(): String = "$expression as $targetType"
 }
 
@@ -252,6 +278,7 @@ class TypeTestExpressionDefault(
         val ttn = targetType.asString(indent, imports)
         return "${expression.asString(indent, imports)} as $ttn"
     }
+
     override fun toString(): String = "$expression as $targetType"
 }
 

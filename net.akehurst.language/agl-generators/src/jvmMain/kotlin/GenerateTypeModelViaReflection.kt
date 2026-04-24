@@ -1,9 +1,9 @@
 package net.akehurst.language.agl.generators
 
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.kotlinx.komposite.common.DatatypeRegistry
 import net.akehurst.kotlinx.komposite.processor.Komposite
 import net.akehurst.language.base.api.*
-import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 import java.nio.file.FileSystem
@@ -122,7 +122,7 @@ class GenerateTypeModelViaReflection(
 
     private val _include = mutableListOf<QualifiedName>()
     private val _exclude = mutableListOf<QualifiedName>()
-    private val _requires = lazyMutableMapNonNull<QualifiedName, MutableSet<QualifiedName>> { mutableSetOf() }
+    private val _requires by lazyMutableMapNotNull<QualifiedName, MutableSet<QualifiedName>> { mutableSetOf() }
 
     fun include(qualifiedName: String) {
         _include.add(QualifiedName(qualifiedName))

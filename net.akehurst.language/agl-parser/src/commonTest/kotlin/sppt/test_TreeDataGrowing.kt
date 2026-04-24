@@ -59,7 +59,10 @@ class test_TreeDataGrowing {
 
     /** Skeleton [Rule]; only `tag` is used by [CompleteTreeDataNode.toString]. */
     private class FakeRule(override val tag: String) : Rule {
+        override val ruleSetNumber: Int = 1
+        override val number: Int = 1
         override val isSkip: Boolean = false
+        override val isGoal: Boolean = false
         override val isPseudo: Boolean = false
         override val isTerminal: Boolean = false
         override val isEndOfText: Boolean = false

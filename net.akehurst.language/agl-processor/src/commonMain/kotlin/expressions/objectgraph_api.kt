@@ -122,8 +122,8 @@ interface ObjectGraphAccessorMutatorCommon {
     var typesDomain: TypesDomain
     val createdStructuresByType: Map<TypeInstance, List<Any>>
 
-    fun typeFor(obj: Any?): TypeInstance
-    fun toTypedObject(obj: Any?): TypedObject
+    fun typeFor(obj: Any?, ifNotFound: TypeInstance): TypeInstance
+    fun toTypedObject(obj: Any?, ifNotFound: TypeInstance): TypedObject
     fun untyped(typedObj: TypedObject): Any
     fun typedAs(obj:Any, type:TypeInstance): TypedObject
 
@@ -156,7 +156,7 @@ interface ObjectGraphAccessorMutatorCommon {
 }
 
 interface ExternalGetter {
-    fun typeFor(obj: Any): TypeInstance
+    fun typeFor(obj: Any, ifNotFound:TypeInstance): TypeInstance
     fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     fun getProperty(obj: Any, propertyName: String): Any?
     fun setProperty(obj: Any, propertyName: String, value: Any?)

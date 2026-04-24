@@ -22,6 +22,7 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.Expression
@@ -53,6 +54,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::format)
         super.register(this::formatRule)
         super.register(this::formatExpression)
+        super.register(this::viaFormatSet)
         super.register(this::whenExpression)
         super.register(this::whenOption)
         super.register(this::whenOptionElse)
@@ -122,13 +124,16 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         return AglFormatRuleDefault(forTypeName, expression)
     }
 
-    //formatExpression = expression | templateString | whenExpression    ;
+    //formatExpression = expression viaFormatSet? | Template::templateString ;
     fun formatExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpression = when (nodeInfo.alt.option.value) {
-        0 -> FormatExpressionExpressionDefault(children[0] as Expression)
+        0 -> FormatExpressionExpressionDefault(children[0] as Expression, children[1] as PossiblyQualifiedName?)
         1 -> children[0] as FormatExpressionTemplate
-        2 -> children[0] as FormatExpressionWhen
         else -> error("Option not handled")
     }
+
+    // viaFormatSet = 'via' possiblyQualifiedName ;
+    private fun viaFormatSet(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        children[1] as PossiblyQualifiedName
 
     // whenExpression = 'when' '{' whenOptionList '}' ;
     private fun whenExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpressionWhen {
@@ -149,11 +154,12 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         return FormatWhenOptionElseDefault(expression)
     }
 
-    // separatedList = rootExpression 'sep' separator ;
-    private fun separatedList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Expression,Expression> {
+    // separatedList = rootExpression 'sep' separator viaFormatSet? ;
+    private fun separatedList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatSeparatedList {
         val propertyReference = children[0] as Expression
         val separator = children[2] as Expression
-        return Pair(propertyReference,separator)
+        val via = children[3] as PossiblyQualifiedName?
+        return FormatSeparatedListDefault(propertyReference,separator, via)
     }
 
     // separator = STRING | rootExpression ;

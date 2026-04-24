@@ -1197,6 +1197,7 @@ internal class Grammar2TransformRuleSet(
                     MethodCallDefault(
                         "map", listOf(
                             LambdaExpressionDefault(
+                                listOf("it"),
                                 WithExpressionDefault(
                                     RootExpressionDefault("it"),
                                     trRuleForItem.expression

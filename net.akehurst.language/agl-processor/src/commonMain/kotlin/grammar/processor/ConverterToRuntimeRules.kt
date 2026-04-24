@@ -74,7 +74,7 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun recordOriginalRuleItem(runtimeRule: RuntimeRule, originalRuleItem: RuleItem) {
-        this._originalRuleItem[Pair(runtimeRule.runtimeRuleSetNumber, runtimeRule.ruleNumber)] = originalRuleItem
+        this._originalRuleItem[Pair(runtimeRule.ruleSetNumber, runtimeRule.number)] = originalRuleItem
     }
 
     private fun nextRule(name: String, isSkip: Boolean, isPseudo: Boolean): RuntimeRule {

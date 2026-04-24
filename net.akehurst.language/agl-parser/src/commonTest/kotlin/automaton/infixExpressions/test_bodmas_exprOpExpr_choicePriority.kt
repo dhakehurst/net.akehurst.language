@@ -49,7 +49,7 @@ class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() {
     }
     private val S = rrs.findRuntimeRule("S")
     private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
+    private val rG = SM.startState.runtimeRules.first()
     private val E = rrs.findRuntimeRule("E")
     private val EA = rrs.findRuntimeRule("EA")
     private val EB = rrs.findRuntimeRule("EB")
@@ -67,14 +67,14 @@ class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(G,oN,SR)     /* G = . S */
+            val s0 = state(rG,oN,SR)     /* G = . S */
             val s1 = state(v,oN,EOR)     /* v .     */
             val s2 = state(E,oN,EOR)     /* E = v . */
             val s3 = state(S,oN,EOR)     /* S = E . */
             val s4 = state(RP(EA, oN, 1), RP(EB, oN, 1))     /* G = . S   */
             val s5 = state(EA,oN,1)     /* G = . S   */
             val s6 = state(EB,oN,1)     /* G = . S   */
-            val s7 = state(G,oN,EOR)     /* G = . S   */
+            val s7 = state(rG,oN,EOR)     /* G = . S   */
 
 
             //transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
@@ -98,7 +98,7 @@ class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(G,oN,SR)     /* G = . S   */
+            val s0 = state(rG,oN,SR)     /* G = . S   */
 
 
             //transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)

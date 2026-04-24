@@ -44,7 +44,7 @@ class test_abcz_OR_abcy : test_AutomatonAbstract() {
     }
     private val S = rrs.findRuntimeRule("S")
     private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
+    private val rG = SM.startState.runtimeRules.first()
     private val ABCZ = rrs.findRuntimeRule("ABCZ")
     private val ABCY = rrs.findRuntimeRule("ABCY")
     private val a = rrs.findRuntimeRule("'a'")
@@ -66,7 +66,7 @@ class test_abcz_OR_abcy : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SOR))                                   // G = . S
+            val s0 = state(RP(rG, oN, SOR))                                   // G = . S
             val s1 = state(RP(a, oN, EOR))                                   // a .
             val s2 = state(RP(ABCZ, oN, 1), RP(ABCY, oN, 1))    // ABCZ = a . b c z , ABCY = a . b c y
             val s3 = state(RP(b, oN, EOR))                                   // b .
@@ -77,7 +77,7 @@ class test_abcz_OR_abcy : test_AutomatonAbstract() {
             val s8 = state(RP(y, oN, EOR))                                   // y .
             val s9 = state(RP(ABCZ, oN, EOR))                                // ABCZ = abcz .
             val s10 = state(RP(S, oN, EOR))                                  // S = ABCZ .
-            val s11 = state(RP(G, oN, EOR))                                  // G = S .
+            val s11 = state(RP(rG, oN, EOR))                                  // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 0), RP(ABCY, oN, 0)))
@@ -89,7 +89,7 @@ class test_abcz_OR_abcy : test_AutomatonAbstract() {
             transition(s0, s6, s8, WIDTH, setOf(EOT), setOf(), null)
             transition(s6, s7, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 3)))
             transition(s0, s9, s10, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, oN, 0)))
-            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, oN, 0)))
+            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(rG, oN, 0)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -106,7 +106,7 @@ class test_abcz_OR_abcy : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SOR))                                   // G = . S
+            val s0 = state(RP(rG, oN, SOR))                                   // G = . S
             val s1 = state(RP(a, oN, ER))                                   // a .
             val s2 = state(RP(ABCZ, oN, 1), RP(ABCY, oN, 1))    // ABCZ = a . b c z , ABCY = a . b c y
             val s3 = state(RP(b, oN, ER))                                   // b .
@@ -117,7 +117,7 @@ class test_abcz_OR_abcy : test_AutomatonAbstract() {
             val s8 = state(RP(y, oN, ER))                                   // y .
             val s9 = state(RP(ABCY, oN, ER))                                // ABCY = abcy .
             val s10 = state(RP(S, o1, ER))                                  // S = ABCY .
-            val s11 = state(RP(G, oN, ER))                                  // G = S .
+            val s11 = state(RP(rG, oN, ER))                                  // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 0), RP(ABCY, oN, 0)))
@@ -129,7 +129,7 @@ class test_abcz_OR_abcy : test_AutomatonAbstract() {
             transition(s0, s6, s8, WIDTH, setOf(EOT), setOf(), null)
             transition(s6, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCY, oN, 3)))
             transition(s0, s9, s10, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, o1, 0)))
-            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, oN, 0)))
+            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(rG, oN, 0)))
 
         }
 
@@ -151,8 +151,8 @@ class test_abcz_OR_abcy : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, oN, SOR))                                   // G = . S
-            val s1 = state(RP(G, oN, ER))                                  // G = S .
+            val s0 = state(RP(rG, oN, SOR))                                   // G = . S
+            val s1 = state(RP(rG, oN, ER))                                  // G = S .
             val s2 = state(RP(S, o0, ER))                                  // S = ABCZ .
             val s3 = state(RP(S, o1, ER))                                  // S = ABCY .
             val s4 = state(RP(ABCY, oN, ER))                                // ABCY = abcy .

@@ -38,7 +38,7 @@ class test_sList_0_n_literal : test_AutomatonAbstract() {
 
     private val a = rrs.findRuntimeRule("'a'")
     private val b = rrs.findRuntimeRule("'b'")
-    private val G = SM.startState.runtimeRules.first()
+    private val rG = SM.startState.runtimeRules.first()
 
     private val s0 = SM.startState
 
@@ -51,16 +51,16 @@ class test_sList_0_n_literal : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)  // G=.S
-            state(G, oN, ER)  // G=S.
+            state(rG, oN, SR)  // G=.S
+            state(rG, oN, ER)  // G=S.
             state(a, oN, ER)  // a
             state(EMPTY, oN, ER)  // <empty>
             state(S, oSE, ER) // S=[EMPTY].
 
-            trans(WIDTH) { src(G, oN, SR); tgt(EMPTY); lhg(EOT); ctx(G, oN, SR) }
-            trans(WIDTH) { src(G, oN, SR); tgt(a); lhg(setOf(EOT, b)); ctx(G, oN, SR) }
-            trans(GOAL) { src(S, oSE, ER); tgt(G); lhg(EOT); ctx(G, oN, SR) }
-            trans(HEIGHT) { src(EMPTY); tgt(S, oSE, ER); lhg(setOf(EOT), setOf(EOT)); ctx(G, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY); lhg(EOT); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(a); lhg(setOf(EOT, b)); ctx(rG, oN, SR) }
+            trans(GOAL) { src(S, oSE, ER); tgt(rG); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(EMPTY); tgt(S, oSE, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }

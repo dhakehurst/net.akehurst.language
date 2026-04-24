@@ -56,7 +56,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
         }
     }
     private val SM = rrs.fetchStateSetFor("S", AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
+    private val rG = SM.startState.runtimeRules.first()
     private val S = rrs.findRuntimeRule("S")
     private val rIfThenElse = rrs.findRuntimeRule("ifthenelse")
     private val rIfThen = rrs.findRuntimeRule("ifthen")
@@ -78,19 +78,19 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)       // G = . S
+            state(rG, oN, SR)       // G = . S
             state(tVAR)           // VAR
             state(tIF)           // 'if'
             state(rIfThenElse, oN, p1)   // ifthenelse = 'if' . expr 'then' expr 'else' expr ;
             state(rIfThen, oN, p1)       // ifthen = 'if' . expr 'then' expr ;
             state(rExpr)       // G = S .
 
-            trans(WIDTH) { src(G, oN, SR); tgt(tIF); lhg(setOf(tVAR, tIF)); ctx(G, oN, SR) }
-            trans(WIDTH) { src(rIfThenElse, oN, p1); tgt(tIF); lhg(setOf(tVAR, tIF)); ctx(G, oN, SR) }
-            trans(WIDTH) { src(rIfThenElse, oN, p1); tgt(tVAR); lhg(setOf(tTHEN)); ctx(G, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(tIF); lhg(setOf(tVAR, tIF)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rIfThenElse, oN, p1); tgt(tIF); lhg(setOf(tVAR, tIF)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rIfThenElse, oN, p1); tgt(tVAR); lhg(setOf(tTHEN)); ctx(rG, oN, SR) }
 
-            trans(HEIGHT) { src(tIF); tgt(rIfThen, oN, p1); lhg(setOf(tVAR, tIF)); ctx(G, oN, SR) }
-            trans(HEIGHT) { src(tIF); tgt(rIfThenElse, oN, p1); lhg(setOf(tVAR, tIF)); ctx(G, oN, SR) }
+            trans(HEIGHT) { src(tIF); tgt(rIfThen, oN, p1); lhg(setOf(tVAR, tIF)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(tIF); tgt(rIfThenElse, oN, p1); lhg(setOf(tVAR, tIF)); ctx(rG, oN, SR) }
 
         }
 
@@ -146,10 +146,10 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)
+            state(rG, oN, SR)
             state(tVAR)
             state(tIF)
-            state(G)
+            state(rG)
             state(S)
             state(rIfThenElse)
             state(rIfThenElse, oN, 4)

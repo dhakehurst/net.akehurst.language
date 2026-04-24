@@ -104,13 +104,13 @@ For detailed build instructions, see the project's GitHub repository.
 <dependency>
     <groupId>net.akehurst.language</groupId>
     <artifactId>agl-processor</artifactId>
-    <version>4.2.2</version>
+    <version>4.2.2.21</version>
 </dependency>
 ```
 
 ### Gradle (Kotlin DSL)
 ```kotlin
-implementation("net.akehurst.language:agl-processor:4.2.2")
+implementation("net.akehurst.language:agl-processor:4.2.2.21")
 ```
 
 ## Support

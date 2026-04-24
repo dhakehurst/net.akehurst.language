@@ -117,13 +117,13 @@ class GenerateGrammarDomainBuild(
         return generateFromAsm(asm)
     }
 
-    fun generateFromAsm(grammarDomain: GrammarDomain): String {
+    fun generateFromAsm(asm: GrammarDomain): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
         val og = ObjectGraphAccessorMutatorByReflection(AglGrammar.typesDomain, issues)
         val formatter = FormatterOverTypedObject(formatDomain, og,issues)
 
         val tp = grammarTypesDomain.findFirstDefinitionByNameOrNull(SimpleName("GrammarDomain"))!!.type()
-        val tobj = og.toTypedObject(tp)
+        val tobj = og.toTypedObject(asm, tp)
         val res = formatter.formatSelf(formatSet.qualifiedName, tobj)
         check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
         //val str = grammarModel.namespace.joinToString(separator = "\n\n") { generateNamespace(it) }

@@ -43,7 +43,7 @@ interface CreateObjectExpression : Expression {
     val propertyAssignments: List<AssignmentStatement>
 }
 
-interface FunctionCall: Expression {
+interface FunctionCall : Expression {
     val possiblyQualifiedName: PossiblyQualifiedName
     val arguments: List<Expression>
 }
@@ -74,6 +74,12 @@ interface MethodCall : NavigationPart {
 }
 
 interface LambdaExpression : Expression {
+    val variables: List<String>
+    val expression: Expression
+}
+
+interface StatementBlockExpression : Expression {
+    val assignment: List<AssignmentStatement>
     val expression: Expression
 }
 
@@ -113,20 +119,20 @@ interface InfixExpression : Expression {
     val operators: List<String>
 }
 
-interface CastExpression  : Expression {
+interface CastExpression : Expression {
     val expression: Expression
-    val targetType:TypeReference
+    val targetType: TypeReference
 }
 
-interface TypeTestExpression  : Expression {
+interface TypeTestExpression : Expression {
     val expression: Expression
-    val targetType:TypeReference
+    val targetType: TypeReference
 }
 
 interface TypeReference {
-    val possiblyQualifiedName:PossiblyQualifiedName
-    val typeArguments:List<TypeReference>
-    val isNullable:Boolean
+    val possiblyQualifiedName: PossiblyQualifiedName
+    val typeArguments: List<TypeReference>
+    val isNullable: Boolean
 
     fun asString(indent: Indent, imports: List<Import>): String
 }

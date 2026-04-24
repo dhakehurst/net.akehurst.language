@@ -53,30 +53,30 @@ internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
 
     operator fun set(runtimeRule: RuntimeRule, inputPosition: Int, value: T) {
         when {
-            runtimeRule.ruleNumber == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _goal = value
             }
 
-            runtimeRule.ruleNumber == RuntimeRuleSet.EOT_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.EOT_RULE_NUMBER -> {
                 _eot[inputPosition] = value
             }
 
-            runtimeRule.ruleNumber == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _skip = value
             }
             //0 > runtimeRule.number -> error("") //TODO: remove this
             else -> {
-                var m2 = _map[runtimeRule.ruleNumber]
+                var m2 = _map[runtimeRule.number]
                 if (null == m2) {
                     //m2 = MapIntTo<T>()
                     if (_map.isInitialised) {
-                        _map.setToInitialised(runtimeRule.ruleNumber)
-                        m2 = _map[runtimeRule.ruleNumber]!!
+                        _map.setToInitialised(runtimeRule.number)
+                        m2 = _map[runtimeRule.number]!!
                     } else {
                         m2 = MapIntTo<T>()
-                        _map[runtimeRule.ruleNumber] = m2
+                        _map[runtimeRule.number] = m2
                     }
                 }
                 m2[inputPosition] = value
@@ -86,22 +86,22 @@ internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
 
     operator fun get(runtimeRule: RuntimeRule, inputPosition: Int): T? {
         return when {
-            runtimeRule.ruleNumber == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _goal
             }
 
-            runtimeRule.ruleNumber == RuntimeRuleSet.EOT_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.EOT_RULE_NUMBER -> {
                 _eot[inputPosition]
             }
 
-            runtimeRule.ruleNumber == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _skip
             }
 
             else -> {
-                val m2 = _map[runtimeRule.ruleNumber] ?: return null
+                val m2 = _map[runtimeRule.number] ?: return null
                 m2[inputPosition]
             }
         }
@@ -126,16 +126,16 @@ internal class CompletedNodesStore<T>(val num: Int) {
 
     operator fun set(runtimeRule: RuntimeRule, inputPosition: Int, value: T) {
         when {
-            runtimeRule.ruleNumber == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _goal = value
             }
 
-            runtimeRule.ruleNumber == RuntimeRuleSet.EOT_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.EOT_RULE_NUMBER -> {
                 _eot[inputPosition] = value
             }
 
-            runtimeRule.ruleNumber == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _skip = value
             }
@@ -148,16 +148,16 @@ internal class CompletedNodesStore<T>(val num: Int) {
 
     operator fun get(runtimeRule: RuntimeRule, inputPosition: Int): T? {
         return when {
-            runtimeRule.ruleNumber == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _goal
             }
 
-            runtimeRule.ruleNumber == RuntimeRuleSet.EOT_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.EOT_RULE_NUMBER -> {
                 _eot[inputPosition]
             }
 
-            runtimeRule.ruleNumber == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+            runtimeRule.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _skip
             }

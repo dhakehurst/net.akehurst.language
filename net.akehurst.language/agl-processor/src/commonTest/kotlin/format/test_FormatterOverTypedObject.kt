@@ -26,47 +26,53 @@ import kotlin.test.assertTrue
 
 class test_FormatterOverTypedObject {
 
-    data class TestData(val name:String, val template: FormatString, val types: TypesDomain, val self:Any, val expected:String)
+    data class TestData(val name: String, val template: FormatString, val types: TypesDomain, val self: Any, val expected: String)
 
     data class TestObject(
-        val intValue:Int = 3,
-        val strValue:String = "Hello World!",
-        val listValue:List<String> = listOf("a","b","c")
+        val intValue: Int = 3,
+        val strValue: String = "Hello World!",
+        val listValue: List<String> = listOf("a", "b", "c")
     )
 
     private companion object {
         val testData = listOf<TestData>(
             TestData(
                 name = "Output a String from Raw Text",
-                template = FormatString("""
+                template = FormatString(
+                    """
                     namespace test
                     format Test {
                       Any -> "Hello World!"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) { },
                 self = 1,
                 expected = "Hello World!"
             ),
             TestData(
                 name = "Output a String from self Object, implicit template",
-                template = FormatString("""
+                template = FormatString(
+                    """
                     namespace test
                     format Test {
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) { },
                 self = "Hello World!",
                 expected = "Hello World!"
             ),
             TestData(
                 name = "Output a String from self Object, explicit template",
-                template = FormatString("""
+                template = FormatString(
+                    """
                     namespace test
                     format Test {
                       TestObject -> "Hello World!"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) {
                     namespace("test") {
                         data("TestObject")
@@ -77,12 +83,14 @@ class test_FormatterOverTypedObject {
             ),
             TestData(
                 name = "Output an Integer value from self Object, explicit template",
-                template = FormatString($$"""
+                template = FormatString(
+                    $$"""
                     namespace test
                     format Test {
                       TestObject -> "$intValue"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) {
                     namespace("test") {
                         data("TestObject")
@@ -93,12 +101,14 @@ class test_FormatterOverTypedObject {
             ),
             TestData(
                 name = "Output a String value from self Object, explicit template",
-                template = FormatString($$"""
+                template = FormatString(
+                    $$"""
                     namespace test
                     format Test {
                       TestObject -> "$strValue"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) {
                     namespace("test") {
                         data("TestObject")
@@ -109,12 +119,14 @@ class test_FormatterOverTypedObject {
             ),
             TestData(
                 name = "Output a List value from self Object, explicit template",
-                template = FormatString($$"""
+                template = FormatString(
+                    $$"""
                     namespace test
                     format Test {
                       TestObject -> "$listValue"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) {
                     namespace("test") {
                         data("TestObject")
@@ -125,12 +137,14 @@ class test_FormatterOverTypedObject {
             ),
             TestData(
                 name = $$"Output a String with $EOL from self Object, explicit template",
-                template = FormatString($$"""
+                template = FormatString(
+                    $$"""
                     namespace test
                     format Test {
                       TestObject -> "Hello$EOL World!"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) {
                     namespace("test") {
                         data("TestObject")
@@ -144,12 +158,14 @@ class test_FormatterOverTypedObject {
             ),
             TestData(
                 name = $$"Output a String with ${$EOL} from self Object, explicit template",
-                template = FormatString($$"""
+                template = FormatString(
+                    $$"""
                     namespace test
                     format Test {
                       TestObject -> "Hello${$EOL}World!"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) {
                     namespace("test") {
                         data("TestObject")
@@ -163,12 +179,14 @@ class test_FormatterOverTypedObject {
             ),
             TestData(
                 name = $$"Output a List value separated with ', ' from self Object, explicit template",
-                template = FormatString($$"""
+                template = FormatString(
+                    $$"""
                     namespace test
                     format Test {
                       TestObject -> "list: $[listValue sep ', ']"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) {
                     namespace("test") {
                         data("TestObject")
@@ -179,29 +197,128 @@ class test_FormatterOverTypedObject {
             ),
             TestData(
                 name = $$"Output a list separated with $EOL from self Object, explicit template",
-                template = FormatString($$"""
+                template = FormatString(
+                    $$"""
                     namespace test
                     format Test {
                       TestObject -> "list:$EOL$[listValue sep $EOL]"
                     }
-                    """),
+                    """
+                ),
                 types = typesDomain("Test", true) {
                     namespace("test") {
                         data("TestObject")
                     }
                 },
-                self = TestObject(1,""),
+                self = TestObject(1, ""),
                 expected = """
                    list:
                    a
                    b
                    c
                 """.trimIndent()
-            )
+            ),
+            TestData(
+                name = "Multiline tempate with 2 props",
+                template = FormatString(
+                    $$"""
+                    namespace test
+                    format Test {
+                      TestObject -> "
+                        props {
+                          $intValue
+                          $strValue
+                        }
+                      "
+                    }
+                    """
+                ),
+                types = typesDomain("Test", true) {
+                    namespace("test") {
+                        data("TestObject")
+                    }
+                },
+                self = TestObject(1, "xxx"),
+                expected = """
+                   props {
+                     1
+                     xxx
+                   }
+                """.trimIndent()
+            ),
+            TestData(
+                name = $$"Multiline tempate with list elements",
+                template = FormatString(
+                    $$"""
+                    namespace test
+                    format Test {
+                      TestObject -> "
+                      list:
+                        $[listValue sep $EOL]
+                      "
+                    }
+                    """
+                ),
+                types = typesDomain("Test", true) {
+                    namespace("test") {
+                        data("TestObject")
+                    }
+                },
+                self = TestObject(1, "xxx"),
+                expected = """
+                   list:
+                     a
+                     b
+                     c
+                """.trimIndent()
+            ),
+            TestData(
+                name = $$"via other FormatSet",
+                template = FormatString(
+                    $$"""
+                    namespace test
+                    format Test1 {
+                      TestObject -> "Test1: ${strValue}"
+                    }
+                    format Test2 {
+                      TestObject -> "Test2: ${intValue}  ${$self via Test1}"
+                    }
+                    """
+                ),
+                types = typesDomain("Test2", true) {
+                    namespace("test") {
+                        data("TestObject")
+                    }
+                },
+                self = TestObject(),
+                expected = "Test2: 3  Test1: Hello World!"
+            ),
+            TestData(
+                name = $$"list via other FormatSet",
+                template = FormatString(
+                    $$"""
+                    namespace test
+                    format Test1 {
+                      String -> "'$self'"
+                    }
+                    format Test2 {
+                      TestObject -> "Test2: $[listValue sep ',' via Test1]"
+                    }
+                    """
+                ),
+                types = typesDomain("Test2", true) {
+                    namespace("test") {
+                        data("TestObject")
+                    }
+                },
+                self = TestObject(),
+                expected = "Test2: 'a','b','c'"
+            ),
         )
 
-        fun test(data:TestData) {
+        fun test(data: TestData) {
             val res = Agl.formatByReflection(data.template, data.types, data.self)
+            println(res.issues)
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val actual = res.sentence
             assertEquals(data.expected, actual)
@@ -218,7 +335,7 @@ class test_FormatterOverTypedObject {
 
     @Test
     fun test1() {
-        test(testData[5])
+        test(testData[13])
     }
 
 }

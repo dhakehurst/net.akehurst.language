@@ -28,7 +28,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
-import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNotNull
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -50,7 +50,7 @@ class test_Vistraq_References {
                     check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                     it.asm!!
                 }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
+        private val processors by lazyMutableMapNotNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarList
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default

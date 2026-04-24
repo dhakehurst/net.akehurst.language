@@ -62,6 +62,8 @@ class ParseOptionsBuilder(
     private var _reportErrors: Boolean = base.reportErrors
     private var _reportGrammarAmbiguities = base.reportGrammarAmbiguities
     private var _cacheSkip: Boolean = base.cacheSkip
+    private var _reverseFindWordStartRegex = base.reverseFindWordStartRegex
+    private var _reverseFindWordStartBySkipRules = base.reverseFindWordStartBySkipRules
 
     fun enabled(value: Boolean) {
         _enabled = value
@@ -87,9 +89,24 @@ class ParseOptionsBuilder(
         _cacheSkip = value
     }
 
+    fun reverseFindWordStartRegex(value: String) {
+        _reverseFindWordStartRegex = value
+    }
+
+    fun reverseFindWordStartBySkipRules(value:Boolean) {
+        _reverseFindWordStartBySkipRules = value
+    }
+
     fun build(): ParseOptions {
         return ParseOptionsDefault(
-            _enabled, _goalRuleName, _sentenceIdentity, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
+            _enabled,
+            _goalRuleName,
+            _sentenceIdentity,
+            _reportErrors,
+            _reportGrammarAmbiguities,
+            _cacheSkip,
+            _reverseFindWordStartRegex,
+            _reverseFindWordStartBySkipRules
         )
     }
 }

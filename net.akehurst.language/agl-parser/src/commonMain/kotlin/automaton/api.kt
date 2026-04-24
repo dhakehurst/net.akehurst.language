@@ -17,7 +17,9 @@
 package net.akehurst.language.automaton.api
 
 import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
+import net.akehurst.language.parser.api.RuleSet
 
 enum class AutomatonKind {
     LOOKAHEAD_NONE,     // LC(O) like LR(0)
@@ -25,8 +27,35 @@ enum class AutomatonKind {
     LOOKAHEAD_1         // LC(1) like LR(1)
 }
 
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class StateNumber(val value:Int) //: PublicValueType
+
 interface Automaton {
+    val ruleSet : RuleSet
+    val state: Set<AutomatonState>
+    val transition: Set<AutomatonTransition>
+
     fun asString(withStates:Boolean=false):String
+}
+
+interface AutomatonState {
+    val number: StateNumber
+    val rulePosition: List<RulePosition>
+}
+
+interface AutomatonTransition {
+    val action: ParseAction
+    val source: AutomatonState
+    val target: AutomatonState
+    val lookahead: Set<LookaheadGuard>
+    val prev:Set<AutomatonState>
+    val prevPrev:Set<AutomatonState>
+}
+
+interface LookaheadGuard {
+    val guard : Set<Rule>
+    val up : Set<Rule>
 }
 
 enum class ParseAction {
@@ -48,7 +77,8 @@ interface AutomatonBuilder {
 
 @AglAutomatonDslMarker
 interface TransitionBuilder {
+    fun pctx(vararg stateNumbers: Int)
     fun ctx(vararg stateNumbers: Int)
-    fun source(stateNumber:Int)
-    fun target(stateNumber:Int)
+    fun src(stateNumber:Int)
+    fun tgt(stateNumber:Int)
 }

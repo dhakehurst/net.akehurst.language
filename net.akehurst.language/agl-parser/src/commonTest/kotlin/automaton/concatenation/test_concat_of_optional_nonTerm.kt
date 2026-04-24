@@ -56,7 +56,7 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val optA = rrs.findRuntimeRule("optA")
         val A = rrs.findRuntimeRule("A")
         val E_optA = EMPTY
@@ -84,7 +84,7 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(G,oN,SR)       // G = . S
+            val s0 = state(rG,oN,SR)       // G = . S
             val s1 = state(T_a,oN,EOR)       // 'a'
             val s2 = state(E_optA,o0,EOR)
             val s3 = state(optA,o1,EOR)
@@ -101,7 +101,7 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
             val s14 = state(L,oN,EOR)
             val s15 = state(B,oN,EOR)
             val s16 = state(S,oN,EOR)
-            val s17 = state(G,oN,EOR)
+            val s17 = state(rG,oN,EOR)
             // S =  optA B ;
             // optA = A? ;
             // A = 'a'
@@ -124,7 +124,7 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(G,oN,SOR)       // G = . S
+            val s0 = state(rG,oN,SOR)       // G = . S
             val s1 = state(T_a,oN,EOR)       // 'a'
             val s2 = state(E_optA,o0,EOR)
             val s3 = state(optA,o1,ER)
@@ -141,7 +141,7 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
             val s14 = state(L,oN,ER)
             val s15 = state(B,oN,ER)
             val s16 = state(S,oN,ER)
-            val s17 = state(G,oN,ER)
+            val s17 = state(rG,oN,ER)
             // S =  optA B ;
             // optA = A? ;
             // A = 'a'
@@ -164,7 +164,7 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(G,oN,SOR)       // G = . S
+            val s0 = state(rG,oN,SOR)       // G = . S
             val s1 = state(T_a,oN,ER)       // 'a'
             val s2 = state(E_optA,o0,ER)
             val s3 = state(optA,o1,ER)
@@ -181,7 +181,7 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
             val s14 = state(L,oN,ER)
             val s15 = state(B,oN,ER)
             val s16 = state(S,oN,ER)
-            val s17 = state(G,oN,ER)
+            val s17 = state(rG,oN,ER)
             // S =  optA B ;
             // optA = A? ;
             // A = 'a'

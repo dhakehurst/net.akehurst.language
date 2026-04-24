@@ -170,7 +170,7 @@ class test_StdLibPrimitiveExecutionsForReflection_eval {
             }
         }
         val self = TestObj(listOf("A", "B", "C", "D"))
-        test(tm, self, "ns.TestObj", "list.map({ it + '1' })", listOf("A1", "B1", "C1", "D1"))
+        test(tm, self, "ns.TestObj", "list.map({it ->  it + '1' })", listOf("A1", "B1", "C1", "D1"))
     }
 
     @Test
@@ -183,7 +183,7 @@ class test_StdLibPrimitiveExecutionsForReflection_eval {
             }
         }
         val self = TestObjSet(setOf("A", "B", "C", "D"))
-        test(tm, self, "ns.TestObjSet", "set.map({ it + '1' })", listOf("A1", "B1", "C1", "D1"))
+        test(tm, self, "ns.TestObjSet", "set.map({it ->  it + '1' })", listOf("A1", "B1", "C1", "D1"))
     }
 
     @Test
@@ -196,7 +196,7 @@ class test_StdLibPrimitiveExecutionsForReflection_eval {
             }
         }
         val self = TestObj(listOf("A", "B", "C", "D"))
-        test(tm, self, "ns.TestObj", "list.filter({ it != 'B' })", listOf("A", "C", "D"))
+        test(tm, self, "ns.TestObj", "list.filter({it ->  it != 'B' })", listOf("A", "C", "D"))
     }
 
     @Test
@@ -226,6 +226,6 @@ class test_StdLibPrimitiveExecutionsForReflection_eval {
             )
         )
         val expected = listOf("1.1", "1.2", "1.3", "1.1.1", "1.3.1")
-        test(tm, self, "ns.TestContainer", "list.transitiveClosure({ it.list }).map({it.id})", expected)
+        test(tm, self, "ns.TestContainer", "list.transitiveClosure({it ->  it.list }).map({it -> it.id})", expected)
     }
 }

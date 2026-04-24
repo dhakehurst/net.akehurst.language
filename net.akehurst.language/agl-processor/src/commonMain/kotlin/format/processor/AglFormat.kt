@@ -63,8 +63,8 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
             templateExpressionProperty = DOLLAR_IDENTIFIER ;
             templateExpressionList = '$[' $NAME::separatedList ']' ;
             templateExpressionEmbedded = '$${'{'}' $NAME::formatExpression '}'
-            
-            leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
+                        
+            leaf DOLLAR_IDENTIFIER = '$' "[a-zA-Z_][a-zA-Z_0-9-]*" ;
             leaf RAW_TEXT = "(\\\"|[^\"])+" ;
         }
         
@@ -76,13 +76,16 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
             formatRule = typeReference '->' formatExpression ;
             
             formatExpression
-              = expression
+              = expression viaFormatSet?
               | Template::templateString
               ;
+            viaFormatSet = 'via' possiblyQualifiedName ;
+                          
             override whenOption = expression '->' formatExpression ;
             override whenOptionElse = 'else' '->' formatExpression ;
             
-            separatedList = expression 'sep' separator ;
+            // separatedList is used from Template, but part of this grammar
+            separatedList = expression 'sep' separator viaFormatSet? ;
             separator = STRING | rootExpression ;
         }
     """
@@ -145,10 +148,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                     }
                     concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
                     concatenation("RAW_TEXT", isLeaf = true) {
-                        pat(
-                            "([^" +
-                                    "$\"\\\\]|\\\\.)+"
-                        )
+                        pat("([^\$\"\\\\]|\\\\.)+")
                     }
                 }
                 grammar(NAME) {
@@ -166,9 +166,11 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                         ref("typeReference"); lit("->"); ref("formatExpression")
                     }
                     choice("formatExpression") {
-                        ref("expression")
-                        ebd("Template", "templateString")
+                        concat { ref("expression"); opt { ref("viaFormatSet") } }
+                        concat { ebd("Template", "templateString") }
                     }
+
+                    concatenation("viaFormatSet") { lit("via"); ref("possiblyQualifiedName") }
                     concatenation("whenOption", OverrideKind.REPLACE) {
                         ref("expression"); lit("->"); ref("formatExpression")
                     }
@@ -178,7 +180,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
 
                     // only referenced from Template::templateExpressionList
                     concatenation("separatedList") {
-                        ref("expression"); lit("sep"); ref("separator")
+                        ref("expression"); lit("sep"); ref("separator"); opt { ref("viaFormatSet") }
                     }
                     choice("separator") {
                         ref("STRING")
@@ -217,7 +219,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
+        styleDomain(NAME, sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     extends(AglBase.NAME)

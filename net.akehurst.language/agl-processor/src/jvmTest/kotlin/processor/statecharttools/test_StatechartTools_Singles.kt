@@ -28,7 +28,7 @@ import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNotNull
 import net.akehurst.language.format.asm.AglFormatDomainDefault
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
@@ -79,7 +79,7 @@ class test_StatechartTools_Singles {
             .also {
                 assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
             }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
+        private val processors by lazyMutableMapNotNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarList.asm ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(grmName) //use default

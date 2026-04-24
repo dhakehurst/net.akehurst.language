@@ -48,7 +48,7 @@ class test_Transition : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val v = rrs.findRuntimeRule("'v'")
         val d = rrs.findRuntimeRule("'/'")
         val a = rrs.findRuntimeRule("'+'")
@@ -58,16 +58,16 @@ class test_Transition : test_AutomatonUtilsAbstract() {
         val s1 = stateSet.createState(listOf(RP(v, oN, EOR)))
         val s2 = stateSet.createState(listOf(RP(vr, oN, EOR)))
         val tr1 = Transition(
-            from = s1,
-            to = s2,
+            source = s1,
+            target = s2,
             action = ParseAction.HEIGHT,
-            lookahead = setOf(Lookahead(LHS(EOT, d).lhs(stateSet), LHS(EOT, d).lhs(stateSet)), Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet)))
+            lookaheadGuard = setOf(Lookahead(LHS(EOT, d).lhs(stateSet), LHS(EOT, d).lhs(stateSet)), Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet)))
         )
         val tr2 = Transition(
-            from = s1,
-            to = s2,
+            source = s1,
+            target = s2,
             action = ParseAction.HEIGHT,
-            lookahead = setOf(
+            lookaheadGuard = setOf(
                 Lookahead(LHS(EOT).lhs(stateSet), LHS(EOT).lhs(stateSet)),
                 Lookahead(LHS(d).lhs(stateSet), LHS(d).lhs(stateSet)),
                 Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet))
@@ -75,13 +75,13 @@ class test_Transition : test_AutomatonUtilsAbstract() {
         )
 
         val group = mutableSetOf(tr1, tr2).groupBy {
-            val l = listOf(tr1.from, tr1.action, tr1.to, tr1.runtimeGuard)
+            val l = listOf(tr1.source, tr1.action, tr1.target, tr1.runtimeGuard)
             println("$l")
             l
         }
 
-        val list1 = listOf(tr1.from, tr1.action, tr1.to, tr1.runtimeGuard)
-        val list2 = listOf(tr2.from, tr2.action, tr2.to, tr2.runtimeGuard)
+        val list1 = listOf(tr1.source, tr1.action, tr1.target, tr1.runtimeGuard)
+        val list2 = listOf(tr2.source, tr2.action, tr2.target, tr2.runtimeGuard)
 
         assertEquals(list1, list2)
         assertEquals(1, group.size)

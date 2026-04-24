@@ -27,11 +27,11 @@ internal class RuntimeSpineDefault(
     override val nextChildNumber: Int
 ) : RuntimeSpine {
     override val elements: List<RulePositionRuntime> by lazy {
-        val list = mutableListOf(head.state.rulePositions.first())
+        val list = mutableListOf(head.state.rulePosition.first())
         var next = gssSnapshot[head]
         while (null != next && next.isNotEmpty()) {
             val nh = next.first() //TODO: could be many
-            list.add(nh.state.rulePositions.first())
+            list.add(nh.state.rulePosition.first())
             next = gssSnapshot[nh]
         }
         list

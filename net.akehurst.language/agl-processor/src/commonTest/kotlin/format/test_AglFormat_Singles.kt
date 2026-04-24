@@ -179,7 +179,41 @@ class test_AglFormat_Singles {
     fun Template_RAW_TEXT() {
         val targetGrammar = "Template"
         val goal = "RAW_TEXT"
-        val sentence = ""
+        val sentence = " "
+        val asm = null
+        test_process(targetGrammar, goal, sentence, asm)
+    }
+
+    @Test
+    fun Format_unit_2_formatSets() {
+        val targetGrammar = "Format"
+        val goal = "unit"
+        val sentence = $$"""
+            namespace test
+            format F {
+                Type -> "somethingelse" 
+            }            
+            format G {
+                Type -> "he said ${a+b} to me!" 
+            }
+        """.trimIndent()
+        val asm = null
+        test_process(targetGrammar, goal, sentence, asm)
+    }
+
+    @Test
+    fun Format_unit_2_formatSets_via() {
+        val targetGrammar = "Format"
+        val goal = "unit"
+        val sentence = $$"""
+            namespace test
+            format F {
+                Type -> "something else" 
+            }            
+            format G {
+                Type -> "he said ${a via F} to me!" 
+            }
+        """.trimIndent()
         val asm = null
         test_process(targetGrammar, goal, sentence, asm)
     }

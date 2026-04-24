@@ -64,6 +64,7 @@ interface FormatExpression : Expression {
 
 interface FormatExpressionExpression : FormatExpression {
     val expression: Expression
+    val via: PossiblyQualifiedName?
 }
 
 interface FormatExpressionTemplate : FormatExpression {
@@ -82,6 +83,12 @@ interface FormatWhenOptionElse : WhenOptionElse {
     val format: FormatExpression
 }
 
+interface FormatSeparatedList {
+    val listExpression: Expression
+    val separator: Expression
+    val via: PossiblyQualifiedName?
+}
+
 interface TemplateElement
 
 interface TemplateElementText : TemplateElement {
@@ -93,8 +100,7 @@ interface TemplateElementExpressionProperty : TemplateElement {
 }
 
 interface TemplateElementExpressionList : TemplateElement {
-    val listExpression: Expression
-    val separator: Expression
+    val formatSeparatedList: FormatSeparatedList
 }
 
 interface TemplateElementExpressionListSeparator {

@@ -75,7 +75,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(SentenceDefault(text, null), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
-        val startState = RulePositionWithLookahead(RulePositionRuntime(gr, RulePosition.OPTION_NONE, 0), emptySet())
+        //val startState = RulePositionWithLookahead(RulePositionRuntime(gr, RulePosition.OPTION_NONE, 0), emptySet())
         //sut.start(startState, rrs)
         TODO()
         val actual = sut.canGrow

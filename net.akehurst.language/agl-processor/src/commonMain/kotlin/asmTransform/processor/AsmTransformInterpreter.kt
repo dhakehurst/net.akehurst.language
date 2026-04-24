@@ -145,8 +145,8 @@ class AsmTransformInterpreter(
     private  fun executeStatementOn(evc: EvaluationContext, st: AssignmentStatement, asm: AsmStructure) {
         val propertyName = st.lhsPropertyName
         val propValue = evaluateExpressionOver(st.rhs, evc)
-        val tObj = objectGraph.toTypedObject(asm )
-        val pv = objectGraph.toTypedObject(propValue)
+        val tObj = objectGraph.toTypedObject(asm , StdLibDefault.AnyType)
+        val pv = objectGraph.toTypedObject(propValue, StdLibDefault.AnyType)
         tObj.setProperty( propertyName, pv)
         //asm.setProperty(PropertyValueName(st.lhsPropertyName), propValue, asm.property.size)
     }

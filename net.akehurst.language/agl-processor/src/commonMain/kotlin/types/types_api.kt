@@ -169,6 +169,7 @@ interface TypeInstance {
     val qualifiedTypeName: QualifiedName
 
     val isNothing: Boolean
+    val isPrimitive: Boolean
     val isCollection: Boolean
 
     /**

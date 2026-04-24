@@ -16,8 +16,8 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
@@ -34,23 +34,23 @@ class test_abc_OR_abd : test_AutomatonAbstract() {
     // ABD = a b d
 
     // must be fresh per test or automaton is not correct for different parses (due to caching)
-    private val rrs = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+    private val rrs = ruleSet("Test") {
+        choiceLongest("S") {
             ref("ABC")
             ref("ABD")
         }
         concatenation("ABC") { literal("a"); literal("b"); literal("c") }
         concatenation("ABD") { literal("a"); literal("b"); literal("d") }
-    }
-    private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor("S", AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
-    private val ABC = rrs.findRuntimeRule("ABC")
-    private val ABD = rrs.findRuntimeRule("ABD")
-    private val a = rrs.findRuntimeRule("'a'")
-    private val b = rrs.findRuntimeRule("'b'")
-    private val c = rrs.findRuntimeRule("'c'")
-    private val d = rrs.findRuntimeRule("'d'")
+    }  as RuntimeRuleSet
+
+    private val S = rrs.rule[0]  // S
+    private val _t1 = rrs.rule[1]  // 'a'
+    private val _t2 = rrs.rule[2]  // 'b'
+    private val _t3 = rrs.rule[3]  // 'c'
+    private val ABC = rrs.rule[4]  // ABC
+    private val _t5 = rrs.rule[5]  // 'd'
+    private val ABD = rrs.rule[6]  // ABD
+    private val rG = rrs.goalRuleFor[S]
 
     @Test
     fun automaton_parse_abc() {
@@ -63,28 +63,29 @@ class test_abc_OR_abd : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)      /* G = . S   */
-            state(a, oN, ER)      /* a .       */
-            state(RP(ABC, oN, p1), RP(ABD, oN, p1))    /* ABC = a . bc, ABD = a . bd */
-            state(b, oN, EOR)     /* b . */
-            state(ABD, oN, p2)    /* ABD = ab . d  */
-            state(ABC, oN, p2)    /* ABC = ab . c  */
-            state(c, oN, EOR)     /* c . */
-            state(ABC, oN, EOR)   /* ABC = abc . */
-            state(S, oN, EOR)     /* S = ABC . */
-            state(G, oN, EOR)     /* G = S .   */
+            state(rG, oN, SR)      /* G = . S   */
+            state(_t1, oN, ER)     /* a .       */
+            state(ABC, oN, p1)     /* ABC = a . bc */
+            state( ABD, oN, p1)    /* ABD = a . bd */
+            state(_t2, oN, EOR)    /* b . */
+            //state(ABD, oN, p2)     /* ABD = ab . d  */
+            state(ABC, oN, p2)     /* ABC = ab . c  */
+            state(_t3, oN, EOR)    /* c . */
+            state(ABC, oN, EOR)    /* ABC = abc . */
+            state(S, oN, EOR)      /* S = ABC . */
+            state(rG, oN, EOR)     /* G = S .   */
 
-            trans(WIDTH) { src(G, oN, SR); tgt(a); lhg(b); ctx(G, oN, SR) }
-            trans(WIDTH) { src(setOf(RP(ABC, oN, p1), RP(ABD, oN, p1))); tgt(b); lhg(setOf(d, c)); ctx(G, oN, SR) }
-            trans(WIDTH) { src(ABC, oN, p2); tgt(c); lhg(RT); ctx(G, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1); lhg(_t2); ctx(rG, oN, SR) }
+//            trans(WIDTH) { src(setOf(RP(ABC, oN, p1), RP(ABD, oN, p1))); tgt(_t2); lhg(setOf(_t5, _t3)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, p2); tgt(_t3); lhg(RT); ctx(rG, oN, SR) }
 
-            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G, oN, SR) }
+            trans(GOAL) { src(S); tgt(rG); lhg(EOT); ctx(rG, oN, SR) }
 
-            trans(GRAFT) { src(b); tgt(ABC, oN, p2); lhg(c); ctx(setOf(RP(ABC, oN, p1), RP(ABD, oN, p1))) }
-            trans(GRAFT) { src(c); tgt(ABC); lhg(RT); ctx(ABC, oN, p2) }
-            trans(HEIGHT) { src(a); tgt(setOf(RP(ABC, oN, p1), RP(ABD, oN, p1))); lhg(setOf(b), setOf(EOT)); ctx(G, oN, SR) }
-            trans(GRAFT) { src(b); tgt(ABD, oN, p2); lhg(d); ctx(setOf(RP(ABC, oN, p1), RP(ABD, oN, p1))) }
-            trans(HEIGHT) { src(ABC); tgt(S); lhg(setOf(RT), setOf(RT)); ctx(G, oN, SR) }
+//            trans(GRAFT) { src(_t2); tgt(ABC, oN, p2); lhg(_t3); ctx(setOf(RP(ABC, oN, p1), RP(ABD, oN, p1))) }
+            trans(GRAFT) { src(_t3); tgt(ABC); lhg(RT); ctx(ABC, oN, p2) }
+//            trans(HEIGHT) { src(_t1); tgt(setOf(RP(ABC, oN, p1), RP(ABD, oN, p1))); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR) }
+//            trans(GRAFT) { src(_t2); tgt(ABD, oN, p2); lhg(_t5); ctx(setOf(RP(ABC, oN, p1), RP(ABD, oN, p1))) }
+            trans(HEIGHT) { src(ABC); tgt(S); lhg(setOf(RT), setOf(RT)); ctx(rG, oN, SR) }
 
         }
 
@@ -102,29 +103,29 @@ class test_abc_OR_abd : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)     /* G = . S   */
-            state(a, oN, ER)     /* a .       */
+            state(rG, oN, SR)     /* G = . S   */
+            state(_t1, oN, ER)     /* a .       */
             state(ABD, oN, p1)   /* ABD = a . bd */
             state(ABC, oN, p1)   /* ABC = a . bc */
-            state(b, oN, ER)     /* b . */
+            state(_t2, oN, ER)     /* b . */
             state(ABD, oN, p2)   /* ABD = ab . d  */
-            state(d, oN, ER)     /* d . */
+            state(_t5, oN, ER)     /* d . */
             state(ABD, oN, ER)   /* ABD = abd . */
             state(S, o1, ER)     /* S = ABD . */
-            state(G, oN, ER)     /* G = S .   */
+            state(rG, oN, ER)     /* G = S .   */
 
-            trans(WIDTH) { src(G, oN, SR); tgt(a); lhg(b); ctx(G, oN, SR) }
-            trans(WIDTH) { src(ABC, oN, p1); tgt(b); lhg(c); ctx(G, oN, SR) }
-            trans(WIDTH) { src(ABD, oN, p1); tgt(b); lhg(d); ctx(G, oN, SR) }
-            trans(WIDTH) { src(ABD, oN, p2); tgt(d); lhg(RT); ctx(G, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1); lhg(_t2); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, p1); tgt(_t2); lhg(_t3); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABD, oN, p1); tgt(_t2); lhg(_t5); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABD, oN, p2); tgt(_t5); lhg(RT); ctx(rG, oN, SR) }
 
-            trans(GOAL) { src(S, o1, ER); tgt(G); lhg(EOT); ctx(G, oN, SR) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG); lhg(EOT); ctx(rG, oN, SR) }
 
-            trans(HEIGHT) { src(a); tgt(ABC, oN, p1); lhg(setOf(b), setOf(EOT)); ctx(G, oN, SR) }
-            trans(GRAFT) { src(d); tgt(ABD); lhg(RT); ctx(ABD, oN, p2) }
-            trans(HEIGHT) { src(a); tgt(ABD, oN, p1); lhg(setOf(b), setOf(EOT)); ctx(G, oN, SR) }
-            trans(GRAFT) { src(b); tgt(ABD, oN, p2); lhg(d); ctx(ABD, oN, p1) }
-            trans(HEIGHT) { src(ABD); tgt(S, o1, ER); lhg(setOf(RT), setOf(RT)); ctx(G, oN, SR) }
+            trans(HEIGHT) { src(_t1); tgt(ABC, oN, p1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t5); tgt(ABD); lhg(RT); ctx(ABD, oN, p2) }
+            trans(HEIGHT) { src(_t1); tgt(ABD, oN, p1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2); tgt(ABD, oN, p2); lhg(_t5); ctx(ABD, oN, p1) }
+            trans(HEIGHT) { src(ABD); tgt(S, o1, ER); lhg(setOf(RT), setOf(RT)); ctx(rG, oN, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -145,38 +146,36 @@ class test_abc_OR_abd : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)     /* G = . S   */
-            state(G, oN, ER)     /* G = S .   */
-            state(S, oN, ER)     /* S = ABC . */
-            state(S, o1, ER)     /* S = ABD . */
-            state(ABC, oN, p1)   /* ABC = a . bc */
-            state(ABC, oN, p2)   /* ABC = ab . c */
-            state(ABC, oN, ER)   /* ABC = abc . */
-            state(ABD, oN, p1)   /* ABD = a . bd */
-            state(ABD, oN, p2)   /* ABD = ab . d  */
-            state(ABD, oN, ER)   /* ABD = abd . */
-            state(a, oN, ER)     /* a .       */
-            state(b, oN, ER)     /* b . */
-            state(c, oN, ER)     /* c . */
-            state(d, oN, ER)     /* d . */
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, o0, ER)   // S = ABC .
+            state(S, o1, ER)   // S = ABD .
+            state(ABC, oN, 1)   // ABC = 'a' . 'b' 'c'
+            state(ABC, oN, 2)   // ABC = 'a' 'b' . 'c'
+            state(ABC, oN, ER)   // ABC = 'a' 'b' 'c' .
+            state(ABD, oN, 1)   // ABD = 'a' . 'b' 'd'
+            state(ABD, oN, 2)   // ABD = 'a' 'b' . 'd'
+            state(ABD, oN, ER)   // ABD = 'a' 'b' 'd' .
+            state(_t1, oN, ER)   // 'a'
+            state(_t2, oN, ER)   // 'b'
+            state(_t3, oN, ER)   // 'c'
+            state(_t5, oN, ER)   // 'd'
 
-            trans(WIDTH) { src(G, oN, SR); tgt(a); lhg(b); ctx(G, oN, SR) }
-            trans(WIDTH) { src(ABC, oN, p1); tgt(b); lhg(c); ctx(G, oN, SR) }
-            trans(WIDTH) { src(ABD, oN, p1); tgt(b); lhg(d); ctx(G, oN, SR) }
-            trans(WIDTH) { src(ABC, oN, p2); tgt(c); lhg(EOT); ctx(G, oN, SR) }
-            trans(WIDTH) { src(ABD, oN, p2); tgt(d); lhg(EOT); ctx(G, oN, SR) }
-
-            trans(GOAL) { src(S, oN, ER); tgt(G); lhg(EOT); ctx(G, oN, SR) }
-            trans(GOAL) { src(S, o1, ER); tgt(G); lhg(EOT); ctx(G, oN, SR) }
-
-            trans(GRAFT) { src(c); tgt(ABC); lhg(EOT); ctx(ABC, oN, p2) }
-            trans(HEIGHT) { src(a); tgt(ABC, oN, p1); lhg(setOf(b), setOf(EOT)); ctx(G, oN, SR) }
-            trans(GRAFT) { src(b); tgt(ABC, oN, p2); lhg(c); ctx(ABC, oN, p1) }
-            trans(GRAFT) { src(d); tgt(ABD); lhg(EOT); ctx(ABD, oN, p2) }
-            trans(HEIGHT) { src(a); tgt(ABD, oN, p1); lhg(setOf(b), setOf(EOT)); ctx(G, oN, SR) }
-            trans(GRAFT) { src(b); tgt(ABD, oN, p2); lhg(d); ctx(ABD, oN, p1) }
-            trans(HEIGHT) { src(ABC); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(G, oN, SR) }
-            trans(HEIGHT) { src(ABD); tgt(S, o1, ER); lhg(setOf(EOT), setOf(EOT)); ctx(G, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(_t2); ctx(rG, oN, SR) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, 1); tgt(_t2, oN, ER); lhg(_t3); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABC, oN, 2); tgt(_t3, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(ABC, oN, ER); tgt(S, o0, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABD, oN, 1); tgt(_t2, oN, ER); lhg(_t5); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(ABD, oN, 2); tgt(_t5, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(ABD, oN, ER); tgt(S, o1, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(ABC, oN, 1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(ABD, oN, 1); lhg(setOf(_t2), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(ABC, oN, 2); lhg(_t3); ctx(ABC, oN, 1); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(ABD, oN, 2); lhg(_t5); ctx(ABD, oN, 1); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t3, oN, ER); tgt(ABC, oN, ER); lhg(EOT); ctx(ABC, oN, 2); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t5, oN, ER); tgt(ABD, oN, ER); lhg(EOT); ctx(ABD, oN, 2); pctx(rG, oN, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -184,8 +183,8 @@ class test_abc_OR_abd : test_AutomatonAbstract() {
 
     @Test
     fun compare() {
-        val rrs_noBuild = (rrs).clone()
-        val rrs_preBuild = (rrs).clone()
+        val rrs_noBuild = (rrs).clone()  as RuntimeRuleSet
+        val rrs_preBuild = (rrs).clone() as RuntimeRuleSet
 
         val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("abc", "abd")

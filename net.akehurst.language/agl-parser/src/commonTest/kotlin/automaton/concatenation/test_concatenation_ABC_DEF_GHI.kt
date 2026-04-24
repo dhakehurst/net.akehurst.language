@@ -48,7 +48,7 @@ class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
 
     private val S = rrs.findRuntimeRule("S")
     private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
+    private val rG = SM.startState.runtimeRules.first()
     private val AB = rrs.findRuntimeRule("AB")
     private val ABC = rrs.findRuntimeRule("ABC")
     private val C = rrs.findRuntimeRule("C")
@@ -76,7 +76,7 @@ class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             // States must be declared so every state referenced by ctx/pctx/src/tgt
             // exists in the fixture. Numbers in comments match the runtime dump
             // produced by usedAutomatonToString (lazy / on-demand build).
-            state(G,oN,SOR)     //  0   G = . S
+            state(rG,oN,SOR)     //  0   G = . S
             state(a,oN,EOR)     //  1
             state(AB,oN,p1)     //  2   AB = a . b
             state(b,oN,EOR)     //  3
@@ -101,40 +101,40 @@ class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             state(i,oN,EOR)     // 22
             state(GHI,oN,EOR)   // 23
             state(S,oN,EOR)     // 24
-            state(G,oN,EOR)     // 25
+            state(rG,oN,EOR)     // 25
 
             // WIDTH (source is non-at-end). ctx = immediate predecessor.
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(b); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(AB, oN, p1); tgt(b); lhg(RT); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(ABC, oN, p1); tgt(cT); lhg(RT); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, p1); tgt(d); lhg(e); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(b); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(AB, oN, p1); tgt(b); lhg(RT); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(ABC, oN, p1); tgt(cT); lhg(RT); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, p1); tgt(d); lhg(e); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(DEF, oN, p1); tgt(e); lhg(f); ctx(S, oN, p1) }
             trans(WIDTH) { src(EF, oN, p1); tgt(f); lhg(RT); ctx(DEF, oN, p1) }
-            trans(WIDTH) { src(S, oN, p2); tgt(gT); lhg(h); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, p2); tgt(gT); lhg(h); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(GHI, oN, p1); tgt(h); lhg(i); ctx(S, oN, p2) }
             trans(WIDTH) { src(GHI, oN, p2); tgt(i); lhg(RT); ctx(S, oN, p2) }
 
             // GOAL (source is at-end S). ctx = prev, pctx = prev².
-            trans(GOAL) { src(S); tgt(G, oN, EOR); lhg(EOT); ctx(G, oN, SOR); pctx(G, oN, SOR) }
+            trans(GOAL) { src(S); tgt(rG, oN, EOR); lhg(EOT); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
 
             // HEIGHT (source is at-end). ctx = prev, pctx = prev².
-            trans(HEIGHT) { src(a); tgt(AB, oN, p1); lhg(setOf(b), setOf(cT)); ctx(G, oN, SOR); pctx(G, oN, SOR) }
-            trans(HEIGHT) { src(AB); tgt(ABC, oN, p1); lhg(setOf(cT), setOf(d)); ctx(G, oN, SOR); pctx(G, oN, SOR) }
-            trans(HEIGHT) { src(cT); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, oN, p1); pctx(G, oN, SOR) }
-            trans(HEIGHT) { src(d); tgt(DEF, oN, p1); lhg(setOf(e), setOf(gT)); ctx(S, oN, p1); pctx(G, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(AB, oN, p1); lhg(setOf(b), setOf(cT)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(AB); tgt(ABC, oN, p1); lhg(setOf(cT), setOf(d)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(cT); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, oN, p1); pctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(d); tgt(DEF, oN, p1); lhg(setOf(e), setOf(gT)); ctx(S, oN, p1); pctx(rG, oN, SOR) }
             trans(HEIGHT) { src(e); tgt(EF, oN, p1); lhg(setOf(f), setOf(RT)); ctx(DEF, oN, p1); pctx(S, oN, p1) }
-            trans(HEIGHT) { src(gT); tgt(GHI, oN, p1); lhg(setOf(h), setOf(RT)); ctx(S, oN, p2); pctx(G, oN, SOR) }
-            trans(HEIGHT) { src(ABC); tgt(S, oN, p1); lhg(setOf(d), setOf(RT)); ctx(G, oN, SOR); pctx(G, oN, SOR) }
+            trans(HEIGHT) { src(gT); tgt(GHI, oN, p1); lhg(setOf(h), setOf(RT)); ctx(S, oN, p2); pctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(ABC); tgt(S, oN, p1); lhg(setOf(d), setOf(RT)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
 
             // GRAFT (source is at-end). ctx = prev, pctx = prev². Up-lookahead unused.
-            trans(GRAFT) { src(b); tgt(AB); lhg(RT); ctx(AB, oN, p1); pctx(G, oN, SOR) }
-            trans(GRAFT) { src(C); tgt(ABC); lhg(RT); ctx(ABC, oN, p1); pctx(G, oN, SOR) }
+            trans(GRAFT) { src(b); tgt(AB); lhg(RT); ctx(AB, oN, p1); pctx(rG, oN, SOR) }
+            trans(GRAFT) { src(C); tgt(ABC); lhg(RT); ctx(ABC, oN, p1); pctx(rG, oN, SOR) }
             trans(GRAFT) { src(EF); tgt(DEF); lhg(RT); ctx(DEF, oN, p1); pctx(S, oN, p1) }
             trans(GRAFT) { src(f); tgt(EF); lhg(RT); ctx(EF, oN, p1); pctx(DEF, oN, p1) }
             trans(GRAFT) { src(h); tgt(GHI, oN, p2); lhg(i); ctx(GHI, oN, p1); pctx(S, oN, p2) }
             trans(GRAFT) { src(i); tgt(GHI); lhg(RT); ctx(GHI, oN, p2); pctx(S, oN, p2) }
-            trans(GRAFT) { src(DEF); tgt(S, oN, p2); lhg(gT); ctx(S, oN, p1); pctx(G, oN, SOR) }
-            trans(GRAFT) { src(GHI); tgt(S); lhg(RT); ctx(S, oN, p2); pctx(G, oN, SOR) }
+            trans(GRAFT) { src(DEF); tgt(S, oN, p2); lhg(gT); ctx(S, oN, p1); pctx(rG, oN, SOR) }
+            trans(GRAFT) { src(GHI); tgt(S); lhg(RT); ctx(S, oN, p2); pctx(rG, oN, SOR) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -146,7 +146,7 @@ class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             // Same set of 26 states as parse_abcdefghi.
-            state(G,oN,SOR)     //  0
+            state(rG,oN,SOR)     //  0
             state(a,oN,EOR)     //  1
             state(AB,oN,p1)     //  2
             state(b,oN,EOR)     //  3
@@ -171,39 +171,39 @@ class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             state(i,oN,EOR)     // 22
             state(GHI,oN,EOR)   // 23
             state(S,oN,EOR)     // 24
-            state(G,oN,EOR)     // 25
+            state(rG,oN,EOR)     // 25
 
             // Eager (pre-)build resolves <RT> to concrete terminals using full
             // grammar context — so where parse_abcdefghi has lhg(RT) this test
             // typically has the resolved terminal (cT/d/gT/EOT/...).
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(b); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(AB, oN, p1); tgt(b); lhg(cT); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(ABC, oN, p1); tgt(cT); lhg(d); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, p1); tgt(d); lhg(e); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(b); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(AB, oN, p1); tgt(b); lhg(cT); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(ABC, oN, p1); tgt(cT); lhg(d); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, p1); tgt(d); lhg(e); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(DEF, oN, p1); tgt(e); lhg(f); ctx(S, oN, p1) }
             trans(WIDTH) { src(EF, oN, p1); tgt(f); lhg(gT); ctx(DEF, oN, p1) }
-            trans(WIDTH) { src(S, oN, p2); tgt(gT); lhg(h); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(S, oN, p2); tgt(gT); lhg(h); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(GHI, oN, p1); tgt(h); lhg(i); ctx(S, oN, p2) }
             trans(WIDTH) { src(GHI, oN, p2); tgt(i); lhg(EOT); ctx(S, oN, p2) }
 
-            trans(GOAL) { src(S); tgt(G, oN, EOR); lhg(EOT); ctx(G, oN, SOR); pctx(G, oN, SOR) }
+            trans(GOAL) { src(S); tgt(rG, oN, EOR); lhg(EOT); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
 
-            trans(HEIGHT) { src(a); tgt(AB, oN, p1); lhg(setOf(b), setOf(cT)); ctx(G, oN, SOR); pctx(G, oN, SOR) }
-            trans(HEIGHT) { src(AB); tgt(ABC, oN, p1); lhg(setOf(cT), setOf(d)); ctx(G, oN, SOR); pctx(G, oN, SOR) }
-            trans(HEIGHT) { src(cT); tgt(C); lhg(setOf(d), setOf(d)); ctx(ABC, oN, p1); pctx(G, oN, SOR) }
-            trans(HEIGHT) { src(d); tgt(DEF, oN, p1); lhg(setOf(e), setOf(gT)); ctx(S, oN, p1); pctx(G, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(AB, oN, p1); lhg(setOf(b), setOf(cT)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(AB); tgt(ABC, oN, p1); lhg(setOf(cT), setOf(d)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(cT); tgt(C); lhg(setOf(d), setOf(d)); ctx(ABC, oN, p1); pctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(d); tgt(DEF, oN, p1); lhg(setOf(e), setOf(gT)); ctx(S, oN, p1); pctx(rG, oN, SOR) }
             trans(HEIGHT) { src(e); tgt(EF, oN, p1); lhg(setOf(f), setOf(gT)); ctx(DEF, oN, p1); pctx(S, oN, p1) }
-            trans(HEIGHT) { src(gT); tgt(GHI, oN, p1); lhg(setOf(h), setOf(EOT)); ctx(S, oN, p2); pctx(G, oN, SOR) }
-            trans(HEIGHT) { src(ABC); tgt(S, oN, p1); lhg(setOf(d), setOf(EOT)); ctx(G, oN, SOR); pctx(G, oN, SOR) }
+            trans(HEIGHT) { src(gT); tgt(GHI, oN, p1); lhg(setOf(h), setOf(EOT)); ctx(S, oN, p2); pctx(rG, oN, SOR) }
+            trans(HEIGHT) { src(ABC); tgt(S, oN, p1); lhg(setOf(d), setOf(EOT)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
 
-            trans(GRAFT) { src(b); tgt(AB); lhg(cT); ctx(AB, oN, p1); pctx(G, oN, SOR) }
-            trans(GRAFT) { src(C); tgt(ABC); lhg(d); ctx(ABC, oN, p1); pctx(G, oN, SOR) }
+            trans(GRAFT) { src(b); tgt(AB); lhg(cT); ctx(AB, oN, p1); pctx(rG, oN, SOR) }
+            trans(GRAFT) { src(C); tgt(ABC); lhg(d); ctx(ABC, oN, p1); pctx(rG, oN, SOR) }
             trans(GRAFT) { src(EF); tgt(DEF); lhg(gT); ctx(DEF, oN, p1); pctx(S, oN, p1) }
             trans(GRAFT) { src(f); tgt(EF); lhg(gT); ctx(EF, oN, p1); pctx(DEF, oN, p1) }
             trans(GRAFT) { src(h); tgt(GHI, oN, p2); lhg(i); ctx(GHI, oN, p1); pctx(S, oN, p2) }
             trans(GRAFT) { src(i); tgt(GHI); lhg(EOT); ctx(GHI, oN, p2); pctx(S, oN, p2) }
-            trans(GRAFT) { src(DEF); tgt(S, oN, p2); lhg(gT); ctx(S, oN, p1); pctx(G, oN, SOR) }
-            trans(GRAFT) { src(GHI); tgt(S); lhg(EOT); ctx(S, oN, p2); pctx(G, oN, SOR) }
+            trans(GRAFT) { src(DEF); tgt(S, oN, p2); lhg(gT); ctx(S, oN, p1); pctx(rG, oN, SOR) }
+            trans(GRAFT) { src(GHI); tgt(S); lhg(EOT); ctx(S, oN, p2); pctx(rG, oN, SOR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)

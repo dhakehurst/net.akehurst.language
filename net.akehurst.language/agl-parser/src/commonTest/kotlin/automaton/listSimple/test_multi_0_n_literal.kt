@@ -37,7 +37,7 @@ class test_multi_0_n_literal : test_AutomatonAbstract() {
 
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
         val eS = EMPTY
         val a = rrs.findRuntimeRule("'a'")
 

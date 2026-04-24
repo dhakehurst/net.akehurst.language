@@ -23,7 +23,7 @@ import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNotNull
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -53,7 +53,7 @@ class test_StatechartTools_CodeCompletion {
         """.replace("§", "\$")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
+        private val processors by lazyMutableMapNotNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarList.asm ?: error("Can't find grammar for '$grmName'")
             /*            val cfg = Agl.configuration {
                             targetGrammarName(null) //use default
