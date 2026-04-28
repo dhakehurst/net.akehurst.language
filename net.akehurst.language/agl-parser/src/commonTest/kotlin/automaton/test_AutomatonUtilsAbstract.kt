@@ -31,11 +31,20 @@ abstract class test_AutomatonUtilsAbstract {
         val o1 = OptionNum(1)
         val o2 = OptionNum(2)
         val o3 = OptionNum(3)
+        val oN = RulePosition.OPTION_NONE
+        val OE = RulePosition.OPTION_OPTIONAL_EMPTY
+        val OI = RulePosition.OPTION_OPTIONAL_ITEM
+        val LE = RulePosition.OPTION_MULTI_EMPTY
+        val LI = RulePosition.OPTION_MULTI_ITEM
+        val SE = RulePosition.OPTION_SLIST_EMPTY
+        val SI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+
         val p1 = 1
         val p2 = 2
         val p3 = 3
         val p4 = 4
         val p5 = 5
+
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val EMPTY = RuntimeRuleSet.EMPTY
         val EMPTY_LIST = RuntimeRuleSet.EMPTY_LIST
@@ -47,14 +56,6 @@ abstract class test_AutomatonUtilsAbstract {
         const val EOR = RulePosition.END_OF_RULE
         const val SR = RulePosition.START_OF_RULE
         const val SOR = RulePosition.START_OF_RULE
-
-        /**
-         * Option value for when there is no option
-         */
-        val oN = RulePosition.OPTION_NONE
-
-        val oOE = RulePosition.OPTION_OPTIONAL_EMPTY
-        val oOI = RulePosition.OPTION_OPTIONAL_ITEM
 
         /**
          * Option for SimpleList Item

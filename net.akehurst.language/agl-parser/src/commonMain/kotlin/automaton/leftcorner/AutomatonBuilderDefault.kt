@@ -61,10 +61,10 @@ internal class AutomatonBuilderDefault(
     val HEIGHT = ParseAction.HEIGHT
     val GRAFT = ParseAction.GRAFT
 
-    val G = ParseAction.GOAL
-    val W = ParseAction.WIDTH
-    val H = ParseAction.HEIGHT
-    val F = ParseAction.GRAFT
+    val aG = ParseAction.GOAL
+    val aW = ParseAction.WIDTH
+    val aH = ParseAction.HEIGHT
+    val aF = ParseAction.GRAFT
 
     internal fun state(vararg rulePositions: RulePositionRuntime) = result.createState(rulePositions.toList())
     internal fun state(rule: Rule, option: OptionNum, position: Int) = state(RulePositionRuntime(rule as RuntimeRule, option, position))

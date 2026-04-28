@@ -9,18 +9,29 @@ import net.akehurst.language.scanner.common.ScannerOnDemand
 
 fun main() {
     val rrs = ruleSet("Test") {
-        choiceLongest("S") {
-            ref("ABCZ")
-            ref("ABC")
+        concatenation("S") { ref("E") }
+        choiceLongest("E") {
+            ref("E1")
+            ref("T")
         }
-        concatenation("ABCZ") { literal("a"); literal("b"); literal("c"); literal("z") }
-        concatenation("ABC") { literal("a"); literal("b"); literal("c") }
+        concatenation("E1") { ref("E"); literal("a"); ref("T") }
+        choiceLongest("T") {
+            ref("T1")
+            ref("F")
+        }
+        concatenation("T1") { ref("T"); literal("m"); ref("F") }
+        choiceLongest("F") {
+            literal("v")
+            ref("F2")
+        }
+        concatenation("F2") { literal("("); ref("E"); literal(")") }
     }
-    //val automaton = rrs.automatonFor("S", AutomatonKind.LOOKAHEAD_1)
+    val automaton = rrs.automatonFor("S", AutomatonKind.LOOKAHEAD_1)
 
-    val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
-    val result = parser.parseForGoal("S", "abcz")
-    val automaton = rrs.usedAutomatonFor("S")
+//    val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
+//    val sentences = listOf("bcd", "abcd", "bced", "abced", "bcefed", "abcefed")
+//    sentences.forEach { parser.parseForGoal("S", it) }
+//    val automaton = rrs.usedAutomatonFor("S")
 
     val generator = GenerateAutomatonDslForTests()
     val output = generator.generateFromAsm("Automaton", automaton)

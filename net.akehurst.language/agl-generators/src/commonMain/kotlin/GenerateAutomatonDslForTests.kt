@@ -39,17 +39,52 @@ format RuleDecl {
   }
 }
 
+format RP {
+    AutomatonState -> "$[rulePosition sep ', ']"
+    RulePosition -> when {
+      0 == position -> "RP(${rule}, $option, SR)"
+      -1 == position -> "RP(${rule}, $option, ER)"
+      else -> when {
+        rule.isListSeparated -> when {
+          1 == position -> "RP(${rule}, $option, LIST_SEPARATOR)"
+          2 == position -> "RP(${rule}, $option, LIST_ITEM)"
+          else -> "§ERROR"
+        }
+        else -> "RP(${rule.tag}, $option, ${position})"
+      }
+    }
+    Rule -> when {
+       '<GOAL>'==tag -> 'rG'
+       '<EOT>'==tag -> 'EOT'
+       '<RT>'==tag -> 'RT'
+       '<EMPTY>'==tag -> 'EMPTY'
+       '<EMPTY_LIST>'==tag -> 'EMPTY_LIST'
+       isTerminal -> "_t$number"
+       else -> tag
+    }
+    OptionNum -> when {
+      (-1) == value -> 'oN'
+      (-2) == value -> 'OI'
+      (-3) == value -> 'OE'
+      (-4) == value -> 'LI'
+      (-5) == value -> 'LE'
+      (-6) == value -> 'SI'
+      (-7) == value -> 'SE'
+      else -> value
+    }
+}
+
 format Trans {
     AutomatonState -> {
       when {
          1 == rulePosition.size -> {
            with(rulePosition.first) when {
-             0 == position -> "${rule via AutomatonDsl}, $option, SR"
-             -1 == position -> "${rule via AutomatonDsl}, $option, ER"
-             else -> "${rule via AutomatonDsl}, $option, ${position}"
+             0 == position -> "${rule via RP}, $option, SR"
+             -1 == position -> "${rule via RP}, $option, ER"
+             else -> "${rule via RP}, $option, ${position}"
            }
          }
-         else -> "$[rulePosition sep ', ' via AutomatonDsl])"
+         else -> "$[rulePosition sep ', ' via RP])"
       }
     }
 }
@@ -67,42 +102,42 @@ format AutomatonDsl {
     "
 
     StateNumber -> value
-    Rule -> when {
-       '<GOAL>'==tag -> 'rG'
-       '<EOT>'==tag -> 'EOT'
-       '<RT>'==tag -> 'RT'
-       isTerminal -> "_t$number"
-       else -> tag
-    }
     
     AutomatonState -> {
       when {
          1 == rulePosition.size -> {
            rp := rulePosition.first
            when{
-             0 == rp.position -> "state(${rp.rule}, ${rp.option}, SR)   // ${rp.asString}"
-             -1 == rp.position -> "state(${rp.rule}, ${rp.option}, ER)   // ${rp.asString}"
-             else -> "state(${rp.rule}, ${rp.option}, ${rp.position})   // ${rp.asString}"
+             0 == rp.position -> "state(${rp.rule via RP}, ${rp.option}, SR)   // ${rp.asString}"
+             -1 == rp.position -> "state(${rp.rule via RP}, ${rp.option}, ER)   // ${rp.asString}"
+             else -> "state(${rp.rule via RP}, ${rp.option}, ${rp.position})   // ${rp.asString}"
            }
          }
-         else -> "state($[rulePosition sep ', '])"
+         else -> "state($[rulePosition sep ', ' via RP])"
       }
-    }
-    
-    RulePosition -> when {
-      0 == position -> "RP(${rule}, $option, SR)"
-      -1 == position -> "RP(${rule}, $option, ER)"
-      else -> "RP(${rule.tag}, $option, ${position})"
     }
    
     AutomatonTransition -> when {
-      prevPrev.isEmpty -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx(${prev via Trans}) }"
-      else -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx(${prev via Trans}); pctx(${prevPrev via Trans}) }"
+      prevPrev.isEmpty -> when {
+        1 == prev.size -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx(${prev via Trans}) }"
+        else -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx($[prev sep ',' via RP]) }"
+      }
+      1 == prevPrev.size -> when {
+        1 == prev.size -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx(${prev via Trans}); pctx(${prevPrev via Trans}) }"
+        else -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx($[prev sep ',' via RP]); pctx(${prevPrev via Trans}) }"
+      }
+      else -> when {
+        1 == prev.size -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx(${prev via Trans}); pctx($[prevPrev sep ',' via RP]) }"
+        else -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx($[prev sep ',' via RP]); pctx($[prevPrev sep ',' via RP]) }"
+      }
     }
 
     LookaheadGuard -> when {
-      0 == up.size -> "lhg($[guard sep ',']);"
-      else -> "lhg(setOf($[guard sep ',']), setOf($[up sep ',']));"
+      0 == up.size -> when {
+        1 == guard.size -> "lhg($[guard sep ',' via RP]);"
+        else -> "lhg(setOf($[guard sep ',' via RP]));"
+      }
+      else -> "lhg(setOf($[guard sep ',' via RP]), setOf($[up sep ',' via RP]));"
     }
 }
         """.trimIndent()
@@ -149,6 +184,11 @@ format AutomatonDsl {
                 propertyOf(setOf(CMP, VAL), "up", "Set", execution = LookaheadGuard::up) { typeArgument("Rule") }
             }
             data("StateNumber", implementation = StateNumber::class) {
+                constructor_ {
+                    parameter(setOf(REF, VAL), "value", "Integer")
+                }
+            }
+            data("OptionNum", implementation = StateNumber::class) {
                 constructor_ {
                     parameter(setOf(REF, VAL), "value", "Integer")
                 }

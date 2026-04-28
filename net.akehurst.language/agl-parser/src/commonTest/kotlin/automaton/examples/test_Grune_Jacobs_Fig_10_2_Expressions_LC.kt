@@ -17,6 +17,8 @@
 package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -37,40 +39,38 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
     //    F = v | F2
     //    F2 = ( E )
 
-    private val rrs = runtimeRuleSet {
+    private val rrs = ruleSet("Test") {
         concatenation("S") { ref("E") }
-        choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        choiceLongest("E") {
             ref("E1")
             ref("T")
         }
         concatenation("E1") { ref("E"); literal("a"); ref("T") }
-        choice("T", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        choiceLongest("T") {
             ref("T1")
             ref("F")
         }
         concatenation("T1") { ref("T"); literal("m"); ref("F") }
-        choice("F", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        choiceLongest("F") {
             literal("v")
             ref("F2")
         }
         concatenation("F2") { literal("("); ref("E"); literal(")") }
-    }
-    private val S = rrs.findRuntimeRule("S")
+    } as RuntimeRuleSet
 
-    private val E = rrs.findRuntimeRule("E")
-    private val T = rrs.findRuntimeRule("T")
-    private val F = rrs.findRuntimeRule("F")
-    private val F2 = rrs.findRuntimeRule("F2")
-    private val E1 = rrs.findRuntimeRule("E1")
-    private val T1 = rrs.findRuntimeRule("T1")
-
-    private val a = rrs.findRuntimeRule("'a'")
-    private val m = rrs.findRuntimeRule("'m'")
-    private val v = rrs.findRuntimeRule("'v'")
-    private val o = rrs.findRuntimeRule("'('")
-    private val c = rrs.findRuntimeRule("')'")
-    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val rG = SM.startState.runtimeRules.first()
+    private val S = rrs.rule[0]  // S
+    private val E = rrs.rule[1]  // E
+    private val _t2 = rrs.rule[2]  // 'a'
+    private val E1 = rrs.rule[3]  // E1
+    private val T = rrs.rule[4]  // T
+    private val _t5 = rrs.rule[5]  // 'm'
+    private val T1 = rrs.rule[6]  // T1
+    private val _t7 = rrs.rule[7]  // 'v'
+    private val F = rrs.rule[8]  // F
+    private val _t9 = rrs.rule[9]  // '('
+    private val _t10 = rrs.rule[10]  // ')'
+    private val F2 = rrs.rule[11]  // F2
+    private val rG = rrs.goalRuleFor[S]
 
     @Test
     fun buildFor() {
@@ -86,12 +86,70 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
             assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            //todo
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false)  {
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, oN, ER)   // S = E .
+            state(E, o0, ER)   // E = E1 .
+            state(E, o1, ER)   // E = T .
+            state(E1, oN, 1)   // E1 = E . 'a' T
+            state(E1, oN, 2)   // E1 = E 'a' . T
+            state(E1, oN, ER)   // E1 = E 'a' T .
+            state(T, o0, ER)   // T = T1 .
+            state(T, o1, ER)   // T = F .
+            state(T1, oN, 1)   // T1 = T . 'm' F
+            state(T1, oN, 2)   // T1 = T 'm' . F
+            state(T1, oN, ER)   // T1 = T 'm' F .
+            state(F, o0, ER)   // F = 'v' .
+            state(F, o1, ER)   // F = F2 .
+            state(F2, oN, 1)   // F2 = '(' . E ')'
+            state(F2, oN, 2)   // F2 = '(' E . ')'
+            state(F2, oN, ER)   // F2 = '(' E ')' .
+            state(_t2, oN, ER)   // 'a'
+            state(_t5, oN, ER)   // 'm'
+            state(_t7, oN, ER)   // 'v'
+            state(_t9, oN, ER)   // '('
+            state(_t10, oN, ER)   // ')'
+
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t7, oN, ER); lhg(setOf(EOT,_t5,_t2)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t9, oN, ER); lhg(setOf(_t7,_t9)); ctx(rG, oN, SR) }
+            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(E1, oN, 1); lhg(setOf(_t2), setOf(EOT,_t10,_t2)); ctx(RP(rG, oN, SR),RP(F2, oN, 1)); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(GRAFT) { src(E, o0, ER); tgt(F2, oN, 2); lhg(_t10); ctx(F2, oN, 1); pctx(RP(T1, oN, 2),RP(E1, oN, 2),RP(rG, oN, SR),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(E1, oN, 1); lhg(setOf(_t2), setOf(EOT,_t10,_t2)); ctx(RP(rG, oN, SR),RP(F2, oN, 1)); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(GRAFT) { src(E, o1, ER); tgt(F2, oN, 2); lhg(_t10); ctx(F2, oN, 1); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(WIDTH) { src(E1, oN, 1); tgt(_t2, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(F2, oN, 1),RP(rG, oN, SR)) }
+            trans(WIDTH) { src(E1, oN, 2); tgt(_t7, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(RP(F2, oN, 1),RP(rG, oN, SR)) }
+            trans(WIDTH) { src(E1, oN, 2); tgt(_t9, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(F2, oN, 1),RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(E1, oN, ER); tgt(E, o0, ER); lhg(setOf(EOT,_t10,_t2), setOf(EOT,_t10,_t2)); ctx(RP(rG, oN, SR),RP(F2, oN, 1)); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(T, o0, ER); tgt(E, o1, ER); lhg(setOf(EOT,_t10,_t2), setOf(EOT,_t10,_t2)); ctx(RP(rG, oN, SR),RP(F2, oN, 1)); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(T, o0, ER); tgt(T1, oN, 1); lhg(setOf(_t5), setOf(EOT,_t2,_t5,_t10)); ctx(RP(rG, oN, SR),RP(F2, oN, 1),RP(E1, oN, 2)); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(GRAFT) { src(T, o0, ER); tgt(E1, oN, ER); lhg(setOf(EOT,_t10,_t2)); ctx(E1, oN, 2); pctx(RP(rG, oN, SR),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(T, o1, ER); tgt(E, o1, ER); lhg(setOf(EOT,_t10,_t2), setOf(EOT,_t10,_t2)); ctx(RP(rG, oN, SR),RP(F2, oN, 1)); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(T, o1, ER); tgt(T1, oN, 1); lhg(setOf(_t5), setOf(EOT,_t2,_t5,_t10)); ctx(RP(rG, oN, SR),RP(F2, oN, 1),RP(E1, oN, 2)); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(GRAFT) { src(T, o1, ER); tgt(E1, oN, ER); lhg(setOf(EOT,_t10,_t2)); ctx(E1, oN, 2); pctx(RP(F2, oN, 1),RP(rG, oN, SR)) }
+            trans(WIDTH) { src(T1, oN, 1); tgt(_t5, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(WIDTH) { src(T1, oN, 2); tgt(_t7, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(WIDTH) { src(T1, oN, 2); tgt(_t9, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(T1, oN, ER); tgt(T, o0, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10)); ctx(RP(E1, oN, 2),RP(F2, oN, 1),RP(rG, oN, SR)); pctx(RP(F2, oN, 1),RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2)) }
+            trans(HEIGHT) { src(F, o0, ER); tgt(T, o1, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10)); ctx(RP(F2, oN, 1),RP(E1, oN, 2),RP(rG, oN, SR)); pctx(RP(T1, oN, 2),RP(E1, oN, 2),RP(rG, oN, SR),RP(F2, oN, 1)) }
+            trans(GRAFT) { src(F, o0, ER); tgt(T1, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(T1, oN, 2); pctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(F, o1, ER); tgt(T, o1, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10)); ctx(RP(rG, oN, SR),RP(F2, oN, 1),RP(E1, oN, 2)); pctx(RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(GRAFT) { src(F, o1, ER); tgt(T1, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(T1, oN, 2); pctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(WIDTH) { src(F2, oN, 1); tgt(_t7, oN, ER); lhg(setOf(_t5,_t10,_t2)); ctx(RP(T1, oN, 2),RP(E1, oN, 2),RP(rG, oN, SR),RP(F2, oN, 1)) }
+            trans(WIDTH) { src(F2, oN, 1); tgt(_t9, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(T1, oN, 2),RP(E1, oN, 2),RP(rG, oN, SR),RP(F2, oN, 1)) }
+            trans(WIDTH) { src(F2, oN, 2); tgt(_t10, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(RP(E1, oN, 2),RP(rG, oN, SR),RP(T1, oN, 2),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(F2, oN, ER); tgt(F, o1, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10)); ctx(RP(T1, oN, 2),RP(F2, oN, 1),RP(E1, oN, 2),RP(rG, oN, SR)); pctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1),RP(T1, oN, 2)) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(E1, oN, 2); lhg(setOf(_t7,_t9)); ctx(E1, oN, 1); pctx(RP(F2, oN, 1),RP(rG, oN, SR)) }
+            trans(GRAFT) { src(_t5, oN, ER); tgt(T1, oN, 2); lhg(setOf(_t7,_t9)); ctx(T1, oN, 1); pctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(_t7, oN, ER); tgt(F, o0, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10)); ctx(RP(F2, oN, 1),RP(T1, oN, 2),RP(E1, oN, 2),RP(rG, oN, SR)); pctx(RP(T1, oN, 2),RP(E1, oN, 2),RP(rG, oN, SR),RP(F2, oN, 1)) }
+            trans(HEIGHT) { src(_t9, oN, ER); tgt(F2, oN, 1); lhg(setOf(_t7,_t9), setOf(EOT,_t2,_t5,_t10)); ctx(RP(E1, oN, 2),RP(rG, oN, SR),RP(F2, oN, 1),RP(T1, oN, 2)); pctx(RP(F2, oN, 1),RP(rG, oN, SR),RP(T1, oN, 2),RP(E1, oN, 2)) }
+            trans(GRAFT) { src(_t10, oN, ER); tgt(F2, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(F2, oN, 2); pctx(RP(E1, oN, 2),RP(rG, oN, SR),RP(T1, oN, 2),RP(F2, oN, 1)) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
-
 
     @Test
     fun compare() {

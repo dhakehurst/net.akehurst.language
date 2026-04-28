@@ -16,8 +16,8 @@
 
 package net.akehurst.language.automaton.leftcorner.infixExpressions
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.automaton
 import net.akehurst.language.automaton.leftcorner.test_AutomatonAbstract
@@ -38,9 +38,9 @@ class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstract() {
     // A = E 'a' E ;     add = expr + expr
 
     // must be fresh per test or automaton is not correct for different parses (due to caching)
-    private val rrs = runtimeRuleSet {
+    private val rrs = ruleSet("Test") {
         concatenation("S") { ref("E") }
-        choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        choiceLongest("E") {
             ref("R")
             ref("M")
             ref("A")
@@ -48,18 +48,17 @@ class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstract() {
         concatenation("R") { literal("v") }
         concatenation("M") { ref("E"); literal("m"); ref("E") }
         concatenation("A") { ref("E"); literal("a"); ref("E") }
-    }
+    } as RuntimeRuleSet
 
-    private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val rG = SM.startState.runtimeRules.first()
-    private val E = rrs.findRuntimeRule("E")
-    private val R = rrs.findRuntimeRule("R")
-    private val rM = rrs.findRuntimeRule("M")
-    private val rA = rrs.findRuntimeRule("A")
-    private val m = rrs.findRuntimeRule("'m'")
-    private val a = rrs.findRuntimeRule("'a'")
-    private val v = rrs.findRuntimeRule("'v'")
+    private val S = rrs.rule[0]  // S
+    private val E = rrs.rule[1]  // E
+    private val _t2 = rrs.rule[2]  // 'v'
+    private val R = rrs.rule[3]  // R
+    private val _t4 = rrs.rule[4]  // 'm'
+    private val M = rrs.rule[5]  // M
+    private val _t6 = rrs.rule[6]  // 'a'
+    private val A = rrs.rule[7]  // A
+    private val rG = rrs.goalRuleFor[S]
 
     @Test
     fun automaton_parse_v() {
@@ -71,22 +70,22 @@ class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(rG, oN, SR)  // G = . S
-            state(v, oN, ER)  // v .
-            state(R, oN, ER)  // R = 'v' .
-            state(E, oN, ER)  // E = R .
-            state(S, oN, ER)  // S = E .
-            state(rM, oN, p1)  // M = E . 'm' E
-            state(rA, oN, p1)  // E . 'a' E
-            state(rG, oN, ER)  // G = S .
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t2, oN, ER)   // 'v'
+            state(R, oN, ER)   // R = 'v' .
+            state(E, o0, ER)   // E = R .
+            state(S, oN, ER)   // S = E .
+            state(A, oN, 1)   // A = E . 'a' E
+            state(M, oN, 1)   // M = E . 'm' E
+            state(rG, oN, ER)   // <GOAL> = S .
 
-            trans(WIDTH) { src(rG, oN, SR); tgt(v); lhg(setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(GOAL) { src(S); tgt(rG); lhg(EOT); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(E); tgt(rA, oN, p1); lhg(setOf(a), setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(R); tgt(E); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(E); tgt(rM, oN, p1); lhg(setOf(m), setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t2, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t2, oN, ER); tgt(R, oN, ER); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(R, oN, ER); tgt(E, o0, ER); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(EOT,_t4,_t6)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(EOT,_t4,_t6)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -102,35 +101,34 @@ class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(rG, oN, SR)  // G = . S
-            state(v)  // v .
-            state(R)  // R = 'v' .
-            state(E, oN, ER)  // E = R .
-            state(S)  // S = E .
-            state(rM, oN, p1)  // M = E . 'm' E
-            state(rA, oN, p1)  // E . 'a' E
-            state(m)
-            state(rM, oN, p2)
-            state(rM)
-            state(E, o1, ER)
-            state(rG, oN, ER)  // G = S .
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t2, oN, ER)   // 'v'
+            state(R, oN, ER)   // R = 'v' .
+            state(E, o0, ER)   // E = R .
+            state(S, oN, ER)   // S = E .
+            state(A, oN, 1)   // A = E . 'a' E
+            state(M, oN, 1)   // M = E . 'm' E
+            state(_t4, oN, ER)   // 'm'
+            state(M, oN, 2)   // M = E 'm' . E
+            state(M, oN, ER)   // M = E 'm' E .
+            state(E, o1, ER)   // E = M .
+            state(rG, oN, ER)   // <GOAL> = S .
 
-            trans(WIDTH) { src(rM, oN, p1); tgt(m); lhg(v); ctx(rG, oN, SR) }
-            trans(WIDTH) { src(rG, oN, SR); tgt(v); lhg(setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(WIDTH) { src(rM, oN, p2); tgt(v); lhg(setOf(RT, m, a)); ctx(rG, oN, SR) }
-            trans(GOAL) { src(S); tgt(rG); lhg(EOT); ctx(rG, oN, SR) }
-
-            trans(HEIGHT) { src(E, oN, ER); tgt(rA, oN, p1); lhg(setOf(a), setOf(RT, EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(R); tgt(E); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(E); tgt(rM, oN, p1); lhg(setOf(m), setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR) }
-            trans(GRAFT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR) }
-            trans(GRAFT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t2, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t2, oN, ER); tgt(R, oN, ER); lhg(setOf(RT,_t4,_t6), setOf(RT,_t4,_t6)); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2)); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(R, oN, ER); tgt(E, o0, ER); lhg(setOf(RT,_t4,_t6), setOf(RT,_t4,_t6)); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2)); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(RT,EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2)); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(RT,EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2)); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(E, o0, ER); tgt(M, oN, ER); lhg(RT); ctx(M, oN, 2); pctx(rG, oN, SR) }
+            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(M, oN, 1); tgt(_t4, oN, ER); lhg(_t2); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t4, oN, ER); tgt(M, oN, 2); lhg(_t2); ctx(M, oN, 1); pctx(rG, oN, SR) }
+            trans(WIDTH) { src(M, oN, 2); tgt(_t2, oN, ER); lhg(setOf(RT,_t4,_t6)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(M, oN, ER); tgt(E, o1, ER); lhg(setOf(RT,_t4,_t6), setOf(RT,_t4,_t6)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(S, oN, ER); lhg(setOf(RT), setOf(RT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(RT,_t4,_t6)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(RT,_t4,_t6)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -152,52 +150,49 @@ class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(rG, oN, SOR))    // G = . S
-            val s1 = state(RP(v, oN, EOR))    // v
-            val s2 = state(RP(R, oN, EOR))    // R = v .
-            val s3 = state(RP(E, oN, EOR))    // E = R .
-            val s4 = state(RP(S, oN, EOR))    // S = E .
-            val s5 = state(RP(rA, oN, p1))    // A = E . a E
-            val s6 = state(RP(rM, oN, p1))    // M = E . m E
-            val s7 = state(RP(rG, oN, ER))    // G = S .
-            val s8 = state(RP(a, oN, ER))    // a
-            val s9 = state(RP(rA, oN, p2))    // A = E a . E
-            val s10 = state(RP(rA, oN, ER))  // A = E a E .
-            val s11 = state(RP(E, o2, ER))   // E = M .
-            val s12 = state(RP(m, oN, ER))   // m
-            val s13 = state(RP(rM, oN, p2))   // M = E m . E
-            val s14 = state(RP(rM, oN, ER))  // M = E m E .
-            val s15 = state(RP(E, o1, ER))   // E = A .
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t2, oN, ER)   // 'v'
+            state(R, oN, ER)   // R = 'v' .
+            state(E, o0, ER)   // E = R .
+            state(S, oN, ER)   // S = E .
+            state(A, oN, 1)   // A = E . 'a' E
+            state(M, oN, 1)   // M = E . 'm' E
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(_t6, oN, ER)   // 'a'
+            state(A, oN, 2)   // A = E 'a' . E
+            state(A, oN, ER)   // A = E 'a' E .
+            state(E, o2, ER)   // E = A .
+            state(_t4, oN, ER)   // 'm'
+            state(M, oN, 2)   // M = E 'm' . E
+            state(M, oN, ER)   // M = E 'm' E .
+            state(E, o1, ER)   // E = M .
 
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t2, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t2, oN, ER); tgt(R, oN, ER); lhg(setOf(RT,_t4,_t6), setOf(RT,_t4,_t6)); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(R, oN, ER); tgt(E, o0, ER); lhg(setOf(RT,_t4,_t6), setOf(RT,_t4,_t6)); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(RT,EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(RT,EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(GRAFT) { src(E, o0, ER); tgt(A, oN, ER); lhg(RT); ctx(A, oN, 2); pctx(RP(rG, oN, SR),RP(M, oN, 2)) }
+            trans(GRAFT) { src(E, o0, ER); tgt(M, oN, ER); lhg(RT); ctx(M, oN, 2); pctx(RP(rG, oN, SR),RP(A, oN, 2)) }
+            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
             // because GRAFT is done before HEIGHT, RP(A,0,2) never becomes context for this trans, even though prebuild allows for it
-            trans(WIDTH) { ctx(RP(rG, oN, SOR), RP(rM, oN, p2)); src(rA, oN, p1); tgt(a); lhg(v) }
-            // because GRAFT is done before HEIGHT, RP(M,0,2) never becomes context for this trans, even though prebuild allows for it
-            trans(WIDTH) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2)); src(rM, oN, p1); tgt(m); lhg(v) }
-            trans(WIDTH) { ctx(rG, oN, SOR); src(rG, oN, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
-            trans(WIDTH) { ctx(RP(rG, oN, SOR), RP(rM, oN, p2)); src(rA, oN, p2); tgt(v); lhg(setOf(EOT, a, m)) }
-            trans(WIDTH) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2)); src(rM, oN, p2); tgt(v); lhg(setOf(EOT, a, m)) }
-            trans(GOAL) { ctx(RP(rG, oN, SOR)); src(S); tgt(rG); lhg(EOT); }
-            trans(GRAFT) { ctx(rA, oN, p2); src(E, oN, ER); tgt(rA); lhg(setOf(EOT)); gpg(rA, oN, p2) } // lhg == [EOT,a,m] for prebuild?
-            trans(GRAFT) { ctx(rA, oN, p2); src(E, o1, ER); tgt(rA); lhg(setOf(EOT)); gpg(rA, oN, p2) } // lhg == [EOT,a,m] for prebuild?
-            //transition(GRAFT) { ctx(rA, o0, p2); src(E,o2,EOR); tgt(rA); lhg(setOf(EOT)); rtg(rA, o0, p2) } //never gets created
-            transition(setOf(s0, s9, s13), s3, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(EOT)) }
-            transition(setOf(s0, s9), s15, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(EOT)) }
-            transition(setOf(s0, s13), s11, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(EOT)) }
-            transition(s5, s8, s9, GRAFT, setOf(RP(rA, oN, 1))) { lhg(setOf(v)) }
-            trans(GRAFT) { ctx(rA, oN, p1); src(a); tgt(rA, oN, p2); lhg(v); gpg(rA, oN, p1) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(R); tgt(E); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2)); src(rM); tgt(E, o1, ER); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rM, oN, p2)); src(rA); tgt(E, o2, ER); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            trans(GRAFT) { ctx(rM, oN, p2); src(E, oN, ER); tgt(rM); lhg(EOT); gpg(rM, oN, p2) }
-            trans(GRAFT) { ctx(rM, oN, p2); src(E, o2, ER); tgt(rM); lhg(EOT); gpg(rM, oN, p2) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2));src(E); tgt(rM, oN, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2)); src(E, o1, ER); tgt(rM, oN, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rM, oN, p2)); src(E, o2, ER); tgt(rM, oN, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
-            trans(GRAFT) { ctx(rM, oN, p1); src(m); tgt(rM, oN, p2); lhg(v); gpg(rM, oN, p1) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(v); tgt(R); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            trans(HEIGHT) { ctx(rG, oN, SOR); src(E, oN, ER); tgt(S); lhg(EOT, EOT) }
-            trans(HEIGHT) { ctx(rG, oN, SOR); src(E, o1, ER); tgt(S); lhg(EOT, EOT) }
-            trans(HEIGHT) { ctx(rG, oN, SOR); src(E, o2, ER); tgt(S); lhg(EOT, EOT) }
+            trans(WIDTH) { src(A, oN, 1); tgt(_t6, oN, ER); lhg(_t2); ctx(RP(rG, oN, SR),RP(M, oN, 2)) }
+            trans(WIDTH) { src(M, oN, 1); tgt(_t4, oN, ER); lhg(_t2); ctx(RP(rG, oN, SR),RP(A, oN, 2)) }
+            trans(GRAFT) { src(_t6, oN, ER); tgt(A, oN, 2); lhg(_t2); ctx(A, oN, 1); pctx(RP(rG, oN, SR),RP(M, oN, 2)) }
+            trans(WIDTH) { src(A, oN, 2); tgt(_t2, oN, ER); lhg(setOf(RT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2)) }
+            trans(HEIGHT) { src(A, oN, ER); tgt(E, o2, ER); lhg(setOf(RT,_t4,_t6), setOf(RT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2)); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o2, ER); tgt(S, oN, ER); lhg(setOf(RT), setOf(RT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o2, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(RT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2)); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o2, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(RT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2)); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(E, o2, ER); tgt(M, oN, ER); lhg(RT); ctx(M, oN, 2); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t4, oN, ER); tgt(M, oN, 2); lhg(_t2); ctx(M, oN, 1); pctx(RP(rG, oN, SR),RP(A, oN, 2)) }
+            trans(WIDTH) { src(M, oN, 2); tgt(_t2, oN, ER); lhg(setOf(RT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(M, oN, ER); tgt(E, o1, ER); lhg(setOf(RT,_t4,_t6), setOf(RT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2)); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(S, oN, ER); lhg(setOf(RT), setOf(RT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(RT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2)); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(RT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2)); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(E, o1, ER); tgt(A, oN, ER); lhg(RT); ctx(A, oN, 2); pctx(rG, oN, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -218,50 +213,50 @@ class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(rG, oN, SOR))    // G = . S
-            val s1 = state(RP(rG, oN, ER))    // G = S .
-            val s2 = state(RP(S, oN, ER))    // S = E .
-            val s3 = state(RP(E, oN, ER))    // E = R .
-            val s4 = state(RP(E, o1, ER))    // E = M .
-            val s5 = state(RP(E, o2, ER))    // E = A .
-            val s6 = state(RP(rA, oN, ER))   // A = E a E .
-            val s7 = state(RP(a, oN, ER))    // v
-            val s8 = state(RP(rM, oN, ER))   // M = E m E .
-            val s9 = state(RP(m, oN, ER))    // m
-            val s10 = state(RP(R, oN, ER))   // R = v .
-            val s11 = state(RP(v, oN, ER))   // v
-            val s12 = state(RP(rA, oN, p1))   // A = E . a E
-            val s13 = state(RP(rA, oN, p2))   // A = E a . E
-            val s14 = state(RP(rM, oN, p1))   // M = E . m E
-            val s15 = state(RP(rM, oN, p2))   // M = E m . E
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, oN, ER)   // S = E .
+            state(E, o0, ER)   // E = R .
+            state(E, o1, ER)   // E = M .
+            state(E, o2, ER)   // E = A .
+            state(R, oN, ER)   // R = 'v' .
+            state(M, oN, 1)   // M = E . 'm' E
+            state(M, oN, 2)   // M = E 'm' . E
+            state(M, oN, ER)   // M = E 'm' E .
+            state(A, oN, 1)   // A = E . 'a' E
+            state(A, oN, 2)   // A = E 'a' . E
+            state(A, oN, ER)   // A = E 'a' E .
+            state(_t2, oN, ER)   // 'v'
+            state(_t4, oN, ER)   // 'm'
+            state(_t6, oN, ER)   // 'a'
 
-            trans(WIDTH) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(rA, oN, p1); tgt(a); lhg(v) }
-            trans(WIDTH) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(rM, oN, p1); tgt(m); lhg(v) }
-            trans(WIDTH) { ctx(rG, oN, SOR); src(rG, oN, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
-            trans(WIDTH) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(rA, oN, p2); tgt(v); lhg(setOf(EOT, a, m)) }
-            trans(WIDTH) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(rM, oN, p2); tgt(v); lhg(setOf(EOT, a, m)) }
-            trans(GOAL) { ctx(RP(rG, oN, SOR)); src(S); tgt(rG); lhg(EOT) }
-            trans(GRAFT) { ctx(rA, oN, p2); src(E, oN, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, oN, p2) }
-            trans(GRAFT) { ctx(rA, oN, p2); src(E, o1, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, oN, p2) }
-            trans(GRAFT) { ctx(rA, oN, p2); src(E, o2, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, oN, p2) }  //never gets created in on-demand-build !
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(E, oN, ER); tgt(rA, oN, p1); lhg(setOf(a), setOf(EOT, a, m)) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(E, o1, ER); tgt(rA, oN, p1); lhg(setOf(a), setOf(EOT, a, m)) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(E, o2, ER); tgt(rA, oN, p1); lhg(setOf(a), setOf(EOT, a, m)) }
-            trans(GRAFT) { ctx(rA, oN, p1); src(a); tgt(rA, oN, p2); lhg(v); gpg(rA, oN, p1) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(R); tgt(E, oN, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(rM); tgt(E, o1, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(rA); tgt(E, o2, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
-            trans(GRAFT) { ctx(rM, oN, p2); src(E, oN, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, oN, p2) }
-            trans(GRAFT) { ctx(rM, oN, p2); src(E, o1, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, oN, p2) }
-            trans(GRAFT) { ctx(rM, oN, p2); src(E, o2, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, oN, p2) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(E, oN, ER); tgt(rM, oN, p1); lhg(setOf(m), setOf(EOT, a, m)) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(E, o1, ER); tgt(rM, oN, p1); lhg(setOf(m), setOf(EOT, a, m)) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(E, o2, ER); tgt(rM, oN, p1); lhg(setOf(m), setOf(EOT, a, m)) }
-            trans(GRAFT) { ctx(rM, oN, p1); src(m); tgt(rM, oN, p2); lhg(v); gpg(rM, oN, p1) }
-            trans(HEIGHT) { ctx(RP(rG, oN, SOR), RP(rA, oN, p2), RP(rM, oN, p2)); src(v); tgt(R); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
-            trans(HEIGHT) { ctx(rG, oN, SOR); src(E, oN, ER); tgt(S); lhg(EOT, EOT) }
-            trans(HEIGHT) { ctx(rG, oN, SOR); src(E, o1, ER); tgt(S); lhg(EOT, EOT) }
-            trans(HEIGHT) { ctx(rG, oN, SOR); src(E, o2, ER); tgt(S); lhg(EOT, EOT) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t2, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(rG, oN, SR) }
+            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(GRAFT) { src(E, o0, ER); tgt(M, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(M, oN, 2); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(GRAFT) { src(E, o0, ER); tgt(A, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(A, oN, 2); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(E, o1, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(GRAFT) { src(E, o1, ER); tgt(M, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(M, oN, 2); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(GRAFT) { src(E, o1, ER); tgt(A, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(A, oN, 2); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(E, o2, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(E, o2, ER); tgt(A, oN, 1); lhg(setOf(_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)); pctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)) }
+            trans(HEIGHT) { src(E, o2, ER); tgt(M, oN, 1); lhg(setOf(_t4), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)); pctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)) }
+            trans(GRAFT) { src(E, o2, ER); tgt(A, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(A, oN, 2); pctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)) }
+            trans(GRAFT) { src(E, o2, ER); tgt(M, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(M, oN, 2); pctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)) }
+            trans(HEIGHT) { src(R, oN, ER); tgt(E, o0, ER); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(WIDTH) { src(M, oN, 1); tgt(_t4, oN, ER); lhg(_t2); ctx(RP(M, oN, 2),RP(A, oN, 2),RP(rG, oN, SR)) }
+            trans(WIDTH) { src(M, oN, 2); tgt(_t2, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(M, oN, ER); tgt(E, o1, ER); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)); pctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)) }
+            trans(WIDTH) { src(A, oN, 1); tgt(_t6, oN, ER); lhg(_t2); ctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)) }
+            trans(WIDTH) { src(A, oN, 2); tgt(_t2, oN, ER); lhg(setOf(EOT,_t4,_t6)); ctx(RP(A, oN, 2),RP(rG, oN, SR),RP(M, oN, 2)) }
+            trans(HEIGHT) { src(A, oN, ER); tgt(E, o2, ER); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(RP(M, oN, 2),RP(A, oN, 2),RP(rG, oN, SR)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(HEIGHT) { src(_t2, oN, ER); tgt(R, oN, ER); lhg(setOf(EOT,_t4,_t6), setOf(EOT,_t4,_t6)); ctx(RP(M, oN, 2),RP(A, oN, 2),RP(rG, oN, SR)); pctx(RP(rG, oN, SR),RP(M, oN, 2),RP(A, oN, 2)) }
+            trans(GRAFT) { src(_t4, oN, ER); tgt(M, oN, 2); lhg(_t2); ctx(M, oN, 1); pctx(RP(M, oN, 2),RP(A, oN, 2),RP(rG, oN, SR)) }
+            trans(GRAFT) { src(_t6, oN, ER); tgt(A, oN, 2); lhg(_t2); ctx(A, oN, 1); pctx(RP(rG, oN, SR),RP(A, oN, 2),RP(M, oN, 2)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -289,6 +284,6 @@ class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstract() {
         println("--No Build--")
         println(rrs_noBuild.usedAutomatonToString("S"))
 
-        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild, config = AutomatonTest.MatchConfiguration(no_lookahead_compare = true))
     }
 }
