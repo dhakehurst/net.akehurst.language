@@ -917,7 +917,8 @@ internal class BuildCacheLC1(
                         ParseAction.GRAFT,
                         ParseAction.GOAL -> LookaheadSetPart.EMPTY
                     }
-                    TransInfo(setOf(setOf(ctxCtx)), setOf(setOf(ctx)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
+                    // Pair (prevPrev=ctxCtx, prev=ctx) is kept atomic — see TransPrev kdoc.
+                    TransInfo(setOf(TransPrev(setOf(ctxCtx), setOf(ctx))), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                     //HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                 }.toSet()
                 hgtis.addAll(hgInfo)
@@ -951,7 +952,8 @@ internal class BuildCacheLC1(
                 }
                 val trp = firstTermInfo.terminalRule.asTerminalRulePosition
                 val lhs = firstTermInfo.parentExpectedAt
-                TransInfo(setOf(emptySet()), setOf(setOf(ctx)), action, setOf(trp), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
+                // WIDTH/EMBED: prevPrev is irrelevant (consumer ignores it for incomplete sources).
+                TransInfo(setOf(TransPrev(emptySet(), setOf(ctx))), action, setOf(trp), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
             }
             transInfo.addAll(wis.toSet())
         }
@@ -1035,13 +1037,14 @@ internal class BuildCacheLC1(
             else -> {
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
-                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
-                    val prev = me.value.flatMap { it.prev }.toSet()
+                    // Pairs are kept atomic — flatMap unions the per-input pair-sets without
+                    // splitting prev/prevPrev (no Cartesian re-expansion).
+                    val prevPairs = me.value.flatMap { it.prevPairs }.toSet()
                     val action = ParseAction.WIDTH
                     val to = me.value.flatMap { it.to }.toSet()
                     val grd = me.value.flatMap { it.lookahead.map { it.guard } }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     val lhs = setOf(LookaheadInfoPart(grd, LookaheadSetPart.EMPTY))
-                    TransInfo(prevPrev, prev, action, to, lhs)
+                    TransInfo(prevPairs, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1054,12 +1057,11 @@ internal class BuildCacheLC1(
             else -> {
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
-                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
-                    val prev = me.value.flatMap { it.prev }.toSet()
+                    val prevPairs = me.value.flatMap { it.prevPairs }.toSet()
                     val action = ParseAction.HEIGHT
                     val to = me.key
                     val lhs = LookaheadInfoPart.merge(me.value.flatMap { it.lookahead }.toSet())
-                    TransInfo(prevPrev, prev, action, to, lhs)
+                    TransInfo(prevPairs, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1070,16 +1072,13 @@ internal class BuildCacheLC1(
         return when {
             transInfo.isEmpty() -> transInfo
             else -> {
-                //val grouped = transInfo.groupBy { Pair(it.to, it.lookahead) }
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
-                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
-                    val prev = me.value.flatMap { it.prev }.toSet()
+                    val prevPairs = me.value.flatMap { it.prevPairs }.toSet()
                     val action = ParseAction.HEIGHT
                     val to = me.key
-                    //val lhs = me.key.second
                     val lhs = LookaheadInfoPart.merge(me.value.flatMap { it.lookahead }.toSet())
-                    TransInfo(prevPrev, prev, action, to, lhs)
+                    TransInfo(prevPairs, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1092,13 +1091,12 @@ internal class BuildCacheLC1(
             else -> {
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
-                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
-                    val prev = me.value.flatMap { it.prev }.toSet()
+                    val prevPairs = me.value.flatMap { it.prevPairs }.toSet()
                     val action = ParseAction.GRAFT
                     val to = me.key
                     val grd = me.value.flatMap { it.lookahead.map { it.guard } }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     val lhs = setOf(LookaheadInfoPart(grd, LookaheadSetPart.EMPTY))
-                    TransInfo(prevPrev, prev, action, to, lhs)
+                    TransInfo(prevPairs, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1111,13 +1109,12 @@ internal class BuildCacheLC1(
             else -> {
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
-                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
-                    val prev = me.value.flatMap { it.prev }.toSet()
+                    val prevPairs = me.value.flatMap { it.prevPairs }.toSet()
                     val action = ParseAction.GRAFT
                     val to = me.key
                     val grd = me.value.flatMap { it.lookahead.map { it.guard } }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     val lhs = setOf(LookaheadInfoPart(grd, LookaheadSetPart.EMPTY))
-                    TransInfo(prevPrev, prev, action, to, lhs)
+                    TransInfo(prevPairs, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1193,7 +1190,7 @@ internal class BuildCacheLC1(
                 map[hg.to] = hg
             } else {
                 val lhs = hg.lookahead.union(existing.lookahead)
-                map[hg.to] = TransInfo(existing.prevPrev, existing.prev, hg.action, hg.to, lhs)
+                map[hg.to] = TransInfo(existing.prevPairs, hg.action, hg.to, lhs)
             }
         }
     }
@@ -1217,7 +1214,8 @@ internal class BuildCacheLC1(
                     val grd = parentNext.expectedAt
                     val up = parentNext.parentExpectedAt
                     rls.add(tgt.rule)
-                    TransInfo(setOf(setOf(contextContext)), setOf(setOf(context)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
+                    // Pair (prevPrev=contextContext, prev=context) is kept atomic.
+                    TransInfo(setOf(TransPrev(setOf(contextContext), setOf(context))), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                     //HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                 }
             }

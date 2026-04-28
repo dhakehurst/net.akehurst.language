@@ -199,9 +199,25 @@ internal data class LookaheadInfoPart(
 
 }
 
+/**
+ * A single (prevPrev, prev) context pair attached to a [TransInfo].
+ *
+ * Pairs are kept atomic — they must NEVER be split into independent
+ * `prevPrev` and `prev` sets that are later cross-multiplied, because the
+ * Cartesian product would fabricate (prev, prevPrev) combinations that can
+ * never co-occur on the GSS at runtime (e.g. a non-sentinel prevPrev paired
+ * with the goal-start sentinel prev).
+ *
+ * For WIDTH/EMBED transitions [prevPrev] is irrelevant and is stored as the
+ * empty set; consumers that build incomplete transitions ignore it.
+ */
+internal data class TransPrev(
+    val prevPrev: Set<RulePositionRuntime>,
+    val prev: Set<RulePositionRuntime>
+)
+
 internal data class TransInfo(
-    val prevPrev: Set<Set<RulePositionRuntime>>,
-    val prev: Set<Set<RulePositionRuntime>>,
+    val prevPairs: Set<TransPrev>,
     val action: ParseAction,
     val to: Set<RulePositionRuntime>,
     val lookahead: Set<LookaheadInfoPart>
@@ -211,7 +227,7 @@ internal data class StateInfo(
     val rulePositions: Set<RulePositionRuntime>
 ) {
     var possibleTrans: Set<TransInfo> = emptySet()
-    val possiblePrev: Set<Set<RulePositionRuntime>> get() = possibleTrans.flatMap { it.prev }.toSet()
+    val possiblePrev: Set<Set<RulePositionRuntime>> get() = possibleTrans.flatMap { ti -> ti.prevPairs.map { it.prev } }.toSet()
 }
 
 internal data class WidthInfo(

@@ -233,15 +233,15 @@ class ParserStateSet(
                 val action = ti.action
                 val to = this.fetchCompatibleState(ti.to.toList()) ?: error("Internal error, state not created for ${ti.to}")
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
-                for (ps in ti.prev) {
-                    val prev = this.fetchCompatibleState(ps.toList()) ?: error("Internal error, state not created for $ps")
+                // Iterate atomic (prevPrev, prev) pairs — never the Cartesian product of two
+                // independent sets, which would fabricate stack triples that cannot occur.
+                for (pp in ti.prevPairs) {
+                    val prev = this.fetchCompatibleState(pp.prev.toList()) ?: error("Internal error, state not created for ${pp.prev}")
                     when {
                         state.isNotAtEnd -> state.outTransitions.createTransitionForIncomplete(prev, from, action, to, lhs)
                         else -> {
-                            for (pps in ti.prevPrev) {
-                                val prevPrev = this.fetchCompatibleState(pps.toList()) ?: error("Internal error, state not created for $pps")
-                                state.outTransitions.createTransitionForComplete(prev, prevPrev, from, action, to, lhs)
-                            }
+                            val prevPrev = this.fetchCompatibleState(pp.prevPrev.toList()) ?: error("Internal error, state not created for ${pp.prevPrev}")
+                            state.outTransitions.createTransitionForComplete(prev, prevPrev, from, action, to, lhs)
                         }
                     }
                 }

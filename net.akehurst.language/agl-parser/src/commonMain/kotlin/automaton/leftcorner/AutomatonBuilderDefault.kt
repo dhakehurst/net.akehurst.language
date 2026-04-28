@@ -198,8 +198,24 @@ internal class TransitionBuilderDefault internal constructor(
      * common case where prev² discrimination is irrelevant (i.e. `prev` is
      * not at-start). Tests that need to assert prev²-discriminated behaviour
      * should call [pctx] explicitly.
+     *
+     * NOTE: When BOTH [ctx] and [pctx] are populated they are combined as the
+     * full Cartesian product `ctx × pctx`. This is convenient but produces
+     * spurious (prev, prevPrev) entries when not every combination is
+     * structurally reachable on the GSS (e.g. the goal-start sentinel can
+     * only ever pair with itself as prev²). For pair-precise fixtures use
+     * [prevPair] instead — see [_explicitPrevPairs].
      */
     private var _prevPrevContext: Set<ParserState>? = null
+
+    /**
+     * Pair-precise (prevPrev, prev) entries supplied via [prevPair].
+     * When non-empty, [build] registers exactly these pairs and ignores
+     * [_transitionContext] / [_prevPrevContext] for the purpose of pair
+     * enumeration (those still validate non-emptiness via [ctx]).
+     * Mixing modes is not supported — use one or the other.
+     */
+    private val _explicitPrevPairs = mutableSetOf<Pair<ParserState, ParserState>>()
     private lateinit var _src: ParserState
     private lateinit var _tgt: ParserState
     private val _lhg = mutableSetOf<Lookahead>()
@@ -255,6 +271,31 @@ internal class TransitionBuilderDefault internal constructor(
     fun pctx(vararg rulePositions: Set<RulePositionRuntime>) {
         val states = rulePositions.map { this.stateSet.fetchState(it.toList()) ?: error("State for $it not defined") }.toSet()
         this.pctx(states)
+    }
+
+    /**
+     * Register an explicit (prevPrev, prev) pair for HEIGHT / GRAFT / GOAL
+     * transitions. Use this in preference to the [ctx] × [pctx] cross-product
+     * when only a subset of combinations is reachable on the GSS, so that
+     * the DSL fixture matches the cross-product-free output produced by the
+     * preBuild / on-demand construction paths (see TransPrev kdoc).
+     *
+     * May be called multiple times to register multiple pairs.
+     */
+    fun prevPair(prevPrev: ParserState, prev: ParserState) {
+        _explicitPrevPairs.add(prevPrev to prev)
+    }
+
+    fun prevPair(prevPrev: RulePositionRuntime, prev: RulePositionRuntime) {
+        val pp = stateSet.fetchState(listOf(prevPrev)) ?: error("State for $prevPrev not defined")
+        val p = stateSet.fetchState(listOf(prev)) ?: error("State for $prev not defined")
+        prevPair(pp, p)
+    }
+
+    fun prevPair(prevPrev: Set<RulePositionRuntime>, prev: Set<RulePositionRuntime>) {
+        val pp = stateSet.fetchState(prevPrev.toList()) ?: error("State for $prevPrev not defined")
+        val p = stateSet.fetchState(prev.toList()) ?: error("State for $prev not defined")
+        prevPair(pp, p)
     }
 
     fun src(rule: Rule) {
@@ -336,11 +377,12 @@ internal class TransitionBuilderDefault internal constructor(
 
     internal fun build(): Transition {
         val trans = Transition(_src as ParserState, _tgt as ParserState, action, _lhg)
-        require(_transitionContext.isNotEmpty()) { "ctx(...) must be set before build()" }
         when (action) {
             ParseAction.WIDTH, ParseAction.EMBED -> {
+                require(_transitionContext.isNotEmpty()) { "ctx(...) must be set before build()" }
                 check(!_src.isAtEnd) { "$action requires non-at-end source state" }
                 check(_prevPrevContext == null) { "pctx(...) is not meaningful for $action transitions" }
+                check(_explicitPrevPairs.isEmpty()) { "prevPair(...) is not meaningful for $action transitions" }
                 for (prev in _transitionContext) {
                     _src.outTransitions.addTransitionForIncomplete(prev, trans)
                 }
@@ -348,12 +390,24 @@ internal class TransitionBuilderDefault internal constructor(
 
             ParseAction.HEIGHT, ParseAction.GRAFT, ParseAction.GOAL -> {
                 check(_src.isAtEnd) { "$action requires at-end source state" }
-                // Sentinel prev² when none supplied — matches runtime substitution
-                // in RuntimeParserAgl.growComplete2 (`prevPrev?.state ?: stateSet.startState`).
-                val prevPrevs = _prevPrevContext ?: setOf(stateSet.startState)
-                for (prev in _transitionContext) {
-                    for (prevPrev in prevPrevs) {
+                if (_explicitPrevPairs.isNotEmpty()) {
+                    // Pair-precise mode — register exactly the supplied (prevPrev, prev) pairs.
+                    check(_prevPrevContext == null) { "Cannot mix prevPair(...) with pctx(...)" }
+                    require(_transitionContext.isEmpty() || _transitionContext == _explicitPrevPairs.map { it.second }.toSet()) {
+                        "When using prevPair(...), ctx(...) is optional but if supplied must equal the set of `prev` states across the supplied pairs"
+                    }
+                    for ((prevPrev, prev) in _explicitPrevPairs) {
                         _src.outTransitions.addTransitionForComplete(prev, prevPrev, trans)
+                    }
+                } else {
+                    require(_transitionContext.isNotEmpty()) { "ctx(...) must be set before build()" }
+                    // Sentinel prev² when none supplied — matches runtime substitution
+                    // in RuntimeParserAgl.growComplete2 (`prevPrev?.state ?: stateSet.startState`).
+                    val prevPrevs = _prevPrevContext ?: setOf(stateSet.startState)
+                    for (prev in _transitionContext) {
+                        for (prevPrev in prevPrevs) {
+                            _src.outTransitions.addTransitionForComplete(prev, prevPrev, trans)
+                        }
                     }
                 }
             }
