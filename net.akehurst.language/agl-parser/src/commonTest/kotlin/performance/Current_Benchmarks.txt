@@ -1,0 +1,12 @@
+PERF | right-recursive S='a' | 'a' S            | n=     50 | min=     675µs | med=     923µs | mean=    1120µs | max=    4053µs |        54171 ch/s
+PERF | right-recursive S='a' | 'a' S            | n=    500 | min=    4542µs | med=    6241µs | mean=    6502µs | max=    9069µs |        80115 ch/s
+PERF | right-recursive S='a' | 'a' S            | n=   5000 | min=   16159µs | med=   18927µs | mean=   21460µs | max=   37837µs |       264172 ch/s
+PERF | sList  S=['a'/',']+   (with ws skip)     | n=     50 | min=    2719µs | med=    3078µs | mean=    3109µs | max=    3742µs |        16244 ch/s
+PERF | sList  S=['a'/',']+   (with ws skip)     | n=    500 | min=    7830µs | med=    9679µs | mean=   10746µs | max=   17670µs |        51658 ch/s
+PERF | sList  S=['a'/',']+   (with ws skip)     | n=   5000 | min=   72378µs | med=   75167µs | mean=   75360µs | max=   79654µs |        66518 ch/s
+PERF | multi  S='a'+                            | n=    100 | min=     165µs | med=     175µs | mean=     268µs | max=    4618µs |       571428 ch/s
+PERF | multi  S='a'+                            | n=   1000 | min=    1661µs | med=    1748µs | mean=    1777µs | max=    1987µs |       572082 ch/s
+PERF | multi  S='a'+                            | n=  10000 | min=   17824µs | med=   18247µs | mean=   18612µs | max=   22442µs |       548035 ch/s
+PERF | expr   E='n' (+|*) 'n' ...               | n=     50 | min=     855µs | med=    1005µs | mean=     993µs | max=    1340µs |        49751 ch/s
+PERF | expr   E='n' (+|*) 'n' ...               | n=    500 | min=    4500µs | med=    5469µs | mean=    5788µs | max=   10787µs |        91424 ch/s
+PERF | expr   E='n' (+|*) 'n' ...               | n=   5000 | min=   47300µs | med=   48756µs | mean=   49195µs | max=   52948µs |       102551 ch/s
