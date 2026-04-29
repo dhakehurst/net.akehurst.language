@@ -48,8 +48,8 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         check_expectedAt(RP(rG, oN, SR), LookaheadSetPart.EOT, expected = setOf(EOT, a))
         check_expectedAt(RP(S, oSI, SR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, oSE, SR), LookaheadSetPart.EOT, expected = setOf(EOT))
-        check_expectedAt(RP(S, oSS, PLS), LookaheadSetPart.EOT, expected = setOf(b))
-        check_expectedAt(RP(S, oSI, PLI), LookaheadSetPart.EOT, expected = setOf(a))
+        check_expectedAt(RP(S, oSS, pSS), LookaheadSetPart.EOT, expected = setOf(b))
+        check_expectedAt(RP(S, oSI, pSI), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, oSI, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
     }
 

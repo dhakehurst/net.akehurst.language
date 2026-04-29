@@ -369,7 +369,7 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         check_parentInContext(
             RP(rG, oN, SOR), RP(rG, oN, SOR), LookaheadSetPart.EOT, a,
             setOf(
-                ParentNext(true, RP(S, oSI, PLS), LHS(b), LHS(EOT)),
+                ParentNext(true, RP(S, oSI, pSS), LHS(b), LHS(EOT)),
                 ParentNext(true, RP(S, oSI, ER), LHS(EOT), LHS(EOT))
             )
         )

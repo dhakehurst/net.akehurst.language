@@ -24,6 +24,7 @@ import net.akehurst.language.automaton.api.AutomatonState
 import net.akehurst.language.automaton.api.AutomatonTransition
 import net.akehurst.language.automaton.api.LookaheadGuard
 import net.akehurst.language.automaton.api.ParseAction
+import net.akehurst.language.automaton.api.TransitionContext
 import net.akehurst.language.parser.api.RulePosition
 
 //internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
@@ -169,6 +170,12 @@ class Transition(
     override val prev: Set<AutomatonState> get() = context.map { it.previous }.toSet()
 
     override val prevPrev: Set<AutomatonState> get() = context.filterIsInstance<CompleteKey>().map { it.prevPrev }.toSet()
+
+    /**
+     * Atomic (prevPrev, prev) pairs derived directly from the underlying [CompleteKey]s.
+     * Returns the empty set for incomplete transitions (WIDTH/EMBED) — see API kdoc.
+     */
+    override val transContext: Set<TransitionContext> get() = context.filterIsInstance<CompleteKey>().toSet()
 
     // --- Any ---
     override fun hashCode(): Int = this.hashCode_cache

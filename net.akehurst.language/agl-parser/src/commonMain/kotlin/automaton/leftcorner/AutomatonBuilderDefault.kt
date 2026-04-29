@@ -60,6 +60,7 @@ internal class AutomatonBuilderDefault(
     val WIDTH = ParseAction.WIDTH
     val HEIGHT = ParseAction.HEIGHT
     val GRAFT = ParseAction.GRAFT
+    val EMBED = ParseAction.EMBED
 
     val aG = ParseAction.GOAL
     val aW = ParseAction.WIDTH
@@ -220,6 +221,7 @@ internal class TransitionBuilderDefault internal constructor(
     private lateinit var _tgt: ParserState
     private val _lhg = mutableSetOf<Lookahead>()
 
+    @Deprecated("Use prevPair")
     override fun pctx(vararg stateNumbers: Int) {
         _prevPrevContext = stateNumbers.toList().map { n -> this.stateSet.allBuiltStates.first { n == it.number.value } }.toSet()
     }
@@ -258,16 +260,20 @@ internal class TransitionBuilderDefault internal constructor(
      *
      * Has no effect for WIDTH / EMBED transitions.
      */
+    @Deprecated("Use prevPair")
     fun pctx(states: Set<ParserState>) {
         _prevPrevContext = states
     }
 
+    @Deprecated("Use prevPair")
     fun pctx(rule: Rule, option: OptionNum, position: Int) = pctx(RulePositionRuntime(rule as RuntimeRule, option, position))
+    @Deprecated("Use prevPair")
     fun pctx(vararg rulePositions: RulePositionRuntime) {
         val states = rulePositions.map { this.stateSet.fetchState(listOf(it)) ?: error("State for $it not defined") }.toSet()
         this.pctx(states)
     }
 
+    @Deprecated("Use prevPair")
     fun pctx(vararg rulePositions: Set<RulePositionRuntime>) {
         val states = rulePositions.map { this.stateSet.fetchState(it.toList()) ?: error("State for $it not defined") }.toSet()
         this.pctx(states)
@@ -324,8 +330,6 @@ internal class TransitionBuilderDefault internal constructor(
         _tgt = state
     }
 
-
-
     fun lhg(guard: Set<Rule>, up: Set<Rule>) {
         this._lhg.add(
             Lookahead(
@@ -339,8 +343,6 @@ internal class TransitionBuilderDefault internal constructor(
     }
     fun lhg(guard: Rule, up: Rule) = lhg(setOf(guard), setOf(up))
     fun lhg(guard: Rule) = lhg(setOf(guard))
-
-
 
     fun lh(guard: Set<Int>, up: Set<Int>) {
         val g = guard.map { rn ->

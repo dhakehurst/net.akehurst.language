@@ -86,7 +86,7 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
             assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false)  {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(rG, oN, SR)   // <GOAL> =  . S
             state(rG, oN, ER)   // <GOAL> = S .
             state(S, oN, ER)   // S = E .
@@ -111,192 +111,190 @@ class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
             state(_t9, oN, ER)   // '('
             state(_t10, oN, ER)   // ')'
 
-            trans(WIDTH) { src(rG, oN, SR); tgt(_t7, oN, ER); lhg(setOf(EOT,_t5,_t2)); ctx(rG, oN, SR) }
-            trans(WIDTH) { src(rG, oN, SR); tgt(_t9, oN, ER); lhg(setOf(_t7,_t9)); ctx(rG, oN, SR) }
-            // HEIGHT/GRAFT/GOAL transitions register explicit (prevPrev, prev) pairs via prevPair(...)
-            // — see TransPrev kdoc. The legacy ctx(...)+pctx(...) cross-product would over-approximate
-            // by fabricating pairs that cannot occur on the GSS at runtime.
-            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT)
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t7, oN, ER); lhg(setOf(EOT, _t5, _t2)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t9, oN, ER); lhg(setOf(_t7, _t9)); ctx(rG, oN, SR) }
+            trans(GOAL) {
+                src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
             }
-            trans(HEIGHT) { src(E, o0, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            trans(HEIGHT) {
+                src(E, o0, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
             }
-            trans(HEIGHT) { src(E, o0, ER); tgt(E1, oN, 1); lhg(setOf(_t2), setOf(EOT,_t10,_t2))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(E, o0, ER); tgt(E1, oN, 1); lhg(setOf(_t2), setOf(EOT, _t10, _t2));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
             }
-            trans(GRAFT) { src(E, o0, ER); tgt(F2, oN, 2); lhg(_t10)
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(GRAFT) {
+                src(E, o0, ER); tgt(F2, oN, 2); lhg(_t10); prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
             }
-            trans(HEIGHT) { src(E, o1, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            trans(HEIGHT) { src(E, o1, ER); tgt(S, oN, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
             }
-            trans(HEIGHT) { src(E, o1, ER); tgt(E1, oN, 1); lhg(setOf(_t2), setOf(EOT,_t10,_t2))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(E, o1, ER); tgt(E1, oN, 1); lhg(setOf(_t2), setOf(EOT, _t10, _t2)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
             }
-            trans(GRAFT) { src(E, o1, ER); tgt(F2, oN, 2); lhg(_t10)
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(GRAFT) {
+                src(E, o1, ER); tgt(F2, oN, 2); lhg(_t10); prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
             }
-            trans(WIDTH) { src(E1, oN, 1); tgt(_t2, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(F2, oN, 1),RP(rG, oN, SR)) }
-            trans(WIDTH) { src(E1, oN, 2); tgt(_t7, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(RP(F2, oN, 1),RP(rG, oN, SR)) }
-            trans(WIDTH) { src(E1, oN, 2); tgt(_t9, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(F2, oN, 1),RP(rG, oN, SR)) }
-            trans(HEIGHT) { src(E1, oN, ER); tgt(E, o0, ER); lhg(setOf(EOT,_t10,_t2), setOf(EOT,_t10,_t2))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(WIDTH) { src(E1, oN, 1); tgt(_t2, oN, ER); lhg(setOf(_t7, _t9)); ctx(RP(F2, oN, 1), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(E1, oN, 2); tgt(_t7, oN, ER); lhg(setOf(EOT, _t2, _t5, _t10)); ctx(RP(F2, oN, 1), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(E1, oN, 2); tgt(_t9, oN, ER); lhg(setOf(_t7, _t9)); ctx(RP(F2, oN, 1), RP(rG, oN, SR)) }
+            trans(HEIGHT) {
+                src(E1, oN, ER); tgt(E, o0, ER); lhg(setOf(EOT, _t10, _t2), setOf(EOT, _t10, _t2)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
             }
-            trans(HEIGHT) { src(T, o0, ER); tgt(E, o1, ER); lhg(setOf(EOT,_t10,_t2), setOf(EOT,_t10,_t2))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(T, o0, ER); tgt(E, o1, ER); lhg(setOf(EOT, _t10, _t2), setOf(EOT, _t10, _t2)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
             }
-            trans(HEIGHT) { src(T, o0, ER); tgt(T1, oN, 1); lhg(setOf(_t5), setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(T, o0, ER); tgt(T1, oN, 1); lhg(setOf(_t5), setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
             }
-            trans(GRAFT) { src(T, o0, ER); tgt(E1, oN, ER); lhg(setOf(EOT,_t10,_t2))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
+            trans(GRAFT) {
+                src(T, o0, ER); tgt(E1, oN, ER); lhg(setOf(EOT, _t10, _t2)); prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
             }
-            trans(HEIGHT) { src(T, o1, ER); tgt(E, o1, ER); lhg(setOf(EOT,_t10,_t2), setOf(EOT,_t10,_t2))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(T, o1, ER); tgt(E, o1, ER); lhg(setOf(EOT, _t10, _t2), setOf(EOT, _t10, _t2)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
             }
-            trans(HEIGHT) { src(T, o1, ER); tgt(T1, oN, 1); lhg(setOf(_t5), setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(T, o1, ER); tgt(T1, oN, 1); lhg(setOf(_t5), setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
             }
-            trans(GRAFT) { src(T, o1, ER); tgt(E1, oN, ER); lhg(setOf(EOT,_t10,_t2))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
+            trans(GRAFT) {
+                src(T, o1, ER); tgt(E1, oN, ER); lhg(setOf(EOT, _t10, _t2)); prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
             }
-            trans(WIDTH) { src(T1, oN, 1); tgt(_t5, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
-            trans(WIDTH) { src(T1, oN, 2); tgt(_t7, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
-            trans(WIDTH) { src(T1, oN, 2); tgt(_t9, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(rG, oN, SR),RP(E1, oN, 2),RP(F2, oN, 1)) }
-            trans(HEIGHT) { src(T1, oN, ER); tgt(T, o0, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(WIDTH) { src(T1, oN, 1); tgt(_t5, oN, ER); lhg(setOf(_t7, _t9)); ctx(RP(rG, oN, SR), RP(E1, oN, 2), RP(F2, oN, 1)) }
+            trans(WIDTH) { src(T1, oN, 2); tgt(_t7, oN, ER); lhg(setOf(EOT, _t2, _t5, _t10)); ctx(RP(rG, oN, SR), RP(E1, oN, 2), RP(F2, oN, 1)) }
+            trans(WIDTH) { src(T1, oN, 2); tgt(_t9, oN, ER); lhg(setOf(_t7, _t9)); ctx(RP(rG, oN, SR), RP(E1, oN, 2), RP(F2, oN, 1)) }
+            trans(HEIGHT) {
+                src(T1, oN, ER); tgt(T, o0, ER); lhg(setOf(EOT, _t2, _t5, _t10), setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
             }
-            trans(HEIGHT) { src(F, o0, ER); tgt(T, o1, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(F, o0, ER); tgt(T, o1, ER); lhg(setOf(EOT, _t2, _t5, _t10), setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
             }
-            trans(GRAFT) { src(F, o0, ER); tgt(T1, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(E1, oN, 2), RP(T1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(T1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(T1, oN, 2))
+            trans(GRAFT) {
+                src(F, o0, ER); tgt(T1, oN, ER); lhg(setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(T1, oN, 2)))
             }
-            trans(HEIGHT) { src(F, o1, ER); tgt(T, o1, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10))
-                // 7 pairs (same shape as F.o0 → T.o1). prev=T1.2 cases are absent: when the
-                // F sits in the F-position of T1 (prev=T1.2), the only valid follow-up is
-                // GRAFT into T1.ER, never HEIGHT to T.o1 — so the builder filters them out.
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(F, o1, ER); tgt(T, o1, ER); lhg(setOf(EOT, _t2, _t5, _t10), setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
             }
-            trans(GRAFT) { src(F, o1, ER); tgt(T1, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(E1, oN, 2), RP(T1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(T1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(T1, oN, 2))
+            trans(GRAFT) {
+                src(F, o1, ER); tgt(T1, oN, ER); lhg(setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(T1, oN, 2)))
             }
-            trans(WIDTH) { src(F2, oN, 1); tgt(_t7, oN, ER); lhg(setOf(_t5,_t10,_t2)); ctx(RP(T1, oN, 2),RP(E1, oN, 2),RP(rG, oN, SR),RP(F2, oN, 1)) }
-            trans(WIDTH) { src(F2, oN, 1); tgt(_t9, oN, ER); lhg(setOf(_t7,_t9)); ctx(RP(T1, oN, 2),RP(E1, oN, 2),RP(rG, oN, SR),RP(F2, oN, 1)) }
-            trans(WIDTH) { src(F2, oN, 2); tgt(_t10, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10)); ctx(RP(E1, oN, 2),RP(rG, oN, SR),RP(T1, oN, 2),RP(F2, oN, 1)) }
-            trans(HEIGHT) { src(F2, oN, ER); tgt(F, o1, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
-                prevPair(RP(E1, oN, 2), RP(T1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(T1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(T1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(WIDTH) { src(F2, oN, 1); tgt(_t7, oN, ER); lhg(setOf(_t5, _t10, _t2)); ctx(RP(T1, oN, 2), RP(E1, oN, 2), RP(rG, oN, SR), RP(F2, oN, 1)) }
+            trans(WIDTH) { src(F2, oN, 1); tgt(_t9, oN, ER); lhg(setOf(_t7, _t9)); ctx(RP(T1, oN, 2), RP(E1, oN, 2), RP(rG, oN, SR), RP(F2, oN, 1)) }
+            trans(WIDTH) { src(F2, oN, 2); tgt(_t10, oN, ER); lhg(setOf(EOT, _t2, _t5, _t10)); ctx(RP(E1, oN, 2), RP(rG, oN, SR), RP(T1, oN, 2), RP(F2, oN, 1)) }
+            trans(HEIGHT) {
+                src(F2, oN, ER); tgt(F, o1, ER); lhg(setOf(EOT, _t2, _t5, _t10), setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
             }
-            trans(GRAFT) { src(_t2, oN, ER); tgt(E1, oN, 2); lhg(setOf(_t7,_t9))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 1))
+            trans(GRAFT) {
+                src(_t2, oN, ER); tgt(E1, oN, 2); lhg(setOf(_t7, _t9)); prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 1)))
             }
-            trans(GRAFT) { src(_t5, oN, ER); tgt(T1, oN, 2); lhg(setOf(_t7,_t9))
-                prevPair(RP(rG, oN, SR), RP(T1, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(T1, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(T1, oN, 1))
+            trans(GRAFT) {
+                src(_t5, oN, ER); tgt(T1, oN, 2); lhg(setOf(_t7, _t9)); prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(T1, oN, 1)))
             }
-            trans(HEIGHT) { src(_t7, oN, ER); tgt(F, o0, ER); lhg(setOf(EOT,_t2,_t5,_t10), setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
-                prevPair(RP(E1, oN, 2), RP(T1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(T1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(T1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(_t7, oN, ER); tgt(F, o0, ER); lhg(setOf(EOT, _t2, _t5, _t10), setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
             }
-            trans(HEIGHT) { src(_t9, oN, ER); tgt(F2, oN, 1); lhg(setOf(_t7,_t9), setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
-                prevPair(RP(rG, oN, SR), RP(E1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(E1, oN, 2))
-                prevPair(RP(E1, oN, 2), RP(T1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(T1, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(T1, oN, 2))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 1))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 1))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 1))
+            trans(HEIGHT) {
+                src(_t9, oN, ER); tgt(F2, oN, 1); lhg(setOf(_t7, _t9), setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(F2, oN, 1)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(T1, oN, 2)))
             }
-            trans(GRAFT) { src(_t10, oN, ER); tgt(F2, oN, ER); lhg(setOf(EOT,_t2,_t5,_t10))
-                prevPair(RP(rG, oN, SR), RP(F2, oN, 2))
-                prevPair(RP(E1, oN, 2), RP(F2, oN, 2))
-                prevPair(RP(T1, oN, 2), RP(F2, oN, 2))
-                prevPair(RP(F2, oN, 1), RP(F2, oN, 2))
+            trans(GRAFT) {
+                src(_t10, oN, ER); tgt(F2, oN, ER); lhg(setOf(EOT, _t2, _t5, _t10)); prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F2, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F2, oN, 2)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F2, oN, 2)))
+                prevPair(setOf(RP(F2, oN, 1)), setOf(RP(F2, oN, 2)))
             }
         }
         AutomatonTest.assertEquals(expected, actual)

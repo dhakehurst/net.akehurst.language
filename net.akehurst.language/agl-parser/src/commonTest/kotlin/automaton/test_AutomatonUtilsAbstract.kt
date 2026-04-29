@@ -39,6 +39,14 @@ abstract class test_AutomatonUtilsAbstract {
         val SE = RulePosition.OPTION_SLIST_EMPTY
         val SI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
 
+        val oOE = RulePosition.OPTION_OPTIONAL_EMPTY
+        val oOI = RulePosition.OPTION_OPTIONAL_ITEM
+        val oLI = RulePosition.OPTION_MULTI_ITEM
+        val oLE = RulePosition.OPTION_MULTI_EMPTY
+        val oSE = RulePosition.OPTION_SLIST_EMPTY
+        val oSI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+        val oSS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+
         val p1 = 1
         val p2 = 2
         val p3 = 3
@@ -57,45 +65,11 @@ abstract class test_AutomatonUtilsAbstract {
         const val SR = RulePosition.START_OF_RULE
         const val SOR = RulePosition.START_OF_RULE
 
-        /**
-         * Option for SimpleList Item
-         */
-        val oLI = RulePosition.OPTION_MULTI_ITEM
 
-        /**
-         * Option for SimpleList Empty
-         */
-        val oLE = RulePosition.OPTION_MULTI_EMPTY
 
-        /**
-         * Option for SeparatedList Empty
-         */
-        val oSE = RulePosition.OPTION_SLIST_EMPTY
-
-        /**
-         * Option for SeparatedList Item
-         */
-        val oSI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
-
-        /**
-         * Option for SeparatedList Separator
-         */
-        val oSS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
-
-        /**
-         * Position of SimpleList Item
-         */
         const val PMI = RulePosition.POSITION_MULIT_ITEM
-
-        /**
-         * Position of SeparatedList Item
-         */
-        const val PLI = RulePosition.POSITION_SLIST_ITEM
-
-        /**
-         * Position of SeparatedList Separator
-         */
-        const val PLS = RulePosition.POSITION_SLIST_SEPARATOR
+        const val pSI = RulePosition.POSITION_SLIST_ITEM
+        const val pSS = RulePosition.POSITION_SLIST_SEPARATOR
 
         val WIDTH = ParseAction.WIDTH
         val HEIGHT = ParseAction.HEIGHT

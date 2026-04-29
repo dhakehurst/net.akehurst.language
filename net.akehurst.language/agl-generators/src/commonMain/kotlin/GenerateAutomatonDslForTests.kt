@@ -1,25 +1,13 @@
 package net.akehurst.language.agl.generators
 
-import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
-import net.akehurst.language.agl.generators.GenerateGrammarDomainBuild.Companion.generatedFormat
-import net.akehurst.language.agl.processor.contextFromRegistryGrammars
-import net.akehurst.language.api.processor.FormatString
-import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonState
 import net.akehurst.language.automaton.api.AutomatonTransition
 import net.akehurst.language.automaton.api.LookaheadGuard
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.api.StateNumber
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.automaton.api.TransitionContext
 import net.akehurst.language.base.api.asQualifiedName
-import net.akehurst.language.format.processor.FormatterOverTypedObject
-import net.akehurst.language.grammar.api.GrammarDomain
-import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
@@ -46,8 +34,8 @@ format RP {
       -1 == position -> "RP(${rule}, $option, ER)"
       else -> when {
         rule.isListSeparated -> when {
-          1 == position -> "RP(${rule}, $option, LIST_SEPARATOR)"
-          2 == position -> "RP(${rule}, $option, LIST_ITEM)"
+          1 == position -> "RP(${rule}, $option, pSS)"
+          2 == position -> "RP(${rule}, $option, pSI)"
           else -> "§ERROR"
         }
         else -> "RP(${rule.tag}, $option, ${position})"
@@ -64,13 +52,13 @@ format RP {
     }
     OptionNum -> when {
       (-1) == value -> 'oN'
-      (-2) == value -> 'OI'
-      (-3) == value -> 'OE'
-      (-4) == value -> 'LI'
-      (-5) == value -> 'LE'
-      (-6) == value -> 'SI'
-      (-7) == value -> 'SE'
-      else -> value
+      (-2) == value -> 'oOI'
+      (-3) == value -> 'oOE'
+      (-4) == value -> 'oLI'
+      (-5) == value -> 'oLE'
+      (-6) == value -> 'oSI'
+      (-7) == value -> 'oSE'
+      else -> "o$value"
     }
 }
 
@@ -118,18 +106,20 @@ format AutomatonDsl {
     }
    
     AutomatonTransition -> when {
-      prevPrev.isEmpty -> when {
+      transContext.isEmpty -> when {
+        // WIDTH / EMBED — incomplete source state, no prevPrev needed; use legacy ctx(...) form.
         1 == prev.size -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx(${prev via Trans}) }"
         else -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx($[prev sep ',' via RP]) }"
       }
-      1 == prevPrev.size -> when {
-        1 == prev.size -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx(${prev via Trans}); pctx(${prevPrev via Trans}) }"
-        else -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx($[prev sep ',' via RP]); pctx(${prevPrev via Trans}) }"
-      }
-      else -> when {
-        1 == prev.size -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx(${prev via Trans}); pctx($[prevPrev sep ',' via RP]) }"
-        else -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' '] ctx($[prev sep ',' via RP]); pctx($[prevPrev sep ',' via RP]) }"
-      }
+      // HEIGHT / GRAFT / GOAL — emit one prevPair(...) per atomic (prevPrev, prev) pair
+      else -> "trans($action) { src(${source via Trans}); tgt(${target via Trans}); $[lookahead sep ' ']  $[transContext sep '; '] }"
+    }
+
+    TransitionContext -> when {
+      ((1 == prevPrev.rulePosition.size) and (1 == prev.rulePosition.size)) ->
+        "prevPair(${prevPrev via RP}, ${prev via RP})"
+      else ->
+        "prevPair(setOf($[prevPrev.rulePosition sep ',' via RP]), setOf($[prev.rulePosition sep ',' via RP]))"
     }
 
     LookaheadGuard -> when {
@@ -178,6 +168,11 @@ format AutomatonDsl {
                 propertyOf(setOf(VAL), "lookahead", "Set", execution = AutomatonTransition::lookahead) { typeArgument("LookaheadGuard") }
                 propertyOf(setOf(VAL), "prev", "Set", execution = AutomatonTransition::prev) { typeArgument("AutomatonState") }
                 propertyOf(setOf(VAL), "prevPrev", "Set", execution = AutomatonTransition::prevPrev) { typeArgument("AutomatonState") }
+                propertyOf(setOf(VAL), "transContext", "Set", execution = AutomatonTransition::transContext) { typeArgument("TransitionContext") }
+            }
+            interface_("TransitionContext", implementation = TransitionContext::class) {
+                propertyOf(setOf(CMP, VAL), "prevPrev", "AutomatonState", execution = TransitionContext::prevPrev)
+                propertyOf(setOf(CMP, VAL), "prev", "AutomatonState", execution = TransitionContext::prev)
             }
             interface_("LookaheadGuard") {
                 propertyOf(setOf(CMP, VAL), "guard", "Set", execution = LookaheadGuard::guard) { typeArgument("Rule") }

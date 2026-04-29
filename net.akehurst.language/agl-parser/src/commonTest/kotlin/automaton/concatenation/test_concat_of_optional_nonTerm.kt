@@ -85,14 +85,14 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
             state(rG, oN, SR)   // <GOAL> =  . S
             state(_t2, oN, ER)   // 'a'
             state(EMPTY_LIST, oN, ER)   // <EMPTY_LIST>
-            state(optA, LE, ER)   // optA = A .
+            state(optA, LE, ER)   // [EMPTY A] .
             state(S, oN, 1)   // S = optA . B
             state(_t4, oN, ER)   // 'b'
             state(B, oN, 1)   // B = 'b' . L
             state(_t6, oN, ER)   // 'c'
             state(L, oN, 1)   // L = 'c' . Es 'd'
             state(_t10, oN, ER)   // 'e'
-            state(Es, SE, ER)   // Es = 'e' .
+            state(Es, SE, ER)   // [EMPTY 'e' sep 'f'] .
             state(L, oN, 2)   // L = 'c' Es . 'd'
             state(_t7, oN, ER)   // 'd'
             state(L, oN, ER)   // L = 'c' Es 'd' .
@@ -102,21 +102,41 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
             trans(WIDTH) { src(rG, oN, SR); tgt(_t2, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
             trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(optA, LE, ER); lhg(setOf(_t4), setOf(_t4)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(Es, SE, ER); lhg(setOf(_t7), setOf(_t7)); ctx(L, oN, 1); pctx(B, oN, 1) }
-            trans(HEIGHT) { src(optA, LE, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(optA, LE, ER); lhg(setOf(_t4), setOf(_t4));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(Es, SE, ER); lhg(setOf(_t7), setOf(_t7));
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 1)))
+            }
+            trans(HEIGHT) { src(optA, LE, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(EOT));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
             trans(WIDTH) { src(S, oN, 1); tgt(_t4, oN, ER); lhg(_t6); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(_t4, oN, ER); tgt(B, oN, 1); lhg(setOf(_t6), setOf(RT)); ctx(S, oN, 1); pctx(rG, oN, SR) }
-            trans(WIDTH) { src(B, oN, 1); tgt(_t6, oN, ER); lhg(setOf(_t10, _t7)); ctx(S, oN, 1) }
-            trans(HEIGHT) { src(_t6, oN, ER); tgt(L, oN, 1); lhg(setOf(_t10, _t7), setOf(RT)); ctx(B, oN, 1); pctx(S, oN, 1) }
-            trans(WIDTH) { src(L, oN, 1); tgt(_t10, oN, ER); lhg(setOf(_t11, _t7)); ctx(B, oN, 1) }
+            trans(HEIGHT) { src(_t4, oN, ER); tgt(B, oN, 1); lhg(setOf(_t6), setOf(RT));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S, oN, 1)))
+            }
+            trans(WIDTH) { src(B, oN, 1); tgt(_t6, oN, ER); lhg(setOf(_t10,_t7)); ctx(S, oN, 1) }
+            trans(HEIGHT) { src(_t6, oN, ER); tgt(L, oN, 1); lhg(setOf(_t10,_t7), setOf(RT));
+                prevPair(setOf(RP(S, oN, 1)), setOf(RP(B, oN, 1)))
+            }
+            trans(WIDTH) { src(L, oN, 1); tgt(_t10, oN, ER); lhg(setOf(_t11,_t7)); ctx(B, oN, 1) }
             trans(WIDTH) { src(L, oN, 1); tgt(EMPTY_LIST, oN, ER); lhg(_t7); ctx(B, oN, 1) }
-            trans(GRAFT) { src(Es, SE, ER); tgt(L, oN, 2); lhg(_t7); ctx(L, oN, 1); pctx(B, oN, 1) }
+            trans(GRAFT) { src(Es, SE, ER); tgt(L, oN, 2); lhg(_t7);
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 1)))
+            }
             trans(WIDTH) { src(L, oN, 2); tgt(_t7, oN, ER); lhg(RT); ctx(B, oN, 1) }
-            trans(GRAFT) { src(_t7, oN, ER); tgt(L, oN, ER); lhg(RT); ctx(L, oN, 2); pctx(B, oN, 1) }
-            trans(GRAFT) { src(L, oN, ER); tgt(B, oN, ER); lhg(RT); ctx(B, oN, 1); pctx(S, oN, 1) }
-            trans(GRAFT) { src(B, oN, ER); tgt(S, oN, ER); lhg(RT); ctx(S, oN, 1); pctx(rG, oN, SR) }
-            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t7, oN, ER); tgt(L, oN, ER); lhg(RT);
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 2)))
+            }
+            trans(GRAFT) { src(L, oN, ER); tgt(B, oN, ER); lhg(RT);
+                prevPair(setOf(RP(S, oN, 1)), setOf(RP(B, oN, 1)))
+            }
+            trans(GRAFT) { src(B, oN, ER); tgt(S, oN, ER); lhg(RT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S, oN, 1)))
+            }
+            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -139,14 +159,14 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
             state(_t2, oN, ER)   // 'a'
             state(EMPTY_LIST, oN, ER)   // <EMPTY_LIST>
             state(A, oN, ER)   // A = 'a' .
-            state(optA, LI, ER)   // optA = A .
+            state(optA, LI, ER)   // [A] .
             state(S, oN, 1)   // S = optA . B
             state(_t4, oN, ER)   // 'b'
             state(B, oN, 1)   // B = 'b' . L
             state(_t6, oN, ER)   // 'c'
             state(L, oN, 1)   // L = 'c' . Es 'd'
             state(_t10, oN, ER)   // 'e'
-            state(Es, SE, ER)   // Es = 'e' .
+            state(Es, SE, ER)   // [EMPTY 'e' sep 'f'] .
             state(L, oN, 2)   // L = 'c' Es . 'd'
             state(_t7, oN, ER)   // 'd'
             state(L, oN, ER)   // L = 'c' Es 'd' .
@@ -156,22 +176,55 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
             trans(WIDTH) { src(rG, oN, SR); tgt(_t2, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
             trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(_t2, oN, ER); tgt(A, oN, ER); lhg(setOf(_t4), setOf(_t4)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(Es, SE, ER); lhg(setOf(_t7), setOf(_t7)); ctx(L, oN, 1); pctx(B, oN, 1) }
-            trans(HEIGHT) { src(A, oN, ER); tgt(optA, LI, ER); lhg(setOf(_t4), setOf(_t4)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(optA, LI, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) {
+                src(_t2, oN, ER); tgt(A, oN, ER); lhg(setOf(_t4), setOf(_t4));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(EMPTY_LIST, oN, ER); tgt(Es, SE, ER); lhg(setOf(_t7), setOf(_t7));
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 1)))
+            }
+            trans(HEIGHT) {
+                src(A, oN, ER); tgt(optA, LI, ER); lhg(setOf(_t4), setOf(_t4));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(optA, LI, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(EOT));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
             trans(WIDTH) { src(S, oN, 1); tgt(_t4, oN, ER); lhg(_t6); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(_t4, oN, ER); tgt(B, oN, 1); lhg(setOf(_t6), setOf(RT)); ctx(S, oN, 1); pctx(rG, oN, SR) }
+            trans(HEIGHT) {
+                src(_t4, oN, ER); tgt(B, oN, 1); lhg(setOf(_t6), setOf(RT));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S, oN, 1)))
+            }
             trans(WIDTH) { src(B, oN, 1); tgt(_t6, oN, ER); lhg(setOf(_t10, _t7)); ctx(S, oN, 1) }
-            trans(HEIGHT) { src(_t6, oN, ER); tgt(L, oN, 1); lhg(setOf(_t10, _t7), setOf(RT)); ctx(B, oN, 1); pctx(S, oN, 1) }
+            trans(HEIGHT) {
+                src(_t6, oN, ER); tgt(L, oN, 1); lhg(setOf(_t10, _t7), setOf(RT));
+                prevPair(setOf(RP(S, oN, 1)), setOf(RP(B, oN, 1)))
+            }
             trans(WIDTH) { src(L, oN, 1); tgt(_t10, oN, ER); lhg(setOf(_t11, _t7)); ctx(B, oN, 1) }
             trans(WIDTH) { src(L, oN, 1); tgt(EMPTY_LIST, oN, ER); lhg(_t7); ctx(B, oN, 1) }
-            trans(GRAFT) { src(Es, SE, ER); tgt(L, oN, 2); lhg(_t7); ctx(L, oN, 1); pctx(B, oN, 1) }
+            trans(GRAFT) {
+                src(Es, SE, ER); tgt(L, oN, 2); lhg(_t7);
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 1)))
+            }
             trans(WIDTH) { src(L, oN, 2); tgt(_t7, oN, ER); lhg(RT); ctx(B, oN, 1) }
-            trans(GRAFT) { src(_t7, oN, ER); tgt(L, oN, ER); lhg(RT); ctx(L, oN, 2); pctx(B, oN, 1) }
-            trans(GRAFT) { src(L, oN, ER); tgt(B, oN, ER); lhg(RT); ctx(B, oN, 1); pctx(S, oN, 1) }
-            trans(GRAFT) { src(B, oN, ER); tgt(S, oN, ER); lhg(RT); ctx(S, oN, 1); pctx(rG, oN, SR) }
-            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GRAFT) {
+                src(_t7, oN, ER); tgt(L, oN, ER); lhg(RT);
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 2)))
+            }
+            trans(GRAFT) {
+                src(L, oN, ER); tgt(B, oN, ER); lhg(RT);
+                prevPair(setOf(RP(S, oN, 1)), setOf(RP(B, oN, 1)))
+            }
+            trans(GRAFT) {
+                src(B, oN, ER); tgt(S, oN, ER); lhg(RT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S, oN, 1)))
+            }
+            trans(GOAL) {
+                src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -191,10 +244,11 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, SR)   // <GOAL> =  . S
             state(_t2, oN, ER)   // 'a'
             state(EMPTY_LIST, oN, ER)   // <EMPTY_LIST>
             state(A, oN, ER)   // A = 'a' .
-            state(optA, LI, ER)   // optA = A .
+            state(optA, LI, ER)   // [A] .
             state(S, oN, 1)   // S = optA . B
             state(_t4, oN, ER)   // 'b'
             state(B, oN, 1)   // B = 'b' . L
@@ -212,23 +266,59 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
             trans(WIDTH) { src(rG, oN, SR); tgt(_t2, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
             trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(_t2, oN, ER); tgt(A, oN, ER); lhg(setOf(_t4), setOf(_t4)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(A, oN, ER); tgt(optA, LI, ER); lhg(setOf(_t4), setOf(_t4)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(optA, LI, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) {
+                src(_t2, oN, ER); tgt(A, oN, ER); lhg(setOf(_t4), setOf(_t4));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(A, oN, ER); tgt(optA, LI, ER); lhg(setOf(_t4), setOf(_t4));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(optA, LI, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(EOT));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
             trans(WIDTH) { src(S, oN, 1); tgt(_t4, oN, ER); lhg(_t6); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(_t4, oN, ER); tgt(B, oN, 1); lhg(setOf(_t6), setOf(RT)); ctx(S, oN, 1); pctx(rG, oN, SR) }
+            trans(HEIGHT) {
+                src(_t4, oN, ER); tgt(B, oN, 1); lhg(setOf(_t6), setOf(RT));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S, oN, 1)))
+            }
             trans(WIDTH) { src(B, oN, 1); tgt(_t6, oN, ER); lhg(setOf(_t10, _t7)); ctx(S, oN, 1) }
-            trans(HEIGHT) { src(_t6, oN, ER); tgt(L, oN, 1); lhg(setOf(_t10, _t7), setOf(RT)); ctx(B, oN, 1); pctx(S, oN, 1) }
+            trans(HEIGHT) {
+                src(_t6, oN, ER); tgt(L, oN, 1); lhg(setOf(_t10, _t7), setOf(RT));
+                prevPair(setOf(RP(S, oN, 1)), setOf(RP(B, oN, 1)))
+            }
             trans(WIDTH) { src(L, oN, 1); tgt(_t10, oN, ER); lhg(setOf(_t11, _t7)); ctx(B, oN, 1) }
             trans(WIDTH) { src(L, oN, 1); tgt(EMPTY_LIST, oN, ER); lhg(_t7); ctx(B, oN, 1) }
-            trans(HEIGHT) { src(_t10, oN, ER); tgt(Es, SI, ER); lhg(setOf(_t7), setOf(_t7)); ctx(L, oN, 1); pctx(B, oN, 1) }
-            trans(HEIGHT) { src(_t10, oN, ER); tgt(Es, SI, 1); lhg(setOf(_t11), setOf(_t7)); ctx(L, oN, 1); pctx(B, oN, 1) }
-            trans(GRAFT) { src(Es, SI, ER); tgt(L, oN, 2); lhg(_t7); ctx(L, oN, 1); pctx(B, oN, 1) }
+            trans(HEIGHT) {
+                src(_t10, oN, ER); tgt(Es, SI, ER); lhg(setOf(_t7), setOf(_t7));
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 1)))
+            }
+            trans(HEIGHT) {
+                src(_t10, oN, ER); tgt(Es, SI, 1); lhg(setOf(_t11), setOf(_t7));
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 1)))
+            }
+            trans(GRAFT) {
+                src(Es, SI, ER); tgt(L, oN, 2); lhg(_t7);
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 1)))
+            }
             trans(WIDTH) { src(L, oN, 2); tgt(_t7, oN, ER); lhg(RT); ctx(B, oN, 1) }
-            trans(GRAFT) { src(_t7, oN, ER); tgt(L, oN, ER); lhg(RT); ctx(L, oN, 2); pctx(B, oN, 1) }
-            trans(GRAFT) { src(L, oN, ER); tgt(B, oN, ER); lhg(RT); ctx(B, oN, 1); pctx(S, oN, 1) }
-            trans(GRAFT) { src(B, oN, ER); tgt(S, oN, ER); lhg(RT); ctx(S, oN, 1); pctx(rG, oN, SR) }
-            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(GRAFT) {
+                src(_t7, oN, ER); tgt(L, oN, ER); lhg(RT);
+                prevPair(setOf(RP(B, oN, 1)), setOf(RP(L, oN, 2)))
+            }
+            trans(GRAFT) {
+                src(L, oN, ER); tgt(B, oN, ER); lhg(RT);
+                prevPair(setOf(RP(S, oN, 1)), setOf(RP(B, oN, 1)))
+            }
+            trans(GRAFT) {
+                src(B, oN, ER); tgt(S, oN, ER); lhg(RT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S, oN, 1)))
+            }
+            trans(GOAL) {
+                src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -276,32 +366,32 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
             trans(WIDTH) { src(rG, oN, SR); tgt(_t2, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
             trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(_t4); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(_t2, oN, ER); tgt(A, oN, ER); lhg(setOf(_t4), setOf(_t4)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(optA, LE, ER); lhg(setOf(_t4), setOf(_t4)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(Es, SE, ER); lhg(setOf(_t7), setOf(_t7)); ctx(L, oN, 1); pctx(B, oN, 1) }
-            trans(HEIGHT) { src(optA, LE, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(EOT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t2, oN, ER); tgt(A, oN, ER); lhg(setOf(_t4), setOf(_t4));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(optA, LE, ER); lhg(setOf(_t4), setOf(_t4));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(Es, SE, ER); lhg(setOf(_t7), setOf(_t7));  prevPair(RP(B, oN, 1), RP(L, oN, 1)) }
+            trans(HEIGHT) { src(optA, LE, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(EOT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
             trans(WIDTH) { src(S, oN, 1); tgt(_t4, oN, ER); lhg(_t6); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(_t4, oN, ER); tgt(B, oN, 1); lhg(setOf(_t6), setOf(RT)); ctx(S, oN, 1); pctx(rG, oN, SR) }
-            trans(WIDTH) { src(B, oN, 1); tgt(_t6, oN, ER); lhg(setOf(_t10, _t7)); ctx(S, oN, 1) }
-            trans(HEIGHT) { src(_t6, oN, ER); tgt(L, oN, 1); lhg(setOf(_t10, _t7), setOf(RT)); ctx(B, oN, 1); pctx(S, oN, 1) }
-            trans(WIDTH) { src(L, oN, 1); tgt(_t10, oN, ER); lhg(setOf(_t11, _t7)); ctx(B, oN, 1) }
+            trans(HEIGHT) { src(_t4, oN, ER); tgt(B, oN, 1); lhg(setOf(_t6), setOf(RT));  prevPair(RP(rG, oN, SR), RP(S, oN, 1)) }
+            trans(WIDTH) { src(B, oN, 1); tgt(_t6, oN, ER); lhg(setOf(_t10,_t7)); ctx(S, oN, 1) }
+            trans(HEIGHT) { src(_t6, oN, ER); tgt(L, oN, 1); lhg(setOf(_t10,_t7), setOf(RT));  prevPair(RP(S, oN, 1), RP(B, oN, 1)) }
+            trans(WIDTH) { src(L, oN, 1); tgt(_t10, oN, ER); lhg(setOf(_t11,_t7)); ctx(B, oN, 1) }
             trans(WIDTH) { src(L, oN, 1); tgt(EMPTY_LIST, oN, ER); lhg(_t7); ctx(B, oN, 1) }
-            trans(HEIGHT) { src(_t10, oN, ER); tgt(Es, SI, ER); lhg(setOf(_t7), setOf(_t7)); ctx(L, oN, 1); pctx(B, oN, 1) }
-            trans(HEIGHT) { src(_t10, oN, ER); tgt(Es, SI, 1); lhg(setOf(_t11), setOf(_t7)); ctx(L, oN, 1); pctx(B, oN, 1) }
-            trans(GRAFT) { src(_t10, oN, ER); tgt(Es, SI, ER); lhg(RT); ctx(Es, SI, 2); pctx(L, oN, 1) }
-            trans(GRAFT) { src(_t10, oN, ER); tgt(Es, SI, 1); lhg(_t11); ctx(Es, SI, 2); pctx(L, oN, 1) }
-            trans(GRAFT) { src(Es, SE, ER); tgt(L, oN, 2); lhg(_t7); ctx(L, oN, 1); pctx(B, oN, 1) }
+            trans(HEIGHT) { src(_t10, oN, ER); tgt(Es, SI, ER); lhg(setOf(_t7), setOf(_t7));  prevPair(RP(B, oN, 1), RP(L, oN, 1)) }
+            trans(HEIGHT) { src(_t10, oN, ER); tgt(Es, SI, 1); lhg(setOf(_t11), setOf(_t7));  prevPair(RP(B, oN, 1), RP(L, oN, 1)) }
+            trans(GRAFT) { src(_t10, oN, ER); tgt(Es, SI, ER); lhg(RT);  prevPair(RP(L, oN, 1), RP(Es, oSI, pSI)) }
+            trans(GRAFT) { src(_t10, oN, ER); tgt(Es, SI, 1); lhg(_t11);  prevPair(RP(L, oN, 1), RP(Es, oSI, pSI)) }
+            trans(GRAFT) { src(Es, SE, ER); tgt(L, oN, 2); lhg(_t7);  prevPair(RP(B, oN, 1), RP(L, oN, 1)) }
             trans(WIDTH) { src(L, oN, 2); tgt(_t7, oN, ER); lhg(RT); ctx(B, oN, 1) }
-            trans(GRAFT) { src(_t7, oN, ER); tgt(L, oN, ER); lhg(RT); ctx(L, oN, 2); pctx(B, oN, 1) }
-            trans(GRAFT) { src(L, oN, ER); tgt(B, oN, ER); lhg(RT); ctx(B, oN, 1); pctx(S, oN, 1) }
-            trans(GRAFT) { src(B, oN, ER); tgt(S, oN, ER); lhg(RT); ctx(S, oN, 1); pctx(rG, oN, SR) }
-            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(A, oN, ER); tgt(optA, LI, ER); lhg(setOf(_t4), setOf(_t4)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(HEIGHT) { src(optA, LI, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(RT)); ctx(rG, oN, SR); pctx(rG, oN, SR) }
-            trans(GRAFT) { src(Es, SI, ER); tgt(L, oN, 2); lhg(_t7); ctx(L, oN, 1); pctx(B, oN, 1) }
+            trans(GRAFT) { src(_t7, oN, ER); tgt(L, oN, ER); lhg(RT);  prevPair(RP(B, oN, 1), RP(L, oN, 2)) }
+            trans(GRAFT) { src(L, oN, ER); tgt(B, oN, ER); lhg(RT);  prevPair(RP(S, oN, 1), RP(B, oN, 1)) }
+            trans(GRAFT) { src(B, oN, ER); tgt(S, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(S, oN, 1)) }
+            trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(A, oN, ER); tgt(optA, LI, ER); lhg(setOf(_t4), setOf(_t4));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(optA, LI, ER); tgt(S, oN, 1); lhg(setOf(_t4), setOf(RT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(Es, SI, ER); tgt(L, oN, 2); lhg(_t7);  prevPair(RP(B, oN, 1), RP(L, oN, 1)) }
             trans(WIDTH) { src(Es, SI, 1); tgt(_t11, oN, ER); lhg(_t10); ctx(L, oN, 1) }
-            trans(GRAFT) { src(_t11, oN, ER); tgt(Es, SI, 2); lhg(_t10); ctx(Es, SI, 1); pctx(L, oN, 1) }
-            trans(WIDTH) { src(Es, SI, 2); tgt(_t10, oN, ER); lhg(setOf(RT, _t11)); ctx(L, oN, 1) }
+            trans(GRAFT) { src(_t11, oN, ER); tgt(Es, SI, 2); lhg(_t10);  prevPair(RP(L, oN, 1), RP(Es, oSI, pSS)) }
+            trans(WIDTH) { src(Es, SI, 2); tgt(_t10, oN, ER); lhg(setOf(RT,_t11)); ctx(L, oN, 1) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -382,7 +472,7 @@ class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         val rrs_preBuild = rrs.clone()
 
         val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
-        val sentences = listOf("bcd", "abcd", "bced", "abced", "bcefed", "abcefed","abcefefed")
+        val sentences = listOf("bcd", "abcd", "bced", "abced", "bcefed", "abcefed", "abcefefed")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)
             //val result = parser.parseForGoal("S", "", AutomatonKind.LOOKAHEAD_1)

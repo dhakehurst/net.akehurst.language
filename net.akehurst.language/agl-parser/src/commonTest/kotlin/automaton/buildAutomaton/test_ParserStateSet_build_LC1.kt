@@ -17,6 +17,8 @@
 package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -46,10 +48,10 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
-            val s1 = state(rG,oN,EOR)      // G = S .
-            val s2 = state(S,oN,EOR)      // S = 'a' .
-            val s3 = state(a,oN,EOR)      // 'a'
+            val s0 = state(rG, oN, SOR)      // G = . S
+            val s1 = state(rG, oN, EOR)      // G = S .
+            val s2 = state(S, oN, EOR)      // S = 'a' .
+            val s3 = state(a, oN, EOR)      // 'a'
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(EOT)); ctx(rG, oN, SOR) }
             trans(HEIGHT) { src(a); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SOR) }
@@ -86,16 +88,16 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
-            val s1 = state(a,oN,EOR)      // a
-            val s2 = state(S,oN,1)   // S = a . b c d
-            val s3 = state(b,oN,EOR)      // b
-            val s4 = state(S,oN,2)   // S = a b . c d
-            val s5 = state(c,oN,EOR)      // c
-            val s6 = state(S,oN,3)   // S = a b c . d
-            val s7 = state(d,oN,EOR)      // d
-            val s8 = state(S,oN,EOR)      // S = a b c d .
-            val s9 = state(rG,oN,EOR)      // G = S .
+            val s0 = state(rG, oN, SOR)      // G = . S
+            val s1 = state(a, oN, EOR)      // a
+            val s2 = state(S, oN, 1)   // S = a . b c d
+            val s3 = state(b, oN, EOR)      // b
+            val s4 = state(S, oN, 2)   // S = a b . c d
+            val s5 = state(c, oN, EOR)      // c
+            val s6 = state(S, oN, 3)   // S = a b c . d
+            val s7 = state(d, oN, EOR)      // d
+            val s8 = state(S, oN, EOR)      // S = a b c d .
+            val s9 = state(rG, oN, EOR)      // G = S .
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(b)); ctx(rG, oN, SOR) }
             trans(HEIGHT) { src(a); tgt(S, oN, 1); lhg(setOf(b), setOf(EOT)); ctx(rG, oN, SOR) }
@@ -141,16 +143,16 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
-            val s1 = state(a,oN,ER)      // a
-            val s2 = state(b,oN,ER)      // b
-            val s3 = state(c,oN,ER)      // c
-            val s4 = state(d,oN,ER)      // d
-            val s5 = state(S,o0,ER)      // S = a .
-            val s6 = state(S,o1,ER)      // S = b .
-            val s7 = state(S,o2,ER)      // S = c .
-            val s8 = state(S,o3,ER)      // S = d .
-            val s9 = state(rG,oN,ER)      // G = S .
+            val s0 = state(rG, oN, SOR)      // G = . S
+            val s1 = state(a, oN, ER)      // a
+            val s2 = state(b, oN, ER)      // b
+            val s3 = state(c, oN, ER)      // c
+            val s4 = state(d, oN, ER)      // d
+            val s5 = state(S, o0, ER)      // S = a .
+            val s6 = state(S, o1, ER)      // S = b .
+            val s7 = state(S, o2, ER)      // S = c .
+            val s8 = state(S, o3, ER)      // S = d .
+            val s9 = state(rG, oN, ER)      // G = S .
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(EOT)); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(rG, oN, SOR); tgt(b); lhg(setOf(EOT)); ctx(rG, oN, SOR) }
@@ -202,17 +204,17 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
-            val s1 = state(a,oN,ER)      // a
-            val s2 = state(A,oN,ER)      // A = a .
-            val s3 = state(S,oN,1)   // S = A . B C
-            val s4 = state(b,oN,ER)      // b
-            val s5 = state(B,oN,ER)      // B = b .
-            val s6 = state(S,oN,2)   // S = A B . C
-            val s7 = state(c,oN,ER)      // c
-            val s8 = state(C,oN,ER)      // C = c .
-            val s9 = state(S,oN,ER)      // S = A B C .
-            val s10 = state(rG,oN,ER)      // G = S .
+            val s0 = state(rG, oN, SOR)      // G = . S
+            val s1 = state(a, oN, ER)      // a
+            val s2 = state(A, oN, ER)      // A = a .
+            val s3 = state(S, oN, 1)   // S = A . B C
+            val s4 = state(b, oN, ER)      // b
+            val s5 = state(B, oN, ER)      // B = b .
+            val s6 = state(S, oN, 2)   // S = A B . C
+            val s7 = state(c, oN, ER)      // c
+            val s8 = state(C, oN, ER)      // C = c .
+            val s9 = state(S, oN, ER)      // S = A B C .
+            val s10 = state(rG, oN, ER)      // G = S .
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(b)); ctx(rG, oN, SOR) }
             trans(HEIGHT) { src(a); tgt(A); lhg(setOf(b), setOf(b)); ctx(rG, oN, SOR) }
@@ -251,10 +253,10 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
-            val s1 = state(eS,oN,ER)      // eS
-            val s2 = state(S,oN,ER)      // S = eS .
-            val s3 = state(rG,oN,ER)      // G = S .
+            val s0 = state(rG, oN, SOR)      // G = . S
+            val s1 = state(eS, oN, ER)      // eS
+            val s2 = state(S, oN, ER)      // S = eS .
+            val s3 = state(rG, oN, ER)      // G = S .
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(eS); lhg(setOf(EOT)); ctx(rG, oN, SOR) }
             trans(HEIGHT) { src(eS); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(rG, oN, SOR) }
@@ -295,17 +297,17 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
-            state(rG,oN,ER)               // G = S .
-            state(S,oN,1)                // S = oA . oB oC
-            state(S,oN,2)                // S = oA oB . oC
-            state(S,oN,ER)               // S = oA oB oC .
-            state(oA,o0,ER)              // oA = a .
-            state(oB,o0,ER)              // oB = b .
-            state(oC,o0,ER)              // oC = c .
-            state(a,oN,ER)               // a
-            state(b,oN,ER)               // b
-            state(c,oN,ER)               // c
+            val s0 = state(rG, oN, SOR)      // G = . S
+            state(rG, oN, ER)               // G = S .
+            state(S, oN, 1)                // S = oA . oB oC
+            state(S, oN, 2)                // S = oA oB . oC
+            state(S, oN, ER)               // S = oA oB oC .
+            state(oA, o0, ER)              // oA = a .
+            state(oB, o0, ER)              // oB = b .
+            state(oC, o0, ER)              // oC = c .
+            state(a, oN, ER)               // a
+            state(b, oN, ER)               // b
+            state(c, oN, ER)               // c
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(b)); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(S, oN, 1); tgt(b); lhg(setOf(c)); ctx(rG, oN, SOR) }
@@ -356,7 +358,7 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -399,20 +401,20 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            state(rG,oN,SOR)
-            state(rG,oN,EOR)
-            state(S,o0,EOR)
-            state(S,o1,EOR)
-            state(ABC,oN,1)
-            state(ABC,oN,2)
-            state(ABC,oN,EOR)
-            state(ABD,oN,1)
-            state(ABD,oN,2)
-            state(ABD,oN,EOR)
-            state(a,oN,EOR)
-            state(b,oN,EOR)
-            state(c,oN,EOR)
-            state(d,oN,EOR)
+            state(rG, oN, SOR)
+            state(rG, oN, EOR)
+            state(S, o0, EOR)
+            state(S, o1, EOR)
+            state(ABC, oN, 1)
+            state(ABC, oN, 2)
+            state(ABC, oN, EOR)
+            state(ABD, oN, 1)
+            state(ABD, oN, 2)
+            state(ABD, oN, EOR)
+            state(a, oN, EOR)
+            state(b, oN, EOR)
+            state(c, oN, EOR)
+            state(d, oN, EOR)
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(b)); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(ABC, oN, 1); tgt(b); lhg(setOf(c)); ctx(rG, oN, SOR) }
@@ -471,22 +473,22 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            state(rG,oN,SOR)
-            state(rG,oN,EOR)
-            state(S,o0,EOR)
-            state(S,o1,EOR)
-            state(ABC,oN,1)
-            state(ABC,oN,2)
-            state(ABC,oN,EOR)
-            state(XABD,oN,1)
-            state(XABD,oN,2)
-            state(XABD,oN,3)
-            state(XABD,oN,EOR)
-            state(a,oN,EOR)
-            state(b,oN,EOR)
-            state(c,oN,EOR)
-            state(d,oN,EOR)
-            state(x,oN,EOR)
+            state(rG, oN, SOR)
+            state(rG, oN, EOR)
+            state(S, o0, EOR)
+            state(S, o1, EOR)
+            state(ABC, oN, 1)
+            state(ABC, oN, 2)
+            state(ABC, oN, EOR)
+            state(XABD, oN, 1)
+            state(XABD, oN, 2)
+            state(XABD, oN, 3)
+            state(XABD, oN, EOR)
+            state(a, oN, EOR)
+            state(b, oN, EOR)
+            state(c, oN, EOR)
+            state(d, oN, EOR)
+            state(x, oN, EOR)
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(b)); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(XABD, oN, 1); tgt(a); lhg(setOf(b)); ctx(rG, oN, SOR) }
@@ -544,17 +546,17 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            state(rG,oN,SOR)
-            state(rG,oN,EOR)
-            state(S,o0,EOR)
-            state(S,o1,EOR)
-            state(AAAA,oN,1)
-            state(AAAA,oN,2)
-            state(AAAA,oN,3)
-            state(AAAA,oN,EOR)
-            state(AAAAm,oLI,PMI)
-            state(AAAAm,oLI,EOR)
-            state(a,oN,EOR)
+            state(rG, oN, SOR)
+            state(rG, oN, EOR)
+            state(S, o0, EOR)
+            state(S, o1, EOR)
+            state(AAAA, oN, 1)
+            state(AAAA, oN, 2)
+            state(AAAA, oN, 3)
+            state(AAAA, oN, EOR)
+            state(AAAAm, oLI, PMI)
+            state(AAAAm, oLI, EOR)
+            state(a, oN, EOR)
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(a)); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(AAAA, oN, 1); tgt(a); lhg(setOf(a)); ctx(rG, oN, SOR) }
@@ -608,19 +610,19 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            state(rG,oN,SOR)
-            state(rG,oN,EOR)
-            state(S,o0,EOR)
-            state(S,o1,EOR)
-            state(AAAA,oN,1)
-            state(AAAA,oN,2)
-            state(AAAA,oN,3)
-            state(AAAA,oN,EOR)
-            state(AAAAm,oLE,EOR)
-            state(AAAAm,oLI,PMI)
-            state(AAAAm,oLI,EOR)
-            state(EMPTY_LIST,oN,EOR)
-            state(a,oN,EOR)
+            state(rG, oN, SOR)
+            state(rG, oN, EOR)
+            state(S, o0, EOR)
+            state(S, o1, EOR)
+            state(AAAA, oN, 1)
+            state(AAAA, oN, 2)
+            state(AAAA, oN, 3)
+            state(AAAA, oN, EOR)
+            state(AAAAm, oLE, EOR)
+            state(AAAAm, oLI, PMI)
+            state(AAAAm, oLI, EOR)
+            state(EMPTY_LIST, oN, EOR)
+            state(a, oN, EOR)
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(EMPTY_LIST); lhg(setOf(EOT)); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(EOT, a)); ctx(rG, oN, SOR) }
@@ -685,15 +687,15 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            state(rG,oN,SOR)
-            state(rG,oN,EOR)
-            state(S,o0,EOR)
-            state(S,o1,EOR)
-            state(AAAAm1,oLI,PMI)
-            state(AAAAm1,oLI,EOR)
-            state(AAAAm2,oLI,PMI)
-            state(AAAAm2,oLI,EOR)
-            state(a,oN,EOR)
+            state(rG, oN, SOR)
+            state(rG, oN, EOR)
+            state(S, o0, EOR)
+            state(S, o1, EOR)
+            state(AAAAm1, oLI, PMI)
+            state(AAAAm1, oLI, EOR)
+            state(AAAAm2, oLI, PMI)
+            state(AAAAm2, oLI, EOR)
+            state(a, oN, EOR)
 
             trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(EOT, a)); ctx(rG, oN, SOR) }
             trans(WIDTH) { src(AAAAm1, oLI, PMI); tgt(a); lhg(setOf(EOT, a)); ctx(rG, oN, SOR) }
@@ -730,115 +732,212 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
     @Test
     fun AhoSetiUlman_Grm_4_1() {
-        val rrs = runtimeRuleSet {
-            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        val rrs = ruleSet("Test") {
+            choiceLongest("E") {
                 ref("E1")
                 ref("E2")
             }
             concatenation("E1") { ref("E"); literal("+"); ref("T") }
             concatenation("E2") { ref("T"); }
-            choice("T", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("T") {
                 ref("T1")
                 ref("T2")
             }
             concatenation("T1") { ref("T"); literal("*"); ref("F") }
             concatenation("T2") { ref("F") }
-            choice("F", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("F") {
                 ref("F1")
                 ref("F2")
             }
             concatenation("F1") { literal("("); literal("id"); literal(")") }
             concatenation("F2") { literal("id"); }
-        }
-        val S = rrs.findRuntimeRule("E")
-        val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val rG = s0.runtimeRules.first()
-        val E = rrs.findRuntimeRule("E")
-        val E1 = rrs.findRuntimeRule("E1")
-        val E2 = rrs.findRuntimeRule("E2")
-        val T = rrs.findRuntimeRule("T")
-        val T1 = rrs.findRuntimeRule("T1")
-        val T2 = rrs.findRuntimeRule("T2")
-        val F = rrs.findRuntimeRule("F")
-        val F1 = rrs.findRuntimeRule("F1")
-        val F2 = rrs.findRuntimeRule("F2")
-        val plus = rrs.findRuntimeRule("'+'")
-        val star = rrs.findRuntimeRule("'*'")
-        val lpar = rrs.findRuntimeRule("'('")
-        val id = rrs.findRuntimeRule("'id'")
-        val rpar = rrs.findRuntimeRule("')'")
+        } as RuntimeRuleSet
 
-        val actual = SM.build()
+        val E = rrs.rule[0]  // E
+        val _t1 = rrs.rule[1]  // '+'
+        val E1 = rrs.rule[2]  // E1
+        val E2 = rrs.rule[3]  // E2
+        val T = rrs.rule[4]  // T
+        val _t5 = rrs.rule[5]  // '*'
+        val T1 = rrs.rule[6]  // T1
+        val T2 = rrs.rule[7]  // T2
+        val F = rrs.rule[8]  // F
+        val _t9 = rrs.rule[9]  // '('
+        val _t10 = rrs.rule[10]  // 'id'
+        val _t11 = rrs.rule[11]  // ')'
+        val F1 = rrs.rule[12]  // F1
+        val F2 = rrs.rule[13]  // F2
+        val rG = rrs.goalRuleFor[E]
+
+        val actual = rrs.fetchStateSetFor(E, automatonKind).build()
         println(rrs.usedAutomatonToString("E"))
 
         val expected = automaton(rrs, automatonKind, "E", false) {
-            state(rG, oN, SOR)
-            state(rG, oN, EOR)
-            state(E, o0, EOR)
-            state(E, o1, EOR)
-            state(E1, oN, 1)
-            state(E1, oN, 2)
-            state(E1, oN, EOR)
-            state(T, o0, EOR)
-            state(T, o1, EOR)
-            state(T1, oN, 1)
-            state(T1, oN, 2)
-            state(T1, oN, EOR)
-            state(F, o0, EOR)
-            state(F, o1, EOR)
-            state(F1, oN, 1)
-            state(F1, oN, 2)
-            state(F1, oN, EOR)
-            state(F2, oN, EOR)
-            state(T2, oN, EOR)
-            state(E2, oN, EOR)
-            state(plus, oN, EOR)
-            state(star, oN, EOR)
-            state(lpar, oN, EOR)
-            state(id, oN, EOR)
-            state(rpar, oN, EOR)
+            state(rG, oN, SR)   // <GOAL> =  . E
+            state(rG, oN, ER)   // <GOAL> = E .
+            state(E, o0, ER)   // E = E1 .
+            state(E, o1, ER)   // E = E2 .
+            state(E1, oN, 1)   // E1 = E . '+' T
+            state(E1, oN, 2)   // E1 = E '+' . T
+            state(E1, oN, ER)   // E1 = E '+' T .
+            state(T, o0, ER)   // T = T1 .
+            state(T, o1, ER)   // T = T2 .
+            state(T1, oN, 1)   // T1 = T . '*' F
+            state(T1, oN, 2)   // T1 = T '*' . F
+            state(T1, oN, ER)   // T1 = T '*' F .
+            state(F, o0, ER)   // F = F1 .
+            state(F, o1, ER)   // F = F2 .
+            state(F1, oN, 1)   // F1 = '(' . 'id' ')'
+            state(F1, oN, 2)   // F1 = '(' 'id' . ')'
+            state(F1, oN, ER)   // F1 = '(' 'id' ')' .
+            state(F2, oN, ER)   // F2 = 'id' .
+            state(T2, oN, ER)   // T2 = F .
+            state(E2, oN, ER)   // E2 = T .
+            state(_t1, oN, ER)   // '+'
+            state(_t5, oN, ER)   // '*'
+            state(_t9, oN, ER)   // '('
+            state(_t10, oN, ER)   // 'id'
+            state(_t11, oN, ER)   // ')'
 
-            trans(WIDTH) { src(rG, oN, SOR); tgt(lpar); lhg(setOf(id)); ctx(rG, oN, SOR) }
-            trans(WIDTH) { src(E1, oN, 2); tgt(lpar); lhg(setOf(id)); ctx(rG, oN, SOR) }
-            trans(WIDTH) { src(T1, oN, 2); tgt(lpar); lhg(setOf(id)); ctx(RP(E1, oN, 2), RP(rG, oN, SOR)) }
-            trans(WIDTH) { src(F1, oN, 2); tgt(rpar); lhg(setOf(EOT, star, plus)); ctx(RP(rG, oN, SOR), RP(T1, oN, 2), RP(E1, oN, 2)) }
-            trans(WIDTH) { src(T1, oN, 1); tgt(star); lhg(setOf(lpar, id)); ctx(RP(E1, oN, 2), RP(rG, oN, SOR)) }
-            trans(WIDTH) { src(E1, oN, 1); tgt(plus); lhg(setOf(lpar, id)); ctx(rG, oN, SOR) }
-            trans(WIDTH) { src(rG, oN, SOR); tgt(id); lhg(setOf(EOT, star, plus)); ctx(rG, oN, SOR) }
-            trans(WIDTH) { src(E1, oN, 2); tgt(id); lhg(setOf(EOT, star, plus)); ctx(rG, oN, SOR) }
-            trans(WIDTH) { src(F1, oN, 1); tgt(id); lhg(setOf(rpar)); ctx(RP(T1, oN, 2), RP(E1, oN, 2), RP(rG, oN, SOR)) }
-            trans(WIDTH) { src(T1, oN, 2); tgt(id); lhg(setOf(EOT, star, plus)); ctx(RP(E1, oN, 2), RP(rG, oN, SOR)) }
-
-            trans(GOAL) { src(E, o0, EOR); tgt(rG); lhg(setOf(EOT)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-            trans(GOAL) { src(E, o1, EOR); tgt(rG); lhg(setOf(EOT)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-
-            trans(HEIGHT) { src(E1); tgt(E, o0, EOR); lhg(setOf(EOT, plus), setOf(EOT, plus)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(E2); tgt(E, o1, EOR); lhg(setOf(EOT, plus), setOf(EOT, plus)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(E, o0, EOR); tgt(E1, oN, 1); lhg(setOf(plus), setOf(EOT, plus)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(E, o1, EOR); tgt(E1, oN, 1); lhg(setOf(plus), setOf(EOT, plus)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-            trans(GRAFT) { src(plus); tgt(E1, oN, 2); lhg(setOf(lpar, id)); ctx(E1, oN, 1); pctx(rG, oN, SOR) }
-            trans(GRAFT) { src(T, o0, EOR); tgt(E1); lhg(setOf(EOT, plus)); ctx(E1, oN, 2); pctx(rG, oN, SOR) }
-            trans(GRAFT) { src(T, o1, EOR); tgt(E1); lhg(setOf(EOT, plus)); ctx(E1, oN, 2); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(T, o0, EOR); tgt(E2); lhg(setOf(EOT, plus), setOf(EOT, plus)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(T, o1, EOR); tgt(E2); lhg(setOf(EOT, plus), setOf(EOT, plus)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-
-            trans(HEIGHT) { src(F1); tgt(F, o0, EOR); lhg(setOf(EOT, star, plus), setOf(EOT, star, plus)); ctx(RP(rG, oN, SOR), RP(E1, oN, 2), RP(T1, oN, 2)); pctx(RP(rG, oN, SOR), RP(E1, oN, 2)) }
-            trans(HEIGHT) { src(F2); tgt(F, o1, EOR); lhg(setOf(EOT, star, plus), setOf(EOT, star, plus)); ctx(RP(T1, oN, 2), RP(rG, oN, SOR), RP(E1, oN, 2)); pctx(RP(E1, oN, 2), RP(rG, oN, SOR)) }
-            trans(HEIGHT) { src(lpar); tgt(F1, oN, 1); lhg(setOf(id), setOf(EOT, star, plus)); ctx(RP(E1, oN, 2), RP(T1, oN, 2), RP(rG, oN, SOR)); pctx(RP(rG, oN, SOR), RP(E1, oN, 2)) }
-            trans(GRAFT) { src(id); tgt(F1, oN, 2); lhg(setOf(rpar)); ctx(F1, oN, 1); pctx(RP(T1, oN, 2), RP(E1, oN, 2), RP(rG, oN, SOR)) }
-            trans(GRAFT) { src(rpar); tgt(F1); lhg(setOf(EOT, star, plus)); ctx(F1, oN, 2); pctx(RP(rG, oN, SOR), RP(T1, oN, 2), RP(E1, oN, 2)) }
-            trans(HEIGHT) { src(id); tgt(F2); lhg(setOf(EOT, star, plus), setOf(EOT, star, plus)); ctx(RP(T1, oN, 2), RP(rG, oN, SOR), RP(E1, oN, 2)); pctx(RP(E1, oN, 2), RP(rG, oN, SOR)) }
-
-            trans(HEIGHT) { src(T1); tgt(T, o0, EOR); lhg(setOf(EOT, star, plus), setOf(EOT, star, plus)); ctx(RP(E1, oN, 2), RP(rG, oN, SOR)); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(T2); tgt(T, o1, EOR); lhg(setOf(EOT, star, plus), setOf(EOT, star, plus)); ctx(RP(E1, oN, 2), RP(rG, oN, SOR)); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(T, o0, EOR); tgt(T1, oN, 1); lhg(setOf(star), setOf(EOT, star, plus)); ctx(RP(rG, oN, SOR), RP(E1, oN, 2)); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(T, o1, EOR); tgt(T1, oN, 1); lhg(setOf(star), setOf(EOT, star, plus)); ctx(RP(rG, oN, SOR), RP(E1, oN, 2)); pctx(rG, oN, SOR) }
-            trans(GRAFT) { src(star); tgt(T1, oN, 2); lhg(setOf(lpar, id)); ctx(T1, oN, 1); pctx(RP(E1, oN, 2), RP(rG, oN, SOR)) }
-            trans(GRAFT) { src(F, o0, EOR); tgt(T1); lhg(setOf(EOT, star, plus)); ctx(T1, oN, 2); pctx(RP(E1, oN, 2), RP(rG, oN, SOR)) }
-            trans(GRAFT) { src(F, o1, EOR); tgt(T1); lhg(setOf(EOT, star, plus)); ctx(T1, oN, 2); pctx(RP(E1, oN, 2), RP(rG, oN, SOR)) }
-            trans(HEIGHT) { src(F, o0, EOR); tgt(T2); lhg(setOf(EOT, star, plus), setOf(EOT, star, plus)); ctx(RP(E1, oN, 2), RP(rG, oN, SOR)); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(F, o1, EOR); tgt(T2); lhg(setOf(EOT, star, plus), setOf(EOT, star, plus)); ctx(RP(rG, oN, SOR), RP(E1, oN, 2)); pctx(rG, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t9, oN, ER); lhg(_t10); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t10, oN, ER); lhg(setOf(EOT, _t5, _t1)); ctx(rG, oN, SR) }
+            trans(HEIGHT) {
+                src(E, o0, ER); tgt(E1, oN, 1); lhg(setOf(_t1), setOf(EOT, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(GOAL) {
+                src(E, o0, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(E, o1, ER); tgt(E1, oN, 1); lhg(setOf(_t1), setOf(EOT, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(GOAL) {
+                src(E, o1, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(WIDTH) { src(E1, oN, 1); tgt(_t1, oN, ER); lhg(setOf(_t9, _t10)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(E1, oN, 2); tgt(_t9, oN, ER); lhg(_t10); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(E1, oN, 2); tgt(_t10, oN, ER); lhg(setOf(EOT, _t5, _t1)); ctx(rG, oN, SR) }
+            trans(HEIGHT) {
+                src(E1, oN, ER); tgt(E, o0, ER); lhg(setOf(EOT, _t1), setOf(EOT, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(T, o0, ER); tgt(E2, oN, ER); lhg(setOf(EOT, _t1), setOf(EOT, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(T, o0, ER); tgt(T1, oN, 1); lhg(setOf(_t5), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+            }
+            trans(GRAFT) {
+                src(T, o0, ER); tgt(E1, oN, ER); lhg(setOf(EOT, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+            }
+            trans(HEIGHT) {
+                src(T, o1, ER); tgt(E2, oN, ER); lhg(setOf(EOT, _t1), setOf(EOT, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(T, o1, ER); tgt(T1, oN, 1); lhg(setOf(_t5), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+            }
+            trans(GRAFT) {
+                src(T, o1, ER); tgt(E1, oN, ER); lhg(setOf(EOT, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+            }
+            trans(WIDTH) { src(T1, oN, 1); tgt(_t5, oN, ER); lhg(setOf(_t9, _t10)); ctx(RP(E1, oN, 2), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(T1, oN, 2); tgt(_t9, oN, ER); lhg(_t10); ctx(RP(E1, oN, 2), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(T1, oN, 2); tgt(_t10, oN, ER); lhg(setOf(EOT, _t5, _t1)); ctx(RP(E1, oN, 2), RP(rG, oN, SR)) }
+            trans(HEIGHT) {
+                src(T1, oN, ER); tgt(T, o0, ER); lhg(setOf(EOT, _t5, _t1), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(F, o0, ER); tgt(T2, oN, ER); lhg(setOf(EOT, _t5, _t1), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(GRAFT) {
+                src(F, o0, ER); tgt(T1, oN, ER); lhg(setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+            }
+            trans(HEIGHT) {
+                src(F, o1, ER); tgt(T2, oN, ER); lhg(setOf(EOT, _t5, _t1), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+            }
+            trans(GRAFT) {
+                src(F, o1, ER); tgt(T1, oN, ER); lhg(setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+            }
+            trans(WIDTH) { src(F1, oN, 1); tgt(_t10, oN, ER); lhg(_t11); ctx(RP(T1, oN, 2), RP(E1, oN, 2), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(F1, oN, 2); tgt(_t11, oN, ER); lhg(setOf(EOT, _t5, _t1)); ctx(RP(rG, oN, SR), RP(T1, oN, 2), RP(E1, oN, 2)) }
+            trans(HEIGHT) {
+                src(F1, oN, ER); tgt(F, o0, ER); lhg(setOf(EOT, _t5, _t1), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+            }
+            trans(HEIGHT) {
+                src(F2, oN, ER); tgt(F, o1, ER); lhg(setOf(EOT, _t5, _t1), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(T2, oN, ER); tgt(T, o1, ER); lhg(setOf(EOT, _t5, _t1), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(E2, oN, ER); tgt(E, o1, ER); lhg(setOf(EOT, _t1), setOf(EOT, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(GRAFT) {
+                src(_t1, oN, ER); tgt(E1, oN, 2); lhg(setOf(_t9, _t10));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 1)))
+            }
+            trans(GRAFT) {
+                src(_t5, oN, ER); tgt(T1, oN, 2); lhg(setOf(_t9, _t10));
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 1)))
+            }
+            trans(HEIGHT) {
+                src(_t9, oN, ER); tgt(F1, oN, 1); lhg(setOf(_t10), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(_t10, oN, ER); tgt(F2, oN, ER); lhg(setOf(EOT, _t5, _t1), setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(T1, oN, 2)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(E1, oN, 2)))
+            }
+            trans(GRAFT) {
+                src(_t10, oN, ER); tgt(F1, oN, 2); lhg(_t11);
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F1, oN, 1)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F1, oN, 1)))
+            }
+            trans(GRAFT) {
+                src(_t11, oN, ER); tgt(F1, oN, ER); lhg(setOf(EOT, _t5, _t1));
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(F1, oN, 2)))
+                prevPair(setOf(RP(T1, oN, 2)), setOf(RP(F1, oN, 2)))
+                prevPair(setOf(RP(E1, oN, 2)), setOf(RP(F1, oN, 2)))
+            }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -880,7 +979,7 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -918,7 +1017,7 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            val s0 = state(rG,oN,SOR)      // G = . S
+            val s0 = state(rG, oN, SOR)      // G = . S
 
 
         }
@@ -940,41 +1039,69 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
     @Test
     fun rightRecursive() {
-        val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        val rrs = ruleSet("Test") {
+            choiceLongest("S") {
                 literal("a")
                 ref("S1")
             }
             concatenation("S1") { literal("a"); ref("S") }
-        }
-        val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val rG = SM.startState.runtimeRules.first()
-        val a = rrs.findRuntimeRule("'a'")
+        } as RuntimeRuleSet
 
-        val S1 = rrs.findRuntimeRule("S1")
+        val _t0 = rrs.rule[0]  // 'a'
+        val S = rrs.rule[1]  // S
+        val S1 = rrs.rule[2]  // S1
+        val rG = rrs.goalRuleFor[S]
 
-        val actual = SM.build()
+        val actual = rrs.fetchStateSetFor(S, automatonKind).build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
-            state(rG,oN,SOR)
-            state(rG,oN,EOR)
-            state(S,o0,EOR)
-            state(S,o1,EOR)
-            state(S1,oN,1)
-            state(S1,oN,EOR)
-            state(a,oN,EOR)
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, o0, ER)   // S = 'a' .
+            state(S, o1, ER)   // S = S1 .
+            state(S1, oN, 1)   // S1 = 'a' . S
+            state(S1, oN, ER)   // S1 = 'a' S .
+            state(_t0, oN, ER)   // 'a'
 
-            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(setOf(EOT, a)); ctx(rG, oN, SOR) }
-            trans(WIDTH) { src(S1, oN, 1); tgt(a); lhg(setOf(EOT, a)); ctx(RP(rG, oN, SOR), RP(S1, oN, 1)) }
-            trans(GOAL) { src(S, o0, EOR); tgt(rG); lhg(setOf(EOT)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-            trans(GOAL) { src(S, o1, EOR); tgt(rG); lhg(setOf(EOT)); ctx(rG, oN, SOR); pctx(rG, oN, SOR) }
-            trans(HEIGHT) { src(a); tgt(S, o0, EOR); lhg(setOf(EOT), setOf(EOT)); ctx(RP(rG, oN, SOR), RP(S1, oN, 1)); pctx(RP(rG, oN, SOR), RP(S1, oN, 1)) }
-            trans(HEIGHT) { src(S1, oN, EOR); tgt(S, o1, EOR); lhg(setOf(EOT), setOf(EOT)); ctx(RP(rG, oN, SOR), RP(S1, oN, 1)); pctx(RP(rG, oN, SOR), RP(S1, oN, 1)) }
-            trans(HEIGHT) { src(a); tgt(S1, oN, 1); lhg(setOf(a), setOf(EOT)); ctx(RP(rG, oN, SOR), RP(S1, oN, 1)); pctx(RP(rG, oN, SOR), RP(S1, oN, 1)) }
-            trans(GRAFT) { src(S, o0, EOR); tgt(S1, oN, EOR); lhg(setOf(EOT)); ctx(S1, oN, 1); pctx(RP(rG, oN, SOR), RP(S1, oN, 1)) }
-            trans(GRAFT) { src(S, o1, EOR); tgt(S1, oN, EOR); lhg(setOf(EOT)); ctx(S1, oN, 1); pctx(RP(rG, oN, SOR), RP(S1, oN, 1)) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT, _t0)); ctx(rG, oN, SR) }
+            trans(GRAFT) {
+                src(S, o0, ER); tgt(S1, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(S1, oN, 1)), setOf(RP(S1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S1, oN, 1)))
+            }
+            trans(GOAL) {
+                src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(GRAFT) {
+                src(S, o1, ER); tgt(S1, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(S1, oN, 1)), setOf(RP(S1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S1, oN, 1)))
+            }
+            trans(GOAL) {
+                src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(WIDTH) { src(S1, oN, 1); tgt(_t0, oN, ER); lhg(setOf(EOT, _t0)); ctx(RP(S1, oN, 1), RP(rG, oN, SR)) }
+            trans(HEIGHT) {
+                src(S1, oN, ER); tgt(S, o1, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(setOf(RP(S1, oN, 1)), setOf(RP(S1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(_t0, oN, ER); tgt(S, o0, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(setOf(RP(S1, oN, 1)), setOf(RP(S1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
+            trans(HEIGHT) {
+                src(_t0, oN, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(EOT));
+                prevPair(setOf(RP(S1, oN, 1)), setOf(RP(S1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(S1, oN, 1)))
+                prevPair(setOf(RP(rG, oN, SR)), setOf(RP(rG, oN, SR)))
+            }
         }
 
         AutomatonTest.assertEquals(expected, actual)

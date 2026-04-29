@@ -161,7 +161,7 @@ class RuntimeRuleSet(
      * <SKIP-MULTI> = <SKIP-CHOICE>+
      * <SKIP-CHOICE> = SR-0 | ... | SR-n
      */
-    internal val skipParserStateSet: ParserStateSet? by lazy {
+    val skipParserStateSet: ParserStateSet? by lazy {
         if (skipRules.isEmpty()) {
             null
         } else {
