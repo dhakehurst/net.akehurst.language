@@ -55,7 +55,7 @@ class ParserState(
 
     val isLeaf: Boolean get() = this.firstRule.isTerminal
 
-    val isAtEnd: Boolean get() = this.rulePosition.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
+    val isAtEnd: Boolean = this.rulePosition.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
     val isNotAtEnd: Boolean get() = this.rulePosition.any { it.isAtEnd.not() } //all in state should be either atEnd or notAtEnd
 
     val isGoal = this.firstRule.isGoal
@@ -114,12 +114,11 @@ class ParserState(
     // --- Any ---
     override fun hashCode(): Int = this.number.value + this.stateSet.number * 31
 
-    override fun equals(other: Any?): Boolean {
-        return if (other is ParserState) {
-            this.stateSet.number == other.stateSet.number && this.number.value == other.number.value
-        } else {
-            false
-        }
+    override fun equals(other: Any?): Boolean = when {
+        other !is ParserState -> false
+        this.number.value != other.number.value -> false
+        this.stateSet.number != other.stateSet.number -> false
+        else -> true
     }
 
     override fun toString(): String = "State(${this.number.value}/${this.stateSet.number}-${rulePosition})"

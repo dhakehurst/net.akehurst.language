@@ -33,7 +33,6 @@ internal class RuntimeState(
     val runtimeLookaheadSet: Set<LookaheadSet>,
 ) {
 
-
     val isAtEnd: Boolean get() = state.isAtEnd
     val optionList: List<OptionNum> get() = state.optionList
 
