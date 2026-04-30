@@ -28,10 +28,6 @@ class GraphStructuredStack<E>(
 ) {
     constructor(headHeap: BinaryHeap<E, E>) : this(headHeap, hashMapOf<E, MutableSet<E>>(), hashMapOf<E, Int>()) //no need to preserve insertion order
 
-    // TODO: is the fifo version faster ? it might help with processing heads in a better order!
-    // to order the heads efficiently so we grow them in the required order
-    //private val _growingHeadHeap: BinaryHeap<GrowingNodeIndex, GrowingNodeIndex> = headHeap
-
     private val _previous = previous
 
     /**
