@@ -233,14 +233,14 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     concatenation("function") {
                         lit("fun"); ref("IDENTIFIER");
                         lit("("); spLst(0,-1) { ref("parameter"); lit(",") }; lit(")");
-                        opt { grp{ lit(";"); ref("typeReference") } }
+                        opt { grp{ lit(":"); ref("typeReference") } }
                         lit("="); ref("expression")
                     }
                     // parameter := IDENTIFIER ': typeReference ('=' expression)? ;
                     concatenation("parameter") {
                         ref("IDENTIFIER");
                         lit(":"); ref("typeReference")
-                        opt { grp{ lit(":"); ref("expression") } }
+                        opt { grp{ lit("="); ref("expression") } }
                     }
 
                     choice("expression") {

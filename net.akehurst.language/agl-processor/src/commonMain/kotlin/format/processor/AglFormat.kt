@@ -182,7 +182,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                         lit("else"); lit("->"); ref("formatExpression")
                     }
                     concatenation("block", OverrideKind.REPLACE) {
-                        lit("{"); lst(0, -1) { ref("assignment") }; ref("formatExpression"); lit("}")
+                        lit("{"); lst(0, -1) { ref("variableAssignment") }; ref("formatExpression"); lit("}")
                     }
 
                     // only referenced from Template::templateExpressionList

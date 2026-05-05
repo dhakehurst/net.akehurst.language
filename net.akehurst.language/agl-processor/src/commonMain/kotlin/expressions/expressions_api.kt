@@ -26,7 +26,7 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 
-interface ExpressionsDomain : Domain<ExpressionsNamespace, FunctionDefinition> {
+interface ExpressionsDomain : Domain<ExpressionsNamespace, FunctionDefinition>, Expression {
 
 }
 

@@ -113,6 +113,7 @@ class test_ExpressionsLanguage {
             "(a as C).f",
             // block
             "{ a:=1 a}",
+            "{ a:Integer := 1 a}",
             "{ a:=1 b:=2 c:=3 a+b+c}"
         )
     }
@@ -153,7 +154,7 @@ class test_ExpressionsLanguage {
         val processor = Agl.registry.agl.expressions.processor!!
         for (s in sentences) {
             println("Parsing '$s'")
-            val result = processor.parse(s,Agl.parseOptions { goalRuleName("expression") })
+            val result = processor.parse(s, Agl.parseOptions { goalRuleName("expression") })
             assertTrue(result.issues.errors.isEmpty(), "'$s'\n${result.issues}")
         }
     }
@@ -167,4 +168,23 @@ class test_ExpressionsLanguage {
             assertTrue(result.allIssues.errors.isEmpty(), "'$s'\n${result.allIssues}")
         }
     }
+
+    @Test
+    fun process_function() {
+        val sens = listOf(
+            "namespace t fun f() = 1",
+            "namespace t fun f():Integer = 1",
+            "namespace t fun f() = { a:=1 b:=2 a+b }",
+            "namespace t fun f(a:Integer, b:Integer) = a+b",
+            "namespace t fun f(name:String='World!') = 'Hello '+name",
+        )
+
+        val processor = Agl.registry.agl.expressions.processor!!
+        for (s in sens) {
+            println("Processing '$s'")
+            val result = processor.process(s, Agl.options { parse { goalRuleName("unit") } })
+            assertTrue(result.allIssues.errors.isEmpty(), "'$s'\n${result.allIssues}")
+        }
+    }
+
 }

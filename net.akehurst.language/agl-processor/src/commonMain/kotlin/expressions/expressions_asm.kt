@@ -29,6 +29,7 @@ class ExpressionsDomainDefault(
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespaces: List<ExpressionsNamespace> = emptyList()
 ) : ExpressionsDomain, DomainAbstract<ExpressionsNamespace, FunctionDefinition>(namespaces, options) {
+    override fun asString(indent: Indent, imports: List<Import>): String = super.asString(indent)
 }
 
 class ExpressionsNamespaceDefault(

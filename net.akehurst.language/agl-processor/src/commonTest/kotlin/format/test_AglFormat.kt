@@ -45,6 +45,15 @@ class test_AglFormat {
             ),
             TestData(
                 sentence = """
+                    namespace test
+                    fun f() = 1
+                    format Test {
+                        Type -> ''
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
                     // single line comment
                     namespace test
                     format Test {

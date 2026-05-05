@@ -118,6 +118,25 @@ class test_FormatterOverTypedObject {
                 expected = "Hello World!"
             ),
             TestData(
+                name = $$"using function",
+                template = FormatString(
+                    $$"""
+                    namespace test
+                    fun func(str:String) = '** ' + str + ' **'
+                    format Test {
+                      TestObject -> "${func(strValue)}"
+                    }
+                    """
+                ),
+                types = typesDomain("Test", true) {
+                    namespace("test") {
+                        data("TestObject")
+                    }
+                },
+                self = TestObject(),
+                expected = "** Hello World! **"
+            ),
+            TestData(
                 name = "Output a List value from self Object, explicit template",
                 template = FormatString(
                     $$"""
@@ -314,6 +333,7 @@ class test_FormatterOverTypedObject {
                 self = TestObject(),
                 expected = "Test2: 'a','b','c'"
             ),
+
         )
 
         fun test(data: TestData) {
@@ -335,7 +355,7 @@ class test_FormatterOverTypedObject {
 
     @Test
     fun test1() {
-        test(testData[13])
+        test(testData[5])
     }
 
 }

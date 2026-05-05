@@ -123,8 +123,8 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun function(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: ExpressionsNamespace) -> FunctionDefinition {
         val name = children[1] as String
         val parameters = (children[3] as List<Any>).toSeparatedList<Any, FunctionParameter, String>().items
-        val retType = children[6] as? TypeReference
-        val body = children[8] as Expression
+        val retType = (children[5]  as? List<*>)?.let{ it[1] as TypeReference}
+        val body = children[7] as Expression
         return { namespace ->
             FunctionDefinitionDefault(namespace, SimpleName(name), parameters, retType, body)
         }
@@ -333,7 +333,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     // variableDefinition = IDENTIFIER (':' typeReference)? ;
     private fun variableDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableDefinition {
         val name = children[0] as String
-        val typeRef = children[2] as? TypeReference
+        val typeRef = (children[1] as? List<*>)?.let { it[1] as TypeReference }
         return VariableDefinitionDefault(name, typeRef)
     }
 
