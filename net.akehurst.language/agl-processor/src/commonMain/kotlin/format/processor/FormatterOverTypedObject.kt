@@ -430,15 +430,15 @@ class FormatterOverTypedObject(
         return if (evc.namedValues.containsKey(name)) {
             evc.namedValues[name]!!
         } else {
-            val name1 = when {
-                name.startsWith("\$") -> name.substring(1)
-                else -> name
-            }
+//            val name1 = when {
+//                name.startsWith("\$") -> name.substring(1)
+//                else -> name
+//            }
             val self = evc.self
             when (self) {
                 null -> objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "")
                 else -> {
-                    self.getProperty(name1) //drop the dollar
+                    self.getProperty(name)
                 }
             }
         }

@@ -129,6 +129,18 @@ class test_AglFormat {
             TestData(
                 sentence = $$"""
                     namespace test
+                    format Test {
+                        Type1 -> {
+                          x := 'abc'
+                          y := 1
+                          "$x $y"
+                        }
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = $$"""
+                    namespace test
                     format Test1 {
                        Type1 -> "something else"
                     }

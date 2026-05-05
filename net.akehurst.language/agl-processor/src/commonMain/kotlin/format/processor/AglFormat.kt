@@ -83,6 +83,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                           
             override whenOption = expression '->' formatExpression ;
             override whenOptionElse = 'else' '->' formatExpression ;
+            override block = '{' assignemnt* formatExpression '}' ;
             
             // separatedList is used from Template, but part of this grammar
             separatedList = expression 'sep' separator viaFormatSet? ;
@@ -177,6 +178,10 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                     concatenation("whenOptionElse", OverrideKind.REPLACE) {
                         lit("else"); lit("->"); ref("formatExpression")
                     }
+                    concatenation("block", OverrideKind.REPLACE) {
+                        lit("{"); lst(0, -1) { ref("assignment") }; ref("formatExpression"); lit("}")
+                    }
+
 
                     // only referenced from Template::templateExpressionList
                     concatenation("separatedList") {

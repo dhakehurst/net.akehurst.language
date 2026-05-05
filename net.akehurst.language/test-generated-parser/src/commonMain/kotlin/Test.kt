@@ -84,15 +84,15 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, SentenceContext>() 
 
     private val automaton_S = aut(targetRuleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
         // 0: G = . S
-        state(rGOAL_RULE, OP_NONE, SR)
+        state(GOAL_RULE, OP_NONE, SR)
         // 1: G = S .
-        state(rGOAL_RULE, OP_NONE, ER)
+        state(GOAL_RULE, OP_NONE, ER)
         // 2: S = a .
         state(0, OP_NONE, ER)
         // 3: a.
         state(1, OP_NONE, ER)
 
-        transition(WIDTH) { source(0); target(3) }
+        transition(WIDTH) { src(0); tgt(3) }
     }
 
     val defaultGoalRuleName: String = "S"

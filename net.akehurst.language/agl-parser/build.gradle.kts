@@ -1,8 +1,13 @@
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
 plugins {
     id("project-conventions")
     alias(libs.plugins.exportPublic)
 //    alias(libs.plugins.reflex)
 }
+
 
 kotlin {
     sourceSets {
@@ -13,6 +18,17 @@ kotlin {
 
                 api(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
                 api(libs.nak.kotlinx.collections) // for MutableStack
+            }
+        }
+        jvmTest {
+            dependencies {
+                // JMH (Java Microbenchmark Harness). Used by ParserBenchmarks.kt
+                // and the `jmh` Gradle task below. We deliberately do NOT use
+                // the `me.champeau.jmh` plugin: it doesn't understand KMP
+                // source sets cleanly. Instead we drive JMH ourselves with
+                // two JavaExec tasks (generator + runner).
+                implementation("org.openjdk.jmh:jmh-core:1.37")
+                implementation("org.openjdk.jmh:jmh-generator-bytecode:1.37")
             }
         }
     }

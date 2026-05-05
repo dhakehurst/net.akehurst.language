@@ -86,7 +86,7 @@ internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationA
 
     // templateExpressionProperty = DOLLAR_IDENTIFIER ;
     fun templateExpressionProperty(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionProperty =
-        TemplateElementExpressionPropertyDefault((children[0] as String)) //do not remove '$' here, it is used in the semantic interpretation
+        TemplateElementExpressionPropertyDefault((children[0] as String).substringAfter("$"))
 
     // templateExpressionList = '$[' Format::separatedList ']' ;
     fun templateExpressionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionList {

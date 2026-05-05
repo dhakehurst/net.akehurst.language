@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.parser.performance
+package net.akehurst.language.agl.benchmark
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.runtime.structure.ruleSet
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import kotlin.io.path.pathString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -113,7 +119,7 @@ class test_Performance {
 
     // ----- helpers ------------------------------------------------------
 
-    private fun newParser(rrs: RuntimeRuleSet): LeftCornerParser =
+    private fun newParser(rrs: RuleSet): LeftCornerParser =
         LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
 
     /**
@@ -180,7 +186,10 @@ class test_Performance {
             // brief pause so the next sample doesn't start in a GC tail.
             System.gc()
             System.gc()
-            try { Thread.sleep(2) } catch (_: InterruptedException) { /* ignore */ }
+            try {
+                Thread.sleep(2)
+            } catch (_: InterruptedException) { /* ignore */
+            }
         }
     }
 
@@ -221,26 +230,26 @@ class test_Performance {
 
         println(
             "PERF | ${label.padEnd(40)} | n=${inputLength.toString().padStart(7)}" +
-                " | reps=${innerReps.toString().padStart(3)}" +
-                " | min=${min.toString().padStart(8)}µs" +
-                " | p10=${p10.toString().padStart(8)}µs" +
-                " | p50=${p50.toString().padStart(8)}µs" +
-                " | p90=${p90.toString().padStart(8)}µs" +
-                " | ${charsPerSec.toString().padStart(12)} ch/s" +
-                " | p90/min=${stabilityX10 / 10}.${stabilityX10 % 10}"
+                    " | reps=${innerReps.toString().padStart(3)}" +
+                    " | min=${min.toString().padStart(8)}µs" +
+                    " | p10=${p10.toString().padStart(8)}µs" +
+                    " | p50=${p50.toString().padStart(8)}µs" +
+                    " | p90=${p90.toString().padStart(8)}µs" +
+                    " | ${charsPerSec.toString().padStart(12)} ch/s" +
+                    " | p90/min=${stabilityX10 / 10}.${stabilityX10 % 10}"
         )
     }
 
     // ----- grammars -----------------------------------------------------
 
     /** S = 'a'+   (multi list, runtime-guarded GRAFT) */
-    private fun multiGrammar(): RuntimeRuleSet = runtimeRuleSet {
+    private fun multiGrammar() = ruleSet("Multi") {
         multi("S", 1, -1, "'a'")
         literal("'a'", "a")
     }
 
     /** S = 'a' | 'a' S   (right-recursive choice, exercises HEIGHT) */
-    private fun rightRecursiveGrammar(): RuntimeRuleSet = runtimeRuleSet {
+    private fun rightRecursiveGrammar() = ruleSet("RightRecursive") {
         choiceLongest("S") {
             concatenation { literal("a") }
             concatenation { literal("a"); ref("S") }
@@ -248,7 +257,7 @@ class test_Performance {
     }
 
     /** S = ['a' / ',']+   with whitespace skip */
-    private fun sListGrammar(): RuntimeRuleSet = runtimeRuleSet {
+    private fun sListGrammar() = ruleSet("SList") {
         pattern("WS", "\\s+", isSkip = true)
         sList("S", 1, -1, "'a'", "','")
         literal("'a'", "a")
@@ -263,7 +272,7 @@ class test_Performance {
      * Implemented with `choiceLongest`; this exercises the precedence
      * resolution path in `RuntimeParserAgl` (and the merge-decision logic).
      */
-    private fun expressionGrammar(): RuntimeRuleSet = runtimeRuleSet {
+    private fun expressionGrammar() = ruleSet("Expression") {
         pattern("WS", "\\s+", isSkip = true)
         choiceLongest("E") {
             concatenation { ref("E"); literal("+"); ref("E") }
@@ -389,6 +398,40 @@ class test_Performance {
 
             benchmark("expr   E=...    (reportErrors=off)", size) {
                 parser.parse(input, opts)
+            }
+        }
+    }
+
+   // @Test
+    fun bench_06_java8() {
+        val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
+        val grammarStr = this::class.java.getResource(grammarFile)?.readText() ?: error("file not found '$grammarFile'")
+        val proc = Agl.processorFromString<Asm, SentenceContext>(
+            grammarDefinitionStr = grammarStr,
+            aglOptions = Agl.options {
+                semanticAnalysis {
+                    sentenceContext(contextFromGrammarRegistry(Agl.registry))
+                    // switch off ambiguity analysis for performance
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                }
+            }
+        ).let {
+            check(it.issues.errors.isEmpty()) { it.issues.toString() }
+            check(null != it.processor) { "Processor is null" }
+            it.processor!!
+        }
+
+        val parser = proc.parser!!
+        val files = Java8TestFiles.files
+        for (fileData in files) {
+            val sentence =fileData.path.toFile().readText()
+            val r0 = parser.parseForGoal("CompilationUnit", sentence)
+            assertNotNull(r0.sppt, r0.issues.joinToString("\n"))
+            // Note: ambiguity warnings may appear depending on grammar tweaks;
+            // we tolerate non-error issues but require a parse tree.
+
+            benchmark(fileData.path.pathString, sentence.length) {
+                parser.parseForGoal("CompilationUnit", sentence)
             }
         }
     }

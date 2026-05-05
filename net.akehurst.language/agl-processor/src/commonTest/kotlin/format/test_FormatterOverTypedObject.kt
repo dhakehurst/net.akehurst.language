@@ -247,7 +247,7 @@ class test_FormatterOverTypedObject {
                 """.trimIndent()
             ),
             TestData(
-                name = $$"Multiline tempate with list elements",
+                name = $$"Multiline template with list elements",
                 template = FormatString(
                     $$"""
                     namespace test

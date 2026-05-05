@@ -357,7 +357,7 @@ class ExternalGetterByReflection(
     val typesDomain: TypesDomain,
     val issues: IssueHolder,
 ) : ExternalGetter {
-    override fun typeFor(obj: Any, ifNotFound:TypeInstance): TypeInstance {
+    override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
         val tp = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
         return when (tp) {
             null -> {
@@ -449,8 +449,8 @@ constructor(
     }
 
     override fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
-        executeMethodInternal(tobj, methodName, args) { obj, type, decl, args ->
-            primitiveExecutor.methodCall(obj, type, decl, args)
+        executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
+            decl.execution?.invoke(obj, args)
         }
 
     override fun callFunction(functionName: String, args: List<TypedObject>): TypedObject {
@@ -472,9 +472,10 @@ constructor(
      *   type has resolved property -> try primitiveExecutor or reflection if executor fails
      * }
      */
-    override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject = getPropertyInternal(tobj, propertyName, externalGetter::getProperty) { obj, decl ->
-        decl.execution?.invoke(obj)
-    }
+    override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject =
+        getPropertyInternal(tobj, propertyName, externalGetter::getProperty) { obj, decl ->
+            decl.execution?.invoke(obj)
+        }
 
     override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) {
         when {
@@ -519,8 +520,8 @@ constructor(
     }
 
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
-        executeMethodInternal(tobj, methodName, args) { obj, type, decl, args ->
-            primitiveExecutor.methodCallSuspend(obj, type, decl, args)
+        executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
+            decl.executionSuspend?.invoke(obj, args)
         }
 
     // --- Internal ---
@@ -533,7 +534,10 @@ constructor(
             ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
         val obj = when (typeDef) {
             is SingletonType -> typeDef.objectInstance()
-            is StructuredType -> externalCreateStructure(typeDef.qualifiedName,constructorArgs.map { (k, v) -> Pair(k, v.self) }.toMap()) //externalGetter.createStructure(typeDef.qualifiedName, constructorArgs.map { (k, v) -> Pair(k, v.self) }.toMap()) ?: Unit
+            is StructuredType -> externalCreateStructure(
+                typeDef.qualifiedName,
+                constructorArgs.map { (k, v) -> Pair(k, v.self) }.toMap()
+            ) //externalGetter.createStructure(typeDef.qualifiedName, constructorArgs.map { (k, v) -> Pair(k, v.self) }.toMap()) ?: Unit
 
             is SpecialType -> error("Should not create an instance of a SpecialType")
             is PrimitiveType -> error("use 'createPrimitiveValue' for PrimitiveType")
@@ -581,12 +585,12 @@ constructor(
                         when {
                             (null != propResOriginal.execution) -> {
                                 val value = propertyExecution(obj, propResOriginal)
-                                value?.let { toTypedObject(value,propRes.typeInstance) } ?: nothing()
+                                value?.let { toTypedObject(value, propRes.typeInstance) } ?: nothing()
                             }
 
                             (null != propResOriginal.executionSuspend) -> {
                                 val value = propertyExecution(obj, propResOriginal)
-                                value?.let { toTypedObject(value,propRes.typeInstance) } ?: nothing()
+                                value?.let { toTypedObject(value, propRes.typeInstance) } ?: nothing()
                             }
 
                             else -> {
@@ -595,10 +599,10 @@ constructor(
                                 when (execResult) {
                                     null -> {
                                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
-                                        value?.let { toTypedObject(value,propRes.typeInstance) } ?: nothing()
+                                        value?.let { toTypedObject(value, propRes.typeInstance) } ?: nothing()
                                     }
 
-                                    else -> toTypedObject(execResult.value,propRes.typeInstance)
+                                    else -> toTypedObject(execResult.value, propRes.typeInstance)
                                 }
                             }
                         }
@@ -613,10 +617,10 @@ constructor(
         tobj: TypedObject,
         methodName: String,
         args: List<TypedObject>,
-        primitiveExecute: (obj: Any, typeDef: TypeDefinition, decl: MethodDeclaration, args: List<*>) -> ExecutionResult?
+        methodExecution: (obj: Any, decl: MethodDeclaration, args: List<*>) -> Any?
     ): TypedObject {
-        val meth = tobj.type.allResolvedMethod[MethodName(methodName)]
-        return when (meth) {
+        val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]
+        return when (methRes) {
             null -> {
                 val obj = untyped(tobj)
                 val arguments = args.map { untyped(it) }.toTypedArray()
@@ -628,20 +632,34 @@ constructor(
                 val typeDef = tobj.type.resolvedDeclaration
                 val arguments = args.map { untyped(it) }
                 val obj = untyped(tobj)
-                val execResult = primitiveExecute(obj, typeDef, meth.original, arguments)//primitiveExecutor.methodCall(untyped(tobj), type, meth.original, arguments)
-                when (execResult) {
-                    null -> when (meth.original) {
-                        is MethodDeclarationDerived -> TODO()
-                        is MethodDeclarationPrimitive -> {
-                            // should have found execution if there is one
-                            issues.error(null, "using StdLibPrimitiveExecutionsForReflection not found for method '${meth}'")
-                            nothing()
-                        }
-
-                        else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
+                val methResOriginal = methRes.original
+                when {
+                    (null != methResOriginal.execution) -> {
+                        val value = methodExecution(obj, methResOriginal, arguments)
+                        value?.let { toTypedObject(value, methRes.returnType) } ?: nothing()
                     }
+                    (null != methResOriginal.executionSuspend) -> {
+                        val value = methodExecution(obj, methResOriginal, arguments)
+                        value?.let { toTypedObject(value, methRes.returnType) } ?: nothing()
+                    }
+                    else -> {
+                        val execResult = primitiveExecutor.methodCall(obj, typeDef, methResOriginal, arguments)
+                       // val execResult = primitiveExecute(obj, typeDef, meth.original, arguments)//primitiveExecutor.methodCall(untyped(tobj), type, meth.original, arguments)
+                        when (execResult) {
+                            null -> when (methResOriginal) {
+                                is MethodDeclarationDerived -> TODO()
+                                is MethodDeclarationPrimitive -> {
+                                    // should have found execution if there is one
+                                    issues.error(null, "using StdLibPrimitiveExecutionsForReflection not found for method '${methResOriginal}'")
+                                    nothing()
+                                }
 
-                    else -> toTypedObject(execResult.value, meth.original.returnType)
+                                else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
+                            }
+
+                            else -> toTypedObject(execResult.value, methRes.returnType)
+                        }
+                    }
                 }
             }
         }
