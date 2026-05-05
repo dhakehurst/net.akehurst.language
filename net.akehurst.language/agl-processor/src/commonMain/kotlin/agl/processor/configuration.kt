@@ -27,7 +27,7 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.format.asm.AglFormatDomainDefault
+import net.akehurst.language.format.asm.FormatDomainDefault
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -112,7 +112,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
     override var formatResolver: FormatResolver<AsmType, ContextType>? = { p ->
-        AglFormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.formatString ?: FormatString(""))
+        FormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
@@ -172,7 +172,7 @@ internal class LanguageProcessorConfigurationSimple(
         )
     },
     override var formatResolver: FormatResolver<Asm, SentenceContext>? = { p ->
-        AglFormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.formatString ?: FormatString(""))
+        FormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<Asm, SentenceContext>? = { p ->
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))

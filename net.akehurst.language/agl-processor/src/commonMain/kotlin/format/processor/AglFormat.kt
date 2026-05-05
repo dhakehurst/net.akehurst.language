@@ -69,7 +69,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
         }
         
         grammar $NAME extends ${AglExpressions.NAME} {        
-            override definition = format ;
+            override definition = format | function ;
             format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule* ;
@@ -154,7 +154,10 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                 }
                 grammar(NAME) {
                     extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)
-                    concatenation("definition", OverrideKind.REPLACE) { ref("format") }
+                    choice("definition", overrideKind = OverrideKind.REPLACE) {
+                        ref("format")
+                        ref("function")
+                    }
                     concatenation("format") {
                         lit("format"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
                         lst(0, -1) { ref("formatRule") }
@@ -181,7 +184,6 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                     concatenation("block", OverrideKind.REPLACE) {
                         lit("{"); lst(0, -1) { ref("assignment") }; ref("formatExpression"); lit("}")
                     }
-
 
                     // only referenced from Template::templateExpressionList
                     concatenation("separatedList") {

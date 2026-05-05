@@ -27,7 +27,11 @@ import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.FunctionDefinition
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
+import net.akehurst.language.expressions.api.FunctionParameter
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.expressions.asm.FunctionDefinitionAbstract
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
@@ -36,11 +40,11 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.TypesDomain
 
 
-class AglFormatDomainDefault(
+class FormatDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespaces: List<FormatNamespace> = emptyList()
-) : AglFormatDomain, DomainAbstract<FormatNamespace, FormatSet>(namespaces, options) {
+) : AglFormatDomain, DomainAbstract<FormatNamespace, FormatDefinition>(namespaces, options) {
     companion object {
         private fun fromRuleItem(grammar: Grammar, ruleItem: RuleItem): TemplateElement = when (ruleItem) {
             is Terminal -> when {
@@ -62,7 +66,7 @@ class AglFormatDomainDefault(
 
         fun fromGrammar(grammarDomain: GrammarDomain, typesDomain: TypesDomain): ProcessResult<AglFormatDomain> {
             val issues = IssueHolder(LanguageProcessorPhase.ALL)
-            val formatModel = AglFormatDomainDefault(grammarDomain.name)
+            val formatModel = FormatDomainDefault(grammarDomain.name)
             for (ns in typesDomain.namespace) {
                 when {
                     ns is GrammarTypesNamespace -> {
@@ -114,13 +118,14 @@ class AglFormatDomainDefault(
     }
 }
 
-class AglFormatNamespaceDefault(
+class FormatNamespaceDefault(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import> = emptyList()
-) : FormatNamespace, NamespaceAbstract<FormatSet>(options, import) {
+) : FormatNamespace, NamespaceAbstract<FormatDefinition>(options, import) {
 
-    override val formatSet: List<FormatSet> get() = super.definition
+    override val function: List<FormatFunctionDefinition> get() = super.definition.filterIsInstance<FormatFunctionDefinition>()
+    override val formatSet: List<FormatSet> get() = super.definition.filterIsInstance<FormatSet>()
 }
 
 class FormatSetReferenceDefault(
@@ -133,13 +138,25 @@ class FormatSetReferenceDefault(
     }
 }
 
+class FormatFunctionDefinitionDefault(
+    override val namespace: Namespace<FormatDefinition>,
+    name: SimpleName,
+    parameters: List<FunctionParameter>,
+    returnTypeReference: TypeReference?,
+    body: Expression
+) : FunctionDefinitionFloating by FunctionDefinitionAbstract(name, parameters, returnTypeReference, body), FormatFunctionDefinition, DefinitionAbstract<FormatDefinition>() {
+
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
+
+}
+
 class FormatSetDefault(
     override val namespace: FormatNamespace,
     override val name: SimpleName,
     override val extends: List<FormatSetReference>,
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     override val rules: List<AglFormatRule>
-) : FormatSet, DefinitionAbstract<FormatSet>() {
+) : FormatSet, DefinitionAbstract<FormatDefinition>() {
 
     override val allRules: List<AglFormatRule> get() = extends.flatMap { allRules } + rules
 

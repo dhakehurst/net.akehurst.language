@@ -137,7 +137,7 @@ object ExpressionsTest {
         }
     }
 
-    fun exAssertEquals(expected: List<AssignmentStatement>, actual: List<AssignmentStatement>, message: String) {
+    fun exAssertEquals(expected: List<VariableAssignmentStatement>, actual: List<VariableAssignmentStatement>, message: String) {
         assertEquals(expected.size, actual.size, "number of AssignmentStatement is different")
         for (i in expected.indices) {
             val expEl = expected[i]
@@ -146,8 +146,8 @@ object ExpressionsTest {
         }
     }
 
-    private fun exAssertEquals(expected: AssignmentStatement, actual: AssignmentStatement, message: String) {
-        assertEquals(expected.lhsPropertyName, actual.lhsPropertyName)
+    private fun exAssertEquals(expected: VariableAssignmentStatement, actual: VariableAssignmentStatement, message: String) {
+        assertEquals(expected.variable.name, actual.variable.name)
         ExpressionsTest.exAssertEquals(expected.rhs, actual.rhs)
     }
 

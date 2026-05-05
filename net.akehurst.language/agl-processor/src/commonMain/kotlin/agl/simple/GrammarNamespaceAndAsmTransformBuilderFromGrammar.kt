@@ -25,7 +25,7 @@ import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.asmTransform.asm.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.expressions.api.AssignmentStatement
+import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationPart
 import net.akehurst.language.expressions.asm.*
@@ -1104,7 +1104,7 @@ internal class Grammar2TransformRuleSet(
     private var tupleCount = 0
     private fun trRuleForRuleItemConcatenation(ruleItem: RuleItem, items: List<RuleItem>): AsmTransformationRule {
         //To avoid recursion issue, create and cache type & tr-rule before creating assignments
-        val assignments = mutableListOf<AssignmentStatement>()
+        val assignments = mutableListOf<VariableAssignmentStatement>()
         val typeArgs = mutableListOf<TypeArgumentNamed>()
         val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
         val tr = asmTransformationRule(ti, CreateTupleExpressionDefault(assignments))
@@ -1307,7 +1307,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun createPropertyDeclarationAndAssignment(et: StructuredType, ruleItem: RuleItem, childIndex: Int): AssignmentStatement? {
+    private fun createPropertyDeclarationAndAssignment(et: StructuredType, ruleItem: RuleItem, childIndex: Int): VariableAssignmentStatement? {
         return when (ruleItem) {
             // Empty and Terminals do not create properties
             is EmptyRule -> null
@@ -1342,7 +1342,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun createPropertyDeclarationAndAssignment_old(et: StructuredType, ruleItem: RuleItem, childIndex: Int): AssignmentStatement? {
+    private fun createPropertyDeclarationAndAssignment_old(et: StructuredType, ruleItem: RuleItem, childIndex: Int): VariableAssignmentStatement? {
         //val et: StructuredType = cor.resolvedType.declaration as StructuredType
         return when (ruleItem) {
             is EmptyRule -> null
@@ -1439,7 +1439,7 @@ internal class Grammar2TransformRuleSet(
         et: StructuredType,
         ruleItem: SimpleItem,
         childIndex: Int
-    ): AssignmentStatement? {
+    ): VariableAssignmentStatement? {
         val rhs = refRule?.rhs
         return when (rhs) {
             /*
@@ -1513,7 +1513,7 @@ internal class Grammar2TransformRuleSet(
     }
 
     //TODO: combine with above by passing in TypeModel
-    private fun createPropertyDeclarationForEmbedded(et: StructuredType, ruleItem: Embedded, childIndex: Int): AssignmentStatement? {
+    private fun createPropertyDeclarationForEmbedded(et: StructuredType, ruleItem: Embedded, childIndex: Int): VariableAssignmentStatement? {
         val g2ns = transformForEmbedded(ruleItem) //TODO: configuration
         val g2rs = g2ns.g2rs!!
         val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
@@ -1606,12 +1606,13 @@ internal class Grammar2TransformRuleSet(
         type: TypeInstance,
         childIndex: Int,
         rhsExpression: Expression
-    ): AssignmentStatement {
+    ): VariableAssignmentStatement {
         val uniqueName = createUniquePropertyNameFor(et, name)
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
         val pd = et.appendPropertyStored(uniqueName, type, characteristics, childIndex)
         //(trRule as TransformationRuleAbstract).appendAssignment(lhsPropertyName = uniqueName, rhs = rhsExpression)
-        return AssignmentStatementDefault(lhsPropertyName = uniqueName.value, lhsGrammarRuleIndex = childIndex, rhs = rhsExpression)
+        val variable = VariableDefinitionDefault(uniqueName.value, null)
+        return VariableAssignmentStatementDefault(variable = variable, lhsGrammarRuleIndex = childIndex, rhs = rhsExpression)
     }
 
     private fun createUniquePropertyNameFor(et: StructuredType, name: PropertyName): PropertyName {

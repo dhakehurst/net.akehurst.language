@@ -22,11 +22,11 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.expressions.api.AssignmentStatement
+import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.FunctionParameter
 import net.akehurst.language.expressions.api.StatementBlockExpression
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.asm.LiteralExpressionDefault
@@ -54,6 +54,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::unit)
         super.register(this::namespace)
         super.register(this::definition)
+        super.register(this::function)
         super.register(this::format)
         super.register(this::formatRule)
         super.register(this::formatExpression)
@@ -73,7 +74,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         val namespace = children[1] as List<FormatNamespace>
         val optHolder = OptionHolderDefault(null, options.toMap())
         namespace.forEach { (it.options as OptionHolderDefault).parent = optHolder }
-        val result = AglFormatDomainDefault(SimpleName("Unit"), optHolder, namespace)
+        val result = FormatDomainDefault(SimpleName("Unit"), optHolder, namespace)
         return result
     }
 
@@ -82,10 +83,10 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         val pqn = children[1] as PossiblyQualifiedName
         val options = children[2] as List<Pair<String, String>>
         val import = children[3] as List<Import>
-        val definition = children[4] as List<(ns: FormatNamespace) -> FormatSet>
+        val definition = children[4] as List<(ns: FormatNamespace) -> FormatDefinition>
 
         val optHolder = OptionHolderDefault(null, options.toMap())
-        val ns = AglFormatNamespaceDefault(pqn.asQualifiedName(null), optHolder, import)
+        val ns = FormatNamespaceDefault(pqn.asQualifiedName(null), optHolder, import)
         definition.forEach {
             val def = it.invoke(ns)
             ns.addDefinition(def)
@@ -93,8 +94,20 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         return ns
     }
 
-    fun definition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: FormatNamespace) -> FormatSet =
-        children[0] as ((ns: FormatNamespace) -> FormatSet)
+    fun definition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: FormatNamespace) -> FormatDefinition =
+        children[0] as ((ns: FormatNamespace) -> FormatDefinition)
+
+    // override function from Expressions
+    // function := 'fun' IDENTIFIER '(' [parameter sep ',']* ')' (':' typeReference)? '=' expression ;
+    private fun function(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: FormatNamespace) -> FormatFunctionDefinition {
+        val name = children[1] as String
+        val parameters = (children[3] as List<Any>).toSeparatedList<Any, FunctionParameter, String>().items
+        val retType = children[6] as? TypeReference
+        val body = children[8] as Expression
+        return { namespace ->
+            FormatFunctionDefinitionDefault(namespace, SimpleName(name), parameters, retType, body)
+        }
+    }
 
     // format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
     fun format(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: FormatNamespace) -> FormatSet {
@@ -160,7 +173,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
 
     // override block = '{' assignemnt* formatExpression '}' ;
     private fun block(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StatementBlockExpression {
-        val assignments = children[1] as List<AssignmentStatement>
+        val assignments = children[1] as List<VariableAssignmentStatement>
         val expression = children[2] as FormatExpression
         return StatementBlockExpressionDefault(assignments,expression)
     }

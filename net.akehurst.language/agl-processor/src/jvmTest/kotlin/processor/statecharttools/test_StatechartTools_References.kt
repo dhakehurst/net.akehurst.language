@@ -35,7 +35,7 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
-import net.akehurst.language.format.asm.AglFormatDomainDefault
+import net.akehurst.language.format.asm.FormatDomainDefault
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -63,7 +63,7 @@ class test_StatechartTools_References {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesDomain, p.crossReferenceDomain)) }
                 //  styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatResolver { p -> AglFormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), FormatString("")) }
+                formatResolver { p -> FormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), FormatString("")) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(
                 //         CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),

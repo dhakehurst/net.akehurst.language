@@ -22,7 +22,7 @@ import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.expressions.api.AssignmentStatement
+import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -142,8 +142,8 @@ class AsmTransformInterpreter(
         return exprInterpreter.evaluateExpression(evc, expression)
     }
 
-    private  fun executeStatementOn(evc: EvaluationContext, st: AssignmentStatement, asm: AsmStructure) {
-        val propertyName = st.lhsPropertyName
+    private  fun executeStatementOn(evc: EvaluationContext, st: VariableAssignmentStatement, asm: AsmStructure) {
+        val propertyName = st.variable.name
         val propValue = evaluateExpressionOver(st.rhs, evc)
         val tObj = objectGraph.toTypedObject(asm , StdLibDefault.AnyType)
         val pv = objectGraph.toTypedObject(propValue, StdLibDefault.AnyType)

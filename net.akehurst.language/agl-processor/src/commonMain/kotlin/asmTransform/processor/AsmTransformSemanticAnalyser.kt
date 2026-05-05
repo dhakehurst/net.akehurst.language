@@ -298,7 +298,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                             val t = gtns.findOwnedOrCreateDataTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
 
                             val params = expr.constructorArguments.map { ass ->
-                                val pName = TmParameterName(ass.lhsPropertyName)
+                                val pName = TmParameterName(ass.variable.name)
                                 var pType = exprTypeResolver.typeFor(ass.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
                                 if (pType == StdLibDefault.NothingType) {
                                     pType = StdLibDefault.AnyType
@@ -308,7 +308,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                             t.addConstructor(params)
 
                             expr.propertyAssignments.forEach { ass ->
-                                val propName = PropertyName(ass.lhsPropertyName)
+                                val propName = PropertyName(ass.variable.name)
                                 var propType = exprTypeResolver.typeFor(ass.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
                                 if (propType == StdLibDefault.NothingType) {
                                     propType = StdLibDefault.AnyType

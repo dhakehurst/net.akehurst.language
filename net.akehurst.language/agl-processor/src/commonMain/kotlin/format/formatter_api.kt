@@ -18,11 +18,13 @@ package net.akehurst.language.formatter.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.FunctionDefinition
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.api.WhenOption
 import net.akehurst.language.expressions.api.WhenOptionElse
 
-interface AglFormatDomain : Domain<FormatNamespace, FormatSet> {
+interface AglFormatDomain : Domain<FormatNamespace, FormatDefinition> {
 
     val defaultWhiteSpace: String
 
@@ -33,7 +35,8 @@ interface AglFormatDomain : Domain<FormatNamespace, FormatSet> {
 
 }
 
-interface FormatNamespace : Namespace<FormatSet> {
+interface FormatNamespace : Namespace<FormatDefinition> {
+    val function: List<FormatFunctionDefinition>
     val formatSet: List<FormatSet>
 }
 
@@ -45,8 +48,13 @@ interface FormatSetReference {
     fun resolveAs(resolved: FormatSet)
 }
 
+interface FormatDefinition : Definition<FormatDefinition>
 
-interface FormatSet : Definition<FormatSet> {
+interface FormatFunctionDefinition : FormatDefinition, FunctionDefinitionFloating {
+
+}
+
+interface FormatSet : FormatDefinition {
     override val namespace: FormatNamespace
     val extends: List<FormatSetReference>
     val rules: List<AglFormatRule>

@@ -542,8 +542,8 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
         val tuple = objectGraph.createTupleValue(typeArgs)
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            tuple.setPropertySuspend(it.lhsPropertyName, value)
-            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
+            tuple.setPropertySuspend(it.variable.name, value)
+            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.variable.name), value.type))
         }
         return tuple
     }
@@ -594,10 +594,10 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
      * Execute a property assignment block for self.
      * Separation of construct and setProperties needed for M2m interpreter
      */
-    suspend fun propertyAssignmentBlock(evc: EvaluationContext, self: TypedObject, propertyAssignments: List<AssignmentStatement>) {
+    suspend fun propertyAssignmentBlock(evc: EvaluationContext, self: TypedObject, propertyAssignments: List<VariableAssignmentStatement>) {
         propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            self.setPropertySuspend( it.lhsPropertyName, value)
+            self.setPropertySuspend( it.variable.name, value)
         }
     }
 }

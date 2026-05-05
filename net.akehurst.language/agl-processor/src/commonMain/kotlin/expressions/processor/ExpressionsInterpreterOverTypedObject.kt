@@ -534,7 +534,7 @@ open class ExpressionsInterpreterOverTypedObject(
         val newEvc = evc.child(emptyMap())
         for (ass in expression.assignment) {
             val rhsValue = evaluateExpression(newEvc, ass.rhs)
-            newEvc.setNamedValue(ass.lhsPropertyName, rhsValue)
+            newEvc.setNamedValue(ass.variable.name, rhsValue)
         }
         val result = evaluateExpression(newEvc, expression.expression)
         return result
@@ -553,8 +553,8 @@ open class ExpressionsInterpreterOverTypedObject(
         val tuple = objectGraph.createTupleValue(typeArgs)
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            tuple.setProperty(it.lhsPropertyName, value)
-            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
+            tuple.setProperty(it.variable.name, value)
+            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.variable.name), value.type))
         }
         return tuple
     }
@@ -605,10 +605,10 @@ open class ExpressionsInterpreterOverTypedObject(
      * Execute a property assignment block for self.
      * Separation of construct and setProperties needed for M2m interpreter
      */
-    fun propertyAssignmentBlock(evc: EvaluationContext, self: TypedObject, propertyAssignments: List<AssignmentStatement>) {
+    fun propertyAssignmentBlock(evc: EvaluationContext, self: TypedObject, propertyAssignments: List<VariableAssignmentStatement>) {
         propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            self.setProperty(it.lhsPropertyName, value)
+            self.setProperty(it.variable.name, value)
         }
     }
 }

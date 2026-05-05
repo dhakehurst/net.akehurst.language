@@ -153,7 +153,7 @@ class test_ExpressionsLanguage {
         val processor = Agl.registry.agl.expressions.processor!!
         for (s in sentences) {
             println("Parsing '$s'")
-            val result = processor.parse(s)
+            val result = processor.parse(s,Agl.parseOptions { goalRuleName("expression") })
             assertTrue(result.issues.errors.isEmpty(), "'$s'\n${result.issues}")
         }
     }

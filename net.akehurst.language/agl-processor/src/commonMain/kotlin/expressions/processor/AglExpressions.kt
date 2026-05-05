@@ -27,6 +27,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.ChoiceIndicator
+import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammar.processor.contextFromGrammar
@@ -48,7 +49,13 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
     override val grammarString = $$"""
         namespace $$NAMESPACE_NAME
-          grammar $$NAME : Base {
+          grammar $$NAME : $${AglBase.NAME} {
+            
+            override definition = function ;
+            
+            function = 'fun' IDENTIFIER '(' [parameter / ',']* ')' (':' typeReference)? '=' expression ;
+            parameter = IDENTIFIER ':' typeReference ('=' expression)? ;
+            
             expression
               = rootExpression
               | literalExpression
@@ -90,7 +97,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             
             functionCall = IDENTIFIER '(' argumentList ')' ;
             object = possiblyQualifiedName constructorArguments propertyAssignmentBlock ;
-            constructorArguments = '(' [assignment / ',']* ')' ;
+            constructorArguments = '(' [propertyAssignment / ',']* ')' ;
             tuple = 'tuple' propertyAssignmentBlock ;
             propertyAssignmentBlock = '{' propertyAssignment*  '}' ;
             propertyAssignment = propertyName grammarRuleIndex? ASSIGN_OP expression ;
@@ -113,9 +120,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             methodCall = '.' methodReference '(' argumentList ')' ;
             argumentList = [expression / ',']* ;
             
-            lambda = '{' [IDENTIFIER / ',']+ -> expression '}' ;
+            lambda = '{' [IDENTIFIER / ',']+ '->' expression '}' ;
             
-            block = '{' assignemnt* expression '}' ;
+            block = '{' variableAssignment* expression '}' ;
+            variableAssignment = variableDefinition ':=' expression ;
+            variableDefinition = IDENTIFIER (':' typeReference)? ;
             
             propertyReference = SPECIAL | IDENTIFIER ;
             methodReference = IDENTIFIER ;
@@ -217,6 +226,23 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
+
+                    // override definition = function ;
+                    concatenation("definition", overrideKind = OverrideKind.REPLACE) { ref("function") }
+                    // function := 'fun' IDENTIFIER '(' [parameter sep ',']* ')' (':' typeReference)? '=' expression ;
+                    concatenation("function") {
+                        lit("fun"); ref("IDENTIFIER");
+                        lit("("); spLst(0,-1) { ref("parameter"); lit(",") }; lit(")");
+                        opt { grp{ lit(";"); ref("typeReference") } }
+                        lit("="); ref("expression")
+                    }
+                    // parameter := IDENTIFIER ': typeReference ('=' expression)? ;
+                    concatenation("parameter") {
+                        ref("IDENTIFIER");
+                        lit(":"); ref("typeReference")
+                        opt { grp{ lit(":"); ref("expression") } }
+                    }
+
                     choice("expression") {
                         ref("rootExpression")
                         ref("literalExpression")
@@ -315,8 +341,12 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("expression"); lit(",")
                     }
                     concatenation("lambda") { lit("{"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit ("->"); ref("expression"); lit("}") }
-                    concatenation("block") { lit("{"); lst(0, -1) { ref("assignment") }; ref("expression"); lit("}") }
-                    concatenation("assignment") { ref("IDENTIFIER"); lit(":="); ref("expression"); }
+                    // block = '{' variableAssignment* expression '}' ;
+                    concatenation("block") { lit("{"); lst(0, -1) { ref("variableAssignment") }; ref("expression"); lit("}") }
+                    // variableAssignment = variableDefinition ':=' expression ;
+                    concatenation("variableAssignment") { ref("variableDefinition"); lit(":="); ref("expression"); }
+                    // variableDefinition = IDENTIFIER (':' typeReference)? ;
+                    concatenation("variableDefinition") { ref("IDENTIFIER"); opt{ grp{ lit(":"); ref("typeReference") } } }
                     choice("propertyReference") {
                         ref("SPECIAL")
                         ref("IDENTIFIER")

@@ -29,7 +29,7 @@ import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
-import net.akehurst.language.format.asm.AglFormatDomainDefault
+import net.akehurst.language.format.asm.FormatDomainDefault
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import kotlin.test.Ignore
@@ -91,7 +91,7 @@ class test_StatechartTools_Singles {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesDomain, p.crossReferenceDomain)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatResolver { p -> AglFormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), formatterStr) }
+                formatResolver { p -> FormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), formatterStr) }
 //TODO                formatterResolver { p -> FormatterSimple(p.) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(

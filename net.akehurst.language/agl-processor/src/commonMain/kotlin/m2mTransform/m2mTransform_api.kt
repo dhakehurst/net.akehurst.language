@@ -17,15 +17,12 @@
 
 package net.akehurst.language.m2mTransform.api
 
-import net.akehurst.kotlinx.issues.api.Issue
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
-
-
 
 interface M2mTransformDomain : Domain<M2mTransformNamespace, M2mTransformRuleSet> {
     override val namespace: List<M2mTransformNamespace>

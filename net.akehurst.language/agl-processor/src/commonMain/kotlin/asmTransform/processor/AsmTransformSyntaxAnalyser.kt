@@ -31,11 +31,12 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.expressions.api.AssignmentStatement
+import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.asm.AssignmentStatementDefault
+import net.akehurst.language.expressions.asm.VariableAssignmentStatementDefault
 import net.akehurst.language.expressions.asm.OnExpressionDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
+import net.akehurst.language.expressions.asm.VariableDefinitionDefault
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.grammar.api.GrammarRuleName
@@ -161,7 +162,7 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
     // modifyRule = '{' possiblyQualifiedTypeName '->' statementList '}' ;
     private fun modifyRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AsmTransformationRule {
         val possiblyQualifiedTypeName = children[1] as PossiblyQualifiedName
-        val statements = children[3] as List<AssignmentStatement>
+        val statements = children[3] as List<VariableAssignmentStatement>
         val expr = OnExpressionDefault(RootExpressionDefault("\$it"))
         expr.propertyAssignments = statements
         val tr = AsmTransformationRuleDefault(expr)
@@ -169,11 +170,12 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
     }
 
     // assignmentStatement = propertyName grammarRuleIndex? ':=' expression ;
-    private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatementDefault {
+    private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableAssignmentStatementDefault {
         val propName = children[0] as String
         val grIndex = children[1] as Int?
         val expr = children[3] as Expression
-        return AssignmentStatementDefault(propName, grIndex, expr)
+        val variable = VariableDefinitionDefault(propName, null) //TODO: variables?
+        return VariableAssignmentStatementDefault(variable, grIndex, expr)
     }
 
     // propertyName = IDENTIFIER ;

@@ -70,10 +70,15 @@ class FormatterOverTypedObject(
     //private lateinit var _formatSet: FormatSet
     private val _rules: Map<PossiblyQualifiedName, Map<TypeInstance, AglFormatRule>> = lazyMap { formatSetName: PossiblyQualifiedName ->
         val fs = formatDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
-        var map = fs.rules.associateBy { rl ->
-            super.evaluateTypeReference(rl.forTypeName)
+        when (fs) {
+            is FormatSet -> {
+                var map = fs.rules.associateBy { rl ->
+                    super.evaluateTypeReference(rl.forTypeName)
+                }
+                map
+            }
+            else -> error("Defintion named '${formatSetName.value}' is not a FormatSet")
         }
-        map
     }
 
     fun findRuleFor(formatSetName: PossiblyQualifiedName, type: TypeInstance): AglFormatRule? = _rules[formatSetName]?.entries?.firstOrNull { (ti, rl) ->

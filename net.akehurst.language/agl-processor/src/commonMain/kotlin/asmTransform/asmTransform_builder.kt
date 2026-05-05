@@ -24,11 +24,12 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
-import net.akehurst.language.expressions.api.AssignmentStatement
+import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.asm.AssignmentStatementDefault
+import net.akehurst.language.expressions.asm.VariableAssignmentStatementDefault
 import net.akehurst.language.expressions.asm.CreateObjectExpressionDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
+import net.akehurst.language.expressions.asm.VariableDefinitionDefault
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.types.api.TypeDefinition
@@ -262,7 +263,10 @@ class AssignmentBuilder() {
         _assignments.add(Triple(lhsPropertyName, lhsGrammarRuleIndex, expr))
     }
 
-    fun build(): List<AssignmentStatement> {
-        return _assignments.map { AssignmentStatementDefault(it.first, it.second, it.third) }
+    fun build(): List<VariableAssignmentStatement> {
+        return _assignments.map {
+            val variable = VariableDefinitionDefault(it.first, null)
+            VariableAssignmentStatementDefault(variable, it.second, it.third)
+        }
     }
 }

@@ -33,7 +33,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectSuspending
-import net.akehurst.language.format.asm.AglFormatDomainDefault
+import net.akehurst.language.format.asm.FormatDomainDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.GrammarDomain
@@ -339,7 +339,7 @@ object Agl {
     }
 
     fun formatDomain(template: FormatString, typesDomain: TypesDomain): ProcessResult<AglFormatDomain> {
-        return AglFormatDomainDefault.fromString(contextFromTypesDomain(typesDomain), template)
+        return FormatDomainDefault.fromString(contextFromTypesDomain(typesDomain), template)
     }
 
     fun <SelfType : Any> format(

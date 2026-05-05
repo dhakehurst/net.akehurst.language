@@ -28,6 +28,7 @@ import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.formatter.api.AglFormatDomain
+import net.akehurst.language.formatter.api.FormatFunctionDefinition
 import net.akehurst.language.formatter.api.FormatSet
 import net.akehurst.language.formatter.api.FormatSetReference
 import net.akehurst.language.grammar.api.Grammar
@@ -86,7 +87,11 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
     private fun checkFormatDomain(context: SentenceContext?, domain: AglFormatDomain) {
         domain.namespace.forEach { ns ->
             ns.definition.forEach { def ->
-                this.resolveRefs(context, def)
+                when (def) {
+                    is FormatSet -> this.resolveRefs(context, def)
+                    is FormatFunctionDefinition -> Unit //TODO
+                }
+
             }
         }
     }

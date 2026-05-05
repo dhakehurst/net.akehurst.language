@@ -16,11 +16,57 @@
 
 package net.akehurst.language.expressions.asm
 
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.Indent
-import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.DefinitionAbstract
+import net.akehurst.language.base.asm.DomainAbstract
+import net.akehurst.language.base.asm.NamespaceAbstract
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.expressions.asm.VariableDefinitionDefault
+
+class ExpressionsDomainDefault(
+    override val name: SimpleName,
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    namespaces: List<ExpressionsNamespace> = emptyList()
+) : ExpressionsDomain, DomainAbstract<ExpressionsNamespace, FunctionDefinition>(namespaces, options) {
+}
+
+class ExpressionsNamespaceDefault(
+    override val qualifiedName: QualifiedName,
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    import: List<Import> = emptyList()
+) : ExpressionsNamespace, NamespaceAbstract<FunctionDefinition>(options, import) {
+
+    override val function: List<FunctionDefinition> get() = super.definition
+}
+
+ class FunctionDefinitionAbstract(
+    override val name: SimpleName,
+    override val parameters: List<FunctionParameter>,
+    override val returnTypeReference: TypeReference?,
+    override val body: Expression
+) : FunctionDefinitionFloating {
+}
+
+class FunctionDefinitionDefault(
+    override val namespace: Namespace<FunctionDefinition>,
+    name: SimpleName,
+    parameters: List<FunctionParameter>,
+    returnTypeReference: TypeReference?,
+    body: Expression
+) : FunctionDefinitionFloating by FunctionDefinitionAbstract(name, parameters, returnTypeReference, body), FunctionDefinition, DefinitionAbstract<FunctionDefinition>() {
+
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
+
+}
+
+class FunctionParameterDefault(
+    override val name: String,
+    override val typeRef: TypeReference,
+    override val defaultValueExpression: Expression?
+) : FunctionParameter {
+
+}
 
 abstract class ExpressionAbstract : Expression {
 
@@ -31,7 +77,7 @@ abstract class ExpressionAbstract : Expression {
 }
 
 data class CreateTupleExpressionDefault(
-    override val propertyAssignments: List<AssignmentStatement>
+    override val propertyAssignments: List<VariableAssignmentStatement>
 ) : ExpressionAbstract(), CreateTupleExpression {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
@@ -49,10 +95,10 @@ data class CreateTupleExpressionDefault(
 
 data class CreateObjectExpressionDefault(
     override val possiblyQualifiedTypeName: PossiblyQualifiedName,
-    override val constructorArguments: List<AssignmentStatement>
+    override val constructorArguments: List<VariableAssignmentStatement>
 ) : ExpressionAbstract(), CreateObjectExpression {
 
-    override var propertyAssignments: List<AssignmentStatement> = emptyList()
+    override var propertyAssignments: List<VariableAssignmentStatement> = emptyList()
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
@@ -141,7 +187,7 @@ class WhenOptionElseDefault(
 class OnExpressionDefault(
     override val expression: Expression
 ) : ExpressionAbstract(), OnExpression {
-    override var propertyAssignments: List<AssignmentStatement> = emptyList()
+    override var propertyAssignments: List<VariableAssignmentStatement> = emptyList()
 }
 
 data class RootExpressionDefault(
@@ -208,7 +254,7 @@ data class LambdaExpressionDefault(
 }
 
 data class StatementBlockExpressionDefault(
-    override val assignment: List<AssignmentStatement>,
+    override val assignment: List<VariableAssignmentStatement>,
     override val expression: Expression
 ) : StatementBlockExpression {
 
@@ -237,16 +283,27 @@ data class IndexOperationDefault(
     override fun toString(): String = "[${indices.joinToString { it.toString() }}]"
 }
 
-class AssignmentStatementDefault(
-    override val lhsPropertyName: String,
+class VariableAssignmentStatementDefault(
+    override val variable: VariableDefinition,
     override val lhsGrammarRuleIndex: Int?,
     override val rhs: Expression
-) : AssignmentStatement {
+) : VariableAssignmentStatement {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "$lhsPropertyName := ${rhs.asString(indent, imports)}"
+    override fun asString(indent: Indent, imports: List<Import>): String = "${variable.asString(indent, imports)} := ${rhs.asString(indent, imports)}"
 
-    override fun toString(): String = "$lhsPropertyName := $rhs"
+    override fun toString(): String = "$variable := $rhs"
 
+}
+
+class VariableDefinitionDefault(
+    override val name: String,
+    override val typeRef: TypeReference?,
+) : VariableDefinition {
+    override fun asString(indent: Indent, imports: List<Import>): String  = when (typeRef) {
+        null -> name
+        else -> "$name: ${typeRef.asString(indent, imports)}"
+    }
+    override fun toString(): String = "$name : $typeRef"
 }
 
 class InfixExpressionDefault(

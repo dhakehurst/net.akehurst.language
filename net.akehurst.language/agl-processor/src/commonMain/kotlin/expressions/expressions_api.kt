@@ -17,10 +17,39 @@
 
 package net.akehurst.language.expressions.api
 
+import net.akehurst.language.base.api.Definition
+import net.akehurst.language.base.api.Domain
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.Indent
+import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+
+interface ExpressionsDomain : Domain<ExpressionsNamespace, FunctionDefinition> {
+
+}
+
+interface ExpressionsNamespace : Namespace<FunctionDefinition> {
+    val function: List<FunctionDefinition>
+}
+
+interface FunctionDefinitionFloating {
+    val name: SimpleName
+    val parameters: List<FunctionParameter>
+    val returnTypeReference: TypeReference?
+    val body: Expression
+}
+
+interface FunctionDefinition : FunctionDefinitionFloating, Definition<FunctionDefinition> {
+
+}
+
+interface FunctionParameter {
+    val name: String
+    val typeRef: TypeReference
+    val defaultValueExpression: Expression?
+}
 
 interface Expression {
     fun asString(indent: Indent, imports: List<Import> = emptyList()): String
@@ -39,8 +68,8 @@ interface LiteralExpression : Expression {
 
 interface CreateObjectExpression : Expression {
     val possiblyQualifiedTypeName: PossiblyQualifiedName
-    val constructorArguments: List<AssignmentStatement>
-    val propertyAssignments: List<AssignmentStatement>
+    val constructorArguments: List<VariableAssignmentStatement>
+    val propertyAssignments: List<VariableAssignmentStatement>
 }
 
 interface FunctionCall : Expression {
@@ -49,12 +78,12 @@ interface FunctionCall : Expression {
 }
 
 interface CreateTupleExpression : Expression {
-    val propertyAssignments: List<AssignmentStatement>
+    val propertyAssignments: List<VariableAssignmentStatement>
 }
 
 interface OnExpression : Expression {
     val expression: Expression
-    val propertyAssignments: List<AssignmentStatement>
+    val propertyAssignments: List<VariableAssignmentStatement>
 }
 
 interface NavigationExpression : Expression {
@@ -79,7 +108,7 @@ interface LambdaExpression : Expression {
 }
 
 interface StatementBlockExpression : Expression {
-    val assignment: List<AssignmentStatement>
+    val assignment: List<VariableAssignmentStatement>
     val expression: Expression
 }
 
@@ -87,10 +116,17 @@ interface IndexOperation : NavigationPart {
     val indices: List<Expression>
 }
 
-interface AssignmentStatement {
-    val lhsPropertyName: String
+interface VariableAssignmentStatement {
+    val variable: VariableDefinition
     val lhsGrammarRuleIndex: Int?
     val rhs: Expression
+
+    fun asString(indent: Indent, imports: List<Import> = emptyList()): String
+}
+
+interface VariableDefinition  {
+    val name: String
+    val typeRef: TypeReference?
 
     fun asString(indent: Indent, imports: List<Import> = emptyList()): String
 }

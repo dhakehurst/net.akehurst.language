@@ -165,7 +165,7 @@ class ExpressionTypeResolver(
     fun CreateTupleExpression.typeOfCreateTupleExpressionFor(self: TypeInstance): TypeInstance {
         val args = this.propertyAssignments.map {
             val t = typeFor(it.rhs, self)
-            val n = PropertyName(it.lhsPropertyName)
+            val n = PropertyName(it.variable.name)
             TypeArgumentNamedSimple(n, t)
         }
         return StdLibDefault.TupleType.typeTuple(args)
