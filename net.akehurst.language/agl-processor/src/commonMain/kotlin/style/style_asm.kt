@@ -96,7 +96,7 @@ class AglStyleSetDefault(
         namespace.addDefinition(this)
     }
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val extends = when{
             extends.isEmpty() -> ""
@@ -127,7 +127,7 @@ data class AglStyleMetaRuleDefault(
     // order matters
     override var declaration = linkedMapOf<String, AglStyleDeclaration>()
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val sel = this.pattern.value
         sb.append("$$ \"$sel\" {\n")
@@ -147,7 +147,7 @@ data class AglStyleTagRuleDefault(
     // order matters
     override var declaration = linkedMapOf<String, AglStyleDeclaration>()
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val sel = this.selector.joinToString { it.value }
         sb.append("$sel {\n")

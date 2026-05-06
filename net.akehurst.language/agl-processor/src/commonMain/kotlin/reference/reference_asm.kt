@@ -168,7 +168,7 @@ data class DeclarationsForNamespaceDefault(
         return identifiable?.identifiedBy
     }
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val scps = scopeDefinition.values.joinToString(separator = "\n") {
             "$indent${it.asString(indent)}"
@@ -183,7 +183,7 @@ data class ScopeDefinitionDefault(
 ) : ScopeDefinition {
     override val identifiables = mutableListOf<Identifiable>()
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("scope ${scopeForTypeName.value} {")
         if (this.identifiables.isEmpty()) {
@@ -203,7 +203,7 @@ data class IdentifiableDefault(
     override val typeName: SimpleName,
     override val identifiedBy: Expression
 ) : Identifiable {
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         return "${indent}identify ${typeName.value} by ${identifiedBy.asString(indent, emptyList())}"
     }
 }
@@ -217,7 +217,7 @@ data class ReferenceDefinitionDefault(
     override val referenceExpressionList: List<ReferenceExpression>
 ) : ReferenceDefinition {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("in ${inTypeName.value} {\n")
         for (re in referenceExpressionList) {
@@ -235,7 +235,7 @@ data class ReferenceExpressionPropertyDefault(
     override val fromNavigation: NavigationExpression?
 ) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val rp = referringPropertyNavigation.asString(indent, emptyList())
         val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
@@ -263,7 +263,7 @@ data class ReferenceExpressionCollectionDefault(
     override val referenceExpressionList: List<ReferenceExpressionAbstract>
 ) : ReferenceExpressionAbstract(), ReferenceExpressionCollection {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val ex = expression.asString(indent, emptyList())
         val ot = when (ofType) {

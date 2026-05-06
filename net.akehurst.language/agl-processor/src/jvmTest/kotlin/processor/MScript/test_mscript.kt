@@ -35,7 +35,7 @@ class test_mscript {
     @Test
     fun mscript_typeModel() {
         val actual = sut.typesDomain
-        val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript") {
+        val expected = grammarTypeModel("com.yakindu.modelviewer.parser.MScript", "Mscript") {
             dataFor("script", "Script") {
                 // script = statementList ;
                 propertyListSeparatedTypeOf("statementList", "Line", "String", false, 0)
@@ -64,8 +64,9 @@ class test_mscript {
                 propertyListSeparatedTypeOf("statementList2", "Line", "String", false, 5)
             }
             dataFor("assignment", "Assignment") {
+                supertype("Statement")
                 // assignment = rootVariable '=' expression ;
-                propertyDataTypeOf("rootVariable", "RootVariable", false, 0)
+                propertyOf(setOf(CMP), "lhs", "Lhs")
                 propertyDataTypeOf("expression", "Expression", false, 2)
             }
             dataFor("", "ExpressionStatement") {
@@ -97,7 +98,8 @@ class test_mscript {
             }
             dataFor("", "ArgumentList") {
                 // argumentList = [ argument / ',' ]* ;
-                propertyListSeparatedTypeOf("argument", "Argument", "String", false, 0)
+                propertyOf(setOf(CMP),"argument","List") {typeArgument("Argument")}
+                //propertyListSeparatedTypeOf("argument", "Argument", "String", false, 0)
             }
             dataFor("", "Argument") {
                 // argument = expression | colonOperator ;
@@ -128,6 +130,7 @@ class test_mscript {
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
             dataFor("", "ColonOperator") {
+                supertype("Argument")
                 propertyPrimitiveType("colon", "String", false, 0)
             }
             dataFor("", "Matrix") {

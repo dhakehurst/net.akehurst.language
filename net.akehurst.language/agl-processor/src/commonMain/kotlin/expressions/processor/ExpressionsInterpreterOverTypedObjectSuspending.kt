@@ -26,6 +26,7 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
+//TODO: merge with other
 open class ExpressionsInterpreterOverTypedObjectSuspending(
     val objectGraph: ObjectGraphAccessorMutator,
     val issues: IssueHolder
@@ -99,7 +100,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
         val argValues = expression.arguments.map {
             evaluateExpression(evc, it)
         }
-        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues)
+        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues) { tr -> evaluateTypeReference(tr) }
     }
 
     private suspend fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject {

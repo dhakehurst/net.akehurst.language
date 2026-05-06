@@ -118,7 +118,7 @@ class Indent(val value: String = "", val increment: String = "  ") {
 }
 
 interface Formatable {
-    fun asString(indent: Indent = Indent("", "  ")): String
+    fun asString(indent: Indent = Indent("", "  "), imports: List<Import> = emptyList<Import>()): String
 }
 
 interface OptionHolder {

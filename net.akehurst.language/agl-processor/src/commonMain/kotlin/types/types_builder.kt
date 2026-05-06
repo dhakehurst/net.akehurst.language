@@ -40,6 +40,20 @@ fun typesDomain(
     return m
 }
 
+private fun String.asTypeParameterReferenceOrNewTypeInstance(namespace: TypesNamespace, typeDef: TypeDefinition?, typeArgs:List<TypeArgument> = emptyList(), nullable:Boolean = false): TypeInstance {
+    val pqn = this.asPossiblyQualifiedName
+    return when (pqn) {
+        is QualifiedName -> namespace.createTypeInstance(typeDef?.qualifiedName, pqn, typeArgs, nullable)
+        is SimpleName -> {
+            val tp = typeDef?.typeParameters?.firstOrNull { it.name == pqn }
+            when {
+                null == tp || null == typeDef -> namespace.createTypeInstance(typeDef?.qualifiedName, pqn, typeArgs, nullable)
+                else -> TypeParameterReference(typeDef, tp.name)
+            }
+        }
+    }
+}
+
 @TypeModelDslMarker
 class TypeDomainBuilder(
     val name: SimpleName,
@@ -123,16 +137,30 @@ open class TypeNamespaceBuilder(
     }
 
     @JvmOverloads //ensure the Java has overloads using the default values
-    fun enum(typeName: String, literals: List<String>, implementation: KClass<*>? = null, init: EnumTypeBuilder.() -> Unit = {}): EnumType =
-        _namespace.findOwnedOrCreateEnumTypeNamed(SimpleName(typeName), literals)
-            .also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
+    fun enum(typeName: String, literals: List<String>, implementation: KClass<*>? = null, init: EnumTypeBuilder.() -> Unit = {}): EnumType {
+        val b = EnumTypeBuilder(_namespace, SimpleName(typeName), literals)
+        b.init()
+        return b.build().also {
+            //TODO: literals
+            (it as TypeDefinitionSimpleAbstract).implementation = implementation
+        }
+//        _namespace.findOwnedOrCreateEnumTypeNamed(SimpleName(typeName), literals)
+//            .also { (it as TypeDefinitionSimpleAbstract).implementation = implementation }
+    }
 
     @JvmOverloads //ensure the Java has overloads using the default values
-    fun collection(typeName: String, typeParams: List<String>, implementation: KClass<*>? = null, init: CollectionTypeBuilder.() -> Unit = {}): CollectionType =
-        _namespace.findOwnedOrCreateCollectionTypeNamed(SimpleName(typeName)).also {
+    fun collection(typeName: String, typeParams: List<String>, implementation: KClass<*>? = null, init: CollectionTypeBuilder.() -> Unit = {}): CollectionType {
+       val tParams = typeParams.map { tp -> TypeParameterSimple(SimpleName(tp)) }
+        val b = CollectionTypeBuilder(_namespace, _typeReferences, SimpleName(typeName), tParams)
+        b.init()
+        return b.build().also {
             (it as TypeDefinitionSimpleAbstract).implementation = implementation
-            (it.typeParameters as MutableList).addAll(typeParams.map { tp -> TypeParameterSimple(SimpleName(tp)) })
         }
+//        _namespace.findOwnedOrCreateCollectionTypeNamed(SimpleName(typeName)).also {
+//            (it as TypeDefinitionSimpleAbstract).implementation = implementation
+//            (it.typeParameters as MutableList).addAll(typeParams.map { tp -> TypeParameterSimple(SimpleName(tp)) })
+//        }
+    }
 
     /**
      * create a list type of the indicated typeName
@@ -283,7 +311,8 @@ abstract class StructuredTypeBuilder(
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
         tab.init()
         val targs = tab.build()
-        val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        //val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _structuredType, targs, isNullable)
         return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics).also {
             (it as PropertyDeclarationStored).execution = execution as KProperty1<Any, out Any?>?
         }
@@ -300,7 +329,8 @@ abstract class StructuredTypeBuilder(
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
         tab.init()
         val targs = tab.build()
-        val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        //val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _structuredType, targs, isNullable)
         return _structuredType.appendPropertyPrimitive(PropertyName(propertyName), ti, description).also {
             (it as PropertyDeclarationPrimitive).execution = execution
         }
@@ -317,7 +347,8 @@ abstract class StructuredTypeBuilder(
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
         tab.init()
         val targs = tab.build()
-        val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        //val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _structuredType, targs, isNullable)
         return _structuredType.appendPropertyPrimitive(PropertyName(propertyName), ti, description).also {
             (it as PropertyDeclarationPrimitive).executionSuspend = execution
         }
@@ -419,7 +450,8 @@ abstract class StructuredTypeBuilder(
         tab.typeArguments()
         val btargs = tab.build()
         val targs = btargs
-        val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        //val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _structuredType, targs, isNullable)
         return _structuredType.appendPropertyPrimitive(PropertyName(propertyName), ti, description)
     }
 
@@ -433,9 +465,9 @@ abstract class StructuredTypeBuilder(
         methodName: String,
         returnTypeName: String,
         isNullable: Boolean = false,
-        returnTypeTypeArguments: TypeArgumentBuilder.() -> Unit = {},
+        //returnTypeTypeArguments: TypeArgumentBuilder.() -> Unit = {},
         init: MethodParameterBuilder.() -> Unit = {}
-    ): MethodDeclarationPrimitive {
+    ): MethodDefinitionPrimitive {
         val pb = MethodParameterBuilder(_namespace, _structuredType, methodName, returnTypeName, isNullable)
         pb.init()
         return pb.build()
@@ -445,9 +477,9 @@ abstract class StructuredTypeBuilder(
         methodName: String,
         returnTypeName: String,
         isNullable: Boolean = false,
-        returnTypeTypeArguments: TypeArgumentBuilder.() -> Unit = {},
+        //returnTypeTypeArguments: TypeArgumentBuilder.() -> Unit = {},
         init: MethodParameterBuilder.() -> Unit = {}
-    ): MethodDeclarationPrimitive {
+    ): MethodDefinitionPrimitive {
         val bldr = MethodParameterBuilder(_namespace, _structuredType, methodName, returnTypeName, isNullable)
         bldr.init()
         return bldr.build()
@@ -514,7 +546,8 @@ class PrimitiveTypeBuilder(
         val tab = TypeArgumentBuilder(_type, _namespace)
         tab.init()
         val targs = tab.build()
-        val ti = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        //val ti = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, targs, isNullable)
         return _type.appendPropertyDerived(PropertyName(propertyName), ti, "", "").also {
             (it as PropertyDeclarationDerived).execution = execution
         }
@@ -530,7 +563,8 @@ class PrimitiveTypeBuilder(
         val tab = TypeArgumentBuilder(_type, _namespace)
         tab.init()
         val targs = tab.build()
-        val ti = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+       // val ti = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, targs, isNullable)
         return _type.appendPropertyDerived(PropertyName(propertyName), ti, "", "").also {
             (it as PropertyDeclarationDerived).executionSuspend = execution
         }
@@ -540,9 +574,9 @@ class PrimitiveTypeBuilder(
         methodName: String,
         returnTypeName: String,
         isNullable: Boolean = false,
-        returnTypeTypeArguments: TypeArgumentBuilder.() -> Unit = {},
+       // returnTypeTypeArguments: TypeArgumentBuilder.() -> Unit = {},
         init: MethodParameterBuilder.() -> Unit = {}
-    ): MethodDeclarationPrimitive {
+    ): MethodDefinitionPrimitive {
         val pb = MethodParameterBuilder(_namespace, _type, methodName, returnTypeName, isNullable)
         pb.init()
         return pb.build()
@@ -552,9 +586,9 @@ class PrimitiveTypeBuilder(
         methodName: String,
         returnTypeName: String,
         isNullable: Boolean = false,
-        returnTypeTypeArguments: TypeArgumentBuilder.() -> Unit = {},
+       // returnTypeTypeArguments: TypeArgumentBuilder.() -> Unit = {},
         init: MethodParameterBuilder.() -> Unit = {}
-    ): MethodDeclarationPrimitive {
+    ): MethodDefinitionPrimitive {
         val bldr = MethodParameterBuilder(_namespace, _type, methodName, returnTypeName, isNullable)
         bldr.init()
         return bldr.build()
@@ -657,10 +691,10 @@ class InterfaceTypeBuilder(
 @TypeModelDslMarker
 class EnumTypeBuilder(
     _namespace: TypesNamespace,
-    _name: SimpleName
+    _name: SimpleName,
+    _literals: List<String>
 ) {
-    private val _type = _namespace.findOwnedOrCreateEnumTypeNamed(_name, emptyList()) as EnumType
-
+    private val _type = _namespace.findOwnedOrCreateEnumTypeNamed(_name, _literals) as EnumType
 
     fun build(): EnumType {
         return _type
@@ -671,10 +705,11 @@ class EnumTypeBuilder(
 class CollectionTypeBuilder(
     _namespace: TypesNamespace,
     _typeReferences: MutableList<TypeInstanceArgBuilder>,
-    _name: SimpleName
+    _name: SimpleName,
+    _typeParams: List<TypeParameter>
 ) : StructuredTypeBuilder(_namespace, _typeReferences) {
 
-    private val _type = _namespace.findOwnedOrCreateCollectionTypeNamed(_name)
+    private val _type = _namespace.findOwnedOrCreateCollectionTypeNamed(_name, _typeParams)
     override val _structuredType: StructuredType get() = _type
 
     fun typeParameters(vararg parameters: String) {
@@ -779,11 +814,12 @@ class ConstructorBuilder(
         val tab = TypeArgumentBuilder(_type, _namespace)
         tab.typeArguments()
         val targs = tab.build()
-        val ty = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, nullable)
-        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ty, null))
+        //val ty = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, nullable)
+        val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, targs, nullable)
+        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ti, null))
         if (characteristic.isNotEmpty()) {
             when(_type) {
-                is DataType, is ValueType -> _type.appendPropertyStored(PropertyName(name),ty, characteristic+ PropertyCharacteristic.CONSTRUCTOR)
+                is DataType, is ValueType -> _type.appendPropertyStored(PropertyName(name),ti, characteristic+ PropertyCharacteristic.CONSTRUCTOR)
             }
         }
     }
@@ -905,17 +941,19 @@ class TypeArgumentBuilder(
         val typeArgs = tab.build()
         //val tref = _namespace.createTypeInstance(_context, qualifiedTypeName.asPossiblyQualifiedName, typeArgs, false)
 
-        val pqn = possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName
-        val ti = when (pqn) {
-            is QualifiedName -> _namespace.createTypeInstance(_context?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
-            is SimpleName -> {
-                val tp = _context?.typeParameters?.firstOrNull { it.name == pqn }
-                when {
-                    null == tp || null == _context -> _namespace.createTypeInstance(_context?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
-                    else -> TypeParameterReference(_context, tp.name)
-                }
-            }
-        }
+        val ti = possiblyQualifiedTypeDeclarationName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _context, typeArgs, nullable)
+
+//        val pqn = possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName
+//        val ti = when (pqn) {
+//            is QualifiedName -> _namespace.createTypeInstance(_context?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
+//            is SimpleName -> {
+//                val tp = _context?.typeParameters?.firstOrNull { it.name == pqn }
+//                when {
+//                    null == tp || null == _context -> _namespace.createTypeInstance(_context?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
+//                    else -> TypeParameterReference(_context, tp.name)
+//                }
+//            }
+//        }
         list.add(ti.asTypeArgument)
     }
 
@@ -987,7 +1025,7 @@ class SubtypeListBuilder(
 class MethodParameterBuilder(
     val _namespace: TypesNamespace,
     private val _type: TypeDefinition,
-    private val _methodName: String,
+     val methodName: String,
     private val _returnTypeName: String,
     private val _returnTypeIsNullable: Boolean
 ) {
@@ -1003,17 +1041,18 @@ class MethodParameterBuilder(
         val typeArgs = tab.build()
         //val tref = _namespace.createTypeInstance(_context, qualifiedTypeName.asPossiblyQualifiedName, typeArgs, false)
 
-        val pqn = possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName
-        val ti = when (pqn) {
-            is QualifiedName -> _namespace.createTypeInstance(_type?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
-            is SimpleName -> {
-                val tp = _type?.typeParameters?.firstOrNull { it.name == pqn }
-                when {
-                    null == tp || null == _type -> _namespace.createTypeInstance(_type?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
-                    else -> TypeParameterReference(_type, tp.name)
-                }
-            }
-        }
+        val ti = possiblyQualifiedTypeDeclarationName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, typeArgs, nullable)
+//        val pqn = possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName
+//        val ti = when (pqn) {
+//            is QualifiedName -> _namespace.createTypeInstance(_type?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
+//            is SimpleName -> {
+//                val tp = _type?.typeParameters?.firstOrNull { it.name == pqn }
+//                when {
+//                    null == tp || null == _type -> _namespace.createTypeInstance(_type?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
+//                    else -> TypeParameterReference(_type, tp.name)
+//                }
+//            }
+//        }
         _returnTypeArgs.add(ti.asTypeArgument)
     }
 
@@ -1021,8 +1060,9 @@ class MethodParameterBuilder(
         val tab = TypeArgumentBuilder(_type, _namespace)
         tab.typeArguments()
         val targs = tab.build()
-        val ty = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, nullable)
-        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ty, null))
+        //val ty = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, nullable)
+        val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, targs, nullable)
+        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ti, null))
     }
 
     fun description(value: String) {
@@ -1037,22 +1077,23 @@ class MethodParameterBuilder(
         _executionSuspend = value
     }
 
-    fun build(): MethodDeclarationPrimitive {
-        val ti = _namespace.createTypeInstance(
-            _type.qualifiedName,
-            _returnTypeName.asPossiblyQualifiedName,
-            _returnTypeArgs,
-            _returnTypeIsNullable
-        )
+    fun build(): MethodDefinitionPrimitive {
+        val rti = _returnTypeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, _returnTypeArgs, _returnTypeIsNullable)
+//        val ti = _namespace.createTypeInstance(
+//            _type.qualifiedName,
+//            _returnTypeName.asPossiblyQualifiedName,
+//            _returnTypeArgs,
+//            _returnTypeIsNullable
+//        )
 
         return _type.appendMethodPrimitive(
-            MethodName(_methodName),
+            MethodName(methodName),
             _paramList,
-            ti,
+            rti,
             _description
         ).also {
-            (it as MethodDeclarationAbstract).execution = _execution
-            (it as MethodDeclarationAbstract).executionSuspend = _executionSuspend
+            (it as MethodDefinitionAbstract).execution = _execution
+            (it as MethodDefinitionAbstract).executionSuspend = _executionSuspend
         }
     }
 }

@@ -24,12 +24,13 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
+import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
-import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KProperty1
 import kotlin.time.Instant
@@ -39,7 +40,7 @@ class StdLibPrimitiveExecutionsForReflection(
 ) : PrimitiveExecutor {
 
     private val _property = mutableMapOf<TypeDefinition, MutableMap<PropertyDeclaration, ((Any, PropertyDeclaration) -> Any?)>>(
-        StdLibDefault.Collection to mutableMapOf(
+        StdLibDefault.Collection to  mutableMapOf(
             StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
                 check(self is Collection<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.size.toLong()
@@ -110,7 +111,7 @@ class StdLibPrimitiveExecutionsForReflection(
         )
     )
 
-    private val _method = mutableMapOf<TypeDefinition, MutableMap<MethodDeclaration, ((Any, MethodDeclaration, List<*>) -> Any?)>>(
+    private val _method = mutableMapOf<TypeDefinition, MutableMap<MethodDefinition, ((Any, MethodDefinition, List<*>) -> Any?)>>(
         StdLibDefault.String.resolvedDeclaration to mutableMapOf(
             StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("toBoolean"))!! to { self, meth, args ->
                 check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -196,7 +197,7 @@ class StdLibPrimitiveExecutionsForReflection(
         ),
     )
 
-    private val _methodSuspend = mutableMapOf<TypeDefinition, MutableMap<MethodDeclaration, (suspend (Any, MethodDeclaration, List<*>) -> Any?)>>(
+    private val _methodSuspend = mutableMapOf<TypeDefinition, MutableMap<MethodDefinition, (suspend (Any, MethodDefinition, List<*>) -> Any?)>>(
         StdLibDefault.Collection to mutableMapOf(
             StdLibDefault.Collection.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
                 check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -237,18 +238,18 @@ class StdLibPrimitiveExecutionsForReflection(
     override fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? =
         propertyValueDirectOrSuperType(obj, typeDef, property)
 
-    override fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>) =
+    override fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>) =
         methodDirectOrSuperType(obj, typeDef, method, args)
 
     override fun functionCall(functionName: String, args: List<*>): ExecutionResult? {
         return when (functionName) {
-            "Pair" -> {
-                check(2 == args.size) { "The Pair function only takes 2 arguments." }
-                ExecutionResult(Pair(args[0], args[1]))
-            }
-
-            "Set" -> ExecutionResult(args.toSet())
-            "List" -> ExecutionResult(args)
+//            "Pair" -> {
+//                check(2 == args.size) { "The Pair function only takes 2 arguments." }
+//                ExecutionResult(Pair(args[0], args[1]))
+//            }
+//
+//            "Set" -> ExecutionResult(args.toSet())
+//            "List" -> ExecutionResult(args)
             else -> error("StdLibPrimitiveExecutionsForReflection, unsupported function '$functionName'")
         }
     }
@@ -306,7 +307,7 @@ class StdLibPrimitiveExecutionsForReflection(
         }
     }
 
-    private fun methodDirectOrSuperType(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? {
+    private fun methodDirectOrSuperType(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
         val result = methodDirect(obj, typeDef, method, args)
         return if (null != result) {
             result
@@ -316,7 +317,7 @@ class StdLibPrimitiveExecutionsForReflection(
         }
     }
 
-    private fun methodDirect(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? {
+    private fun methodDirect(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
         val typeMeths = this._method[typeDef]
         return typeMeths?.let {
             val methExec = typeMeths[method]
@@ -327,10 +328,10 @@ class StdLibPrimitiveExecutionsForReflection(
         }
     }
 
-    override suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>) =
+    override suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>) =
         methodDirectOrSuperTypeSuspend(obj, typeDef, method, args) ?: methodDirectOrSuperType(obj, typeDef, method, args)
 
-    private suspend fun methodDirectOrSuperTypeSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? {
+    private suspend fun methodDirectOrSuperTypeSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
         val result = methodDirectSuspend(obj, typeDef, method, args)
         return if (null != result) {
             result
@@ -340,7 +341,7 @@ class StdLibPrimitiveExecutionsForReflection(
         }
     }
 
-    private suspend fun methodDirectSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? {
+    private suspend fun methodDirectSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
         val typeMeths = this._methodSuspend[typeDef]
         return typeMeths?.let {
             val methExec = typeMeths[method]
@@ -403,14 +404,14 @@ class ExternalGetterByReflection(
         getProperty(obj, propertyName)
 }
 
-
 open class ObjectGraphAccessorMutatorByReflection
 @JvmOverloads //ensure the Java has overloads using the default values
 constructor(
     typesDomain: TypesDomain,
     issues: IssueHolder,
     override val externalGetter: ExternalGetter = ExternalGetterByReflection(typesDomain, issues),
-    override val primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForReflection()
+    override val primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForReflection(),
+    override val functionLib: FunctionLib = StdFunctionLib
 ) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues), ObjectGraphAccessorMutator {
 
     override fun typeFor(obj: Any?, ifNotFound: TypeInstance): TypeInstance {
@@ -453,12 +454,10 @@ constructor(
             decl.execution?.invoke(obj, args)
         }
 
-    override fun callFunction(functionName: String, args: List<TypedObject>): TypedObject {
-        val arguments = args.map { untyped(it) }
-        return primitiveExecutor.functionCall(functionName, arguments)?.let {
-            toTypedObject(it.value, StdLibDefault.AnyType)
-        } ?: nothing()
-    }
+    override fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunctionInternal(functionName, args, typeReferenceResolver) { decl, args ->
+            decl.execution?.invoke(args)
+        }
 
     override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject =
         createStructureValueInternal(possiblyQualifiedTypeName, constructorArgs) { tqn, args ->
@@ -617,7 +616,7 @@ constructor(
         tobj: TypedObject,
         methodName: String,
         args: List<TypedObject>,
-        methodExecution: (obj: Any, decl: MethodDeclaration, args: List<*>) -> Any?
+        methodExecution: (obj: Any, decl: MethodDefinition, args: List<*>) -> Any?
     ): TypedObject {
         val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]
         return when (methRes) {
@@ -635,20 +634,22 @@ constructor(
                 val methResOriginal = methRes.original
                 when {
                     (null != methResOriginal.execution) -> {
-                        val value = methodExecution(obj, methResOriginal, arguments)
+                        val value = methodExecution.invoke(obj, methResOriginal, arguments)
                         value?.let { toTypedObject(value, methRes.returnType) } ?: nothing()
                     }
+
                     (null != methResOriginal.executionSuspend) -> {
-                        val value = methodExecution(obj, methResOriginal, arguments)
+                        val value = methodExecution.invoke(obj, methResOriginal, arguments)
                         value?.let { toTypedObject(value, methRes.returnType) } ?: nothing()
                     }
+
                     else -> {
                         val execResult = primitiveExecutor.methodCall(obj, typeDef, methResOriginal, arguments)
-                       // val execResult = primitiveExecute(obj, typeDef, meth.original, arguments)//primitiveExecutor.methodCall(untyped(tobj), type, meth.original, arguments)
+                        // val execResult = primitiveExecute(obj, typeDef, meth.original, arguments)//primitiveExecutor.methodCall(untyped(tobj), type, meth.original, arguments)
                         when (execResult) {
                             null -> when (methResOriginal) {
-                                is MethodDeclarationDerived -> TODO()
-                                is MethodDeclarationPrimitive -> {
+                                is MethodDefinitionDerived -> TODO()
+                                is MethodDefinitionPrimitive -> {
                                     // should have found execution if there is one
                                     issues.error(null, "using StdLibPrimitiveExecutionsForReflection not found for method '${methResOriginal}'")
                                     nothing()
@@ -658,6 +659,45 @@ constructor(
                             }
 
                             else -> toTypedObject(execResult.value, methRes.returnType)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private inline fun callFunctionInternal(
+        functionName: String,
+        args: List<TypedObject>,
+        typeReferenceResolver: (TypeReference) -> TypeInstance,
+        functionExecution: (decl: FunctionDefinitionFloating, args: List<*>) -> Any?
+    ): TypedObject {
+        val decl = functionLib.declaration[functionName]
+        return when (decl) {
+            null -> {
+                issues.error(null, "No function named '${functionName}' was declared.")
+                nothing()
+            }
+
+            else -> {
+                val arguments = args.map { untyped(it) }
+                val returnType = decl.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
+                when {
+                    (null != decl.execution) -> {
+                        val value = functionExecution.invoke(decl, arguments)
+                        value?.let { toTypedObject(value, returnType) } ?: nothing()
+                    }
+
+                    (null != decl.executionSuspend) -> {
+                        val value = functionExecution.invoke(decl, arguments)
+                        value?.let { toTypedObject(value, returnType) } ?: nothing()
+                    }
+
+                    else -> {
+                        val execResult = primitiveExecutor.functionCall(functionName, arguments)
+                        when (execResult) {
+                            null -> error("Function '${functionName}' not executed.")
+                            else -> toTypedObject(execResult.value, returnType)
                         }
                     }
                 }

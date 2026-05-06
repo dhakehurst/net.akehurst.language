@@ -146,7 +146,7 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
     }
 
     // -- Formatable ---
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val ns = this.namespace
             .filterNot { it == StdLibDefault } // Don't show the stdlib details
             .sortedBy { it.qualifiedName.value }
@@ -181,13 +181,13 @@ abstract class TypeInstanceAbstract() : TypeInstance {
             return superProps + ownResolveProps
         }
 
-    override val allResolvedMethod: Map<MethodName, MethodDeclarationResolved>
+    override val allResolvedMethod: Map<MethodName, MethodDefinitionResolved>
         get() {
             val typeArgMap = createTypeArgMap()
             val superProps = resolvedDeclaration.supertypes.map {
                 val resIt = it.resolved(typeArgMap)
                 resIt.allResolvedMethod
-            }.fold(mapOf<MethodName, MethodDeclarationResolved>()) { acc, it -> acc + it }
+            }.fold(mapOf<MethodName, MethodDefinitionResolved>()) { acc, it -> acc + it }
             val ownResolveProps = resolvedDeclaration.method.associate {
                 val rp = it.resolved(typeArgMap)
                 Pair(it.name, rp)
@@ -726,10 +726,12 @@ abstract class TypesNamespaceAbstract(
         }
     }
 
-    override fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType {
+    override fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName, typeParameters: List<TypeParameter>): CollectionType {
         val existing = findOwnedTypeNamed(typeName)
         return if (null == existing) {
-            CollectionTypeSimple(this, typeName)
+            CollectionTypeSimple(this, typeName).also { collType->
+                typeParameters.forEach { collType.addTypeParameter(it) }
+            }
         } else {
             existing as CollectionType
         }
@@ -814,7 +816,7 @@ abstract class TypesNamespaceAbstract(
     }
 
     // --- Formatable ---
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val types = this.ownedTypesByName.entries //.sortedBy { it.key.value }
             .sortedWith(compareBy<Map.Entry<SimpleName, TypeDefinition>> { it.value::class.simpleName }.thenBy { it.value.name.value })
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asStringInContext(this) }
@@ -879,7 +881,7 @@ abstract class TypeDefinitionSimpleAbstract(
     override val property get() = propertyByIndex.values.toList() //should be in order because mutableMap is LinkedHashMap by default
     //protected val properties = mutableListOf<PropertyDeclaration>()
 
-    override val method = mutableListOf<MethodDeclaration>()
+    override val method = mutableListOf<MethodDefinition>()
 
     override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.resolvedDeclaration as DataType).allSuperTypes }
 
@@ -888,7 +890,7 @@ abstract class TypeDefinitionSimpleAbstract(
             it.resolvedDeclaration.allProperty.values
         }.associateBy { it.name } + this.property.associateBy { it.name }
 
-    override val allMethod: Map<MethodName, MethodDeclaration>
+    override val allMethod: Map<MethodName, MethodDefinition>
         get() = supertypes.flatMap {
             it.resolvedDeclaration.allMethod.values
         }.associateBy { it.name } + this.method.associateBy { it.name }
@@ -921,10 +923,10 @@ abstract class TypeDefinitionSimpleAbstract(
     override fun findAllPropertyOrNull(name: PropertyName): PropertyDeclaration? =
         this.allProperty[name]
 
-    override fun findOwnedMethodOrNull(name: MethodName): MethodDeclaration? =
+    override fun findOwnedMethodOrNull(name: MethodName): MethodDefinition? =
         this.method.firstOrNull { it.name == name }
 
-    override fun findAllMethodOrNull(name: MethodName): MethodDeclaration? =
+    override fun findAllMethodOrNull(name: MethodName): MethodDefinition? =
         this.allMethod[name]
 
     // --- mutable ---
@@ -971,21 +973,21 @@ abstract class TypeDefinitionSimpleAbstract(
         parameters: List<ParameterDeclaration>,
         returnType: TypeInstance,
         description: String
-    ): MethodDeclarationPrimitive {
-        return MethodDeclarationPrimitiveSimple(this, name, parameters, returnType, description)
+    ): MethodDefinitionPrimitive {
+        return MethodDefinitionPrimitiveSimple(this, name, parameters, returnType, description)
     }
 
     /**
      * append a method/function with the expression that should execute
      */
-    override fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String): MethodDeclarationDerived {
-        return MethodDeclarationDerivedSimple(this, name, parameters, typeInstance, description, body)
+    override fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String): MethodDefinitionDerived {
+        return MethodDefinitionDerivedSimple(this, name, parameters, typeInstance, description, body)
     }
 
     override fun asStringInContext(context: TypesNamespace): String = signature(context, 0)
 
     // --- Formatable ---
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         TODO("not implemented")
     }
 
@@ -1014,8 +1016,8 @@ abstract class TypeDefinitionSimpleAbstract(
         //this.property[propertyDeclaration.name] = propertyDeclaration
     }
 
-    fun addMethod(methodDeclaration: MethodDeclaration) {
-        this.method.add(methodDeclaration)
+    fun addMethod(methodDefinition: MethodDefinition) {
+        this.method.add(methodDefinition)
         //this.method[methodDeclaration.name] = methodDeclaration
     }
 }
@@ -1591,7 +1593,7 @@ class CollectionTypeSimple(
     override fun findInOrCloneTo(other: TypesDomain): CollectionType =
         namespace.findInOrCloneTo(other).findOwnedCollectionTypeNamedOrNull(this.name)
             ?: run {
-                namespace.findInOrCloneTo(other).findOwnedOrCreateCollectionTypeNamed(this.name)
+                namespace.findInOrCloneTo(other).findOwnedOrCreateCollectionTypeNamed(this.name, this.typeParameters.map { it.clone() })
                     .also { clone -> super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract) }
             }
 
@@ -1767,12 +1769,12 @@ class PropertyDeclarationResolvedSimple(
             }
 }
 
-abstract class MethodDeclarationAbstract() : MethodDeclaration {
+abstract class MethodDefinitionAbstract() : MethodDefinition {
 
     override var execution: ((self: Any, args: List<*>) -> Any?)? = null
     override var executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)? = null
 
-    override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved = MethodDeclarationResolvedSimple(
+    override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDefinitionResolved = MethodDefinitionResolvedSimple(
         this,
         this.owner,
         this.name,
@@ -1784,19 +1786,19 @@ abstract class MethodDeclarationAbstract() : MethodDeclaration {
     )
 }
 
-internal class MethodDeclarationPrimitiveSimple(
+internal class MethodDefinitionPrimitiveSimple(
     override val owner: TypeDefinition,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,
     override val returnType: TypeInstance,
     override val description: String
-) : MethodDeclarationAbstract(), MethodDeclarationPrimitive {
+) : MethodDefinitionAbstract(), MethodDefinitionPrimitive {
     init {
         (owner as TypeDefinitionSimpleAbstract).addMethod(this)
     }
 
-    override fun findInOrCloneTo(other: TypesDomain): MethodDeclarationPrimitive =
-        owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name) as MethodDeclarationPrimitive?
+    override fun findInOrCloneTo(other: TypesDomain): MethodDefinitionPrimitive =
+        owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name) as MethodDefinitionPrimitive?
             ?: run {
                 owner.findInOrCloneTo(other).appendMethodPrimitive(
                     this.name,
@@ -1807,20 +1809,20 @@ internal class MethodDeclarationPrimitiveSimple(
             }
 }
 
-class MethodDeclarationDerivedSimple(
+class MethodDefinitionDerivedSimple(
     override val owner: TypeDefinition,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,
     override val returnType: TypeInstance,
     override val description: String,
     val body: String
-) : MethodDeclarationAbstract(), MethodDeclarationDerived {
+) : MethodDefinitionAbstract(), MethodDefinitionDerived {
     init {
         (owner as TypeDefinitionSimpleAbstract).addMethod(this)
     }
 
-    override fun findInOrCloneTo(other: TypesDomain): MethodDeclarationDerived =
-        owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name) as MethodDeclarationDerived?
+    override fun findInOrCloneTo(other: TypesDomain): MethodDefinitionDerived =
+        owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name) as MethodDefinitionDerived?
             ?: run {
                 owner.findInOrCloneTo(other).appendMethodDerived(
                     this.name,
@@ -1832,22 +1834,22 @@ class MethodDeclarationDerivedSimple(
             }
 }
 
-class MethodDeclarationResolvedSimple(
-    override val original: MethodDeclaration,
+class MethodDefinitionResolvedSimple(
+    override val original: MethodDefinition,
     override val owner: TypeDefinition,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,
     override val returnType: TypeInstance,
     override val description: String
-) : MethodDeclarationAbstract(), MethodDeclarationResolved {
+) : MethodDefinitionAbstract(), MethodDefinitionResolved {
     //init {
     //    (owner as TypeDefinitionSimpleAbstract).addMethod(this)
     //}
 
-    override fun findInOrCloneTo(other: TypesDomain): MethodDeclaration =
+    override fun findInOrCloneTo(other: TypesDomain): MethodDefinition =
         this.owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name)
             ?: run {
-                MethodDeclarationResolvedSimple(
+                MethodDefinitionResolvedSimple(
                     this.original.findInOrCloneTo(other),
                     owner.findInOrCloneTo(other),
                     this.name,

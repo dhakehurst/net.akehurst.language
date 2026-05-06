@@ -18,7 +18,6 @@
 package net.akehurst.language.types.api
 
 import net.akehurst.language.base.api.*
-import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
 
 interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
@@ -109,7 +108,7 @@ interface TypesNamespace : Namespace<TypeDefinition> {
     fun findOwnedOrCreateValueTypeNamed(typeName: SimpleName): ValueType
     fun findOwnedOrCreateInterfaceTypeNamed(typeName: SimpleName): InterfaceType
     fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType
-    fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType
+    fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName, typeParameters:List<TypeParameter>): CollectionType
     fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate: (UnionType) -> Unit): UnionType
 
     /**
@@ -184,7 +183,7 @@ interface TypeInstance {
      */
     val allResolvedProperty: Map<PropertyName, PropertyDeclarationResolved>
 
-    val allResolvedMethod: Map<MethodName, MethodDeclarationResolved>
+    val allResolvedMethod: Map<MethodName, MethodDefinitionResolved>
 
     val asTypeArgument: TypeArgument
 
@@ -229,7 +228,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
     val typeParameters: List<TypeParameter>
 
     val property: List<PropertyDeclaration>
-    val method: List<MethodDeclaration>
+    val method: List<MethodDefinition>
 
     /**
      * transitive closure of supertypes
@@ -244,7 +243,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
     /**
      * all methods from this and transitive closure of supertypes
      */
-    val allMethod: Map<MethodName, MethodDeclaration>
+    val allMethod: Map<MethodName, MethodDefinition>
 
     /**
      * information about this type
@@ -270,8 +269,8 @@ interface TypeDefinition : Definition<TypeDefinition> {
     fun getOwnedPropertyByIndexOrNull(i: Int): PropertyDeclaration?
     fun findOwnedPropertyOrNull(name: PropertyName): PropertyDeclaration?
     fun findAllPropertyOrNull(name: PropertyName): PropertyDeclaration?
-    fun findOwnedMethodOrNull(name: MethodName): MethodDeclaration?
-    fun findAllMethodOrNull(name: MethodName): MethodDeclaration?
+    fun findOwnedMethodOrNull(name: MethodName): MethodDefinition?
+    fun findAllMethodOrNull(name: MethodName): MethodDefinition?
 
     fun asStringInContext(context: TypesNamespace): String
 
@@ -288,9 +287,9 @@ interface TypeDefinition : Definition<TypeDefinition> {
         parameters: List<ParameterDeclaration>,
         returnType: TypeInstance,
         description: String
-    ): MethodDeclarationPrimitive
+    ): MethodDefinitionPrimitive
 
-    fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String): MethodDeclarationDerived
+    fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String): MethodDefinitionDerived
 
     fun findInOrCloneTo(other: TypesDomain): TypeDefinition
 }
@@ -510,7 +509,7 @@ enum class PropertyCharacteristic {
 // TODO: value classes don't work (fully) in js and wasm
 data class MethodName(override val value: String) : PublicValueType
 
-interface MethodDeclaration {
+interface MethodDefinition {
     val owner: TypeDefinition
     val name: MethodName
 
@@ -523,14 +522,14 @@ interface MethodDeclaration {
     val execution: ((self: Any, args:List<*>) -> Any?)?
     val executionSuspend: (suspend (self: Any, args:List<*>) -> Any?)?
 
-    fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved
-    fun findInOrCloneTo(other: TypesDomain): MethodDeclaration
+    fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDefinitionResolved
+    fun findInOrCloneTo(other: TypesDomain): MethodDefinition
 }
 
-interface MethodDeclarationPrimitive : MethodDeclaration
-interface MethodDeclarationDerived : MethodDeclaration
-interface MethodDeclarationResolved : MethodDeclaration {
-    val original: MethodDeclaration
+interface MethodDefinitionPrimitive : MethodDefinition
+interface MethodDefinitionDerived : MethodDefinition
+interface MethodDefinitionResolved : MethodDefinition {
+    val original: MethodDefinition
 }
 
 interface ConstructorDeclaration {

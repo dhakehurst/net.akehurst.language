@@ -160,7 +160,7 @@ class test_FormatterOverTypedObject {
                     $$"""
                     namespace test
                     format Test {
-                      TestObject -> "Hello$EOL World!"
+                      TestObject -> "Hello${$EOL} World!"
                     }
                     """
                 ),
@@ -220,7 +220,7 @@ class test_FormatterOverTypedObject {
                     $$"""
                     namespace test
                     format Test {
-                      TestObject -> "list:$EOL$[listValue sep $EOL]"
+                      TestObject -> "list:${$EOL}$[listValue sep $EOL]"
                     }
                     """
                 ),
@@ -318,7 +318,7 @@ class test_FormatterOverTypedObject {
                     $$"""
                     namespace test
                     format Test1 {
-                      String -> "'$self'"
+                      String -> "'${$self}'"
                     }
                     format Test2 {
                       TestObject -> "Test2: $[listValue sep ',' via Test1]"
@@ -355,7 +355,7 @@ class test_FormatterOverTypedObject {
 
     @Test
     fun test1() {
-        test(testData[5])
+        test(testData[6])
     }
 
 }

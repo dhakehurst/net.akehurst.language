@@ -23,8 +23,10 @@ import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.FunctionCall
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.issues.ram.IssueHolder
@@ -109,7 +111,7 @@ class FormatterOverTypedObject(
                             self.self is Iterable<*> -> {
                                 val formatRule = findRuleFor(formatSetName, self.type.typeArguments[0].type)
                                 val col = self.self as Iterable<*>
-                                col.joinToString {
+                                col.joinToString("") {
                                     val elemEvc = evc.childSelf( self.accessor.toTypedObject(it, self.type.typeArguments[0].type))
                                     when (formatRule) {
                                         null -> formatWhenNoRule(formatSetName, elemEvc)
@@ -455,6 +457,8 @@ class FormatterOverTypedObject(
         return evaluateExpression(newEvc, expression)
     }
 
+    // --- override Expression Interpreter ---
+
     // need to override ExpressionsInterpreter.evaluateExpression so that embedded FormatExpressions are interpreted correctly
     override fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject = when (expression) {
         is FormatExpression -> {
@@ -470,4 +474,36 @@ class FormatterOverTypedObject(
 
         else -> super.evaluateExpression(evc, expression)
     }
+
+    override fun evaluateFunctionCall(evc: EvaluationContext, expression: FunctionCall): TypedObject {
+        val funcName = expression.possiblyQualifiedName.value
+        val func =  this.formatDomain.findFirstFunctionDefinitionByNameOrNull(SimpleName(funcName))
+        val argValues = expression.arguments.map {
+            evaluateExpression(evc, it)
+        }
+        return when (func) {
+            null -> {
+                objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues) { tr -> evaluateTypeReference(tr) }
+            }
+            else -> when {
+                null!= func.execution -> {
+                    val retType = func.returnTypeReference?.let { evaluateTypeReference(it) } ?: StdLibDefault.AnyType
+                    val args = argValues.map { objectGraph.untyped(it) }
+                    val res = func.execution!!.invoke(args)
+                    objectGraph.toTypedObject(res, retType)
+                }
+                null!=func.body -> {
+                    val argMap = func.parameters.mapIndexed { idx, prm ->  Pair(prm.name, argValues[idx]) }.associate { it }
+                    val newEvc = evc.child(argMap)
+                    evaluateExpression(newEvc, func.body!!)
+                }
+                else -> {
+                    issues.error(null,"Function named '$funcName' could not be executed.")
+                    objectGraph.nothing()
+                }
+            }
+        }
+    }
+
+
 }

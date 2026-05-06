@@ -100,12 +100,12 @@ class test_ObjectGraphByReflectionSuspending {
         val actual4 = og.getFromListWithIndex(list, -1)
         assertEquals(Unit, actual4.self)
         assertEquals(1, og.issues.size)
-        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getIndex argument index '-1' out of range", null)), og.issues.toString())
+        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getFromListWithIndex argument index '-1' out of range", null)), og.issues.toString())
 
         val actual5 = og.getFromListWithIndex(list, 5)
         assertEquals(Unit, actual5.self)
         assertEquals(2, og.issues.size)
-        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getIndex argument index '5' out of range", null)), og.issues.toString())
+        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getFromListWithIndex argument index '5' out of range", null)), og.issues.toString())
 
     }
 
@@ -156,7 +156,11 @@ class test_ObjectGraphByReflectionSuspending {
     @Test
     fun executeMethod_Primitive_map() = runTest {
         //given
-        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(
+            testTypeModel,
+            IssueHolder(LanguageProcessorPhase.INTERPRET),
+
+        )
         val tObj = og.typedAs(
             listOf(
                 og.typedAs(1L, StdLibDefault.Integer),

@@ -17,19 +17,17 @@
 package net.akehurst.language.expressions.asm
 
 import net.akehurst.language.base.api.*
-import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.*
-import net.akehurst.language.expressions.asm.VariableDefinitionDefault
 
 class ExpressionsDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespaces: List<ExpressionsNamespace> = emptyList()
 ) : ExpressionsDomain, DomainAbstract<ExpressionsNamespace, FunctionDefinition>(namespaces, options) {
-    override fun asString(indent: Indent, imports: List<Import>): String = super.asString(indent)
+
 }
 
 class ExpressionsNamespaceDefault(
@@ -41,12 +39,15 @@ class ExpressionsNamespaceDefault(
     override val function: List<FunctionDefinition> get() = super.definition
 }
 
- class FunctionDefinitionAbstract(
+ abstract class FunctionDefinitionAbstract(
     override val name: SimpleName,
     override val parameters: List<FunctionParameter>,
     override val returnTypeReference: TypeReference?,
-    override val body: Expression
+    override val body: Expression?
 ) : FunctionDefinitionFloating {
+
+     override var execution: ((args: List<*>) -> Any?)? = null
+     override var executionSuspend: (suspend (args: List<*>) -> Any?)? = null
 }
 
 class FunctionDefinitionDefault(
@@ -55,10 +56,14 @@ class FunctionDefinitionDefault(
     parameters: List<FunctionParameter>,
     returnTypeReference: TypeReference?,
     body: Expression
-) : FunctionDefinitionFloating by FunctionDefinitionAbstract(name, parameters, returnTypeReference, body), FunctionDefinition, DefinitionAbstract<FunctionDefinition>() {
+) : FunctionDefinitionFloating, FunctionDefinitionAbstract(name, parameters, returnTypeReference, body), FunctionDefinition {
 
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
 
+    // --- Definition ---
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let{": ${it.asString(indent, imports)}"}}"
 }
 
 class FunctionParameterDefault(

@@ -116,6 +116,12 @@ class FormatDomainDefault(
     fun addRule(typeName: SimpleName) {
         TODO("is it needed ?")
     }
+
+    override fun findFirstFunctionDefinitionByNameOrNull(functionName: SimpleName): FormatFunctionDefinition? {
+        return namespace.firstNotNullOfOrNull {
+            it.function.firstOrNull { it.name == functionName }
+        }
+    }
 }
 
 class FormatNamespaceDefault(
@@ -144,9 +150,14 @@ class FormatFunctionDefinitionDefault(
     parameters: List<FunctionParameter>,
     returnTypeReference: TypeReference?,
     body: Expression
-) : FunctionDefinitionFloating by FunctionDefinitionAbstract(name, parameters, returnTypeReference, body), FormatFunctionDefinition, DefinitionAbstract<FormatDefinition>() {
+) : FunctionDefinitionFloating,FormatFunctionDefinition, FunctionDefinitionAbstract(name, parameters, returnTypeReference, body) {
 
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
+
+    // --- Definition ---
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let{": ${it.asString(indent, imports)}"}}"
 
 }
 

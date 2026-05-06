@@ -19,6 +19,7 @@ package net.akehurst.language.expressions.api
 
 import net.akehurst.language.base.api.Definition
 import net.akehurst.language.base.api.Domain
+import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.Namespace
@@ -38,7 +39,11 @@ interface FunctionDefinitionFloating {
     val name: SimpleName
     val parameters: List<FunctionParameter>
     val returnTypeReference: TypeReference?
-    val body: Expression
+    val body: Expression?
+
+    // to assist execution by reflection without having MPP reflection support
+    val execution: ((args:List<*>) -> Any?)?
+    val executionSuspend: (suspend (args:List<*>) -> Any?)?
 }
 
 interface FunctionDefinition : FunctionDefinitionFloating, Definition<FunctionDefinition> {
@@ -51,8 +56,7 @@ interface FunctionParameter {
     val defaultValueExpression: Expression?
 }
 
-interface Expression {
-    fun asString(indent: Indent, imports: List<Import> = emptyList()): String
+interface Expression: Formatable {
 }
 
 interface RootExpression : Expression {

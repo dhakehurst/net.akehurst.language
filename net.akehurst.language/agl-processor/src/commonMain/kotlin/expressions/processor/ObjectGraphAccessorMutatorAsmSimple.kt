@@ -23,8 +23,13 @@ import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
+import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.expressions.asm.FunctionDefinitionAbstract
+import net.akehurst.language.expressions.asm.TypeReferenceDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.reference.api.CrossReferenceDomain
@@ -94,7 +99,7 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor {
         )
     )
 
-    val method = mapOf<TypeDefinition, Map<MethodDeclaration, ((AsmValue, MethodDeclaration, List<*>) -> AsmValue)>>(
+    val method = mapOf<TypeDefinition, Map<MethodDefinition, ((AsmValue, MethodDefinition, List<*>) -> AsmValue)>>(
         StdLibDefault.List to mapOf(
             StdLibDefault.List.findAllMethodOrNull(MethodName("get"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -149,7 +154,7 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor {
         return ExecutionResult(propExec.invoke(obj as AsmValue, property))
     }
 
-    override fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? {
+    override fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
         val methProps = this.method[typeDef] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for TypeDeclaration '${typeDef.qualifiedName.value}'")
         val methExec = methProps[method] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for method '${method.name.value}' of TypeDeclaration '${typeDef.qualifiedName.value}'")
         return ExecutionResult(methExec.invoke(obj as AsmValue, method, args) as AsmValue)
@@ -157,22 +162,55 @@ object StdLibPrimitiveExecutionsForAsmSimple : PrimitiveExecutor {
 
     override fun functionCall(functionName: String, args: List<*>): ExecutionResult? {
         return when (functionName) {
-            "List" -> {
-                val elts = args
-                ExecutionResult(AsmListSimple(elts as List<AsmValue>))
-            }
-
-            "Set" -> {
-                val elts = args.toSet()
-                ExecutionResult(AsmSetSimple(elts as Set<AsmValue>))
-            }
+//            "List" -> {
+//                ExecutionResult(AsmListSimple(args as List<AsmValue>))
+//            }
+//
+//            "Set" -> {
+//                ExecutionResult(AsmSetSimple(args.toSet() as Set<AsmValue>))
+//            }
 
             else -> error("Unknown function '$functionName'")
         }
     }
 
-    override suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult? =
+    override suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? =
         methodCall(obj, typeDef, method, args)
+}
+
+object StdFunctionLibForAsmSimple : FunctionLib {
+    override val declaration: Map<String, FunctionDefinitionFloating> = mutableMapOf()
+
+    init {
+        (declaration as MutableMap)["Pair"] = FunctionDefinitionPrimitive(
+            SimpleName("Pair"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> Pair(args[0], args[1]) }
+        }
+        (declaration as MutableMap)["Set"] = FunctionDefinitionPrimitive(
+            SimpleName("Set"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> AsmSetSimple(args.toSet() as Set<AsmValue>) }
+        }
+        (declaration as MutableMap)["List"] = FunctionDefinitionPrimitive(
+            SimpleName("List"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> AsmListSimple(args as List<AsmValue>) }
+        }
+    }
+
+    override fun findFirstFunctionNamed(functionName: String): FunctionDefinitionFloating? {
+        return declaration[functionName]
+    }
 }
 
 class ExternalGetterAsmSimple(
@@ -246,7 +284,8 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     override var typesDomain: TypesDomain,
     val issues: IssueHolder,
     override val externalGetter: ExternalGetter = ExternalGetterAsmSimple(typesDomain, null, issues),
-    override val primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple
+    override val primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple,
+    override val functionLib: FunctionLib = StdFunctionLibForAsmSimple
 ) : ObjectGraphAccessorMutator {
 
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<AsmValue>>()
@@ -676,11 +715,33 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
         executeMethod(tobj, methodName, args) // no need for anything suspend specific
 
-    override fun callFunction(functionName: String, args: List<TypedObject>): TypedObject {
-        val arguments = args.map { untyped(it) }
-        return primitiveExecutor.functionCall(functionName, arguments)?.let {
-            toTypedObject(it.value as AsmValue, StdLibDefault.AnyType)
-        } ?: nothing()
+    override fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject {
+        val decl = functionLib.declaration[functionName]
+        return when (decl) {
+            null -> {
+                issues.error(null, "No function named '${functionName}' was declared.")
+                nothing()
+            }
+
+            else -> {
+                val arguments = args.map { untyped(it) }
+                val returnType = decl.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
+                when {
+                    (null != decl.execution) -> {
+                        val value = decl.execution!!.invoke(arguments)
+                        value?.let { toTypedObject(value, returnType) } ?: nothing()
+                    }
+
+                    else -> {
+                        val execResult = primitiveExecutor.functionCall(functionName, arguments)
+                        when (execResult) {
+                            null -> error("Function '${functionName}' not executed.")
+                            else -> toTypedObject(execResult.value, returnType)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun convertValue(ownerType: TypeInstance, propertyName: String, value: TypedObject): AsmValue {

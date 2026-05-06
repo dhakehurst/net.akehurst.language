@@ -18,7 +18,6 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.simple.contextAsmSimpleWithAsmPath
 import net.akehurst.language.base.processor.AglBase

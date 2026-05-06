@@ -48,7 +48,7 @@ class test_LanguageRegistry {
         )
 
         assertEquals(identity, languageDefinition.identity)
-        assertTrue(languageDefinition.issues.isNotEmpty(), languageDefinition.issues.toString())
+        assertTrue(languageDefinition.issues.isEmpty(), languageDefinition.issues.toString())
         assertNull(languageDefinition.processor)
     }
 
@@ -90,7 +90,7 @@ class test_LanguageRegistry {
         )
 
         assertEquals(identity, languageDefinition.identity)
-        assertTrue(languageDefinition.issues.isNotEmpty(), languageDefinition.issues.toString())
+        assertTrue(languageDefinition.issues.isEmpty(), languageDefinition.issues.toString())
         assertNull(languageDefinition.processor)
 
         languageDefinition.update(GrammarString("namespace ns grammar Test { S = 'b'; }"), null, null, null, null)

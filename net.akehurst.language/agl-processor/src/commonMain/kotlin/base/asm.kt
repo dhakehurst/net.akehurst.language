@@ -122,7 +122,7 @@ abstract class DomainAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
     }
 
     // --- Formatable ---
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val ns = namespace.joinToString(separator = "\n") { "$indent${it.asString(indent)}" }
         sb.append(ns)
@@ -207,7 +207,7 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
     }
 
     // --- Formatable ---
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc
@@ -242,7 +242,7 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
 abstract class DefinitionAbstract<DT : Definition<DT>> : Definition<DT> {
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         TODO("not implemented")
     }
 }

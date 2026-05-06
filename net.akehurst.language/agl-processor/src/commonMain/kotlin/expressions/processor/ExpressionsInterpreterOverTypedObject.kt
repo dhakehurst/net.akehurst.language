@@ -96,11 +96,11 @@ open class ExpressionsInterpreterOverTypedObject(
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject =
         objectGraph.createPrimitiveValue(expression.qualifiedTypeName, expression.value)
 
-    private fun evaluateFunctionCall(evc: EvaluationContext, expression: FunctionCall): TypedObject {
+    protected open fun evaluateFunctionCall(evc: EvaluationContext, expression: FunctionCall): TypedObject {
         val argValues = expression.arguments.map {
             evaluateExpression(evc, it)
         }
-        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues)
+        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues) { tr -> evaluateTypeReference(tr) }
     }
 
     private fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject {

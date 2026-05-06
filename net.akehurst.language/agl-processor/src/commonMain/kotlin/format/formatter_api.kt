@@ -33,6 +33,7 @@ interface AglFormatDomain : Domain<FormatNamespace, FormatDefinition> {
      */
     val rules: Map<SimpleName, AglFormatRule>
 
+    fun findFirstFunctionDefinitionByNameOrNull(functionName: SimpleName): FormatFunctionDefinition?
 }
 
 interface FormatNamespace : Namespace<FormatDefinition> {

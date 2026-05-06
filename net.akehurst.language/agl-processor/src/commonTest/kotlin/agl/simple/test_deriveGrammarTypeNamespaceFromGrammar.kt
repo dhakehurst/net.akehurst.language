@@ -20,7 +20,6 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault

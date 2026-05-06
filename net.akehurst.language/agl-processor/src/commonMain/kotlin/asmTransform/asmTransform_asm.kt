@@ -104,7 +104,7 @@ class AsmTransformNamespaceDefault(
         _rules = emptyList()
     )
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc
@@ -198,7 +198,7 @@ class AsmTransformRuleSetDefault(
         (rules as MutableMap)[rule.grammarRuleName] = rule
     }
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val extStr = when {
             this.extends.isEmpty() -> " "

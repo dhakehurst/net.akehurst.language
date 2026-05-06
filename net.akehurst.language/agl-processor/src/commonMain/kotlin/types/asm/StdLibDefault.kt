@@ -17,18 +17,25 @@
 
 package net.akehurst.language.types.asm
 
-import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
+import net.akehurst.language.expressions.api.FunctionParameter
+import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.expressions.asm.FunctionDefinitionAbstract
+import net.akehurst.language.expressions.asm.TypeReferenceDefault
+import net.akehurst.language.objectgraph.api.FunctionLib
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.builder.TypeNamespaceBuilder
-import net.akehurst.language.types.builder.typesDomain
-import kotlin.time.Instant
 
-object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
+@Deprecated("Use StdLibDefault below")
+object StdLibDefault1 : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
 
     override val qualifiedName: QualifiedName = QualifiedName("std")
 
@@ -42,8 +49,8 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
     private val Map_typeName = SimpleName("Map")
 
     //TODO: need some other kinds of type for these really
-    val AnyType = super.findOwnedOrCreateSpecialTypeNamed(SimpleName("Any")).type()
-    val NothingType = super.findOwnedOrCreateSpecialTypeNamed(SimpleName("Nothing")).type()
+    val AnyType get() = super.findOwnedOrCreateSpecialTypeNamed(SimpleName("Any")).type()
+    val NothingType get() = super.findOwnedOrCreateSpecialTypeNamed(SimpleName("Nothing")).type()
     //val TupleType = super.findOrCreateSpecialTypeNamed("\$Tuple")
     //val UnnamedSuperTypeType = super.findOrCreateSpecialTypeNamed("\$UnnamedSuperType")
 
@@ -79,35 +86,30 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
 
     val TupleType = TupleTypeSimple(this, TupleType_typeName)
 
-    val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName).also { typeDecl ->
-        (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
+    val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName, listOf(TypeParameterSimple(SimpleName("E"))))
 
-    }
-
-    val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName).also { typeDecl ->
-        (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
+    val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName, listOf(TypeParameterSimple(SimpleName("E")))).also { typeDecl ->
         typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
     }
 
     // ListSeparated<I,S>
-    val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed(ListSeparated_typeName).also { typeDecl ->
+    val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed(
+        ListSeparated_typeName,
+        listOf(TypeParameterSimple(SimpleName("I")), TypeParameterSimple(SimpleName("S")))
+    ).also { typeDecl ->
         typeDecl.addSupertype(List.type(listOf(AnyType.asTypeArgument)))
-        (typeDecl.typeParameters as MutableList).addAll(listOf(TypeParameterSimple(SimpleName("I")), TypeParameterSimple(SimpleName("S"))))
     }
 
     // Set<E>
-    val Set = super.findOwnedOrCreateCollectionTypeNamed(Set_typeName).also { typeDecl ->
-        (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
+    val Set = super.findOwnedOrCreateCollectionTypeNamed(Set_typeName, listOf(TypeParameterSimple(SimpleName("E")))).also { typeDecl ->
         typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
     }
 
-    val OrderedSet = super.findOwnedOrCreateCollectionTypeNamed(OrderedSet_typeName).also { typeDecl ->
-        (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
+    val OrderedSet = super.findOwnedOrCreateCollectionTypeNamed(OrderedSet_typeName, listOf(TypeParameterSimple(SimpleName("E")))).also { typeDecl ->
         typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
     }
 
-    val Map = super.findOwnedOrCreateCollectionTypeNamed(Map_typeName).also { typeDecl ->
-        (typeDecl.typeParameters as MutableList).addAll(listOf(TypeParameterSimple(SimpleName("K")), TypeParameterSimple(SimpleName("V"))))
+    val Map = super.findOwnedOrCreateCollectionTypeNamed(Map_typeName,listOf(TypeParameterSimple(SimpleName("K")), TypeParameterSimple(SimpleName("V")))).also { typeDecl ->
         typeDecl.addSupertype(
             Collection.type(
                 listOf(
@@ -290,17 +292,71 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
     }
 }
 
-//In work
-object StdLibDefault2 : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
+class FunctionDefinitionPrimitive(
+    name: SimpleName,
+    parameters: List<FunctionParameter>,
+    returnTypeReference: TypeReference?,
+    body: Expression?
+) : FunctionDefinitionFloating, FunctionDefinitionAbstract(name, parameters, returnTypeReference, body) {
+
+}
+
+object StdFunctionLib : FunctionLib {
+    override val declaration: Map<String, FunctionDefinitionFloating> = mutableMapOf()
+
+    init {
+        (declaration as MutableMap)["Pair"] = FunctionDefinitionPrimitive(
+            SimpleName("Pair"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> Pair(args[0], args[1]) }
+        }
+        (declaration as MutableMap)["Set"] = FunctionDefinitionPrimitive(
+            SimpleName("Set"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> args.toSet() }
+        }
+        (declaration as MutableMap)["List"] = FunctionDefinitionPrimitive(
+            SimpleName("List"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> args }
+        }
+    }
+
+    override fun findFirstFunctionNamed(functionName: String): FunctionDefinitionFloating? {
+        return declaration[functionName]
+    }
+}
+
+object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
+
+    override val qualifiedName: QualifiedName = QualifiedName("std")
+
+    private val LambdaType_typeName = SimpleName("LambdaType")
+    private val TupleType_typeName = SimpleName("TupleType")
+    private val Collection_typeName = SimpleName("Collection")
+    private val List_typeName = SimpleName("List")
+    private val ListSeparated_typeName = SimpleName("ListSeparated")
+    private val Set_typeName = SimpleName("Set")
+    private val OrderedSet_typeName = SimpleName("OrderedSet")
+    private val Map_typeName = SimpleName("Map")
 
     init {
         val nsb = TypeNamespaceBuilder(QualifiedName("std"), emptyList(), this)
         nsb.apply {
-            special("Any", Any::class)
-            special("Nothing", Unit::class)
-            special("Lambda")
+            special("Any", kotlin.Any::class)
+            special("Nothing", kotlin.Unit::class)
+            special(LambdaType_typeName.value)
 
-            primitive("String", String::class) {
+            primitive("String", kotlin.String::class) {
                 methodPrimitive("toBoolean", "Boolean", true) {
                     execution { self, args -> (self as String).toBooleanStrictOrNull() }
                 }
@@ -316,15 +372,15 @@ object StdLibDefault2 : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMa
                     execution { self, args -> (self as String).removeSurrounding(args[0] as CharSequence) }
                 }
             }
-            primitive("Boolean", Boolean::class)
-            primitive("Integer", Long::class)
-            primitive("Real", Double::class)
-            primitive("Timestamp", Instant::class)
-            primitive("Exception", Throwable::class)
+            primitive("Boolean", kotlin.Boolean::class)
+            primitive("Integer", kotlin.Long::class)
+            primitive("Real", kotlin.Double::class)
+            primitive("Timestamp", kotlin.time.Instant::class)
+            primitive("Exception", kotlin.Throwable::class)
 
-            data("Pair", Pair::class)
+            data("Pair", kotlin.Pair::class)
 
-            collection("Collection", listOf("E"), Collection::class) {
+            collection(Collection_typeName.value, listOf("E"), kotlin.collections.Collection::class) {
                 propertyPrimitive("size", "Integer", false, "Number of elements in the Collection.", execution = { self -> (self as Collection<*>).size })
                 propertyPrimitive("isEmpty", "Boolean", false, "True if the Collection has no elements.", execution = { self -> (self as Collection<*>).isEmpty() })
                 propertyPrimitive("isNotEmpty", "Boolean", false, "True if the Collection has some elements.", execution = { self -> (self as Collection<*>).isNotEmpty() })
@@ -344,61 +400,191 @@ object StdLibDefault2 : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMa
                 methodPrimitive("contains", "Boolean") {
                     description("Returns true if this Collection contains the element")
                     parameter("element", "E")
+                    execution { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' has wrong number of argument, expecting 1, received ${args.size}" }
+                        val element = args[0]
+                        (self as Collection<*>).contains(element)
+                    }
+                    // no need for separate suspend version
                 }
                 methodPrimitive("intersect", "Boolean") {
                     description("Returns true other Collection intersects this Collection.")
                     parameter("other", "Collection") { typeArgument("Any") }
+                    execution { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' has wrong number of argument, expecting 1, received ${args.size}" }
+                        check(args[0] is Collection<*>) { "Method '${methodName}' takes an '${StdLibDefault.Collection.qualifiedName.value}' as its argument, received '${args[0]?.let { it::class.simpleName }}'." }
+                        val other = (args[0] as Collection<*>)
+                        (self as Collection<*>).intersect(other.toSet())
+                    }
+                    // no need for separate suspend version
                 }
                 methodPrimitive("filter", "List") {
                     description("A list created by filtering the elements to those for which the given lambda expression evaluates to true.")
                     parameter("lambda", "Lambda") // TODO: lambda must return Boolean
+                    execution { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
+                        check(args[0] is Function1<*, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                        val lambda = args[0] as Function1<Any, Boolean>
+                        (self as Collection<Any>).filter {
+                            lambda.invoke(it)
+                        }
+                    }
+                    executionSuspend { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
+                        check(args[0] is Function2<*, *, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                        val lambda: suspend (Any) -> Boolean = args[0] as suspend (Any) -> Boolean
+                        (self as Collection<Any>).filter {
+                            lambda.invoke(it)
+                        }
+                    }
                 }
                 methodPrimitive("map", "List") {
                     description("Returns true other Collection intersects this Collection.")
                     returnTypeArgument("Any") //TODO: should be return type of lambda !
                     parameter("lambda", "Lambda")
+                    execution { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
+                        check(args[0] is Function1<*, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                        val lambda = args[0] as Function1<Any, *>
+                        (self as Collection<Any>).map {
+                            lambda.invoke(it)
+                        }
+                    }
+                    executionSuspend { self, args ->
+                        check(self is Collection<*>) { "Method '${methodName}' is not applicable to '${self::class.simpleName}' objects." }
+                        check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
+                        check(args[0] is Function2<*, *, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                        val lambda: suspend (Any) -> Any = args[0] as suspend (Any) -> Any
+                        (self as Collection<Any>).map {
+                            lambda.invoke(it)
+                        }
+
+                    }
                 }
             }
-            collection("Set", listOf("E"), Set::class) {
-                supertype("Collection"){ ref("E") }
+            collection(Set_typeName.value, listOf("E"), kotlin.collections.Set::class) {
+                supertype("Collection") { ref("E") }
 
-                methodPrimitive("transitiveClosure","Set", false) {
+                methodPrimitive("transitiveClosure", "Set", false) {
                     description("")
                     returnTypeArgument("E")
                     parameter("lambda", "Lambda") // TODO: lambda should return Set<E>
                 }
             }
-            collection("List", listOf("E"), List::class) {
-                supertype("Collection"){ ref("E") }
-                propertyPrimitive("first", "E", false, "First element in the List.", execution = { self -> (self as Collection<*>).size })
-                propertyPrimitive("last", "E", false, "Last element in the List.", execution = { self -> (self as Collection<*>).size })
-                propertyPrimitive("front", "List<E>", false, "All elements in the List except the last one.", execution = { self -> (self as Collection<*>).size })
-                propertyPrimitive("back", "List<E>", false, "All elements in the List except the first one.", execution = { self -> (self as Collection<*>).size })
-                propertyPrimitive("join", "String", false, "The String value of all elements (toString) concatenated.", execution = { self -> (self as Collection<*>).size })
+            collection(List_typeName.value, listOf("E"), kotlin.collections.List::class) {
+                supertype("Collection") { ref("E") }
+                propertyPrimitive("first", "E", false, "First element in the List.", execution = { self -> (self as List<*>).first() })
+                propertyPrimitive("last", "E", false, "Last element in the List.", execution = { self -> (self as List<*>).last() })
+                propertyPrimitive("front", "List", false, "All elements in the List except the last one.", execution = { self -> (self as List<*>).dropLast(1) }) { typeArgument("E") }
+                propertyPrimitive("back", "List", false, "All elements in the List except the first one.", execution = { self -> (self as List<*>).drop(1) }) { typeArgument("E") }
+                propertyPrimitive("join", "String", false, "The String value of all elements (toString) concatenated.", execution = { self ->
+                    (self as List<*>).joinToString(separator = "") {
+                        when (it) {
+                            is TypedObject -> it.self.toString()
+                            else -> it.toString()
+                        }
+                    }
+                })
 
                 methodPrimitive("get", "E", true) {
                     description("Returns the element at the given index.")
                     parameter("index", "Integer")
+                    execution { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' has wrong number of argument, expecting 1, received ${args.size}" }
+                        check(args[0] is Long) { "Method '${methodName}' takes an ${Integer.qualifiedTypeName} as its argument, received ${args[0]?.let { it::class.simpleName }}" }
+                        (self as List<*>).get((args[0] as Long).toInt())
+                    }
+                    executionSuspend { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' has wrong number of argument, expecting 1, received ${args.size}" }
+                        check(args[0] is Long) { "Method '${methodName}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0]?.let {it::class.simpleName}}" }
+                        //check(StdLibDefault.Integer.qualifiedTypeName == args[0].qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                        val idx = args[0] as Long
+                        (self as List<*>)[idx.toInt()] as Any
+                    }
                 }
-                methodPrimitive("transitiveClosure","List", false) {
+                methodPrimitive("separate", ListSeparated_typeName.value, true) {
+                    description("Returns a ListSeparated version of this List.")
+                    parameter("index", "Integer")
+                    returnTypeArgument("E")
+                    returnTypeArgument("E")
+                    returnTypeArgument("E")
+                    execution { self, args ->
+                        check(args.isEmpty()) { "Method '${methodName}' has wrong number of argument, expecting 0, received ${args.size}" }
+                        (self as List<*>).toSeparatedList()
+                    }
+                }
+                methodPrimitive("transitiveClosure", "List", false) {
                     description("")
                     returnTypeArgument("E")
                     parameter("lambda", "Lambda") // TODO: lambda should return List<E>
+                    execution { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
+                        check(args[0] is Function1<*, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                        val lambda: (Any) -> List<Any> = args[0] as (Any) -> List<Any>
+                        (self as List<Any>).transitiveClosure {
+                            //val args = mapOf("it" to it)
+                            lambda.invoke(it)
+                        }
+
+                    }
+                    executionSuspend { self, args ->
+                        check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
+                        // Lambda has extra paramter for coroutine (because it is a suspend function)
+                        check(args[0] is Function2<*, *, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                        val lambda: suspend (Any) -> List<Any> = args[0] as suspend (Any) -> List<Any>
+                        (self as List<Any>).transitiveClosure {
+                            //val args = mapOf("it" to it)
+                            lambda.invoke(it)
+                        }
+                    }
                 }
             }
-            collection("ListSeparated", listOf("E", "I", "S"), ListSeparated::class) {
+            collection(ListSeparated_typeName.value, listOf("E", "I", "S"), net.akehurst.language.collections.ListSeparated::class) {
                 supertype("List") { ref("E") }
+                propertyPrimitive("elements", "List", false, "Elements in the ListSeparated.", execution = { self -> (self as ListSeparated<*, *, *>).elements }) { typeArgument("E") }
+                propertyPrimitive("items", "List", false, "Items in the ListSeparated.", execution = { self -> (self as ListSeparated<*, *, *>).items }) { typeArgument("I") }
+                propertyPrimitive("separators", "List", false, "Separators in the ListSeparated.", execution = { self -> (self as ListSeparated<*, *, *>).separators }) { typeArgument("S") }
             }
-            collection("Map", listOf("K", "V"), Map::class) {
+            collection(OrderedSet_typeName.value, listOf("E"), net.akehurst.kotlinx.collections.OrderedSet::class) {
+                //TODO:
+            }
+            collection(Map_typeName.value, listOf("K", "V"), kotlin.collections.Map::class) {
                 supertype("Collection") { ref("Pair") }
             }
         }
         nsb.build()
     }
 
-    override val qualifiedName: QualifiedName = QualifiedName("std")
-    override fun findInOrCloneTo(other: TypesDomain): TypesNamespace = this
+    val AnyType by lazy { super.findOwnedSpecialTypeNamedOrNull(SimpleName("Any"))!!.type() }
+    val NothingType by lazy { super.findOwnedSpecialTypeNamedOrNull(SimpleName("Nothing"))!!.type() }
 
+    val String by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("String"))!!.type() }
+    val Boolean by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Boolean"))!!.type() }
+
+    /**
+     * 64 bit Integer (Long)
+     */
+    val Integer by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Integer"))!!.type() }
+
+    /**
+     * 64 bit Real (Double)
+     */
+    val Real by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Real"))!!.type() }
+    val Timestamp by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Timestamp"))!!.type() }
+    val Exception by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Exception"))!!.type() }
+
+    val Pair by lazy { super.findOwnedDataTypeNamedOrNull(SimpleName("Pair"))!! }
+    val Lambda by lazy { super.findOwnedSpecialTypeNamedOrNull(LambdaType_typeName)!!.type() }
+    val TupleType by lazy { TupleTypeSimple(this, TupleType_typeName) }
+
+    val Collection by lazy { super.findOwnedCollectionTypeNamedOrNull(Collection_typeName)!! }
+    val Set by lazy { super.findOwnedCollectionTypeNamedOrNull(Set_typeName)!! }
+    val List by lazy { super.findOwnedCollectionTypeNamedOrNull(List_typeName)!! }
+    val ListSeparated by lazy { super.findOwnedCollectionTypeNamedOrNull(ListSeparated_typeName)!! }
+    val OrderedSet by lazy { super.findOwnedCollectionTypeNamedOrNull(OrderedSet_typeName)!! }
+    val Map by lazy { super.findOwnedCollectionTypeNamedOrNull(Map_typeName)!! }
+
+    override fun findInOrCloneTo(other: TypesDomain): TypesNamespace = this
 
     private fun Collection_asMap(self: Any): Map<Any, Any>? {
         check(self is Collection<*>) { "Property 'asMap' is not applicable to '${self::class.simpleName}' objects." }

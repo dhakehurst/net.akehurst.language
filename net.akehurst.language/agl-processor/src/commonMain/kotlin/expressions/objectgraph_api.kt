@@ -20,6 +20,9 @@ package net.akehurst.language.objectgraph.api
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.expressions.api.FunctionDefinition
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
+import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.types.api.*
 
@@ -100,10 +103,10 @@ data class ExecutionResult(val value: Any?)
 
 interface PrimitiveExecutor {
     fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult?
-    fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult?
+    fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult?
     fun functionCall(functionName: String, args: List<*>): ExecutionResult?
 
-    suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult?
+    suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult?
 
 }
 
@@ -143,7 +146,7 @@ interface ObjectGraphAccessorMutatorCommon {
     fun getFromMapWithKey(tobj: TypedObject, key: TypedObject): TypedObject
     fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit)
 
-    fun callFunction(functionName: String, args: List<TypedObject>): TypedObject
+    fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver:(TypeReference)-> TypeInstance): TypedObject
     fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject
 
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject
@@ -165,9 +168,16 @@ interface ExternalGetter {
     suspend fun getPropertySuspend(obj: Any, propertyName: String): Any?
 }
 
+interface FunctionLib {
+    val declaration: Map<String, FunctionDefinitionFloating>
+
+    fun findFirstFunctionNamed(functionName:String): FunctionDefinitionFloating?
+}
+
 interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
     val primitiveExecutor: PrimitiveExecutor
     val externalGetter: ExternalGetter
+    val functionLib: FunctionLib
 
     fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject
 
@@ -198,7 +208,7 @@ interface ExternalGetterSuspending {
 
 interface PrimitiveExecutorSuspending {
     fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult?
-    suspend fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDeclaration, args: List<*>): ExecutionResult?
+    suspend fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult?
     fun functionCall(functionName: String, args: List<*>): ExecutionResult?
 }
 /*

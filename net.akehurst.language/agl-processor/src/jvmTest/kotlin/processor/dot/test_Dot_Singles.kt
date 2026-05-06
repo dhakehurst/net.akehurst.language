@@ -980,53 +980,55 @@ digraph G {
     fun dot__style() {
 
         val sentence = """
-namespace DOT
-C_PREPROCESSOR {
-  foreground: gray;
-  font-style: italic;
-}
-SINGLE_LINE_COMMENT {
-  foreground: DarkSlateGrey;
-  font-style: italic;
-}
-MULTI_LINE_COMMENT {
-  foreground: DarkSlateGrey;
-  font-style: italic;
-}
-STRICT {
-  foreground: purple;
-  font-weight: bold;
-}
-GRAPH {
-  foreground: purple;
-  font-weight: bold;
-}
-DIGRAPH {
-  foreground: purple;
-  font-weight: bold;
-}
-SUBGRAPH {
-  foreground: purple;
-  font-weight: bold;
-}
-NODE {
-  foreground: purple;
-  font-weight: bold;
-}
-EDGE {
-  foreground: purple;
-  font-weight: bold;
-}
-ALPHABETIC_ID {
-  foreground: red;
-  font-style: italic;
-}
-HTML {
-  background: LemonChiffon;
-}
-NAME {
-    foreground: green;
-}
+        namespace DOT
+        styles Dot {
+            C_PREPROCESSOR {
+              foreground: gray;
+              font-style: italic;
+            }
+            SINGLE_LINE_COMMENT {
+              foreground: DarkSlateGrey;
+              font-style: italic;
+            }
+            MULTI_LINE_COMMENT {
+              foreground: DarkSlateGrey;
+              font-style: italic;
+            }
+            STRICT {
+              foreground: purple;
+              font-weight: bold;
+            }
+            GRAPH {
+              foreground: purple;
+              font-weight: bold;
+            }
+            DIGRAPH {
+              foreground: purple;
+              font-weight: bold;
+            }
+            SUBGRAPH {
+              foreground: purple;
+              font-weight: bold;
+            }
+            NODE {
+              foreground: purple;
+              font-weight: bold;
+            }
+            EDGE {
+              foreground: purple;
+              font-weight: bold;
+            }
+            ALPHABETIC_ID {
+              foreground: red;
+              font-style: italic;
+            }
+            HTML {
+              background: LemonChiffon;
+            }
+            NAME {
+                foreground: green;
+            }
+        }
         """.trimIndent()
 
         val styleProc = Agl.registry.agl.style.processor!!
