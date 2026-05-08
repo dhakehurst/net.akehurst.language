@@ -30,7 +30,7 @@ open class ExpressionsInterpreterOverTypedObject(
     val objectGraph: ObjectGraphAccessorMutator,
     val issues: IssueHolder
 ) {
-    val typeModel = objectGraph.typesDomain
+    val typesDomain = objectGraph.typesDomain
     //val typeResolver = ExpressionTypeResolver(typeModel, issues)
 
     /**
@@ -149,8 +149,8 @@ open class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateIndexOperation(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
         return when {
-            obj.type.resolvedDeclaration.conformsTo(StdLibDefault.List) -> evaluateIndexOperationOnList(evc, obj, indices)
-            obj.type.resolvedDeclaration.conformsTo(StdLibDefault.Map) -> evaluateIndexOperationOnMap(evc, obj, indices)
+            obj.type.resolvedDefinition.conformsTo(StdLibDefault.List) -> evaluateIndexOperationOnList(evc, obj, indices)
+            obj.type.resolvedDefinition.conformsTo(StdLibDefault.Map) -> evaluateIndexOperationOnMap(evc, obj, indices)
             else -> {
                 issues.error(null, "Index operation on non List value is not possible: ${obj.asString()}")
                 objectGraph.nothing()
@@ -171,14 +171,14 @@ open class ExpressionsInterpreterOverTypedObject(
                         when {
                             objectGraph.nothing() == elem -> objectGraph.nothing()
                             else -> {
-                                val elemType = typeModel.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type(elem.type.typeArguments)
+                                val elemType = typesDomain.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type(elem.type.typeArguments)
                                 when {
                                     null == elemType -> {
                                         issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of List element '$elem'")
                                         objectGraph.cast(elem, listElementType)
                                     }
 
-                                    elemType.resolvedDeclaration is TupleType -> objectGraph.cast(elem, elemType)
+                                    elemType.resolvedDefinition is TupleType -> objectGraph.cast(elem, elemType)
                                     elemType.conformsTo(listElementType) -> objectGraph.cast(elem, elemType)
                                     else -> {
                                         issues.error(
@@ -228,14 +228,14 @@ open class ExpressionsInterpreterOverTypedObject(
                         when {
                             objectGraph.nothing() == elem -> objectGraph.nothing()
                             else -> {
-                                val elemType = typeModel.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type()
+                                val elemType = typesDomain.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type()
                                 when {
                                     null == elemType -> {
                                         issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of Map element '$elem'")
                                         objectGraph.cast(elem, valueType)
                                     }
 
-                                    elemType.resolvedDeclaration is TupleType -> objectGraph.cast(elem, elemType)
+                                    elemType.resolvedDefinition is TupleType -> objectGraph.cast(elem, elemType)
                                     elemType.conformsTo(valueType) -> objectGraph.cast(elem, elemType)
                                     else -> {
                                         issues.warn(
@@ -542,7 +542,7 @@ open class ExpressionsInterpreterOverTypedObject(
 
     fun evaluateTypeReference(typeReference: TypeReference): TypeInstance {
         //TODO: issues rather than exceptions!
-        val decl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
+        val decl = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
         val targs = typeReference.typeArguments.map { evaluateTypeReference(it).asTypeArgument }
         return decl.type(targs, typeReference.isNullable)
     }
@@ -570,7 +570,7 @@ open class ExpressionsInterpreterOverTypedObject(
      * Separation of construct and setProperties needed for M2m interpreter
      */
     fun constructObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
-        val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
+        val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
         return when (typeDef) {
             null -> error("Type not found ${expression.possiblyQualifiedTypeName}")
             is DataType, is ValueType -> {

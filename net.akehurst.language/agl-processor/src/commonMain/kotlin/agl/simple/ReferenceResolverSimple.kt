@@ -222,7 +222,7 @@ class ReferenceResolverSimple(
         val targets = referredToTypes.flatMap { td ->
             // Use context (not scope) because the reference could have been created from a different sentence
             sentenceContext.findItemsByQualifiedNameConformingTo(qName) {
-                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDefinition
                 itemType.conformsTo(td)
             }
         }
@@ -323,7 +323,7 @@ class ReferenceResolverSimple(
     }
 
     private fun AsmValue.conformsToType(typeName: PossiblyQualifiedName): Boolean {
-        val type = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDeclaration
+        val type = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDefinition
         val selfType = typesDomain.typeOf(this)
         return selfType.conformsTo(type)
     }

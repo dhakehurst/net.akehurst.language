@@ -17,13 +17,17 @@
 
 package net.akehurst.language.agl.expressions.processor
 
+import net.akehurst.kotlinx.collections.OrderedSet
+import net.akehurst.kotlinx.collections.toOrderedSet
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.time.Instant
 
 private class TypedObjectAny(
     override val accessor: ObjectGraphAccessorMutator,
@@ -88,44 +92,66 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         obj is TypedObject -> obj as TypedObject
         else -> when (obj) {
             is Boolean -> typedAs(obj, StdLibDefault.Boolean)
+            is Byte -> typedAs(obj.toLong(), StdLibDefault.Integer)
+            is Short -> typedAs(obj.toLong(), StdLibDefault.Integer)
             is Int -> typedAs(obj.toLong(), StdLibDefault.Integer)
             is Long -> typedAs(obj, StdLibDefault.Integer)
             is Float -> typedAs(obj.toDouble(), StdLibDefault.Real)
             is Double -> typedAs(obj, StdLibDefault.Real)
+            is Char -> typedAs(obj.toString(), StdLibDefault.String) //TODO: do we need an explicit Char type ?
             is String -> typedAs(obj, StdLibDefault.String)
-            is List<*> -> {
-                val ifElementTypeNotFound = when {
-                    StdLibDefault.List == ifNotFound.resolvedDeclaration && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type
+            is Instant -> typedAs(obj, StdLibDefault.Timestamp)
+            is Throwable -> typedAs(obj, StdLibDefault.Exception)
+            is Pair<*, *> -> {
+                val ifFstTypeNotFound = when {
+                    StdLibDefault.Pair == ifNotFound.resolvedDefinition && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type
                     else -> StdLibDefault.AnyType
                 }
-                val elements = obj.map { toTypedObject(it, ifElementTypeNotFound) }
-                when {
-                    StdLibDefault.List == ifNotFound.resolvedDeclaration -> createCollection(ifNotFound, elements)
-                    else -> createCollection(StdLibDefault.List.type(listOf(ifElementTypeNotFound.asTypeArgument)), elements)
-                }
-            }
-            is Set<*> -> {
-                val ifElementTypeNotFound = when {
-                    StdLibDefault.Set == ifNotFound.resolvedDeclaration && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type
+                val ifSndTypeNotFound = when {
+                    StdLibDefault.Pair == ifNotFound.resolvedDefinition && 1 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[1].type
                     else -> StdLibDefault.AnyType
                 }
-                val elements = obj.map { toTypedObject(it, ifElementTypeNotFound) }.toSet()
+                val fst = toTypedObject(obj.first, ifFstTypeNotFound)
+                val snd = toTypedObject(obj.second, ifSndTypeNotFound)
                 when {
-                    StdLibDefault.Set == ifNotFound.resolvedDeclaration -> createCollection(ifNotFound, elements)
-                    else -> createCollection(StdLibDefault.Set.type(listOf(ifElementTypeNotFound.asTypeArgument)), elements)
+                    StdLibDefault.Pair == ifNotFound.resolvedDefinition -> typedAs(obj, ifNotFound)
+                    else -> typedAs(Pair(fst, snd), typeFor(obj, ifNotFound))
                 }
             }
 
-            is Map<*, *> -> createCollectionFromQualifiedName(
-                StdLibDefault.Map.qualifiedName,
-                obj.map { (k, v) ->
-                    val key = toTypedObject(k, ifNotFound)
-                    val value = toTypedObject(v, ifNotFound)
+            is OrderedSet<*> -> toTypedCollection(obj.toList(), StdLibDefault.OrderedSet, ifNotFound) { it.toOrderedSet() }
+            is ListSeparated<*, *, *> -> {
+                TODO()
+            }
+
+            is Array<*> -> toTypedCollection(obj.toList(), StdLibDefault.List, ifNotFound) { it.toList() }
+            //TODO: special array types IntArray, LongArray, etc
+            is List<*> -> toTypedCollection(obj, StdLibDefault.List, ifNotFound) { it.toList() }
+            is Set<*> -> toTypedCollection(obj, StdLibDefault.Set, ifNotFound) { it.toSet() }
+
+            is Map<*, *> -> {
+                val ifKeyTypeNotFound = when {
+                    StdLibDefault.Map == ifNotFound.resolvedDefinition && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type
+                    else -> StdLibDefault.AnyType
+                }
+                val ifValueTypeNotFound = when {
+                    StdLibDefault.Map == ifNotFound.resolvedDefinition && 1 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[1].type
+                    else -> StdLibDefault.AnyType
+                }
+                val entries = obj.map { (k, v) ->
+                    val key = toTypedObject(k, ifKeyTypeNotFound)
+                    val value = toTypedObject(v, ifValueTypeNotFound)
                     val p = Pair(key, value)
                     typedAs(p, StdLibDefault.Pair.type(listOf(key.type.asTypeArgument, value.type.asTypeArgument)))
                 }
-            )
+                when {
+                    StdLibDefault.Map == ifNotFound.resolvedDefinition -> createCollection(ifNotFound, entries)
+                    else -> createCollection(StdLibDefault.Map.type(listOf(ifKeyTypeNotFound.asTypeArgument, ifValueTypeNotFound.asTypeArgument)), entries)
+                }
+            }
 
+            is Iterator<*> -> toTypedCollection(obj.asSequence().toList(), StdLibDefault.List, ifNotFound) { it.toList() }
+            is Function<*> -> typedAs(obj, StdLibDefault.Lambda)
             else -> typedAs(obj, typeFor(obj, ifNotFound))
         }
     }
@@ -295,5 +321,17 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return ObjectGraphAny(nodes, edges)
     }
 
+    private fun toTypedCollection(obj: Iterable<*>, baseCollType: TypeDefinition, ifNotFound: TypeInstance, func: (Iterable<TypedObject>) -> Iterable<TypedObject>): TypedObject {
+        val ifElementTypeNotFound = when {
+            baseCollType == ifNotFound.resolvedDefinition && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type
+            else -> StdLibDefault.AnyType
+        }
+        val els = obj.map { toTypedObject(it, ifElementTypeNotFound) }
+        val elements = func.invoke(els)
+        return when {
+            baseCollType == ifNotFound.resolvedDefinition -> createCollection(ifNotFound, elements)
+            else -> createCollection(baseCollType.type(listOf(ifElementTypeNotFound.asTypeArgument)), elements)
+        }
+    }
 }
 

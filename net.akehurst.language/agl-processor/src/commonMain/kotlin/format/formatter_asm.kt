@@ -122,6 +122,11 @@ class FormatDomainDefault(
             it.function.firstOrNull { it.name == functionName }
         }
     }
+
+    override fun findFirstFormatSetDefinitionByNameOrNull(formatSetName: PossiblyQualifiedName): FormatSet? = when (formatSetName) {
+        is SimpleName ->  namespace.firstNotNullOfOrNull { it.formatSet.firstOrNull { it.name == formatSetName } }
+        is QualifiedName -> findNamespaceOrNull(formatSetName.front)?.findDefinitionOrNull(formatSetName.last) as? FormatSet
+    }
 }
 
 class FormatNamespaceDefault(

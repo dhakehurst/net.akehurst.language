@@ -175,7 +175,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 val downData = downStack.pop()
                 val value = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack
-                    typesDomain.NothingType == downData.trRule.forNode.resolvedType.resolvedDeclaration -> objectGraph.nothing()
+                    typesDomain.NothingType == downData.trRule.forNode.resolvedType.resolvedDefinition -> objectGraph.nothing()
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { setLocationFor(it.self, nodeInfo, sentence) }
@@ -262,7 +262,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 
     private fun trRuleForNode(parentTrRule: AsmTransformationRule?, nodeInfo: SpptDataNodeInfo): AsmTransformationRule {
         //val parentType = parentTrRule?.resolvedType
-        val parentTypeDecl = parentTrRule?.resolvedType?.resolvedDeclaration
+        val parentTypeDecl = parentTrRule?.resolvedType?.resolvedDefinition
         val nodeRule = nodeInfo.node.rule
         return when {
             null == parentTypeDecl -> asmTransformationRule(StdLibDefault.NothingType, RootExpressionDefault.NOTHING)
@@ -388,7 +388,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     private fun typeForEmbedded(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         // need to skip over the embedded node and use type of its child
         if (Debug.CHECK) check(nodeInfo.node.rule.isEmbedded)
-        val type = parentTypeUsage.resolvedDeclaration
+        val type = parentTypeUsage.resolvedDefinition
         return when (type) {
             is DataType -> {
                 val prop = type.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
@@ -402,7 +402,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     private fun typeForParentListSimple(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         // nodes map to runtime-rules, not user-rules
         // if user-rule only had one list item, then runtime-rule is 'compressed, i.e. no pseudo rule for the list
-        if (Debug.CHECK) check(parentTypeUsage.resolvedDeclaration == StdLibDefault.List)
+        if (Debug.CHECK) check(parentTypeUsage.resolvedDefinition == StdLibDefault.List)
         val itemTypeUse = parentTypeUsage.typeArguments[0]
         return itemTypeUse as TypeInstance
     }
@@ -410,7 +410,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     private fun typeForParentListSeparated(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         // nodes map to runtime-rules, not user-rules
         // if user-rule only had one slist item, then runtime-rule is 'compressed, i.e. no pseudo rule for the slist
-        if (Debug.CHECK) check(parentTypeUsage.resolvedDeclaration == StdLibDefault.ListSeparated)
+        if (Debug.CHECK) check(parentTypeUsage.resolvedDefinition == StdLibDefault.ListSeparated)
         val index = nodeInfo.child.index % 2
         val childTypeUse = parentTypeUsage.typeArguments[index]
         return childTypeUse as TypeInstance
@@ -418,7 +418,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 
     private fun typeForParentUnnamedSuperType(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         if (Debug.CHECK) check(parentTypeUsage.isNullable)
-        val tu = (parentTypeUsage.resolvedDeclaration as UnionType).alternatives[nodeInfo.alt.option.asIndex]
+        val tu = (parentTypeUsage.resolvedDefinition as UnionType).alternatives[nodeInfo.alt.option.asIndex]
         return tu
     }
 
@@ -442,7 +442,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     }
 
     private fun resolveElementSubtype(typeUse: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
-        val type = typeUse.resolvedDeclaration
+        val type = typeUse.resolvedDefinition
         return when {
             type is DataType && type.subtypes.isNotEmpty() -> {
                 val t = type.subtypes[nodeInfo.alt.option.asIndex]
@@ -458,12 +458,12 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             null == prop -> typesDomain.NothingType.type() // property unused
             prop.typeInstance.isNullable -> prop.typeInstance//typeForOptional(propTypeUse, nodeInfo)
             else -> {
-                val propType = prop.typeInstance.resolvedDeclaration
+                val propType = prop.typeInstance.resolvedDefinition
                 when (propType) {
                     is PrimitiveType -> (prop.typeInstance)
                     is UnionType -> {
                         val tu = resolveUnnamedSuperTypeSubtype(prop.typeInstance, nodeInfo)
-                        when (tu.resolvedDeclaration) {
+                        when (tu.resolvedDefinition) {
                             is TupleType -> (tu)
                             else -> (prop.typeInstance)
                         }
@@ -485,7 +485,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     }
 
     private fun resolveCompressed(p: ParsePath, trRule: AsmTransformationRule, nodeInfo: SpptDataNodeInfo): DownData2 {
-        val typeDecl = trRule.resolvedType.resolvedDeclaration
+        val typeDecl = trRule.resolvedType.resolvedDefinition
         return when {
             typeDecl is StructuredType && nodeInfo.node.rule.isOptional && nodeInfo.node.rule.hasOnyOneRhsItem && nodeInfo.node.rule.rhsItems[0][0].isTerminal -> {
                 DownData2(p, NodeTrRules(trRule, StdLibDefault.String.toLeafAsStringTrRule()))
@@ -517,7 +517,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 when {
                     // special cases where PT is compressed for choice of concats
                     nodeInfo.node.rule.isChoice -> when {
-                        typeDecl.alternatives[nodeInfo.alt.option.asIndex].resolvedDeclaration is TupleType -> DownData2(
+                        typeDecl.alternatives[nodeInfo.alt.option.asIndex].resolvedDefinition is TupleType -> DownData2(
                             p,
                             NodeTrRules(trRule, typeDecl.alternatives[nodeInfo.alt.option.asIndex].toSubtypeTrRule())
                         )
@@ -534,7 +534,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     }
 
     private fun resolveUnnamedSuperTypeSubtype(typeUse: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
-        val type = typeUse.resolvedDeclaration
+        val type = typeUse.resolvedDefinition
         return when {
             type is UnionType -> when {
                 nodeInfo.node.rule.isChoice && type.alternatives.isNotEmpty() -> {

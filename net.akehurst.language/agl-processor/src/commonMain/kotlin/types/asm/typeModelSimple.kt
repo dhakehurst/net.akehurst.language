@@ -54,8 +54,8 @@ class TypesDomainSimple(
 // TODO: extend ModelAbstract !
 abstract class TypesDomainSimpleAbstract() : TypesDomain {
 
-    override val AnyType: TypeDefinition get() = StdLibDefault.AnyType.resolvedDeclaration //TODO: stdLib not necessarily part of model !
-    override val NothingType: TypeDefinition get() = StdLibDefault.NothingType.resolvedDeclaration //TODO: stdLib not necessarily part of model !
+    override val AnyType: TypeDefinition get() = StdLibDefault.AnyType.resolvedDefinition //TODO: stdLib not necessarily part of model !
+    override val NothingType: TypeDefinition get() = StdLibDefault.NothingType.resolvedDefinition //TODO: stdLib not necessarily part of model !
 
     // stored in namespace so deserialisation works
     private val _namespace = cached {
@@ -170,11 +170,11 @@ abstract class TypeInstanceAbstract() : TypeInstance {
     override val allResolvedProperty: Map<PropertyName, PropertyDeclarationResolved>
         get() {
             val typeArgMap = createTypeArgMap()
-            val superProps = resolvedDeclaration.supertypes.map {
+            val superProps = resolvedDefinition.supertypes.map {
                 val resIt = it.resolved(typeArgMap)
                 resIt.allResolvedProperty
             }.fold(mapOf<PropertyName, PropertyDeclarationResolved>()) { acc, it -> acc + it }
-            val ownResolveProps = resolvedDeclaration.property.associate {
+            val ownResolveProps = resolvedDefinition.property.associate {
                 val rp = it.resolved(typeArgMap)
                 Pair(it.name, rp)
             }
@@ -184,11 +184,11 @@ abstract class TypeInstanceAbstract() : TypeInstance {
     override val allResolvedMethod: Map<MethodName, MethodDefinitionResolved>
         get() {
             val typeArgMap = createTypeArgMap()
-            val superProps = resolvedDeclaration.supertypes.map {
+            val superProps = resolvedDefinition.supertypes.map {
                 val resIt = it.resolved(typeArgMap)
                 resIt.allResolvedMethod
             }.fold(mapOf<MethodName, MethodDefinitionResolved>()) { acc, it -> acc + it }
-            val ownResolveProps = resolvedDeclaration.method.associate {
+            val ownResolveProps = resolvedDefinition.method.associate {
                 val rp = it.resolved(typeArgMap)
                 Pair(it.name, rp)
             }
@@ -197,8 +197,8 @@ abstract class TypeInstanceAbstract() : TypeInstance {
 
     override val asTypeArgument: TypeArgument get() = TypeArgumentSimple(this)
 
-    override fun notNullable() = this.resolvedDeclaration.type(typeArguments, false)
-    override fun nullable() = this.resolvedDeclaration.type(typeArguments, true)
+    override fun notNullable() = this.resolvedDefinition.type(typeArguments, false)
+    override fun nullable() = this.resolvedDefinition.type(typeArguments, true)
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String {
         return when {
@@ -213,8 +213,8 @@ abstract class TypeInstanceAbstract() : TypeInstance {
                     else -> ""
                 }
                 val name = when {
-                    typeArguments.isEmpty() -> resolvedDeclarationOrNull?.signature(context, currentDepth + 1) ?: this.typeName.value
-                    else -> resolvedDeclaration.name.value
+                    typeArguments.isEmpty() -> resolvedDefinitionOrNull?.signature(context, currentDepth + 1) ?: this.typeName.value
+                    else -> resolvedDefinition.name.value
                 }
                 return "${name}$args$n"
             }
@@ -226,7 +226,7 @@ abstract class TypeInstanceAbstract() : TypeInstance {
         this == StdLibDefault.NothingType -> other.isNullable
         other == StdLibDefault.NothingType -> false
         other == StdLibDefault.AnyType -> true
-        this.resolvedDeclaration.conformsTo(other.resolvedDeclaration).not() -> false
+        this.resolvedDefinition.conformsTo(other.resolvedDefinition).not() -> false
         this.typeArguments.size != other.typeArguments.size -> false
         else -> {
             var result = true
@@ -267,7 +267,7 @@ abstract class TypeInstanceAbstract() : TypeInstance {
 
     protected open fun createTypeArgMap(): Map<TypeParameter, TypeInstance> {
         val typeArgMap = mutableMapOf<TypeParameter, TypeInstance>()
-        resolvedDeclarationOrNull?.typeParameters?.forEachIndexed { index, it ->
+        resolvedDefinitionOrNull?.typeParameters?.forEachIndexed { index, it ->
             val tp = it
             // maybe the type arg has not been explicitly provided, in which case provide AnyType
             val ta = this.typeArguments.getOrNull(index) ?: StdLibDefault.AnyType.asTypeArgument
@@ -294,13 +294,13 @@ class TypeParameterReference(
 
     override val typeArguments: List<TypeArgument> = mutableListOf() //mutableListOf for serialisation
 
-    override val isNothing: Boolean get() = StdLibDefault.NothingType.resolvedDeclaration == resolvedDeclaration
-    override val isPrimitive: Boolean get() = resolvedDeclaration is PrimitiveType
-    override val isCollection: Boolean get() = resolvedDeclaration is CollectionType
+    override val isNothing: Boolean get() = StdLibDefault.NothingType.resolvedDefinition == resolvedDefinition
+    override val isPrimitive: Boolean get() = resolvedDefinition is PrimitiveType
+    override val isCollection: Boolean get() = resolvedDefinition is CollectionType
 
-    override val resolvedDeclarationOrNull: TypeDefinition? = null
+    override val resolvedDefinitionOrNull: TypeDefinition? = null
 
-    override val resolvedDeclaration: TypeDefinition get() = error("TypeParameterReference does not have a declaration")
+    override val resolvedDefinition: TypeDefinition get() = error("TypeParameterReference does not have a declaration")
 
     override fun conformsTo(other: TypeInstance): Boolean {
         TODO("not implemented")
@@ -387,7 +387,7 @@ class TypeInstanceSimple(
     val context: TypeDefinition? get() = contextQualifiedTypeName?.let { namespace.findTypeNamed(it) }
 
     val qualifiedNameOrNull
-        get() = resolvedDeclarationOrNull?.qualifiedName
+        get() = resolvedDefinitionOrNull?.qualifiedName
             ?: when (qualifiedOrImportedTypeName) {
                 is QualifiedName -> qualifiedOrImportedTypeName
                 is SimpleName -> context?.namespace?.qualifiedName?.append(qualifiedOrImportedTypeName)
@@ -397,21 +397,21 @@ class TypeInstanceSimple(
     val qualifiedNameOrSimpleName get() = qualifiedNameOrNull ?: qualifiedOrImportedTypeName
 
     override val typeName: SimpleName
-        get() = resolvedDeclarationOrNull?.name
+        get() = resolvedDefinitionOrNull?.name
             ?: qualifiedOrImportedTypeName.simpleName
 
     override val qualifiedTypeName: QualifiedName
         get() = qualifiedNameOrNull
             ?: error("Cannot construct a Qualified name for '$qualifiedOrImportedTypeName' in context of '$contextQualifiedTypeName'")
 
-    override val isNothing: Boolean get() = StdLibDefault.NothingType.resolvedDeclaration == resolvedDeclaration
-    override val isPrimitive: Boolean get() = resolvedDeclaration is PrimitiveType
-    override val isCollection: Boolean get() = resolvedDeclaration is CollectionType
+    override val isNothing: Boolean get() = StdLibDefault.NothingType.resolvedDefinition == resolvedDefinition
+    override val isPrimitive: Boolean get() = resolvedDefinition is PrimitiveType
+    override val isCollection: Boolean get() = resolvedDefinition is CollectionType
 
-    override val resolvedDeclarationOrNull: TypeDefinition? get() = namespace.findTypeNamed(qualifiedOrImportedTypeName)
+    override val resolvedDefinitionOrNull: TypeDefinition? get() = namespace.findTypeNamed(qualifiedOrImportedTypeName)
 
-    override val resolvedDeclaration: TypeDefinition
-        get() = resolvedDeclarationOrNull
+    override val resolvedDefinition: TypeDefinition
+        get() = resolvedDefinitionOrNull
             ?: error("Cannot resolve TypeDefinition '$qualifiedOrImportedTypeName', not found in namespace '${namespace.qualifiedName}'. Is an import needed?")
 
     override fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance {
@@ -431,7 +431,7 @@ class TypeInstanceSimple(
     }
 
     override fun possiblyQualifiedNameInContext(context: TypesNamespace): PossiblyQualifiedName = when {
-        this.resolvedDeclaration.namespace == context -> this.typeName
+        this.resolvedDefinition.namespace == context -> this.typeName
         else -> this.qualifiedTypeName
     }
 
@@ -464,13 +464,13 @@ class TupleTypeInstanceSimple(
     override val isNullable: Boolean
 ) : TypeInstanceAbstract(), TupleTypeInstance {
 
-    override val typeName: SimpleName get() = resolvedDeclaration.name
-    override val qualifiedTypeName: QualifiedName get() = resolvedDeclaration.qualifiedName
+    override val typeName: SimpleName get() = resolvedDefinition.name
+    override val qualifiedTypeName: QualifiedName get() = resolvedDefinition.qualifiedName
     override val isNothing: Boolean get() = false
     override val isPrimitive: Boolean get() = false
     override val isCollection: Boolean get() = false
-    override val resolvedDeclarationOrNull: TypeDefinition get() = resolvedDeclaration
-    override val resolvedDeclaration: TypeDefinition = StdLibDefault.TupleType
+    override val resolvedDefinitionOrNull: TypeDefinition get() = resolvedDefinition
+    override val resolvedDefinition: TypeDefinition = StdLibDefault.TupleType
 
     override fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance {
         val thisTypeArgMap = createTypeArgMap()
@@ -484,7 +484,7 @@ class TupleTypeInstanceSimple(
     override fun createTypeArgMap(): Map<TypeParameter, TypeInstance> = emptyMap()
 
     override fun possiblyQualifiedNameInContext(context: TypesNamespace): PossiblyQualifiedName = when {
-        this.resolvedDeclaration.namespace == context -> this.typeName
+        this.resolvedDefinition.namespace == context -> this.typeName
         else -> this.qualifiedTypeName
     }
 
@@ -496,10 +496,10 @@ class TupleTypeInstanceSimple(
         )
     }
 
-    override fun hashCode(): Int = listOf(resolvedDeclaration, typeArguments, isNullable).hashCode()
+    override fun hashCode(): Int = listOf(resolvedDefinition, typeArguments, isNullable).hashCode()
     override fun equals(other: Any?): Boolean = when {
         other !is TypeInstanceSimple -> false
-        this.resolvedDeclaration != other.resolvedDeclaration -> false
+        this.resolvedDefinition != other.resolvedDefinition -> false
         this.isNullable != other.isNullable -> false
         this.typeArguments != other.typeArguments -> false
         else -> true
@@ -883,16 +883,16 @@ abstract class TypeDefinitionSimpleAbstract(
 
     override val method = mutableListOf<MethodDefinition>()
 
-    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.resolvedDeclaration as DataType).allSuperTypes }
+    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.resolvedDefinition as DataType).allSuperTypes }
 
     override val allProperty: Map<PropertyName, PropertyDeclaration>
         get() = supertypes.flatMap {
-            it.resolvedDeclaration.allProperty.values
+            it.resolvedDefinition.allProperty.values
         }.associateBy { it.name } + this.property.associateBy { it.name }
 
     override val allMethod: Map<MethodName, MethodDefinition>
         get() = supertypes.flatMap {
-            it.resolvedDeclaration.allMethod.values
+            it.resolvedDefinition.allMethod.values
         }.associateBy { it.name } + this.method.associateBy { it.name }
 
     /**
@@ -907,12 +907,12 @@ abstract class TypeDefinitionSimpleAbstract(
 
     override fun conformsTo(other: TypeDefinition): Boolean = when {
         other === this -> true // fast option
-        this == StdLibDefault.NothingType.resolvedDeclaration -> false
-        other == StdLibDefault.NothingType.resolvedDeclaration -> false
-        other == StdLibDefault.AnyType.resolvedDeclaration -> true
+        this == StdLibDefault.NothingType.resolvedDefinition -> false
+        other == StdLibDefault.NothingType.resolvedDefinition -> false
+        other == StdLibDefault.AnyType.resolvedDefinition -> true
         other == this -> true
-        other is UnionType -> other.alternatives.any { this.conformsTo(it.resolvedDeclaration) }
-        else -> this.supertypes.any { it.resolvedDeclaration.conformsTo(other) }
+        other is UnionType -> other.alternatives.any { this.conformsTo(it.resolvedDefinition) }
+        else -> this.supertypes.any { it.resolvedDefinition.conformsTo(other) }
     }
 
     override fun getOwnedPropertyByIndexOrNull(i: Int): PropertyDeclaration? = propertyByIndex[i]
@@ -1191,8 +1191,8 @@ class UnionTypeSimple(
 
     override fun conformsTo(other: TypeDefinition): Boolean = when {
         this === other -> true
-        other == StdLibDefault.NothingType.resolvedDeclaration -> false
-        other == StdLibDefault.AnyType.resolvedDeclaration -> true
+        other == StdLibDefault.NothingType.resolvedDefinition -> false
+        other == StdLibDefault.AnyType.resolvedDefinition -> true
         other is UnionType -> this.alternatives == other.alternatives
         else -> false
     }
@@ -1300,8 +1300,8 @@ class TupleTypeSimple(
 
     override fun conformsTo(other: TypeDefinition): Boolean = when {
         this === other -> true
-        other == StdLibDefault.NothingType.resolvedDeclaration -> false
-        other == StdLibDefault.AnyType.resolvedDeclaration -> true
+        other == StdLibDefault.NothingType.resolvedDefinition -> false
+        other == StdLibDefault.AnyType.resolvedDefinition -> true
         other is TupleType -> other.typeParameters.containsAll(this.typeParameters) //TODO: this should check conformance of property types! - could cause recursive loop!
         else -> false
     }
@@ -1331,7 +1331,7 @@ class ValueTypeSimple(
         namespace.addDefinition(this)
     }
 
-    override val constructors: List<ConstructorDeclaration> = mutableListOf()
+    override val constructors: List<ConstructorDefinition> = mutableListOf()
 
     override val valueProperty: PropertyDeclaration
         get() = when (constructors.size) {
@@ -1346,7 +1346,7 @@ class ValueTypeSimple(
         }
 
     override fun addConstructor(parameters: List<ParameterDeclaration>) {
-        val cons = ConstructorDeclarationSimple(this, parameters)
+        val cons = ConstructorDefinitionSimple(this, parameters)
         (constructors as MutableList).add(cons)
 
     }
@@ -1487,7 +1487,7 @@ class DataTypeSimple(
     override val name: SimpleName
 ) : StructuredTypeSimpleAbstract(), DataType {
 
-    override val constructors: List<ConstructorDeclaration> = mutableListOf()
+    override val constructors: List<ConstructorDefinition> = mutableListOf()
     //override var typeParameters = mutableListOf<SimpleName>()
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
@@ -1498,7 +1498,7 @@ class DataTypeSimple(
     }
 
     override fun addConstructor(parameters: List<ParameterDeclaration>) {
-        val cons = ConstructorDeclarationSimple(this, parameters)
+        val cons = ConstructorDefinitionSimple(this, parameters)
         (constructors as MutableList).add(cons)
     }
 
@@ -1607,13 +1607,16 @@ class CollectionTypeSimple(
     }
 }
 
-class ConstructorDeclarationSimple(
+class ConstructorDefinitionSimple(
     override val owner: TypeDefinition,
     override val parameters: List<ParameterDeclaration>
-) : ConstructorDeclaration {
+) : ConstructorDefinition {
 
-    override fun findInOrCloneTo(other: TypesDomain): ConstructorDeclaration =
-        ConstructorDeclarationSimple(
+    override var execution: ((args: List<*>) -> Any?)? = null
+    override var executionSuspend: (suspend (args: List<*>) -> Any?)? = null
+
+    override fun findInOrCloneTo(other: TypesDomain): ConstructorDefinition =
+        ConstructorDefinitionSimple(
             this.owner.findInOrCloneTo(other),
             this.parameters.map { it.findInOrCloneTo(other) }
         )

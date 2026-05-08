@@ -64,8 +64,14 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
             import = 'import' possiblyQualifiedName ;
             definition = 'definition' IDENTIFIER ;
             possiblyQualifiedName = [IDENTIFIER / '.']+ ;
-            option = '#' IDENTIFIER (':' IDENTIFIER)? ;
+            option = '#' IDENTIFIER (':' optionValue)? ;
+            optionValue = IDENTIFIER | literal ;
+            literal = BOOLEAN | INTEGER | REAL | STRING ;
             leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
+            leaf BOOLEAN = "true|false" ;
+            leaf INTEGER = "[-]?[0-9]+" ;
+            leaf REAL = "[-]?[0-9]+[.][0-9]+" ;
+            leaf STRING = "'([^'\\]|\\.)*'" ;
           }
       """.trimIndent()
 
@@ -151,9 +157,23 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
                     concatenation("definition") { lit("definition"); ref("IDENTIFIER") }
                     separatedList("possiblyQualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
                     concatenation("option") {
-                        lit("#"); ref("IDENTIFIER"); opt { grp { lit(":"); ref("IDENTIFIER") } }
+                        lit("#"); ref("IDENTIFIER"); opt { grp { lit(":"); ref("optionValue") } }
+                    }
+                    choice("optionValue") {
+                        ref("IDENTIFIER")
+                        ref("literal")
+                    }
+                    choice("literal") {
+                        ref("BOOLEAN")
+                        ref("INTEGER")
+                        ref("REAL")
+                        ref("STRING")
                     }
                     concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
+                    concatenation("BOOLEAN", isLeaf = true) { pat("true|false") }
+                    concatenation("INTEGER", isLeaf = true) { pat("[-]?[0-9]+") }
+                    concatenation("REAL", isLeaf = true) { pat("[-]?[0-9]+[.][0-9]+") }
+                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
                 }
             }
         }

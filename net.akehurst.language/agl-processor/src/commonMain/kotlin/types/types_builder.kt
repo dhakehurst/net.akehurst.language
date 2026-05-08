@@ -532,8 +532,8 @@ class PrimitiveTypeBuilder(
     fun constructor_(init: ConstructorBuilder.() -> Unit) {
         val b = ConstructorBuilder(_namespace, _type, _typeReferences)
         b.init()
-        val params = b.build()
-        (_type as ValueTypeSimple).addConstructor(params)
+        val info = b.build()
+        (_type as ValueTypeSimple).addConstructor(info.parameters)
     }
 
     fun derivedPropertyOf(
@@ -600,7 +600,6 @@ class PrimitiveTypeBuilder(
 
 }
 
-
 @TypeModelDslMarker
 class ValueTypeBuilder(
     _namespace: TypesNamespace,
@@ -631,8 +630,8 @@ class ValueTypeBuilder(
     fun constructor_(init: ConstructorBuilder.() -> Unit) {
         val b = ConstructorBuilder(_namespace, _type, _typeReferences)
         b.init()
-        val params = b.build()
-        (_type as ValueTypeSimple).addConstructor(params)
+        val info = b.build()
+        (_type as ValueTypeSimple).addConstructor(info.parameters)
     }
 
     fun build(): ValueType {
@@ -735,8 +734,8 @@ class CollectionTypeBuilder(
     fun constructor_(init: ConstructorBuilder.() -> Unit) {
         val b = ConstructorBuilder(_namespace, _type, _typeReferences)
         b.init()
-        val params = b.build()
-        (_type as DataTypeSimple).addConstructor(params)
+        val info = b.build()
+        (_type as DataTypeSimple).addConstructor(info.parameters)
     }
 
     fun build(): CollectionType {
@@ -785,8 +784,8 @@ class DataTypeBuilder(
     fun constructor_(init: ConstructorBuilder.() -> Unit) {
         val b = ConstructorBuilder(_namespace, _type, _typeReferences)
         b.init()
-        val params = b.build()
-        (_type as DataTypeSimple).addConstructor(params)
+        val info = b.build()
+        (_type as DataTypeSimple).addConstructor(info.parameters)
     }
 
     fun build(): DataType {
@@ -801,6 +800,14 @@ class ConstructorBuilder(
     private val _type: TypeDefinition,
     private val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
+    companion object {
+        class ConstructorInfo(
+            val parameters: List<ParameterDeclaration>,
+            val execution: ((args: List<*>) -> Any?)?,
+            val executionSuspend: (suspend (args: List<*>) -> Any?)?
+        )
+    }
+
     val CMP = PropertyCharacteristic.COMPOSITE
     val REF = PropertyCharacteristic.REFERENCE
     val VAL = PropertyCharacteristic.READ_ONLY
@@ -809,6 +816,8 @@ class ConstructorBuilder(
     val STR = PropertyCharacteristic.STORED
 
     private val _paramList = mutableListOf<ParameterDeclaration>()
+    private var _execution: ((args: List<*>) -> Any?)? = null
+    private var _executionSuspend: (suspend (args: List<*>) -> Any?)? = null
 
     fun parameter(characteristic: Set<PropertyCharacteristic>, name: String, typeName: String, nullable: Boolean = false, propertyExecution:KProperty1<*, *>? = null, typeArguments: TypeArgumentBuilder.() -> Unit = {}) {
         val tab = TypeArgumentBuilder(_type, _namespace)
@@ -824,7 +833,15 @@ class ConstructorBuilder(
         }
     }
 
-    fun build(): List<ParameterDeclaration> = _paramList
+    fun execution(value: (args: List<*>) -> Any?) {
+        _execution = value
+    }
+
+    fun executionSuspend(value: suspend (args: List<*>) -> Any?) {
+        _executionSuspend = value
+    }
+
+    fun build() = ConstructorInfo(_paramList,_execution,_executionSuspend)
 }
 
 @TypeModelDslMarker

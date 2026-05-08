@@ -130,7 +130,7 @@ class CompletionProviderSimple(
 
     private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, sentenceContext: SentenceContext): List<CompletionItem> {
         try {
-            val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
+            val prop = type.resolvedDefinition.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
             //TODO: lists ?
             return when (prop) {
                 null -> emptyList()
@@ -140,7 +140,7 @@ class CompletionProviderSimple(
                         strProps = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
                                 strProps.filter { it.typeInstance != StdLibDefault.String }.flatMap { prp ->
                                     val type = prp.typeInstance
-                                    val td = type.resolvedDeclaration
+                                    val td = type.resolvedDefinition
                                     when (td) {
                                         is CollectionType -> firstPropertyOf(type.typeArguments[0].type)
                                         is StructuredType -> firstPropertyOf(type)
@@ -153,7 +153,7 @@ class CompletionProviderSimple(
                         val refTypes = refTypeNames.mapNotNull { typesDomain.findByQualifiedNameOrNull(it) }
                         val items = refTypes.flatMap { refType ->
                             sentenceContext.findItemsConformingTo {
-                                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDefinition
                                 itemType.conformsTo(refType)
                             }
                         }
@@ -201,7 +201,7 @@ class CompletionProviderSimple(
     }
 */
     private fun firstPropertyOf(type: TypeInstance): List<PropertyDeclaration> {
-        val typesClosure = setOf(type).transitiveClosure { it.resolvedDeclaration.subtypes.toSet() }
+        val typesClosure = setOf(type).transitiveClosure { it.resolvedDefinition.subtypes.toSet() }
         val minProps = typesClosure.mapNotNull { it.allResolvedProperty.values.minByOrNull { it.index } }
         val minOfMin = minProps.minOf { it.index }
         return minProps.filter { minOfMin == it.index }

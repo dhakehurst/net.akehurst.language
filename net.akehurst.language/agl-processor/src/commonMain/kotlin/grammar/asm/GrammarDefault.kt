@@ -70,7 +70,7 @@ class GrammarDefault(
     }
 
     override val defaultGoalRule: GrammarRule
-        get() = options[AglGrammar.OPTION_defaultGoalRule]?.let { findAllResolvedGrammarRule(GrammarRuleName(it)) }
+        get() = options.get<String?>(AglGrammar.OPTION_defaultGoalRule)?.let { findAllResolvedGrammarRule(GrammarRuleName(it)) }
             ?: this.allResolvedGrammarRule.firstOrNull { it.isSkip.not() }
             ?: error("Could not find default grammar rule or first non skip rule")
 }

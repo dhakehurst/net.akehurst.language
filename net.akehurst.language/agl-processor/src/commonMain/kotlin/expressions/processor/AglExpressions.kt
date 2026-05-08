@@ -137,10 +137,6 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             literal = BOOLEAN | INTEGER | REAL | STRING ;
         
             leaf SPECIAL = '$' IDENTIFIER ;
-            leaf BOOLEAN = "true|false" ;
-            leaf INTEGER = "[-]?[0-9]+" ;
-            leaf REAL = "[-]?[0-9]+[.][0-9]+" ;
-            leaf STRING = "'([^'\\]|\\.)*'" ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
           }
       """.trimIndent()
@@ -363,17 +359,13 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         lit("<"); spLst(1, -1) { ref("typeReference"); lit(",") }; lit(">")
                     }
 
-                    choice("literal") {
+                    choice("literal", OverrideKind.REPLACE) {
                         ref("BOOLEAN")
                         ref("INTEGER")
                         ref("REAL")
                         ref("STRING")
                     }
                     concatenation("SPECIAL", isLeaf = true) { lit("$"); ref("IDENTIFIER") }
-                    concatenation("BOOLEAN", isLeaf = true) { pat("true|false") }
-                    concatenation("INTEGER", isLeaf = true) { pat("[-]?[0-9]+") }
-                    concatenation("REAL", isLeaf = true) { pat("[-]?[0-9]+[.][0-9]+") }
-                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
 
                     // If we have an 'expression'

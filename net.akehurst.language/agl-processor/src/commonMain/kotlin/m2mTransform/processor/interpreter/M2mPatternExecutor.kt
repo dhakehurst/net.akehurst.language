@@ -2,7 +2,6 @@ package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
 import net.akehurst.kotlinx.collections.topologicalSort
 import net.akehurst.kotlinx.collections.transitveClosure
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.RootExpression
@@ -134,7 +133,7 @@ class M2mPatternExecutor(
         template: ObjectTemplate,
         lhsType: TypeInstance
     ): M2mPatternExecution {
-        val decl = template.type.resolvedDeclaration
+        val decl = template.type.resolvedDefinition
 
         val inputs = emptyList<String>()
         val (id, outputs) = template.identifier?.value?.let { Pair(it, listOf(it)) } ?: Pair(createTempVariable(), emptyList())
@@ -425,7 +424,7 @@ class M2mPatternExecutor(
         val existing = evc.namedValues[id]
         return when (existing) {
             null -> {
-                val decl = template.type.resolvedDeclaration
+                val decl = template.type.resolvedDefinition
                 when (decl) {
                     is DataType, is ValueType -> {
                         val matchedVars = mutableMapOf<String, TypedObject>()

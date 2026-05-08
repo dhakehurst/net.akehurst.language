@@ -1122,7 +1122,7 @@ class M2mTransformInterpreter(
         lhsType: TypeInstance,
         objectTemplate: ObjectTemplate
     ): Pair<TypedObject, Map<String, TypedObject>> {
-        val decl = objectTemplate.type.resolvedDeclaration
+        val decl = objectTemplate.type.resolvedDefinition
         return when (decl) {
             is DataType, is ValueType -> {
                 val matchedVars = mutableMapOf<String, TypedObject>()
@@ -1240,7 +1240,7 @@ class M2mTransformInterpreter(
         evc: EvaluationContext,
         objectTemplate: ObjectTemplate
     ) {
-        val decl = objectTemplate.type.resolvedDeclaration
+        val decl = objectTemplate.type.resolvedDefinition
         return when (decl) {
             // only DataTypes have properties that can be set
             is DataType -> {

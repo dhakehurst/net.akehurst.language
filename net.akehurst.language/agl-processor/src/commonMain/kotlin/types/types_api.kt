@@ -174,9 +174,9 @@ interface TypeInstance {
     /**
      * {derived} type is resolved via the namespace
      */
-    val resolvedDeclaration: TypeDefinition
+    val resolvedDefinition: TypeDefinition
 
-    val resolvedDeclarationOrNull: TypeDefinition?
+    val resolvedDefinitionOrNull: TypeDefinition?
 
     /**
      * properties from this type, and all supertypes, with type parameters resolved
@@ -339,7 +339,7 @@ interface TupleType : TypeDefinition {
 }
 
 interface ValueType : StructuredType {
-    val constructors: List<ConstructorDeclaration>
+    val constructors: List<ConstructorDefinition>
     val valueProperty: PropertyDeclaration
 
     fun addConstructor(parameters: List<ParameterDeclaration>)
@@ -356,7 +356,7 @@ interface DataType : StructuredType {
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     override val subtypes: List<TypeInstance>
 
-    val constructors: List<ConstructorDeclaration>
+    val constructors: List<ConstructorDefinition>
 
     @Deprecated("Create a TypeInstance and use addSubtype(TypeInstance)")
     fun addSubtype_dep(qualifiedTypeName: PossiblyQualifiedName)
@@ -532,11 +532,15 @@ interface MethodDefinitionResolved : MethodDefinition {
     val original: MethodDefinition
 }
 
-interface ConstructorDeclaration {
+interface ConstructorDefinition {
     val owner: TypeDefinition
     val parameters: List<ParameterDeclaration>
 
-    fun findInOrCloneTo(other: TypesDomain): ConstructorDeclaration
+    // to assist execution by reflection without having MPP reflection support
+    val execution: ((args:List<*>) -> Any?)?
+    val executionSuspend: (suspend (args:List<*>) -> Any?)?
+
+    fun findInOrCloneTo(other: TypesDomain): ConstructorDefinition
 }
 
 // ParameterName clashes with kotlin.ParameterName

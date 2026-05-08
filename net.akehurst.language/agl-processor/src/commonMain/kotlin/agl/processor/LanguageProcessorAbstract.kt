@@ -82,7 +82,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     protected val defaultGoalRuleName: GrammarRuleName? by lazy {
         configuration.defaultGoalRuleName
-            ?: targetGrammar?.options?.get(AglGrammar.OPTION_defaultGoalRule)?.let { GrammarRuleName(it) }
+            ?: targetGrammar?.options?.get<String>(AglGrammar.OPTION_defaultGoalRule)?.let { GrammarRuleName(it) }
             ?: targetGrammar?.grammarRule?.firstOrNull { it.isSkip.not() }?.name
     }
 
@@ -251,14 +251,14 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val opts = defaultOptions(options)
         val parseResult = this.parse(sentence, opts.parse)
         return if (null == parseResult.sppt) {
-            FormatResultDefault(null, parseResult.issues)
+            FormatResultDefault(emptyMap(), parseResult.issues)
         } else {
             val synxResult = this.syntaxAnalysis(parseResult.sppt!!)
             if (null == synxResult.asm) {
-                FormatResultDefault(null, parseResult.issues + synxResult.issues)
+                FormatResultDefault(emptyMap(), parseResult.issues + synxResult.issues)
             } else {
                 val frmtResult = this.formatAsm(synxResult.asm!!)
-                FormatResultDefault(frmtResult.sentence, parseResult.issues + synxResult.issues + frmtResult.issues)
+                FormatResultDefault(frmtResult.output, parseResult.issues + synxResult.issues + frmtResult.issues)
             }
         }
     }

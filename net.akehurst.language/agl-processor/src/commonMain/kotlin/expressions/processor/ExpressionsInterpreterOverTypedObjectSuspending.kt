@@ -149,8 +149,8 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
 
     private suspend fun evaluateIndexOperation(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
         return when {
-            obj.type.resolvedDeclaration.conformsTo(StdLibDefault.List) -> evaluateIndexOperationOnList(evc, obj, indices)
-            obj.type.resolvedDeclaration.conformsTo(StdLibDefault.Map) -> evaluateIndexOperationOnMap(evc, obj, indices)
+            obj.type.resolvedDefinition.conformsTo(StdLibDefault.List) -> evaluateIndexOperationOnList(evc, obj, indices)
+            obj.type.resolvedDefinition.conformsTo(StdLibDefault.Map) -> evaluateIndexOperationOnMap(evc, obj, indices)
             else -> {
                 issues.error(null, "Index operation on non List value is not possible: ${obj.asString()}")
                 objectGraph.nothing()
@@ -178,7 +178,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                                         objectGraph.cast(elem, listElementType)
                                     }
 
-                                    elemType.resolvedDeclaration is TupleType -> objectGraph.cast(elem, elemType)
+                                    elemType.resolvedDefinition is TupleType -> objectGraph.cast(elem, elemType)
                                     elemType.conformsTo(listElementType) -> objectGraph.cast(elem, elemType)
                                     else -> {
                                         issues.error(
@@ -235,7 +235,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                                         objectGraph.cast(elem, valueType)
                                     }
 
-                                    elemType.resolvedDeclaration is TupleType -> objectGraph.cast(elem, elemType)
+                                    elemType.resolvedDefinition is TupleType -> objectGraph.cast(elem, elemType)
                                     elemType.conformsTo(valueType) -> objectGraph.cast(elem, elemType)
                                     else -> {
                                         issues.warn(

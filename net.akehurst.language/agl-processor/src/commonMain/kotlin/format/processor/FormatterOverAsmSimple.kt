@@ -44,7 +44,7 @@ class FormatterOverAsmSimple(
             sb.append(str)
         }
 
-        return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
+        return FormatResultDefault(mapOf(FormatResultDefault.DEFAULT to sb.toString() ), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
     override  fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): FormatResult {

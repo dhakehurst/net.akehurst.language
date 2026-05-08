@@ -34,6 +34,7 @@ interface AglFormatDomain : Domain<FormatNamespace, FormatDefinition> {
     val rules: Map<SimpleName, AglFormatRule>
 
     fun findFirstFunctionDefinitionByNameOrNull(functionName: SimpleName): FormatFunctionDefinition?
+    fun findFirstFormatSetDefinitionByNameOrNull(formatSetName: PossiblyQualifiedName): FormatSet?
 }
 
 interface FormatNamespace : Namespace<FormatDefinition> {

@@ -44,7 +44,7 @@ fun contextFromGrammar(vararg grammarDomains: GrammarDomain): SentenceContext {
             val scope = sentenceContext.newScopeForSentence(g.qualifiedName.toString())
             g.allResolvedGrammarRule.forEach {
                 val rType = aglGrammarTypeModel.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
-                scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, null, it.name.value, false)
+                scope.addToScope(it.name.value, rType.resolvedDefinition.qualifiedName, null, it.name.value, false)
             }
             g.allResolvedTerminal.forEach {
                 val rTypeName = when {

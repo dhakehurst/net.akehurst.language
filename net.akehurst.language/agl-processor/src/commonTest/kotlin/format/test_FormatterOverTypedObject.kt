@@ -17,6 +17,7 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
@@ -333,15 +334,15 @@ class test_FormatterOverTypedObject {
                 self = TestObject(),
                 expected = "Test2: 'a','b','c'"
             ),
-
         )
 
-        fun test(data: TestData) {
+        fun test(data: TestData): FormatResult {
             val res = Agl.formatByReflection(data.template, data.types, data.self)
             println(res.issues)
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val actual = res.sentence
             assertEquals(data.expected, actual)
+            return res
         }
     }
 
@@ -355,7 +356,35 @@ class test_FormatterOverTypedObject {
 
     @Test
     fun test1() {
-        test(testData[6])
+        test(testData[1])
+    }
+
+    @Test
+    fun extraOutput() {
+        val td = TestData(
+            name = "Create extra output",
+            template = FormatString(
+                $$"""
+                    namespace test
+                    format Test {
+                      #output: 'TestObject -> "extra output"'
+                      TestObject -> "$intValue"
+                    }
+                    """
+            ),
+            types = typesDomain("Test", true) {
+                namespace("test") {
+                    data("TestObject")
+                }
+            },
+            self = TestObject(),
+            expected = "3"
+        )
+        val actual = test(td)
+
+        assertEquals(2, actual.output.size)
+        assertEquals(setOf("sentence", "extra output"), actual.output.keys.toSet())
+        assertEquals("3", actual.output["extra output"])
     }
 
 }

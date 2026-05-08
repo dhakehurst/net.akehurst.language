@@ -59,8 +59,8 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         const val OPTION_CREATE_TYPES = "create-missing-types"
         const val OPTION_OVERRIDE_DEFAULT = "override-default-transform"
 
-        private val OptionHolder.createTypes get() = this[OPTION_CREATE_TYPES] == "true"
-        private val OptionHolder.overrideDefault get() = this[OPTION_OVERRIDE_DEFAULT] == "true"
+        private val OptionHolder.createTypes:Boolean get() = this[OPTION_CREATE_TYPES] ?: false
+        private val OptionHolder.overrideDefault:Boolean get() = this[OPTION_OVERRIDE_DEFAULT]  ?: false
 
     }
 
@@ -161,11 +161,11 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     newRule.grammarRuleName = trr.grammarRuleName
                     trs.setRule(newRule)
                     //also ensure properties are transferred
-                    val defDecl = defRule.resolvedType.resolvedDeclaration
+                    val defDecl = defRule.resolvedType.resolvedDefinition
                     when {
                         clonedTypeDeclOrCreated is StructuredType -> {
                             val tocopy = defDecl.property.filter {
-                                it is PropertyDeclarationStored && null == exprType.resolvedDeclaration.findOwnedPropertyOrNull(it.name)
+                                it is PropertyDeclarationStored && null == exprType.resolvedDefinition.findOwnedPropertyOrNull(it.name)
                             }
                             tocopy.forEach { clonedTypeDeclOrCreated.appendPropertyStored(it.name, it.typeInstance, it.characteristics, it.index) }
                         }

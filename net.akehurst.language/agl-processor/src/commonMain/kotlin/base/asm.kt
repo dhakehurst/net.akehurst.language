@@ -21,11 +21,11 @@ import net.akehurst.language.base.api.*
 
 class OptionHolderDefault(
     override var parent: OptionHolder? = null,
-    val options: Map<String, String> = emptyMap()
+    val options: Map<String, Any> = emptyMap()
 ) : OptionHolder {
 
-    override operator fun get(name: String): String? {
-        return this.options[name] ?: this.parent?.get(name)
+    override operator fun <T> get(name: String): T? {
+        return (this.options[name] ?: this.parent?.get(name)) as? T
     }
 
     override fun clone(parent: OptionHolder?): OptionHolder = OptionHolderDefault(parent, this.options)

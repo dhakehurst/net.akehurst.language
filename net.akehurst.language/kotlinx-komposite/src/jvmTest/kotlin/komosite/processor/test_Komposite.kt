@@ -16,13 +16,10 @@
 
 package net.akehurst.kotlinx.komposite.processor
 
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import kotlin.test.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertNotNull
 
-
-@RunWith(Parameterized::class)
 class test_Komposite(val data: Data) {
 
     class Data(val sourceFileName: String, val fileContent: String) {
@@ -48,8 +45,7 @@ class test_Komposite(val data: Data) {
 
 
         @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
-        fun data(): Collection<Data> {
+        fun testDataProvider(): Collection<Data> {
             val col = ArrayList<Data>()
             for (sourceFile in sourceFiles) {
                 val fileContent = ClassLoader.getSystemClassLoader().getResourceAsStream(sourceFile).reader().readText()
@@ -60,7 +56,8 @@ class test_Komposite(val data: Data) {
     }
 
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("testDataProvider")
     fun parse() {
         val result = processor.parse(this.data.fileContent)
         assertNotNull(result.sppt,result.issues.joinToString(separator = "\n"){"$it"})
@@ -68,7 +65,8 @@ class test_Komposite(val data: Data) {
         //assertEquals(original, resultStr)
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("testDataProvider")
     fun process() {
         val result = processor.process(this.data.fileContent)
         assertNotNull(result.asm,result.allIssues.joinToString(separator = "\n"){"$it"})

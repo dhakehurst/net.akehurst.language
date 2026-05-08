@@ -156,7 +156,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
                     .filterNot { it == StdLibDefault.AnyType }
                     .joinToString(separator = "\n", postfix = "\n") { st ->
                         val pqn = when {
-                            st.resolvedDeclaration.namespace == context -> st.typeName.value
+                            st.resolvedDefinition.namespace == context -> st.typeName.value
                             context.import.contains(st.qualifiedTypeName.front.asImport) -> st.typeName.value
                             else -> st.qualifiedTypeName.value // TODO: add import if not name clash
                         }
@@ -173,7 +173,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
         }
     }
 
-    fun formatConstructors(indent: Indent, context: TypesNamespace, constructors: List<ConstructorDeclaration>): String {
+    fun formatConstructors(indent: Indent, context: TypesNamespace, constructors: List<ConstructorDefinition>): String {
         return when {
             constructors.isEmpty() -> ""
             else -> {

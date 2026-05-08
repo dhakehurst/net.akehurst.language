@@ -28,7 +28,6 @@ import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
-import net.akehurst.language.expressions.asm.FunctionDefinitionAbstract
 import net.akehurst.language.expressions.asm.TypeReferenceDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
@@ -537,7 +536,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     }
 
     override fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject {
-        val rtd = newType.resolvedDeclaration
+        val rtd = newType.resolvedDefinition
         return when (rtd) {
             is TupleType -> {
                 val targs = (tobj.self as AsmStructure).property.map {
@@ -580,7 +579,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
             override fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {
                 val src = toTypedObject(owner, StdLibDefault.AnyType)
                 val tgt = toTypedObject(property.value, StdLibDefault.AnyType)
-                val ownerTypeDef = src.type.resolvedDeclaration
+                val ownerTypeDef = src.type.resolvedDefinition
                 val propDef = ownerTypeDef.findAllPropertyOrNull(PropertyName(property.name.value))
                 if (null == propDef) {
                     issues.error(null, "Cannot find property '${property.name.value}' on type definition '${ownerTypeDef.qualifiedName.value}'")
@@ -633,7 +632,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
             else -> when (propRes.original) {
                 is PropertyDeclarationDerived -> TODO()
                 is PropertyDeclarationPrimitive -> {
-                    val type = tobj.type.resolvedDeclaration
+                    val type = tobj.type.resolvedDefinition
                     val typeProps = StdLibPrimitiveExecutionsForAsmSimple.property[type]
                         ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
                     val propExec = typeProps[propRes.original]
@@ -695,7 +694,7 @@ open class ObjectGraphAccessorMutatorAsmSimple(
             }
 
             else -> {
-                val type = tobj.type.resolvedDeclaration
+                val type = tobj.type.resolvedDefinition
                 val stdMeths = StdLibPrimitiveExecutionsForAsmSimple.method[type]
                 val ao = when (stdMeths) {
                     null -> TODO()

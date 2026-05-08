@@ -56,9 +56,15 @@ data class ProcessResultDefault<AsmType : Any>(
 }
 
 data class FormatResultDefault(
-    override val sentence: String?,
+    override val output: Map<String, String>,
     override val issues: IssueCollection<LanguageIssue>
-) : FormatResult
+) : FormatResult {
+    companion object {
+        const val DEFAULT = "sentence"
+    }
+
+    override val sentence: String? get() = output[DEFAULT]
+}
 
 data class ExpectedAtResultDefault(
     override val requestedPosition: Int,

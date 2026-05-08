@@ -191,21 +191,21 @@ class ReferencesSemanticAnalyser(
             }
         }
         val collTypeInstance = _typeResolver!!.typeFor(refExpr.expression, contextType.type())
-        when (collTypeInstance.resolvedDeclaration) {
+        when (collTypeInstance.resolvedDefinition) {
             is SpecialType -> when {
-                StdLibDefault.NothingType == collTypeInstance.resolvedDeclaration -> Unit
+                StdLibDefault.NothingType == collTypeInstance.resolvedDefinition -> Unit
                 else -> TODO()
             }
 
             is CollectionType -> {
-                val loopVarType = collTypeInstance.typeArguments[0].type.resolvedDeclaration
+                val loopVarType = collTypeInstance.typeArguments[0].type.resolvedDefinition
                 val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
                     val ofType = _grammarNamespace?.findTypeNamed(ofTypeName)
                     when {
                         null == ofType -> error("Should not happen, checked above.")
                         //TODO: needs a conforms to to check transitive closure of supertypes
-                        loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.resolvedDeclaration == loopVarType } -> ofType //no error
-                        loopVarType is UnionType && loopVarType.alternatives.any { it.resolvedDeclaration == ofType } -> ofType
+                        loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.resolvedDefinition == loopVarType } -> ofType //no error
+                        loopVarType is UnionType && loopVarType.alternatives.any { it.resolvedDefinition == ofType } -> ofType
                         else -> {
                             raiseError(ref, "The of-type '${ofType.name}' is not a subtype of the loop variable type '${loopVarType.name}'")
                             null

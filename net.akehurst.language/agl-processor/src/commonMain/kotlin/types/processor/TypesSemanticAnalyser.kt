@@ -35,7 +35,7 @@ internal class TypesSemanticAnalyser : SemanticAnalyser<TypesDomain, SentenceCon
     companion object {
         const val OPTION_INCLUDE_STD = "include-std"
 
-        private val OptionHolder.includeStd get() = this[OPTION_INCLUDE_STD] == "true"
+        private val OptionHolder.includeStd:Boolean get() = this[OPTION_INCLUDE_STD] ?: false
     }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)

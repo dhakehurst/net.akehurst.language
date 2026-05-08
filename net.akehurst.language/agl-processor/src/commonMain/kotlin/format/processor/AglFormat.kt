@@ -70,7 +70,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
         
         grammar $NAME extends ${AglExpressions.NAME} {        
             override definition = format | function ;
-            format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
+            format = 'format' IDENTIFIER extends? '{' option* ruleList '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule* ;
             formatRule = typeReference '->' formatExpression ;
@@ -160,6 +160,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                     }
                     concatenation("format") {
                         lit("format"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
+                        lst(0,-1) { ref("option") }
                         lst(0, -1) { ref("formatRule") }
                         lit("}")
                     }

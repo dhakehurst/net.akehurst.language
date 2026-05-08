@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.expressions.processor
 
+import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
@@ -112,20 +113,20 @@ class StdLibPrimitiveExecutionsForReflection(
     )
 
     private val _method = mutableMapOf<TypeDefinition, MutableMap<MethodDefinition, ((Any, MethodDefinition, List<*>) -> Any?)>>(
-        StdLibDefault.String.resolvedDeclaration to mutableMapOf(
-            StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("toBoolean"))!! to { self, meth, args ->
+        StdLibDefault.String.resolvedDefinition to mutableMapOf(
+            StdLibDefault.String.resolvedDefinition.findAllMethodOrNull(MethodName("toBoolean"))!! to { self, meth, args ->
                 check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.toBooleanStrictOrNull() ?: Unit
             },
-            StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("toInteger"))!! to { self, meth, args ->
+            StdLibDefault.String.resolvedDefinition.findAllMethodOrNull(MethodName("toInteger"))!! to { self, meth, args ->
                 check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.toLongOrNull() ?: Unit
             },
-            StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("toReal"))!! to { self, meth, args ->
+            StdLibDefault.String.resolvedDefinition.findAllMethodOrNull(MethodName("toReal"))!! to { self, meth, args ->
                 check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.toDoubleOrNull() ?: Unit
             },
-            StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("removeSurrounding"))!! to { self, meth, args ->
+            StdLibDefault.String.resolvedDefinition.findAllMethodOrNull(MethodName("removeSurrounding"))!! to { self, meth, args ->
                 check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 val arg1 = args[0] as String
                 self.removeSurrounding(arg1)
@@ -274,7 +275,7 @@ class StdLibPrimitiveExecutionsForReflection(
             result
         } else {
             // try supertypes
-            typeDef.supertypes.firstNotNullOfOrNull { superType -> propertyValueDirectOrSuperType(obj, superType.resolvedDeclaration, property) }
+            typeDef.supertypes.firstNotNullOfOrNull { superType -> propertyValueDirectOrSuperType(obj, superType.resolvedDefinition, property) }
         }
     }
 
@@ -313,7 +314,7 @@ class StdLibPrimitiveExecutionsForReflection(
             result
         } else {
             // try supertypes
-            typeDef.supertypes.firstNotNullOfOrNull { superType -> methodDirectOrSuperType(obj, superType.resolvedDeclaration, method, args) }
+            typeDef.supertypes.firstNotNullOfOrNull { superType -> methodDirectOrSuperType(obj, superType.resolvedDefinition, method, args) }
         }
     }
 
@@ -337,7 +338,7 @@ class StdLibPrimitiveExecutionsForReflection(
             result
         } else {
             // try supertypes
-            typeDef.supertypes.firstNotNullOfOrNull { superType -> methodDirectOrSuperTypeSuspend(obj, superType.resolvedDeclaration, method, args) }
+            typeDef.supertypes.firstNotNullOfOrNull { superType -> methodDirectOrSuperTypeSuspend(obj, superType.resolvedDefinition, method, args) }
         }
     }
 
@@ -418,10 +419,23 @@ constructor(
         return when (obj) {
             null -> StdLibDefault.NothingType
             is Boolean -> StdLibDefault.Boolean
+            is Byte,
+            is Short,
+            is Int,
             is Long -> StdLibDefault.Integer
+            is Char,
             is String -> StdLibDefault.String
             is Double -> StdLibDefault.Real
             is Instant -> StdLibDefault.Timestamp
+            is Throwable -> StdLibDefault.Exception
+            is Pair<*,*> -> {
+                val fstType = typeFor(obj.first, StdLibDefault.AnyType)
+                val sndType = typeFor(obj.second, StdLibDefault.AnyType)
+                StdLibDefault.Pair.type(listOf(fstType.asTypeArgument,sndType.asTypeArgument))
+            }
+            is OrderedSet<*> -> StdLibDefault.OrderedSet.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            is ListSeparated<*,*,*> -> StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument,StdLibDefault.AnyType.asTypeArgument,StdLibDefault.AnyType.asTypeArgument))
+            is Array<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             is List<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             is Set<*> -> StdLibDefault.Set.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             is Map<*, *> -> {
@@ -438,7 +452,8 @@ constructor(
                     }
                 }
             }
-
+            is Iterator<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            is Function<*> -> StdLibDefault.Lambda
             else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
         }
     }
@@ -478,7 +493,7 @@ constructor(
 
     override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) {
         when {
-            StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
+            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
                 when (tobj.self) {
                     is MutableMap<*, *> -> {
                         (tobj.self as MutableMap<String, Any>)[propertyName] = untyped(value)
@@ -557,7 +572,7 @@ constructor(
         propertyExecution: (obj: Any, decl: PropertyDeclaration) -> Any?
     ): TypedObject {
         return when {
-            StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
+            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
                 val obj = untyped(tobj)
                 when (obj) {
                     is Map<*, *> -> {
@@ -593,7 +608,7 @@ constructor(
                             }
 
                             else -> {
-                                val type = tobj.type.resolvedDeclaration
+                                val type = tobj.type.resolvedDefinition
                                 val execResult = primitiveExecutor.propertyValue(untyped(tobj), type, propRes.original)
                                 when (execResult) {
                                     null -> {
@@ -628,7 +643,7 @@ constructor(
             }
 
             else -> {
-                val typeDef = tobj.type.resolvedDeclaration
+                val typeDef = tobj.type.resolvedDefinition
                 val arguments = args.map { untyped(it) }
                 val obj = untyped(tobj)
                 val methResOriginal = methRes.original

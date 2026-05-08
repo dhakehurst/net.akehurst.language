@@ -48,7 +48,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
 
     override val grammarString = """
         namespace $NAMESPACE_NAME
-            grammar $NAME : Base {
+            grammar $NAME : ${AglBase.NAME} {
                 override unit = namespace styleSet* ;
                 styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
                 extends = ':' [possiblyQualifiedName / ',']+ ;
@@ -70,7 +70,6 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                 leaf SPECIAL_IDENTIFIER = "[\\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
                 leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
                 leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
-                leaf STRING = "'([^'\\\\]|\\'|\\\\)*'" ;
             }
         """.trimIndent()
 
@@ -185,7 +184,6 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     }
                     concatenation("STYLE_ID", isLeaf = true) { pat("[-a-zA-Z_][-a-zA-Z_0-9]*") }
                     concatenation("STYLE_VALUE", isLeaf = true) { pat("[^;: \\t\\n\\x0B\\f\\r]+") }
-                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\'|\\\\\\\\)*'") }
                 }
             }
         }

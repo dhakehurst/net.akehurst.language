@@ -47,7 +47,7 @@ class ExpressionTypeResolver(
         this.isNothing -> StdLibDefault.NothingType
         this.isSelf -> self
         else -> {
-            when (self.resolvedDeclaration) {
+            when (self.resolvedDefinition) {
                 is StructuredType -> {
                     self.allResolvedProperty[PropertyName(this.name)]?.typeInstance ?: run {
                         issues.error(null, "'$self' has no property named '${this.name}'")

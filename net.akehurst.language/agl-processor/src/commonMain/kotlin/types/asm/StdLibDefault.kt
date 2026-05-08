@@ -144,7 +144,7 @@ object StdLibDefault1 : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMa
     }
 
     private fun createMethodsForString() {
-        val typeDecl = String.resolvedDeclaration
+        val typeDecl = String.resolvedDefinition
         typeDecl.appendMethodPrimitive(MethodName("toBoolean"), emptyList(), Boolean, "Convert this String to a Boolean value. 'true' is true, 'false' is false, other values are \$nothing.")
         typeDecl.appendMethodPrimitive(MethodName("toInteger"), emptyList(), Integer, "Convert this String to an Integer value.")
         typeDecl.appendMethodPrimitive(MethodName("toReal"), emptyList(), Real, "Convert this String to a Real value.")

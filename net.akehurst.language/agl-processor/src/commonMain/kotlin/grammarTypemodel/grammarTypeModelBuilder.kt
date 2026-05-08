@@ -70,7 +70,7 @@ class GrammarTypeNamespaceBuilder(
     private val _grammarNamespace get() = _namespace as GrammarTypesNamespace
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
-    val StringType: PrimitiveType get() = StdLibDefault.String.resolvedDeclaration as PrimitiveType
+    val StringType: PrimitiveType get() = StdLibDefault.String.resolvedDefinition as PrimitiveType
 
     fun stringTypeFor(grammarRuleName: String, isNullable: Boolean = false) {
         _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), if (isNullable) StdLibDefault.String.nullable() else StdLibDefault.String)

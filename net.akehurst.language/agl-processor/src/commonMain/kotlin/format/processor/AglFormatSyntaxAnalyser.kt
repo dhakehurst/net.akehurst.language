@@ -109,12 +109,14 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         }
     }
 
-    // format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
+    // format = 'format' IDENTIFIER extends? '{' option* ruleList '}' ;
     fun format(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: FormatNamespace) -> FormatSet {
         val name = SimpleName(children[1] as String)
         val extendsFunc = (children[2] as List<(ns: FormatNamespace) -> FormatSetReference>?) ?: emptyList()
-        val options = OptionHolderDefault() //TODO
-        val rules: List<AglFormatRule> = children[4] as List<AglFormatRule>
+        val optionsList = (children[4] as List<Pair<String, Any>>)
+        val rules: List<AglFormatRule> = children[5] as List<AglFormatRule>
+
+        val options = OptionHolderDefault(null, optionsList.toMap())
         return { ns ->
             val extends = extendsFunc.map { it.invoke(ns) }
             FormatSetDefault(ns, name, extends, options, rules)
