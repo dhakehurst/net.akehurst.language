@@ -20,7 +20,7 @@ package net.akehurst.language.m2mTransform.processor
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecution
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecutor
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecutor.Companion.RESULT
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.expressions.api.Expression

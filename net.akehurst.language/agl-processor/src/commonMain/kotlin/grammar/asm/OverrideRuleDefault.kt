@@ -17,7 +17,7 @@
 package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.grammar.api.*
 
 data class OverrideRuleDefault(

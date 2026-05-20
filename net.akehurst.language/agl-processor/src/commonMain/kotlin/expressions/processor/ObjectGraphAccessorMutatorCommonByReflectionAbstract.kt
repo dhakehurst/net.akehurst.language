@@ -19,7 +19,7 @@ package net.akehurst.language.agl.expressions.processor
 
 import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.collections.toOrderedSet
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList

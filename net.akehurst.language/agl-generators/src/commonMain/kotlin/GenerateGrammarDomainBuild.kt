@@ -26,6 +26,7 @@ import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.format.processor.FormatterOverTypedObject
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -96,7 +97,7 @@ class GenerateGrammarDomainBuild(
         """
     }
 
-    val formatDomain by lazy {
+    val formatDomain: AglFormatDomain by lazy {
         val res = Agl.formatDomain(FormatString(generatedFormat),grammarTypesDomain )
         check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         res.asm!!

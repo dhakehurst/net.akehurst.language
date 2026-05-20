@@ -62,7 +62,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
             templateExpression = templateExpressionProperty | templateExpressionList | templateExpressionEmbedded ;
             templateExpressionProperty = DOLLAR_IDENTIFIER ;
             templateExpressionList = '$[' $NAME::separatedList ']' ;
-            templateExpressionEmbedded = '$${'{'}' $NAME::formatExpression '}'
+            templateExpressionEmbedded = '$${'{'}' $NAME::embeddedExpression '}'
                         
             leaf DOLLAR_IDENTIFIER = '$' "[a-zA-Z_][a-zA-Z_0-9-]*" ;
             leaf RAW_TEXT = "(\\\"|[^\"])+" ;
@@ -73,17 +73,14 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
             format = 'format' IDENTIFIER extends? '{' option* ruleList '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule* ;
-            formatRule = typeReference '->' formatExpression ;
+            formatRule = typeReference '->' expression ;
             
-            formatExpression
-              = expression viaFormatSet?
-              | Template::templateString
-              ;
+            override literalExpression = literal | templateExpression 
+            templateExpression = Template::templateString ;
+            
             viaFormatSet = 'via' possiblyQualifiedName ;
-                          
-            override whenOption = expression '->' formatExpression ;
-            override whenOptionElse = 'else' '->' formatExpression ;
-            override block = '{' assignemnt* formatExpression '}' ;
+            //embeddedExpression is used from Template, but part of this grammar
+            embeddedExpression = expression viaFormatSet? ;
             
             // separatedList is used from Template, but part of this grammar
             separatedList = expression 'sep' separator viaFormatSet? ;
@@ -145,7 +142,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                         lit("\$["); ebd(NAME, "separatedList"); lit("]")
                     }
                     concatenation("templateExpressionEmbedded") {
-                        lit("\${"); ebd(NAME, "formatExpression"); lit("}")
+                        lit("\${"); ebd(NAME, "embeddedExpression"); lit("}")
                     }
                     concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
                     concatenation("RAW_TEXT", isLeaf = true) {
@@ -160,7 +157,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                     }
                     concatenation("format") {
                         lit("format"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
-                        lst(0,-1) { ref("option") }
+                        lst(0, -1) { ref("option") }
                         lst(0, -1) { ref("formatRule") }
                         lit("}")
                     }
@@ -168,25 +165,22 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                         lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
                     }
                     concatenation("formatRule") {
-                        ref("typeReference"); lit("->"); ref("formatExpression")
+                        ref("typeReference"); lit("->"); ref("expression")
                     }
-                    choice("formatExpression") {
-                        concat { ref("expression"); opt { ref("viaFormatSet") } }
-                        concat { ebd("Template", "templateString") }
+                    // override literalExpression += literal | templateExpression ;
+                    choice("literalExpression", overrideKind = OverrideKind.REPLACE) {
+                        ref("literal")
+                        ref("templateExpression")
                     }
-
+                    concatenation("templateExpression") {
+                        ebd("Template", "templateString")
+                    }
                     concatenation("viaFormatSet") { lit("via"); ref("possiblyQualifiedName") }
-                    concatenation("whenOption", OverrideKind.REPLACE) {
-                        ref("expression"); lit("->"); ref("formatExpression")
-                    }
-                    concatenation("whenOptionElse", OverrideKind.REPLACE) {
-                        lit("else"); lit("->"); ref("formatExpression")
-                    }
-                    concatenation("block", OverrideKind.REPLACE) {
-                        lit("{"); lst(0, -1) { ref("variableAssignment") }; ref("formatExpression"); lit("}")
-                    }
-
-                    // only referenced from Template::templateExpressionList
+                    //embeddedExpression is used from Template, but part of this grammar
+                    // embeddedExpression = expression viaFormatSet? ;
+                    concatenation("embeddedExpression") { ref("expression"); opt { ref("viaFormatSet") } }
+                    // separatedList is used from Template, but part of this grammar
+                    // separatedList = expression 'sep' separator viaFormatSet? ;
                     concatenation("separatedList") {
                         ref("expression"); lit("sep"); ref("separator"); opt { ref("viaFormatSet") }
                     }

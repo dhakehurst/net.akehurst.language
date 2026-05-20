@@ -18,6 +18,7 @@
 package net.akehurst.language.style.api
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.regex.api.EscapedPattern
 
 interface AglStyleDomain : Domain<StyleNamespace, StyleSet> {

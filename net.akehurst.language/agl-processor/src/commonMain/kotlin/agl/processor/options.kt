@@ -94,6 +94,7 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
 }
 
 class FormatOptionsDefault<SelfType : Any>(
+    override var locationMap: LocationMap? = null,
     override val environment: Map<String, SelfType> = mutableMapOf(),
 ) : FormatOptions<SelfType> {
     override fun clone() = FormatOptionsDefault<SelfType>(

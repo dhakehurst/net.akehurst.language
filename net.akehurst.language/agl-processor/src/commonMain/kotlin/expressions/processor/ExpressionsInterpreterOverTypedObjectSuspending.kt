@@ -497,7 +497,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                     }
                 }
 
-                else -> error("Conditions/Options in a when expression must result in a Boolean value")
+                else -> error("Conditions/Options in a when expression must result in a Boolean value: '${opt.condition}'")
             }
         }
         return evaluateExpression(evc, expression.elseOption.expression)

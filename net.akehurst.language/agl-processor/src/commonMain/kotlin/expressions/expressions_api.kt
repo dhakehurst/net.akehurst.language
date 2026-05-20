@@ -21,7 +21,7 @@ import net.akehurst.language.base.api.Definition
 import net.akehurst.language.base.api.Domain
 import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName

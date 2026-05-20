@@ -26,6 +26,7 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asmTransform.api.*
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract

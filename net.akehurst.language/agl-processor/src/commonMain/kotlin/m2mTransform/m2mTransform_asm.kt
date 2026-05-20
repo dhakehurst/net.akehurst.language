@@ -18,6 +18,7 @@
 package net.akehurst.language.m2mTransform.asm
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract

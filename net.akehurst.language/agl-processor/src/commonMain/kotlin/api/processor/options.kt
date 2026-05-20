@@ -82,6 +82,9 @@ interface CompletionProviderOptions<ContextType : Any> {
 }
 
 interface FormatOptions<SelfType : Any> {
+    /** locationMap for the FormatString */
+    var locationMap: LocationMap?
+
     val environment: Map<String, SelfType>
 
     fun clone(): FormatOptions<SelfType>

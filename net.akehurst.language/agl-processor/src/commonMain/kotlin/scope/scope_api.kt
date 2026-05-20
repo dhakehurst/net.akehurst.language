@@ -17,7 +17,7 @@
 
 package net.akehurst.language.scope.api
 
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.QualifiedName
 
 data class ItemInScope(

@@ -18,6 +18,7 @@
 package net.akehurst.language.grammarTypemodel.builder
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple

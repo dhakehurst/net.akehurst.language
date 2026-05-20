@@ -17,10 +17,10 @@
 
 package net.akehurst.language.agl.simple
 
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.api.semanticAnalyser.CreateScopedItem
 import net.akehurst.language.api.semanticAnalyser.ResolveScopedItem
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.scope.api.ItemInScope

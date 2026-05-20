@@ -27,10 +27,13 @@ import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.FunctionParameter
+import net.akehurst.language.expressions.api.LiteralExpression
 import net.akehurst.language.expressions.api.StatementBlockExpression
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.expressions.api.VariableDefinition
 import net.akehurst.language.expressions.asm.LiteralExpressionDefault
 import net.akehurst.language.expressions.asm.StatementBlockExpressionDefault
+import net.akehurst.language.expressions.asm.VariableAssignmentStatementDefault
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.format.asm.*
 import net.akehurst.language.formatter.api.*
@@ -57,12 +60,9 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::function)
         super.register(this::format)
         super.register(this::formatRule)
-        super.register(this::formatExpression)
         super.register(this::viaFormatSet)
-        super.register(this::whenExpression)
-        super.register(this::whenOption)
-        super.register(this::whenOptionElse)
-        super.register(this::block)
+        super.register(this::templateExpression)
+        super.register(this::embeddedExpression)
         super.register(this::separatedList)
         super.register(this::separator)
     }
@@ -136,48 +136,26 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         return extended
     }
 
-    //formatRule = typeReference '->' formatExpression ;
+    //formatRule = typeReference '->' expression ;
     fun formatRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglFormatRule {
         val forTypeName = children[0] as TypeReference
-        val expression = children[2] as FormatExpression
+        val expression = children[2] as Expression
         return AglFormatRuleDefault(forTypeName, expression)
-    }
-
-    //formatExpression = expression viaFormatSet? | Template::templateString ;
-    fun formatExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpression = when (nodeInfo.alt.option.value) {
-        0 -> FormatExpressionExpressionDefault(children[0] as Expression, children[1] as PossiblyQualifiedName?)
-        1 -> children[0] as FormatExpressionTemplate
-        else -> error("Option not handled")
     }
 
     // viaFormatSet = 'via' possiblyQualifiedName ;
     private fun viaFormatSet(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
         children[1] as PossiblyQualifiedName
 
-    // whenExpression = 'when' '{' whenOptionList '}' ;
-    private fun whenExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpressionWhen {
-        val optionList = children[2] as List<FormatWhenOption>
-        return FormatExpressionWhenDefault(optionList)
-    }
+    //formatExpression = expression viaFormatSet? | Template::templateString ;
+    fun templateExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpression =
+        children[0] as FormatExpressionTemplate
 
-    // override whenOption = expression '->' formatExpression ;
-    private fun whenOption(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatWhenOption {
-        val condition = children[0] as Expression
-        val expression = children[2] as FormatExpression
-        return FormatWhenOptionDefault(condition, expression)
-    }
-
-    // override whenOptionElse = else '->' formatExpression ;
-    private fun whenOptionElse(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatWhenOptionElse {
-        val expression = children[2] as FormatExpression
-        return FormatWhenOptionElseDefault(expression)
-    }
-
-    // override block = '{' variableAssignemnt* formatExpression '}' ;
-    private fun block(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StatementBlockExpression {
-        val assignments = children[1] as List<VariableAssignmentStatement>
-        val expression = children[2] as FormatExpression
-        return StatementBlockExpressionDefault(assignments,expression)
+    // embeddedExpression = expression viaFormatSet? ;
+    private fun embeddedExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatEmbeddedExpression {
+        val expression = children[0] as Expression
+        val via = children[1] as PossiblyQualifiedName?
+        return FormatEmbeddedExpressionDefault(expression,via)
     }
 
     // separatedList = rootExpression 'sep' separator viaFormatSet? ;

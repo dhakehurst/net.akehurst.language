@@ -369,6 +369,9 @@ object Agl {
     ): FormatResult {
         val formatResult = formatDomain(template, typesDomain)
         val formatDomain = formatResult.asm ?: error("AglFormatDomain not created from template.")
+        if (null==options.locationMap) {
+            options.locationMap = formatResult.syntaxAnalysis?.locationMap
+        }
         val result = format(formatDomain, objectGraph, self, options)
         return result
     }

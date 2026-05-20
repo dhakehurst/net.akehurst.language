@@ -4,6 +4,7 @@ import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.kotlinx.komposite.common.DatatypeRegistry
 import net.akehurst.kotlinx.komposite.processor.Komposite
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 import java.nio.file.FileSystem

@@ -421,6 +421,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                 methodPrimitive("filter", "List") {
                     description("A list created by filtering the elements to those for which the given lambda expression evaluates to true.")
                     parameter("lambda", "Lambda") // TODO: lambda must return Boolean
+                    returnTypeArgument("E")
                     execution { self, args ->
                         check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
                         check(args[0] is Function1<*, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }

@@ -17,8 +17,8 @@
 package net.akehurst.language.formatter.api
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.api.FunctionDefinition
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.api.WhenOption
@@ -65,14 +65,14 @@ interface FormatSet : FormatDefinition {
 
 interface AglFormatRule {
     val forTypeName: TypeReference
-    val formatExpression: FormatExpression
+    val formatExpression: Expression
 }
 
 interface FormatExpression : Expression {
 
 }
 
-interface FormatExpressionExpression : FormatExpression {
+interface FormatEmbeddedExpression : FormatExpression {
     val expression: Expression
     val via: PossiblyQualifiedName?
 }

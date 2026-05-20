@@ -17,7 +17,7 @@
 
 package net.akehurst.language.base.api
 
-//import net.akehurst.language.asmTransform.api.TransformRuleSet
+import net.akehurst.kotlinx.utils.Indent
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
 // [https://youtrack.jetbrains.com/issue/IDEA-359261/value-class-extension-methods-not-working-when-defined-in-companion-object]
@@ -109,11 +109,6 @@ interface PublicValueType {
 // TODO: value classes don't work (fully) in js and wasm
 data class Import(override val value: String) : PublicValueType {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
-    override fun toString() = value
-}
-
-class Indent(val value: String = "", val increment: String = "  ") {
-    val inc get() = Indent(this.value + increment, increment)
     override fun toString() = value
 }
 

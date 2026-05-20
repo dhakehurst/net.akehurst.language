@@ -23,8 +23,8 @@ import net.akehurst.language.asmTransform.api.AsmTransformNamespace
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.asmTransform.asm.*
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationPart

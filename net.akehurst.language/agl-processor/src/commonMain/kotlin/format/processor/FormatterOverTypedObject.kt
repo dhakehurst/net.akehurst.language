@@ -20,10 +20,12 @@ import net.akehurst.kotlinx.collections.lazyMap
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.FormatResultDefault
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -42,7 +44,8 @@ import net.akehurst.language.types.asm.StdLibDefault
 class FormatterOverTypedObject(
     override val formatDomain: AglFormatDomain,
     objectGraph: ObjectGraphAccessorMutator,
-    issues: IssueHolder
+    issues: IssueHolder,
+    val locationMap: LocationMap = LocationMapDefault()
 ) : ExpressionsInterpreterOverTypedObject(objectGraph, issues), Formatter {
 
     companion object {
@@ -86,7 +89,7 @@ class FormatterOverTypedObject(
                 map
             }
 
-            else -> error("Defintion named '${formatSetName.value}' is not a FormatSet")
+            else -> error("Definition named '${formatSetName.value}' is not a FormatSet")
         }
     }
     private val _output = mutableMapOf<String, String>()
@@ -109,6 +112,11 @@ class FormatterOverTypedObject(
         return FormatResultDefault(_output + Pair(FormatResultDefault.DEFAULT, str), issues)
     }
 
+    private fun issueError(item: Any?, message: String, data: Any? = null) {
+        val location = item?.let{this.locationMap[item]}
+        issues.error(location, message, data)
+    }
+
     private fun formatEvc(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): String {
         val self = evc.self
         val resultStr = when (self) {
@@ -117,9 +125,9 @@ class FormatterOverTypedObject(
                 self.type.isCollection && self.type.typeArguments.isNotEmpty() -> {
                     val selfRaw = self.self
                     val (coll, elType) = when {
-                        selfRaw is Iterable<*> -> Pair(selfRaw.toList(),self.type.typeArguments[0].type)
-                        selfRaw is Map<*,*> -> Pair(selfRaw.toList(), StdLibDefault.Pair.type(self.type.typeArguments))
-                        else -> Pair(null,null)
+                        selfRaw is Iterable<*> -> Pair(selfRaw.toList(), self.type.typeArguments[0].type)
+                        selfRaw is Map<*, *> -> Pair(selfRaw.toList(), StdLibDefault.Pair.type(self.type.typeArguments))
+                        else -> Pair(null, null)
                     }
                     when {
                         null == coll -> error("type.isCollection but self is not Iterable!")
@@ -134,7 +142,6 @@ class FormatterOverTypedObject(
                                     else -> formatExpression(formatSetName, elemEvc, formatRule.formatExpression)
                                 }
                                 setAdditionalOutputIfRequired(typedElem, formatSetName, resStr)
-                                resStr
                             }
                         }
                     }
@@ -147,7 +154,6 @@ class FormatterOverTypedObject(
                         else -> formatExpression(formatSetName, evc, formatRule.formatExpression)
                     }
                     setAdditionalOutputIfRequired(self, formatSetName, resStr)
-                    resStr
                 }
             }
         }
@@ -155,59 +161,68 @@ class FormatterOverTypedObject(
         return resultStr
     }
 
-    private fun setAdditionalOutputIfRequired(self: TypedObject, formatSetName: PossiblyQualifiedName, resultStr: String) {
+    private fun setAdditionalOutputIfRequired(self: TypedObject, formatSetName: PossiblyQualifiedName, resultStr: String): String {
         val formatSet = _formatSet[formatSetName] ?: error("Format named '${formatSetName.value}' cannot be found")
-        val outputOptionAny:Any? = formatSet.options["output"]
-        when {
-            null == outputOptionAny -> Unit // nothing needed
-            outputOptionAny !is LiteralExpression -> {
-                issues.error(null,"The option '#output' must be a literal String.")
-            }
-            outputOptionAny.value !is String -> {
-                issues.error(null,"The option '#output' must be a literal String'")
-            }
-            else -> {
-                val outputOption = (outputOptionAny.value as String)
-                val applicableTypeName = outputOption.substringBefore("->").trim()
-                val applicableType = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(applicableTypeName))
-                when {
-                    null == applicableType -> {
-                        issues.error(null,"The applicable type '$applicableTypeName' of the option '#output' is not found.")
-                    }
-                    ! self.type.resolvedDefinition.conformsTo(applicableType) -> Unit // do nothing type not applicable
-                    else -> {
-                        val formatExpr = """
+        val outputOptionAny: Any? = formatSet.options["output"]
+        return when {
+            null == outputOptionAny -> resultStr // nothing needed - use result string
+            else -> when {
+                outputOptionAny !is LiteralExpression -> {
+                    issueError(null, "The option '#output' must be a literal String.")
+                    ""
+                }
+
+                outputOptionAny.value !is String -> {
+                    issueError(null, "The option '#output' must be a literal String'")
+                    ""
+                }
+
+                else -> {
+                    val outputOption = (outputOptionAny.value as String)
+                    val applicableTypeName = outputOption.substringBefore("->").trim()
+                    val applicableType = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(applicableTypeName))
+                    when {
+                        null == applicableType -> {
+                            issueError(null, "The applicable type '$applicableTypeName' of the option '#output' is not found.")
+                            ""
+                        }
+
+                        !self.type.resolvedDefinition.conformsTo(applicableType) -> resultStr // do nothing type not applicable
+                        else -> {
+                            val formatExpr = """
                             namespace temp
                             format Temp {
                               $outputOption
                             }
                         """
-                        val outputFmtDom = Agl.formatDomain(FormatString(formatExpr), typesDomain)
-                        when {
-                            outputFmtDom.allIssues.errors.isNotEmpty() || null == outputFmtDom.asm -> {
-                                issues.error(null, "Cannot process the output directive '$outputOption'.")
-                                issues.addAll(outputFmtDom.allIssues)
-                            }
+                            val outputFmtDom = Agl.formatDomain(FormatString(formatExpr), typesDomain)
+                            when {
+                                outputFmtDom.allIssues.errors.isNotEmpty() || null == outputFmtDom.asm -> {
+                                    issueError(null, "Cannot process the output directive '$outputOption'.")
+                                    issues.addAll(outputFmtDom.allIssues)
+                                }
 
-                            else -> {
-                                val objectGraph = ObjectGraphAccessorMutatorByReflection(typesDomain, issues)
-                                val outputName = Agl.format(outputFmtDom.asm!!, objectGraph, self)
-                                when {
-                                    outputName.issues.errors.isNotEmpty() || null == outputName.sentence -> {
-                                        issues.error(null, "Cannot process the output directive '$outputOption'.")
-                                        issues.addAll(outputName.issues)
-                                    }
-
-                                    else -> when {
-                                        _output.contains(outputName.sentence!!) -> {
-                                            issues.error(null, "Output named '${outputName.sentence!!}' is already defined!'.")
+                                else -> {
+                                    val objectGraph = ObjectGraphAccessorMutatorByReflection(typesDomain, issues)
+                                    val outputName = Agl.format(outputFmtDom.asm!!, objectGraph, self)
+                                    when {
+                                        outputName.issues.errors.isNotEmpty() || null == outputName.sentence -> {
+                                            issueError(null, "Cannot process the output directive '$outputOption'.")
+                                            issues.addAll(outputName.issues)
                                         }
 
-                                        else -> _output[outputName.sentence!!] = resultStr
+                                        else -> when {
+                                            _output.contains(outputName.sentence!!) -> {
+                                                issueError(null, "Output named '${outputName.sentence!!}' is already defined!'.")
+                                            }
+
+                                            else -> _output[outputName.sentence!!] = resultStr
+                                        }
                                     }
                                 }
-                            }
 
+                            }
+                            ""
                         }
                     }
                 }
@@ -282,19 +297,19 @@ class FormatterOverTypedObject(
         }
     }
 
-    private fun formatExpression(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, formatExpr: FormatExpression) = when (formatExpr) {
-        is FormatExpressionExpression -> formatFromExpression(formatSetName, evc, formatExpr)
+    private fun formatExpression(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, formatExpr: Expression): String = when (formatExpr) {
+        is FormatEmbeddedExpression -> formatEmbeddedExpression(formatSetName, evc, formatExpr)
         is FormatExpressionTemplate -> formatFromTemplate(formatSetName, evc, formatExpr)
-        is FormatExpressionWhen -> formatFromWhen(formatSetName, evc, formatExpr)
-        else -> error("Internal error: subtype of AglFormatExpression not handled: '${formatExpr::class.simpleName}'")
+        //is FormatExpressionWhen -> formatFromWhen(formatSetName, evc, formatExpr)
+        else -> evalExpressionAsString(formatSetName, evc, formatExpr)
     }
 
-    private fun formatFromExpression(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, formatExpr: FormatExpressionExpression): String {
+    private fun formatEmbeddedExpression(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, formatExpr: FormatEmbeddedExpression): String {
         val res = formatEvaluateExpression(formatSetName, evc, formatExpr.expression)
         val value = res.self
         return when (value) {
             null -> {
-                issues.error(null, "Expression should result in a value, got 'null'")
+                issueError(formatExpr, "Expression should result in a value, got 'null'")
                 ""
             }
 
@@ -302,6 +317,23 @@ class FormatterOverTypedObject(
             else -> {
                 val via = formatExpr.via ?: formatSetName
                 formatEvc(via, evc.childSelf(res))
+            }
+        }
+    }
+
+    private fun evalExpressionAsString(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, expression: Expression): String {
+        val res = formatEvaluateExpression(formatSetName, evc, expression)
+        val value = res.self
+        return when (value) {
+            null -> {
+                issueError(expression, "Expression should result in a value, got 'null'")
+                ""
+            }
+
+            is String -> value as String
+            else -> {
+                issueError(expression, "Expression should result in a String, got '${value::class.simpleName}'")
+                "ERROR"
             }
         }
     }
@@ -491,7 +523,7 @@ class FormatterOverTypedObject(
                     }
 
                     else -> {
-                        issues.error(null, "Expected a collection object but got a '${obj::class.simpleName}'")
+                        issueError(templateElement, "Expected a collection object but got a '${obj::class.simpleName}'")
                         $$"$ERROR"
                     }
                 }
@@ -518,7 +550,7 @@ class FormatterOverTypedObject(
                     }
                 }
 
-                else -> error("Conditions/Options in a when expression must result in a Boolean value")
+                else -> error("Conditions/Options in a when expression must result in a Boolean value: '${opt.condition}'")
             }
         }
         return ""
@@ -555,7 +587,7 @@ class FormatterOverTypedObject(
         is FormatExpression -> {
             val formatSetName = (evc.getOrInParent(EVC_FORMAT_SET_NAME)?.self as? String)?.asPossiblyQualifiedName ?: error("evaluating a FormatExpression requires a formatSetName!")
             val fmt = when (expression) {
-                is FormatExpressionExpression -> formatFromExpression(formatSetName, evc, expression)
+                is FormatEmbeddedExpression -> formatEmbeddedExpression(formatSetName, evc, expression)
                 is FormatExpressionTemplate -> formatFromTemplate(formatSetName, evc, expression)
                 is FormatExpressionWhen -> formatFromWhen(formatSetName, evc, expression)
                 else -> error("Subtype of FormatExpression not handled in evaluateExpression '${expression::class.simpleName}'")
@@ -592,7 +624,7 @@ class FormatterOverTypedObject(
                 }
 
                 else -> {
-                    issues.error(null, "Function named '$funcName' could not be executed.")
+                    issueError(expression, "Function named '$funcName' could not be executed.")
                     objectGraph.nothing()
                 }
             }

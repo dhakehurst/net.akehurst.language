@@ -1,7 +1,7 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.language.asm.simple.AglAsm
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase

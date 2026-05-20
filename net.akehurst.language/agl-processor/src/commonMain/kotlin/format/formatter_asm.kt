@@ -22,12 +22,12 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.api.FunctionDefinition
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.FunctionParameter
 import net.akehurst.language.expressions.api.TypeReference
@@ -180,7 +180,7 @@ class FormatSetDefault(
 
 class AglFormatRuleDefault(
     override val forTypeName: TypeReference,
-    override val formatExpression: FormatExpression
+    override val formatExpression: Expression
 ) : AglFormatRule {
 }
 
@@ -205,10 +205,10 @@ class FormatWhenOptionElseDefault(
     override val expression: Expression = format
 }
 
-class FormatExpressionExpressionDefault(
+class FormatEmbeddedExpressionDefault(
     override val expression: Expression,
     override val via: PossiblyQualifiedName?
-) : FormatExpressionExpression {
+) : FormatEmbeddedExpression {
 
     override fun asString(indent: Indent, imports: List<Import>): String = "${expression.asString(indent, imports)}${via?.let { " via ${it.value}" }}"
 }

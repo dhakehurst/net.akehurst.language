@@ -20,7 +20,7 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
