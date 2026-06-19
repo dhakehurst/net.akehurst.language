@@ -3,6 +3,10 @@ plugins {
     alias(libs.plugins.jsIntegration)
 }
 
+// do not publish
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
+
+
 dependencies {
     jsTestImplementation(project(":agl-processor"))
 }
@@ -43,7 +47,3 @@ jsIntegration {
 //tasks["overwriteTestEntryFile"].mustRunAfter("jsTestTestDevelopmentExecutableCompileSync")
 //tasks["jsNodeTest"].dependsOn("overwriteTestEntryFile")
 //tasks["jsBrowserTest"].dependsOn("overwriteTestEntryFile")
-
-tasks.withType<AbstractPublishToMaven> {
-    onlyIf { false }
-}

@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.SysML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
@@ -32,7 +32,7 @@ class test_SysML_Singles {
     private companion object {
         const val grammarPath = "/SysML/v2_2023-11/grammars/standard/grammar.agl"
         val grammarStr = this::class.java.getResource(grammarPath).readText()
-        var processor: LanguageProcessor<Asm, SentenceContextAny> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, SentenceContext> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 
@@ -46,7 +46,7 @@ class test_SysML_Singles {
     @Test
     fun process_grammar() {
         val grammarStr = this::class.java.getResource(grammarPath).readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 

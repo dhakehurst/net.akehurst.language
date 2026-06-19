@@ -109,7 +109,7 @@ class test_Processor {
             override fun clear() { }
 
             override fun analyse(sentenceIdentity: Any?, asm: Value, locationMap: LocationMap?, options: SemanticAnalysisOptions<MyContext>): SemanticAnalysisResult {
-                analyseValue(asm, options.context)
+                analyseValue(asm, options.sentenceContext)
                 return SemanticAnalysisResultDefault(_resolvedReferences,issues)
             }
 
@@ -156,7 +156,7 @@ class test_Processor {
         for (sentence in sentences) {
             println(sentence)
             val pres = processor.process(sentence, Agl.options {
-                semanticAnalysis { context(context) }
+                semanticAnalysis { sentenceContext(context) }
             })
             assertTrue(pres.allIssues.errors.isEmpty(), pres.allIssues.toString())
             println("  ${pres.asm}")

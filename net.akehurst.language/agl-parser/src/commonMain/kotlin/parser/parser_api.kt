@@ -17,7 +17,7 @@
 
 package net.akehurst.language.parser.api
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.kotlinx.collections.MapNotNull
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.issues.api.IssueCollection
@@ -25,23 +25,32 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 
 interface RuleSet {
+    val rule : List<Rule>
     val nonSkipTerminals: List<Rule>
 
     /** all terminals in this RuleSet */
     val terminals: List<Rule>
 
     /** all transitive terminals from RuleSets of embedded rules */
-    val embeddedTerminals: List<RuntimeRule>
+    val embeddedTerminals: List<Rule>
+
+    val goalRuleFor: MapNotNull<Rule, Rule>
 
     fun automatonFor(goalRuleName: String, automatonKind: AutomatonKind): Automaton
     fun usedAutomatonFor(goalRuleName: String):Automaton
     fun addPreBuiltFor(userGoalRuleName: String, automaton: Automaton)
+
+    fun clone(): RuleSet
 }
 
 interface Rule {
+    val ruleSetNumber: Int
+    val number: Int
     val tag: String
 
     val isSkip: Boolean
+
+    val isGoal: Boolean
 
     /**
      * pseudo rules are created where there is not a 1:1 mapping from (user-defined) grammar-rule to runtime-rule
@@ -116,7 +125,7 @@ data class OptionNum(val value:Int) :Comparable<OptionNum> {
         RulePosition.OPTION_MULTI_ITEM -> "LI"
         RulePosition.OPTION_SLIST_EMPTY -> "SE"
         RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR -> "SI"
-        else -> "$value"
+        else -> "o$value"
     }
 }
 
@@ -124,6 +133,8 @@ interface RulePosition {
     val rule: Rule
     val option: OptionNum
     val position: Int
+
+    val asString: String
 
     companion object {
         const val START_OF_RULE = 0

@@ -65,7 +65,7 @@ internal class ConverterToRuntimeRules(
 
     fun resolveEmbedded(embeddedConverters: Map<Grammar, RuntimeRuleSet>) {
         _embeddedRules.forEach { (ebd,rule) ->
-            val embeddedGrammar = ebd.embeddedGrammarReference.resolved!!
+            val embeddedGrammar = ebd.embeddedGrammarReference.resolved ?: error("embedded grammar reference '${ebd.embeddedGrammarReference.nameOrQName.value}' not resolved")
             val embeddedGoalRuleName = ebd.embeddedGoalName.value
             val embeddedRuntimeRuleSet = embeddedConverters[embeddedGrammar] ?: error("Embedded ConverterToRuntimeRules not found for grammar '${embeddedGrammar.qualifiedName.value}'")
             val embeddedStartRuntimeRule = embeddedRuntimeRuleSet.findRuntimeRule(embeddedGoalRuleName)
@@ -74,7 +74,7 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun recordOriginalRuleItem(runtimeRule: RuntimeRule, originalRuleItem: RuleItem) {
-        this._originalRuleItem[Pair(runtimeRule.runtimeRuleSetNumber, runtimeRule.ruleNumber)] = originalRuleItem
+        this._originalRuleItem[Pair(runtimeRule.ruleSetNumber, runtimeRule.number)] = originalRuleItem
     }
 
     private fun nextRule(name: String, isSkip: Boolean, isPseudo: Boolean): RuntimeRule {

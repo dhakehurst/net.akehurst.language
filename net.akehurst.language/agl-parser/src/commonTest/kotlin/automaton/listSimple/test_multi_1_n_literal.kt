@@ -17,6 +17,8 @@
 package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -29,35 +31,45 @@ class test_multi_1_n_literal : test_AutomatonAbstract() {
 
     // S =  'a'+ ;
 
-    private companion object {
-        val rrs = runtimeRuleSet {
-            multi("S", 1, -1, "'a'")
-            literal("'a'", "a")
-        }
-        val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
-        val a = rrs.findRuntimeRule("'a'")
+    val rrs = ruleSet("Test") {
+        multi("S", 1, -1, "'a'")
+        literal("'a'", "a")
+    } as RuntimeRuleSet
 
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RulePositionRuntime(a, oN, ER)))
-        val s2 = SM.createState(listOf(RulePositionRuntime(S, oN, PMI)))
-        val s3 = SM.createState(listOf(RulePositionRuntime(S, oN, ER)))
-
-        val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
-        val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))
-        val lhs_aT = SM.createLookaheadSet(false, true, false, setOf(a))
-    }
+    private val S = rrs.rule[0]  // S
+    private val _t1 = rrs.rule[1]  // 'a'
+    private val rG = rrs.goalRuleFor[S]
 
     @Test
-    fun parse_aba() {
+    fun parse_aa() {
         val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
-        parser.parseForGoal("S", "aba")
+        parser.parseForGoal("S", "aa")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t1, oN, ER)   // 'a'
+            state(S, LI, ER)   // ['a'] .
+            state(S, LI, 1)   // ['a' . 'a']
+            state(rG, oN, ER)   // <GOAL> = S .
 
-
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT,_t1)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, LI, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, LI, 1); lhg(setOf(_t1), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, LI, ER); lhg(RT);
+                prevPair(RP(rG, oN, SR), RP(S, oLI, 1))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, LI, 1); lhg(_t1);
+                prevPair(RP(rG, oN, SR), RP(S, oLI, 1))
+            }
+            trans(GOAL) { src(S, LI, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(WIDTH) { src(S, LI, 1); tgt(_t1, oN, ER); lhg(setOf(RT,_t1)); ctx(rG, oN, SR) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -68,9 +80,53 @@ class test_multi_1_n_literal : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, LI, 1)   // ['a' . 'a']
+            state(S, LI, ER)   // ['a'] .
+            state(_t1, oN, ER)   // 'a'
 
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT,_t1)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(S, LI, 1); tgt(_t1, oN, ER); lhg(setOf(EOT,_t1)); ctx(rG, oN, SR) }
+            trans(GOAL) { src(S, LI, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, LI, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, LI, 1); lhg(setOf(_t1), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, LI, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(S, oLI, 1))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, LI, 1); lhg(_t1);
+                prevPair(RP(rG, oN, SR), RP(S, oLI, 1))
+            }
         }
 
         AutomatonTest.assertEquals(expected, actual)
+    }
+
+        @Test
+    fun compare() {
+        val rrs_noBuild = rrs.clone()
+        val rrs_preBuild = rrs.clone()
+
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
+        val sentences = listOf("a", "aa", "aaa")
+        for (sen in sentences) {
+            val result = parser.parseForGoal("S", sen)
+            if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
+        }
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+
+        println("--Pre Build--")
+        println(rrs_preBuild.usedAutomatonToString("S"))
+        println("--No Build--")
+        println(rrs_noBuild.usedAutomatonToString("S"))
+
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild, config = AutomatonTest.MatchConfiguration(no_lookahead_compare = true))
     }
 }

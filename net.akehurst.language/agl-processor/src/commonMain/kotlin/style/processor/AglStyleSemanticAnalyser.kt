@@ -18,80 +18,112 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.style.api.AglStyleDomain
-import net.akehurst.language.style.api.AglStyleMetaRule
-import net.akehurst.language.style.api.AglStyleSelectorKind
-import net.akehurst.language.style.api.AglStyleTagRule
+import net.akehurst.language.style.api.*
 
-class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceContextAny> {
+class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceContext> {
 
     companion object {
         // TODO: AglGrammar.typesModel.findTypeForRule(GrammarRuleName("grammarRule"))
         private val grammarRuleQualifiedName = QualifiedName("net.akehurst.language.grammar.api.GrammarRule")
+
+        fun findStyleSetOrNull(sentenceContext: SentenceContext, localNamespace: QualifiedName, nameOrQName: PossiblyQualifiedName): StyleSet? =
+            sentenceContext.findItemsByQualifiedNameConformingTo(nameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
+                itemTypeName.value == StyleSet::class.simpleName!! //TODO: use qualified when kotlin.JS supports it
+            }.firstOrNull()?.item as StyleSet?
     }
 
     val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
+    private var _locationMap: LocationMap? = null
 
     override fun clear() {
         _issues.clear()
         _resolvedReferences.clear()
+        _locationMap = null
     }
 
     override fun analyse(
         sentenceIdentity:Any?,
         asm: AglStyleDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
-        val context = options.context
+        this._locationMap = locationMap ?: LocationMapDefault()
+        val sentenceContext = options.sentenceContext
         val locMap = locationMap ?: LocationMapDefault()
-        if (null != context) {
-            asm.allDefinitions.forEach { ss ->
-                ss.rules.forEach { rule ->
-                    when (rule) {
-                        is AglStyleMetaRule -> analyseMetaRule(rule, locMap, context)
-                        is AglStyleTagRule -> analyseTagRule(rule, locMap, context)
+        if (null != sentenceContext) {
+            asm.namespace.forEach { ns ->
+                ns.definition.forEach { ss ->
+                    resolveStyleSetRefs(sentenceContext, ss)
+
+                    ss.rules.forEach { rule ->
+                        when (rule) {
+                            is AglStyleMetaRule -> analyseMetaRule(rule, locMap, sentenceContext)
+                            is AglStyleTagRule -> analyseTagRule(rule, locMap, sentenceContext)
+                        }
                     }
                 }
             }
-        }
+         }
 
         return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
-    private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, context: SentenceContextAny) {
+    private fun issueError(item: Any, message: String, data: Any?) {
+        val location = this._locationMap?.get(item)
+        _issues.error(location, message, data)
     }
 
-    private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, context: SentenceContextAny) {
+    private fun resolveStyleSetRefs(sentenceContext: SentenceContext?, styleSet: StyleSet) {
+        styleSet.extends.forEach { ref ->
+            checkStyleSetExistsAndResolve(sentenceContext,ref)
+        }
+    }
+
+    private fun checkStyleSetExistsAndResolve(sentenceContext: SentenceContext?, ref: StyleSetReference) {
+        val resolvedSS = sentenceContext?.let {
+            findStyleSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName)
+        }
+        if (null == resolvedSS) {
+            this.issueError(ref, "StyleSet '${ref.nameOrQName}' not found", null)
+        } else {
+            ref.resolveAs(resolvedSS)
+        }
+    }
+
+    private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, sentenceContext: SentenceContext) {
+    }
+
+    private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, sentenceContext: SentenceContext) {
         rule.selector.forEach { sel ->
             val loc = locMap[sel]
             // TODO: user types
             when (sel.kind) {
                 AglStyleSelectorKind.LITERAL -> {
-                    if (context.findItemsNamedConformingTo(sel.value) { it.value == "LITERAL" }.isEmpty()) {
+                    if (sentenceContext.findItemsNamedConformingTo(sel.value) { it.value == "LITERAL" }.isEmpty()) {
                         _issues.error(loc, "Terminal Literal ${sel.value} not found for style rule")
                     }
                 }
 
                 AglStyleSelectorKind.PATTERN -> {
-                    if (context.findItemsNamedConformingTo(sel.value) { it.value == "PATTERN" }.isEmpty()) {
+                    if (sentenceContext.findItemsNamedConformingTo(sel.value) { it.value == "PATTERN" }.isEmpty()) {
                         _issues.error(loc, "Terminal Pattern ${sel.value} not found for style rule")
                     }
                 }
 
                 AglStyleSelectorKind.RULE_NAME -> {
-                    if (context.findItemsNamedConformingTo(sel.value) { it == grammarRuleQualifiedName }.isEmpty()) {
+                    if (sentenceContext.findItemsNamedConformingTo(sel.value) { it == grammarRuleQualifiedName }.isEmpty()) {
                         _issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
                     }
                 }

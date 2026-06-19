@@ -21,6 +21,9 @@ plugins {
     id("project-conventions")
 }
 
+// do not publish
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
+
 kotlin {
     sourceSets {
         commonMain.configure {
@@ -59,9 +62,4 @@ tasks.withType<Test>().configureEach {
         events(PASSED, SKIPPED, FAILED, STANDARD_OUT)
         exceptionFormat = TestExceptionFormat.FULL
     }
-}
-
-// do not publish
-tasks.withType<AbstractPublishToMaven> {
-    onlyIf { false }
 }

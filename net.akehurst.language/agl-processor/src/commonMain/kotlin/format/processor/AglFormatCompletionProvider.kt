@@ -18,10 +18,10 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.formatter.api.AglFormatDomain
 
-class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatDomain, SentenceContextAny>() {
+class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatDomain, SentenceContext>() {
 
         //TODO
 

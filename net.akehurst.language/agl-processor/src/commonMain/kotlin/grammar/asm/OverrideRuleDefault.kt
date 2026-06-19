@@ -16,7 +16,8 @@
 
 package net.akehurst.language.grammar.asm
 
-import net.akehurst.language.base.api.Indent
+import net.akehurst.language.base.api.Import
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.grammar.api.*
 
 data class OverrideRuleDefault(
@@ -107,7 +108,7 @@ data class OverrideRuleDefault(
             }
         }
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         var f = ""
         if (isSkip) f += "skip "
         if (isLeaf) f += "leaf "

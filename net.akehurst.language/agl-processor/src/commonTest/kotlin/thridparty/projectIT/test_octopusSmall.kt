@@ -243,7 +243,7 @@ class test_octopusSmall {
                  'appliedProperty' PropertyCallExp?
                  'type' __pi_reference ;
             
-            CollectionLiteralExp = 'Collection' '\{' [ __pi_super_CollectionLiteralPart / ',' ]* '}' ;
+            CollectionLiteralExp = 'Collection' '\\{' [ __pi_super_CollectionLiteralPart / ',' ]* '}' ;
             
             CollectionLiteralPart = 'CollectionLiteralPart' ;
             
@@ -277,7 +277,7 @@ class test_octopusSmall {
             
             StringLiteralExp = stringLiteral ;
             
-            TupleLiteralExp = 'Tuple' '\{' [ VariableDeclaration / ',' ]* '}' ;
+            TupleLiteralExp = 'Tuple' '\\{' [ VariableDeclaration / ',' ]* '}' ;
             
             OclMessageExp = '<' OclExpression '>^^' __pi_reference '(' [ OclExpression / ',' ]* ')' ;
             
@@ -349,7 +349,10 @@ class test_octopusSmall {
             }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).let {
+            check(it.issues.errors.isEmpty()) {it.issues.toString()}
+            it.processor!!
+        }
         const val goal = "UmlPart"
     }
 

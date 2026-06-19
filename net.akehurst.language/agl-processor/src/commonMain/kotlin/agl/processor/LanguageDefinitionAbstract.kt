@@ -72,7 +72,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     override val crossReferenceDomain: CrossReferenceDomain? get() = this.processor?.crossReferenceDomain
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = this.processor?.syntaxAnalyser
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = this.processor?.semanticAnalyser
-    override val formatter: Formatter<AsmType>? get() = this.processor?.formatter
+    override val formatter: Formatter? get() = this.processor?.formatter
 
     /*
     abstract override var formatStr: String?

@@ -71,7 +71,7 @@ internal class SpineDefault(
         //TODO: use the above but stop it recursing for ever
         runtimeSpine.expectedNextTerminals.mapNotNull {
             val rr = it as RuntimeRule
-            val orig = mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber)
+            val orig = mapToGrammar(rr.ruleSetNumber, rr.number)
             when (orig) {
                 is TangibleItem -> orig as TangibleItem
                 else -> orig?.let {
@@ -93,13 +93,13 @@ internal class SpineDefault(
             when {
                 rp.isGoal -> {
                     val rr = (rp.rule.rhs as RuntimeRuleRhsGoal).userGoalRuleItem
-                    val gr = mapToGrammar.invoke(rr.runtimeRuleSetNumber, rr.ruleNumber) ?: error("No Grammar Rule item for root runtime-rule '$rr'")
+                    val gr = mapToGrammar.invoke(rr.ruleSetNumber, rr.number) ?: error("No Grammar Rule item for root runtime-rule '$rr'")
                     SpineNodeRoot(gr)
                 }
 
                 else -> {
                     val rr = it.rule as RuntimeRule
-                    val ri = mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) ?: error("No Grammar Rule item for runtime-rule '$rr'")
+                    val ri = mapToGrammar(rr.ruleSetNumber, rr.number) ?: error("No Grammar Rule item for runtime-rule '$rr'")
                     SpineNodeDefault(ri, it.position)
                 }
             }

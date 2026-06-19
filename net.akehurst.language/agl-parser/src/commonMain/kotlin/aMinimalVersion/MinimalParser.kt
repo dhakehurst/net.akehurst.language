@@ -17,13 +17,13 @@
 
 package net.akehurst.language.parser.aMinimalVersion
 
+import net.akehurst.kotlinx.collections.LazyMutableMapNotNull
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.*
-import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.binaryHeap
-import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
@@ -61,7 +61,7 @@ class AutomatonForMinimal(
     val states get() = _states.values
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
-    val startState = createState(RulePositionRuntime(goalRule, RulePosition.OPTION_NONE, 0))
+    val startState = createState(RulePositionRuntime(goalRule as RuntimeRule, RulePosition.OPTION_NONE, 0))
 
     val usedRules: Set<RuntimeRule> by lazy {
         this.runtimeRuleSet.calcUsedRules(this.startState.rp.rule)
@@ -822,9 +822,9 @@ class MinimalParser private constructor(
     }
 
     // ----- cache -----
-    private val _firstTerminal = lazyMutableMapNonNull<RulePositionRuntime, LazyMutableMapNonNull<RulePositionRuntime, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNonNull { linkedSetOf() } }
-    private val _parentInContext = lazyMutableMapNonNull<RulePositionRuntime, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { linkedSetOf() } }
-    private val _possibleContexts = lazyMutableMapNonNull<RulePositionRuntime, MutableSet<RulePositionRuntime>> { linkedSetOf() }
+    private val _firstTerminal = lazyMutableMapNotNull<RulePositionRuntime, LazyMutableMapNotNull<RulePositionRuntime, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNotNull { linkedSetOf() } }
+    private val _parentInContext = lazyMutableMapNotNull<RulePositionRuntime, LazyMutableMapNotNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNotNull { linkedSetOf() } }
+    private val _possibleContexts by lazyMutableMapNotNull<RulePositionRuntime, MutableSet<RulePositionRuntime>> { linkedSetOf() }
 
     fun clearCache() {
         _firstTerminal.clear()

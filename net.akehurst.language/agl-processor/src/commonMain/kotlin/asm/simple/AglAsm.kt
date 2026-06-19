@@ -32,9 +32,9 @@ interface AsmListSeparated {
                 data("PropertyValueName") {
                     supertype("PublicValueType")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 interface_("AsmValue") {
 
@@ -103,26 +103,26 @@ interface AsmListSeparated {
                     supertype("AsmValueAbstract")
                     supertype("AsmStructure")
                     constructor_ {
-                        parameter("qualifiedTypeName", "QualifiedName", false)
+                        parameter(setOf(VAL, CMP), "qualifiedTypeName", "QualifiedName")
                     }
                     propertyOf(setOf(VAR, REF, STR), "parsePath", "String", false)
                     propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
                     propertyOf(setOf(VAR, CMP, STR), "semanticPath", "AsmPath", false)
                 }
                 data("AsmStructurePropertySimple") {
                     supertype("AsmStructureProperty")
                     constructor_ {
-                        parameter("name", "PropertyValueName", false)
-                        parameter("index", "Integer", false)
-                        parameter("value", "AsmValue", false)
+                        parameter(setOf(VAL, CMP), "name", "PropertyValueName")
+                        parameter(setOf(VAL, REF), "index", "Integer")
+                        parameter(setOf(VAL, CMP), "value", "AsmValue")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "index", "Integer", false)
-                    propertyOf(setOf(VAL, CMP, STR), "name", "PropertyValueName", false)
-                    propertyOf(setOf(VAR, CMP, STR), "value", "AsmValue", false)
+                    //propertyOf(setOf(VAL, REF, STR), "index", "Integer", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "name", "PropertyValueName", false)
+                   // propertyOf(setOf(VAR, CMP, STR), "value", "AsmValue", false)
                 }
                 data("AsmSimpleKt") {
 
@@ -142,70 +142,79 @@ interface AsmListSeparated {
                     supertype("AsmValueAbstract")
                     supertype("AsmReference")
                     constructor_ {
-                        parameter("reference", "String", false)
-                        parameter("value", "AsmStructure", false)
+                        parameter(setOf(VAL, REF), "reference", "String")
+                        parameter(setOf(VAR, REF), "value", "AsmStructure")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "reference", "String", false)
-                    propertyOf(setOf(VAR, REF, STR), "value", "AsmStructure", false)
+                    //propertyOf(setOf(VAL, REF, STR), "reference", "String", false)
+                    //propertyOf(setOf(VAR, REF, STR), "value", "AsmStructure", false)
                 }
                 data("AsmPrimitiveSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmPrimitive")
                     constructor_ {
-                        parameter("qualifiedTypeName", "QualifiedName", false)
-                        parameter("value", "Any", false)
+                        parameter(setOf(VAL, CMP), "qualifiedTypeName", "QualifiedName")
+                        parameter(setOf(VAL, REF), "value", "Any")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
-                    propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
                 }
                 data("AsmPathSimple") {
                     supertype("AsmPath")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                   // propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 data("AsmListSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmList")
                     constructor_ {
-                        parameter("elements", "List", false)
+                        parameter(setOf(VAR, CMP), "elements", "List"){
+                            typeArgument("AsmValue")
+                        }
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "elements", "List", false){
-                        typeArgument("AsmValue")
-                    }
+//                    propertyOf(setOf(VAR, CMP, STR), "elements", "List", false){
+//                        typeArgument("AsmValue")
+//                    }
                 }
                 data("AsmListSeparatedSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmListSeparated")
                     constructor_ {
-                        parameter("elements", "ListSeparated", false)
+                        parameter(setOf(VAR, CMP), "elements", "ListSeparated"){
+                            typeArgument("AsmValue")
+                            typeArgument("AsmValue")
+                            typeArgument("AsmValue")
+                        }
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "elements", "ListSeparated", false){
-                        typeArgument("AsmValue")
-                        typeArgument("AsmValue")
-                        typeArgument("AsmValue")
-                    }
+//                    propertyOf(setOf(VAR, CMP, STR), "elements", "ListSeparated", false){
+//                        typeArgument("AsmValue")
+//                        typeArgument("AsmValue")
+//                        typeArgument("AsmValue")
+//                    }
                 }
                 data("AsmLambdaSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmLambda")
                     constructor_ {
-                        parameter("lambda", "LambdaType", false)
+                        parameter(setOf(VAL, REF), "lambda", "LambdaType"){
+                            typeArgument("AsmValue")
+                            typeArgument("AsmValue")
+                        }
                     }
-                    propertyOf(setOf(VAL, REF, STR), "lambda", "LambdaType", false){
-                        typeArgument("AsmValue")
-                        typeArgument("AsmValue")
-                    }
+//                    propertyOf(setOf(VAL, REF, STR), "lambda", "LambdaType", false){
+//                        typeArgument("AsmValue")
+//                        typeArgument("AsmValue")
+//                    }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
                 }
                 data("AsmAnySimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmAny")
                     constructor_ {
-                        parameter("value", "Any", false)
+                        parameter(setOf(VAL, REF), "value", "Any")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
                 }
             }
             namespace("net.akehurst.language.collections", listOf("std")) {

@@ -64,7 +64,7 @@ class test_AglStyleLanguage {
         fun process(sentence: String) = aglProc.process(
             sentence,
             Agl.options {
-                semanticAnalysis { context(contextFromGrammar(testGrammar)) }
+                semanticAnalysis { sentenceContext(contextFromGrammar(testGrammar)) }
             })
     }
 

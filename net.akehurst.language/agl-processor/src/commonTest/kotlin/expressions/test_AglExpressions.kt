@@ -18,7 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.simple.contextAsmSimpleWithAsmPath
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.types.asm.StdLibDefault
@@ -29,9 +29,12 @@ import kotlin.test.assertTrue
 
 class test_AglExpressions {
 
-        @Test
+    val sut = AglExpressions
+
+
+    @Test
     fun identity() {
-            assertEquals("net.akehurst.language.Expressions", AglExpressions.identity.value)
+        assertEquals("net.akehurst.language.Expressions", AglExpressions.identity.value)
     }
 
     @Test
@@ -40,7 +43,7 @@ class test_AglExpressions {
             AglBase.grammarString + "\n" + AglExpressions.grammarString,
             Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromRegistryGrammars(Agl.registry))
                 }
             }
         )
@@ -54,11 +57,11 @@ class test_AglExpressions {
     @Test
     fun process_typesString_EQ_typesModel() {
         val res = Agl.registry.agl.types.processor!!.process(
-           AglBase.typesString + "\n" +
-                   AglExpressions.typesString,
+            AglBase.typesString + "\n" +
+                    AglExpressions.typesString,
             Agl.options {
                 semanticAnalysis {
-                    context(contextAsmSimpleWithAsmPath())
+                    sentenceContext(contextAsmSimpleWithAsmPath())
                 }
             }
         )
@@ -113,10 +116,17 @@ class test_AglExpressions {
 
     @Test
     fun styleModel_EQ_styleString() {
-        val actual = AglExpressions.styleDomain.asString()
-        val expected = AglExpressions.styleString
 
-        assertEquals(expected, actual)
+        val processedStyleString = Agl.registry.agl.style.processor!!.process(
+            sut.styleString
+        ).let {
+            assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
+            it.asm!!
+        }
+
+        assertEquals(sut.styleString, sut.styleDomain.asString())
+        assertEquals(sut.styleDomain.asString(), processedStyleString.asString())
+
     }
 
 }

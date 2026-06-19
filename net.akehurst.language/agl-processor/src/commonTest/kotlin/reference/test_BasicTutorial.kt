@@ -81,14 +81,14 @@ class test_BasicTutorial {
         }
 
         fun testPass(sentence: String) {
-            val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
+            val result = _processor.process(sentence, Agl.options { semanticAnalysis { sentenceContext(contextAsmSimple()) } })
             check(_processor.allIssues.errors.isEmpty()){ _processor.allIssues.toString()}
             assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
             assertNotNull(result.asm)
         }
 
         fun testFail(sentence: String, expectedIssues: Set<LanguageIssue>) {
-            val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
+            val result = _processor.process(sentence, Agl.options { semanticAnalysis { sentenceContext(contextAsmSimple()) } })
             assertTrue(_processor.allIssues.errors.isEmpty(), _processor.allIssues.toString())
             assertEquals(expectedIssues,result.allIssues.all)
             assertNotNull(result.asm)

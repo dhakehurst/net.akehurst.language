@@ -33,13 +33,12 @@ internal class RuntimeState(
     val runtimeLookaheadSet: Set<LookaheadSet>,
 ) {
 
-
     val isAtEnd: Boolean get() = state.isAtEnd
     val optionList: List<OptionNum> get() = state.optionList
 
     val uncompressed: Set<StateInfoUncompressed> by lazy {
         //TODO: Maybe runtimeLookahead should be indexed by RulePosition
-        this.state.rulePositions.flatMap { rp ->
+        this.state.rulePosition.flatMap { rp ->
             this.runtimeLookaheadSet.map { grd ->
                 StateInfoUncompressed(rp, grd.fullContent)
             }
@@ -65,6 +64,13 @@ internal class RuntimeState(
         this.runtimeLookaheadSet != other.runtimeLookaheadSet -> false
         else -> true
     }
+//    override fun equals(other: Any?): Boolean {
+//        if (this === other) return true
+//        if (other !is RuntimeState) return false
+//        if (this.hashCode_cache != other.hashCode_cache) return false
+//        if (this.state != other.state) return false
+//        return this.runtimeLookaheadSet == other.runtimeLookaheadSet
+//    }
 
-    override fun toString(): String = "RS{${state.rulePositions}[${runtimeLookaheadSet.joinToString(separator = "|") { it.fullContent.joinToString { it.tag } }}]}"
+    override fun toString(): String = "RS{${state.rulePosition}[${runtimeLookaheadSet.joinToString(separator = "|") { it.fullContent.joinToString { it.tag } }}]}"
 }

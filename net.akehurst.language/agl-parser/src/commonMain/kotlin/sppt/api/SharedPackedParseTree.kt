@@ -25,7 +25,7 @@ interface SpptDataNode {
     val nextInputPosition: Int
     val nextInputNoSkip: Int
     val option: OptionNum
-    val dynamicPriority:List<Int>
+    val dynamicPriority: List<Int>
 }
 
 data class ChildInfo(
@@ -41,11 +41,11 @@ data class AltInfo(
 )
 
 data class ParsePath(
-    val segments:List<String> = emptyList()
+    val segments: List<String> = emptyList()
 ) {
-    operator fun plus(segment:String) = ParsePath(this.segments + segment)
+    operator fun plus(segment: String) = ParsePath(this.segments + segment)
 
-    override fun toString(): String =this.segments.joinToString(prefix = "/", separator = "/")
+    override fun toString(): String = this.segments.joinToString(prefix = "/", separator = "/")
 }
 
 interface SpptDataNodeInfo {
@@ -60,19 +60,20 @@ interface SpptDataNodeInfo {
     val totalChildrenFromAllAlternatives: Int
     val numSkipChildren: Int
 }
+
 val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPosition
 
 // can't override 'path: () -> List<SpptDataNode>' in java
 // so use this fun interface instead
 fun interface PathFunction {
-    fun invoke() :List<SpptDataNode>
+    fun invoke(): List<SpptDataNode>
 }
 
 interface SpptWalker {
     fun beginTree()
     fun endTree()
 
-    fun skip(startPosition: Int, nextInputPosition: Int)
+    fun skip(skipData: TreeData)
     fun leaf(nodeInfo: SpptDataNodeInfo)
 
     /**

@@ -20,6 +20,7 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -82,7 +83,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     protected val defaultGoalRuleName: GrammarRuleName? by lazy {
         configuration.defaultGoalRuleName
-            ?: targetGrammar?.options?.get(AglGrammar.OPTION_defaultGoalRule)?.let { GrammarRuleName(it) }
+            ?: targetGrammar?.options?.get<String>(AglGrammar.OPTION_defaultGoalRule)?.let { GrammarRuleName(it) }
             ?: targetGrammar?.grammarRule?.firstOrNull { it.isSkip.not() }?.name
     }
 
@@ -136,13 +137,13 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
-    override val formatter: Formatter<AsmType>? by lazy {
+    override val formatter: Formatter? by lazy {
         val res = configuration.formatResolver?.invoke(this)
         res?.let {
             this.allIssues.addAllFrom(res.allIssues)
             res.asm?.let {
                 //TODO: make a formatter Resolver !
-                FormatterOverAsmSimple(it, typesDomain, this.allIssues) as Formatter<AsmType>
+                FormatterOverAsmSimple(it, typesDomain, this.allIssues, res.syntaxAnalysis?.locationMap ?: LocationMapDefault()) as Formatter
             }
         }
     }
@@ -179,8 +180,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun buildFor(options: ParseOptions?): LanguageProcessor<AsmType, ContextType> {
-        val opts = options ?: parseOptionsDefault()
-        if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName?.value
+        var opts = options ?: parseOptionsDefault()
+        if (null == opts.goalRuleName) {
+            opts = opts.clone()
+            opts.goalRuleName = this.defaultGoalRuleName?.value
+        }
         this.parser?.buildFor(opts.goalRuleName!!)
         return this
     }
@@ -191,8 +195,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun parse(sentence: String, options: ParseOptions?): ParseResult {//Pair<SharedPackedParseTree?, List<LanguageIssue>> {
-        val opts = options ?: parseOptionsDefault()
-        if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName?.value
+        var opts = options ?: parseOptionsDefault()
+        if (null == opts.goalRuleName) {
+            opts = opts.clone()
+            opts.goalRuleName = this.defaultGoalRuleName?.value
+        }
         return this.parser?.parse(sentence, opts)?.also { scanner?.reset(); parser?.reset() }
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
     }
@@ -208,7 +215,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return sa.transform(sppt) as SyntaxAnalysisResult<AsmType>
     }
 
-    override fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): SemanticAnalysisResult {
+    override  fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): SemanticAnalysisResult {
         val opts = defaultOptions(options)
         val semAnalyser = this.semanticAnalyser
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SemanticAnalyser")
@@ -241,23 +248,23 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         }
     }
 
-    override fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
+    override  fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
         val opts = defaultOptions(options)
         val parseResult = this.parse(sentence, opts.parse)
         return if (null == parseResult.sppt) {
-            FormatResultDefault(null, parseResult.issues)
+            FormatResultDefault(emptyMap(), parseResult.issues)
         } else {
             val synxResult = this.syntaxAnalysis(parseResult.sppt!!)
             if (null == synxResult.asm) {
-                FormatResultDefault(null, parseResult.issues + synxResult.issues)
+                FormatResultDefault(emptyMap(), parseResult.issues + synxResult.issues)
             } else {
                 val frmtResult = this.formatAsm(synxResult.asm!!)
-                FormatResultDefault(frmtResult.sentence, parseResult.issues + synxResult.issues + frmtResult.issues)
+                FormatResultDefault(frmtResult.output, parseResult.issues + synxResult.issues + frmtResult.issues)
             }
         }
     }
 
-    override fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
+    override  fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
         val opts = defaultOptions(options)
         val formatSetName = this.targetGrammar!!.qualifiedName //TODO: make configuratble in options
         //val fm = formatModel?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a FormatModel")
@@ -277,7 +284,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 it.isEmptyListTerminal -> null
                 else -> {
                     val rr = it as RuntimeRule
-                    val terminalRuleItem = mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal?
+                    val terminalRuleItem = mapToGrammar(rr.ruleSetNumber, rr.number) as Terminal?
                     terminalRuleItem?.let { CompletionProviderAbstract.provideForTangible(it, opts.completionProvider) }
                     //when {
                     //    it.isLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.unescapedTerminalValue, it.tag)
@@ -321,8 +328,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     internal fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {
-        val opts = options ?: optionsDefault()
-        if (null == opts.parse.goalRuleName) opts.parse.goalRuleName = this.defaultGoalRuleName?.value
+        var opts = options ?: optionsDefault()
+        if (null == opts.parse.goalRuleName) {
+            opts = opts.clone()
+            opts.parse.goalRuleName = this.defaultGoalRuleName?.value
+        }
         return opts
     }
 

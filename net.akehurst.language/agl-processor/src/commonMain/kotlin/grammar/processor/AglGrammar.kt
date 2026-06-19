@@ -17,7 +17,8 @@
 package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.agl.processor.contextFromLanguageObject
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -38,10 +39,11 @@ import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
-object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() {
+object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
@@ -157,34 +159,25 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
           asm-transform Grammar {
             import-types net.akehurst.language.grammar.api
             import-types net.akehurst.language.grammar.asm
-            unit: GrammarDomain() { }
+            unit: GrammarDomain() {
+
+            }
           }
-    """
+    """.trimIndent()
 
     override val crossReferenceString: String = """
         namespace $NAMESPACE_NAME
-          // TODO
+
     """
 
     override val styleString: String = """
         namespace $NAMESPACE_NAME
-          styles $NAME {
-            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-              foreground: darkgreen;
-              font-weight: bold;
-            }
+          styles $NAME : ${AglBase.NAME} {
             LITERAL {
               foreground: blue;
             }
             PATTERN {
               foreground: darkblue;
-            }
-            IDENTIFIER {
-              foreground: darkred;
-              font-style: italic;
-            }
-            SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
-              foreground: LightSlateGrey;
             }
           }
       """.trimIndent()
@@ -353,7 +346,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                 data("GrammarRuleName") {
                     supertype("PublicValueType")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(), "value", "String")
                     }
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
@@ -475,8 +468,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("TangibleItemAbstract")
                     supertype("Terminal")
                     constructor_ {
-                        parameter("value", "String", false)
-                        parameter("isPattern", "Boolean", false)
+                        parameter(setOf(), "value", "String")
+                        parameter(setOf(), "isPattern", "Boolean")
                     }
                     propertyOf(setOf(VAL, REF, STR), "id", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "isPattern", "Boolean", false)
@@ -490,7 +483,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                 data("SpineDefault") {
                     supertype("Spine")
                     constructor_ {
-                        parameter("parts", "List", false)
+                        parameter(setOf(), "parts", "List")
                     }
                     propertyOf(setOf(VAR, REF, STR), "parts", "List", false) {
                         typeArgument("NonTerminal")
@@ -500,9 +493,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("ListOfItemsAbstract")
                     supertype("SimpleList")
                     constructor_ {
-                        parameter("min", "Integer", false)
-                        parameter("max", "Integer", false)
-                        parameter("item", "RuleItem", false)
+                        parameter(setOf(), "min", "Integer")
+                        parameter(setOf(), "max", "Integer")
+                        parameter(setOf(), "item", "RuleItem")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "item", "RuleItem", false)
                     propertyOf(setOf(VAL, REF, STR), "max", "Integer", false)
@@ -517,10 +510,10 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("ListOfItemsAbstract")
                     supertype("SeparatedList")
                     constructor_ {
-                        parameter("min", "Integer", false)
-                        parameter("max", "Integer", false)
-                        parameter("item", "RuleItem", false)
-                        parameter("separator", "RuleItem", false)
+                        parameter(setOf(), "min", "Integer")
+                        parameter(setOf(), "max", "Integer")
+                        parameter(setOf(), "item", "RuleItem")
+                        parameter(setOf(), "separator", "RuleItem")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "item", "RuleItem", false)
                     propertyOf(setOf(VAL, REF, STR), "max", "Integer", false)
@@ -538,9 +531,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("GrammarItemAbstract")
                     supertype("PreferenceRule")
                     constructor_ {
-                        parameter("grammar", "Grammar", false)
-                        parameter("forItem", "SimpleItem", false)
-                        parameter("optionList", "List", false)
+                        parameter(setOf(), "grammar", "Grammar")
+                        parameter(setOf(), "forItem", "SimpleItem")
+                        parameter(setOf(), "optionList", "List")
                     }
                     propertyOf(setOf(VAL, REF, STR), "forItem", "SimpleItem", false)
                     propertyOf(setOf(VAL, REF, STR), "grammar", "Grammar", false)
@@ -551,11 +544,11 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                 data("PreferenceOptionDefault") {
                     supertype("PreferenceOption")
                     constructor_ {
-                        parameter("spine", "Spine", false)
-                        parameter("choiceIndicator", "ChoiceIndicator", false)
-                        parameter("choiceNumber", "Integer", false)
-                        parameter("onTerminals", "List", false)
-                        parameter("associativity", "Associativity", false)
+                        parameter(setOf(), "spine", "Spine")
+                        parameter(setOf(), "choiceIndicator", "ChoiceIndicator")
+                        parameter(setOf(), "choiceNumber", "Integer")
+                        parameter(setOf(), "onTerminals", "List")
+                        parameter(setOf(), "associativity", "Associativity")
                     }
                     propertyOf(setOf(VAL, REF, STR), "associativity", "Associativity", false)
                     propertyOf(setOf(VAL, REF, STR), "choiceIndicator", "ChoiceIndicator", false)
@@ -569,11 +562,11 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("GrammarRuleAbstract")
                     supertype("OverrideRule")
                     constructor_ {
-                        parameter("grammar", "Grammar", false)
-                        parameter("name", "GrammarRuleName", false)
-                        parameter("isSkip", "Boolean", false)
-                        parameter("isLeaf", "Boolean", false)
-                        parameter("overrideKind", "OverrideKind", false)
+                        parameter(setOf(), "grammar", "Grammar")
+                        parameter(setOf(), "name", "GrammarRuleName")
+                        parameter(setOf(), "isSkip", "Boolean")
+                        parameter(setOf(), "isLeaf", "Boolean")
+                        parameter(setOf(), "overrideKind", "OverrideKind")
                     }
                     propertyOf(setOf(VAL, REF, STR), "grammar", "Grammar", false)
                     propertyOf(setOf(VAL, REF, STR), "isLeaf", "Boolean", false)
@@ -587,7 +580,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("ConcatenationItemAbstract")
                     supertype("OptionalItem")
                     constructor_ {
-                        parameter("item", "RuleItem", false)
+                        parameter(setOf(), "item", "RuleItem")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "item", "RuleItem", false)
                 }
@@ -595,10 +588,10 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("GrammarRuleAbstract")
                     supertype("NormalRule")
                     constructor_ {
-                        parameter("grammar", "Grammar", false)
-                        parameter("name", "GrammarRuleName", false)
-                        parameter("isSkip", "Boolean", false)
-                        parameter("isLeaf", "Boolean", false)
+                        parameter(setOf(), "grammar", "Grammar")
+                        parameter(setOf(), "name", "GrammarRuleName")
+                        parameter(setOf(), "isSkip", "Boolean")
+                        parameter(setOf(), "isLeaf", "Boolean")
                     }
                     propertyOf(setOf(VAL, REF, STR), "grammar", "Grammar", false)
                     propertyOf(setOf(VAL, REF, STR), "isLeaf", "Boolean", false)
@@ -611,8 +604,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("TangibleItemAbstract")
                     supertype("NonTerminal")
                     constructor_ {
-                        parameter("targetGrammar", "GrammarReference", false)
-                        parameter("ruleReference", "GrammarRuleName", false)
+                        parameter(setOf(), "targetGrammar", "GrammarReference")
+                        parameter(setOf(), "ruleReference", "GrammarRuleName")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "ruleReference", "GrammarRuleName", false)
                     propertyOf(setOf(VAL, CMP, STR), "targetGrammar", "GrammarReference", false)
@@ -626,7 +619,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("SimpleItemAbstract")
                     supertype("Group")
                     constructor_ {
-                        parameter("groupedContent", "RuleItem", false)
+                        parameter(setOf(), "groupedContent", "RuleItem")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "groupedContent", "RuleItem", false)
                 }
@@ -638,8 +631,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                 data("GrammarReferenceDefault") {
                     supertype("GrammarReference")
                     constructor_ {
-                        parameter("localNamespace", "Namespace", false)
-                        parameter("nameOrQName", "PossiblyQualifiedName", false)
+                        parameter(setOf(), "localNamespace", "Namespace")
+                        parameter(setOf(), "nameOrQName", "PossiblyQualifiedName")
                     }
                     propertyOf(setOf(VAL, REF, STR), "localNamespace", "Namespace", false) {
                         typeArgument("Grammar")
@@ -651,9 +644,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("GrammarNamespace")
                     supertype("NamespaceAbstract") { ref("net.akehurst.language.grammar.api.Grammar") }
                     constructor_ {
-                        parameter("qualifiedName", "QualifiedName", false)
-                        parameter("options", "OptionHolder", false)
-                        parameter("import", "List", false)
+                        parameter(setOf(), "qualifiedName", "QualifiedName")
+                        parameter(setOf(), "options", "OptionHolder")
+                        parameter(setOf(), "import", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
@@ -661,9 +654,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("GrammarDomain")
                     supertype("DomainAbstract") { ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
                     constructor_ {
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "OptionHolder", false)
-                        parameter("namespace", "List", false)
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "options", "OptionHolder")
+                        parameter(setOf(), "namespace", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                 }
@@ -677,17 +670,17 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                 data("GrammarDefault") {
                     supertype("GrammarAbstract")
                     constructor_ {
-                        parameter("namespace", "GrammarNamespace", false)
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "OptionHolder", false)
+                        parameter(setOf(), "namespace", "GrammarNamespace")
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "options", "OptionHolder")
                     }
                 }
                 data("GrammarAbstract") {
                     supertype("Grammar")
                     constructor_ {
-                        parameter("namespace", "GrammarNamespace", false)
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "OptionHolder", false)
+                        parameter(setOf(), "namespace", "GrammarNamespace")
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "options", "OptionHolder")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "extends", "List", false) {
                         typeArgument("GrammarReference")
@@ -711,8 +704,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("TangibleItemAbstract")
                     supertype("Embedded")
                     constructor_ {
-                        parameter("embeddedGoalName", "GrammarRuleName", false)
-                        parameter("embeddedGrammarReference", "GrammarReference", false)
+                        parameter(setOf(), "embeddedGoalName", "GrammarRuleName")
+                        parameter(setOf(), "embeddedGrammarReference", "GrammarReference")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "embeddedGoalName", "GrammarRuleName", false)
                     propertyOf(setOf(VAL, CMP, STR), "embeddedGrammarReference", "GrammarReference", false)
@@ -726,7 +719,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("RuleItemAbstract")
                     supertype("Concatenation")
                     constructor_ {
-                        parameter("items", "List", false)
+                        parameter(setOf(), "items", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "items", "List", false) {
                         typeArgument("RuleItem")
@@ -736,7 +729,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("ChoiceAbstract")
                     supertype("ChoicePriority")
                     constructor_ {
-                        parameter("alternative", "List", false)
+                        parameter(setOf(), "alternative", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
@@ -746,7 +739,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("ChoiceAbstract")
                     supertype("ChoiceLongest")
                     constructor_ {
-                        parameter("alternative", "List", false)
+                        parameter(setOf(), "alternative", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
@@ -756,7 +749,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("ChoiceAbstract")
                     supertype("ChoiceAmbiguous")
                     constructor_ {
-                        parameter("alternative", "List", false)
+                        parameter(setOf(), "alternative", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
@@ -766,7 +759,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
                     supertype("RuleItemAbstract")
                     supertype("Choice")
                     constructor_ {
-                        parameter("alternative", "List", false)
+                        parameter(setOf(), "alternative", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
@@ -835,8 +828,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            this.declarationsFor(NAMESPACE_NAME) {
 
+            }
         }
     }
 
@@ -847,25 +841,15 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContextAny>() 
     }
 
     override val styleDomain: AglStyleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
-                        declaration("font-weight", "bold")
-                    }
+                    extends(AglBase.NAME)
                     tagRule("LITERAL") {
                         declaration("foreground", "blue")
                     }
                     tagRule("PATTERN") {
                         declaration("foreground", "darkblue")
-                    }
-                    tagRule("IDENTIFIER") {
-                        declaration("foreground", "darkred")
-                        declaration("font-style", "italic")
-                    }
-                    tagRule("SINGLE_LINE_COMMENT", "MULTI_LINE_COMMENT") {
-                        declaration("foreground", "LightSlateGrey")
                     }
                 }
             }
@@ -921,8 +905,8 @@ namespace net.akehurst.language.Grammar {
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<GrammarDomain> by lazy { AglGrammarSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<GrammarDomain, SentenceContextAny> by lazy { AglGrammarSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<GrammarDomain, SentenceContextAny> by lazy { AglGrammarCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<GrammarDomain, SentenceContext> by lazy { AglGrammarSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<GrammarDomain, SentenceContext> by lazy { AglGrammarCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"
 

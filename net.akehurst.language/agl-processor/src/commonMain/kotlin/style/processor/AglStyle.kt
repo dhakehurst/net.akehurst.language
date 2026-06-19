@@ -17,7 +17,8 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.agl.processor.contextFromLanguageObject
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -28,6 +29,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
@@ -35,7 +37,7 @@ import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.types.builder.typesDomain
 
-object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
+object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Style"
     const val goalRuleName = "unit"
@@ -46,7 +48,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
 
     override val grammarString = """
         namespace $NAMESPACE_NAME
-            grammar $NAME : Base {
+            grammar $NAME : ${AglBase.NAME} {
                 override unit = namespace styleSet* ;
                 styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
                 extends = ':' [possiblyQualifiedName / ',']+ ;
@@ -68,7 +70,6 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
                 leaf SPECIAL_IDENTIFIER = "[\\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
                 leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
                 leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
-                leaf STRING = "'([^'\\\\]|\\'|\\\\)*'" ;
             }
         """.trimIndent()
 
@@ -79,7 +80,14 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
 
     override val kompositeString: String = """
         namespace ${NAMESPACE_NAME}.style.api
-          // TODO
+            interface StyleSet {
+                cmp extends
+                cmp rules
+            }
+            interface AglStyleRule {
+                cmp selector
+                cmp declaration
+            }
     """.trimIndent()
 
     override val asmTransformString: String = """
@@ -98,33 +106,24 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
     """.trimIndent()
 
     override val styleString = """
-        namespace net.akehurst.language
-            styles $NAME {
-                $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-                  foreground: darkgreen;
-                  font-weight: bold;
-                }
-                SPECIAL_IDENTIFIER {
-                  foreground: orange;
-                  font-weight: bold;
-                }
-                IDENTIFIER {
-                  foreground: blue;
-                  font-weight: bold;
-                }
-                LITERAL {
-                  foreground: blue;
-                  font-weight: bold;
-                }
-                PATTERN {
-                  foreground: darkblue;
-                  font-weight: bold;
-                }
-                STYLE_ID {
-                  foreground: darkred;
-                  font-style: italic;
-                }
+        namespace ${NAMESPACE_NAME}
+          styles $NAME : ${AglBase.NAME} {
+            SPECIAL_IDENTIFIER {
+              foreground: orange;
+              font-weight: bold;
             }
+            LITERAL {
+              foreground: blue;
+              font-weight: bold;
+            }
+            PATTERN {
+              foreground: darkblue;
+              font-weight: bold;
+            }
+            STYLE_ID {
+              foreground: purple;
+            }
+          }
         """.trimIndent()
 
     override val formatString: String = """
@@ -185,22 +184,10 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContextAny>() {
                     }
                     concatenation("STYLE_ID", isLeaf = true) { pat("[-a-zA-Z_][-a-zA-Z_0-9]*") }
                     concatenation("STYLE_VALUE", isLeaf = true) { pat("[^;: \\t\\n\\x0B\\f\\r]+") }
-                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\'|\\\\\\\\)*'") }
                 }
             }
         }
     }
-
-    const val komposite = """namespace net.akehurst.language.style.api
-interface StyleSet {
-    cmp extends
-    cmp rules
-}
-interface AglStyleRule {
-    cmp selector
-    cmp declaration
-}
-"""
 
     override val typesDomain by lazy {
         typesDomain(NAME, true, AglBase.typesDomain.namespace) {
@@ -243,8 +230,8 @@ interface AglStyleRule {
                 data("AglStyleSelector") {
 
                     constructor_ {
-                        parameter("value", "String", false)
-                        parameter("kind", "AglStyleSelectorKind", false)
+                        parameter(setOf(), "value", "String")
+                        parameter(setOf(), "kind", "AglStyleSelectorKind")
                     }
                     propertyOf(setOf(VAL, REF, STR), "kind", "AglStyleSelectorKind", false)
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
@@ -252,8 +239,8 @@ interface AglStyleRule {
                 data("AglStyleDeclaration") {
 
                     constructor_ {
-                        parameter("name", "String", false)
-                        parameter("value", "String", false)
+                        parameter(setOf(), "name", "String")
+                        parameter(setOf(), "value", "String")
                     }
                     propertyOf(setOf(VAL, REF, STR), "name", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
@@ -263,8 +250,8 @@ interface AglStyleRule {
                 data("StyleSetReferenceDefault") {
                     supertype("StyleSetReference")
                     constructor_ {
-                        parameter("localNamespace", "StyleNamespace", false)
-                        parameter("nameOrQName", "PossiblyQualifiedName", false)
+                        parameter(setOf(), "localNamespace", "StyleNamespace")
+                        parameter(setOf(), "nameOrQName", "PossiblyQualifiedName")
                     }
                     propertyOf(setOf(VAL, REF, STR), "localNamespace", "StyleNamespace", false)
                     propertyOf(setOf(VAL, REF, STR), "nameOrQName", "PossiblyQualifiedName", false)
@@ -274,8 +261,8 @@ interface AglStyleRule {
                     supertype("StyleNamespace")
                     supertype("NamespaceAbstract") { ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
-                        parameter("qualifiedName", "QualifiedName", false)
-                        parameter("import", "List", false)
+                        parameter(setOf(), "qualifiedName", "QualifiedName")
+                        parameter(setOf(), "import", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "import", "List", false) {
                         typeArgument("Import")
@@ -285,9 +272,9 @@ interface AglStyleRule {
                 data("AglStyleSetDefault") {
                     supertype("StyleSet")
                     constructor_ {
-                        parameter("namespace", "StyleNamespace", false)
-                        parameter("name", "SimpleName", false)
-                        parameter("extends", "List", false)
+                        parameter(setOf(), "namespace", "StyleNamespace")
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "extends", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "extends", "List", false) {
                         typeArgument("StyleSetReference")
@@ -301,7 +288,7 @@ interface AglStyleRule {
                 data("AglStyleRuleDefault") {
                     supertype("AglStyleRule")
                     constructor_ {
-                        parameter("selector", "List", false)
+                        parameter(setOf(), "selector", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "declaration", "Map", false) {
                         typeArgument("String")
@@ -315,8 +302,8 @@ interface AglStyleRule {
                     supertype("AglStyleDomain")
                     supertype("DomainAbstract") { ref("net.akehurst.language.style.api.StyleNamespace"); ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
-                        parameter("name", "SimpleName", false)
-                        parameter("namespace", "List", false)
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "namespace", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
@@ -328,11 +315,7 @@ interface AglStyleRule {
     }
 
     override val asmTransformDomain by lazy {
-        asmTransform(
-            name = NAME,
-            typesDomain = typesDomain,
-            createTypes = false
-        ) {
+        asmTransform(name = NAME, typesDomain = typesDomain, createTypes = false) {
             namespace(qualifiedName = NAMESPACE_NAME) {
                 ruleSet(NAME) {
                     importTypes("net.akehurst.language.style.api", "net.akehurst.language.base.api")
@@ -370,12 +353,24 @@ interface AglStyleRule {
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
+                    extends(AglBase.NAME)
+                    tagRule("SPECIAL_IDENTIFIER") {
+                        declaration("foreground", "orange")
                         declaration("font-weight", "bold")
+                    }
+                    tagRule("LITERAL") {
+                        declaration("foreground", "blue")
+                        declaration("font-weight", "bold")
+                    }
+                    tagRule("PATTERN") {
+                        declaration("foreground", "darkblue")
+                        declaration("font-weight", "bold")
+                    }
+                    tagRule("STYLE_ID") {
+                        declaration("foreground", "purple")
                     }
                 }
             }
@@ -392,8 +387,8 @@ interface AglStyleRule {
     override val defaultTargetGoalRule = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<AglStyleDomain>? by lazy { AglStyleSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<AglStyleDomain, SentenceContextAny>? by lazy { AglStyleSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<AglStyleDomain, SentenceContextAny>? by lazy { AglStyleCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<AglStyleDomain, SentenceContext>? by lazy { AglStyleSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AglStyleDomain, SentenceContext>? by lazy { AglStyleCompletionProvider() }
 }
 
 

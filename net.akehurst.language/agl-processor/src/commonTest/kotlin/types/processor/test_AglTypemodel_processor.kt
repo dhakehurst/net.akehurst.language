@@ -104,13 +104,13 @@ class test_AglTypemodel_processor {
     fun value() {
         val typesStr = $$"""
             namespace test
-              value Value(val value:String)
+              value Value(ref val value:String)
         """
         val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 value("Value") {
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String")
                     }
                 }
             }
@@ -200,7 +200,7 @@ class test_AglTypemodel_processor {
                 primitive("Int")
                 data("Data") {
                     constructor_ {
-                        this.parameter("prop1", "Int", false)
+                        this.parameter(setOf(), "prop1", "Int")
                     }
                     propertyOf(setOf(VAL), "prop1", "Int")
                     propertyOf(setOf(VAL), "prop2", "Int")

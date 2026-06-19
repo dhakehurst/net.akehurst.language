@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @OptIn(ExperimentalJsExport::class)
-@JsExport
+//@JsExport
 data class A(
     val prop1: String = "hello"
 )

@@ -125,10 +125,12 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, options = Agl.options { completionProvider { depth(1) } })
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> <extends>? { <option> <rule> }"),
-            CompletionItem(CompletionItemKind.SEGMENT, "import", "import <possiblyQualifiedName>"),
-            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <option> <import> <grammar>"),
-            CompletionItem(CompletionItemKind.SEGMENT, "option", "# <IDENTIFIER> : <IDENTIFIER>?"),
+            CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> <extends> { <option> <rule> }"),
+            CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> { <option> <rule> }"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <option> <import> <definition>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "option", "# <IDENTIFIER> : <IDENTIFIER"),
+            CompletionItem(CompletionItemKind.SEGMENT, "option", "# <IDENTIFIER>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "possiblyQualifiedName", "import <possiblyQualifiedName>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'.'", "."),
             CompletionItem(CompletionItemKind.LITERAL, "'grammar'", "grammar"),

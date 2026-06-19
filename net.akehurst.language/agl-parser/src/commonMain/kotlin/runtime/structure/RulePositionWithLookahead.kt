@@ -16,10 +16,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-// @JvmInline
-// TODO: value classes don't work (fully) in js and wasm
-data class StateNumber(val value:Int) //: PublicValueType
-
 //TODO: how is this different to ParentRelation ?
 internal data class RulePositionWithLookahead(
     val rulePosition: RulePositionRuntime,

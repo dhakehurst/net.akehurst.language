@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
 
 //FIXME: REPEAT - because no MPP test-fixtures
@@ -30,11 +31,28 @@ abstract class test_AutomatonUtilsAbstract {
         val o1 = OptionNum(1)
         val o2 = OptionNum(2)
         val o3 = OptionNum(3)
+        val oN = RulePosition.OPTION_NONE
+        val OE = RulePosition.OPTION_OPTIONAL_EMPTY
+        val OI = RulePosition.OPTION_OPTIONAL_ITEM
+        val LE = RulePosition.OPTION_MULTI_EMPTY
+        val LI = RulePosition.OPTION_MULTI_ITEM
+        val SE = RulePosition.OPTION_SLIST_EMPTY
+        val SI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+
+        val oOE = RulePosition.OPTION_OPTIONAL_EMPTY
+        val oOI = RulePosition.OPTION_OPTIONAL_ITEM
+        val oLI = RulePosition.OPTION_MULTI_ITEM
+        val oLE = RulePosition.OPTION_MULTI_EMPTY
+        val oSE = RulePosition.OPTION_SLIST_EMPTY
+        val oSI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+        val oSS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+
         val p1 = 1
         val p2 = 2
         val p3 = 3
         val p4 = 4
         val p5 = 5
+
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val EMPTY = RuntimeRuleSet.EMPTY
         val EMPTY_LIST = RuntimeRuleSet.EMPTY_LIST
@@ -47,53 +65,11 @@ abstract class test_AutomatonUtilsAbstract {
         const val SR = RulePosition.START_OF_RULE
         const val SOR = RulePosition.START_OF_RULE
 
-        /**
-         * Option value for when there is no option
-         */
-        val oN = RulePosition.OPTION_NONE
 
-        val oOE = RulePosition.OPTION_OPTIONAL_EMPTY
-        val oOI = RulePosition.OPTION_OPTIONAL_ITEM
 
-        /**
-         * Option for SimpleList Item
-         */
-        val oLI = RulePosition.OPTION_MULTI_ITEM
-
-        /**
-         * Option for SimpleList Empty
-         */
-        val oLE = RulePosition.OPTION_MULTI_EMPTY
-
-        /**
-         * Option for SeparatedList Empty
-         */
-        val oSE = RulePosition.OPTION_SLIST_EMPTY
-
-        /**
-         * Option for SeparatedList Item
-         */
-        val oSI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
-
-        /**
-         * Option for SeparatedList Separator
-         */
-        val oSS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
-
-        /**
-         * Position of SimpleList Item
-         */
         const val PMI = RulePosition.POSITION_MULIT_ITEM
-
-        /**
-         * Position of SeparatedList Item
-         */
-        const val PLI = RulePosition.POSITION_SLIST_ITEM
-
-        /**
-         * Position of SeparatedList Separator
-         */
-        const val PLS = RulePosition.POSITION_SLIST_SEPARATOR
+        const val pSI = RulePosition.POSITION_SLIST_ITEM
+        const val pSS = RulePosition.POSITION_SLIST_SEPARATOR
 
         val WIDTH = ParseAction.WIDTH
         val HEIGHT = ParseAction.HEIGHT
@@ -101,7 +77,7 @@ abstract class test_AutomatonUtilsAbstract {
         val GOAL = ParseAction.GOAL
 
         fun RP(rr: RuntimeRule): RulePositionRuntime = RP(rr, oN, EOR)
-        fun RP(rr: RuntimeRule, opt: OptionNum, pos: Int): RulePositionRuntime = RulePositionRuntime(rr, opt, pos)
+        fun RP(rule: Rule, opt: OptionNum, pos: Int): RulePositionRuntime = RulePositionRuntime(rule as RuntimeRule, opt, pos)
         fun LHS(content: Set<RuntimeRule>) = LookaheadSetPart(content.contains(RT), content.contains(EOT), false, content.minus(RT).minus(EOT))
         fun LHS(vararg rrs: RuntimeRule) = LHS(rrs.toSet())
     }

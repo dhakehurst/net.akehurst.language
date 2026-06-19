@@ -16,10 +16,10 @@
 
 package net.akehurst.language.automaton.leftcorner
 
+import net.akehurst.kotlinx.collections.MapNotNull
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.collections.MapNotNull
-import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.parser.api.RulePosition
 
 internal data class RulePositionUpInfo(
@@ -337,8 +337,8 @@ internal class ClosureGraph(
 
     }
 
-    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MapNotNull<Int, MutableSet<ClosureItem>>> { lazyMutableMapNonNull { linkedSetOf() } }
-    private val _parentsOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { linkedSetOf() }
+    private val _childrenOf by lazyMutableMapNotNull<ClosureItem, MapNotNull<Int, MutableSet<ClosureItem>>> { lazyMutableMapNotNull { linkedSetOf() } }
+    private val _parentsOf by lazyMutableMapNotNull<ClosureItem, MutableSet<ClosureItem>> { linkedSetOf() }
 
     // so we can test ClosureGraph
     internal val parentsOf: Map<ClosureItem, Set<ClosureItem>> get() = _parentsOf

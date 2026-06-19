@@ -1,7 +1,7 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.language.asm.simple.AglAsm
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
@@ -145,7 +145,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             expr.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.kompositeString, AglExpressions.kompositeString, AglCrossReference.komposite)
+            listOf(AglBase.kompositeString, AglExpressions.kompositeString, AglCrossReference.kompositeString)
         )
         gen.addPackage("net.akehurst.language.reference.api")
         gen.addPackage("net.akehurst.language.reference.asm")
@@ -189,7 +189,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             baseTm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.kompositeString, AglStyle.komposite)
+            listOf(AglBase.kompositeString, AglStyle.kompositeString)
         )
         gen.addPackage("net.akehurst.language.style.api")
         gen.addPackage("net.akehurst.language.style.asm")

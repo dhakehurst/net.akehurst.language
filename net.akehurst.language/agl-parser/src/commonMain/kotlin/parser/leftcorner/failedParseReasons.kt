@@ -50,8 +50,8 @@ internal class FailedParseReasonLookahead(
     override val spine: RuntimeSpineDefault by lazy {
         val expected: Set<RuntimeRule> = possibleEndOfText.flatMap { eot ->
             runtimeLhs.flatMap { rt ->
-                transition.lookahead.flatMap { lh ->
-                    lh.guard.resolve(eot, rt).fullContent
+                transition.lookaheadGuard.flatMap { lh ->
+                    lh.guardLookaheadSet.resolve(eot, rt).fullContent
                 }
             }
         }.toSet()
@@ -74,7 +74,7 @@ internal class FailedParseReasonWidthTo(
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>
 ) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
 
-    override val spine = RuntimeSpineDefault(head, gssSnapshot, setOf(transition.to.firstRule), head.numNonSkipChildren)
+    override val spine = RuntimeSpineDefault(head, gssSnapshot, setOf(transition.target.firstRule), head.numNonSkipChildren)
 
 }
 
@@ -121,7 +121,7 @@ internal class FailedParseReasonEmbedded(
     override val spine by lazy {
         // Outer skip terms are part of the 'possibleEndOfText' and thus could be in the expected terms
         // if these skip terms are not part of the embedded 'normal' terms...remove them
-        val embeddedRhs = transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
+        val embeddedRhs = transition.target.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
         val embeddedStateSet = embeddedRhs.embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, head.state.stateSet.automatonKind)
         //val x = findNextExpectedAfterError3(sentence, embededFailedParseReasons, head.state.stateSet.automatonKind, embeddedStateSet, failedAtPosition)
         val x = embededFailedParseReasons.map { it.spine }

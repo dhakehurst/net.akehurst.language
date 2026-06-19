@@ -20,7 +20,7 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
@@ -40,17 +40,17 @@ class test_Java8_Singles_aglSpec {
 
     private companion object {
         val grammarFile = "/Java/version_8/grammars/grammar_aglSpec.agl"
-        val aglSpecProcessor: LanguageProcessor<Asm, SentenceContextAny> by lazy { createJava8Processor(grammarFile, true) }
+        val aglSpecProcessor: LanguageProcessor<Asm, SentenceContext> by lazy { createJava8Processor(grammarFile, true) }
 
         val proc = aglSpecProcessor
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, SentenceContextAny> {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, SentenceContext> {
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString<Asm, SentenceContextAny>(
+            val proc = Agl.processorFromString<Asm, SentenceContext>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
-                        context(contextFromGrammarRegistry(Agl.registry))
+                        sentenceContext(contextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
@@ -77,7 +77,7 @@ class test_Java8_Singles_aglSpec {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
         val goal = "Type"
-        val p = Agl.processorFromString<Asm, SentenceContextAny>(
+        val p = Agl.processorFromString<Asm, SentenceContext>(
             grammarDefinitionStr = grammarStr,
             aglOptions = Agl.options {
                 semanticAnalysis {

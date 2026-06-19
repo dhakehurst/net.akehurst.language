@@ -19,15 +19,19 @@ package net.akehurst.language.format.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
+import net.akehurst.language.expressions.api.FunctionParameter
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.expressions.asm.FunctionDefinitionAbstract
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
@@ -36,11 +40,11 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.TypesDomain
 
 
-class AglFormatDomainDefault(
+class FormatDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespaces: List<FormatNamespace> = emptyList()
-) : AglFormatDomain, DomainAbstract<FormatNamespace, FormatSet>(namespaces, options) {
+) : AglFormatDomain, DomainAbstract<FormatNamespace, FormatDefinition>(namespaces, options) {
     companion object {
         private fun fromRuleItem(grammar: Grammar, ruleItem: RuleItem): TemplateElement = when (ruleItem) {
             is Terminal -> when {
@@ -62,7 +66,7 @@ class AglFormatDomainDefault(
 
         fun fromGrammar(grammarDomain: GrammarDomain, typesDomain: TypesDomain): ProcessResult<AglFormatDomain> {
             val issues = IssueHolder(LanguageProcessorPhase.ALL)
-            val formatModel = AglFormatDomainDefault(grammarDomain.name)
+            val formatModel = FormatDomainDefault(grammarDomain.name)
             for (ns in typesDomain.namespace) {
                 when {
                     ns is GrammarTypesNamespace -> {
@@ -87,15 +91,15 @@ class AglFormatDomainDefault(
                     else -> Unit
                 }
             }
-            return ProcessResultDefault(formatModel, processIssues=issues)
+            return ProcessResultDefault(formatModel, processIssues = issues)
         }
 
-        fun fromString(context: SentenceContextAny, formatModelStr: FormatString): ProcessResult<AglFormatDomain> {
+        fun fromString(sentenceContext: SentenceContext, formatModelStr: FormatString): ProcessResult<AglFormatDomain> {
             val proc = Agl.registry.agl.format.processor ?: error("Agl Format language not found!")
             val res = proc.process(
                 sentence = formatModelStr.value,
                 Agl.options {
-                    semanticAnalysis { context(context) }
+                    semanticAnalysis { sentenceContext(sentenceContext) }
                 }
             )
             return when {
@@ -112,15 +116,27 @@ class AglFormatDomainDefault(
     fun addRule(typeName: SimpleName) {
         TODO("is it needed ?")
     }
+
+    override fun findFirstFunctionDefinitionByNameOrNull(functionName: SimpleName): FormatFunctionDefinition? {
+        return namespace.firstNotNullOfOrNull {
+            it.function.firstOrNull { it.name == functionName }
+        }
+    }
+
+    override fun findFirstFormatSetDefinitionByNameOrNull(formatSetName: PossiblyQualifiedName): FormatSet? = when (formatSetName) {
+        is SimpleName ->  namespace.firstNotNullOfOrNull { it.formatSet.firstOrNull { it.name == formatSetName } }
+        is QualifiedName -> findNamespaceOrNull(formatSetName.front)?.findDefinitionOrNull(formatSetName.last) as? FormatSet
+    }
 }
 
-class AglFormatNamespaceDefault(
+class FormatNamespaceDefault(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import> = emptyList()
-) : FormatNamespace, NamespaceAbstract<FormatSet>(options, import) {
+) : FormatNamespace, NamespaceAbstract<FormatDefinition>(options, import) {
 
-    override val formatSet: List<FormatSet> get() = super.definition
+    override val function: List<FormatFunctionDefinition> get() = super.definition.filterIsInstance<FormatFunctionDefinition>()
+    override val formatSet: List<FormatSet> get() = super.definition.filterIsInstance<FormatSet>()
 }
 
 class FormatSetReferenceDefault(
@@ -133,18 +149,38 @@ class FormatSetReferenceDefault(
     }
 }
 
+class FormatFunctionDefinitionDefault(
+    override val namespace: Namespace<FormatDefinition>,
+    name: SimpleName,
+    parameters: List<FunctionParameter>,
+    returnTypeReference: TypeReference?,
+    body: Expression
+) : FunctionDefinitionFloating,FormatFunctionDefinition, FunctionDefinitionAbstract(name, parameters, returnTypeReference, body) {
+
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
+
+    // --- Definition ---
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let{": ${it.asString(indent, imports)}"}}"
+
+}
+
 class FormatSetDefault(
     override val namespace: FormatNamespace,
     override val name: SimpleName,
     override val extends: List<FormatSetReference>,
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     override val rules: List<AglFormatRule>
-) : FormatSet, DefinitionAbstract<FormatSet>() {
+) : FormatSet, DefinitionAbstract<FormatDefinition>() {
+
+    override val allRules: List<AglFormatRule> get() = extends.flatMap { allRules } + rules
+
 }
 
 class AglFormatRuleDefault(
     override val forTypeName: TypeReference,
-    override val formatExpression: FormatExpression
+    override val formatExpression: Expression
 ) : AglFormatRule {
 }
 
@@ -169,21 +205,26 @@ class FormatWhenOptionElseDefault(
     override val expression: Expression = format
 }
 
-class FormatExpressionExpressionDefault(
-    override val expression: Expression
-) : FormatExpressionExpression {
+class FormatEmbeddedExpressionDefault(
+    override val expression: Expression,
+    override val via: PossiblyQualifiedName?
+) : FormatEmbeddedExpression {
 
-    override fun asString(indent: Indent, imports: List<Import>): String {
-        TODO("not implemented")
-    }
+    override fun asString(indent: Indent, imports: List<Import>): String = "${expression.asString(indent, imports)}${via?.let { " via ${it.value}" }}"
 }
 
 class FormatExpressionTemplateDefault(
     override val content: List<TemplateElement>
 ) : FormatExpressionTemplate {
-    override fun asString(indent: Indent, imports: List<Import>): String {
-        TODO("not implemented")
-    }
+    override fun asString(indent: Indent, imports: List<Import>): String = content.joinToString(separator = "") { it.toString() }
+}
+
+class FormatSeparatedListDefault(
+    override val listExpression: Expression,
+    override val separator: Expression,
+    override val via: PossiblyQualifiedName?
+) : FormatSeparatedList {
+    override fun toString(): String = "${listExpression.asString(Indent())} sep ${separator.asString(Indent())}${via?.let { " via ${it.value}" }}"
 }
 
 class TemplateElementTextDefault(
@@ -199,16 +240,15 @@ class TemplateElementExpressionPropertyDefault(
 }
 
 class TemplateElementExpressionListDefault(
-    override val listExpression: Expression,
-    override val separator: Expression
+    override val formatSeparatedList: FormatSeparatedList
 ) : TemplateElementExpressionList {
-    override fun toString(): String = "\$[${listExpression.asString(Indent())} sep '${separator.asString(Indent())}']"
+    override fun toString(): String = "\$[$formatSeparatedList]"
 }
 
 data class TemplateElementExpressionListSeparatorDefault(
-    override val value:String,
-    override val isNamedOfValue:Boolean
-):TemplateElementExpressionListSeparator
+    override val value: String,
+    override val isNamedOfValue: Boolean
+) : TemplateElementExpressionListSeparator
 
 class TemplateElementExpressionEmbeddedDefault(
     override val expression: FormatExpression

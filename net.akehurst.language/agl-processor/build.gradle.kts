@@ -1,5 +1,7 @@
 plugins {
     id("project-conventions")
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotest)
     //alias(libs.plugins.reflex)
 }
 
@@ -39,15 +41,25 @@ kotlin {
                 api(project(":agl-regex"))
                 api(project(":collections")) //TODO merge with kotlinx collections
 
+                api(libs.nak.kotlinx.utils) // needed for asyncLazy
                 api(libs.nak.kotlinx.collections) // needed for topologicalSort, OrderedSet
                 api(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
             }
         }
-
+        commonTest {
+            dependencies {
+                implementation(libs.kotest.framework.engine)
+            }
+        }
 
         commonTest.configure {
             // add language repository so we can test the grammars with specific sentences here
             resources.srcDir(projectDir.resolve("../language-repository/languages"))
+        }
+        jvmMain {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+            }
         }
     }
 }

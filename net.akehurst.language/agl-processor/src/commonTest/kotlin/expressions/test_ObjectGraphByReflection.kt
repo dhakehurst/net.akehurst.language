@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.expressions.processor
 
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -52,7 +53,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun nothing() {
-        val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
         val actual = og.nothing()
         val expected = Unit
@@ -61,7 +62,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun createPrimitiveValue_boolean() {
-        val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
         val actual = og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
         val expected = true
@@ -70,11 +71,11 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun createTupleValue() {
-        val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
         val actual = og.createTupleValue(listOf())
-        og.setProperty(actual, "a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
-        og.setProperty(actual, "b", og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true))
+        actual.setProperty("a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
+        actual.setProperty("b", og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true))
         val expected = mapOf(
             "a" to 1L,
             "b" to true
@@ -84,92 +85,93 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun getIndex() {
-        val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
-        val list = TypedObjectAny(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), listOf("Adam","Betty","Charles"))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
+        val list = og.typedAs(listOf("Adam", "Betty", "Charles"), StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)))
 
-        val actual1 = og.getIndex(list, 0)
+        val actual1 = og.getFromListWithIndex(list, 0)
         assertEquals("Adam", actual1.self)
 
-        val actual2 = og.getIndex(list, 1)
+        val actual2 = og.getFromListWithIndex(list, 1)
         assertEquals("Betty", actual2.self)
 
-        val actual3 = og.getIndex(list, 2)
+        val actual3 = og.getFromListWithIndex(list, 2)
         assertEquals("Charles", actual3.self)
 
-        val actual4 = og.getIndex(list, -1)
+        val actual4 = og.getFromListWithIndex(list, -1)
         assertEquals(Unit, actual4.self)
         assertEquals(1, og.issues.size)
-        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.INTERPRET,null,"In getIndex argument index '-1' out of range",null)), og.issues.toString())
+        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getFromListWithIndex argument index '-1' out of range", null)), og.issues.toString())
 
-        val actual5 = og.getIndex(list, 5)
+        val actual5 = og.getFromListWithIndex(list, 5)
         assertEquals(Unit, actual5.self)
         assertEquals(2, og.issues.size)
-        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.INTERPRET,null,"In getIndex argument index '5' out of range",null)), og.issues.toString())
+        assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "In getFromListWithIndex argument index '5' out of range", null)), og.issues.toString())
 
     }
 
     @Test
     fun object_getProperty() {
-        val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
         val obj = TestClass("A", 1, TestClass("B", 2, null))
         val tp = testTypeModel.findFirstDefinitionByNameOrNull(SimpleName("TestClass"))!!.type()
-        val tobj = TypedObjectAny(tp, obj)
+        val tobj = og.typedAs(obj, tp)
 
-        val actual1 = og.getProperty(tobj, "prop1")
+        val actual1 = tobj.getProperty("prop1")
         assertEquals("A", actual1.self)
 
-        val actual2 = og.getProperty(tobj, "prop2")
-        assertEquals(1, actual2.self)
+        val actual2 = tobj.getProperty("prop2")
+        assertEquals(1L, actual2.self)
 
-        val actual3 = og.getProperty(tobj, "prop3")
+        val actual3 = tobj.getProperty("prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)
 
-        val actual4 = og.getProperty(og.getProperty(tobj, "prop3"),"prop1")
+        val actual4 = tobj.getProperty("prop3").getProperty("prop1")
         assertEquals("B", actual4.self)
     }
 
     @Test
     fun tuple_getProperty() {
-        val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
         val obj = mapOf(
             "prop1" to "A",
             "prop2" to 1,
             "prop3" to TestClass("B", 2, null)
         )
         val tp = StdLibDefault.TupleType.type()
-        val tobj = TypedObjectAny(tp, obj)
+        val tobj = og.typedAs(obj, tp)
 
-        val actual1 = og.getProperty(tobj, "prop1")
+        val actual1 = tobj.getProperty("prop1")
         assertEquals("A", actual1.self)
 
-        val actual2 = og.getProperty(tobj, "prop2")
-        assertEquals(1, actual2.self)
+        val actual2 = tobj.getProperty("prop2")
+        assertEquals(1L, actual2.self)
 
-        val actual3 = og.getProperty(tobj, "prop3")
+        val actual3 = tobj.getProperty("prop3")
         assertEquals(TestClass("B", 2, null), actual3.self)
 
-        val actual4 = og.getProperty(og.getProperty(tobj, "prop3"),"prop1")
+        val actual4 = tobj.getProperty("prop3").getProperty("prop1")
         assertEquals("B", actual4.self)
     }
 
     @Test
     fun executeMethod_Primitive_map() {
         //given
-        val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
-        val tObj =  TypedObjectAny<Any>(StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument)), listOf(
-            TypedObjectAny(StdLibDefault.Integer,1L),
-            TypedObjectAny(StdLibDefault.Integer,2L),
-            TypedObjectAny(StdLibDefault.Integer,3L)
-        ))
-        val lambda = TypedObjectAny<Any>(StdLibDefault.Lambda, { it:Any ->
-            it.toString()
-        })
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
+        val tObj = og.typedAs(
+            listOf(
+                og.typedAs(1L, StdLibDefault.Integer),
+                og.typedAs(2L, StdLibDefault.Integer),
+                og.typedAs(3L, StdLibDefault.Integer)
+            ),
+            StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument))
+        )
+        val lambda = og.typedAs({ it: Any -> it.toString() }, StdLibDefault.Lambda)
         //when
-        val actual = og.executeMethod(tObj, "map", listOf(lambda))
+        val actual = tObj.executeMethod("map", listOf(lambda))
 
         //then
         assertTrue(actual.self is List<*>)
-        assertEquals(listOf("1","2","3"), actual.self)
+        assertEquals(listOf("1", "2", "3"), og.untyped(actual))
     }
 
     @Ignore

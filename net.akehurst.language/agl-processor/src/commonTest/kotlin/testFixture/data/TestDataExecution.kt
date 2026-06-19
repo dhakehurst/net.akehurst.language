@@ -2,14 +2,14 @@ package testFixture.data
 
 import net.akehurst.language.agl.*
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-fun testSentence(proc: LanguageProcessor<Asm, SentenceContextAny>, sd: TestDataParserSentence) {
+fun testSentence(proc: LanguageProcessor<Asm, SentenceContext>, sd: TestDataParserSentence) {
     println("Testing - $sd")
     when (sd) {
         is TestDataProcessorSentencePass -> when {
@@ -46,7 +46,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
         referenceStr = testData.referenceStr?.let { CrossReferenceString(it) },
         grammarAglOptions = Agl.options {
             semanticAnalysis {
-                context(contextFromGrammarRegistry(Agl.registry))
+                sentenceContext(contextFromGrammarRegistry(Agl.registry))
 //TODO:                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
             }
         }

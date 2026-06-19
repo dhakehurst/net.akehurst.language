@@ -17,10 +17,11 @@
 package net.akehurst.language.reference.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
@@ -38,12 +39,12 @@ class CrossReferenceDomainDefault(
         val ROOT_SCOPE_TYPE_NAME = QualifiedName("§root")
         val IDENTIFY_BY_NOTHING = "§nothing"
 
-        fun fromString(context: ContextFromTypesDomain?, crossReferenceString: CrossReferenceString): ProcessResult<CrossReferenceDomain> {
+        fun fromString(context: SentenceContext?, crossReferenceString: CrossReferenceString): ProcessResult<CrossReferenceDomain> {
             val proc = Agl.registry.agl.crossReference.processor ?: error("Agl CrossReference language not found!")
             return proc.process(
                 sentence = crossReferenceString.value,
                 Agl.options {
-                    semanticAnalysis { context(context) }
+                    semanticAnalysis { sentenceContext(context) }
                 }
             )
         }
@@ -168,7 +169,7 @@ data class DeclarationsForNamespaceDefault(
         return identifiable?.identifiedBy
     }
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val scps = scopeDefinition.values.joinToString(separator = "\n") {
             "$indent${it.asString(indent)}"
@@ -183,7 +184,7 @@ data class ScopeDefinitionDefault(
 ) : ScopeDefinition {
     override val identifiables = mutableListOf<Identifiable>()
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("scope ${scopeForTypeName.value} {")
         if (this.identifiables.isEmpty()) {
@@ -203,7 +204,7 @@ data class IdentifiableDefault(
     override val typeName: SimpleName,
     override val identifiedBy: Expression
 ) : Identifiable {
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         return "${indent}identify ${typeName.value} by ${identifiedBy.asString(indent, emptyList())}"
     }
 }
@@ -217,7 +218,7 @@ data class ReferenceDefinitionDefault(
     override val referenceExpressionList: List<ReferenceExpression>
 ) : ReferenceDefinition {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("in ${inTypeName.value} {\n")
         for (re in referenceExpressionList) {
@@ -235,7 +236,7 @@ data class ReferenceExpressionPropertyDefault(
     override val fromNavigation: NavigationExpression?
 ) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val rp = referringPropertyNavigation.asString(indent, emptyList())
         val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
@@ -263,7 +264,7 @@ data class ReferenceExpressionCollectionDefault(
     override val referenceExpressionList: List<ReferenceExpressionAbstract>
 ) : ReferenceExpressionAbstract(), ReferenceExpressionCollection {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val ex = expression.asString(indent, emptyList())
         val ot = when (ofType) {

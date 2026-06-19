@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.KerML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
@@ -29,7 +29,7 @@ class test_KerML_standard_Singles {
     private companion object {
         private val grammarPathStr = "/KerML/v2_2023-08/grammars/standard/grammar.agl"
         private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        var processor: LanguageProcessor<Asm, SentenceContextAny> = Agl.processorFromStringSimple(
+        var processor: LanguageProcessor<Asm, SentenceContext> = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr)
         ).processor!!
 
@@ -45,7 +45,7 @@ class test_KerML_standard_Singles {
     @Test
     fun process_grammar() {
         val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
@@ -57,7 +57,7 @@ class test_KerML_standard_Singles {
             grammarStr,
             Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
                 }
             }

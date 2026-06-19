@@ -22,10 +22,11 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.agl.simple.Grammar2TypesDomainMapping
 import net.akehurst.language.agl.simple.GrammarDomain2TransformDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asmTransform.api.*
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
@@ -43,12 +44,12 @@ class AsmTransformDomainDefault(
 ) : AsmTransformDomain, DomainAbstract<AsmTransformNamespace, AsmTransformRuleSet>(namespace,options) {
 
     companion object Companion {
-        fun fromString(context: SentenceContextAny, transformStr: AsmTransformString): ProcessResult<AsmTransformDomain> {
+        fun fromString(context: SentenceContext, transformStr: AsmTransformString): ProcessResult<AsmTransformDomain> {
             val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             val res = proc.process(
                 sentence = transformStr.value,
                 Agl.options {
-                    semanticAnalysis { context(context) }
+                    semanticAnalysis { sentenceContext(context) }
                 }
             )
             return when {
@@ -104,7 +105,7 @@ class AsmTransformNamespaceDefault(
         _rules = emptyList()
     )
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc
@@ -198,7 +199,7 @@ class AsmTransformRuleSetDefault(
         (rules as MutableMap)[rule.grammarRuleName] = rule
     }
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val extStr = when {
             this.extends.isEmpty() -> " "

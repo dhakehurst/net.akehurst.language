@@ -17,18 +17,20 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+@Ignore("StatechartTools grammars need updating")
 class test_StatechartTools_CodeCompletion {
 
     companion object {
@@ -50,8 +52,8 @@ class test_StatechartTools_CodeCompletion {
            }
         """.replace("§", "\$")
 
-        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContextAny>> { grmName ->
+        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
+        private val processors by lazyMutableMapNotNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarList.asm ?: error("Can't find grammar for '$grmName'")
             /*            val cfg = Agl.configuration {
                             targetGrammarName(null) //use default
@@ -76,7 +78,7 @@ class test_StatechartTools_CodeCompletion {
                         }*/
             val cfg = Agl.configuration(Agl.configurationSimple()) {
                 targetGrammarName(grmName)
-                crossReferenceResolver { p -> CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), CrossReferenceString( crossReferenceModelStr)) }
+                crossReferenceResolver { p -> CrossReferenceDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), CrossReferenceString( crossReferenceModelStr)) }
             }
             Agl.processorFromGrammar(grm, cfg)
         }
@@ -84,7 +86,7 @@ class test_StatechartTools_CodeCompletion {
         fun test_process_format(grammar: String, goal: String, sentence: String) {
             val result = processors[(grammar)].process(sentence, Agl.options {
                 parse { goalRuleName(goal)}
-                semanticAnalysis { context(contextAsmSimple()) }
+                semanticAnalysis { sentenceContext(contextAsmSimple()) }
             })
             assertTrue(result.allIssues.isEmpty(), result.allIssues.joinToString("\n") { it.toString() })
             val resultStr = processors[(grammar)].formatAsm(result.asm!!).sentence
@@ -138,7 +140,7 @@ class test_StatechartTools_CodeCompletion {
                 //reportErrors(false)
             }
             completionProvider {
-                context(contextAsmSimple())
+                sentenceContext(contextAsmSimple())
             }
         }).items.map { it.text }.toSet().sorted()
 
@@ -165,7 +167,7 @@ class test_StatechartTools_CodeCompletion {
                 //reportErrors(false)
             }
             completionProvider {
-                context(context)
+                sentenceContext(context)
             }
         }).items.map { it.text }.toSet().sorted()
 

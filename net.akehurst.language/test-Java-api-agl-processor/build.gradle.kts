@@ -1,7 +1,19 @@
 plugins {
     alias(libs.plugins.kotlin)
 }
+
+// do not publish
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
+
 repositories {
+    mavenLocal {
+        content {
+            includeGroupByRegex("net\\.akehurst.+")
+        }
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
     mavenCentral()
     gradlePluginPortal()
 }
@@ -24,6 +36,3 @@ kotlin {
         }
     }
 }
-
-// do not publish
-tasks.withType<AbstractPublishToMaven> { onlyIf { false } }

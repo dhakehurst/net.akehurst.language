@@ -18,37 +18,40 @@
 package net.akehurst.language.base.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 
-object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
+object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
     const val NAMESPACE_NAME = "net.akehurst.language"
     const val NAME = "Base"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
-    override val extends = emptyList<LanguageObject<Any, SentenceContextAny>>()
+    override val extends = emptyList<LanguageObject<Any, SentenceContext>>()
 
     override val grammarString: String = """
         namespace $NAMESPACE_NAME
@@ -62,8 +65,14 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
             import = 'import' possiblyQualifiedName ;
             definition = 'definition' IDENTIFIER ;
             possiblyQualifiedName = [IDENTIFIER / '.']+ ;
-            option = '#' IDENTIFIER (':' IDENTIFIER)? ;
+            option = '#' IDENTIFIER (':' optionValue)? ;
+            optionValue = IDENTIFIER | literal ;
+            literal = BOOLEAN | INTEGER | REAL | STRING ;
             leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
+            leaf BOOLEAN = "true|false" ;
+            leaf INTEGER = "[-]?[0-9]+" ;
+            leaf REAL = "[-]?[0-9]+[.][0-9]+" ;
+            leaf STRING = "'([^'\\]|\\.)*'" ;
           }
       """.trimIndent()
 
@@ -100,8 +109,8 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
 
     override val crossReferenceString = """
         namespace $NAMESPACE_NAME
-          // TODO
-    """.trimIndent()
+            scope §root { }
+    """.trimIndent() //TODO:
 
     override val styleString: String = """
         namespace $NAMESPACE_NAME
@@ -110,13 +119,25 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
               foreground: darkgreen;
               font-weight: bold;
             }
+            MULTI_LINE_COMMENT {
+              foreground: gray;
+              font-style: italic;
+            }
+            SINGLE_LINE_COMMENT {
+              foreground: darkgray;
+              font-style: italic;
+            }
+            IDENTIFIER {
+              foreground: darkred;
+              font-style: italic;
+            }
           }
       """
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
-          // TODO
-    """.trimIndent()
+        
+    """.trimIndent() //TODO:
 
     override val grammarDomain: GrammarDomain by lazy {
         grammarDomain(NAME) {
@@ -137,9 +158,23 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                     concatenation("definition") { lit("definition"); ref("IDENTIFIER") }
                     separatedList("possiblyQualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
                     concatenation("option") {
-                        lit("#"); ref("IDENTIFIER"); opt { grp { lit(":"); ref("IDENTIFIER") } }
+                        lit("#"); ref("IDENTIFIER"); opt { grp { lit(":"); ref("optionValue") } }
+                    }
+                    choice("optionValue") {
+                        ref("IDENTIFIER")
+                        ref("literal")
+                    }
+                    choice("literal") {
+                        ref("BOOLEAN")
+                        ref("INTEGER")
+                        ref("REAL")
+                        ref("STRING")
                     }
                     concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
+                    concatenation("BOOLEAN", isLeaf = true) { pat("true|false") }
+                    concatenation("INTEGER", isLeaf = true) { pat("[-]?[0-9]+") }
+                    concatenation("REAL", isLeaf = true) { pat("[-]?[0-9]+[.][0-9]+") }
+                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
                 }
             }
         }
@@ -155,26 +190,26 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                     supertype("PossiblyQualifiedName")
                     supertype("PublicValueType")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String",false, SimpleName::value)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, SimpleName::value)
+                   // propertyOf(setOf(VAL, REF, STR), "value", "String", false, SimpleName::value)
                 }
                 // TODO: value classes don't work (fully) in js and wasm
                 data("QualifiedName") {
                     supertype("PossiblyQualifiedName")
                     supertype("PublicValueType")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String", false, QualifiedName::value)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, QualifiedName::value)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "String", false, QualifiedName::value)
                 }
                 // TODO: value classes don't work (fully) in js and wasm
                 data("Import") {
                     supertype("PublicValueType")
                     constructor_ {
-                        parameter("value", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String", false, Import::value)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, Import::value)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "String", false, Import::value)
                 }
                 interface_("PublicValueType") {
                 }
@@ -208,41 +243,44 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                 }
                 data("Indent") {
                     constructor_ {
-                        parameter("value", "String", false)
-                        parameter("increment", "String", false)
+                        parameter(setOf(VAL, REF), "value", "String")
+                        parameter(setOf(VAL, REF), "increment", "String")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "increment", "String", false)
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                    //propertyOf(setOf(VAL, REF, STR), "increment", "String", false)
+                    //propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
             }
             namespace("net.akehurst.language.base.asm", listOf("net.akehurst.language.base.api", "std")) {
                 data("OptionHolderDefault") {
                     supertype("OptionHolder")
                     constructor_ {
-                        parameter("parent", "OptionHolder", false)
-                        parameter("options", "Map", false)
+                        parameter(setOf(VAL, REF), "parent", "OptionHolder")
+                        parameter(setOf(VAL, REF), "options", "Map"){
+                            typeArgument("String")
+                            typeArgument("String")
+                        }
                     }
-                    propertyOf(setOf(VAR, REF, STR), "options", "Map", false) {
-                        typeArgument("String")
-                        typeArgument("String")
-                    }
-                    propertyOf(setOf(VAR, REF, STR), "parent", "OptionHolder", false)
+//                    propertyOf(setOf(VAR, REF, STR), "options", "Map", false) {
+//                        typeArgument("String")
+//                        typeArgument("String")
+//                    }
+//                    propertyOf(setOf(VAR, REF, STR), "parent", "OptionHolder", false)
                 }
                 data("NamespaceDefault") {
                     supertype("NamespaceAbstract") { ref("DefinitionDefault") }
                     constructor_ {
-                        parameter("qualifiedName", "QualifiedName", false)
-                        parameter("options", "OptionHolder", false)
-                        parameter("import", "List", false)
+                        parameter(setOf(VAL, CMP), "qualifiedName", "QualifiedName")
+                        parameter(setOf(), "options", "OptionHolder")
+                        parameter(setOf(), "import", "List")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
                 data("NamespaceAbstract") {
                     typeParameters("DT")
                     supertype("Namespace") { ref("DT") }
                     constructor_ {
-                        parameter("options", "OptionHolder", false)
-                        parameter("argImport", "List", false)
+                        parameter(setOf(VAL, CMP), "options", "OptionHolder")
+                        parameter(setOf(), "argImport", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "_definition", "Map", false) {
                         typeArgument("SimpleName")
@@ -251,41 +289,43 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                     propertyOf(setOf(VAR, CMP, STR), "import", "List", false) {
                         typeArgument("Import")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("DomainDefault") {
                     supertype("DomainAbstract") { ref("NamespaceDefault"); ref("DefinitionDefault") }
                     constructor_ {
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "OptionHolder", false)
-                        parameter("namespace", "List", false)
+                        parameter(setOf(VAL, CMP), "name", "SimpleName")
+                        parameter(setOf(), "options", "OptionHolder")
+                        parameter(setOf(), "namespace", "List")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    //propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                 }
                 data("DomainAbstract") {
                     typeParameters("NT", "DT")
                     supertype("Domain") { ref("NT"); ref("DT") }
                     constructor_ {
-                        parameter("namespace", "List", false)
-                        parameter("options", "OptionHolder", false)
+                        parameter(setOf(VAR, CMP), "namespace", "List"){
+                            typeArgument("NT")
+                        }
+                        parameter(setOf(VAR, CMP), "options", "OptionHolder")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
-                        typeArgument("NT")
-                    }
-                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+//                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
+//                        typeArgument("NT")
+//                    }
+//                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("DefinitionDefault") {
                     supertype("DefinitionAbstract") { ref("DefinitionDefault") }
                     constructor_ {
-                        parameter("namespace", "Namespace", false)
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "OptionHolder", false)
+                        parameter(setOf(VAL, CMP), "namespace", "Namespace")
+                        parameter(setOf(VAL, REF), "name", "SimpleName")
+                        parameter(setOf(VAL, CMP), "options", "OptionHolder")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "Namespace", false) {
-                        typeArgument("DefinitionDefault")
-                    }
-                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+//                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+//                    propertyOf(setOf(VAL, REF, STR), "namespace", "Namespace", false) {
+//                        typeArgument("DefinitionDefault")
+//                    }
+//                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("DefinitionAbstract") {
                     typeParameters("DT")
@@ -308,18 +348,22 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            declarationsFor(NAMESPACE_NAME) {
+
+            }
         }
     }
 
     override val formatDomain: AglFormatDomain by lazy {
         formatDomain(NAME) {
-            //TODO("not implemented")
+            namespace(NAMESPACE_NAME) {
+                //TODO("not implemented")
+            }
         }
     }
 
     override val styleDomain: AglStyleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME, sentenceContext = contextFromGrammar(AglStyle.grammarDomain)) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     metaRule(CommonRegexPatterns.LITERAL.value) {
@@ -334,6 +378,10 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
                         declaration("foreground", "darkgray")
                         declaration("font-style", "italic")
                     }
+                    tagRule("IDENTIFIER") {
+                        declaration("foreground", "darkred")
+                        declaration("font-style", "italic")
+                    }
                 }
             }
         }
@@ -343,8 +391,8 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContextAny>() {
     override val defaultTargetGrammar: Grammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.Base"))!! }
 
     override val syntaxAnalyser: SyntaxAnalyser<Any>? by lazy { BaseSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<Any, SentenceContextAny>? by lazy { BaseSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<Any, SentenceContextAny>? by lazy { BaseCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<Any, SentenceContext>? by lazy { BaseSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<Any, SentenceContext>? by lazy { BaseCompletionProvider() }
 
 
     //TODO: gen this from the ASM

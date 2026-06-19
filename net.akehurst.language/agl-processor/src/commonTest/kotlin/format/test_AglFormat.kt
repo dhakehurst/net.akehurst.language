@@ -45,6 +45,15 @@ class test_AglFormat {
             ),
             TestData(
                 sentence = """
+                    namespace test
+                    fun f() = 1
+                    format Test {
+                        Type -> ''
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
                     // single line comment
                     namespace test
                     format Test {
@@ -111,20 +120,54 @@ class test_AglFormat {
                 """.trimIndent().replace("§", "\$")
             ),
             TestData(
-                sentence = """
+                sentence = $$"""
                     namespace test
                     format Test {
-                        Type1 -> "§prop §prop §prop"
+                        Type1 -> "$prop $prop $prop"
                     }
-                """.trimIndent().replace("§", "\$")
+                """.trimIndent()
             ),
             TestData(
-                sentence = """
+                sentence = $$"""
                     namespace test
                     format Test {
-                        Type1 -> "§{prop} §{prop.re.sdga}"
+                        Type1 -> "${prop} ${prop.re.sdga}"
                     }
-                """.trimIndent().replace("§", "\$")
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = $$"""
+                    namespace test
+                    format Test {
+                        Type1 -> {
+                          x := 'abc'
+                          y := 1
+                          "$x $y"
+                        }
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = $$"""
+                    namespace test
+                    format Test1 {
+                       Type1 -> "something else"
+                    }
+                    format Test2 {
+                        Type1 -> "${prop} ${prop.re.sdga via Test1}"
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = $$"""
+                    namespace test
+                    format Test1 {
+                       Type1 -> "something else"
+                    }
+                    format Test2 {
+                        Type1 -> "${prop} $[propList sep ',' via Test1]"
+                    }
+                """.trimIndent()
             )
         )
 

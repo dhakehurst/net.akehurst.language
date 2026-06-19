@@ -19,7 +19,7 @@ class test_Anneke_2025_03_20 {
                      ('optRefList' refList)?
                     '}'
                  ;
-                 refList = __fre_reference* ';' ;
+                 refList = __fre_reference* ';' ; // Not possible to parse lists or sepLists without list terminator ! TODO: investigate if possible 
                  
                  __fre_reference = [ identifier / '.' ]+ ;
                  leaf identifier = "[a-zA-Z0-9]+" ;
@@ -36,11 +36,11 @@ class test_Anneke_2025_03_20 {
     @Test
     fun parse1() {
         val sentence = """
-            WithDirectRefs { ref someName refList name1 }            
+            WithDirectRefs { ref someName refList name1; }            
         """.trimIndent()
 
         val actual = proc.parse(sentence).let {
-            check(it.issues.errors.isEmpty())
+            check(it.issues.errors.isEmpty()) {it.issues.toString()}
             it.sppt!!
         }
 
@@ -58,7 +58,7 @@ class test_Anneke_2025_03_20 {
         """.trimIndent()
 
         val actual = proc.parse(sentence).let {
-            check(it.issues.errors.isEmpty())
+            check(it.issues.errors.isEmpty()) {it.issues.toString()}
             it.sppt!!
         }
 
@@ -75,15 +75,16 @@ class test_Anneke_2025_03_20 {
                     name1
                     name2
                     name3
-                    name4
-                optRefList nameZ
-                nameY
-                nameX
+                    name4 ;
+                optRefList
+                  nameZ 
+                  nameY
+                  nameX ;
             }            
         """.trimIndent()
 
         val actual = proc.parse(sentence).let {
-            check(it.issues.errors.isEmpty())
+            check(it.issues.errors.isEmpty()) { it.issues.toString() }
             it.sppt!!
         }
 
@@ -95,12 +96,12 @@ class test_Anneke_2025_03_20 {
         val sentence = """
             WithDirectRefs {
                 ref someName
-                refList name1
+                refList name1 ;
             }            
         """
 
         val actual = proc.process(sentence).let {
-            check(it.allIssues.errors.isEmpty())
+            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
             it.asm!!
         }
 
@@ -117,15 +118,16 @@ class test_Anneke_2025_03_20 {
                     name1
                     name2
                     name3
-                    name4
-                optRefList nameZ
-                nameY
-                nameX
+                    name4 ;
+                optRefList
+                    nameZ
+                    nameY
+                    nameX ;
             }            
         """
 
         val actual = proc.process(sentence).let {
-            check(it.allIssues.errors.isEmpty())
+            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
             it.asm!!
         }
 

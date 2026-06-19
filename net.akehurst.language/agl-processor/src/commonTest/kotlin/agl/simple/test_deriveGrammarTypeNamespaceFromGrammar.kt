@@ -20,7 +20,7 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
@@ -42,7 +42,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         fun test(grammarStr: String, expectedTr: AsmTransformDomain, expectedTm: TypesDomain) {
             val result = grammarProc.process(grammarStr, Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromRegistryGrammars(Agl.registry))
                 }
             })
             assertNotNull(result.asm)
@@ -268,19 +268,24 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                     subtypes("Root", "Mul", "Add")
                 }
                 dataFor("root", "Root") {
+                    supertypes("Expr")
                     subtypes("Var", "Literal")
                 }
                 dataFor("var", "Var") {
+                    supertypes("Root")
                     propertyPrimitiveType("name", "String", false, 0)
                 }
                 dataFor("literal", "Literal") {
+                    supertypes("Root")
                     propertyPrimitiveType("number", "String", false, 0)
                 }
                 dataFor("mul", "Mul") {
+                    supertypes("Expr")
                     propertyDataTypeOf("expr", "Expr", false, 0)
                     propertyDataTypeOf("expr2", "Expr", false, 2)
                 }
                 dataFor("add", "Add") {
+                    supertypes("Expr")
                     propertyDataTypeOf("expr", "Expr", false, 0)
                     propertyDataTypeOf("expr2", "Expr", false, 2)
                 }
@@ -300,8 +305,10 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 exprList = expr (';' expr)* ;
                 expr = root | mul | add ;
                 root = var | literal ;
-                mul = [expr / '*']2+ ;
-                add = [expr / '+']2+ ;
+                mul = [expr / MUL_OP]2+ ;
+                leaf MUL_OP = '*';
+                add = [expr / ADD_OP]2+ ;
+                leaf ADD_OP = '+';
                 var = NAME ;
                 literal = NUMBER ;
                 leaf NUMBER = "[0-9]+" ;
@@ -329,20 +336,31 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                     subtypes("Root", "Mul", "Add")
                 }
                 dataFor("root", "Root") {
+                    supertypes("Expr")
                     subtypes("Var", "Literal")
                 }
                 dataFor("var", "Var") {
+                    supertypes("Root")
                     propertyPrimitiveType("name", "String", false, 0)
                 }
                 dataFor("literal", "Literal") {
+                    supertypes("Root")
                     propertyPrimitiveType("number", "String", false, 0)
                 }
                 dataFor("mul", "Mul") {
-                    propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
+                    supertypes("Expr")
+                    propertyOf(setOf(CMP),"expr", "ListSeparated") {
+                        typeArgument("Expr")
+                        typeArgument("String")
+                    }
                 }
                 //listTypeOf("add", "Expr")
                 dataFor("add", "Add") {
-                    propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
+                    supertypes("Expr")
+                    propertyOf(setOf(CMP),"expr", "ListSeparated") {
+                        typeArgument("Expr")
+                        typeArgument("String")
+                    }
                 }
             }
         }

@@ -17,7 +17,7 @@
 package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -34,14 +34,14 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
 
-class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceContextAny> {
+class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceContext> {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.grammar.grammar"
         const val OPTIONS_KEY_AMBIGUITY_ANALYSIS = "$ns.ambiguity.analysis"
 
-        fun findGrammarOrNull(context: SentenceContextAny, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName): Grammar? =
-            context.findItemsByQualifiedNameConformingTo(grammarNameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
+        fun findGrammarOrNull(sentenceContext: SentenceContext, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName): Grammar? =
+            sentenceContext.findItemsByQualifiedNameConformingTo(grammarNameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
                 true
             }.firstOrNull()?.item as Grammar?
     }
@@ -75,9 +75,9 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         sentenceIdentity: Any?,
         asm: GrammarDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
-        val context = options.context
+        val context = options.sentenceContext
         this._locationMap = locationMap ?: LocationMapDefault()
         this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? == true
 
@@ -99,7 +99,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }
 
-    private fun checkGrammar(context: SentenceContextAny?, grammarList: GrammarDomain, automatonKind: AutomatonKind) {
+    private fun checkGrammar(context: SentenceContext?, grammarList: GrammarDomain, automatonKind: AutomatonKind) {
         grammarList.namespace.forEach { ns ->
             ns.definition.forEach { grammar ->
                 this.resolveGrammarRefs(context, grammar)
@@ -114,18 +114,12 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         }
     }
 
-    private fun resolveGrammarRefs(context: SentenceContextAny?, grammar: Grammar) {
-        checkGrammarExistsAndResolve(context, grammar.extends)
-        checkGrammarExistsAndResolve(context, grammar.allGrammarReferencesInRules)
+    private fun resolveGrammarRefs(context: SentenceContext?, grammar: Grammar) {
+        grammar.extends.forEach { checkGrammarExistsAndResolve(context, it) }
+        grammar.allGrammarReferencesInRules.forEach { checkGrammarExistsAndResolve(context, it) }
     }
 
-    private fun checkGrammarExistsAndResolve(context: SentenceContextAny?, refs: List<GrammarReference>) {
-        for (it in refs) {
-            checkGrammarExistsAndResolve(context, it)
-        }
-    }
-
-    private fun checkGrammarExistsAndResolve(context: SentenceContextAny?, ref: GrammarReference) {
+    private fun checkGrammarExistsAndResolve(context: SentenceContext?, ref: GrammarReference) {
         val g = context?.let { findGrammarOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
         if (null == g) {
             this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
@@ -148,7 +142,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         set?.add(rule)
     }
 
-    private fun analyseGrammar(context: SentenceContextAny?, grammar: Grammar) {
+    private fun analyseGrammar(context: SentenceContext?, grammar: Grammar) {
         _unusedRules[grammar] = mutableSetOf()
         // default usage is unused for all rules in this grammar
         grammar.grammarRule.forEach {
@@ -241,7 +235,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         }
     }
 
-    private fun analyseRuleItem(context: SentenceContextAny?, grammar: Grammar, rhs: RuleItem) {
+    private fun analyseRuleItem(context: SentenceContext?, grammar: Grammar, rhs: RuleItem) {
         when (rhs) {
             is EmptyRule -> Unit
             is Terminal -> Unit
@@ -337,11 +331,11 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                     val same = trans.filter { tr2 ->
                         when (tr2.action) {
                             ParseAction.WIDTH,
-                            ParseAction.EMBED -> tr1.lookahead == tr2.lookahead && tr1.to == tr2.to && tr1.context.intersect(tr2.context).isNotEmpty()
+                            ParseAction.EMBED -> tr1.lookaheadGuard == tr2.lookaheadGuard && tr1.target == tr2.target && tr1.context.intersect(tr2.context).isNotEmpty()
 
                             ParseAction.GOAL,
                             ParseAction.HEIGHT,
-                            ParseAction.GRAFT -> tr1.lookahead == tr2.lookahead && tr1.context.intersect(tr2.context).isNotEmpty()
+                            ParseAction.GRAFT -> tr1.lookaheadGuard == tr2.lookaheadGuard && tr1.context.intersect(tr2.context).isNotEmpty()
                         }
                     }
                     same.forEach { tr2 ->
@@ -350,13 +344,13 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                             when {
                                 //(tr1.action == Transition.ParseAction.WIDTH && tr2.action == Transition.ParseAction.WIDTH && tr1.to != tr2.to) -> Unit // no error
                                 else -> {
-                                    val lhg1 = tr1.lookahead.map { it.guard.part }.reduce { acc, it -> acc.intersect(it) }
-                                    val lhg2 = tr2.lookahead.map { it.guard.part }.reduce { acc, it -> acc.intersect(it) }
+                                    val lhg1 = tr1.lookaheadGuard.map { it.guardLookaheadSet.part }.reduce { acc, it -> acc.intersect(it) }
+                                    val lhg2 = tr2.lookaheadGuard.map { it.guardLookaheadSet.part }.reduce { acc, it -> acc.intersect(it) }
                                     val lhi = lhg1.intersect(lhg2)
                                     if (lhi.isNotEmpty) {
-                                        val frOr = conv.originalRuleItemFor(tr1.from.runtimeRules.first().runtimeRuleSetNumber, tr1.from.runtimeRules.first().ruleNumber)
-                                        val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber, tr1.to.runtimeRules.first().ruleNumber) //FIXME
-                                        val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber, tr2.to.runtimeRules.first().ruleNumber) //FIXME
+                                        val frOr = conv.originalRuleItemFor(tr1.source.runtimeRules.first().ruleSetNumber, tr1.source.runtimeRules.first().number)
+                                        val ori1 = conv.originalRuleItemFor(tr1.target.runtimeRules.first().ruleSetNumber, tr1.target.runtimeRules.first().number) //FIXME
+                                        val ori2 = conv.originalRuleItemFor(tr2.target.runtimeRules.first().ruleSetNumber, tr2.target.runtimeRules.first().number) //FIXME
                                         val orF = frOr?.owningRule
                                         val or1 = ori1?.owningRule
                                         val or2 = ori2?.owningRule

@@ -39,7 +39,7 @@ class test_concatenation_abc : test_AutomatonAbstract() {
 
     private val S = rrs.findRuntimeRule("S")
     private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
+    private val rG = SM.startState.runtimeRules.first()
 
     private val a = rrs.findRuntimeRule("'a'")
     private val b = rrs.findRuntimeRule("'b'")
@@ -56,21 +56,21 @@ class test_concatenation_abc : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SR))
-            state(RP(a, oN, EOR))
-            state(RP(S, oN, p1))
-            state(RP(b, oN, EOR))
-            state(RP(S, oN, p2))
-            state(RP(c, oN, EOR))
-            state(RP(S, oN, EOR))
-            state(RP(G, oN, EOR))
+            state(rG,oN,SR)
+            state(a,oN,EOR)
+            state(S,oN,p1)
+            state(b,oN,EOR)
+            state(S,oN,p2)
+            state(c,oN,EOR)
+            state(S,oN,EOR)
+            state(rG,oN,EOR)
 
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(b); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, p1); tgt(b); lhg(c); ctx(G, oN, SOR) }
-            trans(WIDTH) { src(S, oN, p2); tgt(c); lhg(RT); ctx(G, oN, SOR) }
-            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G, oN, SOR) }
+            trans(WIDTH) { src(rG, oN, SOR); tgt(a); lhg(b); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, p1); tgt(b); lhg(c); ctx(rG, oN, SOR) }
+            trans(WIDTH) { src(S, oN, p2); tgt(c); lhg(RT); ctx(rG, oN, SOR) }
+            trans(GOAL) { src(S); tgt(rG); lhg(EOT); ctx(rG, oN, SOR) }
             trans(GRAFT) { src(c); tgt(S); lhg(RT); gpg(S, oN, p2); ctx(S, oN, p2) }
-            trans(HEIGHT) { src(a); tgt(S, oN, p1); lhg(setOf(b), setOf(EOT)); ctx(G, oN, SOR) }
+            trans(HEIGHT) { src(a); tgt(S, oN, p1); lhg(setOf(b), setOf(EOT)); ctx(rG, oN, SOR) }
             trans(GRAFT) { src(b); tgt(S, oN, p2); lhg(c); gpg(S, oN, p1); ctx(S, oN, p1) }
         }
         AutomatonTest.assertEquals(expected, actual)
@@ -88,21 +88,21 @@ class test_concatenation_abc : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))
-            state(RP(S, oN, 1))
-            state(RP(S, oN, 2))
-            state(RP(G, oN, EOR))
-            state(RP(S, oN, EOR))
-            state(RP(a, oN, EOR))
-            state(RP(b, oN, EOR))
-            state(RP(c, oN, EOR))
+            state(rG,oN,SOR)
+            state(S,oN,1)
+            state(S,oN,2)
+            state(rG,oN,EOR)
+            state(S,oN,EOR)
+            state(a,oN,EOR)
+            state(b,oN,EOR)
+            state(c,oN,EOR)
 
-            trans(WIDTH) { ctx(G, oN, SOR); src(G, oN, SOR); tgt(a); lhg(b) }
-            trans(WIDTH) { ctx(G, oN, SOR); src(S, oN, p1); tgt(b); lhg(c) }
-            trans(WIDTH) { ctx(G, oN, SOR); src(S, oN, p2); tgt(c); lhg(EOT) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S); tgt(G); lhg(EOT) }
+            trans(WIDTH) { ctx(rG, oN, SOR); src(rG, oN, SOR); tgt(a); lhg(b) }
+            trans(WIDTH) { ctx(rG, oN, SOR); src(S, oN, p1); tgt(b); lhg(c) }
+            trans(WIDTH) { ctx(rG, oN, SOR); src(S, oN, p2); tgt(c); lhg(EOT) }
+            trans(GOAL) { ctx(rG, oN, SOR); src(S); tgt(rG); lhg(EOT) }
             trans(GRAFT) { ctx(S, oN, p2); src(c); tgt(S); lhg(EOT); gpg(S, oN, p2) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(a); tgt(S, oN, p1); lhg(setOf(b), setOf(EOT)) }
+            trans(HEIGHT) { ctx(rG, oN, SOR); src(a); tgt(S, oN, p1); lhg(setOf(b), setOf(EOT)) }
             trans(GRAFT) { ctx(S, oN, p1); src(b); tgt(S, oN, p2); lhg(c); gpg(S, oN, p1) }
         }
 

@@ -158,7 +158,11 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         return { namespace: TypesNamespace ->
             ValueTypeSimple(namespace, name).also { vt ->
                 setLocationFor(vt, nodeInfo, sentence)
-                supertypes.forEach { vt.addSupertype_dep(it.name) }
+                supertypes.forEach { st ->
+                    val targs = st.args.map { namespace.createTypeInstance(null,it.name).asTypeArgument }
+                    val ti = namespace.createTypeInstance(null,st.name, targs)
+                    vt.addSupertype(ti)
+                }
                 vt.addConstructor(listOf(cParam.invoke(vt)))
             }
         }
@@ -199,7 +203,11 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         return { namespace: TypesNamespace ->
             InterfaceTypeSimple(namespace, name).also { ift ->
                 tParams.forEach { tp -> ift.addTypeParameter(TypeParameterSimple(SimpleName((tp))) )}
-                supertypes.forEach { ift.addSupertype_dep(it.name) }
+                supertypes.forEach { st ->
+                    val targs = st.args.map { namespace.createTypeInstance(null,it.name).asTypeArgument }
+                    val ti = namespace.createTypeInstance(null,st.name, targs)
+                    ift.addSupertype(ti)
+                }
                 property.forEach {
                     it.invoke(ift).also { p -> setResolvers(p.typeInstance, ift) }
                 }

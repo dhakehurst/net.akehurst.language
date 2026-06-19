@@ -20,11 +20,14 @@ plugins {
 }
 
 repositories {
-//    mavenLocal {
-//        content {
-//            includeGroupByRegex("net\\.akehurst.+")
-//        }
-//    }
+    mavenLocal {
+        content {
+            includeGroupByRegex("net\\.akehurst.+")
+        }
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
     mavenCentral()
     google()
     gradlePluginPortal()

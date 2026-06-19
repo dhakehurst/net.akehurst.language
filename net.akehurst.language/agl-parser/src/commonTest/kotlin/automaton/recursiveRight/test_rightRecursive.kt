@@ -18,6 +18,8 @@ package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -31,32 +33,18 @@ class test_rightRecursive : test_AutomatonAbstract() {
     // S =  'a' | S1 ;
     // S1 = 'a' S ;
 
-    private companion object {
-
-        val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                ref("S1")
-            }
-            concatenation("S1") { literal("a"); ref("S") }
+    val rrs = ruleSet("Test") {
+        choiceLongest("S") {
+            literal("a")
+            ref("S1")
         }
-        val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
-        val S1 = rrs.findRuntimeRule("S1")
-        val a = rrs.findRuntimeRule("'a'")
+        concatenation("S1") { literal("a"); ref("S") }
+    } as RuntimeRuleSet
 
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RulePositionRuntime(a, oN, ER)))
-        val s2 = SM.createState(listOf(RulePositionRuntime(S, o0, ER)))
-        val s3 = SM.createState(listOf(RulePositionRuntime(S1, oN, 1)))
-        val s4 = SM.createState(listOf(RulePositionRuntime(S1, oN, ER)))
-        val s5 = SM.createState(listOf(RulePositionRuntime(G, oN, ER)))
-        val s6 = SM.createState(listOf(RulePositionRuntime(S, o1, ER)))
-
-        val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
-        val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))
-    }
+    private val _t0 = rrs.rule[0]  // 'a'
+    private val S = rrs.rule[1]  // S
+    private val S1 = rrs.rule[2]  // S1
+    private val rG = rrs.goalRuleFor[S]
 
     @Test
     fun parse_a_aa_aaa() {
@@ -67,8 +55,23 @@ class test_rightRecursive : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t0, oN, ER)   // 'a'
+            state(S, o0, ER)   // S = 'a' .
+            state(S1, oN, 1)   // S1 = 'a' . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S1, oN, ER)   // S1 = 'a' S .
+            state(S, o1, ER)   // S = S1 .
 
-
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(S, o0, ER); lhg(setOf(RT), setOf(RT)); lhg(setOf(EOT), setOf(EOT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(S1, oN, 1)); prevPair(RP(S1, oN, 1), RP(S1, oN, 1)) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(RT,EOT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(S1, oN, 1)); prevPair(RP(S1, oN, 1), RP(S1, oN, 1)) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(S, o0, ER); tgt(S1, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(S1, oN, 1)); prevPair(RP(S1, oN, 1), RP(S1, oN, 1)) }
+            trans(WIDTH) { src(S1, oN, 1); tgt(_t0, oN, ER); lhg(setOf(RT,_t0)); ctx(RP(rG, oN, SR),RP(S1, oN, 1)) }
+            trans(HEIGHT) { src(S1, oN, ER); tgt(S, o1, ER); lhg(setOf(RT), setOf(RT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(S1, oN, 1)) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(S, o1, ER); tgt(S1, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(S1, oN, 1)) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -79,13 +82,23 @@ class test_rightRecursive : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)
-            state(G, oN, EOR)
-            state(S, oN, EOR)
-            state(S, o1, EOR)
-            state(S1, oN, p1)
-            state(S1, oN, EOR)
-            state(a, oN, EOR)
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, o0, ER)   // S = 'a' .
+            state(S, o1, ER)   // S = S1 .
+            state(S1, oN, 1)   // S1 = 'a' . S
+            state(S1, oN, ER)   // S1 = 'a' S .
+            state(_t0, oN, ER)   // 'a'
+
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0)); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(S, o0, ER); tgt(S1, oN, ER); lhg(EOT);  prevPair(RP(S1, oN, 1), RP(S1, oN, 1)); prevPair(RP(rG, oN, SR), RP(S1, oN, 1)) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(S, o1, ER); tgt(S1, oN, ER); lhg(EOT);  prevPair(RP(S1, oN, 1), RP(S1, oN, 1)); prevPair(RP(rG, oN, SR), RP(S1, oN, 1)) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(S1, oN, 1); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0)); ctx(RP(S1, oN, 1),RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(S1, oN, ER); tgt(S, o1, ER); lhg(setOf(EOT), setOf(EOT));  prevPair(RP(S1, oN, 1), RP(S1, oN, 1)); prevPair(RP(rG, oN, SR), RP(S1, oN, 1)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(S, o0, ER); lhg(setOf(EOT), setOf(EOT));  prevPair(RP(S1, oN, 1), RP(S1, oN, 1)); prevPair(RP(rG, oN, SR), RP(S1, oN, 1)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(EOT));  prevPair(RP(S1, oN, 1), RP(S1, oN, 1)); prevPair(RP(rG, oN, SR), RP(S1, oN, 1)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -102,7 +115,7 @@ class test_rightRecursive : test_AutomatonAbstract() {
             val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
-        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")as ParserStateSet
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S") as ParserStateSet
         val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")

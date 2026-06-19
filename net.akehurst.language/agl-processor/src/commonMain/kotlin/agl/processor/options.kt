@@ -54,7 +54,7 @@ class SyntaxAnalysisOptionsDefault<AsmType : Any>(
 class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override var enabled: Boolean = true,
     override var locationMap: LocationMap = LocationMapDefault(),
-    override var context: ContextType? = null,
+    override var sentenceContext: ContextType? = null,
     override var buildScope: Boolean = true,
     override var replaceIfItemAlreadyExistsInScope: Boolean = false,
     override var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind? = LanguageIssueKind.ERROR,
@@ -65,7 +65,7 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override fun clone() = SemanticAnalysisOptionsDefault<ContextType>(
         enabled = this.enabled,
         locationMap = this.locationMap,
-        context = this.context,
+        sentenceContext = this.sentenceContext,
         buildScope = this.buildScope,
         replaceIfItemAlreadyExistsInScope = this.replaceIfItemAlreadyExistsInScope,
         ifItemAlreadyExistsInScopeIssueKind = this.ifItemAlreadyExistsInScopeIssueKind,
@@ -76,7 +76,7 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
 }
 
 class CompletionProviderOptionsDefault<ContextType : Any>(
-    override var context: ContextType? = null,
+    override var sentenceContext: ContextType? = null,
     override var depth: Int = 0,
     override var path: List<Pair<Int, Int>> = emptyList(),
     override var showOptionalItems: Boolean = true,
@@ -84,7 +84,7 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
     override val other: Map<String, Any> = mutableMapOf()
 ) : CompletionProviderOptions<ContextType> {
     override fun clone() = CompletionProviderOptionsDefault<ContextType>(
-        context = this.context,
+        sentenceContext = this.sentenceContext,
         depth = this.depth,
         path = this.path,
         showOptionalItems = this.showOptionalItems,
@@ -94,6 +94,7 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
 }
 
 class FormatOptionsDefault<SelfType : Any>(
+    override var locationMap: LocationMap? = null,
     override val environment: Map<String, SelfType> = mutableMapOf(),
 ) : FormatOptions<SelfType> {
     override fun clone() = FormatOptionsDefault<SelfType>(

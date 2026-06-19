@@ -18,14 +18,17 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
-import net.akehurst.language.agl.expressions.processor.TypedObjectAny
+import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.format.processor.FormatterOverTypedObject
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -96,7 +99,7 @@ class GenerateGrammarDomainBuild(
         """
     }
 
-    val formatDomain by lazy {
+    val formatDomain: AglFormatDomain by lazy {
         val res = Agl.formatDomain(FormatString(generatedFormat),grammarTypesDomain )
         check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         res.asm!!
@@ -108,22 +111,22 @@ class GenerateGrammarDomainBuild(
             sentence = grammarString.value,
             options = Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry())
+                    sentenceContext(contextFromRegistryGrammars())
                 }
             }
         )
         check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         val asm = res.asm!!
-        return generateFromAsm(asm)
+        return generateFromAsm(asm, res.syntaxAnalysis?.locationMap ?: LocationMapDefault())
     }
 
-    fun generateFromAsm(grammarDomain: GrammarDomain): String {
+    fun generateFromAsm(asm: GrammarDomain, locationMap: LocationMap): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
-        val og = ObjectGraphByReflection<Any>(AglGrammar.typesDomain, issues)
-        val formatter = FormatterOverTypedObject<Any>(formatDomain, og,issues)
+        val og = ObjectGraphAccessorMutatorByReflection(AglGrammar.typesDomain, issues,locationMap)
+        val formatter = FormatterOverTypedObject(formatDomain, og)
 
         val tp = grammarTypesDomain.findFirstDefinitionByNameOrNull(SimpleName("GrammarDomain"))!!.type()
-        val tobj = TypedObjectAny(tp, grammarDomain)
+        val tobj = og.toTypedObject(asm, tp)
         val res = formatter.formatSelf(formatSet.qualifiedName, tobj)
         check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
         //val str = grammarModel.namespace.joinToString(separator = "\n\n") { generateNamespace(it) }

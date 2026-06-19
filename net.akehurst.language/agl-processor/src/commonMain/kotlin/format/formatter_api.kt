@@ -17,12 +17,14 @@
 package net.akehurst.language.formatter.api
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.api.WhenOption
 import net.akehurst.language.expressions.api.WhenOptionElse
 
-interface AglFormatDomain : Domain<FormatNamespace, FormatSet> {
+interface AglFormatDomain : Domain<FormatNamespace, FormatDefinition> {
 
     val defaultWhiteSpace: String
 
@@ -31,9 +33,12 @@ interface AglFormatDomain : Domain<FormatNamespace, FormatSet> {
      */
     val rules: Map<SimpleName, AglFormatRule>
 
+    fun findFirstFunctionDefinitionByNameOrNull(functionName: SimpleName): FormatFunctionDefinition?
+    fun findFirstFormatSetDefinitionByNameOrNull(formatSetName: PossiblyQualifiedName): FormatSet?
 }
 
-interface FormatNamespace : Namespace<FormatSet> {
+interface FormatNamespace : Namespace<FormatDefinition> {
+    val function: List<FormatFunctionDefinition>
     val formatSet: List<FormatSet>
 }
 
@@ -45,25 +50,31 @@ interface FormatSetReference {
     fun resolveAs(resolved: FormatSet)
 }
 
+interface FormatDefinition : Definition<FormatDefinition>
 
-interface FormatSet : Definition<FormatSet> {
+interface FormatFunctionDefinition : FormatDefinition, FunctionDefinitionFloating {
+
+}
+
+interface FormatSet : FormatDefinition {
     override val namespace: FormatNamespace
     val extends: List<FormatSetReference>
     val rules: List<AglFormatRule>
-
+    val allRules:List<AglFormatRule>
 }
 
 interface AglFormatRule {
     val forTypeName: TypeReference
-    val formatExpression: FormatExpression
+    val formatExpression: Expression
 }
 
 interface FormatExpression : Expression {
 
 }
 
-interface FormatExpressionExpression : FormatExpression {
+interface FormatEmbeddedExpression : FormatExpression {
     val expression: Expression
+    val via: PossiblyQualifiedName?
 }
 
 interface FormatExpressionTemplate : FormatExpression {
@@ -82,6 +93,12 @@ interface FormatWhenOptionElse : WhenOptionElse {
     val format: FormatExpression
 }
 
+interface FormatSeparatedList {
+    val listExpression: Expression
+    val separator: Expression
+    val via: PossiblyQualifiedName?
+}
+
 interface TemplateElement
 
 interface TemplateElementText : TemplateElement {
@@ -93,8 +110,7 @@ interface TemplateElementExpressionProperty : TemplateElement {
 }
 
 interface TemplateElementExpressionList : TemplateElement {
-    val listExpression: Expression
-    val separator: Expression
+    val formatSeparatedList: FormatSeparatedList
 }
 
 interface TemplateElementExpressionListSeparator {

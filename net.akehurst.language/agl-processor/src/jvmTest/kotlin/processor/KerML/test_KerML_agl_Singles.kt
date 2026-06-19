@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.KerML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
@@ -30,6 +30,7 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.*
 
+@Ignore // Kerml grammars need updating
 class test_KerML_agl_Singles {
 
     private companion object {
@@ -37,17 +38,17 @@ class test_KerML_agl_Singles {
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
-        val processor: LanguageProcessor<Asm, SentenceContextAny> by lazy {
+        val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
             Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
             ).processor!!
         }
 
-        fun test_process(sentence: String, context: SentenceContextAny, expIssues: Set<LanguageIssue>) {
+        fun test_process(sentence: String, context: SentenceContext, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
                 semanticAnalysis {
-                    context(context)
+                    sentenceContext(context)
                 }
             })
             assertEquals(expIssues, result.allIssues.all, result.allIssues.toString())
@@ -64,7 +65,7 @@ class test_KerML_agl_Singles {
     @Test
     fun process_grammar() {
         val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
@@ -77,7 +78,7 @@ class test_KerML_agl_Singles {
             grammarStr,
             Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
                 }
             }

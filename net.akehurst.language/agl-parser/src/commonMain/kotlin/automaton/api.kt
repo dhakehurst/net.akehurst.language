@@ -17,7 +17,9 @@
 package net.akehurst.language.automaton.api
 
 import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
+import net.akehurst.language.parser.api.RuleSet
 
 enum class AutomatonKind {
     LOOKAHEAD_NONE,     // LC(O) like LR(0)
@@ -25,8 +27,60 @@ enum class AutomatonKind {
     LOOKAHEAD_1         // LC(1) like LR(1)
 }
 
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class StateNumber(val value:Int) //: PublicValueType
+
 interface Automaton {
+    val ruleSet : RuleSet
+    val state: Set<AutomatonState>
+    val transition: Set<AutomatonTransition>
+
     fun asString(withStates:Boolean=false):String
+}
+
+interface AutomatonState {
+    val number: StateNumber
+    val rulePosition: List<RulePosition>
+}
+
+interface AutomatonTransition {
+    val action: ParseAction
+    val source: AutomatonState
+    val target: AutomatonState
+    val lookahead: Set<LookaheadGuard>
+    val prev:Set<AutomatonState>
+    val prevPrev:Set<AutomatonState>
+
+    /**
+     * The atomic (prevPrev, prev) GSS context pairs for this transition.
+     *
+     * - For HEIGHT / GRAFT / GOAL transitions (source state is at-end) this is the
+     *   set of pairs the transition was registered against — pairs are kept atomic
+     *   and MUST NOT be split into independent prev / prevPrev sets that are later
+     *   cross-multiplied (doing so fabricates GSS triples that cannot occur).
+     * - For WIDTH / EMBED transitions (source state is not at-end) the runtime does
+     *   not consult prevPrev (`transitionsIncomplete(prev)` only takes prev), so
+     *   this returns the empty set; consumers needing the prev-only context for
+     *   incomplete transitions should use [prev] instead.
+     */
+    val transContext: Set<TransitionContext>
+}
+
+/**
+ * An atomic (prevPrev, prev) GSS context pair for a HEIGHT / GRAFT / GOAL transition.
+ *
+ * Used as the unit of context registration / iteration that preserves the natural
+ * pairing between an at-end source state's GSS predecessor and pred-of-predecessor.
+ */
+interface TransitionContext {
+    val prevPrev: AutomatonState
+    val prev: AutomatonState
+}
+
+interface LookaheadGuard {
+    val guard : Set<Rule>
+    val up : Set<Rule>
 }
 
 enum class ParseAction {
@@ -42,14 +96,14 @@ internal annotation class AglAutomatonDslMarker
 
 @AglAutomatonDslMarker
 interface AutomatonBuilder {
-    fun state(rp:RulePosition)
     fun state(ruleNumber:Int, option: OptionNum, position:Int)
     fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
 }
 
 @AglAutomatonDslMarker
 interface TransitionBuilder {
+    fun pctx(vararg stateNumbers: Int)
     fun ctx(vararg stateNumbers: Int)
-    fun source(stateNumber:Int)
-    fun target(stateNumber:Int)
+    fun src(stateNumber:Int)
+    fun tgt(stateNumber:Int)
 }

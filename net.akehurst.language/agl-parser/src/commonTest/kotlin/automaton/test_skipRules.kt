@@ -17,6 +17,8 @@
 package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -31,37 +33,20 @@ class test_skipRules : test_AutomatonAbstract() {
     // skip COMMENT = "//[^\n]*$"
     // S = 'a' ;
 
-    private companion object {
+    val rrs = ruleSet("Test") {
+        pattern("WS", "\\s+", true)
+        pattern("COMMENT", "//[^\\n]*[\\n]", true)
+        concatenation("S") { literal("a") }
+    } as RuntimeRuleSet
 
-        val rrs = runtimeRuleSet {
-            pattern("WS", "\\s+", true)
-            pattern("COMMENT", "//[^\\n]*[\\n]", true)
-            concatenation("S") { literal("a") }
-        }
+    val _t0 = rrs.rule[0]  // WS
+    val _t1 = rrs.rule[1]  // COMMENT
+    val _t2 = rrs.rule[2]  // 'a'
+    val S = rrs.rule[3]  // S
+    val rG = rrs.skipParserStateSet!!.goalRule
 
-        val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val a = rrs.findRuntimeRule("'a'")
-        val G = SM.startState.runtimeRules.first()
-
-        val s0 = SM.startState
-
-        val skipSS = rrs.skipParserStateSet!!
-        val sk0 = skipSS.startState
-        val skG = sk0.runtimeRules.first()                    // G = skS ;
-
-        //val skM = skG.rhs.items[0]                            // skS = skC+
-        //val skC = skM.rhs.items[RuntimeRuleRhs.MULTI__ITEM]  // skC = WS | CM
-        val skWS = rrs.findRuntimeRule("WS")
-        val skCM = rrs.findRuntimeRule("COMMENT")
-
-        val sk1 = skipSS.createState(listOf(RulePositionRuntime(skWS, oN, ER)))
-
-        val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
-        val lhs_skWCU = SM.createLookaheadSet(true, false, false, setOf(skWS, skCM))
-        val lhs_aT = SM.createLookaheadSet(false, true, false, setOf(a))
-        val lhs_WS_CM_UP = SM.createLookaheadSet(true, false, false, setOf(skWS, skCM))
-    }
+    val rSKIP_MULTI = rrs.skipParserStateSet!!.userGoalRule
+    val rSKIP_CHOICE = rrs.skipParserStateSet!!.userGoalRule.rhsItems[0][0]
 
     /* TODO
         @Test
@@ -93,26 +78,66 @@ class test_skipRules : test_AutomatonAbstract() {
         }
     */
     @Test
-    fun parse_aba() {
+    fun parse_COMMENT_WS_a_WS__SKIP() {
         val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
-        parser.parseForGoal("S", "aba")
+        parser.parseForGoal("S", "//comment\na ")
         val actual = parser.runtimeRuleSet.skipParserStateSet!!
         println(actual.usedAutomatonToString())
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . rSKIP_MULTI
+            state(_t0, oN, ER)   // WS("\s+")
+            state(_t1, oN, ER)   // COMMENT("//[^\n]*[\n]")
+            state(rSKIP_CHOICE, o1, ER)   // rSKIP_CHOICE = COMMENT .
+            state(rSKIP_MULTI, LI, ER)   // [rSKIP_CHOICE] .
+            state(rSKIP_MULTI, LI, 1)   // [rSKIP_CHOICE . rSKIP_CHOICE]
+            state(rG, oN, ER)   // <GOAL> = rSKIP_MULTI .
+            state(rSKIP_CHOICE, o0, ER)   // rSKIP_CHOICE = WS .
 
-
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT, _t0, _t1)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT, _t0, _t1)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(rSKIP_CHOICE, o0, ER); lhg(setOf(EOT, _t0, _t1), setOf(EOT, _t0, _t1)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(rSKIP_CHOICE, o1, ER); lhg(setOf(EOT, _t0, _t1), setOf(EOT, _t0, _t1)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(rSKIP_CHOICE, o1, ER); tgt(rSKIP_MULTI, LI, ER); lhg(setOf(EOT), setOf(EOT)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(rSKIP_CHOICE, o1, ER); tgt(rSKIP_MULTI, LI, 1); lhg(setOf(_t0, _t1), setOf(EOT)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GOAL) { src(rSKIP_MULTI, LI, ER); tgt(rG, oN, ER); lhg(EOT); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(rSKIP_CHOICE, o0, ER); tgt(rSKIP_MULTI, LI, ER); lhg(setOf(EOT), setOf(EOT)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(rSKIP_CHOICE, o0, ER); tgt(rSKIP_MULTI, LI, 1); lhg(setOf(_t0, _t1), setOf(EOT)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
         }
+
         AutomatonTest.assertEquals(expected, actual)
     }
 
     @Test
-    fun buildFor() {
-        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
+    fun buildFor__SKIP() {
+        val actual = rrs.skipParserStateSet!!
+        actual.build()
+        println(actual.usedAutomatonToString())
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . rSKIP_MULTI
+            state(_t0, oN, ER)   // WS("\s+")
+            state(_t1, oN, ER)   // COMMENT("//[^\n]*[\n]")
+            state(rSKIP_CHOICE, o1, ER)   // rSKIP_CHOICE = COMMENT . 
+            state(rSKIP_MULTI, LI, ER)   // [rSKIP_CHOICE] .
+            state(rSKIP_MULTI, LI, 1)   // [rSKIP_CHOICE . rSKIP_CHOICE]
+            state(rG, oN, ER)   // <GOAL> = rSKIP_MULTI . 
+            state(rSKIP_CHOICE, o0, ER)   // rSKIP_CHOICE = WS . 
 
-        }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0,_t1)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT,_t0,_t1)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(rSKIP_CHOICE, o0, ER); lhg(setOf(EOT,_t0,_t1), setOf(EOT,_t0,_t1));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(rSKIP_MULTI, oLI, 1)) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(rSKIP_CHOICE, o1, ER); lhg(setOf(EOT,_t0,_t1), setOf(EOT,_t0,_t1));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(rSKIP_MULTI, oLI, 1)) }
+            trans(HEIGHT) { src(rSKIP_CHOICE, o1, ER); tgt(rSKIP_MULTI, LI, ER); lhg(setOf(EOT), setOf(EOT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(rSKIP_CHOICE, o1, ER); tgt(rSKIP_MULTI, LI, 1); lhg(setOf(_t0,_t1), setOf(EOT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(rSKIP_CHOICE, o1, ER); tgt(rSKIP_MULTI, LI, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rSKIP_MULTI, oLI, 1)) }
+            trans(GRAFT) { src(rSKIP_CHOICE, o1, ER); tgt(rSKIP_MULTI, LI, 1); lhg(setOf(_t0,_t1));  prevPair(RP(rG, oN, SR), RP(rSKIP_MULTI, oLI, 1)) }
+            trans(GOAL) { src(rSKIP_MULTI, LI, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(rSKIP_MULTI, LI, 1); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0,_t1)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rSKIP_MULTI, LI, 1); tgt(_t1, oN, ER); lhg(setOf(EOT,_t0,_t1)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(rSKIP_CHOICE, o0, ER); tgt(rSKIP_MULTI, LI, ER); lhg(setOf(EOT), setOf(EOT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(rSKIP_CHOICE, o0, ER); tgt(rSKIP_MULTI, LI, 1); lhg(setOf(_t0,_t1), setOf(EOT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(rSKIP_CHOICE, o0, ER); tgt(rSKIP_MULTI, LI, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rSKIP_MULTI, oLI, 1)) }
+            trans(GRAFT) { src(rSKIP_CHOICE, o0, ER); tgt(rSKIP_MULTI, LI, 1); lhg(setOf(_t0,_t1));  prevPair(RP(rG, oN, SR), RP(rSKIP_MULTI, oLI, 1)) }        }
 
         AutomatonTest.assertEquals(expected, actual)
     }

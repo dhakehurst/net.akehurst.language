@@ -105,7 +105,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
 
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
-    val formatter: Formatter<AsmType>?
+    val formatter: Formatter?
 
     val completionProvider: CompletionProvider<AsmType, ContextType>?
 
@@ -159,7 +159,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     /**
      *
      */
-    fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): SemanticAnalysisResult
+     fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): SemanticAnalysisResult
 
     /**
      * Process the sentence, performing all phases where possible.
@@ -174,19 +174,16 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     /**
      *
      */
-    fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
+     fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
 
-    fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
+     fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
 
     /**
      * returns list of terminals expected at the given position
      *
      * @param sentence text to parse
      * @param position position in the text (from reader) at which to provide expectations
-     * @param goalRuleName name of a rule in the grammar that is the goal rule
      * @return list of possible completion items
-     * @throws ParseFailedException
-     * @throws ParseTreeException
      */
     fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 

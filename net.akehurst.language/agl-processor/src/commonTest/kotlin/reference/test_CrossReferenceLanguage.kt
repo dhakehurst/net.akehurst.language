@@ -18,7 +18,7 @@ package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -50,11 +50,11 @@ class test_CrossReferenceLanguage {
             AsmTransformDomainDefault.fromGrammarDomain(grammarMdl, grmrTypeModel)
             val tm = grmrTypeModel
             typemodel?.let { tm.addAllNamespaceAndResolveImports(it.namespace) }
-            val ctx = ContextFromTypesDomain(tm)
+            val ctx = contextFromTypesDomain(tm)
             val result = aglProc.process(
                 sentence = sentence,
                 Agl.options {
-                    semanticAnalysis { context(ctx) }
+                    semanticAnalysis { sentenceContext(ctx) }
                 }
             )
 
@@ -76,7 +76,7 @@ class test_CrossReferenceLanguage {
     @Test
     fun check_typeModel() {
         val actual = aglProc.typesDomain
-        val expected = grammarTypeModel("net.akehurst.language.agl.language", "References") {
+        val expected = grammarTypeModel("net.akehurst.language.Base", "References") {
             // declarations = rootIdentifiables scopes references?
             dataFor("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
@@ -475,18 +475,17 @@ class test_CrossReferenceLanguage {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(0, 0, 0, 0, null),
+                InputLocation(93, 38, 4, 15, null),
                 "For references in 'Rule2', referred to type 'AnExternalType1' not found"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(0, 0, 0, 0, null),
+                InputLocation(111, 56, 4, 15, null),
                 "For references in 'Rule2', referred to type 'AnExternalType2' not found"
             )
         )
-//FIXME: location fails
-        test(grammarStr, sentence, expected, null, expIssues)
 
+        test(grammarStr, sentence, expected, null, expIssues)
     }
 
     @Test

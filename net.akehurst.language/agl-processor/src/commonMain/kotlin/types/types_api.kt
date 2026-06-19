@@ -17,7 +17,9 @@
 
 package net.akehurst.language.types.api
 
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.*
+import kotlin.reflect.KClass
 
 interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
 
@@ -29,6 +31,8 @@ interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypesNamespace
 
     fun findByQualifiedNameOrNull(qualifiedName: QualifiedName): TypeDefinition?
+
+    fun findFirstTypeFor(kclass: KClass<*>): TypeDefinition?
 
     fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypesNamespace>)
 
@@ -44,7 +48,10 @@ data class AssociationEnd(
     val collectionTypeName: PossiblyQualifiedName?,
     val characteristics: Set<PropertyCharacteristic>,
     val navigable: Boolean,
-)
+) {
+    var byEvaluation: ((PropertyDeclaration) -> ((Any)->Any?)?)? = null
+    var byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any)->Any?)?)? = null
+}
 
 interface TypesNamespace : Namespace<TypeDefinition> {
 
@@ -102,7 +109,7 @@ interface TypesNamespace : Namespace<TypeDefinition> {
     fun findOwnedOrCreateValueTypeNamed(typeName: SimpleName): ValueType
     fun findOwnedOrCreateInterfaceTypeNamed(typeName: SimpleName): InterfaceType
     fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType
-    fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType
+    fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName, typeParameters:List<TypeParameter>): CollectionType
     fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate: (UnionType) -> Unit): UnionType
 
     /**
@@ -110,7 +117,7 @@ interface TypesNamespace : Namespace<TypeDefinition> {
      * ends must be 'DataType' types
      * TODO: support directionality and
      */
-    fun findOrCreateAssociation(ends:List<AssociationEnd>): List<PropertyDeclaration>
+    fun findOrCreateAssociation(ends: List<AssociationEnd>): List<PropertyDeclaration>
 
     fun createTypeInstance(
         contextQualifiedTypeName: QualifiedName?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
@@ -162,21 +169,22 @@ interface TypeInstance {
     val qualifiedTypeName: QualifiedName
 
     val isNothing: Boolean
+    val isPrimitive: Boolean
     val isCollection: Boolean
 
     /**
      * {derived} type is resolved via the namespace
      */
-    val resolvedDeclaration: TypeDefinition
+    val resolvedDefinition: TypeDefinition
 
-    val resolvedDeclarationOrNull: TypeDefinition?
+    val resolvedDefinitionOrNull: TypeDefinition?
 
     /**
      * properties from this type, and all supertypes, with type parameters resolved
      */
     val allResolvedProperty: Map<PropertyName, PropertyDeclarationResolved>
 
-    val allResolvedMethod: Map<MethodName, MethodDeclarationResolved>
+    val allResolvedMethod: Map<MethodName, MethodDefinitionResolved>
 
     val asTypeArgument: TypeArgument
 
@@ -221,7 +229,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
     val typeParameters: List<TypeParameter>
 
     val property: List<PropertyDeclaration>
-    val method: List<MethodDeclaration>
+    val method: List<MethodDefinition>
 
     /**
      * transitive closure of supertypes
@@ -236,12 +244,15 @@ interface TypeDefinition : Definition<TypeDefinition> {
     /**
      * all methods from this and transitive closure of supertypes
      */
-    val allMethod: Map<MethodName, MethodDeclaration>
+    val allMethod: Map<MethodName, MethodDefinition>
 
     /**
      * information about this type
      */
     val metaInfo: Map<String, String>
+
+    // to assist execution by reflection without having MPP reflection support
+    val implementation: KClass<*>?
 
     fun signature(context: TypesNamespace?, currentDepth: Int = 0): String
 
@@ -259,15 +270,15 @@ interface TypeDefinition : Definition<TypeDefinition> {
     fun getOwnedPropertyByIndexOrNull(i: Int): PropertyDeclaration?
     fun findOwnedPropertyOrNull(name: PropertyName): PropertyDeclaration?
     fun findAllPropertyOrNull(name: PropertyName): PropertyDeclaration?
-    fun findOwnedMethodOrNull(name: MethodName): MethodDeclaration?
-    fun findAllMethodOrNull(name: MethodName): MethodDeclaration?
+    fun findOwnedMethodOrNull(name: MethodName): MethodDefinition?
+    fun findAllMethodOrNull(name: MethodName): MethodDefinition?
 
     fun asStringInContext(context: TypesNamespace): String
 
     fun addTypeParameter(name: TypeParameter)
 
     @Deprecated("Create a TypeInstance and use addSupertype(TypeInstance). This (deprecated) method does not add TypeArgs to the supertype.")
-    fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName)
+    fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName, typeArgNames:List<PossiblyQualifiedName>)
 
     fun addSupertype(typeInstance: TypeInstance)
     fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String): PropertyDeclaration
@@ -277,9 +288,9 @@ interface TypeDefinition : Definition<TypeDefinition> {
         parameters: List<ParameterDeclaration>,
         returnType: TypeInstance,
         description: String
-    ): MethodDeclarationPrimitive
+    ): MethodDefinitionPrimitive
 
-    fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String): MethodDeclarationDerived
+    fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String): MethodDefinitionDerived
 
     fun findInOrCloneTo(other: TypesDomain): TypeDefinition
 }
@@ -329,7 +340,7 @@ interface TupleType : TypeDefinition {
 }
 
 interface ValueType : StructuredType {
-    val constructors: List<ConstructorDeclaration>
+    val constructors: List<ConstructorDefinition>
     val valueProperty: PropertyDeclaration
 
     fun addConstructor(parameters: List<ParameterDeclaration>)
@@ -346,7 +357,7 @@ interface DataType : StructuredType {
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     override val subtypes: List<TypeInstance>
 
-    val constructors: List<ConstructorDeclaration>
+    val constructors: List<ConstructorDefinition>
 
     @Deprecated("Create a TypeInstance and use addSubtype(TypeInstance)")
     fun addSubtype_dep(qualifiedTypeName: PossiblyQualifiedName)
@@ -385,6 +396,8 @@ interface PropertyDeclaration {
     val characteristics: Set<PropertyCharacteristic>
     val description: String
 
+    val opposite: List<PropertyDeclaration>
+
     // Important: indicates the child number in an SPPT,
     // assists SimpleAST generation,
     // indicates order of constructor params
@@ -418,7 +431,8 @@ interface PropertyDeclaration {
     val isPrimitive: Boolean
 
     // to assist execution by reflection without having MPP reflection support
-    val execution: ((self:Any) -> Any?)?
+    val execution: ((self: Any) -> Any?)?
+    val executionSuspend: (suspend (self: Any) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 
@@ -496,29 +510,38 @@ enum class PropertyCharacteristic {
 // TODO: value classes don't work (fully) in js and wasm
 data class MethodName(override val value: String) : PublicValueType
 
-interface MethodDeclaration {
+interface MethodDefinition {
     val owner: TypeDefinition
     val name: MethodName
+
     //TODO: Method TypeArgs
     val parameters: List<ParameterDeclaration>
     val returnType: TypeInstance
     val description: String
 
-    fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved
-    fun findInOrCloneTo(other: TypesDomain): MethodDeclaration
+    // to assist execution by reflection without having MPP reflection support
+    val execution: ((self: Any, args:List<*>) -> Any?)?
+    val executionSuspend: (suspend (self: Any, args:List<*>) -> Any?)?
+
+    fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDefinitionResolved
+    fun findInOrCloneTo(other: TypesDomain): MethodDefinition
 }
 
-interface MethodDeclarationPrimitive : MethodDeclaration
-interface MethodDeclarationDerived : MethodDeclaration
-interface MethodDeclarationResolved : MethodDeclaration {
-    val original: MethodDeclaration
+interface MethodDefinitionPrimitive : MethodDefinition
+interface MethodDefinitionDerived : MethodDefinition
+interface MethodDefinitionResolved : MethodDefinition {
+    val original: MethodDefinition
 }
 
-interface ConstructorDeclaration {
+interface ConstructorDefinition {
     val owner: TypeDefinition
     val parameters: List<ParameterDeclaration>
 
-    fun findInOrCloneTo(other: TypesDomain): ConstructorDeclaration
+    // to assist execution by reflection without having MPP reflection support
+    val execution: ((args:List<*>) -> Any?)?
+    val executionSuspend: (suspend (args:List<*>) -> Any?)?
+
+    fun findInOrCloneTo(other: TypesDomain): ConstructorDefinition
 }
 
 // ParameterName clashes with kotlin.ParameterName

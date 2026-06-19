@@ -42,6 +42,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::unit)
         super.register(this::namespace)
         super.register(this::styleSet)
+        super.register(this::extends)
         super.register(this::rule)
         super.register(this::metaRule)
         super.register(this::tagRule)
@@ -74,9 +75,10 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     // styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
     fun styleSet(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: StyleNamespaceDefault) -> Unit {
         val name = SimpleName(children[1] as String)
-        val extends = (children[2] as List<StyleSetReference>?) ?: emptyList()
+        val extendsLambda = children[2] as? (StyleNamespace) -> List<StyleSetReference>
         val rules: List<AglStyleTagRule> = children[4] as List<AglStyleTagRule>
         return { ns ->
+            val extends = extendsLambda?.invoke(ns) ?: emptyList()
             val ss = AglStyleSetDefault(ns, name, extends)
                 .also { setLocationFor(it, nodeInfo, sentence) }
             (ss.rules as MutableList).addAll(rules)
@@ -84,15 +86,16 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     }
 
     // extends = ':' [possiblyQualifiedName / ',']+ ;
-    fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<StyleSetReference> {
-        val localNamespace = _localStore["namespace"] as StyleNamespace
+    fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (StyleNamespace) -> List<StyleSetReference> {
         val extendNameList = children[1] as List<PossiblyQualifiedName>
         val sl = extendNameList.toSeparatedList<Any, PossiblyQualifiedName, String>()
-        val extended = sl.items.map {
-            // need to manually add the Reference as it is not seen by the super class
-            StyleSetReferenceDefault(localNamespace, it).also { setLocationFor(it, nodeInfo, sentence) }
+
+        return { ns ->
+             sl.items.map {
+                // need to manually add the Reference as it is not seen by the super class
+                StyleSetReferenceDefault(ns, it).also { setLocationFor(it, nodeInfo, sentence) }
+            }
         }
-        return extended
     }
 
     //  rule = metaRule | styleRule ;

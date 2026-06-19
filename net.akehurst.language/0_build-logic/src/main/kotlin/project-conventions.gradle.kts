@@ -16,6 +16,7 @@
 
 @file:OptIn(ExperimentalWasmDsl::class)
 
+import org.gradle.api.publish.PublishingExtension
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import java.time.Instant
 import java.time.ZoneId
@@ -26,20 +27,22 @@ plugins {
     alias(libs.plugins.dokka)
     alias(libs.plugins.buildconfig)
     alias(libs.plugins.exportPublic)
-    alias(libs.plugins.vanniktech.maven.publish)
     signing
+    alias(libs.plugins.vanniktech.maven.publish)
 }
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
 val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
 val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
 
 repositories {
-    //TODO: remove mavenLocal repo
-//    mavenLocal {
-//        content {
-//            includeGroupByRegex("net\\.akehurst.+")
-//        }
-//    }
+    mavenLocal {
+        content {
+            includeGroupByRegex("net\\.akehurst.+")
+        }
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
     mavenCentral()
     gradlePluginPortal()
 }
@@ -135,6 +138,7 @@ tasks.named("publish").get().dependsOn("javadocJar")
 
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
+    maxHeapSize = "4g"
     filter {
         isFailOnNoMatchingTests = false
     }
@@ -193,6 +197,23 @@ mavenPublishing {
         }
         scm {
             url.set("https://github.com/dhakehurst/net.akehurst.language")
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "Other"
+            url = uri(providers.gradleProperty("publishTo").orElse("other"))
+            credentials {
+                username = providers.environmentVariable("NEXUS_USER")
+                    .orElse(providers.gradleProperty("NEXUS_USER"))
+                    .orNull
+                password = providers.environmentVariable("NEXUS_PASS")
+                    .orElse(providers.gradleProperty("NEXUS_PASS"))
+                    .orNull
+            }
         }
     }
 }

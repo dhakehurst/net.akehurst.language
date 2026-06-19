@@ -17,12 +17,12 @@
 
 package net.akehurst.language.asmTransform.processor
 
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.expressions.api.AssignmentStatement
+import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -35,9 +35,9 @@ import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 
-class AsmTransformInterpreter<AsmValueType:Any>(
+class AsmTransformInterpreter(
     val typesDomain: TypesDomain,
-    val objectGraph: ObjectGraphAccessorMutator<AsmValueType>,
+    val objectGraph: ObjectGraphAccessorMutator,
 ) {
 
     companion object {
@@ -126,32 +126,32 @@ class AsmTransformInterpreter<AsmValueType:Any>(
     }
 
     val issues get() = IssueHolder(LanguageProcessorPhase.INTERPRET)
-    val exprInterpreter = ExpressionsInterpreterOverTypedObject(objectGraph,issues)
+    val exprInterpreter = ExpressionsInterpreterOverTypedObject(objectGraph)
 
     fun clear() {
         this.issues.clear()
     }
 
-    fun evaluate(evc: EvaluationContext<AsmValueType>,trRule: AsmTransformationRule): TypedObject<AsmValueType> {
+     fun evaluate(evc: EvaluationContext,trRule: AsmTransformationRule): TypedObject {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
         return asm
     }
 
-    private fun evaluateSelfStatement(evc: EvaluationContext<AsmValueType>, expression: Expression): TypedObject<AsmValueType> {
+    private  fun evaluateSelfStatement(evc: EvaluationContext, expression: Expression): TypedObject {
         return exprInterpreter.evaluateExpression(evc, expression)
     }
 
-    private fun executeStatementOn(evc: EvaluationContext<AsmValueType>, st: AssignmentStatement, asm: AsmStructure) {
-        val propertyName = st.lhsPropertyName
+    private  fun executeStatementOn(evc: EvaluationContext, st: VariableAssignmentStatement, asm: AsmStructure) {
+        val propertyName = st.variable.name
         val propValue = evaluateExpressionOver(st.rhs, evc)
-        val tObj = objectGraph.toTypedObject(asm as AsmValueType)
-        val pv = objectGraph.toTypedObject(propValue)
-        objectGraph.setProperty(tObj, propertyName, pv)
+        val tObj = objectGraph.toTypedObject(asm , StdLibDefault.AnyType)
+        val pv = objectGraph.toTypedObject(propValue, StdLibDefault.AnyType)
+        tObj.setProperty( propertyName, pv)
         //asm.setProperty(PropertyValueName(st.lhsPropertyName), propValue, asm.property.size)
     }
 
-    private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext<AsmValueType>): AsmValueType {
+    private  fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext): Any {
         val res = exprInterpreter.evaluateExpression(evc, expr)
         return res.self
     }

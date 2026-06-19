@@ -51,6 +51,56 @@ class RulePositionRuntime(
             this.rule.rhs.rhsItemsAt(option, position)
         }
 
+    override val asString: String
+        get() {
+            val ps = if (rule.isPseudo) "pseudo " else ""
+            return when {
+                rule.isTerminal -> if (rule.tag == rule.rhs.asString) rule.tag else "${rule.tag}(${rule.rhs.asString})"
+                rule.isChoice -> {
+                    val choice = (rule.rhs as RuntimeRuleRhsChoice).options[option.asIndex]
+                    val items = choice.rhsItems[0]
+                    val pos = when (position) {
+                        -1 -> items.size
+                        else -> position
+                    }
+                    val before = (0 until pos).joinToString(separator = " ") { items[it].tag }
+                    val after = (pos until items.size).joinToString(separator = " ") { items[it].tag }
+                    "$ps${rule.tag} = $before . $after"
+                }
+
+                rule.isListSimple ->  when {
+                    option.isEmpty -> "[EMPTY ${rule.rhsItems[0][0].tag}] ."
+                    else -> when (position) {
+                        RulePosition.START_OF_RULE -> ". [${rule.rhsItems[0][0].tag}]"
+                        RulePosition.END_OF_RULE -> "[${rule.rhsItems[0][0].tag}] ."
+                        RulePosition.POSITION_MULIT_ITEM -> "[${rule.rhsItems[0][0].tag} . ${rule.rhsItems[0][0].tag}]"
+                        else -> "???"
+                    }
+                }
+                rule.isListSeparated -> when {
+                    option.isEmpty -> "[EMPTY ${rule.rhsItems[0][0].tag} sep ${rule.rhsItems[1][0].tag}] ."
+                    else -> when (position) {
+                        RulePosition.START_OF_RULE -> ". [${rule.rhsItems[0][0].tag} sep ${rule.rhsItems[1][0].tag}]"
+                        RulePosition.END_OF_RULE -> "[${rule.rhsItems[0][0].tag} sep ${rule.rhsItems[1][0].tag}] ."
+                        RulePosition.POSITION_SLIST_ITEM -> "[${rule.rhsItems[0][0].tag} . ${rule.rhsItems[0][0].tag} sep ${rule.rhsItems[1][0].tag}]"
+                        RulePosition.POSITION_SLIST_SEPARATOR -> "[${rule.rhsItems[1][0].tag} . ${rule.rhsItems[0][0].tag} sep ${rule.rhsItems[1][0].tag}]"
+                        else -> "???"
+                    }
+                }
+
+                else -> {
+                    val items = rule.rhsItems[0]
+                    val pos = when (position) {
+                        -1 -> items.size
+                        else -> position
+                    }
+                    val before = (0 until pos).joinToString(separator = " ") { items[it].tag }
+                    val after = (pos until items.size).joinToString(separator = " ") { items[it].tag }
+                    "$ps${rule.tag} = $before . $after"
+                }
+            }
+        }
+
     fun atEnd() = RulePositionRuntime(this.rule, this.option, RulePosition.END_OF_RULE)
     fun next(): Set<RulePositionRuntime> = when {
         isAtEnd -> emptySet()
@@ -110,7 +160,7 @@ class RulePositionRuntime(
                 is RuntimeRuleRhsChoice -> pos
                 is RuntimeRuleRhsOptional -> when (position) {
                     RulePosition.START_OF_RULE -> "BR"
-                    RulePosition. END_OF_RULE -> "ER"
+                    RulePosition.END_OF_RULE -> "ER"
                     else -> pos
                 }
 
@@ -126,13 +176,13 @@ class RulePositionRuntime(
                         RulePosition.START_OF_RULE -> "BR"
                         RulePosition.POSITION_SLIST_SEPARATOR -> "LS"
                         RulePosition.POSITION_SLIST_ITEM -> "LI"
-                        RulePosition. END_OF_RULE -> "ER"
+                        RulePosition.END_OF_RULE -> "ER"
                         else -> pos
                     }
                 }
             }
         }
-        return "RP(${rule.runtimeRuleSetNumber}/${r},$o,$p)"
+        return "RP(${rule.ruleSetNumber}/${r},$o,$p)"
     }
 }
 /*

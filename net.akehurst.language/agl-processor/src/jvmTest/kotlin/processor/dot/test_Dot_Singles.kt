@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
@@ -36,7 +36,7 @@ class test_Dot_Singles {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<Asm, SentenceContextAny> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, SentenceContext> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 
@@ -980,60 +980,62 @@ digraph G {
     fun dot__style() {
 
         val sentence = """
-namespace DOT
-C_PREPROCESSOR {
-  foreground: gray;
-  font-style: italic;
-}
-SINGLE_LINE_COMMENT {
-  foreground: DarkSlateGrey;
-  font-style: italic;
-}
-MULTI_LINE_COMMENT {
-  foreground: DarkSlateGrey;
-  font-style: italic;
-}
-STRICT {
-  foreground: purple;
-  font-weight: bold;
-}
-GRAPH {
-  foreground: purple;
-  font-weight: bold;
-}
-DIGRAPH {
-  foreground: purple;
-  font-weight: bold;
-}
-SUBGRAPH {
-  foreground: purple;
-  font-weight: bold;
-}
-NODE {
-  foreground: purple;
-  font-weight: bold;
-}
-EDGE {
-  foreground: purple;
-  font-weight: bold;
-}
-ALPHABETIC_ID {
-  foreground: red;
-  font-style: italic;
-}
-HTML {
-  background: LemonChiffon;
-}
-NAME {
-    foreground: green;
-}
+        namespace DOT
+        styles Dot {
+            C_PREPROCESSOR {
+              foreground: gray;
+              font-style: italic;
+            }
+            SINGLE_LINE_COMMENT {
+              foreground: DarkSlateGrey;
+              font-style: italic;
+            }
+            MULTI_LINE_COMMENT {
+              foreground: DarkSlateGrey;
+              font-style: italic;
+            }
+            STRICT {
+              foreground: purple;
+              font-weight: bold;
+            }
+            GRAPH {
+              foreground: purple;
+              font-weight: bold;
+            }
+            DIGRAPH {
+              foreground: purple;
+              font-weight: bold;
+            }
+            SUBGRAPH {
+              foreground: purple;
+              font-weight: bold;
+            }
+            NODE {
+              foreground: purple;
+              font-weight: bold;
+            }
+            EDGE {
+              foreground: purple;
+              font-weight: bold;
+            }
+            ALPHABETIC_ID {
+              foreground: red;
+              font-style: italic;
+            }
+            HTML {
+              background: LemonChiffon;
+            }
+            NAME {
+                foreground: green;
+            }
+        }
         """.trimIndent()
 
         val styleProc = Agl.registry.agl.style.processor!!
         val result = styleProc.process(
             sentence,
             Agl.options {
-                semanticAnalysis { context(contextFromGrammar(processor.grammarDomain!!)) }
+                semanticAnalysis { sentenceContext(contextFromGrammar(processor.grammarDomain!!)) }
             })
 
         assertNotNull(result.asm, result.allIssues.toString())

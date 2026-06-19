@@ -1,7 +1,7 @@
 package format
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.format.processor.AglFormat
@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 
 class test_AglFormat_Singles {
     private companion object {
-        fun processor(targetGrammar: String): LanguageProcessor<Asm, SentenceContextAny> {
+        fun processor(targetGrammar: String): LanguageProcessor<Asm, SentenceContext> {
             Agl.registry.agl.expressions
             return Agl.processorFromGrammar(
                 AglFormat.grammarDomain,
@@ -179,7 +179,41 @@ class test_AglFormat_Singles {
     fun Template_RAW_TEXT() {
         val targetGrammar = "Template"
         val goal = "RAW_TEXT"
-        val sentence = ""
+        val sentence = " "
+        val asm = null
+        test_process(targetGrammar, goal, sentence, asm)
+    }
+
+    @Test
+    fun Format_unit_2_formatSets() {
+        val targetGrammar = "Format"
+        val goal = "unit"
+        val sentence = $$"""
+            namespace test
+            format F {
+                Type -> "somethingelse" 
+            }            
+            format G {
+                Type -> "he said ${a+b} to me!" 
+            }
+        """.trimIndent()
+        val asm = null
+        test_process(targetGrammar, goal, sentence, asm)
+    }
+
+    @Test
+    fun Format_unit_2_formatSets_via() {
+        val targetGrammar = "Format"
+        val goal = "unit"
+        val sentence = $$"""
+            namespace test
+            format F {
+                Type -> "something else" 
+            }            
+            format G {
+                Type -> "he said ${a via F} to me!" 
+            }
+        """.trimIndent()
         val asm = null
         test_process(targetGrammar, goal, sentence, asm)
     }

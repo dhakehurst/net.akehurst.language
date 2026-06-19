@@ -17,9 +17,10 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.processor.FormatResultDefault
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
@@ -31,23 +32,24 @@ import net.akehurst.language.types.api.TypesDomain
 class FormatterOverAsmSimple(
     override val formatDomain: AglFormatDomain,
     val typesDomain: TypesDomain,
-    val issues: IssueHolder
-) : Formatter<Asm> {
+    val issues: IssueHolder,
+    locationMap: LocationMap
+) : Formatter {
 
-    private val _formatter = FormatterOverTypedObject(formatDomain, ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues),issues)
+    private val _formatter = FormatterOverTypedObject(formatDomain, ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, locationMap))
 
-    override fun formatSelf(formatSetName: PossiblyQualifiedName, self: Asm): FormatResult {
+    override  fun formatSelf(formatSetName: PossiblyQualifiedName, self: Any): FormatResult {
         val sb = StringBuilder()
 
-        for (root in self.root) {
+        for (root in (self as Asm).root) {
             val str = _formatter.formatSelf(formatSetName,root).sentence
             sb.append(str)
         }
 
-        return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
+        return FormatResultDefault(mapOf(FormatResultDefault.DEFAULT to sb.toString() ), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
-    override fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<Asm>): FormatResult {
+    override  fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): FormatResult {
         TODO("not implemented")
     }
 

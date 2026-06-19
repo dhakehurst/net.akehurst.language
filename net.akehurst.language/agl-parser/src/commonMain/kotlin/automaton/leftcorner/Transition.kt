@@ -20,7 +20,11 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSimple
+import net.akehurst.language.automaton.api.AutomatonState
+import net.akehurst.language.automaton.api.AutomatonTransition
+import net.akehurst.language.automaton.api.LookaheadGuard
 import net.akehurst.language.automaton.api.ParseAction
+import net.akehurst.language.automaton.api.TransitionContext
 import net.akehurst.language.parser.api.RulePosition
 
 //internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
@@ -31,16 +35,16 @@ interface RuntimeGuard {
 }
 
 class Transition(
-    val from: ParserState,
-    val to: ParserState,
-    val action: ParseAction,
-    val lookahead: Set<Lookahead>
-) {
+    override val source: ParserState,
+    override val target: ParserState,
+    override val action: ParseAction,
+    val lookaheadGuard: Set<Lookahead>
+) : AutomatonTransition {
 
     companion object {
 
         class ToEndMultiGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsListSimple
+            val rhs = trans.target.firstRule.rhs as RuntimeRuleRhsListSimple
             val min = rhs.min
             val max = rhs.max
 
@@ -48,7 +52,7 @@ class Transition(
 
             override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> = when {
                 this.min > numNonSkipChildren -> setOf(rhs.repeatedRhsItem)
-                (-1 != max && max < numNonSkipChildren + 1) -> trans.lookahead.map { it.guard }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it.part) }.fullContent
+                (-1 != max && max < numNonSkipChildren + 1) -> trans.lookaheadGuard.map { it.guardLookaheadSet }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it.part) }.fullContent
                 else -> emptySet()
             }
 
@@ -56,7 +60,7 @@ class Transition(
         }
 
         class ToItemMultiGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsListSimple
+            val rhs = trans.target.firstRule.rhs as RuntimeRuleRhsListSimple
             val min = rhs.min
             val max = rhs.max
 
@@ -71,7 +75,7 @@ class Transition(
         }
 
         class ToEndSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val rhs = trans.target.firstRule.rhs as RuntimeRuleRhsList
             val min = rhs.min
             val max = rhs.max
 
@@ -87,7 +91,7 @@ class Transition(
         }
 
         class ToItemSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val rhs = trans.target.firstRule.rhs as RuntimeRuleRhsList
             val min = rhs.min
             val max = rhs.max
 
@@ -103,7 +107,7 @@ class Transition(
         }
 
         class ToSeparatorSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val rhs = trans.target.firstRule.rhs as RuntimeRuleRhsList
             val min = rhs.min
             val max = rhs.max
 
@@ -124,8 +128,8 @@ class Transition(
         }
 
         fun runtimeGuardFor(trans: Transition): RuntimeGuard {
-            val target = trans.to.firstRule
-            val targetRp = trans.to.rulePositions[0]
+            val target = trans.target.firstRule
+            val targetRp = trans.target.rulePosition[0]
             val tgtRhs = target.rhs
             return when (trans.action) {
                 ParseAction.GRAFT -> when (tgtRhs) {
@@ -151,24 +155,38 @@ class Transition(
     }
 
     val context by lazy {
-        this.from.outTransitions.previousFor(this).toSet()
+        this.source.outTransitions.previousFor(this).toSet()
     }
 
     val runtimeGuard: RuntimeGuard = runtimeGuardFor(this)
 
     private val hashCode_cache: Int by lazy {
-        arrayListOf(from, to, action, lookahead).hashCode()
+        arrayListOf(source, target, action, lookaheadGuard).hashCode()
     }
 
+    // --- AutomatonTransition ---
+    override val lookahead: Set<LookaheadGuard> get() = lookaheadGuard
+
+    override val prev: Set<AutomatonState> get() = context.map { it.previous }.toSet()
+
+    override val prevPrev: Set<AutomatonState> get() = context.filterIsInstance<CompleteKey>().map { it.prevPrev }.toSet()
+
+    /**
+     * Atomic (prevPrev, prev) pairs derived directly from the underlying [CompleteKey]s.
+     * Returns the empty set for incomplete transitions (WIDTH/EMBED) — see API kdoc.
+     */
+    override val transContext: Set<TransitionContext> get() = context.filterIsInstance<CompleteKey>().toSet()
+
+    // --- Any ---
     override fun hashCode(): Int = this.hashCode_cache
 
     override fun equals(other: Any?): Boolean {
         when (other) {
             is Transition -> {
-                if (this.from != other.from) return false
-                if (this.to != other.to) return false
+                if (this.source != other.source) return false
+                if (this.target != other.target) return false
                 if (this.action != other.action) return false
-                if (this.lookahead != other.lookahead) return false
+                if (this.lookaheadGuard != other.lookaheadGuard) return false
 //                if (this.graftPrevGuard != other.graftPrevGuard) return false
                 return true
             }
@@ -179,8 +197,8 @@ class Transition(
 
     override fun toString(): String {
         val ctx = this.context.joinToString { it.toString() }
-        val lhsStr = this.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
-        return "Transition: $from -- $action${lhsStr} --> $to {$ctx}"
+        val lhsStr = this.lookaheadGuard.joinToString(separator = "|") { "[${it.guardLookaheadSet.fullContent.joinToString { it.tag }}](${it.upLookaheadSet.fullContent.joinToString { it.tag }})" }
+        return "Transition: $source -- $action${lhsStr} --> $target {$ctx}"
         //return "Transition[$ctx] { $from -- $action${lhsStr} --> $to }${graftPrevGuard?:"[]"}"
     }
 }

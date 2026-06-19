@@ -16,10 +16,11 @@
 package net.akehurst.language.style.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.processor.StyleString
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
@@ -46,11 +47,11 @@ class AglStyleDomainDefault(
         //    it.declaration["font-style"] = AglStyleDeclaration("font-style", "normal")
         //}
 
-        fun fromString(context: SentenceContextAny, aglStyleModelSentence: StyleString): ProcessResult<AglStyleDomain> {
+        fun fromString(context: SentenceContext, aglStyleModelSentence: StyleString): ProcessResult<AglStyleDomain> {
             val proc = Agl.registry.agl.style.processor ?: error("Styles language not found!")
             return proc.process(
                 sentence = aglStyleModelSentence.value,
-                options = Agl.options { semanticAnalysis { context(context) } }
+                options = Agl.options { semanticAnalysis { sentenceContext(context) } }
             )
         }
     }
@@ -89,13 +90,20 @@ class AglStyleSetDefault(
     override val metaRules: List<AglStyleMetaRule> get() = rules.filterIsInstance<AglStyleMetaRule>()
     override val tagRules: List<AglStyleTagRule> get() = rules.filterIsInstance<AglStyleTagRule>()
 
+    override val allRules: List<AglStyleRule>
+        get() = extends.flatMap { it.resolved?.allRules ?: emptyList() } + rules
+
     init {
         namespace.addDefinition(this)
     }
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
-        sb.append("styles ${name.value} {\n")
+        val extends = when{
+            extends.isEmpty() -> ""
+            else -> extends.joinToString(prefix = " : ", separator = ", ") { it.nameOrQName.value }
+        }
+        sb.append("styles ${name.value}$extends {\n")
         val newIndent = indent.inc
         val rules = rules // do not sort, order matters
             .joinToString(separator = "\n") { "$newIndent${it.asString(newIndent)}" }
@@ -103,6 +111,13 @@ class AglStyleSetDefault(
         sb.append("\n$indent}")
         return sb.toString()
     }
+
+    override fun hashCode(): Int = this.qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when(other) {
+        !is StyleSet -> false
+        else -> this.qualifiedName == other.qualifiedName
+    }
+    override fun toString(): String  = "StyleSet(${this.qualifiedName.value})"
 
 }
 
@@ -113,7 +128,7 @@ data class AglStyleMetaRuleDefault(
     // order matters
     override var declaration = linkedMapOf<String, AglStyleDeclaration>()
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val sel = this.pattern.value
         sb.append("$$ \"$sel\" {\n")
@@ -133,7 +148,7 @@ data class AglStyleTagRuleDefault(
     // order matters
     override var declaration = linkedMapOf<String, AglStyleDeclaration>()
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val sel = this.selector.joinToString { it.value }
         sb.append("$sel {\n")

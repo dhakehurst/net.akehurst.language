@@ -17,8 +17,39 @@
 
 package net.akehurst.language.api.semanticAnalyser
 
-interface SentenceContext{
+import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.scope.api.ItemInScope
+import net.akehurst.language.scope.api.Scope
+import net.akehurst.language.scope.asm.ScopeSimple
+import net.akehurst.language.sentence.api.InputLocation
 
+fun interface CreateScopedItem {
+    fun invoke(qualifiedName: List<String>, item: Any, location: InputLocation?): Any
+}
+
+fun interface ResolveScopedItem {
+    fun invoke(itemInScope: Any): Any?
+}
+
+interface SentenceContext{
+    val resolveScopedItem: ResolveScopedItem
+    val createScopedItem: CreateScopedItem
+    val scopeForSentence: Map<Any, ScopeSimple>
+
+    fun newScopeForSentence(sentenceIdentity: Any?): Scope
+    fun getScopeForSentenceOrNull(sentenceIdentity: Any?): Scope?
+    fun getOrCreateScopeForSentence(sentenceIdentity: Any?): Scope
+
+    fun findItemsByQualifiedNameConformingTo(qname: List<String>, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope>
+    fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope>
+    fun findItemsConformingTo(conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope>
+
+    fun addToScope(sentenceIdentity: Any?, qualifiedName: List<String>, itemTypeName: QualifiedName, location: InputLocation?, item: Any)
+
+    fun union(other: SentenceContext): SentenceContext
+
+    fun asString(indent: Indent = Indent()): String
 }
 
 //interface ContextWithScope : SentenceContext {

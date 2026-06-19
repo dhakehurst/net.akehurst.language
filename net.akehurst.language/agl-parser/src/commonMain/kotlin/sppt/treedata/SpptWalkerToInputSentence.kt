@@ -23,6 +23,7 @@ import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.PathFunction
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.api.SpptWalker
+import net.akehurst.language.sppt.api.TreeData
 
 internal class SpptWalkerToInputSentence(
     val sentence: Sentence
@@ -74,7 +75,9 @@ internal class SpptWalkerToInputSentence(
     override fun endTree() {
     }
 
-    override fun skip(startPosition: Int, nextInputPosition: Int) {
+    override fun skip(skipData: TreeData) {
+        val startPosition= skipData.root?.startPosition ?: error("Should not happen")
+        val nextInputPosition= skipData.root?.nextInputPosition ?: error("Should not happen")
         val matchedText = sentence.text.substring(startPosition, nextInputPosition)//.replace("\n", "\u23CE").replace("\t", "\u2B72")
         when {
             textStack.isEmpty -> {

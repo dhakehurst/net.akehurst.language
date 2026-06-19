@@ -46,7 +46,7 @@ class test_Java8Agl_Packages {
                 Agl.configuration { targetGrammarName(("Packages")); defaultGoalRuleName("CompilationUnit") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
-                        context(contextFromGrammarRegistry(Agl.registry))
+                        sentenceContext(contextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }

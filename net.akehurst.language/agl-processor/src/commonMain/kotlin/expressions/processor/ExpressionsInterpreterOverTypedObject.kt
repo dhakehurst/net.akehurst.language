@@ -17,9 +17,8 @@
 
 package net.akehurst.language.expressions.processor
 
-//import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
@@ -28,18 +27,31 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
-open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
-    val objectGraph: ObjectGraphAccessorMutator<SelfType>,
-    val issues: IssueHolder
+open class ExpressionsInterpreterOverTypedObject(
+    val objectGraph: ObjectGraphAccessorMutator
 ) {
-    val typeModel = objectGraph.typesDomain
-    //val typeResolver = ExpressionTypeResolver(typeModel, issues)
+    val issues get() = objectGraph.issues
+    val locationMap: LocationMap get() = objectGraph.locationMap
+    val typesDomain get() = objectGraph.typesDomain
+
+    fun issueError(item: Any?, message: String, data: Any? = null) {
+        val location = item?.let { this.locationMap[item] }
+        issues.error(location, message, data)
+    }
+    fun issueErrorReturnNothing(item: Any?, message: String, data: Any? = null): TypedObject {
+        issueError(item, message, data)
+        return objectGraph.nothing()
+    }
+     fun issueWarn(item: Any?, message: String, data: Any? = null) {
+        val location = item?.let { this.locationMap[item] }
+        issues.warn(location, message, data)
+    }
 
     /**
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    fun evaluateStr(evc: EvaluationContext<SelfType>, expression: String): TypedObject<SelfType> {
+    fun evaluateStr(evc: EvaluationContext, expression: String): TypedObject {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
         check(result.allIssues.errors.isEmpty()) { result.allIssues.toString() }
         val asm = result.asm!!
@@ -50,7 +62,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    open fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
+    open fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject = when (expression) {
         is RootExpression -> this.evaluateRootExpression(evc, expression)
         is LiteralExpression -> this.evaluateLiteralExpression(expression)
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
@@ -61,14 +73,16 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         is LambdaExpression -> this.evaluateLambda(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)
         is WhenExpression -> this.evaluateWhen(evc, expression)
+        is TernaryConditionExpression -> this.evaluateTernaryCondition(evc, expression)
         is InfixExpression -> this.evaluateInfix(evc, expression)
         is CastExpression -> this.evaluateCast(evc, expression)
         is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
         is GroupExpression -> this.evaluateGroup(evc, expression)
+        is StatementBlockExpression -> this.evaluateStatementBlockExpression(evc, expression)
         else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
     }
 
-    private fun evaluateRootExpression(evc: EvaluationContext<SelfType>, expression: RootExpression): TypedObject<SelfType> {
+    private fun evaluateRootExpression(evc: EvaluationContext, expression: RootExpression): TypedObject {
         return when {
             expression.isNothing -> objectGraph.nothing()
             expression.isSelf -> {
@@ -81,30 +95,30 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
             else -> evc.getOrInParent(expression.name)
                 ?: evc.self?.let { evaluatePropertyName(it, PropertyName(expression.name)) }
                 ?: let {
-                    issues.error(null, "Evaluation Context does not contain '${expression.name}' and there is no 'self' object with that property name")
+                    issues.warn(null, $$"Evaluation Context does not contain root expression '$${expression.name}' and there is no '$self' object with that property name, using value '$nothing'")
                     objectGraph.nothing()
                 }
         }
     }
 
-    private fun evaluateSpecial(evc: EvaluationContext<SelfType>, name: String): TypedObject<SelfType> {
+    private fun evaluateSpecial(evc: EvaluationContext, name: String): TypedObject {
         // the name must exist as a property of the self which must be a tuple
         return evc.getOrInParent(name)
             ?: evc.self?.let { evaluatePropertyName(it, PropertyName(name)) }
-            ?: error("Evaluation Context does not contain '$name' and there is no 'self' object with that property name")
+            ?: error($$"Evaluation Context does not contain special value '$$name' and there is no '$self' object with that property name")
     }
 
-    private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject<SelfType> =
+    private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject =
         objectGraph.createPrimitiveValue(expression.qualifiedTypeName, expression.value)
 
-    private fun evaluateFunctionCall(evc: EvaluationContext<SelfType>, expression: FunctionCall): TypedObject<SelfType> {
+    protected open fun evaluateFunctionCall(evc: EvaluationContext, expression: FunctionCall): TypedObject {
         val argValues = expression.arguments.map {
             evaluateExpression(evc, it)
         }
-        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues)
+        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues) { tr -> evaluateTypeReference(tr) }
     }
 
-    private fun evaluateNavigation(evc: EvaluationContext<SelfType>, expression: NavigationExpression): TypedObject<SelfType> {
+    private fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject {
         // start should be a RootExpression or LiteralExpression
         val st = expression.start
         val start = evaluateExpression(evc, st)
@@ -119,16 +133,23 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         return result
     }
 
-    private fun evaluatePropertyName(obj: TypedObject<SelfType>, propertyName: PropertyName): TypedObject<SelfType> {
-        return objectGraph.getProperty(obj, propertyName.value)
+    private fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
+        return when {
+            objectGraph.isNothing(obj) -> {
+                issues.warn(null, $$"Cannot get property '$${propertyName.value}' on $nothing, returning $nothing.")
+                objectGraph.nothing()
+            }
+
+            else -> {
+                obj.getProperty(propertyName.value)
+            }
+        }
     }
 
-    private fun evaluateMethodCall(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, methodName: MethodName, args: List<Expression>): TypedObject<SelfType> {
-        val type = obj.type
-        val md = type.resolvedDeclaration.findAllMethodOrNull(methodName)
-        return when (md) {
-            null -> {
-                issues.error(null, "Method '$methodName' not found on type '${obj.type.typeName}'")
+    private fun evaluateMethodCall(evc: EvaluationContext, obj: TypedObject, methodName: MethodName, args: List<Expression>): TypedObject {
+        return when {
+            objectGraph.isNothing(obj) -> {
+                issues.warn(null, $$"Cannot call method '$${methodName.value}' on on $nothing, returning $nothing.")
                 objectGraph.nothing()
             }
 
@@ -136,61 +157,15 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
                 val argValues = args.map {
                     evaluateExpression(evc, it)
                 }
-                objectGraph.executeMethod(obj, methodName.value, argValues)
+                obj.executeMethod(methodName.value, argValues)
             }
         }
     }
 
-    private fun evaluateIndexOperation(evc: EvaluationContext<SelfType>, obj: TypedObject<SelfType>, indices: List<Expression>): TypedObject<SelfType> {
+    private fun evaluateIndexOperation(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
         return when {
-            obj.type.resolvedDeclaration.conformsTo(StdLibDefault.List) -> {
-                when (indices.size) {
-                    1 -> {
-                        val idx = evaluateExpression(evc, indices[0])
-                        when {
-                            idx.type.conformsTo(StdLibDefault.Integer) -> {
-                                val listElementType = obj.type.typeArguments.getOrNull(0)?.type
-                                    ?: StdLibDefault.AnyType
-                                val i = objectGraph.valueOf(idx) as Long
-                                val elem = objectGraph.getIndex(obj, i.toInt())
-                                when {
-                                    objectGraph.nothing() == elem -> objectGraph.nothing()
-                                    else -> {
-                                        val elemType = typeModel.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type()
-                                        when {
-                                            null == elemType -> {
-                                                issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of List element '$elem'")
-                                                objectGraph.cast(elem, listElementType)
-                                            }
-
-                                            elemType.resolvedDeclaration is TupleType -> objectGraph.cast(elem, elemType)
-                                            elemType.conformsTo(listElementType) -> objectGraph.cast(elem, elemType)
-                                            else -> {
-                                                issues.error(
-                                                    null,
-                                                    "List element '$elem' of type '${elem.type.qualifiedTypeName}' does not conform to the expected List element type of '${listElementType}'"
-                                                )
-                                                objectGraph.cast(elem, elemType)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            else -> {
-                                issues.error(null, "Index value must evaluate to an Integer for Lists")
-                                objectGraph.nothing()
-                            }
-                        }
-                    }
-
-                    else -> {
-                        issues.error(null, "Only one index value should be used for Lists")
-                        objectGraph.nothing()
-                    }
-                }
-            }
-
+            obj.type.resolvedDefinition.conformsTo(StdLibDefault.List) -> evaluateIndexOperationOnList(evc, obj, indices)
+            obj.type.resolvedDefinition.conformsTo(StdLibDefault.Map) -> evaluateIndexOperationOnMap(evc, obj, indices)
             else -> {
                 issues.error(null, "Index operation on non List value is not possible: ${obj.asString()}")
                 objectGraph.nothing()
@@ -198,7 +173,127 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun evaluateInfix(evc: EvaluationContext<SelfType>, expression: InfixExpression): TypedObject<SelfType> {
+    private fun evaluateIndexOperationOnList(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
+        return when (indices.size) {
+            1 -> {
+                val idx = evaluateExpression(evc, indices[0])
+                when {
+                    idx.type.conformsTo(StdLibDefault.Integer) -> {
+                        val listElementType = obj.type.typeArguments.getOrNull(0)?.type
+                            ?: StdLibDefault.AnyType
+                        val i = objectGraph.valueOf(idx) as Long
+                        val elem = objectGraph.getFromListWithIndex(obj, i.toInt())
+                        when {
+                            objectGraph.nothing() == elem -> objectGraph.nothing()
+                            else -> {
+                                val elemType = typesDomain.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type(elem.type.typeArguments)
+                                when {
+                                    null == elemType -> {
+                                        issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of List element '$elem'")
+                                        objectGraph.cast(elem, listElementType)
+                                    }
+
+                                    elemType.resolvedDefinition is TupleType -> objectGraph.cast(elem, elemType)
+                                    elemType.conformsTo(listElementType) -> objectGraph.cast(elem, elemType)
+                                    else -> {
+                                        issues.error(
+                                            null,
+                                            "List element '$elem' of type '${elem.type.qualifiedTypeName}' does not conform to the expected List element type of '${listElementType}'"
+                                        )
+                                        objectGraph.cast(elem, elemType)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    else -> {
+                        issues.error(null, "Index value must evaluate to an Integer for Lists")
+                        objectGraph.nothing()
+                    }
+                }
+            }
+
+            else -> {
+                issues.error(null, "Only one index value should be used for Lists")
+                objectGraph.nothing()
+            }
+        }
+    }
+
+    private fun evaluateIndexOperationOnMap(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
+        return when (indices.size) {
+            1 -> {
+                val idx = evaluateExpression(evc, indices[0])
+                val keyType = obj.type.typeArguments.getOrNull(0)?.type
+                val valueType = obj.type.typeArguments.getOrNull(1)?.type
+                when {
+                    null == keyType -> {
+                        issues.error(null, "Key type not found for object with type '${obj.type.signature(null, 0)}'")
+                        objectGraph.nothing()
+                    }
+
+                    null == valueType -> {
+                        issues.error(null, "Value type not found for object with type '${obj.type.signature(null, 0)}'")
+                        objectGraph.nothing()
+                    }
+
+                    idx.type.conformsTo(keyType) -> {
+                        val elem = objectGraph.getFromMapWithKey(obj, idx)
+                        when {
+                            objectGraph.nothing() == elem -> objectGraph.nothing()
+                            else -> {
+                                val elemType = typesDomain.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type()
+                                when {
+                                    null == elemType -> {
+                                        issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of Map element '$elem'")
+                                        objectGraph.cast(elem, valueType)
+                                    }
+
+                                    elemType.resolvedDefinition is TupleType -> objectGraph.cast(elem, elemType)
+                                    elemType.conformsTo(valueType) -> objectGraph.cast(elem, elemType)
+                                    else -> {
+                                        issues.warn(
+                                            null,
+                                            "Map element '$elem' does not conform to the expected Map element value type of '${valueType}', using '$elemType'."
+                                        )
+                                        objectGraph.cast(elem, elemType)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    else -> {
+                        issues.error(null, "Index value must evaluate to an Integer for Lists")
+                        objectGraph.nothing()
+                    }
+                }
+            }
+
+            else -> {
+                issues.error(null, "Only one index value should be used for Maps")
+                objectGraph.nothing()
+            }
+        }
+    }
+
+    private fun evaluateTernaryCondition(evc: EvaluationContext, expression: TernaryConditionExpression): TypedObject {
+        val condValue = evaluateExpression(evc, expression.condition)
+        return when (condValue.type) {
+            StdLibDefault.Boolean -> {
+                if (objectGraph.valueOf(condValue) as Boolean) {
+                    evaluateExpression(evc, expression.trueExpression)
+                } else {
+                    evaluateExpression(evc, expression.falseExpression)
+                }
+            }
+
+            else -> issueErrorReturnNothing(expression.condition, "Conditions/Options in a ternary condition expression must result in a Boolean value: '${expression.condition}' is of type '${condValue.type}' = ${condValue.self}")
+        }
+    }
+
+    private fun evaluateInfix(evc: EvaluationContext, expression: InfixExpression): TypedObject {
         //TODO: Operator precedence
         var result = evaluateExpression(evc, expression.expressions.first())
         for (i in expression.operators.indices) {
@@ -211,7 +306,63 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
     }
 
     //TODO: add operator functions to StdLib
-    private fun evaluateInfixOperator(lhs: TypedObject<SelfType>, op: String, rhs: TypedObject<SelfType>): TypedObject<SelfType> = when (op) {
+    private fun evaluateInfixOperator(lhs: TypedObject, op: String, rhs: TypedObject): TypedObject = when (op) {
+        // logical
+        "and" -> when {
+            // both nothing -> nothing
+            objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
+            // either false -> false
+            lhs.type.conformsTo(StdLibDefault.Boolean) && (objectGraph.valueOf(lhs) as Boolean).not() -> lhs
+            rhs.type.conformsTo(StdLibDefault.Boolean) && (objectGraph.valueOf(rhs) as Boolean).not() -> rhs
+            // both boolean -> lhs && rhs
+            lhs.type.conformsTo(StdLibDefault.Boolean) && rhs.type.conformsTo(StdLibDefault.Boolean) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Boolean
+                val rhsv = objectGraph.valueOf(rhs) as Boolean
+                objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, lhsv && rhsv)
+            }
+
+            else -> {
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                objectGraph.nothing()
+            }
+        }
+
+        "or" -> when {
+            // both nothing -> nothing
+            objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
+            // either true -> true
+            lhs.type.conformsTo(StdLibDefault.Boolean) && (objectGraph.valueOf(lhs) as Boolean) -> lhs
+            rhs.type.conformsTo(StdLibDefault.Boolean) && (objectGraph.valueOf(rhs) as Boolean) -> rhs
+            // both boolean -> lhs || rhs
+            lhs.type.conformsTo(StdLibDefault.Boolean) && rhs.type.conformsTo(StdLibDefault.Boolean) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Boolean
+                val rhsv = objectGraph.valueOf(rhs) as Boolean
+                objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, lhsv || rhsv)
+            }
+
+            else -> {
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                objectGraph.nothing()
+            }
+        }
+
+        "xor" -> when {
+            // both nothing -> nothing
+            objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
+            // both boolean -> lhs xor rhs
+            lhs.type.conformsTo(StdLibDefault.Boolean) && rhs.type.conformsTo(StdLibDefault.Boolean) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Boolean
+                val rhsv = objectGraph.valueOf(rhs) as Boolean
+                objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, lhsv xor rhsv)
+            }
+
+            else -> {
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                objectGraph.nothing()
+            }
+        }
+
+        // comparison
         "==" -> when {
             lhs.type == rhs.type -> {
                 val lhsv = objectGraph.valueOf(lhs)
@@ -226,6 +377,78 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
             else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
         }
 
+        "!=" -> when {
+            lhs.type == rhs.type -> {
+                val lhsv = objectGraph.valueOf(lhs)
+                val rhsv = objectGraph.valueOf(rhs)
+                if (lhsv != rhsv) {
+                    objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
+                } else {
+                    objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
+                }
+            }
+
+            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
+        }
+
+        // arithmetic
+        "/" -> when {
+            lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Long
+                val rhsv = objectGraph.valueOf(rhs) as Long
+                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv / rhsv)
+            }
+
+            lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Double
+                val rhsv = objectGraph.valueOf(rhs) as Double
+                objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv / rhsv)
+            }
+
+            else -> {
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                objectGraph.nothing()
+            }
+        }
+
+        "*" -> when {
+            lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Long
+                val rhsv = objectGraph.valueOf(rhs) as Long
+                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv * rhsv)
+            }
+
+            lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Double
+                val rhsv = objectGraph.valueOf(rhs) as Double
+                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv * rhsv)
+            }
+
+            else -> {
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                objectGraph.nothing()
+            }
+        }
+
+        "%" -> when {
+            lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Long
+                val rhsv = objectGraph.valueOf(rhs) as Long
+                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv % rhsv)
+            }
+
+            lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Double
+                val rhsv = objectGraph.valueOf(rhs) as Double
+                objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv % rhsv)
+            }
+
+            else -> {
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                objectGraph.nothing()
+            }
+        }
+
         "+" -> when {
             objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
             objectGraph.isNothing(lhs) -> rhs
@@ -236,13 +459,50 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
                 objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, lhsv + rhsv)
             }
 
-            else -> error("'$op' not supported for '${lhs.type.qualifiedTypeName}' && '${rhs.type.qualifiedTypeName}'")
+            lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Long
+                val rhsv = objectGraph.valueOf(rhs) as Long
+                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv + rhsv)
+            }
+
+            lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Double
+                val rhsv = objectGraph.valueOf(rhs) as Double
+                objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv + rhsv)
+            }
+
+            else -> {
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                objectGraph.nothing()
+            }
         }
 
-        else -> error("Unsupported Operator '$op'")
+        "-" -> when {
+            lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Long
+                val rhsv = objectGraph.valueOf(rhs) as Long
+                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv - rhsv)
+            }
+
+            lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
+                val lhsv = objectGraph.valueOf(lhs) as Double
+                val rhsv = objectGraph.valueOf(rhs) as Double
+                objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv - rhsv)
+            }
+
+            else -> {
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                objectGraph.nothing()
+            }
+        }
+
+        else -> {
+            issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+            objectGraph.nothing()
+        }
     }
 
-    private fun evaluateWith(evc: EvaluationContext<SelfType>, expression: WithExpression): TypedObject<SelfType> {
+    private fun evaluateWith(evc: EvaluationContext, expression: WithExpression): TypedObject {
         val newSelf = evaluateExpression(evc, expression.withContext)
         return when {
             objectGraph.nothing() == newSelf -> newSelf
@@ -254,7 +514,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         }
     }
 
-    private fun evaluateWhen(evc: EvaluationContext<SelfType>, expression: WhenExpression): TypedObject<SelfType> {
+    private fun evaluateWhen(evc: EvaluationContext, expression: WhenExpression): TypedObject {
         for (opt in expression.options) {
             val condValue = evaluateExpression(evc, opt.condition)
             when (condValue.type) {
@@ -267,13 +527,13 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
                     }
                 }
 
-                else -> error("Conditions/Options in a when expression must result in a Boolean value")
+                else -> error("Conditions/Options in a when expression must result in a Boolean value: '${opt.condition}' is of type '${condValue.type}' = ${condValue.self}")
             }
         }
         return evaluateExpression(evc, expression.elseOption.expression)
     }
 
-    private fun evaluateLambda(evc: EvaluationContext<SelfType>, expression: LambdaExpression): TypedObject<SelfType> {
+    private fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValue { it ->
             val newEvc = evc.child(mapOf("it" to it))
             evaluateExpression(newEvc, expression.expression)
@@ -281,48 +541,68 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
         return lambda
     }
 
-    private fun evaluateCast(evc: EvaluationContext<SelfType>, expression: CastExpression): TypedObject<SelfType> {
+    private fun evaluateCast(evc: EvaluationContext, expression: CastExpression): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
         return objectGraph.cast(exprResult, tgtType)
     }
 
-    private fun evaluateTypeTest(evc: EvaluationContext<SelfType>, expression: TypeTestExpression): TypedObject<SelfType> {
+    private fun evaluateTypeTest(evc: EvaluationContext, expression: TypeTestExpression): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
         val res = exprResult.type.conformsTo(tgtType)
-        return objectGraph.toTypedObject(res as SelfType)
+        return objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, res)
     }
 
-    private fun evaluateGroup(evc: EvaluationContext<SelfType>, expression: GroupExpression): TypedObject<SelfType> {
+    private fun evaluateGroup(evc: EvaluationContext, expression: GroupExpression): TypedObject {
         return evaluateExpression(evc, expression.expression)
+    }
+
+    private fun evaluateStatementBlockExpression(evc: EvaluationContext, expression: StatementBlockExpression): TypedObject {
+        val newEvc = evc.child(emptyMap())
+        for (ass in expression.assignment) {
+            val rhsValue = evaluateExpression(newEvc, ass.rhs)
+            newEvc.setNamedValue(ass.variable.name, rhsValue)
+        }
+        val result = evaluateExpression(newEvc, expression.expression)
+        return result
     }
 
     fun evaluateTypeReference(typeReference: TypeReference): TypeInstance {
         //TODO: issues rather than exceptions!
-        val decl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
+        val decl = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
         val targs = typeReference.typeArguments.map { evaluateTypeReference(it).asTypeArgument }
         return decl.type(targs, typeReference.isNullable)
     }
 
     // mutation
-    private fun evaluateCreateTuple(evc: EvaluationContext<SelfType>, expression: CreateTupleExpression): TypedObject<SelfType> {
+    private fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
         val typeArgs = mutableListOf<TypeArgumentNamed>()
         val tuple = objectGraph.createTupleValue(typeArgs)
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            objectGraph.setProperty(tuple, it.lhsPropertyName, value)
-            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
+            tuple.setProperty(it.variable.name, value)
+            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.variable.name), value.type))
         }
         return tuple
     }
 
-    private fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
-        val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
-            ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
+    private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
+        return constructObject(evc, expression).also { self ->
+            propertyAssignmentBlock(evc, self, expression.propertyAssignments)
+        }
+    }
+
+    /**
+     * Only construct the object, do not execute the property assignment block.
+     * Separation of construct and setProperties needed for M2m interpreter
+     */
+    fun constructObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
+        val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
         return when (typeDef) {
+            null -> error("Type not found ${expression.possiblyQualifiedTypeName}")
             is DataType, is ValueType -> {
                 val args = expression.constructorArguments.map { evaluateExpression(evc, it.rhs) }
                 val constructorArgs = when {
@@ -344,19 +624,21 @@ open class ExpressionsInterpreterOverTypedObject<SelfType : Any>(
 
                     else -> emptyMap()
                 }
-
-                val obj = objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
-                expression.propertyAssignments.forEach {
-                    val value = evaluateExpression(evc, it.rhs)
-                    objectGraph.setProperty(obj, it.lhsPropertyName, value)
-                }
-                return obj
+                objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
             }
 
             else -> error("Cannot create an object of type '${typeDef.qualifiedName.value}'")
         }
     }
 
-
+    /**
+     * Execute a property assignment block for self.
+     * Separation of construct and setProperties needed for M2m interpreter
+     */
+    fun propertyAssignmentBlock(evc: EvaluationContext, self: TypedObject, propertyAssignments: List<VariableAssignmentStatement>) {
+        propertyAssignments.forEach {
+            val value = evaluateExpression(evc, it.rhs)
+            self.setProperty(it.variable.name, value)
+        }
+    }
 }
-

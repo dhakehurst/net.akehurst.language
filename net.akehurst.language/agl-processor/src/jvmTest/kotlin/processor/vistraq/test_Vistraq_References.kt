@@ -19,15 +19,16 @@ package net.akehurst.language.agl.processor.vistraq
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
-import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -44,18 +45,18 @@ class test_Vistraq_References {
         private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/vistraq/version_/references.agl")?.readText() ?: error("File not found"))
 
         private val grammarList =
-            Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
+            Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
                 .let {
                     check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                     it.asm!!
                 }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, SentenceContextAny>> { grmName ->
+        private val processors by lazyMutableMapNotNull<String, LanguageProcessor<Asm, SentenceContext>> { grmName ->
             val grm = grammarList
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 //typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
                         SyntaxAnalyserSimple(p.typesDomain, p.transformDomain, p.targetGrammar!!.qualifiedName))
@@ -77,9 +78,9 @@ class test_Vistraq_References {
             grammar: String,
             goal: String,
             sentence: String,
-            context: SentenceContextAny,
+            sentenceContext: SentenceContext,
             resolveReferences: Boolean,
-            expectedContext: SentenceContextAny,
+            expectedContext: SentenceContext,
             expectedAsm: Asm? = null,
             expectedIssues: List<LanguageIssue> = emptyList()
         ) {
@@ -87,16 +88,16 @@ class test_Vistraq_References {
             val result = proc.process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
                 semanticAnalysis {
-                    context(context)
+                    sentenceContext(sentenceContext)
                     resolveReferences(resolveReferences)
                 }
             })
-            println(context.asString())
+            println(sentenceContext.asString())
             println(result.asm?.asString())
             assertEquals(expectedIssues, result.allIssues.errors, result.allIssues.toString())
-            assertEquals(expectedContext.asString(), context.asString())
+            assertEquals(expectedContext.asString(), sentenceContext.asString())
             expectedAsm?.let { assertEquals(expectedAsm.asString(), result.asm!!.asString()) }
-            TestContextSimple.assertMatches(expectedContext, context)
+            TestContextSimple.assertMatches(expectedContext, sentenceContext)
         }
     }
 
@@ -112,7 +113,7 @@ class test_Vistraq_References {
         val result = Agl.registry.agl.crossReference.processor!!.process(
             scopeModelStr.value,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypesDomain(typeModel)) }
+                semanticAnalysis { sentenceContext(contextFromTypesDomain(typeModel)) }
             }
         )
         assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
@@ -167,12 +168,12 @@ class test_Vistraq_References {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(62, 5, 4, 21, null),
-                "Reference 'C' not resolved, to type(s) [NodeType] in scope '/CD'", null
+                "Reference 'CD.C' not resolved, to type(s) [NodeType] in scope '/CD'", null
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(62, 5, 4, 21, null),
-                "Reference 'D' not resolved, to type(s) [NodeType] in scope '/CD'", null
+                "Reference 'CD.D' not resolved, to type(s) [NodeType] in scope '/CD'", null
             )
         )
 

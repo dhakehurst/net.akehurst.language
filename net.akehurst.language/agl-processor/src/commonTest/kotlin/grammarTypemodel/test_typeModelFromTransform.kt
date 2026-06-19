@@ -58,6 +58,7 @@ class test_typemodelFromTransform {
         val transformStr = """
             namespace test
             asm-transform Test {
+                #override-default-transform
                 S : S2
             }
         """.trimIndent()
@@ -84,7 +85,7 @@ class test_typemodelFromTransform {
         val transformStr = """
             namespace test
             asm-transform Test {
-                import types.*
+                import-types types
 
                 S : S2
             }
@@ -97,11 +98,15 @@ class test_typemodelFromTransform {
                 }
             }
         }
-        val expected = grammarTypeModel("test", "Test", imports = listOf(StdLibDefault, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
-            dataFor("S", "S2") {
-                propertyPrimitiveType("a", "String", false, 0)
+
+        val expected = typesDomain("Test",true) {
+            grammarTypeNamespace("test") {
+                dataFor("S", "S2") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
             }
         }
+
         test(grammarStr, transformStr, expected)
     }
 
@@ -124,7 +129,7 @@ class test_typemodelFromTransform {
         val transformStr = """
             namespace test
             asm-transform Test {
-                import types.*
+                import-types types
 
                 S : S2
             }

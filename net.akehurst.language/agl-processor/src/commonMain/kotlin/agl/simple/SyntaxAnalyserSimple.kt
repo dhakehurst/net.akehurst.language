@@ -18,6 +18,7 @@ package net.akehurst.language.agl.simple
 
 
 import net.akehurst.kotlinx.collections.lazyMap
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
@@ -56,7 +57,7 @@ class SyntaxAnalyserSimple(
     typesDomain,
     asmTransformDomain,
     relevantTrRuleSet,
-    ObjectGraphAccessorMutatorAsmSimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS))
+    ObjectGraphAccessorMutatorAsmSimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS),LocationMapDefault()) //TODO: what locationMap to use here
 ) {
 
     override fun constructAsm(): Asm = AsmSimple(objectGraph as ObjectGraphAccessorMutatorAsmSimple)

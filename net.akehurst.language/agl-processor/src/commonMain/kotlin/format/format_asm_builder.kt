@@ -24,7 +24,8 @@ import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.format.asm.AglFormatDomainDefault
+import net.akehurst.language.format.asm.FormatDomainDefault
+import net.akehurst.language.format.asm.FormatNamespaceDefault
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.formatter.api.FormatNamespace
 
@@ -44,7 +45,16 @@ class FormatModelBuilder(
 
     private val _namespaces = mutableListOf<FormatNamespace>()
     private val _options = mutableMapOf<String,String>()
-    private val _domain = AglFormatDomainDefault(name, OptionHolderDefault(null, _options), _namespaces)
+    private val _domain = FormatDomainDefault(name, OptionHolderDefault(null, _options), _namespaces)
+
+    fun namespace(qualifiedName: String, init: FormatNamespaceBuilder.() -> Unit): FormatNamespace {
+        val b = FormatNamespaceBuilder(QualifiedName(qualifiedName))
+        b.init()
+        val ns = b.build()
+        _domain.addNamespace(ns)
+        return ns
+    }
+
 //TODO:
     //private val _asm = AsmSimple(ObjectGraphAsmSimple())
     //private val _ruleList = mutableListOf<AsmStructure>()
@@ -66,6 +76,17 @@ class FormatModelBuilder(
 //    }
 
     fun build(): AglFormatDomain = _domain
+}
+
+@FormatModelDslMarker
+class FormatNamespaceBuilder(
+    val qualifiedName: QualifiedName
+) {
+
+    private val _namespace = FormatNamespaceDefault(qualifiedName)
+
+    fun build(): FormatNamespace  = _namespace
+
 }
 
 @FormatModelDslMarker

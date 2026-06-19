@@ -50,7 +50,10 @@ interface ProcessResult<out AsmType:Any> {
 }
 
 interface FormatResult {
-    val sentence: String?
+    /** list of named outputs */
+    val output: Map<String,String>
+    /** default output */
+    val sentence:String?
     val issues: IssueCollection<LanguageIssue>
 }
 

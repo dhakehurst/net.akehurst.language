@@ -17,6 +17,8 @@
 package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -33,18 +35,18 @@ class test_leftRecursive : test_AutomatonAbstract() {
     // S1 = S 'a'
 
     // must be fresh per test or automaton is not correct for different parses (due to caching)
-    private val rrs = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+    private val rrs = ruleSet("Test") {
+        choiceLongest("S") {
             literal("a")
             ref("S1")
         }
         concatenation("S1") { ref("S"); literal("a") }
-    }
+    } as RuntimeRuleSet
 
-    private val S = rrs.findRuntimeRule("S")
-    private val G = rrs.goalRuleFor[S]
-    private val S1 = rrs.findRuntimeRule("S1")
-    private val a = rrs.findRuntimeRule("'a'")
+    private val _t0 = rrs.rule[0]  // 'a'
+    private val S = rrs.rule[1]  // S
+    private val S1 = rrs.rule[2]  // S1
+    private val rG = rrs.goalRuleFor[S]
 
     @Test
     fun parse_a() {
@@ -56,17 +58,16 @@ class test_leftRecursive : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SR))     /* {}     G = . S    */
-            state(RP(G, oN, EOR))     /* {}     G = S .    */
-            state(RP(S, oN, EOR))     /* {0}    S = a .    */
-            state(RP(a, oN, EOR))     /* {0,5}  a .        */
-            state(RP(S1, oN, p1))     /* {0}    S1 = S . a */
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t0, oN, ER)   // 'a'
+            state(S, o0, ER)   // S = 'a' .
+            state(S1, oN, 1)   // S1 = S . 'a'
+            state(rG, oN, ER)   // <GOAL> = S .
 
-            trans(WIDTH) { src(G, oN, SOR); tgt(a); lhg(setOf(EOT, a)); ctx(G, oN, SOR) }
-            trans(GOAL) { src(S); tgt(G); lhg(setOf(EOT)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)); ctx(G, oN, SOR) }
-            trans(HEIGHT) { src(S); tgt(S1, oN, p1); lhg(setOf(a), setOf(EOT, a)); ctx(G, oN, SOR) }
-        }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(S, o0, ER); lhg(setOf(EOT,_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(S, o0, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }        }
         AutomatonTest.assertEquals(expected, actual)
     }
 
@@ -80,23 +81,23 @@ class test_leftRecursive : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))     /* {}     G = . S    */
-            state(RP(G, oN, EOR))     /* {}     G = S .    */
-            state(RP(S, oN, EOR))     /* {0}    S = a .    */
-            state(RP(S, o1, EOR))     /* {0}    S = S1 .   */
-            state(RP(a, oN, EOR))     /* {0,5}  a .        */
-            state(RP(S1, oN, p1))     /* {0}    S1 = S . a */
-            state(RP(S1, oN, EOR))    /* {0}    S1 = S a . */
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t0, oN, ER)   // 'a'
+            state(S, o0, ER)   // S = 'a' .
+            state(S1, oN, 1)   // S1 = S . 'a'
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S1, oN, ER)   // S1 = S 'a' .
+            state(S, o1, ER)   // S = S1 .
 
-            trans(WIDTH) { ctx(G, oN, SOR); src(G, oN, SOR); tgt(a); lhg(setOf(EOT, a)) }
-            trans(WIDTH) { ctx(G, oN, SOR); src(S1, oN, p1); tgt(a); lhg(setOf(RT)) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S, o1, EOR); tgt(G); lhg(setOf(EOT)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(RT, a), setOf(RT, a)) }
-            trans(GRAFT) { ctx(S1, oN, p1); src(a); tgt(S1); lhg(setOf(RT)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S); tgt(S1, oN, p1); lhg(setOf(a), setOf(EOT, a)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S, o1, ER); tgt(S1, oN, p1); lhg(setOf(a), setOf(RT, a)) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(S, o0, ER); lhg(setOf(EOT,_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(_t0, oN, ER); tgt(S1, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(S1, oN, 1)) }
+            trans(HEIGHT) { src(S, o0, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(S1, oN, 1); tgt(_t0, oN, ER); lhg(RT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(S1, oN, ER); tgt(S, o1, ER); lhg(setOf(RT,_t0), setOf(RT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(S, o1, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(RT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -112,23 +113,23 @@ class test_leftRecursive : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))     /* {}     G = . S    */
-            state(RP(G, oN, ER))     /* {}     G = S .    */
-            state(RP(S, oN, ER))     /* {0}    S = a .    */
-            state(RP(S, o1, ER))     /* {0}    S = S1 .   */
-            state(RP(a, oN, ER))     /* {0,5}  a .        */
-            state(RP(S1, oN, p1))     /* {0}    S1 = S . a */
-            state(RP(S1, oN, ER))    /* {0}    S1 = S a . */
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t0, oN, ER)   // 'a'
+            state(S, o0, ER)   // S = 'a' .
+            state(S1, oN, 1)   // S1 = S . 'a'
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S1, oN, ER)   // S1 = S 'a' .
+            state(S, o1, ER)   // S = S1 .
 
-            trans(WIDTH) { ctx(G, oN, SOR); src(G, oN, SOR); tgt(a); lhg(setOf(EOT, a)) }
-            trans(WIDTH) { ctx(G, oN, SOR); src(S1, oN, p1); tgt(a); lhg(setOf(RT)) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S, o1, ER); tgt(G); lhg(setOf(EOT)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(RT, a), setOf(RT, a)) }
-            trans(GRAFT) { ctx(S1, oN, p1); src(a); tgt(S1); lhg(setOf(RT)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S); tgt(S1, oN, p1); lhg(setOf(a), setOf(EOT, a)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S, o1, ER); tgt(S1, oN, p1); lhg(setOf(a), setOf(RT, a)) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(S, o0, ER); lhg(setOf(EOT,_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(_t0, oN, ER); tgt(S1, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(S1, oN, 1)) }
+            trans(HEIGHT) { src(S, o0, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(S1, oN, 1); tgt(_t0, oN, ER); lhg(RT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(S1, oN, ER); tgt(S, o1, ER); lhg(setOf(RT,_t0), setOf(RT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(S, o1, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(RT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -139,23 +140,23 @@ class test_leftRecursive : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, oN, SOR))     /* {}     G = . S    */
-            state(RP(G, oN, ER))     /* {}     G = S .    */
-            state(RP(S, oN, ER))     /* {0}    S = a .    */
-            state(RP(S, o1, ER))     /* {0}    S = S1 .   */
-            state(RP(a, oN, ER))     /* {0,5}  a .        */
-            state(RP(S1, oN, p1))     /* {0}    S1 = S . a */
-            state(RP(S1, oN, ER))    /* {0}    S1 = S a . */
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, o0, ER)   // S = 'a' .
+            state(S, o1, ER)   // S = S1 .
+            state(S1, oN, 1)   // S1 = S . 'a'
+            state(S1, oN, ER)   // S1 = S 'a' .
+            state(_t0, oN, ER)   // 'a'
 
-            trans(WIDTH) { ctx(G, oN, SOR); src(G, oN, SOR); tgt(a); lhg(setOf(EOT, a)) }
-            trans(WIDTH) { ctx(G, oN, SOR); src(S1, oN, p1); tgt(a); lhg(setOf(EOT, a)) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
-            trans(GOAL) { ctx(G, oN, SOR); src(S, o1, ER); tgt(G); lhg(setOf(EOT)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(EOT, a), setOf(EOT, a)) }
-            trans(GRAFT) { ctx(S1, oN, p1); src(a); tgt(S1); lhg(setOf(EOT, a)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S); tgt(S1, oN, p1); lhg(setOf(a), setOf(EOT, a)) }
-            trans(HEIGHT) { ctx(G, oN, SOR); src(S, o1, ER); tgt(S1, oN, p1); lhg(setOf(a), setOf(EOT, a)) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(S, o0, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GOAL) { src(S, o0, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(S, o1, ER); tgt(S1, oN, 1); lhg(setOf(_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GOAL) { src(S, o1, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(WIDTH) { src(S1, oN, 1); tgt(_t0, oN, ER); lhg(setOf(EOT,_t0)); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(S1, oN, ER); tgt(S, o1, ER); lhg(setOf(EOT,_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(_t0, oN, ER); tgt(S, o0, ER); lhg(setOf(EOT,_t0), setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(GRAFT) { src(_t0, oN, ER); tgt(S1, oN, ER); lhg(setOf(EOT,_t0));  prevPair(RP(rG, oN, SR), RP(S1, oN, 1)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)

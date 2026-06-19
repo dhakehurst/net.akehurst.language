@@ -17,7 +17,8 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asm.simple.AsmListSimple
@@ -31,14 +32,14 @@ import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_SimpleTypeModelStdLib_eval {
+class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
 
-    companion object {
+    companion object Companion {
         fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain,issues),issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st,self)), expression)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, LocationMapDefault(), primitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple))
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, actual.self)
         }
     }
@@ -77,7 +78,7 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger( 4L))
+        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger(4L))
     }
 
     @Test
@@ -167,7 +168,7 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.front", AsmListSimple(listOf("A", "B", "C").map { AsmPrimitiveSimple.stdString(it)}))
+        test(tm, self, "list.front", AsmListSimple(listOf("A", "B", "C").map { AsmPrimitiveSimple.stdString(it) }))
     }
 
     @Test
@@ -186,5 +187,84 @@ class test_SimpleTypeModelStdLib_eval {
         }
         val self = asm.root[0]
         test(tm, self, "list.join", AsmPrimitiveSimple.stdString("ABCD"))
+    }
+
+    @Test
+    fun collection_List_map() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("Test") {
+                    propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
+                }
+            }
+        }
+        val asm = asmSimple(typesDomain = tm) {
+            element("Test") {
+                propertyListOfString("list", listOf("A", "B", "C", "D"))
+            }
+        }
+        val self = asm.root[0]
+        test(tm, self, "list.map({it -> it + '1' })", AsmListSimple(listOf("A1", "B1", "C1", "D1").map { AsmPrimitiveSimple.stdString(it) }))
+    }
+
+    @Test
+    fun collection_List_filter() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("Test") {
+                    propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
+                }
+            }
+        }
+        val asm = asmSimple(typesDomain = tm) {
+            element("Test") {
+                propertyListOfString("list", listOf("A", "B", "C", "D"))
+            }
+        }
+        val self = asm.root[0]
+        test(tm, self, "list.filter({it -> it != 'B' })", AsmListSimple(listOf("A", "C", "D").map { AsmPrimitiveSimple.stdString(it) }))
+    }
+
+    @Test
+    fun collection_List_transitiveClosure() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("TestContainer") {
+                    propertyOf(setOf(VAR), "list", "TestContainer", false)
+                }
+            }
+        }
+        val asm = asmSimple(typesDomain = tm) {
+            element("TestContainer") {
+                propertyString("id", "1")
+                propertyListOfElement("list") {
+                    element("TestContainer") {
+                        propertyString("id", "1.1")
+                        propertyListOfElement("list") {
+                            element("TestContainer") {
+                                propertyString("id", "1.1.1")
+                                propertyListOfElement("list") {}
+                            }
+                        }
+                    }
+                    element("TestContainer") {
+                        propertyString("id", "1.2")
+                        propertyListOfElement("list") { }
+                    }
+                    element("TestContainer") {
+                        propertyString("id", "1.3")
+                        propertyListOfElement("list") {
+                            element("TestContainer") {
+                                propertyString("id", "1.3.1")
+                                propertyListOfElement("list") {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        val self = asm.root[0]
+        val expected = AsmListSimple(listOf("1.1", "1.2", "1.3", "1.1.1", "1.3.1").map { AsmPrimitiveSimple.stdString(it) })
+        test(tm, self, "list.transitiveClosure({it -> it.list }).map({it -> it.id})", expected)
     }
 }

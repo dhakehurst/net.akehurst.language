@@ -18,7 +18,7 @@
 package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -26,9 +26,11 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
+import net.akehurst.language.m2mTransform.api.M2mTransformPatternRule
+import net.akehurst.language.m2mTransform.api.RuleCall
 import net.akehurst.language.types.api.TypesDomain
 
-class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContextAny> {
+class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContext> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
 
@@ -40,25 +42,54 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
         sentenceIdentity: Any?,
         asm: M2mTransformDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
-        val context = options.context
+        val sentenceContext = options.sentenceContext
         when {
-            null == context -> _issues.warn(null, "No context provided, either provide one or switch off Semantic Analysis.")
+            null == sentenceContext -> _issues.warn(null, "No sentence context provided, either provide one or switch off Semantic Analysis.")
             else -> {
                 asm.allTransformRuleSet.forEach { def ->
-                    val typeDomains = def.domainParameters
+                    def.domainParameters.entries.forEach { (k, v) ->
+                        val td = (sentenceContext.findItemsNamedConformingTo(v.value) { true }).firstOrNull()?.item
+                        when (td) {
+                            null -> _issues.error(null, "TypesDomain '${v.value}' not found in sentence context for parameter '${k}'")
+                            !is TypesDomain -> _issues.error(null, "TypesDomain '${v.value}' is not a TypesDomain in the sentence context, rather a '${td::class.simpleName}'")
+                            else -> def.resolveDomainParameter(k, td)
+                        }
+                    }
                     def.rule.forEach { (k, v) ->
-                        v.domainSignature.forEach { (dk, dv) ->
-                            val typesDomainName = typeDomains[dv.domainRef]
-                            if (null == typesDomainName) {
-                                _issues.error(null, "TypeDomain '${dv.domainRef}' not found for rule '${k}'")
+                        // resolve extends references
+                        v.extends.forEach { e ->
+                            def.rule[e.nameOrQName.simpleName]?.let { //TODO: support qnames !
+                                e.resolveAs(it)
+                            }
+                        }
+                        v.domainSignature.forEach { (dr, dv) ->
+                            val typesDomain = def.domainParameterResolved[dr]
+                            if (null == typesDomain) {
+                                _issues.error(null, "TypesDomain '$dr' not found in rule '${k}'")
                             } else {
-                                val tm = (context.findItemsNamedConformingTo(typesDomainName.value) { true }).firstOrNull()?.item
-                                when (tm) {
-                                    null -> _issues.error(null, "TypeModel '${typesDomainName.value}' not found for rule '${k}'")
-                                    !is TypesDomain -> _issues.error(null, "TypeModel '${typesDomainName.value}' is not a TypesDomain for rule '${k}'")
-                                    else -> dv.variable.resolveType(tm)
+                                dv.variable.resolveType(typesDomain)
+                            }
+                        }
+                        // resolve where and when rule refs
+                        when (v) {
+                            is M2mTransformPatternRule -> {
+                                v.domainTemplate.forEach { (dr,rhs) ->
+                                    val typesDomain = def.domainParameterResolved[dr]
+                                    if (null == typesDomain) {
+                                        _issues.error(null, "TypesDomain '${dr.value}' not found in rule '${k.value}'")
+                                    } else {
+                                         val typeIssues = rhs.resolveTypes(typesDomain)
+                                         _issues.addAll(typeIssues)
+                                    }
+                                }
+
+                                when (val wn = v.when_) {
+                                    is RuleCall -> def.rule[wn.ruleName]?.let { wn.resolveAs(it) }
+                                }
+                                v.where.forEach { w ->
+                                    def.rule[w.ruleName]?.let { w.resolveAs(it) }
                                 }
                             }
                         }

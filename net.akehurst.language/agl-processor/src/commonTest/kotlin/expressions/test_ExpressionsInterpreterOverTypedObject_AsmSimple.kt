@@ -17,12 +17,14 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.asm.simple.AsmSetSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -32,23 +34,24 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
-class test_ExpressionsInterpreter {
+class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
 
-    companion object {
+    companion object Companion {
         fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues), issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
-            assertEquals(expected, actual.self)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, LocationMapDefault()))
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
+            assertTrue(expected.equalTo(actual.self as AsmValue), "Expected != Actual:\n$expected\n$actual")
         }
 
         fun test_fail(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues), issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, LocationMapDefault()))
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(AsmNothingSimple, actual.self)
             assertEquals(expected, interpreter.issues.all.toList())
         }
@@ -101,11 +104,15 @@ class test_ExpressionsInterpreter {
         }
         val self = AsmNothingSimple
 
-        test(tm, self, expression, AsmListSimple(listOf(
-            AsmPrimitiveSimple.stdString("Hello"),
-            AsmPrimitiveSimple.stdString("World"),
-            AsmPrimitiveSimple.stdString("!")
-        )))
+        test(
+            tm, self, expression, AsmSetSimple(
+                setOf(
+                    AsmPrimitiveSimple.stdString("Hello"),
+                    AsmPrimitiveSimple.stdString("World"),
+                    AsmPrimitiveSimple.stdString("!")
+                )
+            )
+        )
     }
 
     @Test
@@ -358,6 +365,49 @@ class test_ExpressionsInterpreter {
                 AsmPrimitiveSimple.stdString("v3")
             )
         )
-        test(tm, self, "aList.map() {it.prop1}", expected)
+        test(tm, self, "aList.map({it -> it.prop1})", expected)
+    }
+
+    @Test
+    fun ternaryConditional_true() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("Test") {
+                    propertyListTypeOf("aList", "A", false, 0)
+                }
+                data("A") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple(typesDomain = tm) {
+            element("Test") {
+                propertyString("x", "a")
+            }
+        }
+        val self = asm.root[0]
+        val expected = AsmPrimitiveSimple.stdBoolean(true)
+        test(tm, self, "x=='a' ? true : false", expected)
+    }
+    @Test
+    fun ternaryConditional_false() {
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("Test") {
+                    propertyListTypeOf("aList", "A", false, 0)
+                }
+                data("A") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple(typesDomain = tm) {
+            element("Test") {
+                propertyString("x", "a")
+            }
+        }
+        val self = asm.root[0]
+        val expected = AsmPrimitiveSimple.stdString("no")
+        test(tm, self, "x==7 ? 'yes' : 'no'", expected)
     }
 }

@@ -1,0 +1,771 @@
+/*
+ * Copyright (C) 2025 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package net.akehurst.language.agl.expressions.processor
+
+import net.akehurst.kotlinx.collections.OrderedSet
+import net.akehurst.kotlinx.reflect.reflect
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.language.expressions.api.FunctionDefinitionFloating
+import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.*
+import kotlin.jvm.JvmOverloads
+import kotlin.reflect.KProperty1
+import kotlin.time.Instant
+
+class StdLibPrimitiveExecutionsForReflection(
+    val issues: IssueHolder = IssueHolder(LanguageProcessorPhase.INTERPRET)
+) : PrimitiveExecutor {
+
+    private val _property = mutableMapOf<TypeDefinition, MutableMap<PropertyDeclaration, ((Any, PropertyDeclaration) -> Any?)>>(
+        StdLibDefault.Collection to mutableMapOf(
+            StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
+                check(self is Collection<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.size.toLong()
+            },
+            StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("isEmpty"))!! to { self, prop ->
+                check(self is Collection<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.isEmpty()
+            },
+            StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("isNotEmpty"))!! to { self, prop ->
+                check(self is Collection<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.isNotEmpty()
+            },
+            StdLibDefault.Collection.findAllPropertyOrNull(PropertyName("asMap"))!! to { self, prop ->
+                check(self is Collection<*>) { "Method '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.associate {
+                    val el = when (it) {
+                        is TypedObject -> it.self
+                        else -> it
+                    }
+                    when (el) {
+                        is Pair<*, *> -> el
+                        is Map<*, *> -> when {
+                            el.containsKey("key") && el.containsKey("value") -> Pair(el["key"], el["value"])
+                            else -> error("To convert a Collection<Map> via 'asMap' there must be a 'key' and a 'value' entry")
+                        }
+
+                        else -> error("To convert a Collection via 'asMap' the elements must be either Pairs or Maps with key and value entries")
+                    }
+                }
+            },
+        ),
+        StdLibDefault.List to mutableMapOf(
+            StdLibDefault.List.findAllPropertyOrNull(PropertyName("first"))!! to { self, prop ->
+                check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.first() as Any
+            },
+            StdLibDefault.List.findAllPropertyOrNull(PropertyName("last"))!! to { self, prop ->
+                check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.last() as Any
+            },
+            StdLibDefault.List.findAllPropertyOrNull(PropertyName("back"))!! to { self, prop ->
+                check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.drop(1)
+            },
+            StdLibDefault.List.findAllPropertyOrNull(PropertyName("front"))!! to { self, prop ->
+                check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.dropLast(1)
+            },
+            StdLibDefault.List.findAllPropertyOrNull(PropertyName("join"))!! to { self, prop ->
+                check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.joinToString(separator = "") {
+                    when (it) {
+                        is TypedObject -> it.self.toString()
+                        else -> it.toString()
+                    }
+                }
+            },
+        ),
+        StdLibDefault.ListSeparated to mutableMapOf(
+            StdLibDefault.ListSeparated.findAllPropertyOrNull(PropertyName("items"))!! to { self, prop ->
+                check(self is ListSeparated<*, *, *>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.items
+            },
+            StdLibDefault.ListSeparated.findAllPropertyOrNull(PropertyName("separators"))!! to { self, prop ->
+                check(self is ListSeparated<*, *, *>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.separators
+            },
+        )
+    )
+
+    private val _method = mutableMapOf<TypeDefinition, MutableMap<MethodDefinition, ((Any, MethodDefinition, List<*>) -> Any?)>>(
+        StdLibDefault.String.resolvedDefinition to mutableMapOf(
+            StdLibDefault.String.resolvedDefinition.findAllMethodOrNull(MethodName("toBoolean"))!! to { self, meth, args ->
+                check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.toBooleanStrictOrNull() ?: Unit
+            },
+            StdLibDefault.String.resolvedDefinition.findAllMethodOrNull(MethodName("toInteger"))!! to { self, meth, args ->
+                check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.toLongOrNull() ?: Unit
+            },
+            StdLibDefault.String.resolvedDefinition.findAllMethodOrNull(MethodName("toReal"))!! to { self, meth, args ->
+                check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.toDoubleOrNull() ?: Unit
+            },
+            StdLibDefault.String.resolvedDefinition.findAllMethodOrNull(MethodName("removeSurrounding"))!! to { self, meth, args ->
+                check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                val arg1 = args[0] as String
+                self.removeSurrounding(arg1)
+            }
+        ),
+
+        StdLibDefault.Collection to mutableMapOf(
+            StdLibDefault.Collection.findAllMethodOrNull(MethodName("contains"))!! to { self, meth, args ->
+                check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
+                //check(args[0].self is Long) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                //check(StdLibDefault.AnyType.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.AnyType.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val element = args[0]
+                self.contains(element)
+            },
+            StdLibDefault.Collection.findAllMethodOrNull(MethodName("intersect"))!! to { self, meth, args ->
+                check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
+                check(args[0] is Collection<*>) { "Method '${meth.name}' takes an '${StdLibDefault.Collection.qualifiedName.value}' as its argument, received '${args[0]?.let { it::class.simpleName }}'." }
+                //check(StdLibDefault.Integer.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val other = (args[0] as Collection<*>)
+                self.intersect(other.toSet())
+            },
+            StdLibDefault.Collection.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
+                check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
+                check(args[0] is Function1<*, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                val lambda = args[0] as Function1<Any, *>
+                (self as Collection<Any>).map {
+                    lambda.invoke(it)
+                }
+            },
+            StdLibDefault.Collection.findAllMethodOrNull(MethodName("filter"))!! to { self, meth, args ->
+                check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
+                check(args[0] is Function1<*, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                val lambda = args[0] as Function1<Any, Boolean>
+                (self as Collection<Any>).filter {
+                    lambda.invoke(it)
+                }
+            }
+        ),
+
+        StdLibDefault.List to mutableMapOf(
+            StdLibDefault.List.findAllMethodOrNull(MethodName("get"))!! to { self, meth, args ->
+                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
+                check(args[0] is Long) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0]?.let { it::class.simpleName }}" }
+//                check(StdLibDefault.Integer.qualifiedTypeName == args[0].qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val idx = args[0] as Long
+                self[idx.toInt()] as Any
+            },
+            StdLibDefault.List.findAllMethodOrNull(MethodName("separate"))!! to { self, meth, args ->
+                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(0 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 0, received ${args.size}" }
+                self.toSeparatedList()
+            },
+            StdLibDefault.List.findAllMethodOrNull(MethodName("transitiveClosure"))!! to { self, meth, args ->
+                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
+                // Lambda has extra paramter for coroutine (becasue it is a suspend function)
+                check(args[0] is Function1<*, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                val lambda: (Any) -> List<Any> = args[0] as (Any) -> List<Any>
+                (self as List<Any>).transitiveClosure {
+                    //val args = mapOf("it" to it)
+                    lambda.invoke(it)
+                }
+            },
+        ),
+    )
+
+    private val _methodSuspend = mutableMapOf<TypeDefinition, MutableMap<MethodDefinition, (suspend (Any, MethodDefinition, List<*>) -> Any?)>>(
+        StdLibDefault.Collection to mutableMapOf(
+            StdLibDefault.Collection.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
+                check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
+                check(args[0] is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                val lambda: suspend (Any) -> Any = args[0] as suspend (Any) -> Any
+                (self as Collection<Any>).map {
+                    lambda.invoke(it)
+                }
+            },
+            StdLibDefault.Collection.findAllMethodOrNull(MethodName("filter"))!! to { self, meth, args ->
+                check(self is Collection<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
+                check(args[0] is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                val lambda: suspend (Any) -> Boolean = args[0] as suspend (Any) -> Boolean
+                (self as Collection<Any>).filter {
+                    lambda.invoke(it)
+                }
+            }
+        ),
+
+        StdLibDefault.List to mutableMapOf(
+            StdLibDefault.List.findAllMethodOrNull(MethodName("transitiveClosure"))!! to { self, meth, args ->
+                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
+                // Lambda has extra paramter for coroutine (becasue it is a suspend function)
+                check(args[0] is Function2<*, *, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
+                val lambda: suspend (Any) -> List<Any> = args[0] as suspend (Any) -> List<Any>
+                (self as List<Any>).transitiveClosure {
+                    //val args = mapOf("it" to it)
+                    lambda.invoke(it)
+                }
+            },
+        ),
+    )
+
+
+    override fun propertyValue(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? =
+        propertyValueDirectOrSuperType(obj, typeDef, property)
+
+    override fun methodCall(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>) =
+        methodDirectOrSuperType(obj, typeDef, method, args)
+
+    override fun functionCall(functionName: String, args: List<*>): ExecutionResult? {
+        return when (functionName) {
+//            "Pair" -> {
+//                check(2 == args.size) { "The Pair function only takes 2 arguments." }
+//                ExecutionResult(Pair(args[0], args[1]))
+//            }
+//
+//            "Set" -> ExecutionResult(args.toSet())
+//            "List" -> ExecutionResult(args)
+            else -> error("StdLibPrimitiveExecutionsForReflection, unsupported function '$functionName'")
+        }
+    }
+
+    fun <S> addPropertyExecution1(property: PropertyDeclaration, exec: KProperty1<S, Any?>) {
+        addPropertyExecution2(property) { obj, pd -> exec.get(obj as S) }
+    }
+
+    fun addPropertyExecution2(property: PropertyDeclaration, execution: (Any, PropertyDeclaration) -> Any?) {
+        var typeMap = this._property[property.owner]
+        if (null == typeMap) {
+            typeMap = mutableMapOf()
+            this._property[property.owner] = typeMap
+        }
+        typeMap[property] = execution
+    }
+
+    /** returns null if execution is not found for the given property on the typeDef or its supertypes */
+    private fun propertyValueDirectOrSuperType(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
+        val result = propertyValueDirect(obj, typeDef, property)
+        return if (null != result) {
+            result
+        } else {
+            // try supertypes
+            typeDef.supertypes.firstNotNullOfOrNull { superType -> propertyValueDirectOrSuperType(obj, superType.resolvedDefinition, property) }
+        }
+    }
+
+    /** returns null if execution is not found for the given property on the typeDef */
+    private fun propertyValueDirect(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
+        val propExec = property.execution
+        return when {
+            null == propExec -> {
+                val typeProps = this._property[typeDef]
+                typeProps?.let {
+                    val propExec = typeProps[property]
+                    propExec?.let {
+                        val v = propExec.invoke(obj, property)
+                        ExecutionResult(v)
+                    }
+                }
+            }
+
+            propExec !is KProperty1<*, *> -> {
+                issues.error(null, "'$property' is not a KProperty1<*,*>, cannot get it")
+                null
+            }
+
+            else -> try {
+                ExecutionResult((propExec as KProperty1<Any, Any?>).get(obj))
+            } catch (t: Throwable) {
+                issues.error(null, t.message ?: "Error while invoking property execution", t)
+                null
+            }
+        }
+    }
+
+    private fun methodDirectOrSuperType(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
+        val result = methodDirect(obj, typeDef, method, args)
+        return if (null != result) {
+            result
+        } else {
+            // try supertypes
+            typeDef.supertypes.firstNotNullOfOrNull { superType -> methodDirectOrSuperType(obj, superType.resolvedDefinition, method, args) }
+        }
+    }
+
+    private fun methodDirect(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
+        val typeMeths = this._method[typeDef]
+        return typeMeths?.let {
+            val methExec = typeMeths[method]
+            methExec?.let {
+                val v = methExec.invoke(obj, method, args)
+                ExecutionResult(v)
+            }
+        }
+    }
+
+    override suspend fun methodCallSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>) =
+        methodDirectOrSuperTypeSuspend(obj, typeDef, method, args) ?: methodDirectOrSuperType(obj, typeDef, method, args)
+
+    private suspend fun methodDirectOrSuperTypeSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
+        val result = methodDirectSuspend(obj, typeDef, method, args)
+        return if (null != result) {
+            result
+        } else {
+            // try supertypes
+            typeDef.supertypes.firstNotNullOfOrNull { superType -> methodDirectOrSuperTypeSuspend(obj, superType.resolvedDefinition, method, args) }
+        }
+    }
+
+    private suspend fun methodDirectSuspend(obj: Any, typeDef: TypeDefinition, method: MethodDefinition, args: List<*>): ExecutionResult? {
+        val typeMeths = this._methodSuspend[typeDef]
+        return typeMeths?.let {
+            val methExec = typeMeths[method]
+            methExec?.let {
+                val v = methExec.invoke(obj, method, args)
+                ExecutionResult(v)
+            }
+        }
+    }
+
+}
+
+class ExternalGetterByReflection(
+    val typesDomain: TypesDomain,
+    val issues: IssueHolder,
+) : ExternalGetter {
+    override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
+        val tp = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+        return when (tp) {
+            null -> {
+                issues.warn(null, "ExternalGetterByReflection cannot get type for ${obj::class.simpleName}, using '${ifNotFound.typeName.value}'")
+                ifNotFound
+            }
+
+            else -> tp.type()
+        }
+    }
+
+    override fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? {
+        val typeDef = typesDomain.findByQualifiedNameOrNull(qualifiedName)
+        return when (typeDef) {
+            null -> error("Type Definition for '${qualifiedName.value}' not found.")
+            is DataType -> typeDef.constructDataType(*(constructorArgs.values.toTypedArray<Any>()))
+            is ValueType -> typeDef.constructValueType(constructorArgs.values.first()) //TODO: special method
+            is CollectionType -> error("use 'createCollection' for CollectionType")
+            is InterfaceType -> error("Should not create an instance of a InterfaceType")
+            else -> error("Unsupported subtype of StructuredType: '${typeDef::class.simpleName}'")
+        }
+    }
+
+    override fun getProperty(obj: Any, propertyName: String): Any? {
+        return try {
+            obj.reflect().getProperty(propertyName)
+        } catch (t: Throwable) {
+            issues.error(null, "Unable to evaluate property '$propertyName': ${t.message}")
+            null
+        }
+    }
+
+    override fun setProperty(obj: Any, propertyName: String, value: Any?) {
+        TODO()
+    }
+
+    /** may be overridden to create object from suspending source */
+    override fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? =
+        createStructure(qualifiedName, constructorArgs)
+
+    /** may be overridden to get property from suspending source */
+    override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? =
+        getProperty(obj, propertyName)
+}
+
+open class ObjectGraphAccessorMutatorByReflection
+@JvmOverloads //ensure the Java has overloads using the default values
+constructor(
+    typesDomain: TypesDomain,
+    issues: IssueHolder,
+    locationMap: LocationMap,
+    override val externalGetter: ExternalGetter = ExternalGetterByReflection(typesDomain, issues),
+    override val primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForReflection(),
+    override val functionLib: FunctionLib = StdFunctionLib
+) : ObjectGraphAccessorMutatorCommonByReflectionAbstract<Any>(typesDomain, issues, locationMap), ObjectGraphAccessorMutator {
+
+    override fun typeFor(obj: Any?, ifNotFound: TypeInstance): TypeInstance {
+        return when (obj) {
+            null -> StdLibDefault.NothingType
+            is Boolean -> StdLibDefault.Boolean
+            is Byte,
+            is Short,
+            is Int,
+            is Long -> StdLibDefault.Integer
+
+            is Char,
+            is String -> StdLibDefault.String
+
+            is Double -> StdLibDefault.Real
+            is Instant -> StdLibDefault.Timestamp
+            is Throwable -> StdLibDefault.Exception
+            is Pair<*, *> -> {
+                val fstType = typeFor(obj.first, StdLibDefault.AnyType)
+                val sndType = typeFor(obj.second, StdLibDefault.AnyType)
+                StdLibDefault.Pair.type(listOf(fstType.asTypeArgument, sndType.asTypeArgument))
+            }
+
+            is OrderedSet<*> -> StdLibDefault.OrderedSet.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            is ListSeparated<*, *, *> -> StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
+            is Array<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            is List<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            is Set<*> -> StdLibDefault.Set.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            is Map<*, *> -> {
+                val me = obj.entries.firstOrNull()
+                when (me) {
+                    null -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
+                    else -> when (me.key) {
+                        is String -> {
+                            val ttargs = obj.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k as String), typeFor(v, ifNotFound)) }
+                            StdLibDefault.TupleType.type(ttargs)
+                        }
+
+                        else -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
+                    }
+                }
+            }
+
+            is Iterator<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            is Function<*> -> StdLibDefault.Lambda
+            else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
+        }
+    }
+
+    override fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject {
+        val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
+        val lmb: (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it, StdLibDefault.AnyType))) }
+        return typedAs(lmb, lambdaType)
+    }
+
+    override fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
+        executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
+            decl.execution?.invoke(obj, args)
+        }
+
+    override fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunctionInternal(functionName, args, typeReferenceResolver) { decl, args ->
+            decl.execution?.invoke(args)
+        }
+
+    override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject =
+        createStructureValueInternal(possiblyQualifiedTypeName, constructorArgs) { tqn, args ->
+            externalGetter.createStructure(tqn, args)
+        }
+
+    /**
+     * when {
+     *   type is TupleType -> property from tuple or $nothing
+     *   type does not have resolved property -> try reflection
+     *   type has resolved property -> try primitiveExecutor or reflection if executor fails
+     * }
+     */
+    override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject =
+        getPropertyInternal(tobj, propertyName, externalGetter::getProperty) { obj, decl ->
+            decl.execution?.invoke(obj)
+        }
+
+    override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) {
+        when {
+            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
+                when (tobj.self) {
+                    is MutableMap<*, *> -> {
+                        (tobj.self as MutableMap<String, Any>)[propertyName] = untyped(value)
+                    }
+                }
+            }
+
+            else -> {
+                try {
+                    val obj = tobj.self
+                    obj.reflect().setProperty(propertyName, untyped(value))
+                } catch (t: Throwable) {
+                    issueError(null, "Could not set property $propertyName to $value")
+                }
+            }
+        }
+    }
+
+    // --- Suspend ---
+    override suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject {
+        val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
+        val lmb: suspend (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it, StdLibDefault.AnyType))) }
+        return typedAs(lmb, lambdaType)
+    }
+
+    override suspend fun createStructureValueSuspend(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject =
+        createStructureValueInternal(possiblyQualifiedTypeName, constructorArgs) { tqn, args ->
+            externalGetter.createStructureSuspend(tqn, args)
+        }
+
+    override suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject =
+        getPropertyInternal(tobj, propertyName, { o, n -> externalGetter.getPropertySuspend(o, n) }) { obj, decl ->
+            decl.executionSuspend?.invoke(obj) ?: decl.execution?.invoke(obj)
+        }
+
+    override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) {
+        setProperty(tobj, propertyName, value) //TODO: internal and suspend versions
+    }
+
+    override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
+        executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
+            decl.executionSuspend?.invoke(obj, args)
+        }
+
+    // --- Internal ---
+    private inline fun createStructureValueInternal(
+        possiblyQualifiedTypeName: PossiblyQualifiedName,
+        constructorArgs: Map<String, TypedObject>,
+        externalCreateStructure: (tqn: QualifiedName, args: Map<String, Any>) -> Any?
+    ): TypedObject {
+        val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
+            ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
+        val obj = when (typeDef) {
+            is SingletonType -> typeDef.objectInstance()
+            is StructuredType -> externalCreateStructure(
+                typeDef.qualifiedName,
+                constructorArgs.map { (k, v) -> Pair(k, v.self) }.toMap()
+            ) ?: issueErrorReturnNothing(null, "Creating Structure '${typeDef.qualifiedName.value}' results in null, using value \$nothing.")
+
+            is SpecialType -> error("Should not create an instance of a SpecialType")
+            is PrimitiveType -> error("use 'createPrimitiveValue' for PrimitiveType")
+            is EnumType -> error("use '??' for EnumType")
+            is TupleType -> error("use 'createTupleValue' for TupleType")
+            is UnionType -> error("Should not create an instance of a UnionType")
+            else -> error("Unsupported subtype of TypeDefinition: '${typeDef::class.simpleName}'")
+        }
+        val type = typeDef.type()
+        addCreatedStructure(type, obj)
+        return typedAs(obj, type)
+    }
+
+    private inline fun getPropertyInternal(
+        tobj: TypedObject,
+        propertyName: String,
+        externalPropertyAccessor: (obj: Any, name: String) -> Any?,
+        propertyExecution: (obj: Any, decl: PropertyDeclaration) -> Any?
+    ): TypedObject {
+        return when {
+            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
+                val obj = untyped(tobj)
+                when (obj) {
+                    is Map<*, *> -> {
+                        val value = (obj as Map<String, Any>)[propertyName]
+                        value?.let { toTypedObject(it, StdLibDefault.AnyType) } ?: issueWarningReturnNothing(
+                            null,
+                            "Executing property '$propertyName' on Tuple results in null, using value \$nothing."
+                        )
+                    }
+
+                    else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on Tuple, expected a Map, got '${obj::class.simpleName}', using value \$nothing.")
+                }
+            }
+
+            else -> {
+                val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                when (propRes) {
+                    null -> {
+                        val obj = untyped(tobj)
+                        val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
+                        value?.let { toTypedObject(value, StdLibDefault.AnyType) }
+                        // could be validly null, so only issue warning
+                            ?: issueWarningReturnNothing(null, "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing.")
+                    }
+
+                    else -> {
+                        val propResOriginal = propRes.original
+                        val obj = untyped(tobj)
+                        when {
+                            (null != propResOriginal.execution) -> {
+                                val value = propertyExecution(obj, propResOriginal)
+                                value?.let { toTypedObject(value, propRes.typeInstance) }
+                                    ?: when {
+                                        propResOriginal.typeInstance.isNullable -> nothing()
+                                        else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing.")
+                                    }
+                            }
+
+                            (null != propResOriginal.executionSuspend) -> {
+                                val value = propertyExecution(obj, propResOriginal)
+                                value?.let { toTypedObject(value, propRes.typeInstance) }
+                                    ?: when {
+                                        propResOriginal.typeInstance.isNullable -> nothing()
+                                        else -> issueErrorReturnNothing(
+                                            null,
+                                            "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                                        )
+                                    }
+                            }
+
+                            else -> {
+                                val type = tobj.type.resolvedDefinition
+                                val execResult = primitiveExecutor.propertyValue(untyped(tobj), type, propResOriginal)
+                                when (execResult) {
+                                    null -> {
+                                        val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
+                                        value?.let { toTypedObject(value, propRes.typeInstance) }
+                                            ?: when {
+                                                propResOriginal.typeInstance.isNullable -> nothing()
+                                                else -> issueErrorReturnNothing(
+                                                    null,
+                                                    "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                                                )
+                                            }
+                                    }
+
+                                    else -> toTypedObject(execResult.value, propRes.typeInstance)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    private inline fun executeMethodInternal(
+        tobj: TypedObject,
+        methodName: String,
+        args: List<TypedObject>,
+        methodExecution: (obj: Any, decl: MethodDefinition, args: List<*>) -> Any?
+    ): TypedObject {
+        val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]
+        return when (methRes) {
+            null -> {
+                val obj = untyped(tobj)
+                val arguments = args.map { untyped(it) }.toTypedArray()
+                val value = obj.reflect().call(methodName, *arguments)
+                value?.let { toTypedObject(it, StdLibDefault.AnyType) }
+                // could be validly null
+                    ?: issueWarningReturnNothing(
+                        null,
+                        "Calling method '$methodName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                    )
+            }
+
+            else -> {
+                val typeDef = tobj.type.resolvedDefinition
+                val arguments = args.map { untyped(it) }
+                val obj = untyped(tobj)
+                val methResOriginal = methRes.original
+                when {
+                    (null != methResOriginal.execution) -> {
+                        val value = methodExecution.invoke(obj, methResOriginal, arguments)
+                        value?.let { toTypedObject(value, methRes.returnType) }
+                            ?: when {
+                                methResOriginal.returnType.isNullable -> nothing()
+                                else -> issueErrorReturnNothing(
+                                    null,
+                                    "Calling method '$methodName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                                )
+                            }
+                    }
+
+                    (null != methResOriginal.executionSuspend) -> {
+                        val value = methodExecution.invoke(obj, methResOriginal, arguments)
+                        value?.let { toTypedObject(value, methRes.returnType) }
+                            ?: when {
+                                methResOriginal.returnType.isNullable -> nothing()
+                                else -> issueErrorReturnNothing(
+                                    null,
+                                    "Calling method '$methodName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                                )
+                            }
+                    }
+
+                    else -> {
+                        val execResult = primitiveExecutor.methodCall(obj, typeDef, methResOriginal, arguments)
+                        // val execResult = primitiveExecute(obj, typeDef, meth.original, arguments)//primitiveExecutor.methodCall(untyped(tobj), type, meth.original, arguments)
+                        when (execResult) {
+                            null -> when (methResOriginal) {
+                                is MethodDefinitionDerived -> TODO()
+                                // should have found execution if there is one
+                                is MethodDefinitionPrimitive -> when {
+                                    methResOriginal.returnType.isNullable -> nothing()
+                                    else -> issueErrorReturnNothing(
+                                        null,
+                                        "using StdLibPrimitiveExecutionsForReflection not found for method '${methResOriginal}', using value \$nothing."
+                                    )
+                                }
+
+                                else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
+                            }
+
+                            else -> toTypedObject(execResult.value, methRes.returnType)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private inline fun callFunctionInternal(
+        functionName: String,
+        args: List<TypedObject>,
+        typeReferenceResolver: (TypeReference) -> TypeInstance,
+        functionExecution: (decl: FunctionDefinitionFloating, args: List<*>) -> Any?
+    ): TypedObject {
+        val decl = functionLib.declaration[functionName]
+        return when (decl) {
+            null -> issueErrorReturnNothing(null, "No function named '${functionName}' was declared, using value \$nothing.")
+
+            else -> {
+                val arguments = args.map { untyped(it) }
+                val returnType = decl.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
+                when {
+                    (null != decl.execution) -> {
+                        val value = functionExecution.invoke(decl, arguments)
+                        value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${functionName}' results in null, using value \$nothing.")
+                    }
+
+                    (null != decl.executionSuspend) -> {
+                        val value = functionExecution.invoke(decl, arguments)
+                        value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${functionName}' results in null, using value \$nothing.")
+                    }
+
+                    else -> {
+                        val execResult = primitiveExecutor.functionCall(functionName, arguments)
+                        when (execResult) {
+                            null -> error("Function '${functionName}' not executed.")
+                            else -> toTypedObject(execResult.value, returnType)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}

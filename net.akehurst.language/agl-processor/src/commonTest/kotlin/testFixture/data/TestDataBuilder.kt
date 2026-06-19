@@ -2,7 +2,7 @@ package testFixture.data
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessOptionsDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.asm.api.Asm
@@ -13,7 +13,7 @@ import net.akehurst.language.sentence.api.InputLocation
 //copied from parser
 interface TestDataParserSentence {
     val sentence: String
-    val options: ProcessOptions<Asm, SentenceContextAny>
+    val options: ProcessOptions<Asm, SentenceContext>
 }
 
 fun parseError(pos: Int, col: Int, row: Int, len: Int, tryingFor: Set<String>, nextExpected: Set<String>) =
@@ -75,7 +75,7 @@ interface TestDataProcessorSentence : TestDataParserSentence {
 class TestDataProcessorSentencePass(
     override val sentence: String,
     val description:String?,
-    override val options: ProcessOptions<Asm, SentenceContextAny>,
+    override val options: ProcessOptions<Asm, SentenceContext>,
     val expectedAsm: (AsmSimpleBuilder.() -> Unit)?,
     val expectedCompletionItem: List<CompletionItem>?
 ) : TestDataProcessorSentence {
@@ -85,7 +85,7 @@ class TestDataProcessorSentencePass(
 class TestDataProcessorSentenceFail(
     override val sentence: String,
     val description:String?,
-    override val options: ProcessOptions<Asm, SentenceContextAny>,
+    override val options: ProcessOptions<Asm, SentenceContext>,
     val expected: List<LanguageIssue>
 ) : TestDataProcessorSentence {
 
@@ -123,7 +123,7 @@ class TestDataBuilder(
     private var _typeStr: String? = null
     private var _transformStr: String? = null
     private var _referenceStr: String? = null
-    private var _options: ProcessOptions<Asm, SentenceContextAny> = ProcessOptionsDefault()
+    private var _options: ProcessOptions<Asm, SentenceContext> = ProcessOptionsDefault()
     private val _sentences = mutableListOf<TestDataProcessorSentence>()
 
     fun grammarStr(value: String) {
@@ -142,7 +142,7 @@ class TestDataBuilder(
         _referenceStr = value
     }
 
-    fun processOptions(value: ProcessOptions<Asm, SentenceContextAny>) {
+    fun processOptions(value: ProcessOptions<Asm, SentenceContext>) {
         _options = value
     }
 
@@ -166,23 +166,23 @@ class TestDataBuilder(
 @AsmTestDataBuilderMarker
 class TestDataSentenceBuilder(
     val pass: Boolean,
-    val baseOptions: ProcessOptions<Asm, SentenceContextAny>,
+    val baseOptions: ProcessOptions<Asm, SentenceContext>,
     val sentence: String,
     val description:String?
 ) {
-    private var _options: ProcessOptions<Asm, SentenceContextAny> = Agl.options(baseOptions){}
-    private var _context: SentenceContextAny? = null
+    private var _options: ProcessOptions<Asm, SentenceContext> = Agl.options(baseOptions){}
+    private var _context: SentenceContext? = null
     private var _expectedAsm: (AsmSimpleBuilder.() -> Unit)? = null
     private var _expectedCompletionItems: List<CompletionItem>? = null
     private val _expectedIssues = mutableListOf<LanguageIssue>()
 
-    fun options(value: ProcessOptions<Asm, SentenceContextAny>) {
+    fun options(value: ProcessOptions<Asm, SentenceContext>) {
         _options = value
     }
 
-    fun context(value: SentenceContextAny) {
-        _options.semanticAnalysis.context = value
-        _options.completionProvider.context = value
+    fun context(value: SentenceContext) {
+        _options.semanticAnalysis.sentenceContext = value
+        _options.completionProvider.sentenceContext = value
     }
 
     fun expectedIssues(value: List<LanguageIssue>) {

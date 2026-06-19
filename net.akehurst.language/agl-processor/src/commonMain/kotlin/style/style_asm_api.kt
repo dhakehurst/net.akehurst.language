@@ -18,6 +18,7 @@
 package net.akehurst.language.style.api
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.regex.api.EscapedPattern
 
 interface AglStyleDomain : Domain<StyleNamespace, StyleSet> {
@@ -42,6 +43,8 @@ interface StyleSet : Definition<StyleSet> {
     val rules : List<AglStyleRule>
     val metaRules: List<AglStyleMetaRule>
     val tagRules: List<AglStyleTagRule>
+
+    val allRules: List<AglStyleRule>
 }
 
 interface AglStyleRule : Formatable {

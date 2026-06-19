@@ -18,31 +18,45 @@
 package net.akehurst.language.m2mTransform.api
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 
-interface M2mTransformDomain : Domain<M2mTransformNamespace, M2MTransformDefinition> {
+interface M2mTransformDomain : Domain<M2mTransformNamespace, M2mTransformRuleSet> {
     override val namespace: List<M2mTransformNamespace>
     val allTransformRuleSet: List<M2mTransformRuleSet>
     val allTransformTest: List<M2mTransformTest>
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): M2mTransformNamespace
+    fun findTestDefinitionByQualifiedNameOrNull(qualifiedName: QualifiedName): M2mTransformTest?
 
 }
 
-interface M2mTransformNamespace : Namespace<M2MTransformDefinition> {
+interface M2mTransformNamespace : Namespace<M2mTransformRuleSet> {
+
+    val testDefinition: List<M2mTransformTest>
+
+    val testDefinitionByName: Map<SimpleName, M2mTransformTest>
+
     fun createOwnedTransformRuleSet(name: SimpleName, extends: List<M2MTransformDefinition>, options: OptionHolder): M2mTransformRuleSet
+
+    fun findOwnedTestDefinitionOrNull(simpleName: SimpleName): M2mTransformTest?
+
+    fun addTestDefinition(value: M2mTransformTest)
+
+    override fun merge(value: Namespace<M2mTransformRuleSet>)
 }
 
 /**
  * entries in an M2mTransformNamespace, either a RuleSet or a Test
  */
-interface M2MTransformDefinition : Definition<M2MTransformDefinition>
+interface M2MTransformDefinition : Definition<M2mTransformRuleSet>
 
-interface M2mTransformRuleSetReference : DefinitionReference<M2MTransformDefinition> {
-    override fun resolveAs(resolved: M2MTransformDefinition)
+interface M2mTransformRuleSetReference : DefinitionReference<M2mTransformRuleSet> {
+    override fun resolveAs(resolved: M2mTransformRuleSet)
     fun cloneTo(ns: M2mTransformNamespace): M2mTransformRuleSetReference
 }
 
@@ -54,6 +68,7 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
     override val namespace: M2mTransformNamespace
 
     val domainParameters: Map<DomainReference, SimpleName>
+    val domainParameterResolved: Map<DomainReference, TypesDomain>
     val extends: List<M2mTransformRuleSetReference>
 
     /**
@@ -67,13 +82,27 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
 
     fun addImportType(value: Import)
     fun setRule(rule: M2mTransformRule)
+
+    fun resolveDomainParameter(ref: DomainReference, typesDomain: TypesDomain)
+
+    fun merge(value: M2mTransformRuleSet)
+}
+
+interface M2mTransformRuleReference {
+    val nameOrQName: PossiblyQualifiedName
+    var resolved: M2mTransformRule?
+
+    fun resolveAs(resolved: M2mTransformRule)
 }
 
 interface M2mTransformRule {
     val isTop: Boolean
     val name: SimpleName
-    val primitiveDomains: List<VariableDefinition>
+    val parameters: List<VariableDefinition>
+    val extends: List<M2mTransformRuleReference>
     val domainSignature: Map<DomainReference, DomainSignature>
+
+    fun conformsTo(other: M2mTransformRule): Boolean
 }
 
 interface DomainSignature {
@@ -96,7 +125,32 @@ interface M2mTransformAbstractRule : M2mTransformRule {
 interface M2mTransformPatternRule : M2mTransformRule {
     val pivot: Map<SimpleName, VariableDefinition>
     val domainTemplate: Map<DomainReference, PropertyTemplateRhs>
+
+    val when_: Expression?
+    val where: List<RuleWhere>
 }
+
+interface RuleCall {
+    val ruleName: SimpleName
+    val ruleArguments: Map<SimpleName,Expression>
+    val domainArguments: Map<DomainReference,Expression>
+
+    var resolved: M2mTransformRule?
+
+    fun resolveAs(resolved: M2mTransformRule)
+}
+
+interface RuleWhen : Expression, RuleCall
+interface RuleWhenRelationHolds : RuleWhen
+interface RuleWhenRelationHoldsForAll : RuleWhen
+interface RuleWhenMappingHolds : RuleWhen
+interface RuleWhenMappingHoldsForAll : RuleWhen
+
+interface RuleWhere : RuleCall
+interface RuleWhereCallRelation : RuleWhere
+interface RuleWhereCallRelationForAll : RuleWhere
+interface RuleWhereCallMapping : RuleWhere
+interface RuleWhereCallMappingForAll : RuleWhere
 
 interface M2MTransformRelation : M2mTransformPatternRule {
 
@@ -116,12 +170,17 @@ interface M2MTransformTable : M2mTransformRule {
     val values: List<Map<DomainReference, Expression>>
 }
 
-interface ObjectTemplate :  PropertyTemplateRhs {
+interface PropertyTemplateRhs {
+    val identifier: SimpleName?
+    fun setIdentifierValue(value: SimpleName)
+    fun resolveTypes(tm: TypesDomain): List<LanguageIssue> //TODO: use generic Issues ! and move this to semanticAnalyser
 
+    fun asString(indent: Indent = Indent()): String
+}
+
+interface ObjectTemplate : PropertyTemplateRhs {
     val type: TypeInstance
     val propertyTemplate: Map<SimpleName, PropertyTemplate>
-
-    fun resolveType(tm: TypesDomain)
 }
 
 interface CollectionTemplate : PropertyTemplateRhs {
@@ -134,18 +193,23 @@ interface PropertyTemplate {
     val rhs: PropertyTemplateRhs
 }
 
-interface PropertyTemplateRhs {
-    val identifier: SimpleName?
-    fun setIdentifierValue(value: SimpleName)
-}
 
-interface PropertyTemplateExpression :  PropertyTemplateRhs {
+
+interface PropertyTemplateExpression : PropertyTemplateRhs {
     val expression: Expression
 }
 
-interface M2mTransformTest : M2MTransformDefinition {
+interface M2mTransformTest {
+    val namespace: M2mTransformNamespace
+    val name: SimpleName
+    val qualifiedName: QualifiedName
+
+    val options: OptionHolder
+
     val domainParameters: Map<DomainReference, SimpleName>
-    val testCase : Map<SimpleName, M2mTransformTestCase>
+    val testCase: Map<SimpleName, M2mTransformTestCase>
+
+    fun merge(value: M2mTransformTest)
 }
 
 interface M2mTransformTestCase {

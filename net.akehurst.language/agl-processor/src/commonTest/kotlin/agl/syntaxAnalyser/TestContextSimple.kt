@@ -18,13 +18,13 @@
 package net.akehurst.language.agl.semanticAnalyser
 
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple.assertMatches
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.scope.asm.ScopeSimple
 import kotlin.test.assertEquals
 
 object TestContextSimple {
 
-    fun assertMatches(expected: SentenceContextAny, actual: SentenceContextAny) {
+    fun assertMatches(expected: SentenceContext, actual: SentenceContext) {
         assertEquals(expected.scopeForSentence.size, actual.scopeForSentence.size)
         assertEquals(expected.scopeForSentence.keys, actual.scopeForSentence.keys)
         for (k in expected.scopeForSentence.keys) {
@@ -32,14 +32,14 @@ object TestContextSimple {
         }
     }
 
-    fun assertMatches(expected: ScopeSimple<Any>, actual: ScopeSimple<Any>) {
+    fun assertMatches(expected: ScopeSimple, actual: ScopeSimple) {
         assertEquals(expected.scopeIdentity, actual.scopeIdentity)
         assertEquals(expected.items, actual.items)
         assertMatches(expected.childScopes, actual.childScopes)
     }
 
 
-    fun assertMatches(expected: Map<String, ScopeSimple<Any>>, actual: Map<String, ScopeSimple<Any>>) {
+    fun assertMatches(expected: Map<String, ScopeSimple>, actual: Map<String, ScopeSimple>) {
         assertEquals(expected.keys, actual.keys)
         for (k in expected.keys) {
             assertMatches(expected[k]!!, actual[k]!!)

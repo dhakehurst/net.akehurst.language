@@ -25,9 +25,9 @@ import net.akehurst.language.sppt.api.SharedPackedParseTree
 ///**
 // * stateless set of functions that construct elements of an ASM
 // */
-//interface AsmFactory<AsmType : Any, AsmValueType : Any> : ObjectGraph<AsmValueType> {  //TODO: return ObjectGraph (should enable removal of this)
+//interface AsmFactory<AsmType : Any, AsmValueType : Any> : ObjectGraph {  //TODO: return ObjectGraph (should enable removal of this)
 //    fun constructAsm(): AsmType
-//    fun rootList(asm: AsmType): List<AsmValueType>
+//    fun rootList(asm: AsmType): List
 //    fun addRoot(asm: AsmType, root: AsmValueType): Boolean
 //    fun removeRoot(asm: AsmType, root: AsmValueType): Boolean
 //}

@@ -19,9 +19,9 @@ package net.akehurst.language.collections
 
 fun <E> List<E>.indexOfOrNull(element: E) = indexOf(element).let { if (-1 == it) null else it }
 
-fun <T> Set<T>.transitiveClosure(accumulate: Boolean = true, function: (T) -> Set<T>): Set<T> {
+inline fun <T> Set<T>.transitiveClosure(accumulate: Boolean = true, function: (T) -> Set<T>): Set<T> {
     var result: MutableSet<T> = this.toMutableSet()
-    var newThings: MutableSet<T> = this.toMutableSet()
+    val newThings: MutableSet<T> = this.toMutableSet()
     var newStuff = true
     while (newStuff) {
         val temp = newThings.toSet()
@@ -42,7 +42,7 @@ fun <T> Set<T>.transitiveClosure(accumulate: Boolean = true, function: (T) -> Se
 }
 
 internal fun <T> Set<T>.transitiveClosure_old(function: (T) -> Set<T>): Set<T> {
-    var result: MutableSet<T> = this.toMutableSet()
+    val result: MutableSet<T> = this.toMutableSet()
     var oldResult: MutableSet<T> = mutableSetOf<T>()
     while (!oldResult.containsAll(result)) {
         oldResult = result.toMutableSet()
@@ -54,9 +54,12 @@ internal fun <T> Set<T>.transitiveClosure_old(function: (T) -> Set<T>): Set<T> {
     return result
 }
 
-fun <T> List<T>.transitiveClosure(function: (T) -> List<T>): List<T> {
-    var result: MutableList<T> = this.toMutableList()
-    var newThings: MutableList<T> = this.toMutableList()
+/**
+ * inline so it can be used with a suspend function as argument
+ */
+inline fun <T> List<T>.transitiveClosure(function: (T) -> List<T>): List<T> {
+    val result: MutableList<T> = this.toMutableList()
+    val newThings: MutableList<T> = this.toMutableList()
     var newStuff = true
     while (newStuff) {
         val temp = newThings.toSet()

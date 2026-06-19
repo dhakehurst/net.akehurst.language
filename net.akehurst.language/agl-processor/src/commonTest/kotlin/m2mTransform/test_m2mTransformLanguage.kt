@@ -19,6 +19,7 @@ package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.m2mTransform.api.DomainReference
@@ -58,7 +59,16 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                     }
                 """.trimIndent(),
-            ),
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                }
+                val tm2 = typesDomain("D2", true) {
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
             TestData(
                 testName = "single line comment",
                 sentence = """
@@ -67,7 +77,16 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                     }
                 """.trimIndent()
-            ),
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                }
+                val tm2 = typesDomain("D2", true) {
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
             TestData(
                 testName = "multi line comment",
                 sentence = """
@@ -79,7 +98,16 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                     }
                 """.trimIndent()
-            ),
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                }
+                val tm2 = typesDomain("D2", true) {
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
             // relations
             TestData(
                 testName = "top relation",
@@ -97,16 +125,12 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
-                        }
+                        data("X") { }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
-                        }
+                        data("Y") { }
                     }
                 }
                 typeDomains[dr1] = tm1
@@ -128,16 +152,12 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
-                        }
+                        data("X") { }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
-                        }
+                        data("Y") { }
                     }
                 }
                 typeDomains[dr1] = tm1
@@ -167,16 +187,12 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
-                        }
+                        data("X") { }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
-                        }
+                        data("Y") { }
                     }
                 }
                 typeDomains[dr1] = tm1
@@ -199,16 +215,12 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
-                        }
+                        data("X") {  }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
-                        }
+                        data("Y") { }
                     }
                 }
                 typeDomains[dr1] = tm1
@@ -230,15 +242,14 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
-                        }
+                        data("X") { }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
@@ -269,15 +280,14 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
-                        }
+                        data("X") { }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
@@ -291,8 +301,8 @@ class test_m2mTransformLanguage {
                     namespace test
                     transform Test(d1:D1, d2:D2) {
                       top table Rel1 {
-                        domain d1 :Int    domain d2 :Int
-                        values  1    to   2
+                        domain d1 :Int  /**/   domain d2 :Int
+                        values  1        to    2
                       }
                     }
                 """.trimIndent()
@@ -348,17 +358,18 @@ class test_m2mTransformLanguage {
                 typeDomains[dr2] = tm2
                 typeDomains[dr3] = tm3
             },
-            // where
+
+            // when
             TestData(
-                testName = "where",
+                testName = "when related",
                 sentence = """
                     namespace test
                     transform Test(d1:D1, d2:D2) {
                       top relation Rel1 {
                         domain d1 x:X {}
                         domain d2 y:Y {}
-                        where {
-                          Rel2(x,y)
+                        when {
+                          related Rel2{d1:=x d2:=y}
                         }
                       }
                     }
@@ -368,21 +379,230 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
-                        }
+                        data("X") { }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
-                        }
+                        data("Y") { }
                     }
                 }
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+            TestData(
+                testName = "where related all",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        when {
+                          related all Rel2{d1:=x d2:=y}
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("X") { }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("Y") { }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "when mapped ",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        when {
+                          mapped Map2{d1:=x d2:=y}
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("X") { }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("Y") { }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "when mapped all",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        when {
+                          mapped all Map2{d1:=x d2:=y}
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("X") { }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("Y") { }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+
+            // where
+            TestData(
+                testName = "where relate",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          relate Rel2{d1:=x d2:=y}
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("X") { }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("Y") { }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "where relate all",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          relate all Rel2{d1:=x d2:=y}
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("X") { }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("Y") { }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "where map ",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          map Map2{d1:=x d2:=y}
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("X") { }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("Y") { }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "where map all",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          map all Map2{d1:=x d2:=y}
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("X") { }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("Y") { }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+
             // Templates - primitive
             TestData(
                 testName = "Pattern Template literal expression",
@@ -446,6 +666,7 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+
             // Templates - object
             TestData(
                 testName = "Pattern Template property literal string ",
@@ -465,15 +686,16 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
+                        data("X") {
+                            propertyOf(emptySet(), "prop", "String")
                         }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
@@ -498,16 +720,15 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
+                        data("X") {
+                            propertyOf(emptySet(), "prop", "String")
                         }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
-                        }
+                        interface_("Y")
+                        data("A")
                     }
                 }
                 typeDomains[dr1] = tm1
@@ -531,15 +752,19 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
+                        data("X") {
+                            propertyOf(emptySet(), "prop", "Property")
+                        }
+                        data("Property") {
+                            propertyOf(emptySet(), "name", "String")
                         }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
@@ -564,21 +789,26 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
+                        data("X") {
+                            propertyOf(emptySet(), "prop", "Property")
+                        }
+                        data("Property") {
+                            propertyOf(emptySet(), "name", "String")
                         }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+
             // collection template
             TestData(
                 testName = "Pattern Template collection template empty",
@@ -598,15 +828,16 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
+                        data("X") {
+                            propertyOf(emptySet(), "prop", "List") { typeArgument("String") }
                         }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
@@ -620,7 +851,7 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                       mapping Map1 {
                         domain d1 x:X {
-                          prop == ['a' 'b' 'c']
+                          prop == ['a', 'b', 'c']
                         }
                         domain d2 y:Y := A() {}
                       }
@@ -631,15 +862,16 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
+                        data("X") {
+                            propertyOf(emptySet(), "prop", "List") { typeArgument("String") }
                         }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
@@ -654,8 +886,8 @@ class test_m2mTransformLanguage {
                       mapping Map1 {
                         domain d1 x:X {
                           prop == [
-                            Object { p==b }
-                            o2: Object { p==b }
+                            Object { p==b },
+                            o2: Object { p==b },
                             Object { p==b }
                           ]
                         }
@@ -668,15 +900,19 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
+                        data("X") {
+                            propertyOf(emptySet(), "prop", "List") { typeArgument("Object") }
+                        }
+                        data("Object") {
+                            propertyOf(emptySet(), "p", "String")
                         }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
@@ -692,7 +928,7 @@ class test_m2mTransformLanguage {
                         domain d1 x:X {
                           prop == [
                             ...
-                            o2: Object { p==b }
+                            o2: Object { p==b },
                             Object { p==b }
                           ]
                         }
@@ -705,15 +941,19 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
+                        data("X") {
+                            propertyOf(emptySet(), "prop", "List") { typeArgument("Object") }
+                        }
+                        data("Object") {
+                            propertyOf(emptySet(), "p", "String")
                         }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
+                        interface_("Y")
+                        data("A") {
+                            supertype("Y")
                         }
                     }
                 }
@@ -739,16 +979,12 @@ class test_m2mTransformLanguage {
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("D1", true) {
                     namespace("n1") {
-                        data("A1") {
-                            propertyOf(emptySet(), "prop1", "String")
-                        }
+                        data("X") { }
                     }
                 }
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
-                        data("A2") {
-                            propertyOf(emptySet(), "prop2", "String")
-                        }
+                        data("Y") {  }
                     }
                 }
                 typeDomains[dr1] = tm1
@@ -785,7 +1021,7 @@ class test_m2mTransformLanguage {
                         }
                     }
                     semanticAnalysis {
-                        context(context)
+                        sentenceContext(context)
                     }
                 }
             )
@@ -824,7 +1060,6 @@ class test_m2mTransformLanguage {
 
     @Test
     fun parse() {
-        val processor = Agl.registry.agl.m2mTransform.processor!!
         for (td in testData) {
             println()
             println("--- ${td.testName} ---")
@@ -838,6 +1073,78 @@ class test_m2mTransformLanguage {
         for (i in testData.indices) {
             test_process(i)
         }
+    }
+
+    @Test
+    fun single() {
+            test_process(24)
+    }
+
+    @Test
+    fun bug() {
+        val s1 = $$"""
+namespace generateFmea
+
+// this is a one-way transformation
+transform T(arch:Source, fmea:Target) {
+
+   // map each Class with stereotype 'System' to a root (top-level) SystemElement
+   top mapping Class2System {
+     // match Classes with stereotype 'System'
+     domain arch c:Class {
+       stereotype == 'System'
+       name == cn
+	   property == prop 
+     }
+     // create a root SystemElement
+     domain fmea sys:SystemElement := SystemElement() {
+       name := cn
+       children += de
+     }
+
+     where {
+       // if prop has a value for any (c, prop) pair of objects invoke these sub-mappings
+       relate EngDomainProperty2SystemElement(root:=sys, engDomain:='Hardware', path:=List(cn)){arch:=prop fmea:=de}
+       relate EngDomainProperty2SystemElement(root:=sys, engDomain:='Software', path:=List(cn)){arch:=prop fmea:=de}
+       relate EngDomainProperty2SystemElement(root:=sys, engDomain:='Mechanical', path:=List(cn)){arch:=prop fmea:=de}
+     }
+   }
+
+  // map propertes whoes type has a stereotype of engDomain to SystemElements under the EngDomain SystemElement
+  mapping EngDomainProperty2SystemElement( root:SystemElement, engDomain:String, path:List<String> ) {
+    domain arch prop:Property {
+      name == pn
+      type == c:Class {
+        stereotype==engDomain
+        name == cn
+        property == prop
+      }
+    }
+    domain fmea se:SystemElement := SystemElement() {
+      name := engDomain
+      note := 'The $engDomain components'
+      parent := root
+      children += SystemElement() {
+        name := cn
+        note += path
+      }
+    }
+
+     where {
+       relate EngDomainProperty2SystemElement(root:=root, engDomain:='Hardware', path:=path+pn){arch:=prop fmea:=se}
+       relate EngDomainProperty2SystemElement(root:=root, engDomain:='Software', path:=path+pn){arch:=prop fmea:=se}
+       relate EngDomainProperty2SystemElement(root:=root, engDomain:='Mechanical', path:=path+pn){arch:=prop fmea:=se}
+     }
+  }
+
+}            
+        """.trimIndent()
+        val proc = Agl.registry.agl.m2mTransform.processor!!
+        val result = proc.parse(
+            s1,
+        )
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
     }
 
 }

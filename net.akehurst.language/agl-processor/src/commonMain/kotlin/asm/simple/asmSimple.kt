@@ -18,9 +18,10 @@
 package net.akehurst.language.asm.simple
 
 import net.akehurst.language.asm.api.*
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.asm.StdLibDefault
@@ -107,7 +108,7 @@ open class AsmSimple(
     override val elementIndex = mutableMapOf<AsmPath, AsmStructure>()
 
     fun addRoot(root: AsmValue) = (this.root as MutableList).add(root)
-    fun removeRoot(root: Any)= (this.root as MutableList).remove(root)
+    fun removeRoot(root: Any) = (this.root as MutableList).remove(root)
 
     fun createStructure(parsePath: String, typeName: QualifiedName): AsmStructureSimple {
         val obj = objectGraph.createStructureValue(typeName, emptyMap())
@@ -215,10 +216,28 @@ val AsmValue.raw: Any
         is AsmNothing -> Unit
         is AsmAny -> this.value
         is AsmPrimitive -> this.value
-        is AsmList -> this.elements.map { it.raw }
-        else -> {
-            TODO()
-        }
+        is AsmListSeparated -> this.elements.map { it.raw }.toSeparatedList()
+        is AsmListSimple -> this.elements.map { it.raw }
+        is AsmStructure -> this.property.values
+            .sortedBy { it.index }
+            .associate { pv -> Pair(pv.name.value, pv.value.raw) }
+
+        is AsmLambda -> TODO()
+        else -> error("Unknown subtype of AsmValue '${this::class.simpleName}'")
+    }
+
+val Any.toAsmSimple: AsmValue
+    get() = when (this) {
+        is AsmValue -> this
+        is String -> AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, this)
+        is Boolean -> AsmPrimitiveSimple(StdLibDefault.Boolean.qualifiedTypeName, this)
+        is Int -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this.toLong())
+        is Long -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this)
+        is Float -> AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, this.toDouble())
+        is Double -> AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, this)
+        is ListSeparated<*,*,*> -> AsmListSeparatedSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple }.toSeparatedList())
+        is List<*> -> AsmListSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple })
+        else -> error("Type cannot be converted to AsmValue '${this::class.simpleName}'")
     }
 
 class AsmReferenceSimple(
@@ -256,7 +275,7 @@ class AsmReferenceSimple(
 
     override fun toString(): String = when (value) {
         null -> "<unresolved> &$reference"
-        else -> "&{'${value!!.semanticPath?.value ?: value!!.parsePath.toString()}' : ${value!!.typeName}}"
+        else -> "&{'${value!!.qualifiedName(".") ?: value!!.syntaxAnalyserPath?.value ?: value!!.parsePath}' : ${value!!.typeName}}"
     }
 }
 
@@ -267,7 +286,8 @@ class AsmStructureSimple(
     private var _properties = mutableMapOf<PropertyValueName, AsmStructurePropertySimple>()
 
     override var parsePath: String = "??"
-    override var semanticPath: AsmPath? = null
+    override var syntaxAnalyserPath: AsmPath? = null //TODO: not sure if still need this
+    override var semanticQualifiedPath: List<String>? = null; private set
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
     override val propertyOrdered
@@ -290,6 +310,14 @@ class AsmStructureSimple(
             .filterNot { it.isReference }
             .flatMap { if (it.value is List<*>) it.value as List<*> else listOf(it.value) }
             .filterIsInstance<AsmStructureSimple>()
+
+
+    override fun qualifiedName(separator: String): String? =
+        semanticQualifiedPath?.joinToString(separator)
+
+    override fun setSemanticQualifiedPath(segments: List<String>) {
+        semanticQualifiedPath = segments
+    }
 
     override fun hasProperty(name: PropertyValueName): Boolean = property.containsKey(name)
 
@@ -329,17 +357,23 @@ class AsmStructureSimple(
         other !is AsmStructure -> false
         this.qualifiedTypeName != other.qualifiedTypeName -> false
         //this.parsePath != other.parsePath -> false
-        this.property.size != other.property.size -> false
-        else -> {
-            this.property.all { (k, v) ->
-                val o = other.property[k]
-                if (null == o) {
-                    false
-                } else {
-                    v.equalTo(o)
+        else -> when {
+            null != this.semanticQualifiedPath && null != other.semanticQualifiedPath -> this.semanticQualifiedPath == other.semanticQualifiedPath
+            else -> when {
+                this.property.size != other.property.size -> false
+                else -> {
+                    this.property.all { (k, v) ->
+                        val o = other.property[k]
+                        if (null == o) {
+                            false
+                        } else {
+                            v.equalTo(o)
+                        }
+                    }
                 }
             }
         }
+
     }
 
     override fun hashCode(): Int = parsePath.hashCode()
@@ -348,7 +382,7 @@ class AsmStructureSimple(
         else -> false
     }
 
-    override fun toString(): String = ":$typeName[${semanticPath?.value ?: parsePath.toString()}] { ${this.property.values.joinToString()}} }"
+    override fun toString(): String = ":$typeName[${qualifiedName(".") ?: syntaxAnalyserPath?.value ?: parsePath}]"
 
 }
 
@@ -400,7 +434,7 @@ class AsmStructurePropertySimple(
                         error("Cannot compare property values: ${t} and ${o}")
                     }
                 } else {
-                        t.equalTo(o)
+                    t.equalTo(o)
                 }
             }
         }
@@ -425,6 +459,39 @@ class AsmStructurePropertySimple(
     }
 }
 
+class AsmSetSimple(
+    override val elements: Set<AsmValue>
+) : AsmValueAbstract(), AsmSet {
+    override val qualifiedTypeName get() = StdLibDefault.List.qualifiedName
+
+    override val isEmpty: Boolean get() = elements.isEmpty()
+    override val isNotEmpty: Boolean get() = elements.isNotEmpty()
+
+    override fun asString(indent: Indent): String = when {
+        elements.isEmpty() -> "[]"
+        1 == elements.size -> "[ ${elements.first().asString(indent.inc)} ]"
+        else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
+    }
+
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmSet -> false
+        other.elements.size != this.elements.size -> false
+        else -> {
+            this.elements.all { tEl ->
+                other.elements.any { othEl -> tEl.equalTo(othEl) }
+            }
+        }
+    }
+
+    override fun hashCode(): Int = elements.hashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is AsmList -> false
+        else -> this.elements == other.elements //TODO: should use equalTo on elements !
+    }
+
+    override fun toString(): String = "Set(${elements.joinToString()})"
+}
+
 class AsmListSimple(
     override val elements: List<AsmValue>
 ) : AsmValueAbstract(), AsmList {
@@ -443,7 +510,7 @@ class AsmListSimple(
         other !is AsmList -> false
         other.elements.size != this.elements.size -> false
         else -> {
-            (0..this.elements.size).all {
+            (0 until this.elements.size).all {
                 this.elements[it].equalTo(other.elements[it])
             }
         }
@@ -455,7 +522,7 @@ class AsmListSimple(
         else -> this.elements == other.elements
     }
 
-    override fun toString(): String = elements.toString()
+    override fun toString(): String = "List(${elements.joinToString()})"
 }
 
 class AsmListSeparatedSimple(
@@ -471,11 +538,12 @@ class AsmListSeparatedSimple(
         1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
         else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
+
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmListSeparated -> false
         other.elements.size != this.elements.size -> false
         else -> {
-            (0..this.elements.size).all {
+            (0 until this.elements.size).all {
                 (this.elements[it]).equalTo(other.elements[it])
             }
         }

@@ -20,6 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.grammar.api.*
@@ -55,17 +56,17 @@ class CompletionProviderSimple(
     val grammar2TypesDomain: Grammar2TypesDomainMapping,
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain
-) : CompletionProviderAbstract<Asm, SentenceContextAny>() {
+) : CompletionProviderAbstract<Asm, SentenceContext>() {
 
     val targetNamespace = typesDomain.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypesNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContextAny>): List<CompletionItem> {
-        val context = options.context
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
+        val sentenceContext = options.sentenceContext
 
         return when {
             options.path.isEmpty() -> {
-                val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
+                val result = if (null == sentenceContext) {// || context.isEmpty || crossReferenceModel.isEmpty) {
                     val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
                     val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
                     expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
@@ -83,7 +84,7 @@ class CompletionProviderSimple(
                                         expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
                                     }
                                     else -> {
-                                        val forTypes = provideForType(type, firstSpineNode, context)
+                                        val forTypes = provideForType(type, firstSpineNode, sentenceContext)
                                         val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
                                         val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
                                         forTypes + expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
@@ -127,9 +128,9 @@ class CompletionProviderSimple(
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)
 
 
-    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: SentenceContextAny): List<CompletionItem> {
+    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, sentenceContext: SentenceContext): List<CompletionItem> {
         try {
-            val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
+            val prop = type.resolvedDefinition.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
             //TODO: lists ?
             return when (prop) {
                 null -> emptyList()
@@ -139,7 +140,7 @@ class CompletionProviderSimple(
                         strProps = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
                                 strProps.filter { it.typeInstance != StdLibDefault.String }.flatMap { prp ->
                                     val type = prp.typeInstance
-                                    val td = type.resolvedDeclaration
+                                    val td = type.resolvedDefinition
                                     when (td) {
                                         is CollectionType -> firstPropertyOf(type.typeArguments[0].type)
                                         is StructuredType -> firstPropertyOf(type)
@@ -151,8 +152,8 @@ class CompletionProviderSimple(
                         val refTypeNames = crossReferenceDomain.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
                         val refTypes = refTypeNames.mapNotNull { typesDomain.findByQualifiedNameOrNull(it) }
                         val items = refTypes.flatMap { refType ->
-                            context.findItemsConformingTo {
-                                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                            sentenceContext.findItemsConformingTo {
+                                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDefinition
                                 itemType.conformsTo(refType)
                             }
                         }
@@ -168,7 +169,7 @@ class CompletionProviderSimple(
         }
     }
 /*
-    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: SentenceContextAny): List<CompletionItem> {
+    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: SentenceContext): List<CompletionItem> {
         val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
         //TODO: lists ?
         return when (prop) {
@@ -200,7 +201,7 @@ class CompletionProviderSimple(
     }
 */
     private fun firstPropertyOf(type: TypeInstance): List<PropertyDeclaration> {
-        val typesClosure = setOf(type).transitiveClosure { it.resolvedDeclaration.subtypes.toSet() }
+        val typesClosure = setOf(type).transitiveClosure { it.resolvedDefinition.subtypes.toSet() }
         val minProps = typesClosure.mapNotNull { it.allResolvedProperty.values.minByOrNull { it.index } }
         val minOfMin = minProps.minOf { it.index }
         return minProps.filter { minOfMin == it.index }

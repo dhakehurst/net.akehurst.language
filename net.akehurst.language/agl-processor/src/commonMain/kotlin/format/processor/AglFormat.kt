@@ -18,7 +18,8 @@ package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.agl.processor.contextFromLanguageObject
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -32,16 +33,16 @@ import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
 
-object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>() {
+object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Format"
     const val goalRuleName = "unit"
@@ -61,27 +62,28 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
             templateExpression = templateExpressionProperty | templateExpressionList | templateExpressionEmbedded ;
             templateExpressionProperty = DOLLAR_IDENTIFIER ;
             templateExpressionList = '$[' $NAME::separatedList ']' ;
-            templateExpressionEmbedded = '$${'{'}' $NAME::formatExpression '}'
-            
-            leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
+            templateExpressionEmbedded = '$${'{'}' $NAME::embeddedExpression '}'
+                        
+            leaf DOLLAR_IDENTIFIER = '$' "[a-zA-Z_][a-zA-Z_0-9-]*" ;
             leaf RAW_TEXT = "(\\\"|[^\"])+" ;
         }
         
         grammar $NAME extends ${AglExpressions.NAME} {        
-            override definition = format ;
-            format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
+            override definition = format | function ;
+            format = 'format' IDENTIFIER extends? '{' option* ruleList '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule* ;
-            formatRule = typeReference '->' formatExpression ;
+            formatRule = typeReference '->' expression ;
             
-            formatExpression
-              = expression
-              | Template::templateString
-              ;
-            override whenOption = expression '->' formatExpression ;
-            override whenOptionElse = 'else' '->' formatExpression ;
+            override literalExpression = literal | templateExpression 
+            templateExpression = Template::templateString ;
             
-            separatedList = expression 'sep' separator ;
+            viaFormatSet = 'via' possiblyQualifiedName ;
+            //embeddedExpression is used from Template, but part of this grammar
+            embeddedExpression = expression viaFormatSet? ;
+            
+            // separatedList is used from Template, but part of this grammar
+            separatedList = expression 'sep' separator viaFormatSet? ;
             separator = STRING | rootExpression ;
         }
     """
@@ -108,11 +110,8 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
 
     override val styleString: String = """
         namespace ${NAMESPACE_NAME}
-          styles ${NAME} {
-            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-              foreground: darkgreen;
-              font-weight: bold;
-            }
+          styles ${NAME} : ${AglBase.NAME} {
+
           }
       """
 
@@ -122,7 +121,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
     """.trimIndent()
 
     override val grammarDomain by lazy {
-        grammarDomain(name = NAME, grammarRegistry = Agl.registry) {
+        grammarDomain(name = NAME, registry = Agl.registry) {
             namespace(NAMESPACE_NAME) {
                 grammar("Template") {
                     concatenation("templateString") {
@@ -143,21 +142,22 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
                         lit("\$["); ebd(NAME, "separatedList"); lit("]")
                     }
                     concatenation("templateExpressionEmbedded") {
-                        lit("\${"); ebd(NAME, "formatExpression"); lit("}")
+                        lit("\${"); ebd(NAME, "embeddedExpression"); lit("}")
                     }
                     concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
                     concatenation("RAW_TEXT", isLeaf = true) {
-                        pat(
-                            "([^" +
-                                    "$\"\\\\]|\\\\.)+"
-                        )
+                        pat("([^\$\"\\\\]|\\\\.)+")
                     }
                 }
                 grammar(NAME) {
                     extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)
-                    concatenation("definition", OverrideKind.REPLACE) { ref("format") }
+                    choice("definition", overrideKind = OverrideKind.REPLACE) {
+                        ref("format")
+                        ref("function")
+                    }
                     concatenation("format") {
                         lit("format"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
+                        lst(0, -1) { ref("option") }
                         lst(0, -1) { ref("formatRule") }
                         lit("}")
                     }
@@ -165,22 +165,24 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
                         lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
                     }
                     concatenation("formatRule") {
-                        ref("typeReference"); lit("->"); ref("formatExpression")
+                        ref("typeReference"); lit("->"); ref("expression")
                     }
-                    choice("formatExpression") {
-                        ref("expression")
+                    // override literalExpression += literal | templateExpression ;
+                    choice("literalExpression", overrideKind = OverrideKind.REPLACE) {
+                        ref("literal")
+                        ref("templateExpression")
+                    }
+                    concatenation("templateExpression") {
                         ebd("Template", "templateString")
                     }
-                    concatenation("whenOption", OverrideKind.REPLACE) {
-                        ref("expression"); lit("->"); ref("formatExpression")
-                    }
-                    concatenation("whenOptionElse", OverrideKind.REPLACE) {
-                        lit("else"); lit("->"); ref("formatExpression")
-                    }
-
-                    // only referenced from Template::templateExpressionList
+                    concatenation("viaFormatSet") { lit("via"); ref("possiblyQualifiedName") }
+                    //embeddedExpression is used from Template, but part of this grammar
+                    // embeddedExpression = expression viaFormatSet? ;
+                    concatenation("embeddedExpression") { ref("expression"); opt { ref("viaFormatSet") } }
+                    // separatedList is used from Template, but part of this grammar
+                    // separatedList = expression 'sep' separator viaFormatSet? ;
                     concatenation("separatedList") {
-                        ref("expression"); lit("sep"); ref("separator")
+                        ref("expression"); lit("sep"); ref("separator"); opt { ref("viaFormatSet") }
                     }
                     choice("separator") {
                         ref("STRING")
@@ -219,12 +221,13 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME, sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
-                        declaration("font-weight", "bold")
+                    extends(AglBase.NAME)
+                    tagRule("DOLLAR_IDENTIFIER") {
+                        declaration("foreground", "darkblue")
+                        declaration("font-style", "italic")
                     }
                 }
             }
@@ -241,7 +244,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContextAny>()
     override val defaultTargetGoalRule = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<AglFormatDomain>? by lazy { AglFormatSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<AglFormatDomain, SentenceContextAny>? by lazy { AglFormatSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<AglFormatDomain, SentenceContextAny>? by lazy { AglFormatCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<AglFormatDomain, SentenceContext>? by lazy { AglFormatSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AglFormatDomain, SentenceContext>? by lazy { AglFormatCompletionProvider() }
 
 }

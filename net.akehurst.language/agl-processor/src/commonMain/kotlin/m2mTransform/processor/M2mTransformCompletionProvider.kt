@@ -18,8 +18,8 @@
 package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 
-class M2mTransformCompletionProvider : CompletionProviderAbstract<M2mTransformDomain, SentenceContextAny>() {
+class M2mTransformCompletionProvider : CompletionProviderAbstract<M2mTransformDomain, SentenceContext>() {
 }

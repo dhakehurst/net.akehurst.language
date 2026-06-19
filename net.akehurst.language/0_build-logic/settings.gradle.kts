@@ -16,16 +16,19 @@
 
 pluginManagement {
     repositories {
-//        mavenLocal {
-//            content {
-//                includeGroupByRegex("net\\.akehurst.+")
-//            }
-//        }
+        mavenLocal {
+            content {
+                includeGroupByRegex("net\\.akehurst.+")
+            }
+            mavenContent {
+                snapshotsOnly()
+            }
+        }
         mavenCentral()
         google()
         gradlePluginPortal()
     }
 }
 plugins {
-    id("dev.panuszewski.typesafe-conventions") version "0.7.4"
+    id("dev.panuszewski.typesafe-conventions") version "0.10.0"
 }

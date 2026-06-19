@@ -18,7 +18,7 @@
 package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
@@ -53,21 +53,21 @@ import net.akehurst.language.types.asm.PropertyDeclarationStored
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.util.cached
 
-class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, SentenceContextAny> {
+class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, SentenceContext> {
 
     companion object {
         const val OPTION_CREATE_TYPES = "create-missing-types"
         const val OPTION_OVERRIDE_DEFAULT = "override-default-transform"
 
-        private val OptionHolder.createTypes get() = this[OPTION_CREATE_TYPES] == "true"
-        private val OptionHolder.overrideDefault get() = this[OPTION_OVERRIDE_DEFAULT] == "true"
+        private val OptionHolder.createTypes:Boolean get() = this[OPTION_CREATE_TYPES] ?: false
+        private val OptionHolder.overrideDefault:Boolean get() = this[OPTION_OVERRIDE_DEFAULT]  ?: false
 
     }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
 
-    private var _context: SentenceContextAny? = null
+    private var _context: SentenceContext? = null
     private var __asm: AsmTransformDomain? = null
     private val _asm: AsmTransformDomain get() = __asm!!
     //TODO: rework to allow use of proper items in context
@@ -92,12 +92,12 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         sentenceIdentity: Any?,
         asm: AsmTransformDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
-        _context = options.context
+        _context = options.sentenceContext
         __asm = asm
         if (null == _context) {
-            _issues.warn(null, "No context, semantic analysis cannot be performed")
+            _issues.warn(null, "No sentence context provided, semantic analysis cannot be performed")
         } else {
             (asm as AsmTransformDomainDefault).typesDomain = _typesDomain
             for (trns in asm.namespace) {
@@ -117,7 +117,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     for (ref in trs.extends) {
                         val resolved = asm.resolveReference(ref)
                         when (resolved) {
-                            null -> _issues.error(null, "Cannot resolve '${ref.nameOrQName}' in context '${ref.localNamespace.qualifiedName}'")
+                            null -> _issues.error(null, "Cannot resolve '${ref.nameOrQName}' in the context of '${ref.localNamespace.qualifiedName}'")
                         }
                     }
                     for (trr in trs.rules.values) {
@@ -139,6 +139,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         val rulesToConvert = trs.rules.values.filter { it.expression is RootExpression && (it.expression as RootExpression).isSelf.not() }
         when {
             trs.options.overrideDefault -> {
+                findOrCreateGrammarTypeNamespace(trs.qualifiedName) //ensure type namespace exists
                 rulesToConvert.forEach { trr ->
                     val expr = trr.expression as RootExpression
                     val pqn = expr.name.asPossiblyQualifiedName
@@ -160,11 +161,11 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     newRule.grammarRuleName = trr.grammarRuleName
                     trs.setRule(newRule)
                     //also ensure properties are transferred
-                    val defDecl = defRule.resolvedType.resolvedDeclaration
+                    val defDecl = defRule.resolvedType.resolvedDefinition
                     when {
                         clonedTypeDeclOrCreated is StructuredType -> {
                             val tocopy = defDecl.property.filter {
-                                it is PropertyDeclarationStored && null == exprType.resolvedDeclaration.findOwnedPropertyOrNull(it.name)
+                                it is PropertyDeclarationStored && null == exprType.resolvedDefinition.findOwnedPropertyOrNull(it.name)
                             }
                             tocopy.forEach { clonedTypeDeclOrCreated.appendPropertyStored(it.name, it.typeInstance, it.characteristics, it.index) }
                         }
@@ -185,7 +186,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         // to define the type for a grammar Rule
         // thus only certain expressions are valid.
         val expr = trr.expression
-        val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Should exist!")
+        val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Namespace '${trs.qualifiedName.value}' Should exist!")
         val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)
         val exprType = when {
             trr.isResolved -> trr.resolvedType
@@ -297,7 +298,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                             val t = gtns.findOwnedOrCreateDataTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
 
                             val params = expr.constructorArguments.map { ass ->
-                                val pName = TmParameterName(ass.lhsPropertyName)
+                                val pName = TmParameterName(ass.variable.name)
                                 var pType = exprTypeResolver.typeFor(ass.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
                                 if (pType == StdLibDefault.NothingType) {
                                     pType = StdLibDefault.AnyType
@@ -307,7 +308,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                             t.addConstructor(params)
 
                             expr.propertyAssignments.forEach { ass ->
-                                val propName = PropertyName(ass.lhsPropertyName)
+                                val propName = PropertyName(ass.variable.name)
                                 var propType = exprTypeResolver.typeFor(ass.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
                                 if (propType == StdLibDefault.NothingType) {
                                     propType = StdLibDefault.AnyType

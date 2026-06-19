@@ -18,7 +18,8 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.agl.processor.contextFromLanguageObject
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.asmTransform.builder.asmTransform
@@ -26,15 +27,17 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.ChoiceIndicator
+import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.builder.typesDomain
 
-object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>() {
+object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Expressions"
     const val TYPES_API_NS_QN = "${NAMESPACE_NAME}.expressions.api"
@@ -46,20 +49,29 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
 
     override val grammarString = $$"""
         namespace $$NAMESPACE_NAME
-          grammar $$NAME : Base {
+          grammar $$NAME : $${AglBase.NAME} {
+            
+            override definition = function ;
+            
+            function = 'fun' IDENTIFIER '(' [parameter / ',']* ')' (':' typeReference)? '=' expression ;
+            parameter = IDENTIFIER ':' typeReference ('=' expression)? ;
+            
             expression
               = rootExpression
               | literalExpression
+              | functionCall
               | navigationExpression
+              | ternaryConditionExpression
               | infixExpression
               | tuple
               | object
-              | functionCall
               | with
               | when
               | cast
               | typeTest
+              | lambda
               | group
+              | block
               ;
             rootExpression = propertyReference ;
             literalExpression = literal ;
@@ -68,6 +80,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
             navigationRoot 
              = rootExpression
              | literalExpression
+             | functionCall
              | group
             ;
             navigationPart
@@ -76,6 +89,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
              | indexOperation
             ;
             
+            ternaryConditionExpression = expression '?' expression ':' expression ;
+            
             infixExpression = [expression / INFIX_OPERATOR]2+ ;
             leaf INFIX_OPERATOR
               = 'or' | 'and' | 'xor'  // logical 
@@ -83,16 +98,15 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
               | '/' | '*' | '%' | '+' | '-' // arithmetic
               ;
             
-            functionCall = possiblyQualifiedName '(' argumentList ')' ;
-            tuple = 'tuple' assignmentBlock ;
-            object = possiblyQualifiedName constructorArguments assignmentBlock ;
-            constructorArguments = '(' [assignment / ',']* ')' ;
-            assignmentBlock = '{' assignmentList  '}' ;
-            assignmentList = assignment* ;
-            assignment = propertyName grammarRuleIndex? ASSIGN_OP expression ;
+            functionCall = IDENTIFIER '(' argumentList ')' ;
+            object = possiblyQualifiedName constructorArguments propertyAssignmentBlock ;
+            constructorArguments = '(' [propertyAssignment / ',']* ')' ;
+            tuple = 'tuple' propertyAssignmentBlock ;
+            propertyAssignmentBlock = '{' propertyAssignment*  '}' ;
+            propertyAssignment = propertyName grammarRuleIndex? ASSIGN_OP expression ;
+            leaf ASSIGN_OP = ':=' | '+=' ;
             propertyName = SPECIAL | IDENTIFIER ;
             grammarRuleIndex = '$' POSITIVE_INTEGER ;
-            leaf ASSIGN_OP = ':=' | '+=' ;
                 
             with = 'with' '(' expression ')' expression ;
             
@@ -106,10 +120,14 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
             group = '(' expression ')' ;
             
             propertyCall = '.' propertyReference ;
-            methodCall = '.' methodReference '(' argumentList ')' lambda? ;
+            methodCall = '.' methodReference '(' argumentList ')' ;
             argumentList = [expression / ',']* ;
             
-            lambda = '{' expression '}' ;
+            lambda = '{' [IDENTIFIER / ',']+ '->' expression '}' ;
+            
+            block = '{' variableAssignment* expression '}' ;
+            variableAssignment = variableDefinition ':=' expression ;
+            variableDefinition = IDENTIFIER (':' typeReference)? ;
             
             propertyReference = SPECIAL | IDENTIFIER ;
             methodReference = IDENTIFIER ;
@@ -122,10 +140,6 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
             literal = BOOLEAN | INTEGER | REAL | STRING ;
         
             leaf SPECIAL = '$' IDENTIFIER ;
-            leaf BOOLEAN = "true|false" ;
-            leaf INTEGER = "[0-9]+" ;
-            leaf REAL = "[0-9]+[.][0-9]+" ;
-            leaf STRING = "'([^'\\]|\\.)*'" ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
           }
       """.trimIndent()
@@ -178,47 +192,72 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
 
     override val asmTransformString: String = """
         namespace ${NAMESPACE_NAME}
-          // TODO
+          asm-transform $NAME {
+            import-types net.akehurst.language.expressions.api
+            expression: Expression() {
+        
+            }
+            rootExpression: RootExpression() {
+        
+            }
+          }
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace $NAMESPACE_NAME
-          // TODO
-    """.trimIndent()
+        namespace ${NAMESPACE_NAME}
+            scope §root { }
+    """.trimIndent() //TODO
 
     override val styleString: String = """
         namespace ${NAMESPACE_NAME}
-          styles ${NAME} {
-            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-              foreground: darkgreen;
-              font-weight: bold;
-            }
+          styles ${NAME} : ${AglBase.NAME} {
+
           }
-      """
+      """.trimIndent()
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
-          // TODO
-    """.trimIndent()
+        
+    """.trimIndent() // TODO
 
     override val grammarDomain by lazy {
         grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
+
+                    // override definition = function ;
+                    concatenation("definition", overrideKind = OverrideKind.REPLACE) { ref("function") }
+                    // function := 'fun' IDENTIFIER '(' [parameter sep ',']* ')' (':' typeReference)? '=' expression ;
+                    concatenation("function") {
+                        lit("fun"); ref("IDENTIFIER");
+                        lit("("); spLst(0,-1) { ref("parameter"); lit(",") }; lit(")");
+                        opt { grp{ lit(":"); ref("typeReference") } }
+                        lit("="); ref("expression")
+                    }
+                    // parameter := IDENTIFIER ': typeReference ('=' expression)? ;
+                    concatenation("parameter") {
+                        ref("IDENTIFIER");
+                        lit(":"); ref("typeReference")
+                        opt { grp{ lit("="); ref("expression") } }
+                    }
+
                     choice("expression") {
                         ref("rootExpression")
                         ref("literalExpression")
+                        ref("functionCall")
                         ref("navigationExpression")
+                        ref("ternaryConditionExpression")
                         ref("infixExpression")
                         ref("tuple")
                         ref("object")
-                        ref("functionCall")
                         ref("with")
                         ref("when")
                         ref("cast")
                         ref("typeTest")
+                        ref("lambda")
                         ref("group")
+                        ref("block")
                     }
                     concatenation("rootExpression") {
                         ref("propertyReference")
@@ -230,12 +269,16 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     choice("navigationRoot") {
                         ref("rootExpression")
                         ref("literalExpression")
+                        ref("functionCall")
                         ref("group")
                     }
                     choice("navigationPart") {
                         ref("propertyCall")
                         ref("methodCall")
                         ref("indexOperation")
+                    }
+                    concatenation("ternaryConditionExpression") {
+                        ref("expression"); lit("?"); ref("expression"); lit(":"); ref("expression")
                     }
                     separatedList("infixExpression", 2, -1) {
                         ref("expression"); ref("INFIX_OPERATOR")
@@ -249,24 +292,21 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                         lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
                     }
                     concatenation("functionCall") {
-                        ref("possiblyQualifiedName"); lit("("); ref("argumentList"); lit(")")
+                        ref("IDENTIFIER"); lit("("); ref("argumentList"); lit(")")
                     }
                     concatenation("object") {
-                        ref("possiblyQualifiedName"); ref("constructorArguments"); ref("assignmentBlock")
+                        ref("possiblyQualifiedName"); ref("constructorArguments"); ref("propertyAssignmentBlock")
                     }
                     concatenation("constructorArguments") {
-                        lit("("); spLst(0, -1) { ref("assignment"); lit(",") }; lit(")");
+                        lit("("); spLst(0, -1) { ref("propertyAssignment"); lit(",") }; lit(")");
                     }
                     concatenation("tuple") {
-                        lit("tuple"); ref("assignmentBlock")
+                        lit("tuple"); ref("propertyAssignmentBlock")
                     }
-                    concatenation("assignmentBlock") {
-                        lit("{"); ref("assignmentList"); lit("}")
+                    concatenation("propertyAssignmentBlock") {
+                        lit("{"); lst(0, -1) { ref("propertyAssignment") }; lit("}")
                     }
-                    list("assignmentList", 0, -1) {
-                        ref("assignment")
-                    }
-                    concatenation("assignment") {
+                    concatenation("propertyAssignment") {
                         ref("propertyName"); opt { ref("grammarRuleIndex") }; ref("ASSIGN_OP"); ref("expression")
                     }
                     choice("ASSIGN_OP", isLeaf = true) {
@@ -299,12 +339,17 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     concatenation("methodCall") {
                         lit("."); ref("methodReference")
                         lit("("); ref("argumentList"); lit(")")
-                        opt { ref("lambda") }
                     }
                     separatedList("argumentList", 0, -1) {
                         ref("expression"); lit(",")
                     }
-                    concatenation("lambda") { lit("{"); ref("expression"); lit("}") }
+                    concatenation("lambda") { lit("{"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit ("->"); ref("expression"); lit("}") }
+                    // block = '{' variableAssignment* expression '}' ;
+                    concatenation("block") { lit("{"); lst(0, -1) { ref("variableAssignment") }; ref("expression"); lit("}") }
+                    // variableAssignment = variableDefinition ':=' expression ;
+                    concatenation("variableAssignment") { ref("variableDefinition"); lit(":="); ref("expression"); }
+                    // variableDefinition = IDENTIFIER (':' typeReference)? ;
+                    concatenation("variableDefinition") { ref("IDENTIFIER"); opt{ grp{ lit(":"); ref("typeReference") } } }
                     choice("propertyReference") {
                         ref("SPECIAL")
                         ref("IDENTIFIER")
@@ -321,17 +366,13 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                         lit("<"); spLst(1, -1) { ref("typeReference"); lit(",") }; lit(">")
                     }
 
-                    choice("literal") {
+                    choice("literal", OverrideKind.REPLACE) {
                         ref("BOOLEAN")
                         ref("INTEGER")
                         ref("REAL")
                         ref("STRING")
                     }
                     concatenation("SPECIAL", isLeaf = true) { lit("$"); ref("IDENTIFIER") }
-                    concatenation("BOOLEAN", isLeaf = true) { pat("true|false") }
-                    concatenation("INTEGER", isLeaf = true) { pat("[0-9]+") }
-                    concatenation("REAL", isLeaf = true) { pat("[0-9]+[.][0-9]+") }
-                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
 
                     // If we have an 'expression'
@@ -448,8 +489,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     supertype("ExpressionAbstract")
                     supertype("WithExpression")
                     constructor_ {
-                        parameter("withContext", "Expression", false)
-                        parameter("expression", "Expression", false)
+                        parameter(setOf(), "withContext", "Expression")
+                        parameter(setOf(), "expression", "Expression")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
                     propertyOf(setOf(VAL, CMP, STR), "withContext", "Expression", false)
@@ -457,15 +498,15 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("WhenOptionElseDefault") {
                     supertype("WhenOptionElse")
                     constructor_ {
-                        parameter("expression", "Expression", false)
+                        parameter(setOf(), "expression", "Expression")
                     }
                     propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
                 }
                 data("WhenOptionDefault") {
                     supertype("WhenOption")
                     constructor_ {
-                        parameter("condition", "Expression", false)
-                        parameter("expression", "Expression", false)
+                        parameter(setOf(), "condition", "Expression")
+                        parameter(setOf(), "expression", "Expression")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", false)
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
@@ -474,8 +515,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     supertype("ExpressionAbstract")
                     supertype("WhenExpression")
                     constructor_ {
-                        parameter("options", "List", false)
-                        parameter("elseOption", "WhenOptionElse", false)
+                        parameter(setOf(), "options", "List")
+                        parameter(setOf(), "elseOption", "WhenOptionElse")
                     }
                     propertyOf(setOf(VAL, REF, STR), "elseOption", "WhenOptionElse", false)
                     propertyOf(setOf(VAR, CMP, STR), "options", "List", false) {
@@ -485,8 +526,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("TypeTestExpressionDefault") {
                     supertype("TypeTestExpression")
                     constructor_ {
-                        parameter("expression", "Expression", false)
-                        parameter("targetType", "TypeReference", false)
+                        parameter(setOf(), "expression", "Expression")
+                        parameter(setOf(), "targetType", "TypeReference")
                     }
                     propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
                     propertyOf(setOf(VAL, REF, STR), "targetType", "TypeReference", false)
@@ -494,9 +535,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("TypeReferenceDefault") {
                     supertype("TypeReference")
                     constructor_ {
-                        parameter("possiblyQualifiedName", "PossiblyQualifiedName", false)
-                        parameter("typeArguments", "List", false)
-                        parameter("isNullable", "Boolean", false)
+                        parameter(setOf(), "possiblyQualifiedName", "PossiblyQualifiedName")
+                        parameter(setOf(), "typeArguments", "List")
+                        parameter(setOf(), "isNullable", "Boolean")
                     }
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
                     propertyOf(setOf(VAL, REF, STR), "possiblyQualifiedName", "PossiblyQualifiedName", false)
@@ -508,14 +549,14 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     supertype("ExpressionAbstract")
                     supertype("RootExpression")
                     constructor_ {
-                        parameter("name", "String", false)
+                        parameter(setOf(), "name", "String")
                     }
                     propertyOf(setOf(VAL, REF, STR), "name", "String", false)
                 }
                 data("PropertyCallDefault") {
                     supertype("PropertyCall")
                     constructor_ {
-                        parameter("propertyName", "String", false)
+                        parameter(setOf(), "propertyName", "String")
                     }
                     propertyOf(setOf(VAL, REF, STR), "propertyName", "String", false)
                 }
@@ -523,7 +564,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     supertype("ExpressionAbstract")
                     supertype("OnExpression")
                     constructor_ {
-                        parameter("expression", "Expression", false)
+                        parameter(setOf(), "expression", "Expression")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
                     propertyOf(setOf(VAR, REF, STR), "propertyAssignments", "List", false) {
@@ -534,8 +575,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     supertype("ExpressionAbstract")
                     supertype("NavigationExpression")
                     constructor_ {
-                        parameter("start", "Expression", false)
-                        parameter("parts", "List", false)
+                        parameter(setOf(), "start", "Expression")
+                        parameter(setOf(), "parts", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "parts", "List", false) {
                         typeArgument("NavigationPart")
@@ -545,8 +586,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("MethodCallDefault") {
                     supertype("MethodCall")
                     constructor_ {
-                        parameter("methodName", "String", false)
-                        parameter("arguments", "List", false)
+                        parameter(setOf(), "methodName", "String")
+                        parameter(setOf(), "arguments", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "arguments", "List", false) {
                         typeArgument("Expression")
@@ -557,8 +598,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     supertype("ExpressionAbstract")
                     supertype("LiteralExpression")
                     constructor_ {
-                        parameter("qualifiedTypeName", "QualifiedName", false)
-                        parameter("value", "Any", false)
+                        parameter(setOf(), "qualifiedTypeName", "QualifiedName")
+                        parameter(setOf(), "value", "Any")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
                     propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
@@ -566,15 +607,15 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("LambdaExpressionDefault") {
                     supertype("LambdaExpression")
                     constructor_ {
-                        parameter("expression", "Expression", false)
+                        parameter(setOf(), "expression", "Expression")
                     }
                     propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
                 }
                 data("InfixExpressionDefault") {
                     supertype("InfixExpression")
                     constructor_ {
-                        parameter("expressions", "List", false)
-                        parameter("operators", "List", false)
+                        parameter(setOf(), "expressions", "List")
+                        parameter(setOf(), "operators", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "expressions", "List", false) {
                         typeArgument("Expression")
@@ -586,7 +627,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("IndexOperationDefault") {
                     supertype("IndexOperation")
                     constructor_ {
-                        parameter("indices", "List", false)
+                        parameter(setOf(), "indices", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "indices", "List", false) {
                         typeArgument("Expression")
@@ -595,7 +636,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("GroupExpressionDefault") {
                     supertype("GroupExpression")
                     constructor_ {
-                        parameter("expression", "Expression", false)
+                        parameter(setOf(), "expression", "Expression")
                     }
                     propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
                 }
@@ -607,7 +648,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     supertype("ExpressionAbstract")
                     supertype("CreateTupleExpression")
                     constructor_ {
-                        parameter("propertyAssignments", "List", false)
+                        parameter(setOf(), "propertyAssignments", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "propertyAssignments", "List", false) {
                         typeArgument("AssignmentStatement")
@@ -617,8 +658,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                     supertype("ExpressionAbstract")
                     supertype("CreateObjectExpression")
                     constructor_ {
-                        parameter("possiblyQualifiedTypeName", "PossiblyQualifiedName", false)
-                        parameter("constructorArguments", "List", false)
+                        parameter(setOf(), "possiblyQualifiedTypeName", "PossiblyQualifiedName")
+                        parameter(setOf(), "constructorArguments", "List")
                     }
                     propertyOf(setOf(VAR, REF, STR), "constructorArguments", "List", false) {
                         typeArgument("AssignmentStatement")
@@ -631,8 +672,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("CastExpressionDefault") {
                     supertype("CastExpression")
                     constructor_ {
-                        parameter("expression", "Expression", false)
-                        parameter("targetType", "TypeReference", false)
+                        parameter(setOf(), "expression", "Expression")
+                        parameter(setOf(), "targetType", "TypeReference")
                     }
                     propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
                     propertyOf(setOf(VAL, REF, STR), "targetType", "TypeReference", false)
@@ -640,9 +681,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
                 data("AssignmentStatementDefault") {
                     supertype("AssignmentStatement")
                     constructor_ {
-                        parameter("lhsPropertyName", "String", false)
-                        parameter("lhsGrammarRuleIndex", "Integer", false)
-                        parameter("rhs", "Expression", false)
+                        parameter(setOf(), "lhsPropertyName", "String")
+                        parameter(setOf(), "lhsGrammarRuleIndex", "Integer")
+                        parameter(setOf(), "rhs", "Expression")
                     }
                     propertyOf(setOf(VAL, REF, STR), "lhsGrammarRuleIndex", "Integer", false)
                     propertyOf(setOf(VAL, REF, STR), "lhsPropertyName", "String", false)
@@ -671,26 +712,26 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContextAny>()
 
     override val crossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            declarationsFor(NAMESPACE_NAME) {
 
+            }
         }
     }
 
     override val formatDomain by lazy {
         formatDomain(NAME) {
+            namespace(NAMESPACE_NAME) {
+
 //            TODO("not implemented")
+            }
         }
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME, sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     extends(AglBase.NAME)
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
-                        declaration("font-weight", "bold")
-                    }
                 }
             }
         }

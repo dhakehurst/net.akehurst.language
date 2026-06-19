@@ -33,6 +33,7 @@ class ExpressionTypeResolver(
         is LambdaExpression -> this.typeOfLambdaExpressionFor(self)
         is WithExpression -> this.typeOfWithExpressionFor(self)
         is WhenExpression -> this.typeOfWhenExpressionFor(self)
+        is TernaryConditionExpression -> this.typeOfTernaryConditionFor(self)
         is InfixExpression -> this.typeOfInfixExpressionFor(self)
         is CastExpression -> this.typeOfCastExpressionFor(self)
         is GroupExpression -> this.typeOfGroupExpressionFor(self)
@@ -47,7 +48,7 @@ class ExpressionTypeResolver(
         this.isNothing -> StdLibDefault.NothingType
         this.isSelf -> self
         else -> {
-            when (self.resolvedDeclaration) {
+            when (self.resolvedDefinition) {
                 is StructuredType -> {
                     self.allResolvedProperty[PropertyName(this.name)]?.typeInstance ?: run {
                         issues.error(null, "'$self' has no property named '${this.name}'")
@@ -140,6 +141,14 @@ class ExpressionTypeResolver(
         return commonSuperTypeOf(opts)
     }
 
+    fun TernaryConditionExpression.typeOfTernaryConditionFor(self: TypeInstance): TypeInstance {
+        val opts = listOf(
+            trueExpression.typeOfExpressionFor(self),
+            falseExpression.typeOfExpressionFor(self),
+        )
+        return commonSuperTypeOf(opts)
+    }
+
     //TODO: add operator functions to StdLib
     fun InfixExpression.typeOfInfixExpressionFor(self: TypeInstance): TypeInstance {
         //TODO: Operator precedence
@@ -165,7 +174,7 @@ class ExpressionTypeResolver(
     fun CreateTupleExpression.typeOfCreateTupleExpressionFor(self: TypeInstance): TypeInstance {
         val args = this.propertyAssignments.map {
             val t = typeFor(it.rhs, self)
-            val n = PropertyName(it.lhsPropertyName)
+            val n = PropertyName(it.variable.name)
             TypeArgumentNamedSimple(n, t)
         }
         return StdLibDefault.TupleType.typeTuple(args)

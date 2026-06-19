@@ -18,6 +18,7 @@
 package net.akehurst.language.grammarTypemodel.builder
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
@@ -38,7 +39,7 @@ fun TypeDomainBuilder.grammarTypeNamespace(
     _domain.addNamespace(ns)
 }
 
-@Deprecated("does not allow namespaces",ReplaceWith("typeModel(..) { grammarTypeNamespace(..){...} }"))
+@Deprecated("does not allow namespaces",ReplaceWith("typeModel(...) { grammarTypeNamespace(...){...} }"))
 fun grammarTypeModel(
     namespaceQualifiedName: String,
     modelName: String,
@@ -62,7 +63,7 @@ class GrammarTypeNamespaceBuilder(
     imports: MutableList<Import>,
     resolveImports:Boolean
 )  : TypeNamespaceBuilder(namespaceQualifiedName,imports) {
-    override val _namespace:TypesNamespace = GrammarTypesNamespaceSimple(namespaceQualifiedName, import =  imports).also {
+    override val _namespace = GrammarTypesNamespaceSimple(namespaceQualifiedName, import =  imports).also {
         if(resolveImports) {
             it.resolveImports(typesDomain as Domain<Namespace<TypeDefinition>, TypeDefinition>)
         }
@@ -70,7 +71,7 @@ class GrammarTypeNamespaceBuilder(
     private val _grammarNamespace get() = _namespace as GrammarTypesNamespace
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
-    val StringType: PrimitiveType get() = StdLibDefault.String.resolvedDeclaration as PrimitiveType
+    val StringType: PrimitiveType get() = StdLibDefault.String.resolvedDefinition as PrimitiveType
 
     fun stringTypeFor(grammarRuleName: String, isNullable: Boolean = false) {
         _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), if (isNullable) StdLibDefault.String.nullable() else StdLibDefault.String)
@@ -107,12 +108,12 @@ class GrammarTypeNamespaceBuilder(
     }
 
     fun interfaceFor(grammarRuleName: String, typeName: String, init: InterfaceTypeBuilder.() -> Unit = {}) {
-        val tp = super.interface_(typeName, init)
+        val tp = super.interface_(typeName, null,init)
         _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), tp.type())
     }
 
     fun dataFor(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
-        val tp = super.data(typeName,init)
+        val tp = super.data(typeName,null,init)
         _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), tp.type())
         return tp
     }

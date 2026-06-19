@@ -16,6 +16,8 @@
 
 package net.akehurst.language.automaton.leftcorner
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -28,21 +30,16 @@ class test_sList_0_n_literal : test_AutomatonAbstract() {
     // S =  ['a' / 'b']* ;
 
     // must be fresh per test or automaton is not correct for different parses (due to caching)
-    private val rrs = runtimeRuleSet {
+    private val rrs = ruleSet("Test") {
         sList("S", 0, -1, "'a'", "'b'")
         literal("'a'", "a")
         literal("'b'", "b")
-    }
-    private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+    } as RuntimeRuleSet
 
-    private val a = rrs.findRuntimeRule("'a'")
-    private val b = rrs.findRuntimeRule("'b'")
-    private val G = SM.startState.runtimeRules.first()
-
-    private val s0 = SM.startState
-
-    private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
+    private val S = rrs.rule[0]  // S
+    private val _t1 = rrs.rule[1]  // 'a'
+    private val _t2 = rrs.rule[2]  // 'b'
+    private val rG = rrs.goalRuleFor[S]
 
     @Test
     fun parse_empty() {
@@ -51,16 +48,20 @@ class test_sList_0_n_literal : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, oN, SR)  // G=.S
-            state(G, oN, ER)  // G=S.
-            state(a, oN, ER)  // a
-            state(EMPTY, oN, ER)  // <empty>
-            state(S, oSE, ER) // S=[EMPTY].
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t1, oN, ER)   // 'a'
+            state(EMPTY_LIST, oN, ER)   // <EMPTY_LIST>
+            state(S, SE, ER)   // [EMPTY 'a' sep 'b'] .
+            state(rG, oN, ER)   // <GOAL> = S .
 
-            trans(WIDTH) { src(G, oN, SR); tgt(EMPTY); lhg(EOT); ctx(G, oN, SR) }
-            trans(WIDTH) { src(G, oN, SR); tgt(a); lhg(setOf(EOT, b)); ctx(G, oN, SR) }
-            trans(GOAL) { src(S, oSE, ER); tgt(G); lhg(EOT); ctx(G, oN, SR) }
-            trans(HEIGHT) { src(EMPTY); tgt(S, oSE, ER); lhg(setOf(EOT), setOf(EOT)); ctx(G, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT,_t2)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(S, SE, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GOAL) { src(S, SE, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -72,8 +73,24 @@ class test_sList_0_n_literal : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t1, oN, ER)   // 'a'
+            state(EMPTY_LIST, oN, ER)   // <EMPTY_LIST>
+            state(S, SI, ER)   // ['a' sep 'b'] .
+            state(S, SI, 1)   // ['b' . 'a' sep 'b']
+            state(rG, oN, ER)   // <GOAL> = S .
 
-
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT,_t2)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, SI, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, SI, 1); lhg(setOf(_t2), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GOAL) { src(S, SI, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -85,8 +102,37 @@ class test_sList_0_n_literal : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t1, oN, ER)   // 'a'
+            state(EMPTY_LIST, oN, ER)   // <EMPTY_LIST>
+            state(S, SI, ER)   // ['a' sep 'b'] .
+            state(S, SI, 1)   // ['b' . 'a' sep 'b']
+            state(_t2, oN, ER)   // 'b'
+            state(S, SI, 2)   // ['a' . 'a' sep 'b']
+            state(rG, oN, ER)   // <GOAL> = S .
 
-
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT,_t2)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, SI, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, SI, 1); lhg(setOf(_t2), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, SI, ER); lhg(RT);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSI))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, SI, 1); lhg(_t2);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSI))
+            }
+            trans(GOAL) { src(S, SI, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(WIDTH) { src(S, SI, 1); tgt(_t2, oN, ER); lhg(_t1); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(S, SI, 2); lhg(_t1);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSS))
+            }
+            trans(WIDTH) { src(S, SI, 2); tgt(_t1, oN, ER); lhg(setOf(RT,_t2)); ctx(rG, oN, SR) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -99,8 +145,44 @@ class test_sList_0_n_literal : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(_t1, oN, ER)   // 'a'
+            state(EMPTY_LIST, oN, ER)   // <EMPTY_LIST>
+            state(S, SE, ER)   // [EMPTY 'a' sep 'b'] .
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, SI, ER)   // ['a' sep 'b'] .
+            state(S, SI, 1)   // ['b' . 'a' sep 'b']
+            state(_t2, oN, ER)   // 'b'
+            state(S, SI, 2)   // ['a' . 'a' sep 'b']
 
-
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT,_t2)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, SI, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, SI, 1); lhg(setOf(_t2), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, SI, ER); lhg(RT);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSI))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, SI, 1); lhg(_t2);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSI))
+            }
+            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(S, SE, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GOAL) { src(S, SE, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GOAL) { src(S, SI, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(WIDTH) { src(S, SI, 1); tgt(_t2, oN, ER); lhg(_t1); ctx(rG, oN, SR) }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(S, SI, 2); lhg(_t1);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSS))
+            }
+            trans(WIDTH) { src(S, SI, 2); tgt(_t1, oN, ER); lhg(setOf(RT,_t2)); ctx(rG, oN, SR) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -111,7 +193,44 @@ class test_sList_0_n_literal : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(rG, oN, SR)   // <GOAL> =  . S
+            state(rG, oN, ER)   // <GOAL> = S .
+            state(S, SI, 2)   // ['a' . 'a' sep 'b']
+            state(S, SI, 1)   // ['b' . 'a' sep 'b']
+            state(S, SI, ER)   // ['a' sep 'b'] .
+            state(S, SE, ER)   // [EMPTY 'a' sep 'b'] .
+            state(_t1, oN, ER)   // 'a'
+            state(_t2, oN, ER)   // 'b'
+            state(EMPTY_LIST, oN, ER)   // <EMPTY_LIST>
 
+            trans(WIDTH) { src(rG, oN, SR); tgt(_t1, oN, ER); lhg(setOf(EOT,_t2)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(rG, oN, SR); tgt(EMPTY_LIST, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(S, SI, 2); tgt(_t1, oN, ER); lhg(setOf(EOT,_t2)); ctx(rG, oN, SR) }
+            trans(WIDTH) { src(S, SI, 1); tgt(_t2, oN, ER); lhg(_t1); ctx(rG, oN, SR) }
+            trans(GOAL) { src(S, SI, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GOAL) { src(S, SE, ER); tgt(rG, oN, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, SI, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(HEIGHT) { src(_t1, oN, ER); tgt(S, SI, 1); lhg(setOf(_t2), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, SI, ER); lhg(EOT);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSI))
+            }
+            trans(GRAFT) { src(_t1, oN, ER); tgt(S, SI, 1); lhg(_t2);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSI))
+            }
+            trans(GRAFT) { src(_t2, oN, ER); tgt(S, SI, 2); lhg(_t1);
+                prevPair(RP(rG, oN, SR), RP(S, oSI, pSS))
+            }
+            trans(HEIGHT) { src(EMPTY_LIST, oN, ER); tgt(S, SE, ER); lhg(setOf(EOT), setOf(EOT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
         }
 
         AutomatonTest.assertEquals(expected, actual)

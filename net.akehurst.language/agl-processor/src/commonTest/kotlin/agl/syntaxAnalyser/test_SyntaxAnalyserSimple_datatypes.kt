@@ -19,7 +19,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.asm.api.Asm
@@ -71,7 +71,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         }
         val scopeModel = CrossReferenceDomainDefault(grammar.primary!!.name)
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
-        val processor = Agl.processorFromString<Asm, SentenceContextAny>(
+        val processor = Agl.processorFromString<Asm, SentenceContext>(
             grammarStr,
             Agl.configuration {
                 crossReferenceResolver { ProcessResultDefault(scopeModel) }
@@ -191,7 +191,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(contextAsmSimple())
+                    sentenceContext(contextAsmSimple())
                 }
             }
         )
@@ -235,14 +235,14 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(contextAsmSimple())
+                    sentenceContext(contextAsmSimple())
                 }
             }
         )
         assertNotNull(result.asm)
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
-        val expected = asmSimple(typesDomain = typeModel,crossReferenceDomain = scopeModel, context = contextAsmSimple()) {
+        val expected = asmSimple(typesDomain = typeModel,crossReferenceDomain = scopeModel, sentenceContext = contextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

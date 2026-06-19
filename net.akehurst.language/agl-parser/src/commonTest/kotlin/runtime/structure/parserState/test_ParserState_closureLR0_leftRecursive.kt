@@ -34,7 +34,7 @@ class test_ParserState_closureLR0_leftRecursive {
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
-        val G = SM.startState.runtimeRules.first()
+        val rG = SM.startState.runtimeRules.first()
     }
 
     fun s0_widthInto() {

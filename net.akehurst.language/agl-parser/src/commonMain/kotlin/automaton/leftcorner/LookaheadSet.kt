@@ -21,11 +21,12 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.automaton.api.LookaheadGuard
 
 class Lookahead(
-    val guard: LookaheadSet,
-    val up: LookaheadSet
-) {
+    val guardLookaheadSet: LookaheadSet,
+    val upLookaheadSet: LookaheadSet
+) : LookaheadGuard {
     companion object {
         val EMPTY = Lookahead(LookaheadSet.EMPTY, LookaheadSet.EMPTY)
         fun merge(automaton: ParserStateSet, initial: Set<Lookahead>): Set<Lookahead> {
@@ -33,22 +34,22 @@ class Lookahead(
                 1 -> initial
                 else -> {
                     val merged = initial
-                        .groupBy { it.up }
+                        .groupBy { it.upLookaheadSet }
                         .map { me2 ->
                             val up = me2.key
-                            val guard = me2.value.map { it.guard }.reduce { acc, l -> acc.union(automaton, l) }
+                            val guard = me2.value.map { it.guardLookaheadSet }.reduce { acc, l -> acc.union(automaton, l) }
                             Lookahead(guard, up)
                         }.toSet()
-                        .groupBy { it.guard }
+                        .groupBy { it.guardLookaheadSet }
                         .map { me ->
                             val guard = me.key
-                            val up = me.value.map { it.up }.reduce { acc, l -> acc.union(automaton, l) }
+                            val up = me.value.map { it.upLookaheadSet }.reduce { acc, l -> acc.union(automaton, l) }
                             Lookahead(guard, up)
                         }.toSet()
                     when (merged.size) {
                         1 -> merged
                         else -> {
-                            val sortedMerged = merged.sortedByDescending { it.guard.fullContent.size }
+                            val sortedMerged = merged.sortedByDescending { it.guardLookaheadSet.fullContent.size }
                             val result = mutableSetOf<Lookahead>()
                             val mergedIntoOther = mutableSetOf<Lookahead>()
                             for (i in sortedMerged.indices) {
@@ -58,8 +59,8 @@ class Lookahead(
                                 } else {
                                     for (j in i + 1 until sortedMerged.size) {
                                         val lh2 = sortedMerged[j]
-                                        if (lh1.guard.containsAll(lh2.guard)) {
-                                            lh1 = Lookahead(lh1.guard, lh1.up.union(automaton, lh2.up))
+                                        if (lh1.guardLookaheadSet.containsAll(lh2.guardLookaheadSet)) {
+                                            lh1 = Lookahead(lh1.guardLookaheadSet, lh1.upLookaheadSet.union(automaton, lh2.upLookaheadSet))
                                             mergedIntoOther.add(lh2)
                                         } else {
                                             //result.add(lh2)
@@ -76,15 +77,19 @@ class Lookahead(
         }
     }
 
-    override fun hashCode(): Int = arrayOf(guard, up).contentHashCode()
+    override val guard : Set<RuntimeRule> get() = guardLookaheadSet.fullContent
+    override val up : Set<RuntimeRule> get() = upLookaheadSet.fullContent
+
+    // -- Any --
+    override fun hashCode(): Int = arrayOf(guardLookaheadSet, upLookaheadSet).contentHashCode()
     override fun equals(other: Any?): Boolean = when {
         other !is Lookahead -> false
-        this.up != other.up -> false
-        this.guard != other.guard -> false
+        this.upLookaheadSet != other.upLookaheadSet -> false
+        this.guardLookaheadSet != other.guardLookaheadSet -> false
         else -> true
     }
 
-    override fun toString(): String = "LH($guard, $up)"
+    override fun toString(): String = "LH($guardLookaheadSet, $upLookaheadSet)"
 }
 
 class LookaheadSet(

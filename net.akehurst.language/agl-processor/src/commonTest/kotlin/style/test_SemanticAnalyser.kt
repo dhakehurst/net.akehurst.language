@@ -42,7 +42,7 @@ class test_SemanticAnalyser {
             val context = contextFromGrammar(testGrammar)
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
-                    context(context)
+                    sentenceContext(context)
                 }
             })
             assertTrue(actual.allIssues.errors.isEmpty(), actual.allIssues.toString())
@@ -55,7 +55,7 @@ class test_SemanticAnalyser {
             val context = contextFromGrammar(testGrammar)
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
-                    context(context)
+                    sentenceContext(context)
                 }
             })
             assertTrue(actual.allIssues.errors.isNotEmpty())

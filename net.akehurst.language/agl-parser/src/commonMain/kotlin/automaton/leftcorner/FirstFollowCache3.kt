@@ -16,11 +16,11 @@
 
 package net.akehurst.language.automaton.leftcorner
 
+import net.akehurst.kotlinx.collections.LazyMutableMapNotNull
+import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
-import net.akehurst.language.collections.LazyMutableMapNonNull
-import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
 
 /**
@@ -36,15 +36,15 @@ import net.akehurst.language.collections.mutableQueueOf
 internal class FirstFollowCache3 {
 
     // prev/context -> ( RulePosition -> Boolean )
-    private val _doneFollow = lazyMutableMapNonNull<RulePositionRuntime, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
+    private val _doneFollow by lazyMutableMapNotNull<RulePositionRuntime, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
 
     // prev/context -> ( RulePosition -> Set<Terminal-RuntimeRule> )
-    private val _firstTerminal = lazyMutableMapNonNull<RulePositionRuntime, LazyMutableMapNonNull<RulePositionRuntime, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNonNull { linkedSetOf() } }
+    private val _firstTerminal by lazyMutableMapNotNull<RulePositionRuntime, LazyMutableMapNotNull<RulePositionRuntime, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNotNull { linkedSetOf() } }
 
     // prev/context -> ( TerminalRule -> ParentRulePosition )
-    private val _parentInContext = lazyMutableMapNonNull<RulePositionRuntime, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { linkedSetOf() } }
+    private val _parentInContext by lazyMutableMapNotNull<RulePositionRuntime, LazyMutableMapNotNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNotNull { linkedSetOf() } }
 
-    private val _possibleContexts = lazyMutableMapNonNull<RulePositionRuntime, MutableSet<RulePositionRuntime>> { linkedSetOf() }
+    private val _possibleContexts by lazyMutableMapNotNull<RulePositionRuntime, MutableSet<RulePositionRuntime>> { linkedSetOf() }
 
     fun clear() {
         this._doneFollow.clear()

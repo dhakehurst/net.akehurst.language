@@ -76,15 +76,15 @@ class DatatypeRegistry : TypesDomainSimpleAbstract() {
             namespace("kotlin.collections", emptyList()) {
                 collection("Array", listOf("E"))
                 collection("Collection", listOf("E"))
-                collection("List", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
-                collection("Set", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
+                collection("List", listOf("E")) { supertype("Collection") }
+                collection("Set", listOf("E")){ supertype("Collection") }
                 collection("Map", listOf("K", "V"))
-                collection("EmptySet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
-                collection("EmptyList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
+                collection("EmptySet", emptyList()){ supertype("Set") }
+                collection("EmptyList", emptyList()){ supertype("List") }
                 //TODO: need a java -> kotlin name mapping really, this is class java.util.SingletonList
-                collection("SingletonList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
-                collection("HashSet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
-                collection("LinkedHashSet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
+                collection("SingletonList", emptyList()){ supertype("List") }
+                collection("HashSet", emptyList()){ supertype("Set") }
+                collection("LinkedHashSet", emptyList()){ supertype("Set") }
             }
         }
         //val TypeDeclaration.isKotlinArray get() = this.qualifiedName.value=="kotlin.collections.Array"

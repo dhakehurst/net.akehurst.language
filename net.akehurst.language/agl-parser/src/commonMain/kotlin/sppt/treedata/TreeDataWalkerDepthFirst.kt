@@ -141,7 +141,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         }
     }
 
-    private fun traverseSkip(callback: SpptWalker, skipDataAsTree: Boolean) {
+    private   fun traverseSkip(callback: SpptWalker, skipDataAsTree: Boolean) {
         // handle <GOAL>, <SKIP-MULTI> & <SKIP-CHOICE>
         val goal = treeData.root!!
         val skipMulti = treeData.childrenFor(goal)[0].second[0]
@@ -162,18 +162,18 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
 
     }
 
-    private fun traverseSkipData(callback: SpptWalker, skipDataAsTree: Boolean, skipData: TreeData?) {
+    private   fun traverseSkipData(callback: SpptWalker, skipDataAsTree: Boolean, skipData: TreeData?) {
         if (null != skipData) {
             if (skipDataAsTree) {
                 val walker = TreeDataWalkerDepthFirst<CN>(skipData)
                 walker.traverseSkip(callback, skipDataAsTree)
             } else {
-                callback.skip(skipData.root!!.startPosition, skipData.root!!.nextInputPosition)
+                callback.skip(skipData)//!!.startPosition, skipData.root!!.nextInputPosition)
             }
         }
     }
 
-    private fun traverseStackData(callback: SpptWalker, skipDataAsTree: Boolean, stackData: StackData) {
+    private  fun traverseStackData(callback: SpptWalker, skipDataAsTree: Boolean, stackData: StackData) {
         when (stackData) {
             is StackInfo -> {
                 if (stackData.node.rule.isTerminal) {
@@ -189,7 +189,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         }
     }
 
-    private fun traverseAlternative(callback: SpptWalker, skipDataAsTree: Boolean, info: AlternativesInfo) {
+    private  fun traverseAlternative(callback: SpptWalker, skipDataAsTree: Boolean, info: AlternativesInfo) {
         if (0 == info.alternatives.size) {
             // end of alternatives
             path.pop()
@@ -221,7 +221,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         }
     }
 
-    private fun traverseBranch(callback: SpptWalker, skipDataAsTree: Boolean, nodeInfo: StackInfo) {
+    private  fun traverseBranch(callback: SpptWalker, skipDataAsTree: Boolean, nodeInfo: StackInfo) {
         if (nodeInfo.done) {
             callback.endBranch(nodeInfo)
         } else {

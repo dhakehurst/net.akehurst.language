@@ -17,8 +17,10 @@
 
 package net.akehurst.language.agl.simple
 
+import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.api.semanticAnalyser.CreateScopedItem
+import net.akehurst.language.api.semanticAnalyser.ResolveScopedItem
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.scope.api.ItemInScope
@@ -26,36 +28,31 @@ import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.sentence.api.InputLocation
 
-fun interface CreateScopedItem<ItemType, ItemInScopeType> {
-    fun invoke(qualifiedName: List<String>, item: ItemType, location: InputLocation?): ItemInScopeType
+
+class CreateScopedItemDefault: CreateScopedItem {
+    override fun invoke(qualifiedName: List<String>, item: Any, location: InputLocation?): Any = item
 }
 
-fun interface ResolveScopedItem<ItemType, ItemInScopeType> {
-    fun invoke(itemInScope: ItemInScopeType): ItemType?
+class ResolveScopedItemDefault : ResolveScopedItem {
+    override fun invoke(itemInScope: Any): Any? = itemInScope as Any?
 }
 
-class CreateScopedItemDefault<ItemType : Any, ItemInScopeType : Any> : CreateScopedItem<ItemType, ItemInScopeType> {
-    override fun invoke(qualifiedName: List<String>, item: ItemType, location: InputLocation?): ItemInScopeType = item as ItemInScopeType
-}
-
-class ResolveScopedItemDefault<ItemType : Any, ItemInScopeType : Any> : ResolveScopedItem<ItemType, ItemInScopeType> {
-    override fun invoke(itemInScope: ItemInScopeType): ItemType? = itemInScope as ItemType?
-}
-
-object NULL_SENTENCE_IDENTIFIER {
-    override fun toString() = "NULL_SENTENCE_IDENTIFIER"
-}
-
-open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
-    val createScopedItem: CreateScopedItem<ItemType, ItemInScopeType> = CreateScopedItemDefault(),
-    val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = ResolveScopedItemDefault()
+class SentenceContextAny(
+    override val createScopedItem: CreateScopedItem = CreateScopedItemDefault(),
+    override val resolveScopedItem: ResolveScopedItem = ResolveScopedItemDefault()
 ) : SentenceContext {
+
+    companion object {
+        object NULL_SENTENCE_IDENTIFIER {
+            override fun toString() = "NULL_SENTENCE_IDENTIFIER"
+        }
+    }
 
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
     //var rootScope = ScopeSimple<ItemInScopeType>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
-    val scopeForSentence = mutableMapOf<Any, ScopeSimple<ItemInScopeType>>()
+    override val scopeForSentence = mutableMapOf<Any, ScopeSimple>()
 
     val isEmpty: Boolean get() = scopeForSentence.all { (k, v) -> v.isEmpty }
 
@@ -63,13 +60,13 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         scopeForSentence.clear()
     }
 
-    fun newScopeForSentence(sentenceIdentity: Any?): Scope<ItemInScopeType> {
-        val newScope = ScopeSimple<ItemInScopeType>(null, ScopeSimple.ROOT_ID, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME)
+    override fun newScopeForSentence(sentenceIdentity: Any?): Scope {
+        val newScope = ScopeSimple(null, ScopeSimple.ROOT_ID, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME)
         scopeForSentence[sentenceIdentity ?: NULL_SENTENCE_IDENTIFIER] = newScope
         return newScope
     }
 
-    fun getScopeForSentenceOrNull(sentenceIdentity: Any?): Scope<ItemInScopeType>? {
+    override fun getScopeForSentenceOrNull(sentenceIdentity: Any?): Scope? {
         return if (null == sentenceIdentity) {
             scopeForSentence[NULL_SENTENCE_IDENTIFIER]
                 ?: newScopeForSentence(NULL_SENTENCE_IDENTIFIER)
@@ -78,8 +75,17 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         }
     }
 
+    override fun getOrCreateScopeForSentence(sentenceIdentity: Any?): Scope {
+        return if (null == sentenceIdentity) {
+            scopeForSentence[NULL_SENTENCE_IDENTIFIER]
+                ?: newScopeForSentence(NULL_SENTENCE_IDENTIFIER)
+        } else {
+            scopeForSentence[sentenceIdentity] ?: newScopeForSentence(sentenceIdentity)
+        }
+    }
+
     //TODO: location carries sentenceIdentity ! remove duplication
-    fun addToScope(sentenceIdentity: Any?, qualifiedName: List<String>, itemTypeName: QualifiedName, location: InputLocation?, item: ItemInScopeType) {
+    override fun addToScope(sentenceIdentity: Any?, qualifiedName: List<String>, itemTypeName: QualifiedName, location: InputLocation?, item: Any) {
         val rootScope = getScopeForSentenceOrNull(sentenceIdentity) ?: newScopeForSentence(sentenceIdentity)
         var scope = rootScope
         for (n in qualifiedName.dropLast(1)) {
@@ -88,19 +94,31 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         scope.addToScope(qualifiedName.last(), itemTypeName, location, item, false)
     }
 
-    fun findItemsConformingTo(conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>> {
+    fun merge(sentenceIdentity:Any?, other:Scope) {
+        val scope = getScopeForSentenceOrNull(sentenceIdentity) ?: newScopeForSentence(sentenceIdentity)
+        scope.merge(other)
+    }
+
+    override  fun findItemsConformingTo(conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope> {
         return scopeForSentence.flatMap { it.value.findItemsConformingTo(conformsToFunc) }
     }
 
-    fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>> {
+    override  fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope> {
         return scopeForSentence.flatMap { it.value.findItemsNamedConformingTo(name, conformsToFunc) }
     }
 
-    fun findItemsByQualifiedNameConformingTo(qname: List<String>, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>> {
+    override fun findItemsByQualifiedNameConformingTo(qname: List<String>, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope> {
         return scopeForSentence.flatMap { it.value.findItemsByQualifiedNameConformingTo(qname, conformsToFunc) }
     }
 
-    fun asString(indent: Indent = Indent()): String {
+    override fun union(other: SentenceContext): SentenceContext {
+        return SentenceContextAny().also { result ->
+            this.scopeForSentence.forEach { (k, v) -> result.merge(k,v) }
+            other.scopeForSentence.forEach { (k, v) -> result.merge(k,v) }
+        }
+    }
+
+    override fun asString(indent: Indent): String {
         val scopeIndent = indent.inc
         val scopes = scopeForSentence.entries.joinToString("\n") { (k, v) -> "${scopeIndent}sentence $k = ${v.asString(scopeIndent)}" }
         return when {
@@ -112,26 +130,10 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     override fun hashCode(): Int = 0 //scopeForSentence.hashCode()
 
     override fun equals(other: Any?): Boolean = when {
-        other !is ContextWithScope<*, *> -> false
+        other !is SentenceContext -> false
         this.scopeForSentence != other.scopeForSentence -> false
         else -> true
     }
 
-    override fun toString(): String = "ContextWithScope"
-}
-
-
-class SentenceContextAny(
-    createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault(),
-    resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault()
-) : ContextWithScope<Any,Any>(createScopedItem, resolveScopedItem) {
-    override fun hashCode(): Int = 0 //scopeForSentence.hashCode()
-
-    override fun equals(other: Any?): Boolean = when {
-        other !is SentenceContextAny -> false
-        this.scopeForSentence != other.scopeForSentence -> false
-        else -> true
-    }
-
-    override fun toString(): String = "SentenceContextAny"
+    override fun toString(): String = "SentenceContext"
 }

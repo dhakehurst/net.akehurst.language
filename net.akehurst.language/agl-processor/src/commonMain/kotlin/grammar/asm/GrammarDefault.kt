@@ -18,6 +18,7 @@ package net.akehurst.language.grammar.asm
 
 import net.akehurst.kotlinx.collections.*
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
@@ -70,7 +71,7 @@ class GrammarDefault(
     }
 
     override val defaultGoalRule: GrammarRule
-        get() = options[AglGrammar.OPTION_defaultGoalRule]?.let { findAllResolvedGrammarRule(GrammarRuleName(it)) }
+        get() = options.get<String?>(AglGrammar.OPTION_defaultGoalRule)?.let { findAllResolvedGrammarRule(GrammarRuleName(it)) }
             ?: this.allResolvedGrammarRule.firstOrNull { it.isSkip.not() }
             ?: error("Could not find default grammar rule or first non skip rule")
 }
@@ -300,7 +301,7 @@ abstract class GrammarAbstract(
         }
     }
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("grammar $name")
         val extendsStr = when {

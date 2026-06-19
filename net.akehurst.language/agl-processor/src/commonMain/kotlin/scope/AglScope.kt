@@ -57,10 +57,10 @@ interface Scope {
                     typeParameters("ItemInScopeType")
 
                     constructor_ {
-                        parameter("referableName", "String", false)
-                        parameter("qualifiedTypeName", "QualifiedName", false)
-                        parameter("location", "Any", false)
-                        parameter("item", "ItemInScopeType", false)
+                        parameter(setOf(), "referableName", "String")
+                        parameter(setOf(), "qualifiedTypeName", "QualifiedName")
+                        parameter(setOf(), "location", "Any")
+                        parameter(setOf(), "item", "ItemInScopeType")
                     }
                     propertyOf(setOf(VAL, REF, STR), "item", "ItemInScopeType", false)
                     propertyOf(setOf(VAL, REF, STR), "location", "Any", false)
@@ -73,9 +73,9 @@ interface Scope {
                     typeParameters("ItemInScopeType")
                     supertype("Scope"){ ref("ItemInScopeType") }
                     constructor_ {
-                        parameter("parent", "ScopeSimple", false)
-                        parameter("scopeIdentityInParent", "String", false)
-                        parameter("forTypeName", "QualifiedName", false)
+                        parameter(setOf(), "parent", "ScopeSimple")
+                        parameter(setOf(), "scopeIdentityInParent", "String")
+                        parameter(setOf(), "forTypeName", "QualifiedName")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "childScopes", "Map", false){
                         typeArgument("String")

@@ -20,7 +20,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
@@ -128,7 +128,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
 
         }
 
-        class SemanticAnalyserToString() : SemanticAnalyser<String, SentenceContextAny> {
+        class SemanticAnalyserToString() : SemanticAnalyser<String, SentenceContext> {
             override fun clear() {}
 
             //override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> = emptyList()
@@ -137,14 +137,14 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
                 sentenceIdentity:Any?,
                 asm: String,
                 locationMap: LocationMap?,
-                options: SemanticAnalysisOptions<SentenceContextAny>
+                options: SemanticAnalysisOptions<SentenceContext>
             ): SemanticAnalysisResult {
                 return SemanticAnalysisResultDefault(emptyList(),IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
             }
 
         }
 
-        fun processor(grammarStr: String) = Agl.processorFromString<String, SentenceContextAny>(
+        fun processor(grammarStr: String) = Agl.processorFromString<String, SentenceContext>(
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
                 //typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -153,7 +153,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             }
         )
 
-        fun testProc(grammarStr: String): LanguageProcessor<String, SentenceContextAny> {
+        fun testProc(grammarStr: String): LanguageProcessor<String, SentenceContext> {
             val result = processor(grammarStr)
             assertNotNull(result.processor, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -165,7 +165,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             val expected: String
         )
 
-        fun test(proc: LanguageProcessor<String, SentenceContextAny>, data: TestData) {
+        fun test(proc: LanguageProcessor<String, SentenceContext>, data: TestData) {
             println("'${data.sentence}'")
             val result = proc.process(data.sentence)
             assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())

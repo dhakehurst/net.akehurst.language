@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.SysML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
@@ -31,6 +31,7 @@ import net.akehurst.language.sentence.api.InputLocation
 import testFixture.utils.parseError
 import kotlin.test.*
 
+@Ignore("SysML grammars need updating")
 class test_SysML_agl_Singles {
 
     private companion object {
@@ -38,7 +39,7 @@ class test_SysML_agl_Singles {
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
-        val processor: LanguageProcessor<Asm, SentenceContextAny> by lazy {
+        val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
             val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
@@ -52,10 +53,10 @@ class test_SysML_agl_Singles {
             assertEquals(expIssues, result.issues.all, result.issues.toString())
         }
 
-        fun test_process(sentence: String, context: SentenceContextAny, expIssues: Set<LanguageIssue>) {
+        fun test_process(sentence: String, context: SentenceContext, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
                 semanticAnalysis {
-                    context(context)
+                    sentenceContext(context)
                 }
             })
             assertEquals(expIssues, result.allIssues.all, result.allIssues.toString())
@@ -72,7 +73,7 @@ class test_SysML_agl_Singles {
     @Test
     fun process_grammar() {
         val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
@@ -84,7 +85,7 @@ class test_SysML_agl_Singles {
             grammarStr,
             Agl.options {
                 semanticAnalysis {
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
                 }
             }

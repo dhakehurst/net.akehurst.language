@@ -18,16 +18,38 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.automaton.api.AutomatonKind
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.formatter.api.AglFormatDomain
+import net.akehurst.language.formatter.api.FormatFunctionDefinition
+import net.akehurst.language.formatter.api.FormatSet
+import net.akehurst.language.formatter.api.FormatSetReference
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarDomain
+import net.akehurst.language.grammar.api.GrammarReference
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser.Companion.findGrammarOrNull
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
-class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceContextAny> {
+class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceContext> {
+
+    companion object {
+        fun findFormatSetOrNull(context: SentenceContext, localNamespace: QualifiedName, nameOrQName: PossiblyQualifiedName): FormatSet? =
+            context.findItemsByQualifiedNameConformingTo(nameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
+                true
+            }.firstOrNull()?.item as? FormatSet
+    }
+
+    private val _issues = IssueHolder(LanguageProcessorPhase.FORMAT)
+    private var _locationMap: LocationMap? = null
+
     override fun clear() {
 
     }
@@ -38,9 +60,53 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
 
     override fun analyse(
         sentenceIdentity: Any?,
-        asm: AglFormatDomain, locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<SentenceContextAny>
+        asm: AglFormatDomain,
+        locationMap: LocationMap?,
+        options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
+        this._locationMap = locationMap ?: LocationMapDefault()
+        val context = options.sentenceContext
+        if (null == context) {
+            issueWarn(null, "No ContextFromGrammarRegistry supplied, grammar references cannot be resolved", null)
+        } else {
+            checkFormatDomain(context,asm)
+        }
         return SemanticAnalysisResultDefault(emptyList(), IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }
+
+    private fun issueWarn(item: Any?, message: String, data: Any?) {
+        val location = this._locationMap?.get(item)
+        _issues.warn(location, message, data)
+    }
+
+    private fun issueError(item: Any, message: String, data: Any?) {
+        val location = this._locationMap?.get(item)
+        _issues.error(location, message, data)
+    }
+
+    private fun checkFormatDomain(context: SentenceContext?, domain: AglFormatDomain) {
+        domain.namespace.forEach { ns ->
+            ns.definition.forEach { def ->
+                when (def) {
+                    is FormatSet -> this.resolveRefs(context, def)
+                    is FormatFunctionDefinition -> Unit //TODO
+                }
+
+            }
+        }
+    }
+
+    private fun resolveRefs(context: SentenceContext?, def: FormatSet) {
+        def.extends.forEach { checkGrammarExistsAndResolve(context, it) }
+    }
+
+    private fun checkGrammarExistsAndResolve(context: SentenceContext?, ref: FormatSetReference) {
+        val g = context?.let { findFormatSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
+        if (null == g) {
+            this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
+        } else {
+            ref.resolveAs(g)
+        }
+    }
+
 }

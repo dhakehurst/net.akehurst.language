@@ -17,7 +17,7 @@
 
 package net.akehurst.language.base.api
 
-//import net.akehurst.language.asmTransform.api.TransformRuleSet
+import net.akehurst.kotlinx.utils.Indent
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
 // [https://youtrack.jetbrains.com/issue/IDEA-359261/value-class-extension-methods-not-working-when-defined-in-companion-object]
@@ -112,19 +112,16 @@ data class Import(override val value: String) : PublicValueType {
     override fun toString() = value
 }
 
-class Indent(val value: String = "", val increment: String = "  ") {
-    val inc get() = Indent(this.value + increment, increment)
-    override fun toString() = value
-}
-
 interface Formatable {
-    fun asString(indent: Indent = Indent("", "  ")): String
+    fun asString(indent: Indent = Indent("", "  "), imports: List<Import> = emptyList<Import>()): String
 }
 
 interface OptionHolder {
     var parent: OptionHolder?
 
-    operator fun get(name: String): String?
+    /** gets the value of the option */
+    operator  fun <T> get(name: String): T?
+
     fun clone(parent:OptionHolder?): OptionHolder
 }
 
@@ -154,6 +151,7 @@ interface Domain<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     fun resolveReference(reference:DefinitionReference<DT>): DT?
 
     fun addNamespace(value: NT)
+    fun mergeNamespace(value: NT)
 }
 
 interface Namespace<DT : Definition<DT>> : Formatable {
@@ -181,6 +179,7 @@ interface Namespace<DT : Definition<DT>> : Formatable {
 
     fun addImport(value: Import)
     fun addDefinition(value: DT)
+    fun merge(value: Namespace<DT>)
 }
 
 interface DefinitionReference<DT : Definition<DT>> {

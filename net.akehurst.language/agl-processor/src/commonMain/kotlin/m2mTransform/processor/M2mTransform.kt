@@ -18,7 +18,8 @@
 package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.agl.format.builder.formatDomain
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.agl.processor.contextFromLanguageObject
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -33,14 +34,15 @@ import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.builder.typesDomain
 
-object M2mTransform : LanguageObjectAbstract<M2mTransformDomain, SentenceContextAny>() {
+object M2mTransform : LanguageObjectAbstract<M2mTransformDomain, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "M2mTransform"
     const val goalRuleName = "unit"
@@ -62,13 +64,13 @@ grammar $NAME : Base {
     typeImport = 'import-types' possiblyQualifiedName ;
     
     transformRule = abstractRule | relationRule | mappingRule | tableRule ;
-    abstractRule = 'abstract' 'top'? 'rule' ruleName extends? '{' domainPrimitive* domainSignature* '}' ;
-    relationRule = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainTemplate{2+} when? where? '}' ;
-    mappingRule = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainTemplate+ domainAssignment when? where? '}' ;
-    tableRule = 'top'? 'table' ruleName extends? '{' domainPrimitive* unnamedDomainSignature{2+} values+ when? where? '}' ;
+    abstractRule = 'abstract' 'top'? 'rule' ruleName ruleParameters? extends? '{' domainSignature* '}' ;
+    relationRule = 'top'? 'relation' ruleName ruleParameters? extends? '{' pivot* domainTemplate{2+} when? where? '}' ;
+    mappingRule = 'top'? 'mapping' ruleName ruleParameters? extends? '{' domainTemplate+ domainAssignment when? where? '}' ;
+    tableRule = 'top'? 'table' ruleName ruleParameters? extends? '{' unnamedDomainSignature{2+} values+ when? where? '}' ;
+    ruleParameters = '(' [variableDefinition / ',']+ ')' ;
     
     pivot = 'pivot' variableDefinition ;
-    domainPrimitive = 'primitive' 'domain' variableDefinition ;
     domainSignature = 'domain' domainReference variableDefinition ;
     unnamedDomainSignature = 'domain' domainReference ':' typeReference ;
     domainTemplate = domainSignature domainTemplateRhs ;
@@ -82,14 +84,29 @@ grammar $NAME : Base {
     typeReference = Expressions::typeReference ;
     expression = Expressions::expression ;
     
-    when = 'when' '{' expression '}' ;
-    where = 'where' '{' expression '}' ;
+    when = 'when' '{' whenExpression '}' ;
+    whenExpression = expression | relationHolds | relationHoldsForAll | mappingHolds | mappingHoldsForAll ;
+    relationHolds = 'related' ruleCall ;
+    relationHoldsForAll = 'related' 'all' ruleCall ; 
+    mappingHolds = 'mapped' ruleCall ;
+    mappingHoldsForAll = 'mapped' 'all' ruleCall ;
+    
+    where = 'where' '{' whereExpression+ '}' ;
+    whereExpression = callRelation | callRelationForAll | callMapping | callMappingForAll ;
+    callRelation = 'relate' ruleCall ;
+    callRelationForAll = 'relate' 'all' ruleCall ;
+    callMapping = 'map' ruleCall ;
+    callMappingForAll = 'map' 'all' ruleCall ;
 
-    propertyTemplateRhs = expression | objectTemplate | collectionTemplate ;
+    ruleCall = ruleName arguments? '{' argAssignment* '}' ;
+    arguments = '(' [argAssignment / ',']+ ')' ;
+    argAssignment = variableName ':=' expression ;
+
+    propertyTemplateRhs =  objectTemplate | collectionTemplate | expression ;
     objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
     propertyTemplateBlock = '{' propertyTemplate*  '}';
     propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
-    collectionTemplate = '[' ('...')? propertyTemplateRhs* ']' ;
+    collectionTemplate = (variableName ':')? '[' ('...')? [propertyTemplateRhs / ',' ]* ']' ;
 
     leaf DOMAIN_NAME := IDENTIFIER ;
     leaf domainReference := IDENTIFIER ;
@@ -111,31 +128,28 @@ grammar $NAME : Base {
 
     override val typesString: String = """
         namespace $NAMESPACE_NAME
-          // TODO
+
     """.trimIndent()
 
     override val kompositeString: String = """
         namespace net.akehurst.language.m2mTransform.api
-          // TODO
+
     """.trimIndent()
 
     override val asmTransformString: String = """
         namespace $NAMESPACE_NAME
-          // TODO
+
     """.trimIndent()
 
     override val crossReferenceString = """
         namespace $NAMESPACE_NAME
-          // TODO
+
     """.trimIndent()
 
     override val styleString: String = """
         namespace ${NAMESPACE_NAME}
-          styles ${NAME} {
-            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
-              foreground: darkgreen;
-              font-weight: bold;
-            }
+          styles ${NAME} : ${AglBase.NAME} {
+
           }
       """
 
@@ -176,23 +190,20 @@ grammar $NAME : Base {
                         ref("tableRule")
                     }
                     concatenation("abstractRule") {
-                        lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("extends") }; lit("{")
-                        lst(0, -1) { ref("domainPrimitive") }
+                        lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("domainSignature") }
                         lit("}")
                     }
                     concatenation("relationRule") {
-                        opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("extends") }; lit("{")
+                        opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("pivot") }
-                        lst(0, -1) { ref("domainPrimitive") }
                         lst(2, -1) { ref("domainTemplate") }
                         opt { ref("when") }
                         opt { ref("where") }
                         lit("}")
                     }
                     concatenation("mappingRule") {
-                        opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("extends") }; lit("{")
-                        lst(0, -1) { ref("domainPrimitive") }
+                        opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(1, -1) { ref("domainTemplate") }
                         ref("domainAssignment")
                         opt { ref("when") }
@@ -200,13 +211,15 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("tableRule") {
-                        opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("extends") }; lit("{")
-                        lst(0, -1) { ref("domainPrimitive") }
+                        opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(2, -1) { ref("unnamedDomainSignature") }
                         lst(1, -1) { ref("values") }
                         opt { ref("when") }
                         opt { ref("where") }
                         lit("}")
+                    }
+                    concatenation("ruleParameters") {
+                        lit("("); spLst(1, -1) { ref("variableDefinition"); lit(",") }; lit(")")
                     }
                     concatenation("pivot") { lit("pivot"); ref("variableDefinition") }
                     concatenation("domainPrimitive") { lit("primitive"); lit("domain"); ref("variableDefinition"); }
@@ -232,19 +245,47 @@ grammar $NAME : Base {
                     concatenation("values") { lit("values"); spLst(2, -1) { ref("expression"); lit("to") } }
                     concatenation("typeReference") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "typeReference") }
                     concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
-                    concatenation("when") { lit("when"); lit("{"); ref("expression"); lit("}") }
-                    concatenation("where") { lit("where"); lit("{"); ref("expression"); lit("}") }
+                    concatenation("when") { lit("when"); lit("{"); ref("whenExpression"); lit("}") }
+                    choice("whenExpression") {
+                        ref("relationHolds")
+                        ref("relationHoldsForAll")
+                        ref("mappingHolds")
+                        ref("mappingHoldsForAll")
+                        ref("expression")
+                    }
+                    concatenation("relationHolds") { lit("related"); ref("ruleCall") }
+                    concatenation("relationHoldsForAll") { lit("related"); lit("all"); ref("ruleCall") }
+                    concatenation("mappingHolds") { lit("mapped"); ref("ruleCall") }
+                    concatenation("mappingHoldsForAll") { lit("mapped"); lit("all"); ref("ruleCall") }
+
+                    concatenation("where") { lit("where"); lit("{"); lst(1, -1) { ref("whereExpression") }; lit("}") }
+                    choice("whereExpression") {
+                        ref("callRelationForAll")
+                        ref("callRelation")
+                        ref("callMappingForAll")
+                        ref("callMapping")
+                    }
+                    concatenation("callRelation") { lit("relate"); ref("ruleCall") }
+                    concatenation("callRelationForAll") { lit("relate"); lit("all"); ref("ruleCall") }
+                    concatenation("callMapping") { lit("map"); ref("ruleCall") }
+                    concatenation("callMappingForAll") { lit("map"); lit("all"); ref("ruleCall") }
+
+                    concatenation("ruleCall") {
+                        ref("ruleName"); opt { ref("arguments") }; lit("{"); lst(1, -1) { ref("argAssignment") }; lit("}")
+                    }
+                    concatenation("arguments") { lit("("); spLst(1, -1) { ref("argAssignment"); lit(",") }; lit(")"); }
+                    concatenation("argAssignment") { ref("variableName"); lit(":="); ref("expression") }
 
                     choice("propertyTemplateRhs") {
-                        ref("expression")
                         ref("objectTemplate")
                         ref("collectionTemplate")
+                        ref("expression")
                     }
                     concatenation("objectTemplate") { opt { grp { ref("variableName"); lit(":") } }; ref("typeReference"); ref("propertyTemplateBlock") }
                     concatenation("propertyTemplateBlock") { lit("{"); lst(0, -1) { ref("propertyTemplate") }; lit("}") }
                     concatenation("propertyTemplate") { ref("propertyReference"); lit("=="); ref("propertyTemplateRhs") }
                     concatenation("collectionTemplate") {
-                        lit("["); opt { lit("...") }; lst(0, -1) { ref("propertyTemplateRhs") }; lit("]")
+                        opt { grp { ref("variableName"); lit(":") } }; lit("["); opt { lit("...") }; spLst(0, -1) { ref("propertyTemplateRhs"); lit(",") }; lit("]")
                     }
 
                     concatenation("domainReference", isLeaf = true) { ref("IDENTIFIER") }
@@ -279,10 +320,6 @@ grammar $NAME : Base {
             }
         }
     }
-
-    const val komposite = """namespace net.akehurst.language.m2mTransform.api
-        // TODO
-    """
 
     override val typesDomain by lazy {
         typesDomain(NAME, true, AglBase.typesDomain.namespace) {
@@ -329,20 +366,13 @@ grammar $NAME : Base {
     }
 
     override val styleDomain by lazy {
-        styleDomain(NAME) {
+        styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain, grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
                 styles(AglExpressions.NAME) { //TODO: include from AglExpression not repeat
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
-                        declaration("font-weight", "bold")
-                    }
+                    extends(AglBase.NAME)
                 }
                 styles(NAME) {
                     extends(AglBase.NAME)
-                    metaRule(CommonRegexPatterns.LITERAL.value) {
-                        declaration("foreground", "darkgreen")
-                        declaration("font-weight", "bold")
-                    }
                     tagRule("typeReference") {
                         declaration("foreground", "DarkBlue")
                     }
@@ -358,8 +388,8 @@ grammar $NAME : Base {
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<M2mTransformDomain> by lazy { M2mTransformSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<M2mTransformDomain, SentenceContextAny> by lazy { M2mTransformSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<M2mTransformDomain, SentenceContextAny> by lazy { M2mTransformCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<M2mTransformDomain, SentenceContext> by lazy { M2mTransformSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<M2mTransformDomain, SentenceContext> by lazy { M2mTransformCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.${NAME}"
 

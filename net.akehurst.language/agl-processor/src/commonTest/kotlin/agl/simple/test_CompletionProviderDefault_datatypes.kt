@@ -22,6 +22,7 @@ import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.types.api.TypesDomain
 import testFixture.data.doTest
 import testFixture.data.executeTestSuit
@@ -71,7 +72,7 @@ class test_CompletionProviderDefault_datatypes {
 
         data class TestData(
             val additionalTypesDomain: TypesDomain? = null,
-            val context: SentenceContextAny? = contextAsmSimple(),
+            val context: SentenceContext? = contextAsmSimple(),
             val sentence: String,
             val expected: List<CompletionItem>
         )
@@ -90,7 +91,7 @@ class test_CompletionProviderDefault_datatypes {
 
             val actual = proc.expectedItemsAt(data.sentence, data.sentence.length, Agl.options {
                 completionProvider {
-                    context(data.context)
+                    sentenceContext(data.context)
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())

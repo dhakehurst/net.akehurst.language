@@ -44,7 +44,7 @@ internal class TokensByLineVisitor(
             override fun treeError(msg: String, path: PathFunction) = Unit
             override fun beginTree() {}
             override fun endTree() {}
-            override fun skip(startPosition: Int, nextInputPosition: Int) = Unit
+            override fun skip(skipData: TreeData) = Unit
             override fun leaf(nodeInfo: SpptDataNodeInfo) {
                 val skipNodes = treeData.skipNodesAfter(nodeInfo.node)
                 processLeaf(nodeInfo, skipNodes, nodeLabelStack.elements)

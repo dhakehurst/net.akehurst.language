@@ -17,7 +17,7 @@
 
 package net.akehurst.language.asm.api
 
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -38,7 +38,7 @@ interface Asm {
     val elementIndex: Map<AsmPath, AsmStructure>
 
     fun addToIndex(value: AsmStructure)
-    fun traverseDepthFirst(callback: AsmTreeWalker)
+     fun traverseDepthFirst(callback: AsmTreeWalker)
     fun asString(indent: Indent = Indent()): String
 }
 
@@ -80,7 +80,8 @@ data class PropertyValueName(override val value: String) : PublicValueType {
 interface AsmStructure : AsmValue {
     /** '/' separated String representation of ParsePath */
     val parsePath: String
-    var semanticPath: AsmPath?
+    var syntaxAnalyserPath: AsmPath? //TODO: not sure we still need this, maybe it is useful?
+    val semanticQualifiedPath:List<String>?
 
     val property: Map<PropertyValueName, AsmStructureProperty>
 
@@ -90,6 +91,12 @@ interface AsmStructure : AsmValue {
      * The value of the properties that are not references
      */
     val children: List<AsmValue>
+
+    fun setSemanticQualifiedPath(segments:List<String>)
+    /*
+        this will return null if the semanticQualifiedPath has not been set
+     */
+    fun qualifiedName(separator:String): String?
 
     /**
      * true if the value has the named property
@@ -156,8 +163,19 @@ interface AsmStructureProperty {
     fun equalTo(other: AsmStructureProperty): Boolean
 }
 
-interface AsmList : AsmValue {
-    val elements: List<AsmValue>
+interface AsmCollection : AsmValue {
+    val elements: Collection<AsmValue>
+}
+
+interface AsmSet : AsmCollection {
+    override val elements: Set<AsmValue>
+
+    val isEmpty: Boolean
+    val isNotEmpty: Boolean
+}
+
+interface AsmList : AsmCollection {
+    override val elements: List<AsmValue>
 
     val isEmpty: Boolean
     val isNotEmpty: Boolean
@@ -168,17 +186,17 @@ interface AsmListSeparated : AsmList {
 }
 
 interface AsmLambda : AsmValue {
-    fun invoke(args: Map<String, AsmValue>): AsmValue
+     fun invoke(args: Map<String, AsmValue>): AsmValue
 }
 
 interface AsmTreeWalker {
-    fun beforeRoot(root: AsmValue)
-    fun afterRoot(root: AsmValue)
-    fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing)
-    fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive)
-    fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
-    fun onProperty(owner: AsmStructure, property: AsmStructureProperty)
-    fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
-    fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList)
-    fun afterList(owningProperty: AsmStructureProperty?, value: AsmList)
+     fun beforeRoot(root: AsmValue)
+     fun afterRoot(root: AsmValue)
+     fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing)
+     fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive)
+     fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
+     fun onProperty(owner: AsmStructure, property: AsmStructureProperty)
+     fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
+     fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList)
+     fun afterList(owningProperty: AsmStructureProperty?, value: AsmList)
 }

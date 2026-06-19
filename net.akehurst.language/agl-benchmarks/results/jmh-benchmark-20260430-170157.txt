@@ -1,0 +1,16 @@
+Benchmark                              (size)  Mode  Cnt      Score     Error  Units
+BenchExpression.parse                      50  avgt   30    443.881 ±  11.840  us/op
+BenchExpression.parse                     500  avgt   30   4328.423 ±  31.953  us/op
+BenchExpression.parse                    5000  avgt   30  45517.351 ± 968.332  us/op
+BenchExpressionNoErrorReporting.parse      50  avgt   30    419.249 ±   4.505  us/op
+BenchExpressionNoErrorReporting.parse     500  avgt   30   4156.513 ±  46.704  us/op
+BenchExpressionNoErrorReporting.parse    5000  avgt   30  42892.844 ± 679.429  us/op
+BenchMultiList.parse                      100  avgt   30    157.564 ±   1.456  us/op
+BenchMultiList.parse                     1000  avgt   30   1507.564 ±  16.846  us/op
+BenchMultiList.parse                    10000  avgt   30  15145.797 ± 284.271  us/op
+BenchRightRecursive.parse                  50  avgt   30    154.747 ±   0.969  us/op
+BenchRightRecursive.parse                 500  avgt   30   1480.774 ±   5.306  us/op
+BenchRightRecursive.parse                5000  avgt   30  14359.821 ± 195.178  us/op
+BenchSListWithSkip.parse                   50  avgt   30    573.339 ±   5.349  us/op
+BenchSListWithSkip.parse                  500  avgt   30   5823.942 ±  35.548  us/op
+BenchSListWithSkip.parse,                 5000,  avgt,   30,  65046.473, ± 317.237  us/op

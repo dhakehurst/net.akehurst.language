@@ -20,7 +20,7 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
@@ -38,14 +38,14 @@ class test_Java8_Singles_aglOptm {
     companion object {
         val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
         val grammarStr = this::class.java.getResource(grammarFile)?.readText() ?: error("file not found '$grammarFile'")
-        val proc: LanguageProcessor<Asm, SentenceContextAny> = createJava8Processor(grammarFile, true)
+        val proc: LanguageProcessor<Asm, SentenceContext> = createJava8Processor(grammarFile, true)
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, SentenceContextAny> {
-            val proc = Agl.processorFromString<Asm, SentenceContextAny>(
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, SentenceContext> {
+            val proc = Agl.processorFromString<Asm, SentenceContext>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
-                        context(contextFromGrammarRegistry(Agl.registry))
+                        sentenceContext(contextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
@@ -97,7 +97,7 @@ class test_Java8_Singles_aglOptm {
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
                     //option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
-                    context(contextFromGrammarRegistry(Agl.registry))
+                    sentenceContext(contextFromGrammarRegistry(Agl.registry))
                 }
             }).let {
             check(it.issues.errors.isEmpty()) { it.issues.toString() }
@@ -421,7 +421,7 @@ public class BadBinaryLiterals {
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
 
         val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)

@@ -18,14 +18,15 @@
 package net.akehurst.language.base.asm
 
 import net.akehurst.language.base.api.*
+import net.akehurst.kotlinx.utils.Indent
 
 class OptionHolderDefault(
     override var parent: OptionHolder? = null,
-    val options: Map<String, String> = emptyMap()
+    val options: Map<String, Any> = emptyMap()
 ) : OptionHolder {
 
-    override operator fun get(name: String): String? {
-        return this.options[name] ?: this.parent?.get(name)
+    override operator fun <T> get(name: String): T? {
+        return (this.options[name] ?: this.parent?.get(name)) as? T
     }
 
     override fun clone(parent: OptionHolder?): OptionHolder = OptionHolderDefault(parent, this.options)
@@ -112,8 +113,17 @@ abstract class DomainAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
         }
     }
 
+    override fun mergeNamespace(value: NT) {
+        if (_namespace.containsKey(value.qualifiedName)) {
+            _namespace[value.qualifiedName]!!.merge(value)
+        } else {
+            (_namespace as MutableMap)[value.qualifiedName] = value
+            value.options.parent = this.options //FIXME: could cause wrong parent if namespace in multiple Domains!
+        }
+    }
+
     // --- Formatable ---
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val ns = namespace.joinToString(separator = "\n") { "$indent${it.asString(indent)}" }
         sb.append(ns)
@@ -187,8 +197,18 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
         value.options.parent = this.options
     }
 
+    override fun merge(value: Namespace<DT>) {
+        value.definition.forEach {
+            if(_definition.containsKey(it.name)) {
+                error("Namespace '${qualifiedName}' already contains a definition named '${it.name}', cannot merge another")
+            } else {
+                addDefinition(it)
+            }
+        }
+    }
+
     // --- Formatable ---
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc
@@ -223,7 +243,7 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
 abstract class DefinitionAbstract<DT : Definition<DT>> : Definition<DT> {
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         TODO("not implemented")
     }
 }

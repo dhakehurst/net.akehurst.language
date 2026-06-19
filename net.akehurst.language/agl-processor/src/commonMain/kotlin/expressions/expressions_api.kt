@@ -17,13 +17,46 @@
 
 package net.akehurst.language.expressions.api
 
+import net.akehurst.language.base.api.Definition
+import net.akehurst.language.base.api.Domain
+import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.Indent
+import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 
-interface Expression {
-    fun asString(indent: Indent, imports: List<Import> = emptyList()): String
+interface ExpressionsDomain : Domain<ExpressionsNamespace, FunctionDefinition>, Expression {
+
+}
+
+interface ExpressionsNamespace : Namespace<FunctionDefinition> {
+    val function: List<FunctionDefinition>
+}
+
+interface FunctionDefinitionFloating {
+    val name: SimpleName
+    val parameters: List<FunctionParameter>
+    val returnTypeReference: TypeReference?
+    val body: Expression?
+
+    // to assist execution by reflection without having MPP reflection support
+    val execution: ((args:List<*>) -> Any?)?
+    val executionSuspend: (suspend (args:List<*>) -> Any?)?
+}
+
+interface FunctionDefinition : FunctionDefinitionFloating, Definition<FunctionDefinition> {
+
+}
+
+interface FunctionParameter {
+    val name: String
+    val typeRef: TypeReference
+    val defaultValueExpression: Expression?
+}
+
+interface Expression: Formatable {
 }
 
 interface RootExpression : Expression {
@@ -39,22 +72,22 @@ interface LiteralExpression : Expression {
 
 interface CreateObjectExpression : Expression {
     val possiblyQualifiedTypeName: PossiblyQualifiedName
-    val constructorArguments: List<AssignmentStatement>
-    val propertyAssignments: List<AssignmentStatement>
+    val constructorArguments: List<VariableAssignmentStatement>
+    val propertyAssignments: List<VariableAssignmentStatement>
 }
 
-interface FunctionCall: Expression {
+interface FunctionCall : Expression {
     val possiblyQualifiedName: PossiblyQualifiedName
     val arguments: List<Expression>
 }
 
 interface CreateTupleExpression : Expression {
-    val propertyAssignments: List<AssignmentStatement>
+    val propertyAssignments: List<VariableAssignmentStatement>
 }
 
 interface OnExpression : Expression {
     val expression: Expression
-    val propertyAssignments: List<AssignmentStatement>
+    val propertyAssignments: List<VariableAssignmentStatement>
 }
 
 interface NavigationExpression : Expression {
@@ -74,6 +107,12 @@ interface MethodCall : NavigationPart {
 }
 
 interface LambdaExpression : Expression {
+    val variables: List<String>
+    val expression: Expression
+}
+
+interface StatementBlockExpression : Expression {
+    val assignment: List<VariableAssignmentStatement>
     val expression: Expression
 }
 
@@ -81,10 +120,17 @@ interface IndexOperation : NavigationPart {
     val indices: List<Expression>
 }
 
-interface AssignmentStatement {
-    val lhsPropertyName: String
+interface VariableAssignmentStatement {
+    val variable: VariableDefinition
     val lhsGrammarRuleIndex: Int?
     val rhs: Expression
+
+    fun asString(indent: Indent, imports: List<Import> = emptyList()): String
+}
+
+interface VariableDefinition  {
+    val name: String
+    val typeRef: TypeReference?
 
     fun asString(indent: Indent, imports: List<Import> = emptyList()): String
 }
@@ -108,25 +154,31 @@ interface WhenOptionElse {
     val expression: Expression
 }
 
+interface TernaryConditionExpression : Expression {
+    val condition: Expression
+    val trueExpression: Expression
+    val falseExpression: Expression
+}
+
 interface InfixExpression : Expression {
     val expressions: List<Expression>
     val operators: List<String>
 }
 
-interface CastExpression  : Expression {
+interface CastExpression : Expression {
     val expression: Expression
-    val targetType:TypeReference
+    val targetType: TypeReference
 }
 
-interface TypeTestExpression  : Expression {
+interface TypeTestExpression : Expression {
     val expression: Expression
-    val targetType:TypeReference
+    val targetType: TypeReference
 }
 
 interface TypeReference {
-    val possiblyQualifiedName:PossiblyQualifiedName
-    val typeArguments:List<TypeReference>
-    val isNullable:Boolean
+    val possiblyQualifiedName: PossiblyQualifiedName
+    val typeArguments: List<TypeReference>
+    val isNullable: Boolean
 
     fun asString(indent: Indent, imports: List<Import>): String
 }
