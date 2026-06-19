@@ -17,6 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.builder.asmSimple
@@ -37,7 +38,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
         fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, primitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple), issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, LocationMapDefault(), primitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple))
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, actual.self)
         }

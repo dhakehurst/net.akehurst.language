@@ -206,6 +206,7 @@ class M2mTransformExecution(
     fun evaluationTrace(msg: String) {}
 }
 
+//TODO: combine with suspending version
 class M2mTransformInterpreter(
     val m2m: M2mTransformDomain,
     val domainAccessorMutatorByDomainName: Map<SimpleName, ObjectGraphAccessorMutator>,
@@ -463,7 +464,8 @@ class M2mTransformInterpreter(
                 executeRule(m2mExecution, topRule, domainGraphs)
             }
         }
-        return M2MTransformResult(issues, m2mExecution.records, targetDomainRef)
+        val allIssues = domainAccessorMutatorByDomainName.values.map { it.issues }.fold(issues) { acc, it -> acc.addAllFrom(it); acc }
+        return M2MTransformResult(allIssues, m2mExecution.records, targetDomainRef)
     }
 
     /**
@@ -655,7 +657,7 @@ class M2mTransformInterpreter(
             val mapping = rule.values.firstNotNullOfOrNull { vs ->
                 val srcValues = srcAlt.mapNotNull { (srcDomainRef, v) ->
                     val srcObjectGraph = m2mExecution.domainAccessorMutator[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
-                    val exprInterp = ExpressionsInterpreterOverTypedObject(srcObjectGraph, m2mExecution.issues)
+                    val exprInterp = ExpressionsInterpreterOverTypedObject(srcObjectGraph)
                     val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[srcDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
@@ -670,7 +672,7 @@ class M2mTransformInterpreter(
                 if (srcValues.isEmpty()) {
                     null
                 } else {
-                    val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator, m2mExecution.issues)
+                    val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator)
                     val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[m2mExecution.targetDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
@@ -746,7 +748,7 @@ class M2mTransformInterpreter(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator, m2mExecution.issues)
+                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = accessorMutator.equalTo(lhs, value)
                 TemplateMatchResult(isMatch, emptyMap())
@@ -877,7 +879,7 @@ class M2mTransformInterpreter(
             is RuleWhenMappingHoldsForAll -> TODO()
             else -> {
                 val srcOg = m2mExecution.domainAccessorMutator.entries.filterNot { it.key == m2mExecution.targetDomainRef }.first().value //should never be null!
-                val exprInterp = ExpressionsInterpreterOverTypedObject(srcOg, m2mExecution.issues) //FIXME: which og to use? all might be needed!
+                val exprInterp = ExpressionsInterpreterOverTypedObject(srcOg) //FIXME: which og to use? all might be needed!
                 //val evc = EvaluationContext.of(matchedVariables)
                 val res = exprInterp.evaluateExpression(evc, when_)
                 val v: Boolean = when {
@@ -1042,7 +1044,7 @@ class M2mTransformInterpreter(
     ): Map<DomainReference, List<TypedObject>> {
         return (arguments - m2mExecution.targetDomainRef).mapValues { (k, v) ->
             val og = m2mExecution.domainAccessorMutator[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-            val exprInterp = ExpressionsInterpreterOverTypedObject(og, m2mExecution.issues)
+            val exprInterp = ExpressionsInterpreterOverTypedObject(og)
             //val evc = EvaluationContext.of(matchedVariables)
             val res = exprInterp.evaluateExpression(evc, v)
             listOf(res)
@@ -1062,7 +1064,7 @@ class M2mTransformInterpreter(
         }.associate { it }
         return argsValues.mapValues { (k, v) ->
             val og = m2mExecution.domainAccessorMutator[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-            val exprInterp = ExpressionsInterpreterOverTypedObject(og, m2mExecution.issues)
+            val exprInterp = ExpressionsInterpreterOverTypedObject(og)
             val evc = EvaluationContext.of(matchedVariables)
             val res = exprInterp.evaluateExpression(evc, v)
             listOf(res)
@@ -1101,7 +1103,7 @@ class M2mTransformInterpreter(
         lhsType: TypeInstance,
         expression: Expression
     ): TypedObject {
-        val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator, m2mExecution.issues)
+        val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator)
         return when (expression) {
             is CreateObjectExpression -> {
                 //val evc = EvaluationContext.of(variables)
@@ -1222,7 +1224,7 @@ class M2mTransformInterpreter(
         evc: EvaluationContext,
         expression: Expression
     ) {
-        val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator, m2mExecution.issues)
+        val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator)
         when (expression) {
             is CreateObjectExpression -> {
                 exprInterp.propertyAssignmentBlock(evc, obj, expression.propertyAssignments)

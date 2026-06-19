@@ -31,6 +31,7 @@ import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyName
 
+//TODO: combine with non-suspending version
 class M2mTransformInterpreterSuspending(
     val m2m: M2mTransformDomain,
     val domainObjectGraph: Map<SimpleName, ObjectGraphAccessorMutator>,
@@ -296,7 +297,8 @@ class M2mTransformInterpreterSuspending(
             }
         }
         val r = result.associateBy { it.rule }
-        return M2MTransformResult(_issues, r, targetDomainRef)
+        val allIssues = domainObjectGraph.values.map { it.issues }.fold(_issues) { acc, it -> acc.addAllFrom(it); acc }
+        return M2MTransformResult(allIssues, r, targetDomainRef)
     }
 
     private suspend fun executeRule(
@@ -367,7 +369,7 @@ class M2mTransformInterpreterSuspending(
                                 //TODO: add target of where to variables with correct name
 
                                 // create output
-                                val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtOg, _issues)
+                                val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtOg)
                                 val evc = EvaluationContext.of(allVars.matchedVariables)
                                 val r = exprInterp.evaluateExpression(evc, expression)
                                 val srcs = alt.entries.associate { (srcDomainRef, mr) ->
@@ -438,7 +440,7 @@ class M2mTransformInterpreterSuspending(
             rule.values.firstNotNullOfOrNull { vs ->
                 val srcValues = srcAlt.mapNotNull { (srcDomainRef, v) ->
                     val srcObjectGraph = objectGraph[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
-                    val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(srcObjectGraph, _issues)
+                    val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(srcObjectGraph)
                     val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[srcDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
@@ -454,7 +456,7 @@ class M2mTransformInterpreterSuspending(
                     null
                 } else {
                     val tgtObjectGraph = objectGraph[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
-                    val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtObjectGraph, _issues)
+                    val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtObjectGraph)
                     val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[targetDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
@@ -527,7 +529,7 @@ class M2mTransformInterpreterSuspending(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(srcObjectGraph, _issues)
+                val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(srcObjectGraph)
                 val evc = EvaluationContext.of(variables)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = srcObjectGraph.equalTo(lhs, value)
@@ -613,7 +615,7 @@ class M2mTransformInterpreterSuspending(
                         }.associate { it }
                         val source = (argsValues - targetDomainRef).mapValues { (k, v) ->
                             val og = objectGraph[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-                            val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(og, _issues)
+                            val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(og)
                             val evc = EvaluationContext.of(matchedVariables)
                             val res = exprInterp.evaluateExpression(evc, v)
                             listOf(res)
@@ -674,7 +676,7 @@ class M2mTransformInterpreterSuspending(
      */
     suspend fun createFromPropertyPatternExpression(variables: Map<String, TypedObject>, ppe: PropertyTemplateExpression, tgtObjectGraph: ObjectGraphAccessorMutator): TypedObject {
         val expr = ppe.expression
-        val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtObjectGraph, _issues)
+        val exprInterp = ExpressionsInterpreterOverTypedObjectSuspending(tgtObjectGraph)
         val evc = EvaluationContext.of(variables)
         val value = exprInterp.evaluateExpression(evc, expr)
         return value

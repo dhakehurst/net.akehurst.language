@@ -21,8 +21,10 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.processor.contextFromRegistryGrammars
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.format.processor.FormatterOverTypedObject
@@ -115,13 +117,13 @@ class GenerateGrammarDomainBuild(
         )
         check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         val asm = res.asm!!
-        return generateFromAsm(asm)
+        return generateFromAsm(asm, res.syntaxAnalysis?.locationMap ?: LocationMapDefault())
     }
 
-    fun generateFromAsm(asm: GrammarDomain): String {
+    fun generateFromAsm(asm: GrammarDomain, locationMap: LocationMap): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
-        val og = ObjectGraphAccessorMutatorByReflection(AglGrammar.typesDomain, issues)
-        val formatter = FormatterOverTypedObject(formatDomain, og,issues)
+        val og = ObjectGraphAccessorMutatorByReflection(AglGrammar.typesDomain, issues,locationMap)
+        val formatter = FormatterOverTypedObject(formatDomain, og)
 
         val tp = grammarTypesDomain.findFirstDefinitionByNameOrNull(SimpleName("GrammarDomain"))!!.type()
         val tobj = og.toTypedObject(asm, tp)

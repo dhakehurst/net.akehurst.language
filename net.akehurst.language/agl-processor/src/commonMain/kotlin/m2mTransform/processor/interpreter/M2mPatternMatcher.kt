@@ -88,7 +88,7 @@ class M2mPatternMatcher(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator, issues)
+                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator)
                 val evc = EvaluationContext.of(variables)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = accessorMutator.equalTo(src, value)

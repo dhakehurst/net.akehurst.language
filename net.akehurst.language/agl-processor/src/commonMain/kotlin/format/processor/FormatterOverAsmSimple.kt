@@ -20,6 +20,7 @@ import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
@@ -31,10 +32,11 @@ import net.akehurst.language.types.api.TypesDomain
 class FormatterOverAsmSimple(
     override val formatDomain: AglFormatDomain,
     val typesDomain: TypesDomain,
-    val issues: IssueHolder
+    val issues: IssueHolder,
+    locationMap: LocationMap
 ) : Formatter {
 
-    private val _formatter = FormatterOverTypedObject(formatDomain, ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues),issues)
+    private val _formatter = FormatterOverTypedObject(formatDomain, ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, locationMap))
 
     override  fun formatSelf(formatSetName: PossiblyQualifiedName, self: Any): FormatResult {
         val sb = StringBuilder()

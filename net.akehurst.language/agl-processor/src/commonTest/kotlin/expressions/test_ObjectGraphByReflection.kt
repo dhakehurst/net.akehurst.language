@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.expressions.processor
 
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -52,7 +53,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun nothing() {
-        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
         val actual = og.nothing()
         val expected = Unit
@@ -61,7 +62,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun createPrimitiveValue_boolean() {
-        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
         val actual = og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
         val expected = true
@@ -70,7 +71,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun createTupleValue() {
-        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
         val actual = og.createTupleValue(listOf())
         actual.setProperty("a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
@@ -84,7 +85,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun getIndex() {
-        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
         val list = og.typedAs(listOf("Adam", "Betty", "Charles"), StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)))
 
         val actual1 = og.getFromListWithIndex(list, 0)
@@ -110,7 +111,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun object_getProperty() {
-        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
         val obj = TestClass("A", 1, TestClass("B", 2, null))
         val tp = testTypeModel.findFirstDefinitionByNameOrNull(SimpleName("TestClass"))!!.type()
         val tobj = og.typedAs(obj, tp)
@@ -130,7 +131,7 @@ class test_ObjectGraphByReflection {
 
     @Test
     fun tuple_getProperty() {
-        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
         val obj = mapOf(
             "prop1" to "A",
             "prop2" to 1,
@@ -155,7 +156,7 @@ class test_ObjectGraphByReflection {
     @Test
     fun executeMethod_Primitive_map() {
         //given
-        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
         val tObj = og.typedAs(
             listOf(
                 og.typedAs(1L, StdLibDefault.Integer),

@@ -18,6 +18,7 @@
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -104,7 +105,7 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, SentenceContext>() 
     override val semanticAnalyser: SemanticAnalyser<Asm, SentenceContext> = SemanticAnalyserSimple(typesDomain, crossReferenceDomain)
     override val completionProvider: CompletionProvider<Asm, SentenceContext>?
         get() = TODO("not implemented")
-    val formatter: Formatter = FormatterOverAsmSimple(formatDomain, typesDomain, this.issues)
+    val formatter: Formatter = FormatterOverAsmSimple(formatDomain, typesDomain, this.issues, locationMap = LocationMapDefault())
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )

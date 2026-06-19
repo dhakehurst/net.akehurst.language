@@ -21,6 +21,7 @@ import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -216,9 +217,10 @@ class ExternalGetterAsmSimple(
     val typesDomain: TypesDomain,
     val crossReferenceDomain: CrossReferenceDomain?,
     val issues: IssueHolder,
+    val locationMap: LocationMap,
 ) : ExternalGetter {
 
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, this), issues)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, locationMap,this))
 
     override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
         TODO("not implemented")
@@ -281,8 +283,9 @@ private class TypedObjectAsmValue(
 
 open class ObjectGraphAccessorMutatorAsmSimple(
     override var typesDomain: TypesDomain,
-    val issues: IssueHolder,
-    override val externalGetter: ExternalGetter = ExternalGetterAsmSimple(typesDomain, null, issues),
+    override val issues: IssueHolder,
+    override val locationMap: LocationMap,
+    override val externalGetter: ExternalGetter = ExternalGetterAsmSimple(typesDomain, null, issues, locationMap),
     override val primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple,
     override val functionLib: FunctionLib = StdFunctionLibForAsmSimple
 ) : ObjectGraphAccessorMutator {

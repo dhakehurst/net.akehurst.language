@@ -1,43 +1,40 @@
 # AGL - Akehurst Grammar Language
 
-(This documentation is AI generated, my apologies for any mistakes!)
-
 **AGL** is a comprehensive, multi-platform language processing library built with Kotlin Multiplatform.
 It provides powerful tools for creating, parsing, and processing domain-specific languages (DSLs).
 
 ## Overview
 
-AGL is a complete language development framework that enables you to:
+AGL started out from the tag line "When a RegEx is not enough".
+It was designed to allow me to write grammars quickly and easily and parse a string with the minimum
+number of lines of code. As close to the experience of using a Regular Expression function as possible.
 
-- **Define grammars** in a simple, expressive grammar language
-- **Parse text** according to your grammar definitions
-- **Analyze syntax trees** and transform them into semantic models
-- **Validate and process** language content
-- **Format and style** parsed content
-- **Handle cross-references** and semantic analysis
-- **transform** models (i.e. the AST) into other data structures.
+Over the years, I found it so useful, more anf more features were added until, now,
+
+AGL is a complete language development framework that enables you to do many things related to DSL and model processing.
+The API is designed such that simple things are simple, defaults are provided (convention over configuration),
+with everything being configurable if you want to customise it. AGL provides features to: 
+
+- **Define grammars** in a simple, expressive grammar language, to specify your language's syntax, with features for grammar composition.
+- **Parse text** according to the grammar definitions
+- **Default/Custom Abstract Syntax Graph** defult is based on the grammar and can be augmented with grammar-rule to type mappings, or a custom syntax analyser can be provided
+- **Create syntax graphs** (Syntax Analysis) convert a parse tree into an abstract syntax graph (tree/model)
+- **Validate and process** (Semantic Analysis) analyse the abstract syntax adding semantic content and issues
+- **Style** the langauge, defining color for parts of a sentence based on scanning or parsing results (future work to be based on abstract syntax)
+- **Code Completion** Can ask for the next expected items at any point in the text, a default is provided based on the grammar, or a custom proivder can be written
+- **Format** (model-to-text, M2T) specify declarative rules that will generate text from an abstract syntax graph (inverse of parsing!)
+- **Handle cross-references** there is a DSL for specifying cross-references,  
+- **Transform** (model-to-model, M2M) models (object graphs) such as the abstract syntax graph into other data structures.
 - **Support multiple target platforms** (JVM, JS, WASM, Native)
+- **Language-Agnostic** via kotlin multi-platform, build parsers for any language or DSL - from simple configuration files to complex programming languages.
 
 ## Key Features
-
-### 🎯 Language-Agnostic
-Build parsers for any language or DSL - from simple configuration files to complex programming languages.
 
 ### 🚀 Multi-Platform Support
 - **JVM** - Full Java compatibility
 - **JavaScript** - Browser and Node.js support
 - **WebAssembly** - WASM for high-performance browser execution
 - **Native** - macOS, Linux, Windows (Kotlin/Native)
-
-### 🏗️ Modular Architecture
-- **Grammar Definition** - Express your language's syntax
-- **Parsing** - Efficient parsing with left-corner parsing algorithm
-- **Type System** - Optional type checking and semantic analysis
-- **ASM Transform** - Transform parsed trees into domain models
-- **Cross-References** - Resolve references between elements
-- **Formatting** - Format and style parsed content
-- **Completion** - Provide IDE-like completion suggestions
-- **M2M Transform** - Transform one data-structure into another.
 
 ### 📦 Zero Configuration
 Use sensible defaults and get started immediately, or customize every aspect for advanced use cases.
@@ -55,7 +52,7 @@ See [Getting Started](./GETTING_STARTED.md) for a step-by-step guide to:
 - **Grammar** - Defines the syntax rules of your language
 - **Parser** - Analyzes text according to grammar rules
 - **SPPT** (Shared Packed Parse Tree) - Efficient parse tree representation
-- **ASM** (Abstract Syntax Model) - Target representation of parsed content
+- **ASG** (Abstract Syntax Graph) - Target representation of parsed content
 - **Types Domain** - Type system for semantic analysis
 - **ASM Transform** - Rules for transforming parse trees to semantic models
 
@@ -65,9 +62,9 @@ For detailed explanations, see [Core Concepts](./CONCEPTS.md).
 
 | Module | Purpose |
 |--------|---------|
+| `agl-regex` | Regular expression support for lexical analysis |
 | `agl-parser` | Core parsing engine and parse tree structures |
 | `agl-processor` | Complete language processor with all features |
-| `agl-regex` | Regular expression support for lexical analysis |
 | `agl-generators` | Code generators for various target languages |
 | `agl-neural` | Machine learning support (experimental) |
 | `collections` | Utility collections and data structures |
@@ -83,8 +80,8 @@ For detailed explanations, see [Core Concepts](./CONCEPTS.md).
 
 ## Project Information
 
-- **Version**: 4.2.2
-- **Language**: Kotlin 2.2+
+- **Version**: 4.2.2.21
+- **Language**: Kotlin 2.2.21
 - **License**: Apache License 2.0
 - **Author**: Dr. David H. Akehurst
 - **Repository**: https://github.com/dhakehurst/net.akehurst.language
@@ -121,7 +118,7 @@ implementation("net.akehurst.language:agl-processor:4.2.2.21")
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See LICENSE file for details.
+Licensed under the Apache Licence, Version 2.0. See LICENCE file for details.
 
 ---
 

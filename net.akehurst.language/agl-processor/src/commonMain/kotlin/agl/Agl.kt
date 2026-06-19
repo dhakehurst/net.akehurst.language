@@ -348,8 +348,7 @@ object Agl {
         self: SelfType,
         options: FormatOptions<SelfType> = FormatOptionsDefault()
     ): FormatResult {
-        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
-        val formatter = FormatterOverTypedObject(formatDomain, objectGraph, issueHolder)
+        val formatter = FormatterOverTypedObject(formatDomain, objectGraph)
         val formatSetName = formatDomain.allDefinitions.lastOrNull()?.qualifiedName ?: error("No FormatSet found.")
         val namedValues = mutableMapOf<String, TypedObject>()
         options.environment.forEach { (k, v) ->
@@ -378,7 +377,7 @@ object Agl {
 
     fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<Any> = FormatOptionsDefault()): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
-        val objectGraph = ObjectGraphAccessorMutatorByReflection(typesDomain, issueHolder)
+        val objectGraph = ObjectGraphAccessorMutatorByReflection(typesDomain, issueHolder, options.locationMap ?: LocationMapDefault())
         return formatWithTemplate(template, typesDomain, objectGraph, self, options)
     }
 
@@ -389,8 +388,7 @@ object Agl {
     }
 
     fun executeExpressionWithEvaluationContext(accessorMutator:ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
-        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
-        val interpreter = ExpressionsInterpreterOverTypedObject(accessorMutator, issueHolder)
+        val interpreter = ExpressionsInterpreterOverTypedObject(accessorMutator)
         val result = interpreter.evaluateStr(evc, expression)
         return result
     }
@@ -402,8 +400,7 @@ object Agl {
     }
 
     suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
-        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
-        val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(accessorMutator, issueHolder)
+        val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(accessorMutator)
         val result = interpreter.evaluateStr(evc, expression)
         return result
     }

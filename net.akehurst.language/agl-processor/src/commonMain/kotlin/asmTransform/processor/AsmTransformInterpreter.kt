@@ -126,7 +126,7 @@ class AsmTransformInterpreter(
     }
 
     val issues get() = IssueHolder(LanguageProcessorPhase.INTERPRET)
-    val exprInterpreter = ExpressionsInterpreterOverTypedObject(objectGraph,issues)
+    val exprInterpreter = ExpressionsInterpreterOverTypedObject(objectGraph)
 
     fun clear() {
         this.issues.clear()

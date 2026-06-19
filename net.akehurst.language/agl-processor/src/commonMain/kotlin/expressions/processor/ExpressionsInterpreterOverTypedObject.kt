@@ -18,6 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
@@ -27,11 +28,24 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
 open class ExpressionsInterpreterOverTypedObject(
-    val objectGraph: ObjectGraphAccessorMutator,
-    val issues: IssueHolder
+    val objectGraph: ObjectGraphAccessorMutator
 ) {
-    val typesDomain = objectGraph.typesDomain
-    //val typeResolver = ExpressionTypeResolver(typeModel, issues)
+    val issues get() = objectGraph.issues
+    val locationMap: LocationMap get() = objectGraph.locationMap
+    val typesDomain get() = objectGraph.typesDomain
+
+    fun issueError(item: Any?, message: String, data: Any? = null) {
+        val location = item?.let { this.locationMap[item] }
+        issues.error(location, message, data)
+    }
+    fun issueErrorReturnNothing(item: Any?, message: String, data: Any? = null): TypedObject {
+        issueError(item, message, data)
+        return objectGraph.nothing()
+    }
+     fun issueWarn(item: Any?, message: String, data: Any? = null) {
+        val location = item?.let { this.locationMap[item] }
+        issues.warn(location, message, data)
+    }
 
     /**
      * if more than one value is to be passed in as an 'evaluation-context'
@@ -59,6 +73,7 @@ open class ExpressionsInterpreterOverTypedObject(
         is LambdaExpression -> this.evaluateLambda(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)
         is WhenExpression -> this.evaluateWhen(evc, expression)
+        is TernaryConditionExpression -> this.evaluateTernaryCondition(evc, expression)
         is InfixExpression -> this.evaluateInfix(evc, expression)
         is CastExpression -> this.evaluateCast(evc, expression)
         is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
@@ -260,6 +275,21 @@ open class ExpressionsInterpreterOverTypedObject(
                 issues.error(null, "Only one index value should be used for Maps")
                 objectGraph.nothing()
             }
+        }
+    }
+
+    private fun evaluateTernaryCondition(evc: EvaluationContext, expression: TernaryConditionExpression): TypedObject {
+        val condValue = evaluateExpression(evc, expression.condition)
+        return when (condValue.type) {
+            StdLibDefault.Boolean -> {
+                if (objectGraph.valueOf(condValue) as Boolean) {
+                    evaluateExpression(evc, expression.trueExpression)
+                } else {
+                    evaluateExpression(evc, expression.falseExpression)
+                }
+            }
+
+            else -> issueErrorReturnNothing(expression.condition, "Conditions/Options in a ternary condition expression must result in a Boolean value: '${expression.condition}' is of type '${condValue.type}' = ${condValue.self}")
         }
     }
 

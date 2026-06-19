@@ -1,5 +1,6 @@
 package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asm.simple.toAsmSimple
 import net.akehurst.language.base.api.QualifiedName
@@ -26,7 +27,7 @@ class test_M2mPatternExecutor {
     private companion object {
         fun doTest(types: TypesDomain, lhsType: TypeInstance, template: PropertyTemplateRhs, input: Map<String, Any>, expectedPlan: List<String>, expectedResult: Any) {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val accessorMutator = ObjectGraphAccessorMutatorAsmSimple(types, issues)
+            val accessorMutator = ObjectGraphAccessorMutatorAsmSimple(types, issues, LocationMapDefault())
             val sut = M2mPatternExecutor(issues, accessorMutator, emptyList())
 
             val tgtName = template.identifier?.value ?: M2mPatternExecutor.RESULT

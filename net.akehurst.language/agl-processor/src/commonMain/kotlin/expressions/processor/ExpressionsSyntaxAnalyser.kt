@@ -51,6 +51,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::navigationRoot)
         super.register(this::navigationPartList)
         super.register(this::navigationPart)
+        super.register(this::ternaryConditionExpression)
         super.register(this::infixExpression)
         super.registerFor("object", this::object_)
         super.register(this::functionCall)
@@ -187,6 +188,14 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     // navigationPart = propertyCall | methodCall | indexOperation ;
     private fun navigationPart(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         children[0]
+
+    // ternaryConditionExpression := expression '?' expression ':' expression ;
+    private fun ternaryConditionExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TernaryConditionExpression {
+        val expression = children[0] as Expression
+        val trueExpression = children[2] as Expression
+        val falseExpression = children[4] as Expression
+        return TernaryConditionExpressionDefault(expression, trueExpression, falseExpression)
+    }
 
     // infix = expression INFIX_OPERATOR expression ;
     // infix = [expression / INFIX_OPERATOR]2+ ;

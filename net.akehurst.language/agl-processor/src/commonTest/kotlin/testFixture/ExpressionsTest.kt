@@ -28,6 +28,7 @@ object ExpressionsTest {
             expected is RootExpression && actual is RootExpression -> exAssertEquals(expected, actual)
             expected is LiteralExpression && actual is LiteralExpression -> exAssertEquals(expected, actual)
             expected is NavigationExpression && actual is NavigationExpression -> exAssertEquals(expected, actual)
+            expected is TernaryConditionExpression && actual is TernaryConditionExpression -> exAssertEquals(expected, actual)
             expected is InfixExpression && actual is InfixExpression -> exAssertEquals(expected, actual)
             expected is CreateTupleExpression && actual is CreateTupleExpression -> exAssertEquals(expected, actual)
             expected is CreateObjectExpression && actual is CreateObjectExpression -> exAssertEquals(expected, actual)
@@ -68,6 +69,12 @@ object ExpressionsTest {
             expected is IndexOperation && actual is IndexOperation -> exAssertEquals(expected, actual)
             else -> fail("Type of transformation rules do not match: ${expected::class.simpleName} != ${actual::class.simpleName}")
         }
+    }
+
+    fun exAssertEquals(expected: TernaryConditionExpression, actual: TernaryConditionExpression) {
+        exAssertEquals(expected.condition, actual.condition, "conditions are different")
+        exAssertEquals(expected.trueExpression, actual.trueExpression, "trueExpressions are different")
+        exAssertEquals(expected.falseExpression, actual.falseExpression, "trueExpressions are different")
     }
 
     fun exAssertEquals(expected: InfixExpression, actual: InfixExpression) {

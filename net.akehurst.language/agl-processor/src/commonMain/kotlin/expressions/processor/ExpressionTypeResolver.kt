@@ -33,6 +33,7 @@ class ExpressionTypeResolver(
         is LambdaExpression -> this.typeOfLambdaExpressionFor(self)
         is WithExpression -> this.typeOfWithExpressionFor(self)
         is WhenExpression -> this.typeOfWhenExpressionFor(self)
+        is TernaryConditionExpression -> this.typeOfTernaryConditionFor(self)
         is InfixExpression -> this.typeOfInfixExpressionFor(self)
         is CastExpression -> this.typeOfCastExpressionFor(self)
         is GroupExpression -> this.typeOfGroupExpressionFor(self)
@@ -137,6 +138,14 @@ class ExpressionTypeResolver(
         val opts = this.options.map {
             it.expression.typeOfExpressionFor(self)
         }
+        return commonSuperTypeOf(opts)
+    }
+
+    fun TernaryConditionExpression.typeOfTernaryConditionFor(self: TypeInstance): TypeInstance {
+        val opts = listOf(
+            trueExpression.typeOfExpressionFor(self),
+            falseExpression.typeOfExpressionFor(self),
+        )
         return commonSuperTypeOf(opts)
     }
 

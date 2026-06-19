@@ -313,6 +313,17 @@ class VariableDefinitionDefault(
     override fun toString(): String = "$name : $typeRef"
 }
 
+class TernaryConditionExpressionDefault(
+    override val condition: Expression,
+    override val trueExpression: Expression,
+    override val falseExpression: Expression
+) : TernaryConditionExpression {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "$indent$this"
+
+    override fun toString(): String = "${condition} ? $trueExpression : $falseExpression"
+}
+
 class InfixExpressionDefault(
     override val expressions: List<Expression>,
     override val operators: List<String>

@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
@@ -41,7 +42,7 @@ internal class LanguageProcessorFromLanguageObject<AsmType : Any, ContextType : 
     override val mapToGrammar: (Int, Int) -> RuleItem = languageObject.mapToGrammar
     override val crossReferenceDomain: CrossReferenceDomain = languageObject.crossReferenceDomain //?: CrossReferenceModelDefault(SimpleName("FromGrammar"+ grammarModel.name.value))
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = languageObject.syntaxAnalyser
-    override val formatter: Formatter = FormatterOverAsmSimple(languageObject.formatDomain, languageObject.typesDomain, this.allIssues) as Formatter
+    override val formatter: Formatter = FormatterOverAsmSimple(languageObject.formatDomain, languageObject.typesDomain, this.allIssues, LocationMapDefault()) as Formatter //TODO:what locationMap to use
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = languageObject.semanticAnalyser
 
     init {

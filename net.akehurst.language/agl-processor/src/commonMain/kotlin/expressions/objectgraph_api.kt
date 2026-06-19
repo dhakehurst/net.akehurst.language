@@ -18,12 +18,14 @@
 package net.akehurst.language.objectgraph.api
 
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.FunctionDefinition
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.asm.RootExpressionDefault
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.*
 
 interface TypedObject {
@@ -31,11 +33,11 @@ interface TypedObject {
     val self: Any
     val type: TypeInstance
 
-    fun getProperty(name:String): TypedObject
-    suspend fun getPropertySuspend(name:String) : TypedObject
+    fun getProperty(name: String): TypedObject
+    suspend fun getPropertySuspend(name: String): TypedObject
 
-    fun setProperty(name:String, value: TypedObject)
-    suspend fun setPropertySuspend(name:String, value: TypedObject)
+    fun setProperty(name: String, value: TypedObject)
+    suspend fun setPropertySuspend(name: String, value: TypedObject)
 
     fun executeMethod(name: String, argValues: List<TypedObject>): TypedObject
     suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>): TypedObject
@@ -65,13 +67,15 @@ class EvaluationContext(
 
     val executionTrace: List<String> = mutableListOf()
 
-    fun getOrInParent(name: String): TypedObject? = namedValues[name] ?: parent?.getOrInParent(name)
+    fun getOrInParent(name: String): TypedObject? =
+        namedValues[name]
+            ?: parent?.getOrInParent(name)
 
     fun child(namedValues: Map<String, TypedObject> = emptyMap()) = of(namedValues, this)
 
     fun childSelf(self: TypedObject, namedValues: Map<String, TypedObject> = emptyMap()) = ofSelf(self, namedValues, parent = this)
 
-    fun setNamedValue(name:String, value: TypedObject): EvaluationContext {
+    fun setNamedValue(name: String, value: TypedObject): EvaluationContext {
         (namedValues as MutableMap)[name] = value
         return this
     }
@@ -122,13 +126,15 @@ interface ObjectGraphEdge {
 }
 
 interface ObjectGraphAccessorMutatorCommon {
+    val issues: IssueHolder
+    val locationMap: LocationMap
     var typesDomain: TypesDomain
     val createdStructuresByType: Map<TypeInstance, List<Any>>
 
     fun typeFor(obj: Any?, ifNotFound: TypeInstance): TypeInstance
     fun toTypedObject(obj: Any?, ifNotFound: TypeInstance): TypedObject
     fun untyped(typedObj: TypedObject): Any
-    fun typedAs(obj:Any, type:TypeInstance): TypedObject
+    fun typedAs(obj: Any, type: TypeInstance): TypedObject
 
     fun isNothing(obj: TypedObject): Boolean
     fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean
@@ -146,7 +152,7 @@ interface ObjectGraphAccessorMutatorCommon {
     fun getFromMapWithKey(tobj: TypedObject, key: TypedObject): TypedObject
     fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit)
 
-    fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver:(TypeReference)-> TypeInstance): TypedObject
+    fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject
     fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject
 
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject
@@ -159,7 +165,7 @@ interface ObjectGraphAccessorMutatorCommon {
 }
 
 interface ExternalGetter {
-    fun typeFor(obj: Any, ifNotFound:TypeInstance): TypeInstance
+    fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance
     fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     fun getProperty(obj: Any, propertyName: String): Any?
     fun setProperty(obj: Any, propertyName: String, value: Any?)
@@ -171,7 +177,7 @@ interface ExternalGetter {
 interface FunctionLib {
     val declaration: Map<String, FunctionDefinitionFloating>
 
-    fun findFirstFunctionNamed(functionName:String): FunctionDefinitionFloating?
+    fun findFirstFunctionNamed(functionName: String): FunctionDefinitionFloating?
 }
 
 interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {

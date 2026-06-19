@@ -20,6 +20,7 @@ package net.akehurst.language.expressions.processor
 import kotlinx.coroutines.test.runTest
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
@@ -58,8 +59,8 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
         suspend fun test(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, primitiveExecutor = executor)
-            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og, issues)
+            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues,  LocationMapDefault(), primitiveExecutor = executor)
+            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
             assertEquals(expected, og.untyped(actual))
@@ -68,8 +69,8 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
         suspend fun test_fail(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any, expectedIssues: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, primitiveExecutor = executor)
-            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og, issues)
+            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = executor)
+            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, og.untyped(actual))
             assertEquals(expectedIssues, interpreter.issues.all.toList())

@@ -406,7 +406,7 @@ class M2mPatternExecutor(
      * returns value of expression evaluated in context of provided variables
      */
     private fun createFromExpression(evc: EvaluationContext, lhsType: TypeInstance, expression: Expression): TypedObject {
-        val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator, issues)
+        val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator)
         return when (expression) {
             is CreateObjectExpression -> {
                 exprInterp.constructObject(evc, expression)

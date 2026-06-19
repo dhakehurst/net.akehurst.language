@@ -20,6 +20,7 @@ package net.akehurst.language.agl.expressions.processor
 import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.collections.toOrderedSet
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
@@ -70,10 +71,27 @@ data class ObjectGraphEdgeAny(
 
 abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureType : Any>(
     override var typesDomain: TypesDomain,
-    val issues: IssueHolder,
+    override val issues: IssueHolder,
+    override val locationMap: LocationMap
 ) : ObjectGraphAccessorMutator {
 
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<StructureType>>()
+
+    fun issueError(obj: Any?, message: String) {
+        val loc = obj?.let {  locationMap[obj] }
+        issues.error(loc, message)
+    }
+
+    fun issueErrorReturnNothing(obj: Any?, message: String): TypedObject {
+        issueError(obj,message)
+        return nothing()
+    }
+
+    fun issueWarningReturnNothing(obj: Any?, message: String): TypedObject {
+        val loc = obj?.let {  locationMap[obj] }
+        issues.warn(loc, message)
+        return nothing()
+    }
 
     fun untypedAny(possiblyTypedObject: Any?): Any {
         return when (possiblyTypedObject) {
@@ -243,7 +261,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
                 val el = self.getOrNull(index.toInt())
                 when (el) {
                     null -> {
-                        issues.error(null, "In getFromListWithIndex argument index '$index' out of range")
+                        issueError(null, "In getFromListWithIndex argument index '$index' out of range")
                         nothing()
                     }
 
@@ -252,7 +270,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             }
 
             else -> {
-                issues.error(null, "getFromListWithIndex not supported on type '${tobj.type.typeName}'")
+                issueError(null, "getFromListWithIndex not supported on type '${tobj.type.typeName}'")
                 nothing()
             }
         }
@@ -271,7 +289,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             }
 
             else -> {
-                issues.error(null, "getFromMapWithKey not supported on type '${tobj.type.typeName}'")
+                issueError(null, "getFromMapWithKey not supported on type '${tobj.type.typeName}'")
                 nothing()
             }
         }
@@ -285,7 +303,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             }
 
             else -> {
-                issues.error(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
+                issueError(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
                 nothing()
             }
         }

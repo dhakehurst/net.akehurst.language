@@ -61,6 +61,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
               | literalExpression
               | functionCall
               | navigationExpression
+              | ternaryConditionExpression
               | infixExpression
               | tuple
               | object
@@ -87,6 +88,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
              | methodCall
              | indexOperation
             ;
+            
+            ternaryConditionExpression = expression '?' expression ':' expression ;
             
             infixExpression = [expression / INFIX_OPERATOR]2+ ;
             leaf INFIX_OPERATOR
@@ -244,6 +247,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("literalExpression")
                         ref("functionCall")
                         ref("navigationExpression")
+                        ref("ternaryConditionExpression")
                         ref("infixExpression")
                         ref("tuple")
                         ref("object")
@@ -272,6 +276,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("propertyCall")
                         ref("methodCall")
                         ref("indexOperation")
+                    }
+                    concatenation("ternaryConditionExpression") {
+                        ref("expression"); lit("?"); ref("expression"); lit(":"); ref("expression")
                     }
                     separatedList("infixExpression", 2, -1) {
                         ref("expression"); ref("INFIX_OPERATOR")

@@ -154,6 +154,12 @@ interface WhenOptionElse {
     val expression: Expression
 }
 
+interface TernaryConditionExpression : Expression {
+    val condition: Expression
+    val trueExpression: Expression
+    val falseExpression: Expression
+}
+
 interface InfixExpression : Expression {
     val expressions: List<Expression>
     val operators: List<String>

@@ -2,6 +2,9 @@ plugins {
     id("project-conventions")
 }
 
+// do not publish
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
+
 dependencies {
 
 }
@@ -15,8 +18,4 @@ kotlin {
             }
         }
     }
-}
-
-tasks.withType<AbstractPublishToMaven> {
-    onlyIf { false }
 }

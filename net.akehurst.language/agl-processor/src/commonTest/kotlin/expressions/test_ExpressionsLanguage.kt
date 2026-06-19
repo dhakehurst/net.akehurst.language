@@ -72,6 +72,11 @@ class test_ExpressionsLanguage {
             "a>b",
             "a+b+c-d",
             "a*b/c%d+e-d",
+            // ternary Conditional
+            "true ? 'x' : 'y'",
+            "false ? 1+2 : 3+5",
+            "a and b ? 'x' : 'y'",
+            "a and b ?  1+2 : 3+5",
             // tuple
             "tuple { a:= 1 }",
             $$"tuple { a:= 1 b:=$self }",

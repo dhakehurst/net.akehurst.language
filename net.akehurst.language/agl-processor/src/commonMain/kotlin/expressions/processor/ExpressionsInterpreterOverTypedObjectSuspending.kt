@@ -28,9 +28,9 @@ import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
 //TODO: merge with other
 open class ExpressionsInterpreterOverTypedObjectSuspending(
-    val objectGraph: ObjectGraphAccessorMutator,
-    val issues: IssueHolder
+    val objectGraph: ObjectGraphAccessorMutator
 ) {
+    val issues: IssueHolder get() = objectGraph.issues
     val typeModel = objectGraph.typesDomain
     //val typeResolver = ExpressionTypeResolver(typeModel, issues)
 
@@ -60,6 +60,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
         is LambdaExpression -> this.evaluateLambda(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)
         is WhenExpression -> this.evaluateWhen(evc, expression)
+        is TernaryConditionExpression -> this.evaluateTernaryCondition(evc, expression)
         is InfixExpression -> this.evaluateInfix(evc, expression)
         is CastExpression -> this.evaluateCast(evc, expression)
         is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
@@ -260,6 +261,21 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                 issues.error(null, "Only one index value should be used for Maps")
                 objectGraph.nothing()
             }
+        }
+    }
+
+    private suspend fun evaluateTernaryCondition(evc: EvaluationContext, expression: TernaryConditionExpression): TypedObject {
+        val condValue = evaluateExpression(evc, expression.condition)
+        return when (condValue.type) {
+            StdLibDefault.Boolean -> {
+                if (objectGraph.valueOf(condValue) as Boolean) {
+                    evaluateExpression(evc, expression.trueExpression)
+                } else {
+                    evaluateExpression(evc, expression.falseExpression)
+                }
+            }
+
+            else -> error("The condition in a ternary conditional expression must result in a Boolean value: '${expression.condition}' is of type '${condValue.type}' = ${condValue.self}")
         }
     }
 

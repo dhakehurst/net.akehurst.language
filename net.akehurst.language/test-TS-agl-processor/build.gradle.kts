@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.jsIntegration)
 }
 
+// do not publish
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
+
 dependencies {
     //jsMainImplementation(project(":agl-processor"))
     //jsMainImplementation(npm())
@@ -55,8 +58,4 @@ jsIntegration {
         "tscDev" to "run tsc -p ${jsSrcDir} --outDir ${jsOutDir}",
         "test" to "node out/run_all.mjs"
     ))
-}
-
-tasks.withType<AbstractPublishToMaven> {
-    onlyIf { false }
 }

@@ -20,6 +20,7 @@ package net.akehurst.language.expressions.processor
 import kotlinx.coroutines.test.runTest
 import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
@@ -58,9 +59,9 @@ class test_ExpressionsInterpreter_ByReflection {
         fun test(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, primitiveExecutor = executor)
-            val interpreter = ExpressionsInterpreterOverTypedObject(og, issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs( self,st)), expression)
+            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = executor)
+            val interpreter = ExpressionsInterpreterOverTypedObject(og)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
             assertEquals(expected, og.untyped(actual))
         }
@@ -68,8 +69,8 @@ class test_ExpressionsInterpreter_ByReflection {
         fun test_fail(typesDomain: TypesDomain, self: Any, selfTypeName: String, expression: String, expected: Any, expectedIssues: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, primitiveExecutor = executor)
-            val interpreter = ExpressionsInterpreterOverTypedObject(og, issues)
+            val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = executor)
+            val interpreter = ExpressionsInterpreterOverTypedObject(og)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertEquals(expected, og.untyped(actual))
             assertEquals(expectedIssues, interpreter.issues.all.toList())
@@ -166,6 +167,11 @@ class test_ExpressionsInterpreter_ByReflection {
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
                 "Unable to evaluate property 'prop2': Property prop2 not found on object TestObj(prop1=strValue, propList=[], propListA=[])"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.WARNING, LanguageProcessorPhase.INTERPRET,
+                location = null,
+                message = "Executing property 'prop2' on 'TestObj' results in null, using value \$nothing."
             )
         )
         test_fail(tm, self, "ns.TestObj", "prop2", Unit, expectedIssues)

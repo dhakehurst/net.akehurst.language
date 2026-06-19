@@ -43,10 +43,8 @@ import net.akehurst.language.types.asm.StdLibDefault
 
 class FormatterOverTypedObject(
     override val formatDomain: AglFormatDomain,
-    objectGraph: ObjectGraphAccessorMutator,
-    issues: IssueHolder,
-    val locationMap: LocationMap = LocationMapDefault()
-) : ExpressionsInterpreterOverTypedObject(objectGraph, issues), Formatter {
+    objectGraph: ObjectGraphAccessorMutator
+) : ExpressionsInterpreterOverTypedObject(objectGraph), Formatter {
 
     companion object {
         const val EVC_FORMAT_SET_NAME = "§EVC_FORMAT_SET_NAME"
@@ -112,11 +110,6 @@ class FormatterOverTypedObject(
         return FormatResultDefault(_output + Pair(FormatResultDefault.DEFAULT, str), issues)
     }
 
-    private fun issueError(item: Any?, message: String, data: Any? = null) {
-        val location = item?.let{this.locationMap[item]}
-        issues.error(location, message, data)
-    }
-
     private fun formatEvc(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): String {
         val self = evc.self
         val resultStr = when (self) {
@@ -138,7 +131,7 @@ class FormatterOverTypedObject(
                                 val typedElem = self.accessor.toTypedObject(it, elType)
                                 val elemEvc = evc.childSelf(typedElem)
                                 val resStr = when (formatRule) {
-                                    null -> formatWhenNoRule(formatSetName, elemEvc)
+                                    null -> formatWhenNoRule(formatSetName, elType, elemEvc)
                                     else -> formatExpression(formatSetName, elemEvc, formatRule.formatExpression)
                                 }
                                 setAdditionalOutputIfRequired(typedElem, formatSetName, resStr)
@@ -150,7 +143,7 @@ class FormatterOverTypedObject(
                 else -> {
                     val formatRule = findRuleFor(formatSetName, self.type)  //model?.rules?.get(self.type.typeName)
                     val resStr = when (formatRule) {
-                        null -> formatWhenNoRule(formatSetName, evc)
+                        null -> formatWhenNoRule(formatSetName, self.type, evc)
                         else -> formatExpression(formatSetName, evc, formatRule.formatExpression)
                     }
                     setAdditionalOutputIfRequired(self, formatSetName, resStr)
@@ -203,7 +196,7 @@ class FormatterOverTypedObject(
                                 }
 
                                 else -> {
-                                    val objectGraph = ObjectGraphAccessorMutatorByReflection(typesDomain, issues)
+                                    val objectGraph = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, locationMap)
                                     val outputName = Agl.format(outputFmtDom.asm!!, objectGraph, self)
                                     when {
                                         outputName.issues.errors.isNotEmpty() || null == outputName.sentence -> {
@@ -230,7 +223,11 @@ class FormatterOverTypedObject(
         }
     }
 
-    private fun formatWhenNoRule(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): String {
+    private fun formatWhenNoRule(formatSetName: PossiblyQualifiedName, elType: TypeInstance, evc: EvaluationContext): String {
+        when {
+            elType.isPrimitive -> Unit // not need to warn
+            else -> issueWarn(null, "No format rule found for type '${elType.typeName.value}' in formatSet '${formatSetName.value}'.")
+        }
         val self = evc.self
         return when (self) {
             null -> ""
@@ -557,18 +554,16 @@ class FormatterOverTypedObject(
     }
 
     private fun getNamedValue(evc: EvaluationContext, name: String): TypedObject {
-        return if (evc.namedValues.containsKey(name)) {
-            evc.namedValues[name]!!
-        } else {
-//            val name1 = when {
-//                name.startsWith("\$") -> name.substring(1)
-//                else -> name
-//            }
-            val self = evc.self
-            when (self) {
-                null -> objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "")
-                else -> {
-                    self.getProperty(name)
+        val fromEvc = evc.getOrInParent(name)
+        return when {
+            null != fromEvc -> fromEvc
+            else -> {
+                val self = evc.self
+                when (self) {
+                    null -> objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "")
+                    else -> {
+                        self.getProperty(name)
+                    }
                 }
             }
         }

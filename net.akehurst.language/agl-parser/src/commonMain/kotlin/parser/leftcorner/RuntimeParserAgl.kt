@@ -977,7 +977,7 @@ internal class RuntimeParserAgl(
 
             val skipData = this.tryParseSkipUntilNone(skipLh, atPosition, parseArgs)
 
-            return when {
+            when {
                 needSkip && null == skipData -> {
                     Pair(skipData, true)
                 }

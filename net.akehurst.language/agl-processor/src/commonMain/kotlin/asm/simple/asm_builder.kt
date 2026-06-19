@@ -73,8 +73,10 @@ class AsmSimpleBuilder(
 ) {
     private val _sentenceScope = _context?.getOrCreateScopeForSentence(_sentenceId) as ScopeSimple? //TODO
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(_typesDomain, _issues), _issues)
-    private val _asm = AsmSimple(ObjectGraphAccessorMutatorAsmSimple(_typesDomain, _issues))
+    private val _locationMap = LocationMapDefault() //TODO: what to use here
+    private val _objectGraph = ObjectGraphAccessorMutatorAsmSimple(_typesDomain, _issues,_locationMap)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(_objectGraph)
+    private val _asm = AsmSimple(_objectGraph)
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple>()
     private val _identifyingValueInFor: (SimpleName, AsmStructure) -> Any? = { inTypeName: SimpleName, item: AsmStructure ->
         SemanticAnalyserSimple.identifyingValueInFor(_interpreter, _crossReferenceDomain, inTypeName, item)

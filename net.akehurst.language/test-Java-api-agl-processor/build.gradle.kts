@@ -1,6 +1,10 @@
 plugins {
     alias(libs.plugins.kotlin)
 }
+
+// do not publish
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
+
 repositories {
     mavenLocal {
         content {
@@ -32,6 +36,3 @@ kotlin {
         }
     }
 }
-
-// do not publish
-tasks.withType<AbstractPublishToMaven> { onlyIf { false } }

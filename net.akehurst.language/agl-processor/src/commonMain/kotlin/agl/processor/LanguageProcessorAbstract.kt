@@ -20,6 +20,7 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -142,7 +143,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             this.allIssues.addAllFrom(res.allIssues)
             res.asm?.let {
                 //TODO: make a formatter Resolver !
-                FormatterOverAsmSimple(it, typesDomain, this.allIssues) as Formatter
+                FormatterOverAsmSimple(it, typesDomain, this.allIssues, res.syntaxAnalysis?.locationMap ?: LocationMapDefault()) as Formatter
             }
         }
     }

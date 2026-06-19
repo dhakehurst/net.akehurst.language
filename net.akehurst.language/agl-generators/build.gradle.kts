@@ -2,6 +2,10 @@ plugins {
     id("project-conventions")
 }
 
+
+// do not publish, yet
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
+
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xmulti-dollar-interpolation")
@@ -22,6 +26,3 @@ kotlin {
         }
     }
 }
-
-// do not publish, yet
-//tasks.withType<AbstractPublishToMaven> { onlyIf { false } }

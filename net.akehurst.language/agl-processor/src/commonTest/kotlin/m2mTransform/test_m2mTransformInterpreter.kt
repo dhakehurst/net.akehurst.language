@@ -23,6 +23,7 @@ import net.akehurst.language.agl.m2mTransform.testing.TransformTestSuit
 import net.akehurst.language.agl.m2mTransform.testing.m2mTransformTestSuits
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.simple.contextAsmSimple
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.M2mTransformString
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -2215,7 +2216,7 @@ class test_m2mTransformInterpreter {
             val transform = M2mTransformString(suite.transform)
             val accMuts = suite.typeDomains.entries.associate { (k, v) ->
                 val cdr = suite.crossReferenceDomains[k]
-                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, ExternalGetterAsmSimple(v, cdr, issues)))
+                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
             val domains = case.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")
@@ -2277,7 +2278,7 @@ class test_m2mTransformInterpreter {
             }
             val ogs = suite.typeDomains.entries.associate { (k, v) ->
                 val cdr = suite.crossReferenceDomains[k]
-                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, ExternalGetterAsmSimple(v, cdr, issues)))
+                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
             val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
 

@@ -1,12 +1,12 @@
 [versions]
-project = "4.2.2.21-SNAPSHOT"
+project = "4.2.2.21"
 
 kotlin = "2.2.21"
 dokka = "2.1.0"
 buildconfig = "6.0.7"
 exportPublic = "2.2.21"
-nak-kotlinx = "2.2.21-SNAPSHOT"
-jsIntegration = "2.2.21-SNAPSHOT"
+nak-kotlinx = "2.2.21"
+jsIntegration = "2.2.21"
 vanniktech = "0.35.0"
 
 korlibs = "6.0.2"
@@ -35,6 +35,6 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" } # needed for kotes
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 exportPublic = { id = "net.akehurst.kotlin.gradle.plugin.exportPublic", version.ref = "exportPublic" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
-reflex = { id = "net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref = "nak-kotlinx" }
+#reflex = { id = "net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref = "nak-kotlinx" }
 jsIntegration = { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech" }
