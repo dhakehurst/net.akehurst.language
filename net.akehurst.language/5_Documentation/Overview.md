@@ -9,7 +9,7 @@ AGL started out from the tag line "When a RegEx is not enough".
 It was designed to allow me to write grammars quickly and easily and parse a string with the minimum
 number of lines of code. As close to the experience of using a Regular Expression function as possible.
 
-Over the years, I found it so useful, more anf more features were added until, now,
+Over the years, I found it so useful, more and more features were added until, now,
 
 AGL is a complete language development framework that enables you to do many things related to DSL and model processing.
 The API is designed such that simple things are simple, defaults are provided (convention over configuration),
