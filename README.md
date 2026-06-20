@@ -34,7 +34,7 @@ My Requirements:
 
  - [Documentation](net.akehurst.language/5_Documentation/Overview.md)
  - [Creating a custom Domain Specific Language for text input validation](https://medium.com/javascript-in-plain-english/agl-your-dsl-in-the-web-c9f54595691b)
- - [Documentation](https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79)
+ - [Older Documentation](https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79)
 
 # Example
 
