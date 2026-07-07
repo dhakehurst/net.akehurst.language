@@ -699,7 +699,7 @@ class M2mTransformInterpreter(
             val srcList = source[srcDomainRef] ?: error("No source object found for domain '$srcDomainRef'")
             //filter list to only those objects whoes types match this rule
             val filtered = srcList.filter { it.type.conformsTo(srcDomainType) }
-            val alts = srcList.map { src ->
+            val alts = filtered.map { src ->
                 matchVariablesFromRhs(m2mExecution, EvaluationContext.of(emptyMap()), srcOg, src, srcObjPat)
             }.filter { it.isMatch }
             Pair(srcDomainRef, TemplateMatchAlternatives(alts.flatMap { it.alternatives }))
