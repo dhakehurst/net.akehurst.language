@@ -1,18 +1,18 @@
 [versions]
-project = "4.2.2.21"
+project = "4.2.3.21-SNAPSHOT"
 
-kotlin = "2.2.21"
+kotlin = "2.3.21"
 dokka = "2.1.0"
-buildconfig = "6.0.7"
-exportPublic = "2.2.21"
-nak-kotlinx = "2.2.21"
-jsIntegration = "2.2.21"
-vanniktech = "0.35.0"
+buildconfig = "6.0.10"
+exportPublic = "2.3.21-SNAPSHOT"
+nak-kotlinx = "2.3.21-SNAPSHOT"
+jsIntegration = "2.3.21-SNAPSHOT"
+vanniktech = "0.37.0"
 
 korlibs = "6.0.2"
-kotest = "6.0.7"
-ksp = "2.2.21-2.0.4"
-kotlinx-coroutines = "1.10.2"
+kotest = "6.1.11"
+#ksp = "2.2.21-2.0.4"
+kotlinx-coroutines = "1.11.0"
 
 [libraries]
 korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
@@ -27,11 +27,18 @@ kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref 
 
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 
+# Kotest Test Suite Components
+kotest-runner = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
+kotest-assertions = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
+kotest-property = { group = "io.kotest", name = "kotest-property", version.ref = "kotest" }
+
+[bundles]
+kotest = ["kotest-runner", "kotest-assertions", "kotest-property"]
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-kotest = { id = "io.kotest", version.ref = "kotest" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" } # needed for kotest
+#kotest = { id = "io.kotest", version.ref = "kotest" }
+#ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" } # needed for kotest
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 exportPublic = { id = "net.akehurst.kotlin.gradle.plugin.exportPublic", version.ref = "exportPublic" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }

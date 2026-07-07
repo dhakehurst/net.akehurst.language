@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-@file:OptIn(ExperimentalWasmDsl::class)
-
 import org.gradle.api.publish.PublishingExtension
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -30,9 +27,9 @@ plugins {
     signing
     alias(libs.plugins.vanniktech.maven.publish)
 }
-val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
-val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
-val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
+val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
+val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
+val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
 
 repositories {
     mavenLocal {
@@ -97,7 +94,14 @@ kotlin {
     js {
         binaries.library()
         nodejs()
-        browser()
+        browser {
+            testTask {
+                useKarma {
+                    useChrome()
+                }
+                failOnNoDiscoveredTests = false
+            }
+        }
         generateTypeScriptDefinitions()
         compilerOptions {
             target.set("es2015")
@@ -109,8 +113,9 @@ kotlin {
         browser {
             testTask {
                 useKarma {
-                     useChrome()
+                    useChrome()
                 }
+                failOnNoDiscoveredTests = false
             }
         }
     }

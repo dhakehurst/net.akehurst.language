@@ -31,7 +31,7 @@ import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyName
 
-//TODO: combine with non-suspending version
+//TODO: combine with non-suspending version - this is outdated and much not implemented!
 class M2mTransformInterpreterSuspending(
     val m2m: M2mTransformDomain,
     val domainObjectGraph: Map<SimpleName, ObjectGraphAccessorMutator>,

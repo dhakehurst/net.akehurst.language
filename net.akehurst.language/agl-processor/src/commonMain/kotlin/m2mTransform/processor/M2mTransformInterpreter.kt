@@ -692,10 +692,13 @@ class M2mTransformInterpreter(
     ): Map<DomainReference, TemplateMatchAlternatives> {
         val srcDomainRefs = rule.domainSignature.filterKeys { k -> k != m2mExecution.targetDomainRef }
         val results = srcDomainRefs.map { (srcDomainRef, srcDomainItem) ->
+            val srcDomainType = rule.domainSignature[srcDomainRef]?.variable?.type ?: error("Source domain type not found for domain '$srcDomainRef'")
             val srcOg = m2mExecution.domainAccessorMutator[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
             val srcObjPat = rule.domainTemplate[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")
             // match variables from source domain
             val srcList = source[srcDomainRef] ?: error("No source object found for domain '$srcDomainRef'")
+            //filter list to only those objects whoes types match this rule
+            val filtered = srcList.filter { it.type.conformsTo(srcDomainType) }
             val alts = srcList.map { src ->
                 matchVariablesFromRhs(m2mExecution, EvaluationContext.of(emptyMap()), srcOg, src, srcObjPat)
             }.filter { it.isMatch }

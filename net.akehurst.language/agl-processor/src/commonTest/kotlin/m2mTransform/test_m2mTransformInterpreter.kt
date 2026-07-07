@@ -32,7 +32,9 @@ import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsm
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyCharacteristic
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -2282,7 +2284,7 @@ class test_m2mTransformInterpreter {
             }
             val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
 
-            val source = case.input.entries.associate { (k, v) ->
+            val source:Map<DomainReference, List<TypedObject>> = case.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")
                 val sourceObjects = v.root.map { obj ->
                     println(obj.asString())
