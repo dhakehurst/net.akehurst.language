@@ -1954,7 +1954,7 @@ class test_m2mTransformInterpreter {
                               table == s_tbl
                             }
                             where {
-                                relate all ClassToTable { uml := p_els rdbms:= s_tbl }
+                                relate all ClassToTable { uml:=p_els rdbms:= s_tbl }
                             }
                         }
                         relation ClassToTable {
@@ -1983,9 +1983,9 @@ class test_m2mTransformInterpreter {
                                     kind=='primary'
                                 }
                             }
-                            when { related PackageToSchema{ uml := p rdbms := s } }
+                            when { related PackageToSchema{ uml:=p rdbms:=s } }
                             where {
-                                 relate all AttributeToColumn{ uml := c_atts rdbms := t_cols }
+                                 relate all AttributeToColumn{ uml:=c_atts rdbms:=t_cols }
                             }
                         }
                         abstract rule AttributeToColumn {
@@ -2003,10 +2003,7 @@ class test_m2mTransformInterpreter {
                                 type==ct:String{}
                             }
                             where {
-                                relate PrimitiveUmlTypeToSqlType {
-                                  uml := at
-                                  rdbms := ct
-                                }
+                                relate PrimitiveUmlTypeToSqlType { uml:=at rdbms:=ct }
                             }
                         }
                         relation AttributeToColumnComplex {
@@ -2020,10 +2017,7 @@ class test_m2mTransformInterpreter {
                                 type=='NUMBER'
                             }
                             where {
-                                relate ComplexUmlTypeToSqlType {
-                                  uml := at
-                                  rdbms := ct
-                                }
+                                relate ComplexUmlTypeToSqlType { uml:=at rdbms:=ct }
                             }
                         }                        
                         table PrimitiveUmlTypeToSqlType {
@@ -2206,6 +2200,126 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            testSuit("Where called relation creates object") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation Rel1 {
+                            pivot s:String
+                            domain d1 a1:A1 { prop1 == s }
+                            domain d2 a2:A2 { prop2 == s }
+                            where {
+                              relate Rel2{ d1:=a1 d2:=a2 }
+                            }
+                        }
+                        relation Rel2 {
+                            domain d1 a1:A1 { }
+                            domain d2 a2:A2 { }
+                        } 
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value2")
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value2")
+                        }
+                    }
+                    expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
+                    target("d2") {
+                        element("A2") {
+                            propertyNothing("prop2")
+                        }
+                    }
+                }
+            }
+            testSuit("Where created object is passed to where") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation Rel1 {
+                            domain d1 a1:A1 {}
+                            domain d2 a2:A2 {}
+                            where {
+                              relate Rel2{ d1:=a1 d2:=a2 }
+                            }
+                        }
+                        relation Rel2 {
+                            pivot s:String
+                            domain d1 a1:A1 { prop1 == s }
+                            domain d2 a2:A2 { prop2 == s }
+                        } 
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value2")
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value2")
+                        }
+                    }
+                    expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
+                    target("d2") {
+                        element("A2") {
+                            propertyNothing("prop2")
+                        }
+                    }
+                }
+            }
         }
 
         fun doTest(suite: TransformTestSuit, case: TransformTestCase) {
@@ -2339,8 +2453,8 @@ class test_m2mTransformInterpreter {
 
     @Test
     fun single() {
-        val suite = testSuits["Full umlRdbms QVT example"]!!
-        val case = suite.testCase["1 Class with name, kind & namespace and empty attributes"]!!
+        val suite = testSuits["Where called relation creates object"]!!
+        val case = suite.testCase["A1 with value1 -> A2"]!!
         doTest2(suite, case)
     }
 }

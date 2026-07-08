@@ -159,15 +159,16 @@ class M2mPatternExecutor(
             else -> error("Type '${decl.qualifiedName.value}' has no constructors")
         }
         val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-        val conArgNames = template.propertyTemplate.keys.mapNotNull { k ->
+        val conArgNameMap = template.propertyTemplate.keys.mapNotNull { k ->
             if (possibleConArgNames.contains(k.value)) {
                 Pair(k.value, "${id}_${k.value}")
             } else {
                 null
             }
         }.associate { it }
-        val creation = M2mPatternExecution("$id := ${decl.name.value}(<constructor args>) // Create object ", conArgNames.values.toList(), outputs) { evc ->
-            val rhsMv = createFromObjectTemplate(evc, template.type, template, conArgNames)
+        val conArgNames = conArgNameMap.values.toList()
+        val creation = M2mPatternExecution("$id := ${decl.name.value}(<constructor args>) // Find or Create object ", conArgNames, outputs) { evc ->
+            val rhsMv = findInEnvOrCreateFromObjectTemplate(evc, template.type, template, conArgNameMap)
             evc.setNamedValue(id, rhsMv[RESULT]!!)
             rhsMv.entries.forEach { (k, v) ->
                 if (k != RESULT) {
@@ -180,7 +181,7 @@ class M2mPatternExecutor(
             self.doMeBefore.add(startSetProperties)
         }
 
-        val startConstructorArgs = M2mPatternExecution("// Collect constructor args", inputs, outputs) { evc ->
+        val startConstructorArgs = M2mPatternExecution("// Start Collect constructor args", inputs, emptyList()) { evc ->
         }.also { self ->
             self.doMeBefore.addAll(doAfterMe)
             doBeforeMe.forEach { it.doMeBefore.add(self) }
@@ -191,8 +192,8 @@ class M2mPatternExecutor(
         addExecution(finishSetProperties)
         addExecution(startConstructorArgs)
         addExecution(creation)
-        var prevArgs = setOf(startConstructorArgs)
-        var prevProps = setOf(startSetProperties)
+        val prevArgs = setOf(startConstructorArgs)
+        val prevProps = setOf(startSetProperties)
         template.propertyTemplate.forEach { (k, v) ->
             val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
             if (possibleConArgNames.contains(k.value)) {
@@ -419,9 +420,9 @@ class M2mPatternExecutor(
         }
     }
 
-    private fun createFromObjectTemplate(evc: EvaluationContext, lhsType: TypeInstance, template: ObjectTemplate, conArgNames: Map<String, String>): Map<String, TypedObject> {
+    private fun findInEnvOrCreateFromObjectTemplate(evc: EvaluationContext, lhsType: TypeInstance, template: ObjectTemplate, conArgNames: Map<String, String>): Map<String, TypedObject> {
         val id = template.identifier?.value
-        val existing = evc.namedValues[id]
+        val existing = id?.let { evc.getOrInParent(it) }
         return when (existing) {
             null -> {
                 val decl = template.type.resolvedDefinition
