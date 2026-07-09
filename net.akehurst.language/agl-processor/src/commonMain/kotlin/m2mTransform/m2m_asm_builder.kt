@@ -16,6 +16,7 @@
 
 package net.akehurst.language.m2mTransform.builder
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -29,6 +30,9 @@ import net.akehurst.language.regex.api.UnescapedPattern
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.m2mTransform.asm.*
 import net.akehurst.language.m2mTransform.processor.M2mTransformSemanticAnalyser
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.TypeParameterMultiple.name
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.collections.set
 
 @DslMarker
@@ -46,6 +50,13 @@ fun m2mDomain(name: String, sentenceContext: SentenceContext, init: M2mDomainBui
     return styles
 }
 
+fun patternTemplate(typesDomain: TypesDomain = typesDomain("Default", true) {}, init: PropertyTemplateRhsBuilder.() -> Unit): PropertyTemplateRhs {
+    val b = PropertyTemplateRhsBuilder(typesDomain)
+    b.init()
+    val pt = b.build()
+    pt.resolveTypes(typesDomain)
+    return pt
+}
 
 @M2mModelDslMarker
 class M2mDomainBuilder(
@@ -195,13 +206,77 @@ class M2MTransformRelationBuilder internal constructor(
 }
 
 @M2mModelDslMarker
-class ObjectTemplateBuilder internal constructor(
-
+class PropertyTemplateRhsBuilder(
+    private val _typesDomain: TypesDomain
 ) {
-    private val _typeRef: TypeReference? = null
-    private val _propTemplate = mutableMapOf<SimpleName,PropertyTemplate>()
+    private var _template: PropertyTemplateRhs? = null
 
-    fun build() = ObjectTemplateDefault(_typeRef!!, _propTemplate).also {
+    fun expression(targetName: String?, expression: String) {
+        val expr = Agl.registry.agl.expressions.processor!!.process(expression).let {
+            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
+            it.asm!!
+        }
+        _template = PropertyTemplateExpressionDefault(expr).also { tplt ->
+            tplt.identifier = targetName?.let { SimpleName(it) }
+        }
+    }
 
+    fun collection(targetName: String?, init: CollectionTemplateBuilder.() -> Unit) {
+        val b = CollectionTemplateBuilder(_typesDomain,targetName)
+        b.init()
+        _template = b.build()
+    }
+
+    fun object_(targetName: String?, typeName:String, init: ObjectTemplateBuilder.() -> Unit) {
+        val typeRef = TypeReferenceDefault(typeName.asPossiblyQualifiedName, emptyList(), false)
+        val b = ObjectTemplateBuilder(_typesDomain,targetName, typeRef)
+        b.init()
+        _template = b.build()
+    }
+
+    fun build() = _template!!
+}
+
+@M2mModelDslMarker
+class CollectionTemplateBuilder internal constructor(
+    private val _typesDomain: TypesDomain,
+    private val _targetName: String?
+) {
+    private var _isSubset: Boolean = false
+    private val _elements = mutableListOf<PropertyTemplateRhs>()
+
+    fun isSubset() {
+        _isSubset = true
+    }
+
+    fun element(init: PropertyTemplateRhsBuilder.() -> Unit) {
+        val b = PropertyTemplateRhsBuilder(_typesDomain)
+        b.init()
+        _elements.add(b.build())
+    }
+
+    fun build() = CollectionTemplateDefault(_isSubset, _elements).also { tplt ->
+        tplt.identifier = _targetName?.let { SimpleName(it) }
+    }
+}
+
+@M2mModelDslMarker
+class ObjectTemplateBuilder internal constructor(
+    private val _typesDomain: TypesDomain,
+    private val _targetName: String?,
+    private val _typeRef: TypeReference
+) {
+    private val _propTemplate = mutableMapOf<SimpleName, PropertyTemplate>()
+
+    fun property(propertyName: String, init: PropertyTemplateRhsBuilder.() -> Unit) {
+        val b = PropertyTemplateRhsBuilder(_typesDomain)
+        b.init()
+        val rhs = b.build()
+        val pn = SimpleName(propertyName)
+        _propTemplate[pn] = PropertyTemplateDefault(pn, rhs)
+    }
+
+    fun build() = ObjectTemplateDefault(_typeRef, _propTemplate).also { tplt ->
+        tplt.identifier = _targetName?.let { SimpleName(it) }
     }
 }
