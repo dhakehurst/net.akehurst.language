@@ -114,11 +114,16 @@ data class CreateObjectExpressionDefault(
             else -> possiblyQualifiedTypeName.value
         }
         val cArgs = constructorArguments.joinToString(separator = ", ") { it.asString(Indent(), imports) }
-        sb.append("$pqn($cArgs) {\n")
-        val ni = indent.inc
-        val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
-        sb.append("${props}\n")
-        sb.append("${indent}}")
+        sb.append("$pqn($cArgs) {")
+        if (propertyAssignments.isEmpty()) {
+            sb.append(" }")
+        } else {
+            sb.append("\n")
+            val ni = indent.inc
+            val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
+            sb.append("${props}\n")
+            sb.append("${indent}}")
+        }
         return sb.toString()
     }
 
@@ -152,7 +157,7 @@ class WithExpressionDefault(
         val sb = StringBuilder()
         sb.append("with(${withContext.asString(indent, imports)}) ")
         val ni = indent.inc
-        sb.append(expression.asString(ni, imports))
+        sb.append(expression.asString(indent, imports))
         return sb.toString()
     }
 
@@ -166,11 +171,14 @@ class WhenExpressionDefault(
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
-        sb.append("when {\n")
         val ni = indent.inc
-        val opts = options.joinToString(separator = "\n") { "${it.condition.asString(ni, imports)} -> ${it.expression.asString(ni.inc, imports)}" }
+        sb.append("when {\n")
+        val ni2 = ni.inc
+        val opts = options.joinToString(separator = "\n") { "$ni${it.condition.asString(ni, imports)} -> ${it.expression.asString(ni, imports)}" }
         sb.append("${opts}\n")
-        sb.append("${indent}}")
+        val elseOpt = elseOption.expression.asString(ni, imports)
+        sb.append("${ni}else -> $elseOpt\n")
+        sb.append("$indent}")
         return sb.toString()
     }
 
@@ -269,13 +277,9 @@ data class StatementBlockExpressionDefault(
         return when {
             assignment.isEmpty() -> "{ ${expression.asString(Indent(), imports)} }"
             else -> {
-                val ass = assignment.joinToString(separator = "\n") { it.asString(indent.inc, imports) }
-                """
-                $indent{
-                $ass
-                ${expression.asString(indent.inc, imports)}
-                $indent}
-                """.trimIndent()
+                val ni = indent.inc
+                val ass = assignment.joinToString(separator = "\n") { "$ni${it.asString(ni, imports)}" }
+                "{\n$ass\n$ni${expression.asString(ni, imports)}\n$indent}"
             }
         }
     }
@@ -328,7 +332,7 @@ class InfixExpressionDefault(
     override val expressions: List<Expression>,
     override val operators: List<String>
 ) : InfixExpression {
-    override fun asString(indent: Indent, imports: List<Import>): String = "$indent$this"
+    override fun asString(indent: Indent, imports: List<Import>): String = "$this"
 
     override fun toString(): String = "${expressions.first()} ${operators.indices.joinToString { operators[it] + " " + expressions[it + 1] }}"
 }

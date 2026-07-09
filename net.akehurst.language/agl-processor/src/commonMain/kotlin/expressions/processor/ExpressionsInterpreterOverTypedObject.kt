@@ -562,9 +562,17 @@ open class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateStatementBlockExpression(evc: EvaluationContext, expression: StatementBlockExpression): TypedObject {
         val newEvc = evc.child(emptyMap())
+        val self = evc.self
+        val selfTypeDef = self?.type?.resolvedDefinitionOrNull
         for (ass in expression.assignment) {
             val rhsValue = evaluateExpression(newEvc, ass.rhs)
-            newEvc.setNamedValue(ass.variable.name, rhsValue)
+            val selfProp = selfTypeDef?.findAllPropertyOrNull(PropertyName(ass.variable.name))
+            when {
+                // create new variable with this name
+                selfProp == null ->newEvc.setNamedValue(ass.variable.name, rhsValue)
+                // set the property
+                else ->  self.setProperty(ass.variable.name, rhsValue)
+            }
         }
         val result = evaluateExpression(newEvc, expression.expression)
         return result

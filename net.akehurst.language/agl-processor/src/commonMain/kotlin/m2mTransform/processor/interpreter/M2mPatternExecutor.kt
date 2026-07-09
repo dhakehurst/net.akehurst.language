@@ -50,7 +50,7 @@ class M2mPatternExecutor(
 ) {
 
     companion object {
-        const val RESULT = $$"$result"
+        const val RESULT = $$"§result"
     }
 
     internal var _nextTempVarNum = 0

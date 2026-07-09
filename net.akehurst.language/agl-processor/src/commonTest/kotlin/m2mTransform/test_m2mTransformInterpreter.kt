@@ -2242,7 +2242,7 @@ class test_m2mTransformInterpreter {
                     }
                     target("d2") {
                         element("A2") {
-                            propertyString("prop2", "value2")
+                            propertyString("prop2", "value1")
                         }
                     }
                 }
@@ -2252,7 +2252,7 @@ class test_m2mTransformInterpreter {
                             propertyString("prop1", "value2")
                         }
                     }
-                    expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
+                   // expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
                     target("d2") {
                         element("A2") {
                             propertyNothing("prop2")
@@ -2312,10 +2312,86 @@ class test_m2mTransformInterpreter {
                             propertyString("prop1", "value2")
                         }
                     }
-                    expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
                     target("d2") {
                         element("A2") {
                             propertyNothing("prop2")
+                        }
+                    }
+                }
+            }
+            testSuit("Setting the owner") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            constructor_ {
+                                parameter(setOf(REF, VAL),"id", "String")
+                            }
+                            propertyOf(setOf(CMP, VAR), "b", "B2")
+                        }
+                        data("B2") {
+                            propertyOf(setOf(REF, VAR), "owner", "A2")
+                            propertyOf(setOf(REF, VAR), "prop", "String")
+                        }
+                    }
+                }
+                crossReferenceDomain("d2","Domain2") {
+                    declarationsFor("n2") {
+                        identify("A2", "id")
+                        reference("B2") {
+                            property("owner", listOf("A2"),null)
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation Rel1 {
+                            pivot s:String
+                            domain d1 a1:A1 { prop1 == s }
+                            domain d2 a2:A2 { 
+                              id == 'A2-1'
+                              b == B2 {
+                                owner == a2
+                                prop == s
+                              }
+                            }
+                        }
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2B2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("id", "A2-1")
+                            propertyElementExplicitType("b","B2") {
+                                reference("owner", "A2-1")
+                                propertyString("prop2", "value1")
+                            }
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                        }
+                    }
+                    // expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
+                    target("d2") {
+                        element("A2") {
+                            propertyString("id", "id-a1")
                         }
                     }
                 }
@@ -2453,8 +2529,8 @@ class test_m2mTransformInterpreter {
 
     @Test
     fun single() {
-        val suite = testSuits["Where called relation creates object"]!!
-        val case = suite.testCase["A1 with value1 -> A2"]!!
+        val suite = testSuits["Setting the owner"]!!
+        val case = suite.testCase["A1 with value1 -> A2B2"]!!
         doTest2(suite, case)
     }
 }

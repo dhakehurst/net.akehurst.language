@@ -685,97 +685,67 @@ class M2mTransformInterpreter(
                         } ?: Pair(true, EvaluationContext.of(allVars.matchedVariables))
                         if (whenResult.first) {
                             val varsAfterWhen = whenResult.second
-                            // Extract target domain template details
+
+                            // try to execute wheres
+                            val whereResults = rule.where.associateWith { rw ->
+                                val whereRule = rw.resolved!!
+                                val boundArgs = evaluateArguments(m2mExecution, rw.domainArguments, varsAfterWhen)
+                                val whereResult = executeRuleWhere(m2mExecution, rule, whereRule, boundArgs)
+                                whereResult
+                            }
+                            //val varsAfterTryWhere = //make a function that tries a where and maps the variables
+
                             val template = rule.domainTemplate[m2mExecution.targetDomainRef] ?: error("...")
                             val lhsType = rule.domainSignature[m2mExecution.targetDomainRef]?.variable?.type ?: error("...")
                             val tgtVarName = rule.domainSignature[m2mExecution.targetDomainRef]!!.variable.name.value
                             val tgtName = template.identifier?.value ?: RESULT
-                            val targetOg = m2mExecution.targetAccessorMutator
 
                             val srcs = alt.entries.associate { (srcDomainRef, v) ->
-                                val srcObjPat = rule.domainTemplate[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")
-                                val srcId = srcObjPat.identifier?.value ?: error("No identifier found for matched object in domain '$srcDomainRef'")
-                                val src = v.getValueNamed(srcId) ?: error("No matched object found for identifier '$srcId'")
-                                Pair(srcDomainRef, src)
+                                val srcObjPat = rule.domainTemplate[srcDomainRef] ?: error("...")
+                                val srcId = srcObjPat.identifier?.value ?: error("...")
+                                Pair(srcDomainRef, v.getValueNamed(srcId) ?: error("..."))
                             }
 
-                            // =========================================================================
-                            // PHASE 1: THE HIPPOCRATIC CHECK (Try to find an existing valid state)
-                            // =========================================================================
-                            var checkContext = varsAfterWhen
-                            var allWhereClausesPassed = true
-
-                            // Run checkRelation on where clauses sequentially, accumulating bound target elements
-                            for (rw in rule.where) {
-                                val (isMatch, updatedContext) = checkRelation(m2mExecution, rw.resolved as M2MTransformRelation, rw.domainArguments, checkContext)
-                                if (isMatch) {
-                                    checkContext = updatedContext
-                                } else {
-                                    allWhereClausesPassed = false
-                                    break
-                                }
-                            }
-
-                            // Try to find if the main target object itself is already bound or discoverable
-                            var existingTgtObj = checkContext.getOrInParent(tgtVarName)
-                            if (existingTgtObj == null || targetOg.isNothing(existingTgtObj)) {
-                                existingTgtObj = lookupTargetViaBoundNeighbors(m2mExecution, template, tgtVarName, checkContext)
-                                if (existingTgtObj != null) {
-                                    checkContext = checkContext.child(mapOf(tgtVarName to existingTgtObj, tgtName to existingTgtObj))
-                                }
-                            }
-
-                            // Validate if the gathered target object satisfies the local domain property template
-                            var relationAlreadySatisfied = false
-                            if (allWhereClausesPassed && existingTgtObj != null && !targetOg.isNothing(existingTgtObj)) {
-                                val matchResult = matchVariablesFromRhs(m2mExecution, checkContext, targetOg, existingTgtObj, template)
-                                if (matchResult.alternatives.isNotEmpty()) {
-                                    relationAlreadySatisfied = true
-                                    checkContext = checkContext.child(matchResult.alternatives.first().matchedVariables)
-                                }
-                            }
-
-                            if (relationAlreadySatisfied) {
-                                // Success! Model matches perfectly. Log trace mapping and skip enforcement creation steps entirely.
-                                m2mExecution.addRecord(rule, srcs + Pair(m2mExecution.targetDomainRef, existingTgtObj!!))
-                                return@map
-                            }
-
-                            // =========================================================================
-                            // PHASE 2: ENFORCEMENT & CONSTRUCTION (Fallback if check failed)
-                            // =========================================================================
                             val matchedVars = M2mPatternExecution("Matched variables after when clause", emptyList(), varsAfterWhen.namedValues.map { it.key }) {}
-                            val mappedVars = rule.domainTemplate.map { (k, v) -> v.identifier?.value ?: error("No identifier found for domain '$k'") }
 
+                            val mappedVars = rule.domainTemplate.map { (k, v) -> v.identifier?.value ?: error("...") }
                             val recordMapping = M2mPatternExecution("Record Mapping", mappedVars, emptyList()) { evc ->
                                 val tgtObj = evc.getOrInParent(tgtVarName) ?: m2mExecution.targetAccessorMutator.nothing()
                                 val mapping = srcs + Pair(m2mExecution.targetDomainRef, tgtObj)
                                 m2mExecution.addRecord(rule, mapping)
+                                evc
                             }
 
                             val whereExes = rule.where.map { rw ->
                                 val whereRule = rw.resolved!!
+                                val whereTargetArgName = (rw.domainArguments[m2mExecution.targetDomainRef] as? RootExpression)?.name
 
-                                // During enforcement, a where clause ALWAYS acts as an input post-condition
-                                // to the target variables established by the parent relation
-                                val whereInputs = rw.domainArguments.map { (_, v) -> (v as RootExpression).name }
-                                val whereOutputs = emptyList<String>()
+                                // Determine direction strictly by checking if the variable is already bound in our environment context
+                                val isWhereTargetAlreadyBound = whereTargetArgName != null && varsAfterWhen.getOrInParent(whereTargetArgName) != null
+
+                                val whereOutputs = if (isWhereTargetAlreadyBound || whereTargetArgName == null) emptyList() else listOf(whereTargetArgName)
+                                val whereInputs = rw.domainArguments.map { (_, v) -> (v as RootExpression).name } - whereOutputs
 
                                 M2mPatternExecution("where ${rw}", whereInputs, whereOutputs) { evc ->
-                                    // Because evc is passed by reference down into executeWhere,
-                                    // any property modifications made by child rules are written directly
-                                    // to the shared target objects!
-                                    executeWhere(m2mExecution, rule, rw, evc)
+                                    // evaluateArguments will now build the clean Map<DomainReference, List<TypedObject>>
+                                    // based on whatever is currently bound in evc
+                                    val boundArgs = evaluateArguments(m2mExecution, rw.domainArguments, evc)
+                                    val childRecord = executeRuleWhere(m2mExecution, rule, whereRule, boundArgs)
+
+                                    // If the child relation populated/created a target object, unwrap it into the parent context
+                                    if (whereTargetArgName != null && evc.getOrInParent(whereTargetArgName) == null) {
+                                        val childTargetValue = childRecord //?.get(m2mExecution.targetDomainRef)
+                                        if (childTargetValue != null) {
+                                            evc.setNamedValue(whereTargetArgName, childTargetValue)
+                                        }
+                                    }
                                 }
                             }
-
-                            //recordMapping.doMeBefore.addAll(whereExes)
                             val initExes = listOf(matchedVars, recordMapping) + whereExes
                             val executor = M2mPatternExecutor(m2mExecution.issues, m2mExecution.targetAccessorMutator, initExes)
 
                             executor.build(tgtName, template, lhsType)
-                            // Seed execution with any variables successfully harvested during the partial check phase
-                            executor.execute(checkContext, tgtName)
+                            executor.execute(varsAfterWhen, tgtName)
 
                         } else {
                             m2mExecution.infoIssue("when clause evaluated to false for target domain ref '${m2mExecution.targetDomainRef.value}' of rule '${rule.name}'.")
@@ -1042,7 +1012,8 @@ class M2mTransformInterpreter(
                 m2mExecution.errorIssue("In 'when' clause of rule '${owningRule.name.value}', rule '${when_.ruleName.value}' is unresolved in '${m2mExecution.targetTransform.name.value}'.")
                 Pair(false, evc)
             }
-            is RuleWhenMappingHolds-> when_.resolved?.let { rule ->
+
+            is RuleWhenMappingHolds -> when_.resolved?.let { rule ->
                 checkMapping(m2mExecution, rule as M2MTransformMapping, when_.domainArguments, evc)
                 /*                val source = getSource(m2mExecution, rule, when_.domainArguments, evc)
                                 val rec = m2mExecution.records[rule]
@@ -1084,6 +1055,7 @@ class M2mTransformInterpreter(
                 m2mExecution.errorIssue("In 'when' clause of rule '${owningRule.name.value}', rule '${when_.ruleName.value}' is unresolved in '${m2mExecution.targetTransform.name.value}'.")
                 Pair(false, evc)
             }
+
             is RuleWhenRelationHoldsForAll -> TODO()
             is RuleWhenMappingHoldsForAll -> TODO()
             else -> {
@@ -1273,8 +1245,9 @@ class M2mTransformInterpreter(
     ): EvaluationContext {
         return when (where) { //TODO: support more complex expressions - override the expression interpreter to intercept function calls as rule-calls
             is RuleWhereCallRelation, is RuleWhereCallMapping -> where.resolved?.let { rule ->
-                val source = getSource(m2mExecution, rule, where.domainArguments, evc)
-                val tgtValue = executeRuleWhere(m2mExecution, owningRule, rule, source)
+                //val source = getSource(m2mExecution, rule, where.domainArguments, evc)
+                val boundArgs = evaluateArguments(m2mExecution, where.domainArguments, evc)
+                val tgtValue = executeRuleWhere(m2mExecution, owningRule, rule, boundArgs)
                 val targetArg = where.domainArguments[m2mExecution.targetDomainRef]
                 when (targetArg) {
                     null -> {
@@ -1302,12 +1275,13 @@ class M2mTransformInterpreter(
             }
 
             is RuleWhereCallRelationForAll, is RuleWhereCallMappingForAll -> where.resolved?.let { rule ->
-                val source = getSource(m2mExecution, rule, where.domainArguments, evc)
+                //val source = getSource(m2mExecution, rule, where.domainArguments, evc)
+                val boundArgs = evaluateArguments(m2mExecution, where.domainArguments, evc)
                 val tgtValue = when {
-                    source.all { (k, v) -> v.all { it.type.isCollection } } -> {
+                    boundArgs.all { (k, v) -> v.all { it.type.isCollection } } -> {
                         val sourceElements = mutableListOf<Map<DomainReference, List<TypedObject>>>()
                         val sourceCollType = mutableListOf<TypeInstance>()
-                        source.entries.forEach { (dr, alts) ->
+                        boundArgs.entries.forEach { (dr, alts) ->
                             alts.forEach { to ->
                                 sourceCollType.add(to.type)
                                 val og = m2mExecution.domainAccessorMutator[dr]!!
@@ -1403,6 +1377,29 @@ class M2mTransformInterpreter(
         }
     }
 
+    fun evaluateArguments(
+        m2mExecution: M2mTransformExecution,
+        arguments: Map<DomainReference, Expression>,
+        evc: EvaluationContext
+    ): Map<DomainReference, List<TypedObject>> {
+        return arguments.mapNotNull { (domainRef, expr) ->
+            if (expr is RootExpression) { // shortcut, saves evaluating a simple var name
+                val value = evc.getOrInParent(expr.name)
+                if (value != null && !m2mExecution.targetAccessorMutator.isNothing(value)) {
+                    // Wrap the bound object in a list to match your type signature!
+                    Pair(domainRef, listOf(value))
+                } else {
+                    null // Omit from the map if it's currently unbound
+                }
+            } else {
+                val og = m2mExecution.domainAccessorMutator[domainRef] ?: error("...")
+                val exprInterp = ExpressionsInterpreterOverTypedObject(og)
+                val res = exprInterp.evaluateExpression(evc, expr)
+                Pair(domainRef, listOf(res))
+            }
+        }.toMap()
+    }
+
     fun getSource(
         m2mExecution: M2mTransformExecution,
         rule: M2mTransformRule,
@@ -1438,7 +1435,6 @@ class M2mTransformInterpreter(
             listOf(res)
         }
     }
-
 
 
     fun createFromRhs(
