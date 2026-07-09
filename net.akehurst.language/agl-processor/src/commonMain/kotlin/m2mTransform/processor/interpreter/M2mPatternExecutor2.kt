@@ -127,6 +127,7 @@ class M2mPatternExecutor2(
         template: PropertyTemplateExpression,
         lhsType: TypeInstance
     ): M2mPatternExecution2 {
+        val templateVarName = template.identifier?.value
         val rhsName = when {
             template.expression is RootExpression -> (template.expression as RootExpression).name
             else -> null
@@ -157,7 +158,7 @@ class M2mPatternExecutor2(
         val typeName = template.type.qualifiedTypeName
         val inputs = listOf<String>()
         val outputs = listOf(tgtName)
-        val exe = M2mPatternExecution2("Find '$tgtName' or construct ${typeName.value}(...) ", inputs, outputs) {
+        val exe = M2mPatternExecution2("Find '$tgtName' or construct ${typeName.value}(...)", inputs, outputs) {
             findOrEnforceObjectTemplate(tgtName, template)
         }
         addExecution(exe)
@@ -321,13 +322,17 @@ class M2mPatternExecutor2(
     private fun findOrEnforceObjectTemplate(tgtName: String, template: ObjectTemplate): Expression {
         val construction = findOrEnforceConstructObjectTemplate(tgtName, template)
         val setProperties = checkOrEnforcePropertiesObjectTemplate(template)
-        val objAssignment = VariableAssignmentStatementDefault(VariableDefinitionDefault(tgtName, null), null, construction)
-        val propAssignments = setProperties.map { (k, v) -> VariableAssignmentStatementDefault(VariableDefinitionDefault(k, null), null, v) }
-        val withBlock = StatementBlockExpressionDefault(propAssignments, RootExpressionDefault(tgtName))
-        val propAssignmentsWithObj = WithExpressionDefault(RootExpressionDefault(tgtName), withBlock)
-        val assignments = listOf(objAssignment)
-        val block = StatementBlockExpressionDefault(assignments, propAssignmentsWithObj)
-        return block
+        return if (setProperties.isEmpty()) {
+            construction
+        } else {
+            val objAssignment = VariableAssignmentStatementDefault(VariableDefinitionDefault(tgtName, null), null, construction)
+            val propAssignments = setProperties.map { (k, v) -> VariableAssignmentStatementDefault(VariableDefinitionDefault(k, null), null, v) }
+            val withBlock = StatementBlockExpressionDefault(propAssignments, RootExpressionDefault(tgtName))
+            val propAssignmentsWithObj = WithExpressionDefault(RootExpressionDefault(tgtName), withBlock)
+            val assignments = listOf(objAssignment)
+            val block = StatementBlockExpressionDefault(assignments, propAssignmentsWithObj)
+            block
+        }
     }
 
     private fun findOrEnforceConstructObjectTemplate(tgtName: String, template: ObjectTemplate): Expression {
@@ -428,10 +433,7 @@ class M2mPatternExecutor2(
      */
     private fun findOrSetExpression(propName: String, rhs: Expression): Expression {
         val ifIsNothing = InfixExpressionDefault(listOf(RootExpressionDefault.NOTHING, RootExpressionDefault(propName)), listOf("=="))
-        val propVarDef = VariableDefinitionDefault(propName, null)
-        val setStatement = VariableAssignmentStatementDefault(propVarDef, null, rhs)
-        val setBlock = StatementBlockExpressionDefault(listOf(setStatement), rhs)
-        val setOption = WhenOptionDefault(ifIsNothing, setBlock)
+        val setOption = WhenOptionDefault(ifIsNothing, rhs)
         val findOption = WhenOptionElseDefault(RootExpressionDefault(propName))
         val whenExpr = WhenExpressionDefault(listOf(setOption), findOption)
         return whenExpr

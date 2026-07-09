@@ -51,6 +51,9 @@ class test_M2mPatternExecutor2 {
     fun executionPlan_unnamed_x() {
         // x
         val types = typesDomain("Test", true) { }
+//        val template = propertyTemplate() {
+//            expression(null,"x")
+//        }
         val template = PropertyTemplateExpressionDefault(
             RootExpressionDefault("x")
         )
@@ -70,6 +73,9 @@ class test_M2mPatternExecutor2 {
     fun executionPlan_named_x() {
         // y : x
         val types = typesDomain("Test", true) { }
+//        val template = propertyTemplate() {
+//            expression("y","x")
+//        }
         val template = PropertyTemplateExpressionDefault(
             RootExpressionDefault("x")
         ).also {
@@ -83,14 +89,8 @@ class test_M2mPatternExecutor2 {
         val expectedPlan = $$"""
             // check or set: y == x
             when {
-              $nothing == y -> {
-                y := x
-                x
-              }
-              else -> {
-                assert := y == x
-                x
-              }
+              $nothing == y -> x
+              else -> y
             }
         """.trimIndent()
         val expectedResult = 1
@@ -270,13 +270,10 @@ class test_M2mPatternExecutor2 {
         val template = ObjectTemplateDefault(objType, emptyMap())
         val lhsType = objType
         val input = mapOf<String, Any>(
-            "r" to 1,
-            "p" to 2,
-            "c" to 3
         )
 
         val expectedPlan = $$"""
-            // Find '§result' or construct test.A(...) 
+            // Find '§result' or construct test.A(...)
             when {
               $nothing == §result -> test.A() { }
               else -> §result
@@ -309,7 +306,7 @@ class test_M2mPatternExecutor2 {
         )
 
         val expectedPlan = $$"""
-            // Find 'a' or construct test.A(...) 
+            // Find 'a' or construct test.A(...)
             when {
               $nothing == a -> test.A() { }
               else -> a
@@ -353,34 +350,27 @@ class test_M2mPatternExecutor2 {
         )
 
         val expectedPlan = $$"""
+              // Find 'a' or construct test.A(...)
               {
-                // Find 'a' or construct test.A(...) 
                 a := when {
                   $nothing == a -> test.A() { }
                   else -> a
                 }
-                with(a) when {
-                  $nothing == p1 -> {
-                    p1 := p
-                    p
+                with(a) {
+                  p1 := when {
+                    $nothing == p1 -> p
+                    else -> p1
                   }
-                  else -> p1
-                }
-                with(a) when {
-                  $nothing == p3 -> {
-                    p3 := q
-                    q
+                  p2 := when {
+                    $nothing == p2 -> q
+                    else -> p2
                   }
-                  else -> p2
-                }
-                with(a) when {
-                  $nothing == p3 -> {
-                    p3 := r
-                    r
+                  p3 := when {
+                    $nothing == p3 -> r
+                    else -> p3
                   }
-                  else -> p3
+                  a
                 }
-                a
               }
         """.trimIndent()
         val expectedResult = asmSimple(types) {
@@ -423,8 +413,30 @@ class test_M2mPatternExecutor2 {
             "r" to 3
         )
 
-        val expectedPlan = """
-            
+        val expectedPlan = $$"""
+              // Find 'a' or construct test.A(...)
+              {
+                a := when {
+                  $nothing == a -> test.A(
+                    p1 := when {
+                      $nothing == p1 -> p
+                      else -> p1
+                    }
+                  ) { }
+                  else -> a
+                }
+                with(a) {
+                  p2 := when {
+                    nothing == p2 -> q
+                    else -> p2
+                  }
+                  p3 := when {
+                    $nothing == p3 -> r
+                    else -> p3
+                  }
+                  a
+                }
+              }
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {
@@ -467,8 +479,30 @@ class test_M2mPatternExecutor2 {
             "c" to 3
         )
 
-        val expectedPlan = """
-            
+        val expectedPlan = $$"""
+            // Find 'a' or construct test.A(...)
+            {
+              a := when {
+                $nothing == a -> test.A(
+                  p1 := when {
+                    $nothing == p1 -> b
+                    else -> p1
+                  }
+                ) { }
+                else -> a
+              }
+              with(a) {
+                p2 := when {
+                  $nothing == p2 -> p
+                  else -> p2
+                }
+                p3 := when {
+                  $nothing == p3 -> r
+                  else -> p3
+                }
+                a
+              }
+            }
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {
@@ -515,8 +549,30 @@ class test_M2mPatternExecutor2 {
             "r" to 3
         )
 
-        val expectedPlan ="""
-            
+        val expectedPlan =$$"""
+            // Find 'a' or construct test.A(...)
+            {
+              a := when {
+                $nothing == a -> test.A(
+                  p1 := when {
+                    $nothing == p1 -> p
+                    else -> p1
+                  }
+                ) { }
+                else -> a
+              }
+              with(a) {
+                p2 := when {
+                  $nothing == p2 -> q
+                  else -> p2
+                }
+                p3 := when {
+                  $nothing == p3 -> r
+                  else -> p3
+                }
+                a
+              }
+            }
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {

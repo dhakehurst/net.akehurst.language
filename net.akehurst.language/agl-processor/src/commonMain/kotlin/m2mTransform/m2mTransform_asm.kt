@@ -125,10 +125,9 @@ class M2mTransformRuleSetDefault(
     override val domainParameters: Map<DomainReference, SimpleName>,
     argExtends: List<M2mTransformRuleSetReference> = emptyList(),
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
-    _rules: List<M2mTransformRule>
 ) : M2mTransformRuleSet, DefinitionAbstract<M2mTransformRuleSet>() {
 
-    override val extends: List<M2mTransformRuleSetReference> = mutableListOf()
+    override val extends: List<M2mTransformRuleSetReference> = argExtends.toMutableList()
     override val importTypes: List<Import> = mutableListOf()
     override val topRule: List<M2mTransformRule> get() = rule.values.filter { it.isTop }
     override val rule: Map<SimpleName, M2mTransformRule> = mutableMapOf()

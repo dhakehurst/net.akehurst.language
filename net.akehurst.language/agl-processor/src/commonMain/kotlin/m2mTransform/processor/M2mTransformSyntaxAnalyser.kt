@@ -140,7 +140,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val optHolder = OptionHolderDefault(null, options.toMap())
         return { namespace ->
             val extendRefs = extends.map { M2mTransformRuleSetReferenceDefault(namespace, it) }
-            val asm = M2mTransformRuleSetDefault(namespace, name, domParams.associate { Pair(DomainReference(it.first), it.second) }, extendRefs, optHolder, rules)
+            val asm = M2mTransformRuleSetDefault(namespace, name, domParams.associate { Pair(DomainReference(it.first), it.second) }, extendRefs, optHolder)
             typeImports.forEach { asm.addImportType(it) }
             rules.forEach { asm.setRule(it) }
             asm.also { setLocationFor(it, nodeInfo, sentence) }
