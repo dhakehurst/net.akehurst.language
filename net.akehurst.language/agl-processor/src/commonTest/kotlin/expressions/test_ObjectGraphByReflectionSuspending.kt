@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import kotlinx.coroutines.test.runTest
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
@@ -41,7 +41,7 @@ class test_ObjectGraphByReflectionSuspending {
         )
 
         val testTypeModel = typesDomain("Test", true) {
-            namespace("net.akehurst.language.agl.expressions.processor") {
+            namespace("net.akehurst.language.expressions.processor") {
                 data("TestClass") {
                 }
             }

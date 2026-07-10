@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.base.api.PossiblyQualifiedName

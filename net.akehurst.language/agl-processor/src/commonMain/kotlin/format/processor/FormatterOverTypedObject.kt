@@ -18,7 +18,7 @@ package net.akehurst.language.format.processor
 
 import net.akehurst.kotlinx.collections.lazyMap
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.objectgraph.api.EvaluationContext

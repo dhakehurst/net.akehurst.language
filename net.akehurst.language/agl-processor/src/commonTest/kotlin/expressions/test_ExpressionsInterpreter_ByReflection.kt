@@ -18,8 +18,8 @@
 package net.akehurst.language.expressions.processor
 
 import kotlinx.coroutines.test.runTest
-import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
-import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
+import net.akehurst.language.expressions.processor.StdLibPrimitiveExecutionsForReflection
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName

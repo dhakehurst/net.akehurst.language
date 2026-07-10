@@ -30,6 +30,7 @@ import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 open class ExpressionsInterpreterOverTypedObject(
     val objectGraph: ObjectGraphAccessorMutator
 ) {
+
     val issues get() = objectGraph.issues
     val locationMap: LocationMap get() = objectGraph.locationMap
     val typesDomain get() = objectGraph.typesDomain
@@ -38,11 +39,13 @@ open class ExpressionsInterpreterOverTypedObject(
         val location = item?.let { this.locationMap[item] }
         issues.error(location, message, data)
     }
+
     fun issueErrorReturnNothing(item: Any?, message: String, data: Any? = null): TypedObject {
         issueError(item, message, data)
         return objectGraph.nothing()
     }
-     fun issueWarn(item: Any?, message: String, data: Any? = null) {
+
+    fun issueWarn(item: Any?, message: String, data: Any? = null) {
         val location = item?.let { this.locationMap[item] }
         issues.warn(location, message, data)
     }
@@ -569,9 +572,9 @@ open class ExpressionsInterpreterOverTypedObject(
             val selfProp = selfTypeDef?.findAllPropertyOrNull(PropertyName(ass.variable.name))
             when {
                 // create new variable with this name
-                selfProp == null ->newEvc.setNamedValue(ass.variable.name, rhsValue)
+                selfProp == null -> newEvc.setNamedValue(ass.variable.name, rhsValue)
                 // set the property
-                else ->  self.setProperty(ass.variable.name, rhsValue)
+                else -> self.setProperty(ass.variable.name, rhsValue)
             }
         }
         val result = evaluateExpression(newEvc, expression.expression)

@@ -42,8 +42,8 @@ interface FunctionDefinitionFloating {
     val body: Expression?
 
     // to assist execution by reflection without having MPP reflection support
-    val execution: ((args:List<*>) -> Any?)?
-    val executionSuspend: (suspend (args:List<*>) -> Any?)?
+    val execution: ((args: List<*>) -> Any?)?
+    val executionSuspend: (suspend (args: List<*>) -> Any?)?
 }
 
 interface FunctionDefinition : FunctionDefinitionFloating, Definition<FunctionDefinition> {
@@ -56,7 +56,7 @@ interface FunctionParameter {
     val defaultValueExpression: Expression?
 }
 
-interface Expression: Formatable {
+interface Expression : Formatable {
 }
 
 interface RootExpression : Expression {
@@ -95,7 +95,9 @@ interface NavigationExpression : Expression {
     val parts: List<NavigationPart>
 }
 
-interface NavigationPart
+interface NavigationPart : Formatable {
+
+}
 
 interface PropertyCall : NavigationPart {
     val propertyName: String
@@ -128,7 +130,7 @@ interface VariableAssignmentStatement {
     fun asString(indent: Indent, imports: List<Import> = emptyList()): String
 }
 
-interface VariableDefinition  {
+interface VariableDefinition {
     val name: String
     val typeRef: TypeReference?
 

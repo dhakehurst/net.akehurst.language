@@ -22,6 +22,7 @@ import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.types.asm.StdLibDefault
 
 class ExpressionsDomainDefault(
     override val name: SimpleName,
@@ -230,7 +231,14 @@ data class LiteralExpressionDefault(
     override val value: Any
 ) : ExpressionAbstract(), LiteralExpression {
 
-    override fun toString(): String = value.toString()
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        return when {
+            qualifiedTypeName == StdLibDefault.String.qualifiedTypeName -> return "'${value}'"
+            else -> value.toString()
+        }
+    }
+
+    override fun toString(): String = this.asString()
 }
 
 data class NavigationExpressionDefault(
@@ -238,12 +246,29 @@ data class NavigationExpressionDefault(
     override val parts: List<NavigationPart>
 ) : ExpressionAbstract(), NavigationExpression {
 
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        sb.append(start.asString(indent, imports))
+        for (part in parts) {
+            sb.append(part.asString(indent, imports))
+        }
+        return sb.toString()
+    }
+
     override fun toString(): String = "$start${parts.joinToString(separator = "")}"
 }
 
 data class PropertyCallDefault(
     override val propertyName: String
 ) : PropertyCall {
+
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        sb.append(".")
+        sb.append(propertyName)
+        return sb.toString()
+    }
+
     override fun toString(): String = ".$propertyName"
 }
 
@@ -251,6 +276,17 @@ data class MethodCallDefault(
     override val methodName: String,
     override val arguments: List<Expression>
 ) : MethodCall {
+
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        sb.append(".")
+        sb.append(methodName)
+        sb.append("(")
+        sb.append(arguments.joinToString(separator = ", ") { it.asString(indent, imports) })
+        sb.append(")")
+        return sb.toString()
+    }
+
 
     override fun toString(): String = ".$methodName(${arguments.joinToString()})"
 }
@@ -291,6 +327,14 @@ data class IndexOperationDefault(
     override val indices: List<Expression>
 ) : IndexOperation {
 
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        sb.append("[")
+        sb.append(indices.joinToString(separator = ", ") { it.asString(indent, imports) })
+        sb.append("]")
+        return sb.toString()
+    }
+
     override fun toString(): String = "[${indices.joinToString { it.toString() }}]"
 }
 
@@ -323,7 +367,9 @@ class TernaryConditionExpressionDefault(
     override val falseExpression: Expression
 ) : TernaryConditionExpression {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "$indent$this"
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        return "${condition.asString(indent, imports)} ? ${trueExpression.asString(indent, imports)} : ${falseExpression.asString(indent, imports)}"
+    }
 
     override fun toString(): String = "${condition} ? $trueExpression : $falseExpression"
 }

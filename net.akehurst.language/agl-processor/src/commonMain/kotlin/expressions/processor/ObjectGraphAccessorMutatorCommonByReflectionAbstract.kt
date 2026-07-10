@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.collections.toOrderedSet
@@ -178,7 +178,8 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return untypedAny(typedObj.self)
     }
 
-    override fun typedAs(obj: Any, type: TypeInstance): TypedObject = TypedObjectAny(this, type, obj)
+    override fun typedAs(obj: Any, type: TypeInstance): TypedObject =
+        TypedObjectAny(this, type, obj)
 
     override fun isNothing(obj: TypedObject): Boolean = obj.self == Unit
     override fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean = lhs.self == rhs.self

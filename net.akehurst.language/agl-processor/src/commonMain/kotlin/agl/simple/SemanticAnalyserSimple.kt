@@ -54,8 +54,10 @@ class SemanticAnalyserSimple(
                             val elType = interpreter.typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
                             val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, elType)), exp).self
                             when {
+                                value is String -> value
                                 value is AsmPrimitive && value.isStdString -> value.value as String
                                 value is AsmList && value.elements.all { it is AsmPrimitive && it.isStdString } -> value.elements.map { (it as AsmPrimitive).value as String }
+                                value is AsmAny && value.value is String -> value.value
                                 else -> null//error("Cannot get identifying value for $value")
                             }
                         }

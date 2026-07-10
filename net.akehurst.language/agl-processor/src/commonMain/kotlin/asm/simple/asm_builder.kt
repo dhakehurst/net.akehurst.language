@@ -42,6 +42,13 @@ import net.akehurst.language.types.builder.typesDomain
 @DslMarker
 annotation class AsmSimpleBuilderMarker
 
+/**
+ * To resolve references, there must be:
+ * a) a crossReferenceDomain
+ * b) a sentenceContext
+ * c) the crossReferenceDomain must define the identity of anything that is referenced
+ * d) the crossReferenceDomain must define any referencing property
+ */
 fun asmSimple(
     typesDomain: TypesDomain = typesDomain("StdLib", false) {},
     defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,

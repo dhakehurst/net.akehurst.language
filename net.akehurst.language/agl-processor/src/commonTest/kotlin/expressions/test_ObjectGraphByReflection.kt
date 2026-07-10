@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.SimpleName
@@ -40,7 +40,7 @@ class test_ObjectGraphByReflection {
         )
 
         val testTypeModel = typesDomain("Test", true) {
-            namespace("net.akehurst.language.agl.expressions.processor") {
+            namespace("net.akehurst.language.expressions.processor") {
                 data("TestClass") {
                 }
             }

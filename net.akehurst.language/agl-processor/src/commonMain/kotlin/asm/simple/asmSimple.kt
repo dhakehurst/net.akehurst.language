@@ -216,6 +216,7 @@ val AsmValue.raw: Any
         is AsmNothing -> Unit
         is AsmAny -> this.value
         is AsmPrimitive -> this.value
+        is AsmReference -> this.value ?: AsmNothingSimple
         is AsmListSeparated -> this.elements.map { it.raw }.toSeparatedList()
         is AsmListSimple -> this.elements.map { it.raw }
         is AsmStructure -> this.property.values
@@ -228,6 +229,7 @@ val AsmValue.raw: Any
 
 val Any.toAsmSimple: AsmValue
     get() = when (this) {
+        Unit -> AsmNothingSimple
         is AsmValue -> this
         is String -> AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, this)
         is Boolean -> AsmPrimitiveSimple(StdLibDefault.Boolean.qualifiedTypeName, this)
@@ -283,7 +285,7 @@ class AsmStructureSimple(
     override val qualifiedTypeName: QualifiedName
 ) : AsmValueAbstract(), AsmStructure {
 
-    private var _properties = mutableMapOf<PropertyValueName, AsmStructurePropertySimple>()
+    private var _properties = mutableMapOf<PropertyValueName, AsmStructureProperty>()
 
     override var parsePath: String = "??"
     override var syntaxAnalyserPath: AsmPath? = null //TODO: not sure if still need this
@@ -336,7 +338,7 @@ class AsmStructureSimple(
         _properties[name] = AsmStructurePropertySimple(name, childIndex, value)
     }
 
-    fun addAllProperty(value: List<AsmStructurePropertySimple>) {
+    fun addAllProperty(value: List<AsmStructureProperty>) {
         value.forEach { this._properties[it.name] = it }
     }
 

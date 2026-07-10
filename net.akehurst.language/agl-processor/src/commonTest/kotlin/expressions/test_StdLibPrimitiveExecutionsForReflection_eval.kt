@@ -17,8 +17,8 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
-import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
+import net.akehurst.language.expressions.processor.StdLibPrimitiveExecutionsForReflection
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase

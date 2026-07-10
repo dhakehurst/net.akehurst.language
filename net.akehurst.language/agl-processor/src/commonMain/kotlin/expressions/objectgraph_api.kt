@@ -168,10 +168,11 @@ interface ExternalGetter {
     fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance
     fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     fun getProperty(obj: Any, propertyName: String): Any?
-    fun setProperty(obj: Any, propertyName: String, value: Any?)
+    fun setProperty(obj: Any, propertyName: String, isReference:Boolean, value: Any?)
 
     fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     suspend fun getPropertySuspend(obj: Any, propertyName: String): Any?
+    suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference:Boolean, value: Any?)
 }
 
 interface FunctionLib {

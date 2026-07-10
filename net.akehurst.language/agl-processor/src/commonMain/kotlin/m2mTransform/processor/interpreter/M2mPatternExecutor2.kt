@@ -2,19 +2,28 @@ package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
 import net.akehurst.kotlinx.collections.topologicalSort
 import net.akehurst.kotlinx.collections.transitveClosure
+import net.akehurst.language.asm.api.AsmAny
+import net.akehurst.language.asm.api.AsmPrimitive
+import net.akehurst.language.asm.api.AsmValue
+import net.akehurst.language.asm.simple.raw
 import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.NavigationPart
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.asm.CreateObjectExpressionDefault
+import net.akehurst.language.expressions.asm.FunctionCallDefault
 import net.akehurst.language.expressions.asm.InfixExpressionDefault
+import net.akehurst.language.expressions.asm.LiteralExpressionDefault
+import net.akehurst.language.expressions.asm.MethodCallDefault
+import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.asm.PropertyCallDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.asm.StatementBlockExpressionDefault
+import net.akehurst.language.expressions.asm.TernaryConditionExpressionDefault
 import net.akehurst.language.expressions.asm.VariableAssignmentStatementDefault
 import net.akehurst.language.expressions.asm.VariableDefinitionDefault
-import net.akehurst.language.expressions.asm.WhenExpressionDefault
-import net.akehurst.language.expressions.asm.WhenOptionDefault
-import net.akehurst.language.expressions.asm.WhenOptionElseDefault
 import net.akehurst.language.expressions.asm.WithExpressionDefault
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.issues.ram.IssueHolder
@@ -52,10 +61,28 @@ class M2mPatternExecution2(
     override fun toString(): String = "[$index] ${description} | ${inputs} -> ${outputs} ^ [${doMeBefore.joinToString { it.index.toString() }}]"
 }
 
+class ExecutionStep(
+    val description: String,
+    val inputs: List<String>,
+    val outputs: List<String>,
+    val expression: Expression
+) {
+    var index = -1 //unset
+    fun execute(evaluator:ExpressionsInterpreterOverTypedObject, evc: EvaluationContext) {
+        val result = evaluator.evaluateExpression(evc, this.expression)
+        val outputValues = evaluator.objectGraph.untyped(result) as Map<String, Any>
+        outputValues.forEach { (k,v) ->
+            val tv = evaluator.objectGraph.toTypedObject(v, StdLibDefault.AnyType)// TODO: why untype then retype this
+            evc.setNamedValue(k, tv)
+        }
+    }
+}
+
+
 class M2mPatternExecutor2(
     val issues: IssueHolder,
     val accessorMutator: ObjectGraphAccessorMutator,
-    initialExes: List<M2mPatternExecution2>
+    initialExes: List<ExecutionStep>
 ) {
 
     companion object {
@@ -67,11 +94,11 @@ class M2mPatternExecutor2(
     val executionPlan get() = _executions.topologicalSort(::compareExecutions)
     val executionExpression
         get() = executionPlan.joinToString(separator = "\n") {
-            val expr = it.execution.invoke(EvaluationContext.of(emptyMap()))
+            val expr = it.expression
             "// ${it.description}\n${expr.asString()}"
         }
 
-    fun addExecution(value: M2mPatternExecution2) {
+    fun addExecution(value: ExecutionStep) {
         value.index = _executions.size
         _executions.add(value)
     }
@@ -81,8 +108,8 @@ class M2mPatternExecutor2(
         execute(evc1, tgtName)
     }
 
-    fun build(tgtName: String, template: PropertyTemplateRhs, lhsType: TypeInstance) {
-        constructExecutions(tgtName, emptySet(), emptySet(), template, lhsType)
+    fun build(tgtName: String, template: PropertyTemplateRhs, tgtType: TypeInstance) {
+        constructExecutions(tgtName, emptySet(), emptySet(), template, tgtType)
     }
 
     fun execute(evc1: EvaluationContext, tgtName: String): TypedObject {
@@ -92,11 +119,15 @@ class M2mPatternExecutor2(
         var value: TypedObject? = null
         for (count in 0 until sorted.size) {
             val pe = sorted[count]
-            val expr = pe.execution.invoke(evc)
+            val expr = pe.expression
             value = eval.evaluateExpression(evc, expr)
         }
-        //return evc.getOrInParent(tgtName) ?: accessorMutator.nothing()
-        return value ?: accessorMutator.nothing()
+        // value should be a map<tgtName -> result>
+        return value?.let {
+            val map = accessorMutator.untyped(it) as? Map<String, AsmValue>
+            val v = map?.get(tgtName)
+            accessorMutator.toTypedObject(v, StdLibDefault.AnyType)
+        } ?: accessorMutator.nothing()
     }
 
     private fun createTempVariable() = "temp${_nextTempVarNum++}"
@@ -111,7 +142,7 @@ class M2mPatternExecutor2(
         doAfterMe: Set<M2mPatternExecution2>,
         template: PropertyTemplateRhs,
         lhsType: TypeInstance
-    ): M2mPatternExecution2 {
+    ): ExecutionStep {
         return when (template) {
             is PropertyTemplateExpression -> constructExecutionsFromPropertyTemplateExpression(tgtName, doBeforeMe, doAfterMe, template, lhsType)
             is ObjectTemplate -> constructExecutionsFromObjectTemplate(tgtName, doBeforeMe, doAfterMe, template, lhsType)
@@ -120,29 +151,54 @@ class M2mPatternExecutor2(
         }
     }
 
+    /*
+     {
+       outputValueName := <outputExpression>
+       ...
+       Set(Pair(<outputName>, <outputValueName>>),...).toMap()
+     }
+     */
+    private fun createOutputs(outputExpressions:Map<String, Expression>):Expression {
+        val assignments = outputExpressions.map { (n, e) ->
+            VariableAssignmentStatementDefault(VariableDefinitionDefault(n, null),null,e)
+        }
+        val pairList =outputExpressions.map { (n, e) ->
+            val pairContent = listOf(LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName, n), RootExpressionDefault(n))
+            FunctionCallDefault("Pair".asPossiblyQualifiedName, pairContent)
+        }
+        val outputValuesSet = FunctionCallDefault("Set".asPossiblyQualifiedName,pairList)
+        val mapExpr = NavigationExpressionDefault(outputValuesSet,listOf(PropertyCallDefault("asMap")))
+        val block = StatementBlockExpressionDefault(assignments, mapExpr)
+        return block
+    }
+
     private fun constructExecutionsFromPropertyTemplateExpression(
         tgtName: String,
         doBeforeMe: Set<M2mPatternExecution2>,
         doAfterMe: Set<M2mPatternExecution2>,
         template: PropertyTemplateExpression,
         lhsType: TypeInstance
-    ): M2mPatternExecution2 {
-        val templateVarName = template.identifier?.value
+    ): ExecutionStep {
+        val templateVarName = template.identifier?.value ?: createTempVariable()
         val rhsName = when {
             template.expression is RootExpression -> (template.expression as RootExpression).name
             else -> null
         }
         val inputs = rhsName?.let { listOf(it) } ?: emptyList()
         val outputs = listOf(tgtName)
-        val description = "check or set: $tgtName == $rhsName"
-        val exe = M2mPatternExecution2(description, inputs, outputs) { evc ->
-            findOrSetExpression(tgtName, template.expression)
-        }.also { self ->
-            self.doMeBefore.addAll(doAfterMe)
-            doBeforeMe.forEach { it.doMeBefore.add(self) }
-        }
-        addExecution(exe)
-        return exe
+        val description = "check or set: $templateVarName == $rhsName"
+        val expr = findOrSetExpression(templateVarName, template.expression)
+//        val exe = M2mPatternExecution2(description, inputs, outputs) { evc ->
+//            findOrSetExpression(tgtName, template.expression)
+//        }.also { self ->
+//            self.doMeBefore.addAll(doAfterMe)
+//            doBeforeMe.forEach { it.doMeBefore.add(self) }
+//        }
+
+        val outputExpr = createOutputs(mapOf(templateVarName to expr))
+        val step = ExecutionStep(description, inputs, outputs,outputExpr)
+        addExecution(step)
+        return step
     }
 
     /*
@@ -154,15 +210,20 @@ class M2mPatternExecutor2(
         doAfterMe: Set<M2mPatternExecution2>,
         template: ObjectTemplate,
         lhsType: TypeInstance
-    ): M2mPatternExecution2 {
+    ): ExecutionStep {
+        val templateVarName = template.identifier?.value ?: createTempVariable()
         val typeName = template.type.qualifiedTypeName
         val inputs = listOf<String>()
         val outputs = listOf(tgtName)
-        val exe = M2mPatternExecution2("Find '$tgtName' or construct ${typeName.value}(...)", inputs, outputs) {
-            findOrEnforceObjectTemplate(tgtName, template)
-        }
-        addExecution(exe)
-        return exe
+        val description = "Find '$templateVarName' or construct ${typeName.value}(...)"
+//        val exe = M2mPatternExecution2("Find '$templateVarName' or construct ${typeName.value}(...)", inputs, outputs) {
+//            findOrEnforceObjectTemplate(templateVarName, template)
+//        }
+        val expr = findOrEnforceObjectTemplate(templateVarName, template)
+        val outputExpr = createOutputs(mapOf(tgtName to expr))
+        val step = ExecutionStep(description, inputs, outputs,outputExpr)
+        addExecution(step)
+        return step
     }
 
     private fun constructExecutionsFromCollectionTemplate(
@@ -171,7 +232,8 @@ class M2mPatternExecutor2(
         doAfterMe: Set<M2mPatternExecution2>,
         template: CollectionTemplate,
         lhsType: TypeInstance
-    ): M2mPatternExecution2 {
+    ): ExecutionStep {
+        val templateVarName = template.identifier?.value
         TODO()
     }
 
@@ -182,10 +244,10 @@ class M2mPatternExecutor2(
      *  exe1.input contains any of exe2.outputs
      *  exe2.doAfterMe contains exe1
      */
-    private fun compareExecutions(exe1: M2mPatternExecution2, exe2: M2mPatternExecution2): Int {
+    private fun compareExecutions(exe1: ExecutionStep, exe2: ExecutionStep): Int {
         return when {
-            exe2.doMeBefore.contains(exe1) -> 1 // do exe1 after exe2
-            exe1.doMeBefore.contains(exe2) -> -1 // do exe2 after exe1
+        //    exe2.doMeBefore.contains(exe1) -> 1 // do exe1 after exe2
+        //    exe1.doMeBefore.contains(exe2) -> -1 // do exe2 after exe1
             //exe2.mustComeBefore(exe1) -> 1 // do parent after child
             //exe1.mustComeBefore(exe2) -> -1 // do parent after child
             exe2.outputs.any { exe1.inputs.contains(it) } -> 1 // do outputs before inputs
@@ -321,13 +383,13 @@ class M2mPatternExecutor2(
 
     private fun findOrEnforceObjectTemplate(tgtName: String, template: ObjectTemplate): Expression {
         val construction = findOrEnforceConstructObjectTemplate(tgtName, template)
-        val setProperties = checkOrEnforcePropertiesObjectTemplate(template)
+        val setProperties = findOrEnforcePropertiesObjectTemplate(template)
         return if (setProperties.isEmpty()) {
             construction
         } else {
             val objAssignment = VariableAssignmentStatementDefault(VariableDefinitionDefault(tgtName, null), null, construction)
             val propAssignments = setProperties.map { (k, v) -> VariableAssignmentStatementDefault(VariableDefinitionDefault(k, null), null, v) }
-            val withBlock = StatementBlockExpressionDefault(propAssignments, RootExpressionDefault(tgtName))
+            val withBlock = StatementBlockExpressionDefault(propAssignments, RootExpressionDefault.SELF)
             val propAssignmentsWithObj = WithExpressionDefault(RootExpressionDefault(tgtName), withBlock)
             val assignments = listOf(objAssignment)
             val block = StatementBlockExpressionDefault(assignments, propAssignmentsWithObj)
@@ -336,12 +398,12 @@ class M2mPatternExecutor2(
     }
 
     private fun findOrEnforceConstructObjectTemplate(tgtName: String, template: ObjectTemplate): Expression {
-        val args = findOrEnforceConstructorArgs(template)
+        val args = setConstructorArgs(template)
         return findOrConstructExpression(tgtName, template.type.qualifiedTypeName, args)
     }
 
     private fun enforceObjectTemplate(template: ObjectTemplate): Expression {
-        val args = findOrEnforceConstructorArgs(template)
+        val args = setConstructorArgs(template)
         return constructObjectExpression(template.type.qualifiedTypeName, args)
     }
 
@@ -364,7 +426,26 @@ class M2mPatternExecutor2(
         return constructorArgExpressions
     }
 
-    private fun checkOrEnforcePropertiesObjectTemplate(template: ObjectTemplate): Map<String, Expression> {
+    private fun setConstructorArgs(template: ObjectTemplate): Map<String, Expression> {
+        val decl = template.type.resolvedDefinition
+        val constructors = when (decl) {
+            is DataType -> decl.constructors
+            is ValueType -> decl.constructors
+            else -> error("Type '${decl.qualifiedName.value}' has no constructors")
+        }
+        val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
+        val constructorArgExpressions = template.propertyTemplate.entries.mapNotNull { (k, v) ->
+            if (possibleConArgNames.contains(k.value)) {
+                val expr = enforceRhsExpr( v.rhs)
+                Pair(k.value, expr)
+            } else {
+                null
+            }
+        }.associate { it }
+        return constructorArgExpressions
+    }
+
+    private fun findOrEnforcePropertiesObjectTemplate(template: ObjectTemplate): Map<String, Expression> {
         val decl = template.type.resolvedDefinition
         val constructors = when (decl) {
             is DataType -> decl.constructors
@@ -395,10 +476,14 @@ class M2mPatternExecutor2(
     private fun findOrConstructExpression(tgtName: String, tgtType: PossiblyQualifiedName, constructArgs: Map<String, Expression>): Expression {
         val ifIsNothing = InfixExpressionDefault(listOf(RootExpressionDefault.NOTHING, RootExpressionDefault(tgtName)), listOf("=="))
         val constructExpr = constructObjectExpression(tgtType, constructArgs)
-        val constructOption = WhenOptionDefault(ifIsNothing, constructExpr)
-        val findOption = WhenOptionElseDefault(RootExpressionDefault(tgtName))
-        val choice = WhenExpressionDefault(listOf(constructOption), findOption)
-        return choice
+//        val constructOption = WhenOptionDefault(ifIsNothing, constructExpr)
+//        val findOption = WhenOptionElseDefault(RootExpressionDefault(tgtName))
+//        val choice = WhenExpressionDefault(listOf(constructOption), findOption)
+//        return choice
+
+        val cond = InfixExpressionDefault(listOf(RootExpressionDefault.NOTHING, RootExpressionDefault(tgtName)), listOf("=="))
+        val tc = TernaryConditionExpressionDefault(cond, constructExpr, RootExpressionDefault(tgtName))
+        return tc
     }
 
     /*
@@ -426,16 +511,15 @@ class M2mPatternExecutor2(
     }
 
     /*
-     when {
-       $nothing == <propName> -> rhs
-       else -> <propName>
-     }
+     $nothing == <propName> ? rhs : <propName>
      */
     private fun findOrSetExpression(propName: String, rhs: Expression): Expression {
-        val ifIsNothing = InfixExpressionDefault(listOf(RootExpressionDefault.NOTHING, RootExpressionDefault(propName)), listOf("=="))
-        val setOption = WhenOptionDefault(ifIsNothing, rhs)
+        val cond = InfixExpressionDefault(listOf(RootExpressionDefault.NOTHING, RootExpressionDefault(propName)), listOf("=="))
+        val tc = TernaryConditionExpressionDefault(cond, rhs, RootExpressionDefault(propName))
+
+/*        val setOption = WhenOptionDefault(ifIsNothing, rhs)
         val findOption = WhenOptionElseDefault(RootExpressionDefault(propName))
-        val whenExpr = WhenExpressionDefault(listOf(setOption), findOption)
-        return whenExpr
+        val whenExpr = WhenExpressionDefault(listOf(setOption), findOption)*/
+        return tc
     }
 }

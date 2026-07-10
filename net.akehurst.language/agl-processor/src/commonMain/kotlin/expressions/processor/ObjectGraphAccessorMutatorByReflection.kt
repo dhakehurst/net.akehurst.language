@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.reflect.reflect
@@ -393,8 +393,12 @@ class ExternalGetterByReflection(
         }
     }
 
-    override fun setProperty(obj: Any, propertyName: String, value: Any?) {
-        TODO()
+    override fun setProperty(obj: Any, propertyName: String, isReference:Boolean, value: Any?) {
+        try {
+            obj.reflect().setProperty(propertyName, value)
+        } catch (t: Throwable) {
+            issues.error(null, "Could not set property $propertyName to $value")
+        }
     }
 
     /** may be overridden to create object from suspending source */
@@ -404,6 +408,10 @@ class ExternalGetterByReflection(
     /** may be overridden to get property from suspending source */
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? =
         getProperty(obj, propertyName)
+
+    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference:Boolean, value: Any?) {
+        TODO("not implemented")
+    }
 }
 
 open class ObjectGraphAccessorMutatorByReflection
@@ -429,7 +437,9 @@ constructor(
             is Char,
             is String -> StdLibDefault.String
 
+            is Float,
             is Double -> StdLibDefault.Real
+
             is Instant -> StdLibDefault.Timestamp
             is Throwable -> StdLibDefault.Exception
             is Pair<*, *> -> {
@@ -460,7 +470,7 @@ constructor(
 
             is Iterator<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             is Function<*> -> StdLibDefault.Lambda
-            else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
+            else -> externalGetter.typeFor(obj, ifNotFound)//typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
         }
     }
 
@@ -497,26 +507,10 @@ constructor(
             decl.execution?.invoke(obj)
         }
 
-    override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) {
-        when {
-            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
-                when (tobj.self) {
-                    is MutableMap<*, *> -> {
-                        (tobj.self as MutableMap<String, Any>)[propertyName] = untyped(value)
-                    }
-                }
-            }
-
-            else -> {
-                try {
-                    val obj = tobj.self
-                    obj.reflect().setProperty(propertyName, untyped(value))
-                } catch (t: Throwable) {
-                    issueError(null, "Could not set property $propertyName to $value")
-                }
-            }
+    override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) =
+        setPropertyInternal(tobj, propertyName, value) { o, n, r, v ->
+            externalGetter.setProperty(o, n, r, v)
         }
-    }
 
     // --- Suspend ---
     override suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject {
@@ -535,9 +529,11 @@ constructor(
             decl.executionSuspend?.invoke(obj) ?: decl.execution?.invoke(obj)
         }
 
-    override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) {
-        setProperty(tobj, propertyName, value) //TODO: internal and suspend versions
-    }
+    override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) =
+        setPropertyInternal(tobj, propertyName, value) { o, n, r, v ->
+            externalGetter.setPropertySuspend(o, n, r, v)
+        }
+
 
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
         executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
@@ -655,6 +651,30 @@ constructor(
         }
     }
 
+    private inline fun setPropertyInternal(
+        tobj: TypedObject,
+        propertyName: String,
+        value: TypedObject,
+        externalPropertyMutator: (obj: Any, name: String, isReference: Boolean, value: Any?) -> Unit,
+    ) {
+        when {
+            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
+                when (tobj.self) {
+                    is MutableMap<*, *> -> {
+                        (tobj.self as MutableMap<String, Any>)[propertyName] = untyped(value)
+                    }
+                }
+            }
+
+            else -> {
+                val obj = untyped(tobj)
+                val uv = untyped(value)
+                val prop = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                val r = prop?.isReference ?: false
+                externalPropertyMutator.invoke(obj, propertyName, r,uv)
+            }
+        }
+    }
 
     private inline fun executeMethodInternal(
         tobj: TypedObject,
