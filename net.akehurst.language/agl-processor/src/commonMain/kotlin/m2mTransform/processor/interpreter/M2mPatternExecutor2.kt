@@ -457,7 +457,8 @@ class M2mPatternExecutor2(
             if (possibleConArgNames.contains(k.value)) {
                 null
             } else {
-                val expr = findOrEnforceRhsExpr(k.value, v.rhs)
+                val templateVarName = v.rhs.identifier?.value ?: createTempVariable()
+                val expr = findOrEnforceRhsExpr(templateVarName, v.rhs)
                 Pair(k.value, expr)
             }
         }.associate { it }

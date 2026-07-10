@@ -773,10 +773,10 @@ class test_M2mPatternExecutor2 {
                 state := $nothing == state ? test.State(name := n) { } : state
                 with(state) {
                   machine := {
-                    machine := $nothing == machine ? test.StateMachine(name := pn.name) { } : machine
+                    machine := $nothing == sm ? test.StateMachine(name := pn.name) { } : am
                     with(machine) {
                       owner := {
-                        owner := $nothing == pd ? test.PartDefinition() { } : owner
+                        owner := $nothing == pd ? test.PartDefinition() { } : pd
                         with(owner) {
                           observableStateMachine := $nothing == observableStateMachine ? sm : observableStateMachine
                           $self
