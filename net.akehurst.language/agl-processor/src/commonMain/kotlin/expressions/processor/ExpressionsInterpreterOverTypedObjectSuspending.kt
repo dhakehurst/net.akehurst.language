@@ -18,6 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
@@ -28,11 +29,24 @@ import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
 //TODO: merge with other
 open class ExpressionsInterpreterOverTypedObjectSuspending(
-    val objectGraph: ObjectGraphAccessorMutator
+    val objectGraph: ObjectGraphAccessorMutator,
+    val customFunctions: FunctionLib? = null
 ) {
-    val issues: IssueHolder get() = objectGraph.issues
-    val typeModel = objectGraph.typesDomain
+    val issues get() = objectGraph.issues
+    val locationMap: LocationMap get() = objectGraph.locationMap
+    val typesDomain get() = objectGraph.typesDomain
     //val typeResolver = ExpressionTypeResolver(typeModel, issues)
+
+    fun issueError(item: Any?, message: String, data: Any? = null) {
+        val location = item?.let { this.locationMap[item] }
+        issues.error(location, message, data)
+    }
+
+    fun issueErrorReturnNothing(item: Any?, message: String, data: Any? = null): TypedObject {
+        issueError(item, message, data)
+        return objectGraph.nothing()
+    }
+
 
     /**
      * if more than one value is to be passed in as an 'evaluation-context'
@@ -101,7 +115,16 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
         val argValues = expression.arguments.map {
             evaluateExpression(evc, it)
         }
-        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues) { tr -> evaluateTypeReference(tr) }
+        val funcName = expression.possiblyQualifiedName.value
+        val funcDefinition = customFunctions?.findFirstFunctionNamed(funcName)
+            ?: objectGraph.functionLib.findFirstFunctionNamed(funcName)
+        val result = funcDefinition?.let {
+            objectGraph.callFunction(funcDefinition, argValues) { tr -> evaluateTypeReference(tr) }
+        } ?: run {
+            issueErrorReturnNothing(null, "No function named '${funcName}' was declared, using value \$nothing.")
+            objectGraph.nothing()
+        }
+        return result
     }
 
     private suspend fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject {
@@ -172,7 +195,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                         when {
                             objectGraph.nothing() == elem -> objectGraph.nothing()
                             else -> {
-                                val elemType = typeModel.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type(elem.type.typeArguments)
+                                val elemType = typesDomain.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type(elem.type.typeArguments)
                                 when {
                                     null == elemType -> {
                                         issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of List element '$elem'")
@@ -229,7 +252,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                         when {
                             objectGraph.nothing() == elem -> objectGraph.nothing()
                             else -> {
-                                val elemType = typeModel.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type()
+                                val elemType = typesDomain.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type(elem.type.typeArguments)
                                 when {
                                     null == elemType -> {
                                         issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of Map element '$elem'")
@@ -548,7 +571,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
 
     fun evaluateTypeReference(typeReference: TypeReference): TypeInstance {
         //TODO: issues rather than exceptions!
-        val decl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
+        val decl = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
         val targs = typeReference.typeArguments.map { evaluateTypeReference(it).asTypeArgument }
         return decl.type(targs, typeReference.isNullable)
     }
@@ -576,7 +599,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
      * Separation of construct and setProperties needed for M2m interpreter
      */
     suspend fun constructObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
-        val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
+        val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
         return when (typeDef) {
             null -> error("Type not found ${expression.possiblyQualifiedTypeName}")
             is DataType, is ValueType -> {

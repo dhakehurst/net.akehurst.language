@@ -601,7 +601,9 @@ class FormatterOverTypedObject(
         }
         return when (func) {
             null -> {
-                objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues) { tr -> evaluateTypeReference(tr) }
+                val decl = objectGraph.functionLib.findFirstFunctionNamed(expression.possiblyQualifiedName.value)
+                    ?: error("Function named '${expression.possiblyQualifiedName.value}' not found.")
+                objectGraph.callFunction(decl, argValues) { tr -> evaluateTypeReference(tr) }
             }
 
             else -> when {

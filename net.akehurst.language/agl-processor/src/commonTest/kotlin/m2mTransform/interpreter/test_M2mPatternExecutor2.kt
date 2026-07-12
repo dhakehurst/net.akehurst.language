@@ -44,13 +44,14 @@ class test_M2mPatternExecutor2 {
             val sut = M2mPatternExecutor2(issues, accessorMutator, emptyList())
 
             val tgtName = M2mPatternExecutor.RESULT
-            sut.build(tgtName, template, tgtType)
+            val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
+            val evc = EvaluationContext.of(typedInput)
+            sut.build(evc,tgtName, template, tgtType)
             val actualPlan = sut.executionExpression
             println(actualPlan)
             assertEquals(expectedPlanExpression, actualPlan)
 
-            val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
-            val res = sut.execute(EvaluationContext.of(typedInput), tgtName)
+            val res = sut.execute(evc, tgtName)
             val actualResult = res
             val expectedTypedResult = accessorMutator.toTypedObject(expectedResult, StdLibDefault.AnyType)
             assertEquals(expectedTypedResult.self.toAsmSimple.asString(), actualResult.self.toAsmSimple.asString())
@@ -767,29 +768,29 @@ class test_M2mPatternExecutor2 {
             "pd" to input_pd,
         )
         val expectedPlan = $$"""
-            // Find 'state' or construct test.State(...)
-            {
-              §result := {
-                state := $nothing == state ? test.State(name := n) { } : state
-                with(state) {
-                  machine := {
-                    machine := $nothing == sm ? test.StateMachine(name := pn.name) { } : am
-                    with(machine) {
-                      owner := {
-                        owner := $nothing == pd ? test.PartDefinition() { } : pd
-                        with(owner) {
-                          observableStateMachine := $nothing == observableStateMachine ? sm : observableStateMachine
-                          $self
-                        }
-                      }
-                      $self
-                    }
-                  }
-                  $self
-                }
-              }
-              Set(Pair('§result', §result)).asMap
+// Find 'state' or construct test.State(...)
+{
+  §result := {
+    state := $nothing == state ? test.State(name := n) { } : state
+    with(state) {
+      machine := {
+        sm := $nothing == sm ? test.StateMachine(name := pn.name) { } : sm
+        with(sm) {
+          owner := {
+            pd := $nothing == pd ? test.PartDefinition() { } : pd
+            with(pd) {
+              observableStateMachine := $nothing == temp0 ? bind(temp0, sm) : assert(temp0, sm)
+              $self
             }
+          }
+          $self
+        }
+      }
+      $self
+    }
+  }
+  Set(Pair('§result', §result)).asMap
+}
          """.trimIndent()
         val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
             element("State") {

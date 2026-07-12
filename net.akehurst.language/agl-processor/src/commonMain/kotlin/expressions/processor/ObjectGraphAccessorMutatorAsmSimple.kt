@@ -295,7 +295,7 @@ class ExternalGetterAsmSimple(
         }
     }
 
-    override fun setProperty(obj: Any, propertyName: String, isReference:Boolean, value: Any?) {
+    override fun setProperty(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
         return when {
             obj is AsmStructure -> {
                 val v = when {
@@ -308,6 +308,7 @@ class ExternalGetterAsmSimple(
                         val refStr = v.semanticQualifiedPath?.joinToString(separator = ".")
                         refStr?.let { AsmReferenceSimple(refStr, v) } ?: error("Cannot create reference for ${v} it has no semanticQualifiedPath")
                     }
+
                     else -> v
                 }
                 obj.setProperty(PropertyValueName(propertyName), v2, obj.property.size)
@@ -321,7 +322,7 @@ class ExternalGetterAsmSimple(
 
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? = getProperty(obj, propertyName) //TODO:
 
-    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference:Boolean, value: Any?) = setProperty(obj, propertyName, isReference, value) //TODO:
+    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) = setProperty(obj, propertyName, isReference, value) //TODO:
 }
 
 private class TypedObjectAsmValue(
@@ -887,30 +888,21 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
         executeMethod(tobj, methodName, args) // no need for anything suspend specific
 
-    override fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject {
-        val decl = functionLib.declaration[functionName]
-        return when (decl) {
-            null -> {
-                issues.error(null, "No function named '${functionName}' was declared.")
-                nothing()
+    override fun callFunction(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject {
+        val decl = function
+        val arguments = args.map { untyped(it) }
+        val returnType = decl.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
+        return when {
+            (null != decl.execution) -> {
+                val value = decl.execution!!.invoke(arguments)
+                value?.let { toTypedObject(value, returnType) } ?: nothing()
             }
 
             else -> {
-                val arguments = args.map { untyped(it) }
-                val returnType = decl.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
-                when {
-                    (null != decl.execution) -> {
-                        val value = decl.execution!!.invoke(arguments)
-                        value?.let { toTypedObject(value, returnType) } ?: nothing()
-                    }
-
-                    else -> {
-                        val execResult = primitiveExecutor.functionCall(functionName, arguments)
-                        when (execResult) {
-                            null -> error("Function '${functionName}' not executed.")
-                            else -> toTypedObject(execResult.value, returnType)
-                        }
-                    }
+                val execResult = primitiveExecutor.functionCall(function.name.value, arguments)
+                when (execResult) {
+                    null -> error("Function '${function.name.value}' not executed.")
+                    else -> toTypedObject(execResult.value, returnType)
                 }
             }
         }

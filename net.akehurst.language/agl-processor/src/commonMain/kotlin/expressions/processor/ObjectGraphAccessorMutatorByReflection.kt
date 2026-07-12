@@ -26,6 +26,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.language.expressions.api.FunctionDefinition
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -393,7 +394,7 @@ class ExternalGetterByReflection(
         }
     }
 
-    override fun setProperty(obj: Any, propertyName: String, isReference:Boolean, value: Any?) {
+    override fun setProperty(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
         try {
             obj.reflect().setProperty(propertyName, value)
         } catch (t: Throwable) {
@@ -409,7 +410,7 @@ class ExternalGetterByReflection(
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? =
         getProperty(obj, propertyName)
 
-    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference:Boolean, value: Any?) {
+    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
         TODO("not implemented")
     }
 }
@@ -485,8 +486,8 @@ constructor(
             decl.execution?.invoke(obj, args)
         }
 
-    override fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
-        callFunctionInternal(functionName, args, typeReferenceResolver) { decl, args ->
+    override fun callFunction(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunctionInternal(function, args, typeReferenceResolver) { decl, args ->
             decl.execution?.invoke(args)
         }
 
@@ -671,7 +672,7 @@ constructor(
                 val uv = untyped(value)
                 val prop = tobj.type.allResolvedProperty[PropertyName(propertyName)]
                 val r = prop?.isReference ?: false
-                externalPropertyMutator.invoke(obj, propertyName, r,uv)
+                externalPropertyMutator.invoke(obj, propertyName, r, uv)
             }
         }
     }
@@ -753,39 +754,32 @@ constructor(
     }
 
     private inline fun callFunctionInternal(
-        functionName: String,
+        function: FunctionDefinitionFloating,
         args: List<TypedObject>,
         typeReferenceResolver: (TypeReference) -> TypeInstance,
         functionExecution: (decl: FunctionDefinitionFloating, args: List<*>) -> Any?
     ): TypedObject {
-        val decl = functionLib.declaration[functionName]
-        return when (decl) {
-            null -> issueErrorReturnNothing(null, "No function named '${functionName}' was declared, using value \$nothing.")
+
+        val arguments = args.map { untyped(it) }
+        val returnType = function.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
+        return when {
+            (null != function.execution) -> {
+                val value = functionExecution.invoke(function, arguments)
+                value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${function.name.value}' results in null, using value \$nothing.")
+            }
+
+            (null != function.executionSuspend) -> {
+                val value = functionExecution.invoke(function, arguments)
+                value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${function.name.value}' results in null, using value \$nothing.")
+            }
 
             else -> {
-                val arguments = args.map { untyped(it) }
-                val returnType = decl.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
-                when {
-                    (null != decl.execution) -> {
-                        val value = functionExecution.invoke(decl, arguments)
-                        value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${functionName}' results in null, using value \$nothing.")
-                    }
-
-                    (null != decl.executionSuspend) -> {
-                        val value = functionExecution.invoke(decl, arguments)
-                        value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${functionName}' results in null, using value \$nothing.")
-                    }
-
-                    else -> {
-                        val execResult = primitiveExecutor.functionCall(functionName, arguments)
-                        when (execResult) {
-                            null -> error("Function '${functionName}' not executed.")
-                            else -> toTypedObject(execResult.value, returnType)
-                        }
-                    }
+                val execResult = primitiveExecutor.functionCall(function.name.value, arguments)
+                when (execResult) {
+                    null -> error("Function '${function.name.value}' not executed.")
+                    else -> toTypedObject(execResult.value, returnType)
                 }
             }
         }
     }
-
 }

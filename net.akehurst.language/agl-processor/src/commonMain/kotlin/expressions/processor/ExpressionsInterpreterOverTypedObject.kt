@@ -28,7 +28,8 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
 open class ExpressionsInterpreterOverTypedObject(
-    val objectGraph: ObjectGraphAccessorMutator
+    val objectGraph: ObjectGraphAccessorMutator,
+    val customFunctions: FunctionLib? = null
 ) {
 
     val issues get() = objectGraph.issues
@@ -118,7 +119,16 @@ open class ExpressionsInterpreterOverTypedObject(
         val argValues = expression.arguments.map {
             evaluateExpression(evc, it)
         }
-        return objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues) { tr -> evaluateTypeReference(tr) }
+        val funcName = expression.possiblyQualifiedName.value
+        val funcDefinition = customFunctions?.findFirstFunctionNamed(funcName)
+            ?: objectGraph.functionLib.findFirstFunctionNamed(funcName)
+        val result = funcDefinition?.let {
+            objectGraph.callFunction(funcDefinition, argValues) { tr -> evaluateTypeReference(tr) }
+        } ?: run {
+            issueErrorReturnNothing(null, "No function named '${funcName}' was declared, using value \$nothing.")
+            objectGraph.nothing()
+        }
+        return result
     }
 
     private fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject {

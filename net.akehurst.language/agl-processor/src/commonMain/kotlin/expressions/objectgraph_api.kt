@@ -71,6 +71,8 @@ class EvaluationContext(
         namedValues[name]
             ?: parent?.getOrInParent(name)
 
+    fun hasValue(name: String): Boolean = (null != getOrInParent(name))
+
     fun child(namedValues: Map<String, TypedObject> = emptyMap()) = of(namedValues, this)
 
     fun childSelf(self: TypedObject, namedValues: Map<String, TypedObject> = emptyMap()) = ofSelf(self, namedValues, parent = this)
@@ -152,7 +154,7 @@ interface ObjectGraphAccessorMutatorCommon {
     fun getFromMapWithKey(tobj: TypedObject, key: TypedObject): TypedObject
     fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit)
 
-    fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject
+    fun callFunction(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject
     fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject
 
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject

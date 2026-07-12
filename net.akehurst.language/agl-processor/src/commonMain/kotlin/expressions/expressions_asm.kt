@@ -18,11 +18,29 @@ package net.akehurst.language.expressions.asm
 
 import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.agl.expressions.processor.CustomFunctionBuilder
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.objectgraph.api.FunctionLib
+import net.akehurst.language.types.asm.StdFunctionLib
 import net.akehurst.language.types.asm.StdLibDefault
+
+class CustomFunctionLib() : FunctionLib {
+    override val declaration: Map<String, FunctionDefinitionFloating> = mutableMapOf()
+
+    override fun findFirstFunctionNamed(functionName: String): FunctionDefinitionFloating? {
+        return declaration[functionName]
+    }
+
+    fun registerFunction(name: String, init: CustomFunctionBuilder.()->Unit) {
+        val b = CustomFunctionBuilder(name)
+        b.init()
+        val fd = b.build()
+        (declaration as MutableMap)[name] = fd
+    }
+}
 
 class ExpressionsDomainDefault(
     override val name: SimpleName,
@@ -50,6 +68,16 @@ class ExpressionsNamespaceDefault(
 
      override var execution: ((args: List<*>) -> Any?)? = null
      override var executionSuspend: (suspend (args: List<*>) -> Any?)? = null
+}
+
+class FunctionDefinitionFloatingDefault(
+    name: SimpleName,
+    parameters: List<FunctionParameter>,
+    returnTypeReference: TypeReference?,
+    body: Expression
+): FunctionDefinitionFloating, Formatable, FunctionDefinitionAbstract(name, parameters, returnTypeReference, body) {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let{": ${it.asString(indent, imports)}"}}"
 }
 
 class FunctionDefinitionDefault(
