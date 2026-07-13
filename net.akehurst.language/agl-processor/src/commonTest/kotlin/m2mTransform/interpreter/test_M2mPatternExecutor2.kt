@@ -31,6 +31,8 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class test_M2mPatternExecutor2 {
 
@@ -703,5 +705,114 @@ class test_M2mPatternExecutor2 {
 
         println(input_pd.asString())
         assertEquals(expectedResult.root[0].asString(), input_pd.asString())
+    }
+
+    @Test
+    fun executionPlan_property_bind_conflict_throws_paradox() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    propertyOf(setOf(REF, VAR), "p1", "Integer")
+                    propertyOf(setOf(REF, VAR), "p2", "Integer")
+                }
+            }
+        }
+        val template = patternTemplate(types) {
+            object_("a", "test.A") {
+                property("p1") { expression("v", "x") }
+                property("p2") { expression("v", "y") }
+            }
+        }
+
+        val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+        val accessorMutator = ObjectGraphAccessorMutatorByReflection(
+            types, issues, LocationMapDefault(),
+            externalGetter = ExternalGetterAsmSimple(types, crossReferenceDomain = null, issues, LocationMapDefault())
+        )
+        val input = mapOf<String, Any>(
+            "x" to 1,
+            "y" to 2
+        )
+        val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
+        val evc = EvaluationContext.of(typedInput)
+        val sut = M2mPatternExecutor2(issues, accessorMutator, input.keys, emptyList())
+        sut.build(M2mPatternExecutor.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type())
+
+        val ex = assertFailsWith<IllegalStateException> {
+            sut.execute(evc, M2mPatternExecutor.RESULT)
+        }
+        assertTrue(ex.message?.contains("Paradox") == true)
+    }
+
+    @Test
+    fun executionPlan_named_subset_collection_unions_with_existing_variable() {
+        val types = typesDomain("Test", true) { }
+        val template = patternTemplate() {
+            collection("y", true) {
+                element { expression(null, "a") }
+            }
+        }
+        val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument))
+        val input = mapOf<String, Any>(
+            "y" to listOf(1),
+            "a" to 2
+        )
+
+        val expectedPlan = $$"""
+            §result$el0 := a
+            Synchronize Collection §result
+        """.trimIndent()
+        val expectedResult = listOf(1, 2)
+
+        doTest(types, null, tgtType, template, input, expectedPlan, expectedResult)
+    }
+
+    @Test
+    fun executionPlan_harvested_variable_is_planned_before_use() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("PartDefinition") {
+                    constructor_ { parameter(setOf(CMP, VAL), "name", "String") }
+                }
+                data("StateMachine") {
+                    constructor_ { parameter(setOf(CMP, VAL), "name", "String") }
+                    propertyOf(setOf(REF, VAL), "owner", "PartDefinition")
+                }
+            }
+        }
+        val template = patternTemplate(types) {
+            object_("sm", "test.StateMachine") {
+                property("name") { expression(null, "pdn") }
+                property("owner") {
+                    object_("pd", "test.PartDefinition") {
+                        property("name") { expression(null, "pdn") }
+                    }
+                }
+            }
+        }
+
+        val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+        val accessorMutator = ObjectGraphAccessorMutatorByReflection(
+            types, issues, LocationMapDefault(),
+            externalGetter = ExternalGetterAsmSimple(types, crossReferenceDomain = null, issues, LocationMapDefault())
+        )
+        val inputPd = AsmStructureSimple("test.PartDefinition".asQualifiedName).also {
+            it.setProperty(PropertyValueName("name"), AsmPrimitiveSimple.stdString("part-1"), 0)
+        }
+        val input = mapOf<String, Any>("pd" to inputPd)
+        val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
+        val evc = EvaluationContext.of(typedInput)
+        val sut = M2mPatternExecutor2(issues, accessorMutator, input.keys, emptyList())
+
+        sut.build(M2mPatternExecutor.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.StateMachine"))!!.type())
+        val plan = sut.executionPlan.map { it.description }
+        val producerIdx = plan.indexOfFirst { it.contains("pdn := pd.name") }
+        val consumerIdx = plan.indexOfFirst { it.contains("sm\$name := pdn") }
+
+        assertTrue(producerIdx >= 0, "Expected producer step for pdn from pd.name")
+        assertTrue(consumerIdx >= 0, "Expected consumer step using pdn for sm\$name")
+        assertTrue(producerIdx < consumerIdx, "Expected pdn producer step to appear before consumer step")
+
+        // Plan-order test only: runtime in this scenario needs cross-reference setup beyond this focused case.
     }
 }

@@ -102,7 +102,6 @@ class M2mPatternExecutor2(
         }
     }
 
-    internal var _nextTempVarNum = 0
     internal val _executions = initialExes.mapIndexed { index, execution -> execution.also { it.index = index } }.toMutableList()
     internal val _knownVariables = initialKnownVariableNames.toMutableSet()
     // Keep your initial properties, then add this compilation-state tracker:
@@ -129,8 +128,6 @@ class M2mPatternExecutor2(
      * and compiles the AST into executable steps.
      */
     fun build(tgtName: String, template: PropertyTemplateRhs, tgtType: TypeInstance) {
-        _nextTempVarNum = 0
-
         harvestVariables(_knownVariables.contains(tgtName), template)
         // 3. Begin main traversal
         traversePropertyTemplateRhs(false, null, StdLibDefault.NothingType, tgtName, tgtType, template)
@@ -203,121 +200,6 @@ class M2mPatternExecutor2(
 
      if this is called from a collection element template, then the parentName is null
      */
-    fun traversePropertyTemplateExpression_old(
-        setLhs: Boolean,
-        parentName: String?,
-        parentType: TypeInstance,
-        lhsName: String,
-        lhsType: TypeInstance,
-        lhs: TypedObject,
-        initialKnownVariables: EvaluationContext,
-        template: PropertyTemplateExpression
-    ) {
-        //TODO: check lhs against its type, maybe ?
-        // in this case, because we are enforcing, the lhs object is irrelevant!
-        val lhsFullName = parentName?.let { "$parentName$$lhsName" } ?: lhsName
-        val templateVarName = template.identifier?.value
-        val expressionVarName = when (template.expression) {
-            is RootExpression -> (template.expression as RootExpression).name
-            is LiteralExpression -> {
-                val vn = "$lhsFullName\$rhs"
-                createStep("$vn := ${template.expression.asString()}", emptyList(), listOf(vn)) { evc ->
-                    val value = ExpressionsInterpreterOverTypedObject(accessorMutator).evaluateExpression(evc, template.expression) //TODO: reuse interpreter
-                    evc.setNamedValue(vn, value)
-                }
-                vn
-            }
-
-            else -> {
-                val vn = "$lhsFullName\$rhs"
-                val freeVars = emptyList<String>() //TODO: template.expression.freeVariableNames
-                createStep("$vn := ${template.expression.asString()}", freeVars, listOf(vn)) { evc ->
-                    val value = ExpressionsInterpreterOverTypedObject(accessorMutator).evaluateExpression(evc, template.expression) //TODO: reuse interpreter
-                    evc.setNamedValue(vn, value)
-                }
-                vn
-            }
-        }
-        when {
-            null == templateVarName -> when {
-                accessorMutator.isNothing(lhs) -> {
-                    // expression var must be known
-                    // expressionVarName is input
-                    createStep("$lhsFullName := $expressionVarName", listOf(expressionVarName), listOf(lhsFullName)) { evc ->
-                        val exprValue = evc.getOrInParent(expressionVarName) ?: error("$expressionVarName not found")
-                        evc.setNamedValue(lhsFullName, exprValue)
-                    }
-                    if (setLhs) createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
-                }
-
-                null == initialKnownVariables.getOrInParent(expressionVarName) -> {
-                    // expression var is not known - match it from lhs
-                    // expressionVarName is output - from lhs
-                    check(null != parentName) { "$parentName must not be null here" }
-                    createStep("$lhsFullName := $expressionVarName := ${parentName}.$lhsName", parentName?.let { listOf(it) } ?: emptyList(), listOf(lhsFullName, expressionVarName)) { evc ->
-                        val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
-                        val lhs = parent.getProperty(lhsName)
-                        evc.setNamedValue(expressionVarName, lhs)
-                        evc.setNamedValue(lhsFullName, lhs)
-                    }
-                    // lhs is read, no need to set it
-                }
-
-                else -> {
-                    // expression var is known - enforce it
-                    // expressionVarName is input
-                    createStep("$lhsFullName := $$expressionVarName", listOf(expressionVarName), listOf(lhsFullName)) { evc ->
-                        val exprValue = evc.getOrInParent(expressionVarName) ?: error("Expression $expressionVarName not found")
-                        evc.setNamedValue(lhsFullName, exprValue)
-                    }
-                    if (setLhs) createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
-                }
-            }
-
-            else -> when {
-                null == initialKnownVariables.getOrInParent(templateVarName) -> when {
-                    null == initialKnownVariables.getOrInParent(expressionVarName) -> {
-                        // expression var is not known
-                        // expressionVarName is output - from lhs
-                        //check(null != parentName) { "$parentName must not be null here" }
-                        val lhs = parentName?.let { "$parentName$$lhsName" } ?: lhsName
-                        createStep("$lhsFullName := $templateVarName := $expressionVarName := $lhs", emptyList(), listOf(lhsFullName, templateVarName, expressionVarName)) { evc ->
-                            //val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
-                            val lhs = parentName?.let {
-                                val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
-                                parent.getProperty(lhs)
-                            } ?: evc.getOrInParent(lhs) ?: error("Both $parentName && $lhs not found")
-                            evc.setNamedValue(expressionVarName, lhs)
-                            evc.setNamedValue(templateVarName, lhs)
-                            evc.setNamedValue(lhsFullName, lhs)
-                        }
-                        // lhs is read, no need to set it
-                    }
-
-                    else -> {
-                        // expression var is known
-                        // expressionVarName is input
-                        createStep("$lhsFullName := $templateVarName := $expressionVarName", listOf(expressionVarName), listOf(lhsFullName, templateVarName)) { evc ->
-                            val exprValue = evc.getOrInParent(expressionVarName) ?: error("$expressionVarName not found")
-                            evc.setNamedValue(templateVarName, exprValue)
-                            evc.setNamedValue(lhsFullName, exprValue)
-                        }
-                        if (setLhs) createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
-                    }
-                }
-
-                else -> {
-                    // var is an input - ignore or assert expression
-                    createStep("$lhsName := $templateVarName", listOf(templateVarName), listOf(lhsName)) { evc ->
-                        val value = evc.getOrInParent(templateVarName) ?: error("$templateVarName not found")
-                        evc.setNamedValue(lhsFullName, value)
-                    }
-                    if (setLhs) createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
-                }
-            }
-        }
-    }
-
     fun traversePropertyTemplateExpression(setLhs: Boolean, parentName: String?, parentType: TypeInstance, lhsName: String, lhsType: TypeInstance, template: PropertyTemplateExpression) {
         val lhsFullName = parentName?.let { "$parentName$$lhsName" } ?: lhsName
 
@@ -549,7 +431,7 @@ class M2mPatternExecutor2(
                         }
                     } else {
                         val existing = parentObj.getProperty(lhsName)
-                        if (existing != null && !accessorMutator.isNothing(existing)) {
+                        if (!accessorMutator.isNothing(existing)) {
                             evc.setNamedValue(objVarName, existing)
                             existing
                         } else {
