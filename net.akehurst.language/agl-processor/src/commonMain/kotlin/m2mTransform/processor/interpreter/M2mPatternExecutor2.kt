@@ -2,23 +2,21 @@ package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
 import net.akehurst.kotlinx.collections.topologicalSort
 import net.akehurst.kotlinx.collections.transitveClosure
-import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.agl.m2mTransform.processor.interpreter.ObjectTemplateObjectTemplateExt.constructorArgumentTemplates
+import net.akehurst.language.agl.m2mTransform.processor.interpreter.ObjectTemplateObjectTemplateExt.propertyOnlyTemplates
+import net.akehurst.language.asm.simple.AnyExt.asString
 import net.akehurst.language.base.api.asPossiblyQualifiedName
-import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.LiteralExpression
 import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.expressions.asm.CreateObjectExpressionDefault
 import net.akehurst.language.expressions.asm.FunctionCallDefault
-import net.akehurst.language.expressions.asm.InfixExpressionDefault
 import net.akehurst.language.expressions.asm.LiteralExpressionDefault
 import net.akehurst.language.expressions.asm.NavigationExpressionDefault
 import net.akehurst.language.expressions.asm.PropertyCallDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.asm.StatementBlockExpressionDefault
-import net.akehurst.language.expressions.asm.TernaryConditionExpressionDefault
 import net.akehurst.language.expressions.asm.VariableAssignmentStatementDefault
 import net.akehurst.language.expressions.asm.VariableDefinitionDefault
-import net.akehurst.language.expressions.asm.WithExpressionDefault
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
@@ -32,7 +30,6 @@ import net.akehurst.language.types.api.ValueType
 import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.orEmpty
 import kotlin.collections.plus
 
 class M2mPatternExecution2(
@@ -60,19 +57,35 @@ class ExecutionStep(
     val description: String,
     val inputs: List<String>,
     val outputs: List<String>,
-    val expression: Expression
+    val execution: (evc: EvaluationContext) -> Unit
 ) {
-    var index = -1 //unset
-    fun execute(evaluator: ExpressionsInterpreterOverTypedObject, evc: EvaluationContext) {
-        val result = evaluator.evaluateExpression(evc, this.expression)
-        val outputValues = evaluator.objectGraph.untyped(result) as Map<String, Any>
-        outputValues.forEach { (k, v) ->
-            val tv = evaluator.objectGraph.toTypedObject(v, StdLibDefault.AnyType)// TODO: why untype then retype this
-            evc.setNamedValue(k, tv)
-        }
-    }
+    var index = -1 //unset initially
+
+    override fun toString(): String = description
 }
 
+object ObjectTemplateObjectTemplateExt {
+    val ObjectTemplate.constructorArgumentNames: List<String>
+        get() {
+            val typeDef = type.resolvedDefinition
+            val constructors = when (typeDef) {
+                is DataType -> typeDef.constructors
+                is ValueType -> typeDef.constructors
+                else -> error("Type '${typeDef.qualifiedName.value}' has no constructors")
+            }
+            val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
+            return possibleConArgNames
+        }
+
+    val ObjectTemplate.constructorArgumentTemplates: List<PropertyTemplate>
+        get() =
+            propertyTemplate.values.filter { constructorArgumentNames.contains(it.propertyName.value) }
+
+
+    val ObjectTemplate.propertyOnlyTemplates: List<PropertyTemplate>
+        get() =
+            propertyTemplate.values.filterNot { constructorArgumentNames.contains(it.propertyName.value) }
+}
 
 class M2mPatternExecutor2(
     val issues: IssueHolder,
@@ -81,21 +94,39 @@ class M2mPatternExecutor2(
 ) {
 
     companion object {
-        const val RESULT = $$"$result"
+        /**
+         * +1 if e1 comes after e2
+         * -1 if e2 comes after e1
+         * exe1 comes after exe2 when:
+         *  exe1.input contains any of exe2.outputs
+         *  exe2.doAfterMe contains exe1
+         */
+        private fun compareExecutions(exe1: ExecutionStep, exe2: ExecutionStep): Int {
+            return when {
+                //    exe2.doMeBefore.contains(exe1) -> 1 // do exe1 after exe2
+                //    exe1.doMeBefore.contains(exe2) -> -1 // do exe2 after exe1
+                //exe2.mustComeBefore(exe1) -> 1 // do parent after child
+                //exe1.mustComeBefore(exe2) -> -1 // do parent after child
+                exe2.outputs.any { exe1.inputs.contains(it) } -> 1 // do outputs before inputs
+                exe1.outputs.any { exe2.inputs.contains(it) } -> -1 // do outputs before inputs
+                else -> 0
+            }
+        }
+
     }
 
     internal var _nextTempVarNum = 0
     internal val _executions = initialExes.mapIndexed { index, execution -> execution.also { it.index = index } }.toMutableList()
     val executionPlan get() = _executions.topologicalSort(::compareExecutions)
-    val executionExpression
-        get() = executionPlan.joinToString(separator = "\n") {
-            val expr = it.expression
-            "// ${it.description}\n${expr.asString()}"
-        }
 
     fun addExecution(value: ExecutionStep) {
         value.index = _executions.size
         _executions.add(value)
+    }
+
+    fun createStep(description: String, inputs: List<String>, outputs: List<String>, execution: (evc: EvaluationContext) -> Unit) {
+        val step = ExecutionStep(description, inputs, outputs, execution)
+        addExecution(step)
     }
 
     fun buildAndExecute(tgtName: String, template: PropertyTemplateRhs, lhsType: TypeInstance, evc: EvaluationContext) {
@@ -114,17 +145,15 @@ class M2mPatternExecutor2(
      */
     fun build(initialVariables: EvaluationContext, tgtName: String, template: PropertyTemplateRhs, tgtType: TypeInstance) {
         val lhs = initialVariables.getOrInParent(tgtName) ?: accessorMutator.nothing()
-        val preComputedInputs = discoverKnownVariables(lhs, initialVariables, template)
-        constructExecutions(tgtName, preComputedInputs, template, tgtType)
+        traversePropertyTemplateRhs(false,null, StdLibDefault.NothingType, tgtName, tgtType, lhs, initialVariables, template)
     }
 
     fun execute(evc: EvaluationContext, tgtName: String): TypedObject {
-        val eval = ExpressionsInterpreterOverTypedObject(accessorMutator)
         val sorted = executionPlan
         val evcExecution = evc.child()
         for (count in 0 until sorted.size) {
             val pe = sorted[count]
-            pe.execute(eval, evcExecution)
+            pe.execution.invoke(evcExecution)
         }
         val value = evcExecution.getOrInParent(tgtName) ?: accessorMutator.nothing()
         return value
@@ -135,19 +164,19 @@ class M2mPatternExecutor2(
     /**
      * returns a simplified template where all property assignments are from variables
      * any non-identified template is given an artificial id.
+     * Because we already found out all the inputs based on the initial variables and lhs,
+     * we know that all other variables must be outputs, and constructed objects are inputs
+     * to properties and nested templates
      */
     private fun constructExecutions(
         tgtName: String,
-        preComputedInputs:Map<PropertyTemplateRhs, List<String>>,
+        preComputedInputs: Map<PropertyTemplateRhs, List<String>>,
         template: PropertyTemplateRhs,
         lhsType: TypeInstance
-    ): ExecutionStep {
-        return when (template) {
-            is PropertyTemplateExpression -> constructExecutionsFromPropertyTemplateExpression(tgtName, preComputedInputs, template, lhsType)
-            is ObjectTemplate -> constructExecutionsFromObjectTemplate(tgtName, preComputedInputs, template, lhsType)
-            is CollectionTemplate -> constructExecutionsFromCollectionTemplate(tgtName, preComputedInputs, template, lhsType)
-            else -> error("Unknown rhs type ${template::class}")
-        }
+    ) {
+//       for(step in _executions) {
+//           constructExpression(step)
+//       }
     }
 
     /*
@@ -172,394 +201,367 @@ class M2mPatternExecutor2(
     }
 
     /**
-     * returns a Map from PropertyTemplateRhs to list of output variable name if any
+     * traverse the template.
+     * create Execution steps
+     * set inputs and outputs based on known variables and their properties
      */
-    fun discoverKnownVariables(lhs: TypedObject, variables: EvaluationContext, template: PropertyTemplateRhs): Map<PropertyTemplateRhs, List<String>> {
-        val map = mutableMapOf<PropertyTemplateRhs, List<String>>()
-        // find variables in this template
-        template.identifier?.let { v ->
-            // if the variable has no value
-            variables.getOrInParent(v.value)?.let {
-                // let variable have value of property
-                variables.setNamedValue(v.value, lhs)
-                map[template] = listOf(v.value)
-            }
+    fun traversePropertyTemplateRhs(setLhs:Boolean, parentName: String?, parentType: TypeInstance, lhsName: String, lhsType: TypeInstance, lhs: TypedObject, variables: EvaluationContext, template: PropertyTemplateRhs) {
+        when (template) {
+            is PropertyTemplateExpression -> traversePropertyTemplateExpression(setLhs, parentName, parentType, lhsName, lhsType, lhs, variables, template)
+            is ObjectTemplate -> traverseObjectTemplate(parentName, parentType, lhsName, lhsType, lhs, variables, template)
+            is CollectionTemplate -> traverseCollectionTemplate(parentName, parentType, lhsName, lhsType, lhs, variables, template)
+            else -> error("Unknown rhs type ${template::class}")
         }
-        when {
-            accessorMutator.isNothing(lhs) -> Unit
-            else -> when (template) {
-                is PropertyTemplateExpression -> Unit
-                is ObjectTemplate -> {
-                    // find variables in sub properties
-                    template.propertyTemplate.entries.map { (pn, pt) ->
-                        val propVal = lhs.getProperty(pn.value)
-                        map.putAll(discoverKnownVariables(propVal, variables, pt.rhs))
-                    }
-                }
-
-                is CollectionTemplate -> {
-                    //lhs must be a collection
-                    val propColl = lhs.self as Collection<TypedObject>
-                    propColl.forEach { el ->
-                        template.elements.map { pt ->
-                            map.putAll(discoverKnownVariables(el, variables, pt))
-                        }
-                    }
-                }
-
-                else -> error("Unknown template type ${template::class}")
-            }
-        }
-        return map
     }
 
     /*
-     <tgtName> == <var>? : <expression>
+     <lhs> == <var>? : <expression>
+
+     if this is called from a collection element template, then the parentName is null
      */
-    private fun constructExecutionsFromPropertyTemplateExpression(
-        tgtName: String,
-        preComputedInputs:Map<PropertyTemplateRhs, List<String>>,
-        template: PropertyTemplateExpression,
-        lhsType: TypeInstance
-    ): ExecutionStep {
-        val templateVarName = template.identifier?.value ?: createTempVariable()
-        val rhsName = when {
-            template.expression is RootExpression -> (template.expression as RootExpression).name
-            else -> null
-        }
-        val rhsInput = rhsName?.let { listOf(it) } ?: emptyList()
-        val inputs = rhsInput + preComputedInputs[template].orEmpty()
-        val outputs = preComputedInputs[template]?.let { emptyList<String>() } ?: listOf(templateVarName)
-
-        val description = "check or set: $templateVarName == $rhsName"
-        val expr = when {
-            null == template.identifier -> template.expression
-            else -> setToExpressionOrVar(templateVarName, template.expression)
-        }
-        val outputExpr = createOutputs(mapOf(templateVarName to expr))
-        val step = ExecutionStep(description, inputs, outputs, outputExpr)
-        addExecution(step)
-        return step
-    }
-
-    /*
-
-     */
-    private fun constructExecutionsFromObjectTemplate(
-        tgtName: String,
-        preComputedInputs:Map<PropertyTemplateRhs, List<String>>,
-        template: ObjectTemplate,
-        lhsType: TypeInstance
-    ): ExecutionStep {
-        val templateVarName = template.identifier?.value ?: createTempVariable()
-        val typeName = template.type.qualifiedTypeName
-        val inputs = preComputedInputs[template].orEmpty()
-        val outputs = listOf(tgtName)
-        val description = "Find '$templateVarName' or construct ${typeName.value}(...)"
-        val expr = findOrEnforceObjectTemplate(templateVarName, template)
-        val outputExpr = createOutputs(mapOf(tgtName to expr))
-        val step = ExecutionStep(description, inputs, outputs, outputExpr)
-        addExecution(step)
-        return step
-    }
-
-    private fun constructExecutionsFromCollectionTemplate(
-        tgtName: String,
-        preComputedInputs:Map<PropertyTemplateRhs, List<String>>,
-        template: CollectionTemplate,
-        lhsType: TypeInstance
-    ): ExecutionStep {
+    fun traversePropertyTemplateExpression(setLhs:Boolean, parentName: String?, parentType: TypeInstance, lhsName: String, lhsType: TypeInstance, lhs: TypedObject, initialKnownVariables: EvaluationContext, template: PropertyTemplateExpression) {
+        //TODO: check lhs against its type, maybe ?
+        // in this case, because we are enforcing, the lhs object is irrelevant!
+        val lhsFullName = parentName?.let { "$parentName$$lhsName" } ?: lhsName
         val templateVarName = template.identifier?.value
-        TODO()
-    }
-
-    /**
-     * +1 if e1 comes after e2
-     * -1 if e2 comes after e1
-     * exe1 comes after exe2 when:
-     *  exe1.input contains any of exe2.outputs
-     *  exe2.doAfterMe contains exe1
-     */
-    private fun compareExecutions(exe1: ExecutionStep, exe2: ExecutionStep): Int {
-        return when {
-            //    exe2.doMeBefore.contains(exe1) -> 1 // do exe1 after exe2
-            //    exe1.doMeBefore.contains(exe2) -> -1 // do exe2 after exe1
-            //exe2.mustComeBefore(exe1) -> 1 // do parent after child
-            //exe1.mustComeBefore(exe2) -> -1 // do parent after child
-            exe2.outputs.any { exe1.inputs.contains(it) } -> 1 // do outputs before inputs
-            exe1.outputs.any { exe2.inputs.contains(it) } -> -1 // do outputs before inputs
-            else -> 0
-        }
-    }
-
-    private fun createFromPropertyTemplateExpression(evc: EvaluationContext, lhsType: TypeInstance, rhs: PropertyTemplateExpression): Map<String, TypedObject> {
-        val id = rhs.identifier?.value
-        val existing = evc.namedValues[id]
-        return when (existing) {
-            null -> {
-                val o = createFromExpression(evc, lhsType, rhs.expression)
-                val mv = rhs.identifier?.let { mapOf(it.value to o) } ?: emptyMap()
-                mv + Pair(RESULT, o)
+        val expressionVarName = when (template.expression) {
+            is RootExpression -> (template.expression as RootExpression).name
+            is LiteralExpression -> {
+                val vn = "$lhsFullName\$rhs"
+                createStep("$vn := ${template.expression.asString()}", emptyList(), listOf(vn)) { evc ->
+                    val value = ExpressionsInterpreterOverTypedObject(accessorMutator).evaluateExpression(evc, template.expression) //TODO: reuse interpreter
+                    evc.setNamedValue(vn, value)
+                }
+                vn
             }
-
-            else -> emptyMap()
-        }
-
-    }
-
-    /**
-     * returns value of expression evaluated in context of provided variables
-     */
-    private fun createFromExpression(evc: EvaluationContext, lhsType: TypeInstance, expression: Expression): TypedObject {
-        val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator)
-        return when (expression) {
-            is CreateObjectExpression -> {
-                exprInterp.constructObject(evc, expression)
-            }
-
             else -> {
-                val value = exprInterp.evaluateExpression(evc, expression)
-                value
+                val vn = "$lhsFullName\$rhs"
+                val freeVars = template.expression.freeVariableNames
+                createStep("$vn := ${template.expression.asString()}", freeVars, listOf(vn)) { evc ->
+                    val value = ExpressionsInterpreterOverTypedObject(accessorMutator).evaluateExpression(evc, template.expression) //TODO: reuse interpreter
+                    evc.setNamedValue(vn, value)
+                }
+                vn
             }
         }
-    }
-
-    private fun findInEnvOrCreateFromObjectTemplate(evc: EvaluationContext, lhsType: TypeInstance, template: ObjectTemplate, conArgNames: Map<String, String>): Map<String, TypedObject> {
-        val id = template.identifier?.value
-        val existing = id?.let { evc.getOrInParent(it) }
-        return when (existing) {
-            null -> {
-                val decl = template.type.resolvedDefinition
-                when (decl) {
-                    is DataType, is ValueType -> {
-                        val matchedVars = mutableMapOf<String, TypedObject>()
-                        val constructors = when (decl) {
-                            is DataType -> decl.constructors
-                            is ValueType -> decl.constructors
-                            else -> error("Type '${decl.qualifiedName.value}' has no constructors")
-                        }
-                        val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-                        val conArgs = mutableMapOf<String, TypedObject>()
-                        template.propertyTemplate.forEach { (k, v) ->
-                            if (possibleConArgNames.contains(k.value)) {
-                                val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
-                                val arg = evc.getOrInParent(conArgNames[k.value]!!)
-                                arg?.let { conArgs[k.value] = arg }
-                            }
-                        }
-                        //.resolveType(tgtObjectGraph.typesDomain)
-                        val o = accessorMutator.createStructureValue(template.type.qualifiedTypeName, conArgs)
-                        val mv = template.identifier?.let { matchedVars + Pair(it.value, o) } ?: matchedVars
-                        mv + Pair(RESULT, o)
+        when {
+            null == templateVarName -> when {
+                accessorMutator.isNothing(lhs) -> {
+                    // expression var must be known
+                    // expressionVarName is input
+                    createStep("$lhsFullName := $expressionVarName", listOf(expressionVarName), listOf(lhsFullName)) { evc ->
+                        val exprValue = evc.getOrInParent(expressionVarName) ?: error("$expressionVarName not found")
+                        evc.setNamedValue(lhsFullName, exprValue)
                     }
+                    if(setLhs) createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                }
 
-                    else -> error("Cannot construct object of type ${decl.qualifiedName.value}")
+                null == initialKnownVariables.getOrInParent(expressionVarName) -> {
+                    // expression var is not known - match it from lhs
+                    // expressionVarName is output - from lhs
+                    check(null != parentName) { "$parentName must not be null here" }
+                    createStep("$lhsFullName := $expressionVarName := ${parentName}.$lhsName", parentName?.let { listOf(it) } ?: emptyList(), listOf(lhsFullName, expressionVarName)) { evc ->
+                        val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
+                        val lhs = parent.getProperty(lhsName)
+                        evc.setNamedValue(expressionVarName, lhs)
+                        evc.setNamedValue(lhsFullName, lhs)
+                    }
+                    // lhs is read, no need to set it
+                }
+
+                else -> {
+                    // expression var is known - enforce it
+                    // expressionVarName is input
+                    createStep("$lhsFullName := $$expressionVarName", listOf(expressionVarName), listOf(lhsFullName)) { evc ->
+                        val exprValue = evc.getOrInParent(expressionVarName) ?: error("Expression $expressionVarName not found")
+                        evc.setNamedValue(lhsFullName, exprValue)
+                    }
+                    if(setLhs) createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
                 }
             }
 
-            else -> mapOf(RESULT to existing)
+            else -> when {
+                null == initialKnownVariables.getOrInParent(templateVarName) -> when {
+                    null == initialKnownVariables.getOrInParent(expressionVarName) -> {
+                        // expression var is not known
+                        // expressionVarName is output - from lhs
+                        //check(null != parentName) { "$parentName must not be null here" }
+                        val lhs = parentName?.let { "$parentName$$lhsName" } ?: lhsName
+                        createStep("$lhsFullName := $templateVarName := $expressionVarName := $lhs", emptyList(), listOf(lhsFullName, templateVarName, expressionVarName)) { evc ->
+                            //val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
+                            val lhs = parentName?.let {
+                                val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
+                                parent.getProperty(lhs)
+                            } ?: evc.getOrInParent(lhs) ?: error("Both $parentName && $lhs not found")
+                            evc.setNamedValue(expressionVarName, lhs)
+                            evc.setNamedValue(templateVarName, lhs)
+                            evc.setNamedValue(lhsFullName, lhs)
+                        }
+                        // lhs is read, no need to set it
+                    }
+
+                    else -> {
+                        // expression var is known
+                        // expressionVarName is input
+                        createStep("$lhsFullName := $templateVarName := $expressionVarName", listOf(expressionVarName), listOf(lhsFullName, templateVarName)) { evc ->
+                            val exprValue = evc.getOrInParent(expressionVarName) ?: error("$expressionVarName not found")
+                            evc.setNamedValue(templateVarName, exprValue)
+                            evc.setNamedValue(lhsFullName, exprValue)
+                        }
+                        if(setLhs) createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                    }
+                }
+
+                else -> {
+                    // var is an input - ignore or assert expression
+                    createStep("$lhsName := $templateVarName", listOf(templateVarName), listOf(lhsName)) { evc ->
+                        val value = evc.getOrInParent(templateVarName) ?: error("$templateVarName not found")
+                        evc.setNamedValue(lhsFullName, value)
+                    }
+                    if(setLhs) createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                }
+            }
         }
     }
 
-    private fun createFromCollectionTemplate(evc: EvaluationContext, lhsType: TypeInstance, collectionTemplate: CollectionTemplate, elementIds: List<String>): Map<String, TypedObject> {
-        //collection may already have been created, (via when/where/etc) and be a captured variable
-        val existing = collectionTemplate.identifier?.let { evc.namedValues[it.value] }
-        return when {
-            null == existing || accessorMutator.isNothing(existing) -> {
-                // create new collection from template elements
-                val matchedVars = mutableMapOf<String, TypedObject>()
-                val els = elementIds.mapNotNull { evc.getOrInParent(it) }
-                val col = accessorMutator.createCollection(lhsType, els)
-                val mv = collectionTemplate.identifier?.let { matchedVars + Pair(it.value, col) } ?: matchedVars
-                mv + Pair(RESULT, col)
-            }
-
-            else -> {
-                // try to match template elements against existing collection elements, if not matched then create them.
-                val els = elementIds.mapNotNull { evc.getOrInParent(it) }
-                val newEls = accessorMutator.createCollection(existing.type, els)
-                val newColl = existing.accessor.collectionUnion(existing, newEls)
-                val matchedVars = mutableMapOf<String, TypedObject>()
-                val mv = collectionTemplate.identifier?.let { matchedVars + Pair(it.value, newColl) } ?: matchedVars
-                mv + Pair(RESULT, newColl)
+    fun createSetLhsStep(parentName: String?, parentType: TypeInstance, lhsName: String, lhsFullName: String) {
+        if (null != parentName && parentType.isCollection.not()) {
+            // set lhs value in parent
+            createStep("$parentName.$lhsName := $lhsFullName", listOf(parentName, lhsFullName), emptyList()) { evc ->
+                val value = evc.getOrInParent(lhsFullName) ?: error("$lhsFullName not found")
+                val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
+                parent.setProperty(lhsName, value)
             }
         }
     }
 
-    /**
-     * sets the property value from the template (which should be a simple variable reference)
-     * returns any new variable matches - I think none
+    /*
+      <lhs> == <var>? : Type { <propertyTemplateList> }
      */
-    private fun setPropertyIfNothing(obj: TypedObject, pn: String, pv: TypedObject) {
-        val possiblePv = obj.getProperty(pn)
+    fun traverseObjectTemplate(parentName: String?, parentType: TypeInstance, lhsName: String, lhsType: TypeInstance, lhs: TypedObject, initialKnownVariables: EvaluationContext, template: ObjectTemplate) {
+        val lhsFullName = parentName?.let { "$parentName$$lhsName" } ?: lhsName
+        val templateVarName = template.identifier?.value
         when {
-            accessorMutator.isNothing(possiblePv) -> obj.setProperty(pn, pv)
-            else -> Unit
-        }
-    }
+            null == templateVarName -> when {
+                accessorMutator.isNothing(lhs) -> {
+                    // no template variable & lhs is nothing
+                    // must construct object from template
+                    // inputs are constructor arguments
+                    // output is the object as lhsName
+                    val conArgTemplates = template.constructorArgumentTemplates
+                    val conArgNames = conArgTemplates.map { it.propertyName.value }.map { "$lhsFullName$$it" }
+                    traverseObjectTemplateProperties(false, parentName, lhsName, lhsType, accessorMutator.nothing(), initialKnownVariables, conArgTemplates)
+                    createStep("$lhsFullName := ${template.type.typeName.value}(${conArgNames.joinToString()}){}", conArgNames, listOf(lhsFullName)) { evc ->
+                        val args = conArgTemplates.associate {
+                            val argValName = "$lhsName$${it.propertyName.value}"
+                            it.propertyName.value to (evc.getOrInParent("$lhsName$$argValName") ?: error("$argValName not found"))
+                        }
+                        val value = accessorMutator.createStructureValue(template.type.qualifiedTypeName, args)
+                        evc.setNamedValue(lhsFullName, value)
+                    }
+                    createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                    traverseObjectTemplateProperties(true, parentName, lhsName, lhsType, lhs, initialKnownVariables, template.propertyOnlyTemplates)
+                }
 
-
-    private fun findOrEnforceRhsExpr(tgtName: String, rhs: PropertyTemplateRhs): Expression = when (rhs) {
-        is PropertyTemplateExpression -> findOrEnforcePropertyTemplateExpression(tgtName, rhs)
-        is ObjectTemplate -> findOrEnforceObjectTemplate(tgtName, rhs)
-        is CollectionTemplate -> TODO()
-        else -> error("Unknown PropertyTemplateRhs type: ${rhs::class}")
-    }
-
-    private fun enforceRhsExpr(rhs: PropertyTemplateRhs): Expression = when (rhs) {
-        is PropertyTemplateExpression -> rhs.expression
-        is ObjectTemplate -> enforceObjectTemplate(rhs)
-        is CollectionTemplate -> TODO()
-        else -> error("Unknown PropertyTemplateRhs type: ${rhs::class}")
-    }
-
-    private fun findOrEnforcePropertyTemplateExpression(tgtName: String, template: PropertyTemplateExpression): Expression {
-        return setToExpressionOrVar(tgtName, template.expression)
-    }
-
-    private fun findOrEnforceObjectTemplate(tgtName: String, template: ObjectTemplate): Expression {
-        val construction = findOrEnforceConstructObjectTemplate(tgtName, template)
-        val setProperties = findOrEnforcePropertiesObjectTemplate(template)
-        return if (setProperties.isEmpty()) {
-            construction
-        } else {
-            val objAssignment = VariableAssignmentStatementDefault(VariableDefinitionDefault(tgtName, null), null, construction)
-            val propAssignments = setProperties.map { (k, v) -> VariableAssignmentStatementDefault(VariableDefinitionDefault(k, null), null, v) }
-            val withBlock = StatementBlockExpressionDefault(propAssignments, RootExpressionDefault.SELF)
-            val propAssignmentsWithObj = WithExpressionDefault(RootExpressionDefault(tgtName), withBlock)
-            val assignments = listOf(objAssignment)
-            val block = StatementBlockExpressionDefault(assignments, propAssignmentsWithObj)
-            block
-        }
-    }
-
-    private fun findOrEnforceConstructObjectTemplate(tgtName: String, template: ObjectTemplate): Expression {
-        val args = setConstructorArgs(template)
-        return findOrConstructExpression(tgtName, template.type.qualifiedTypeName, args)
-    }
-
-    private fun enforceObjectTemplate(template: ObjectTemplate): Expression {
-        val args = setConstructorArgs(template)
-        return constructObjectExpression(template.type.qualifiedTypeName, args)
-    }
-
-    private fun findOrEnforceConstructorArgs(template: ObjectTemplate): Map<String, Expression> {
-        val decl = template.type.resolvedDefinition
-        val constructors = when (decl) {
-            is DataType -> decl.constructors
-            is ValueType -> decl.constructors
-            else -> error("Type '${decl.qualifiedName.value}' has no constructors")
-        }
-        val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-        val constructorArgExpressions = template.propertyTemplate.entries.mapNotNull { (k, v) ->
-            if (possibleConArgNames.contains(k.value)) {
-                val expr = findOrEnforceRhsExpr(k.value, v.rhs)
-                Pair(k.value, expr)
-            } else {
-                null
+                else -> {
+                    // no template variable & lhs has a value
+                    // use lhs as the object (if its type matches - if not then fail)
+                    // input is no input ?
+                    // output is lhsName
+                    check(null != parentName) { "$parentName must not be null here" }
+                    createStep("$lhsFullName := ${parentName}.$lhsName", emptyList(), listOf(lhsFullName)) { evc ->
+                        val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
+                        val lhs = parent.getProperty(lhsName)
+                        evc.setNamedValue(lhsFullName, lhs)
+                    }
+                    // lhs is read, no need to set it
+                    traverseObjectTemplateProperties(true, parentName, lhsName, lhsType, lhs, initialKnownVariables, template.propertyOnlyTemplates)
+                }
             }
-        }.associate { it }
-        return constructorArgExpressions
-    }
 
-    private fun setConstructorArgs(template: ObjectTemplate): Map<String, Expression> {
-        val decl = template.type.resolvedDefinition
-        val constructors = when (decl) {
-            is DataType -> decl.constructors
-            is ValueType -> decl.constructors
-            else -> error("Type '${decl.qualifiedName.value}' has no constructors")
-        }
-        val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-        val constructorArgExpressions = template.propertyTemplate.entries.mapNotNull { (k, v) ->
-            if (possibleConArgNames.contains(k.value)) {
-                val expr = enforceRhsExpr(v.rhs)
-                Pair(k.value, expr)
-            } else {
-                null
+            else -> when {
+                null == initialKnownVariables.getOrInParent(templateVarName) -> when {
+                    accessorMutator.isNothing(lhs) -> {
+                        // have template variable with no value & lhs is nothing
+                        // must construct object from template
+                        // inputs are constructor arguments
+                        // output is the lhsName & templateVarName which takes the value of the object
+                        val conArgTemplates = template.constructorArgumentTemplates
+                        val conArgNames = conArgTemplates.map { it.propertyName.value }.map { "$lhsFullName$$it" }
+                        traverseObjectTemplateProperties(false, parentName, lhsName, lhsType, accessorMutator.nothing(), initialKnownVariables, conArgTemplates)
+                        createStep("$lhsFullName := $templateVarName := ${template.type.typeName.value}(${conArgNames.joinToString()}){}", conArgNames, listOf(lhsFullName, templateVarName)) { evc ->
+                            val args = conArgTemplates.associate {
+                                val argValName = "$lhsFullName$${it.propertyName.value}"
+                                it.propertyName.value to (evc.getOrInParent(argValName) ?: error("$argValName not found"))
+                            }
+                            val value = accessorMutator.createStructureValue(template.type.qualifiedTypeName, args)
+                            evc.setNamedValue(templateVarName, value)
+                            evc.setNamedValue(lhsFullName, value)
+                        }
+                        createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                        traverseObjectTemplateProperties(true, parentName, lhsName, lhsType, lhs, initialKnownVariables, template.propertyOnlyTemplates)
+                    }
+
+                    else -> {
+                        // have template variable with no value & lhs has a value
+                        // use lhs as the object (if its type matches - if not then fail)
+                        // inputs are lhs
+                        // output is lhsName &  templateVarName which takes the value of the object
+                        check(null != parentName) { "$parentName must not be null here" }
+                        createStep("$lhsFullName := $templateVarName := ${parentName}.$lhsName", emptyList(), listOf(lhsFullName, templateVarName)) { evc ->
+                            val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
+                            val value = parent.getProperty(lhsName)
+                            evc.setNamedValue(templateVarName, value)
+                            evc.setNamedValue(lhsFullName, value)
+                        }
+                        // lhs is read, no need to set it
+                        traverseObjectTemplateProperties(true, parentName, lhsName, lhsType, lhs, initialKnownVariables, template.propertyTemplate.values)
+                    }
+                }
+
+                else -> {
+                    // have template variable with a value ==> ignore lhs
+                    // variable is the value - check type
+                    // inputs template variable
+                    // output is lhsName which takes the value of the object
+                    createStep("$lhsFullName := $templateVarName", listOf(templateVarName), listOf(lhsFullName)) { evc ->
+                        val value = evc.getOrInParent(templateVarName) ?: error("$templateVarName not found")
+                        evc.setNamedValue(lhsFullName, value)
+                    }
+                    createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                    val knownVar = initialKnownVariables.getOrInParent(templateVarName) ?: error("Must be not null at this point!")
+                    traverseObjectTemplateProperties(true, parentName, lhsName, lhsType, knownVar, initialKnownVariables, template.propertyTemplate.values)
+                }
             }
-        }.associate { it }
-        return constructorArgExpressions
+        }
     }
 
-    private fun findOrEnforcePropertiesObjectTemplate(template: ObjectTemplate): Map<String, Expression> {
-        val decl = template.type.resolvedDefinition
-        val constructors = when (decl) {
-            is DataType -> decl.constructors
-            is ValueType -> decl.constructors
-            else -> error("Type '${decl.qualifiedName.value}' has no constructors")
+    fun traverseObjectTemplateProperties(setLhs:Boolean, parentName: String?, lhsName: String, lhsType: TypeInstance, lhs: TypedObject, initialKnownVariables: EvaluationContext, propertyTemplates: Collection<PropertyTemplate>) {
+        val propParentName = parentName?.let { "$parentName$$lhsName" } ?: lhsName
+        for (pt in propertyTemplates) {
+            val propLhs = lhs.getProperty(pt.propertyName.value)
+            val propLhsName = pt.propertyName.value
+            val propType = lhsType.resolvedDefinition.findAllPropertyOrNull(PropertyName(propLhsName))?.typeInstance ?: StdLibDefault.AnyType
+            traversePropertyTemplateRhs(setLhs, propParentName, lhsType, propLhsName, propType, propLhs, initialKnownVariables, pt.rhs)
         }
-        val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-        val setPropExpressions = template.propertyTemplate.entries.mapNotNull { (k, v) ->
-            if (possibleConArgNames.contains(k.value)) {
-                null
-            } else {
-                val templateVarName = v.rhs.identifier?.value ?: createTempVariable()
-                val expr = findOrEnforceRhsExpr(templateVarName, v.rhs)
-                Pair(k.value, expr)
+    }
+
+    fun traverseCollectionTemplate(parentName: String?, parentType: TypeInstance, lhsName: String, lhsType: TypeInstance, lhs: TypedObject, initialKnownVariables: EvaluationContext, template: CollectionTemplate) {
+        val lhsFullName = parentName?.let { "$parentName$$lhsName" } ?: lhsName
+        val templateVarName = template.identifier?.value
+        val newElementNames = template.elements.mapIndexed { i, et -> "$lhsFullName\$el$i" }
+        when {
+            null == templateVarName -> when {
+                accessorMutator.isNothing(lhs) -> {
+                    // no template variable & lhs is nothing
+                    // must create collection from template
+                    // inputs are constructor arguments
+                    // output is the object as lhsName
+                    traverseCollectionTemplateElement(parentName, lhsName, lhsType, lhs, initialKnownVariables, template)
+                    createStep("$lhsFullName := ${lhsType.typeName.value}(${newElementNames.joinToString()})", newElementNames, listOf(lhsFullName)) { evc ->
+                        val elements = newElementNames.map { evc.getOrInParent(it) ?: error("$it not found") }
+                        val col = accessorMutator.createCollection(lhsType, elements)
+                        evc.setNamedValue(lhsFullName, col)
+                    }
+                    createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                }
+
+                else -> {
+                    // no template variable & lhs has value
+                    // use lhs as collection
+                    // match content in collection if possible, else add to collection
+                    traverseCollectionTemplateElement(parentName, lhsName, lhsType, lhs, initialKnownVariables, template)
+                    createStep("$lhsFullName := ${parentName}.$lhsName + ${newElementNames.joinToString(" + ")}", newElementNames, listOf(lhsFullName)) { evc ->
+                        val elements = newElementNames.map { evc.getOrInParent(it) ?: error("$it not found") }
+                        val col = accessorMutator.createCollection(lhsType, elements)
+                        evc.setNamedValue(lhsFullName, col)
+                    }
+                    // lhs is read, no need to set it
+                }
             }
-        }.associate { it }
-        return setPropExpressions
-    }
 
-    /*
-     when {
-       $nothing == <id> -> {
-           <set-args>
-           construct <Type>(args)
-       }
-       else -> <id>
-     }
-     */
-    private fun findOrConstructExpression(tgtName: String, tgtType: PossiblyQualifiedName, constructArgs: Map<String, Expression>): Expression {
-        val ifIsNothing = InfixExpressionDefault(listOf(RootExpressionDefault.NOTHING, RootExpressionDefault(tgtName)), listOf("=="))
-        val constructExpr = constructObjectExpression(tgtType, constructArgs)
-//        val constructOption = WhenOptionDefault(ifIsNothing, constructExpr)
-//        val findOption = WhenOptionElseDefault(RootExpressionDefault(tgtName))
-//        val choice = WhenExpressionDefault(listOf(constructOption), findOption)
-//        return choice
+            else -> when {
+                null == initialKnownVariables.getOrInParent(templateVarName) -> when {
+                    accessorMutator.isNothing(lhs) -> {
+                        // have template variable with no value & lhs is nothing
+                        // must create collection from template
+                        // inputs are elements - or do we just add them later ?
+                        // output is the lhsName & templateVarName which takes the value of the object
+                        traverseCollectionTemplateElement(parentName, lhsName, lhsType, lhs, initialKnownVariables, template)
+                        createStep("$lhsFullName := $templateVarName := ${lhsType.typeName.value}(${newElementNames.joinToString()})", newElementNames, listOf(lhsFullName)) { evc ->
+                            val elements = newElementNames.map { evc.getOrInParent(it) ?: error("$it not found") }
+                            val col = accessorMutator.createCollection(lhsType, elements)
+                            evc.setNamedValue(templateVarName, col)
+                            evc.setNamedValue(lhsFullName, col)
+                        }
+                        createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                    }
 
-        val cond = InfixExpressionDefault(listOf(RootExpressionDefault.NOTHING, RootExpressionDefault(tgtName)), listOf("=="))
-        val tc = TernaryConditionExpressionDefault(cond, constructExpr, RootExpressionDefault(tgtName))
-        return tc
-    }
+                    else -> {
+                        // have template variable with no value & lhs has a value
+                        // use lhs as the collection (if its type matches - if not then fail)
+                        // inputs are lhs
+                        // output is lhsName &  templateVarName which takes the value of the collection
+                        // for each template element, match it or create if no match
+                        check(parentName != null) { "$parentName must not be null!" }
+                        traverseCollectionTemplateElement(parentName, lhsName, lhsType, lhs, initialKnownVariables, template)
+                        createStep("$lhsFullName := $templateVarName := ${parentName}.$lhsName + ${newElementNames.joinToString(separator = " + ")}", newElementNames + templateVarName, listOf(lhsFullName)) { evc ->
+                            val parent = evc.getOrInParent(parentName) ?: error("$parentName not found")
+                            val col = parent.getProperty(lhsName)
+                            val elements = newElementNames.map { evc.getOrInParent(it) ?: error("$it not found") }
+                            val newElementColl = accessorMutator.createCollection(lhsType, elements)
+                            val newCol = accessorMutator.collectionUnion(col, newElementColl)
+                            evc.setNamedValue(templateVarName, newCol)
+                            evc.setNamedValue(lhsFullName, newCol)
+                        }
+                        createSetLhsStep(parentName, parentType, lhsName, lhsFullName)
+                    }
+                }
 
-    /*
-       <tgt> := {
-         <set-args>
-         construct <Type>(args)
+                else -> {
+                    // have template variable with a value ==> ignore lhs
+                    // variable is the value - check type
+                    // inputs template variable
+                    // output is lhsName which takes the value of the collection
+                    createStep("$lhsFullName := $templateVarName + ${newElementNames.joinToString(separator = " + ")}", newElementNames + templateVarName, listOf(lhsFullName)) { evc ->
+                        val elements = newElementNames.map { evc.getOrInParent(it) ?: error("$it not found") }
+                        val newElementColl = accessorMutator.createCollection(lhsType, elements)
+                        val templateVarValue = evc.getOrInParent(templateVarName) ?: error("$templateVarName not found")
+                        val newCol = accessorMutator.collectionUnion(templateVarValue, newElementColl)
+                        evc.setNamedValue(lhsFullName, newCol)
+                    }
+                }
+            }
         }
-     */
-    private fun constructObjectExpression(tgtType: PossiblyQualifiedName, constructorArgExpressions: Map<String, Expression>): Expression {
-        val conArgs = constructorArgExpressions.map { (k, rhs) ->
-            val varDef = VariableDefinitionDefault(k, null)
-            VariableAssignmentStatementDefault(varDef, null, rhs)
-        }
-        val constructExpr = CreateObjectExpressionDefault(tgtType, conArgs)
-        return constructExpr
     }
 
-    /*
-     with(<lhsExpr>) <findOrSetExpression(...)>
-     */
-//    private fun findOrSetExpressionWith(withObject: Expression, propName: String, rhs: Expression): Expression {
-//        val expr = findOrSetExpression(propName, rhs)
-//        val withExpr = WithExpressionDefault(withObject, expr)
-//        return withExpr
-//    }
+    fun traverseCollectionTemplateElement(parentName: String?, lhsName: String, lhsType: TypeInstance, lhs: TypedObject, initialKnownVariables: EvaluationContext, template: CollectionTemplate) {
+        val elType = lhsType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
+        val elParentName = parentName?.let { "$parentName$$lhsName" } ?: lhsName
+        when {
+            lhsType.isCollection -> when {
+                accessorMutator.isNothing(lhs) -> {
+                    // must simply create elements from template
+                    template.elements.forEachIndexed { etIndex, et ->
+                        //val elLhsName = "el$etIndex"
+                        val elLhsName = "${elParentName}\$el$etIndex"
+                        traversePropertyTemplateRhs(false, null, lhsType, elLhsName, elType, accessorMutator.nothing(), initialKnownVariables, et)
+                    }
+                }
+                lhs.type.isCollection -> {
+                    accessorMutator.forEachIndexed(lhs) { elIndex, elValue ->
+                        template.elements.forEachIndexed { etIndex, et ->
+                            // TODO: if elValue matches el template ?
+                            val elLhsName = "${elParentName}\$el$elIndex"
+                            traversePropertyTemplateRhs(false, null, lhsType, elLhsName, elType, elValue, initialKnownVariables, et)
+                        }
+                    }
+                }
+                else -> error("lhs is not a collection")
+            }
 
-    /*
-      <propName> == <var>: <expression>
-
-      In enforce mode, the existing value if the property is ignored.
-
-      $nothing == <var> ? bind(<var>,<expression>) : assert(<var>,<expression>)
-     */
-    private fun setToExpressionOrVar(varName: String, rhs: Expression): Expression {
-        val cond = InfixExpressionDefault(listOf(RootExpressionDefault.NOTHING, RootExpressionDefault(varName)), listOf("=="))
-        val trueExpr = FunctionCallDefault("bind".asPossiblyQualifiedName, listOf(RootExpressionDefault(varName), rhs))
-        val falseExpr = FunctionCallDefault("assert".asPossiblyQualifiedName, listOf(RootExpressionDefault(varName), rhs))
-        val tc = TernaryConditionExpressionDefault(cond, trueExpr, falseExpr)
-        return tc
+            else -> error("lhsType is not a collection")
+        }
     }
 
 }

@@ -2,17 +2,17 @@ package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.asm.simple.AnyExt.asString
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
-import net.akehurst.language.asm.simple.toAsmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.ExternalGetterAsmSimple
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -46,15 +46,15 @@ class test_M2mPatternExecutor2 {
             val tgtName = M2mPatternExecutor.RESULT
             val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
             val evc = EvaluationContext.of(typedInput)
-            sut.build(evc,tgtName, template, tgtType)
-            val actualPlan = sut.executionExpression
-            println(actualPlan)
-            assertEquals(expectedPlanExpression, actualPlan)
+            sut.build(evc, tgtName, template, tgtType)
+            val actualPlanStr = sut.executionPlan.joinToString("\n") { it.description }
+            println(actualPlanStr)
+            assertEquals(expectedPlanExpression, actualPlanStr)
 
             val res = sut.execute(evc, tgtName)
             val actualResult = res
             val expectedTypedResult = accessorMutator.toTypedObject(expectedResult, StdLibDefault.AnyType)
-            assertEquals(expectedTypedResult.self.toAsmSimple.asString(), actualResult.self.toAsmSimple.asString())
+            assertEquals(expectedTypedResult.self.asString(), actualResult.self.asString())
         }
     }
 
@@ -65,16 +65,13 @@ class test_M2mPatternExecutor2 {
         val template = patternTemplate() {
             expression(null, "x")
         }
-//        val template = PropertyTemplateExpressionDefault(
-//            RootExpressionDefault("x")
-//        )
         val tgtType = StdLibDefault.Integer
         val input = mapOf(
             "x" to 1
         )
 
-        val expectedPlan = """
-            x
+        val expectedPlan = $$"""
+            §result := x
         """.trimIndent()
         val expectedResult = 1
         doTest(types, null, tgtType, template, input, expectedPlan, expectedResult)
@@ -87,22 +84,13 @@ class test_M2mPatternExecutor2 {
         val template = patternTemplate() {
             expression("y", "x")
         }
-//        val template = PropertyTemplateExpressionDefault(
-//            RootExpressionDefault("x")
-//        ).also {
-//            it.setIdentifierValue(SimpleName("y"))
-//        }
         val tgtType = StdLibDefault.Integer
         val input = mapOf(
             "x" to 1
         )
 
         val expectedPlan = $$"""
-            // check or set: y == x
-            when {
-              $nothing == y -> x
-              else -> y
-            }
+            §result := y := x
         """.trimIndent()
         val expectedResult = 1
 
@@ -113,14 +101,16 @@ class test_M2mPatternExecutor2 {
     fun executionPlan_unnamed_empty_nonSusbset_collection() {
         // []
         val types = typesDomain("Test", true) { }
-        val template = CollectionTemplateDefault(false, emptyList())
+        val template = patternTemplate() {
+            collection(null, false) { }
+        }
         val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument))
         val input = mapOf(
             "x" to 1
         )
 
-        val expectedPlan = """
-            
+        val expectedPlan = $$"""
+            §result := List()
         """.trimIndent()
         val expectedResult = listOf<String>()
 
@@ -131,14 +121,14 @@ class test_M2mPatternExecutor2 {
     fun executionPlan_named_empty_nonSusbset_collection() {
         // y: []
         val types = typesDomain("Test", true) { }
-        val template = CollectionTemplateDefault(false, emptyList()).also {
-            it.setIdentifierValue(SimpleName("y"))
+        val template = patternTemplate() {
+            collection("y", false) { }
         }
         val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument))
         val input = mapOf<String, Any>()
 
-        val expectedPlan = """
-            
+        val expectedPlan = $$"""
+            §result := y := List()
         """.trimIndent()
         val expectedResult = listOf<String>()
 
@@ -149,13 +139,12 @@ class test_M2mPatternExecutor2 {
     fun executionPlan_named_nonSusbset_collection_of_unamed() {
         // y: [ a, b, c]
         val types = typesDomain("Test", true) { }
-        val elms = listOf(
-            PropertyTemplateExpressionDefault(RootExpressionDefault("a")),
-            PropertyTemplateExpressionDefault(RootExpressionDefault("b")),
-            PropertyTemplateExpressionDefault(RootExpressionDefault("c"))
-        )
-        val template = CollectionTemplateDefault(false, elms).also {
-            it.setIdentifierValue(SimpleName("y"))
+        val template = patternTemplate() {
+            collection("y", false) {
+                element { expression(null, "a") }
+                element { expression(null, "b") }
+                element { expression(null, "c") }
+            }
         }
         val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument))
         val input = mapOf<String, Any>(
@@ -164,8 +153,11 @@ class test_M2mPatternExecutor2 {
             "c" to 3
         )
 
-        val expectedPlan = """
-            
+        val expectedPlan = $$"""
+            §result$el0 := a
+            §result$el1 := b
+            §result$el2 := c
+            §result := y := List(§result$el0, §result$el1, §result$el2)
         """.trimIndent()
         val expectedResult = listOf(1, 2, 3)
 
@@ -176,13 +168,12 @@ class test_M2mPatternExecutor2 {
     fun executionPlan_named_nonSusbset_collection_of_named() {
         // y: [ p:a, q:b, r:c ]
         val types = typesDomain("Test", true) { }
-        val elms = listOf(
-            PropertyTemplateExpressionDefault(RootExpressionDefault("a")).also { it.setIdentifierValue(SimpleName("p")) },
-            PropertyTemplateExpressionDefault(RootExpressionDefault("b")).also { it.setIdentifierValue(SimpleName("q")) },
-            PropertyTemplateExpressionDefault(RootExpressionDefault("c")).also { it.setIdentifierValue(SimpleName("r")) },
-        )
-        val template = CollectionTemplateDefault(false, elms).also {
-            it.setIdentifierValue(SimpleName("y"))
+        val template = patternTemplate() {
+            collection("y", false) {
+                element { expression("p", "a") }
+                element { expression("q", "b") }
+                element { expression("r", "c") }
+            }
         }
         val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument))
         val input = mapOf<String, Any>(
@@ -191,8 +182,11 @@ class test_M2mPatternExecutor2 {
             "c" to 3
         )
 
-        val expectedPlan = """
-            
+        val expectedPlan = $$"""
+            §result$el0 := p := a
+            §result$el1 := q := b
+            §result$el2 := r := c
+            §result := y := List(§result$el0, §result$el1, §result$el2)
         """.trimIndent()
         val expectedResult = listOf(1, 2, 3)
 
@@ -209,26 +203,23 @@ class test_M2mPatternExecutor2 {
                 data("C") {}
             }
         }
-        val objTypeA = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
-        val objTypeB = types.findByQualifiedNameOrNull(QualifiedName("test.B"))!!.type()
-        val objTypeC = types.findByQualifiedNameOrNull(QualifiedName("test.C"))!!.type()
-        val elms = listOf(
-            ObjectTemplateDefault(objTypeA, emptyMap()),
-            ObjectTemplateDefault(objTypeB, emptyMap()),
-            ObjectTemplateDefault(objTypeC, emptyMap()),
-        )
-        val template = CollectionTemplateDefault(false, elms).also {
-            it.setIdentifierValue(SimpleName("y"))
+        val template = patternTemplate(types) {
+            collection("y", false) {
+                element { object_(null, "A") {} }
+                element { object_(null, "B") {} }
+                element { object_(null, "C") {} }
+            }
         }
+
         val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument))
         val input = mapOf<String, Any>(
-            "a" to 1,
-            "b" to 2,
-            "c" to 3
         )
 
-        val expectedPlan = """
-            
+        val expectedPlan = $$"""
+            §result$el0 := A(){}
+            §result$el1 := B(){}
+            §result$el2 := C(){}
+            §result := y := List(§result$el0, §result$el1, §result$el2)
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             list {
@@ -250,18 +241,23 @@ class test_M2mPatternExecutor2 {
             PropertyTemplateExpressionDefault(RootExpressionDefault("p")).also { it.setIdentifierValue(SimpleName("q")) },
             PropertyTemplateExpressionDefault(RootExpressionDefault("c")).also { it.setIdentifierValue(SimpleName("r")) },
         )
-        val template = CollectionTemplateDefault(false, elms).also {
-            it.setIdentifierValue(SimpleName("y"))
+        val template = patternTemplate() {
+            collection("y", false) {
+                element { expression("p", "r") }
+                element { expression("q", "p") }
+                element { expression("r", "c") }
+            }
         }
         val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument))
         val input = mapOf<String, Any>(
-            "a" to 1,
-            "b" to 2,
             "c" to 3
         )
 
-        val expectedPlan = """
-            
+        val expectedPlan = $$"""
+            §result$el0 := p := r := §result.el0
+            §result$el1 := q := p := §result.el1
+            §result$el2 := r := c
+            §result := y := List(§result$el0, §result$el1, §result$el2)
         """.trimIndent()
         val expectedResult = listOf(3, 3, 3)
 
@@ -286,11 +282,7 @@ class test_M2mPatternExecutor2 {
         )
 
         val expectedPlan = $$"""
-            // Find '§result' or construct test.A(...)
-            when {
-              $nothing == §result -> test.A() { }
-              else -> §result
-            }
+            §result := A(){}
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {}
@@ -317,11 +309,7 @@ class test_M2mPatternExecutor2 {
         val input = mapOf<String, Any>()
 
         val expectedPlan = $$"""
-            // Find 'a' or construct test.A(...)
-            when {
-              $nothing == a -> test.A() { }
-              else -> a
-            }
+            §result := a := A(){}
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {}
@@ -353,14 +341,6 @@ class test_M2mPatternExecutor2 {
                 property("p3") { expression(null, "r") }
             }
         }
-
-//        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
-//        val props = listOf(
-//            PropertyTemplateDefault(SimpleName("p1"), PropertyTemplateExpressionDefault(RootExpressionDefault("p"))),
-//            PropertyTemplateDefault(SimpleName("p2"), PropertyTemplateExpressionDefault(RootExpressionDefault("q"))),
-//            PropertyTemplateDefault(SimpleName("p3"), PropertyTemplateExpressionDefault(RootExpressionDefault("r"))),
-//        ).associateBy { it.propertyName }
-//        val template = ObjectTemplateDefault(objType, props).also { it.setIdentifierValue(SimpleName("a")) }
         val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
         val input = mapOf<String, Any>(
             "p" to 1,
@@ -369,34 +349,19 @@ class test_M2mPatternExecutor2 {
         )
 
         val expectedPlan = $$"""
-              // Find 'a' or construct test.A(...)
-              {
-                a := when {
-                  $nothing == a -> test.A() { }
-                  else -> a
-                }
-                with(a) {
-                  p1 := when {
-                    $nothing == p1 -> p
-                    else -> p1
-                  }
-                  p2 := when {
-                    $nothing == p2 -> q
-                    else -> p2
-                  }
-                  p3 := when {
-                    $nothing == p3 -> r
-                    else -> p3
-                  }
-                  a
-                }
-              }
+            §result := a := A(){}
+            §result$p1 := p
+            §result$p2 := q
+            §result$p3 := r
+            §result.p1 := §result$p1
+            §result.p2 := §result$p2
+            §result.p3 := §result$p3
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {
-                propertyString("p1", "1")
-                propertyString("p2", "2")
-                propertyString("p3", "3")
+                propertyInteger("p1", 1)
+                propertyInteger("p2", 2)
+                propertyInteger("p3", 3)
             }
         }.root[0]
 
@@ -425,13 +390,6 @@ class test_M2mPatternExecutor2 {
                 property("p3") { expression(null, "r") }
             }
         }
-//        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
-//        val props = listOf(
-//            PropertyTemplateDefault(SimpleName("p1"), PropertyTemplateExpressionDefault(RootExpressionDefault("p"))),
-//            PropertyTemplateDefault(SimpleName("p2"), PropertyTemplateExpressionDefault(RootExpressionDefault("q"))),
-//            PropertyTemplateDefault(SimpleName("p3"), PropertyTemplateExpressionDefault(RootExpressionDefault("r"))),
-//        ).associateBy { it.propertyName }
-//        val template = ObjectTemplateDefault(objType, props).also { it.setIdentifierValue(SimpleName("a")) }
         val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
         val input = mapOf<String, Any>(
             "p" to 1,
@@ -440,29 +398,12 @@ class test_M2mPatternExecutor2 {
         )
 
         val expectedPlan = $$"""
-              // Find 'a' or construct test.A(...)
-              {
-                a := when {
-                  $nothing == a -> test.A(
-                    p1 := when {
-                      $nothing == p1 -> p
-                      else -> p1
-                    }
-                  ) { }
-                  else -> a
-                }
-                with(a) {
-                  p2 := when {
-                    nothing == p2 -> q
-                    else -> p2
-                  }
-                  p3 := when {
-                    $nothing == p3 -> r
-                    else -> p3
-                  }
-                  a
-                }
-              }
+            §result$p1 := p
+            §result$p2 := q
+            §result$p3 := r
+            §result := a := A(§result$p1){}
+            §result.p2 := §result$p2
+            §result.p3 := §result$p3
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {
@@ -497,13 +438,6 @@ class test_M2mPatternExecutor2 {
                 property("p3") { expression("p", "r") }
             }
         }
-//        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
-//        val props = listOf(
-//            PropertyTemplateDefault(SimpleName("p1"), PropertyTemplateExpressionDefault(RootExpressionDefault("b")).also { it.setIdentifierValue(SimpleName("r")) }),
-//            PropertyTemplateDefault(SimpleName("p2"), PropertyTemplateExpressionDefault(RootExpressionDefault("p")).also { it.setIdentifierValue(SimpleName("q")) }),
-//            PropertyTemplateDefault(SimpleName("p3"), PropertyTemplateExpressionDefault(RootExpressionDefault("r")).also { it.setIdentifierValue(SimpleName("p")) }),
-//        ).associateBy { it.propertyName }
-//        val template = ObjectTemplateDefault(objType, props).also { it.setIdentifierValue(SimpleName("a")) }
         val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
         val input = mapOf<String, Any>(
             "a" to 1,
@@ -582,29 +516,12 @@ class test_M2mPatternExecutor2 {
         )
 
         val expectedPlan = $$"""
-            // Find 'a' or construct test.A(...)
-            {
-              a := when {
-                $nothing == a -> test.A(
-                  p1 := when {
-                    $nothing == p1 -> p
-                    else -> p1
-                  }
-                ) { }
-                else -> a
-              }
-              with(a) {
-                p2 := when {
-                  $nothing == p2 -> q
-                  else -> p2
-                }
-                p3 := when {
-                  $nothing == p3 -> r
-                  else -> p3
-                }
-                a
-              }
-            }
+            §result := a
+            §result$p2 := q
+            §result$p3 := r
+            §result$p1 := p := §result.p1
+            §result.p2 := §result$p2
+            §result.p3 := §result$p3
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {
@@ -664,28 +581,22 @@ class test_M2mPatternExecutor2 {
             "s" to "strValue",
         )
         val expectedPlan = $$"""
-            // Find 'a2' or construct test.A2(...)
-            {
-              a2 := $nothing == a2 ? test.A2(id := $nothing == id ? A2-1 : id) { } : a2
-              with(a2) {
-                b := {
-                  b := $nothing == b ? test.B2() { } : b
-                  with(b) {
-                    owner := $nothing == owner ? a2 : owner
-                    prop := $nothing == prop ? s : prop
-                    $self
-                  }
-                }
-                $self
-              }
-            }
+            §result$id$rhs := 'A2-1'
+            §result$b := B2(){}
+            §result$b$prop := s
+            §result$id := §result$id$rhs
+            §result$b.prop := §result$b$prop
+            §result := a2 := A2(§result$id){}
+            §result.b := §result$b
+            §result$b$owner := a2
+            §result$b.owner := §result$b$owner
          """.trimIndent()
         val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
             element("A2") {
                 propertyString("id", "A2-1")
                 propertyElementExplicitType("b", "B2") {
-                    reference("owner", "A2-1")
                     propertyString("prop", "strValue")
+                    reference("owner", "A2-1")
                 }
             }
         }.root[0]
@@ -703,6 +614,7 @@ class test_M2mPatternExecutor2 {
               name == pdn
               observableStateMachine == sm
             }
+            state == [... state]
           }
          */
         val types = typesDomain("Test", true) { //TODO:use full sysmlModel from net.akehusrt.omg
@@ -748,10 +660,18 @@ class test_M2mPatternExecutor2 {
                 property("name") { expression(null, "n") }
                 property("machine") {
                     object_("sm", "test.StateMachine") {
-                        property("name") { expression(null, "pn.name") }
+                        property("name") { expression(null, "pdn") }
                         property("owner") {
-                            object_("pd","test.PartDefinition") {
+                            object_("pd", "test.PartDefinition") {
+                                property("name") { expression(null, "pdn") }
                                 property("observableStateMachine") { expression(null, "sm") }
+                            }
+                        }
+                        property("state") {
+                            collection(null, isSubset = true) {
+                                element {
+                                    expression(null, "state")
+                                }
                             }
                         }
                     }
@@ -761,51 +681,48 @@ class test_M2mPatternExecutor2 {
 
         val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.State"))!!.type()
         val input_pd = AsmStructureSimple("test.PartDefinition".asQualifiedName).also {
-            it.setProperty(PropertyValueName("name"), AsmPrimitiveSimple.stdString("part-1"),0)
+            it.setSemanticQualifiedPath(listOf("part-1"))
+            it.setProperty(PropertyValueName("name"), AsmPrimitiveSimple.stdString("part-1"), 0)
         }
         val input = mapOf<String, Any>(
             "n" to "state-1",
             "pd" to input_pd,
         )
         val expectedPlan = $$"""
-// Find 'state' or construct test.State(...)
-{
-  §result := {
-    state := $nothing == state ? test.State(name := n) { } : state
-    with(state) {
-      machine := {
-        sm := $nothing == sm ? test.StateMachine(name := pn.name) { } : sm
-        with(sm) {
-          owner := {
-            pd := $nothing == pd ? test.PartDefinition() { } : pd
-            with(pd) {
-              observableStateMachine := $nothing == temp0 ? bind(temp0, sm) : assert(temp0, sm)
-              $self
-            }
-          }
-          $self
-        }
-      }
-      $self
-    }
-  }
-  Set(Pair('§result', §result)).asMap
-}
-         """.trimIndent()
+            §result$name := n
+            §result$machine$owner := pd
+            §result := state := State(§result$name){}
+            §result$machine$owner$name := pdn := §result$machine$owner.name
+            §result$machine$state$el0 := state
+            §result$machine$name := pdn
+            §result$machine$state := List(§result$machine$state$el0)
+            §result$machine := sm := StateMachine(§result$machine$name){}
+            §result.machine := §result$machine
+            §result$machine.owner := §result$machine$owner
+            §result$machine$owner$observableStateMachine := sm
+            §result$machine.state := §result$machine$state
+            §result$machine$owner.observableStateMachine := §result$machine$owner$observableStateMachine
+        """.trimIndent()
+        var stateObject: AsmStructure? = null
         val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
-            element("State") {
-                propertyString("name", "state-1")
-                reference("machine", "SM-1")
-            }
             element("PartDefinition") {
                 propertyString("name", "part-1")
+                propertyElementExplicitType("observableStateMachine","StateMachine") {
+                    propertyString("name", "part-1")
+                    reference("owner", "part-1")
+                    propertyListOfElement("state") {
+                        stateObject = element("State") {
+                            propertyString("name", "state-1")
+                            reference("machine", "part-1")
+                        }
+                    }
+                }
             }
-            element("StateMachine") {
-                propertyString("name", "SM-1")
-                reference("owner", "part-1")
-            }
-        }.root[0]
+        }
 
-        doTest(types, crossRefs, tgtType, template, input, expectedPlan, expectedResult)
+        doTest(types, crossRefs, tgtType, template, input, expectedPlan, stateObject!!)
+
+        println(input_pd.asString())
+        assertEquals(expectedResult.root[0].asString(), input_pd.asString())
     }
 }

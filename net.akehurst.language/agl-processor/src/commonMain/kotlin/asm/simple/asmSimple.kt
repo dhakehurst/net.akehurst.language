@@ -19,10 +19,13 @@ package net.akehurst.language.asm.simple
 
 import net.akehurst.language.asm.api.*
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.asm.simple.AnyExt.asString
+import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.asm.StdLibDefault
 
@@ -160,7 +163,8 @@ class AsmAnySimple(
 
     override val qualifiedTypeName: QualifiedName get() = StdLibDefault.AnyType.qualifiedTypeName
 
-    override fun asString(indent: Indent): String = "AsmAny($value)"
+    override fun asString(indent: Indent): String = value.asString(indent)
+
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmAny -> false
         other.value != this.value -> false
@@ -227,20 +231,39 @@ val AsmValue.raw: Any
         else -> error("Unknown subtype of AsmValue '${this::class.simpleName}'")
     }
 
-val Any.toAsmSimple: AsmValue
-    get() = when (this) {
-        Unit -> AsmNothingSimple
-        is AsmValue -> this
-        is String -> AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, this)
-        is Boolean -> AsmPrimitiveSimple(StdLibDefault.Boolean.qualifiedTypeName, this)
-        is Int -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this.toLong())
-        is Long -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this)
-        is Float -> AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, this.toDouble())
-        is Double -> AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, this)
-        is ListSeparated<*,*,*> -> AsmListSeparatedSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple }.toSeparatedList())
-        is List<*> -> AsmListSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple })
-        else -> error("Type cannot be converted to AsmValue '${this::class.simpleName}'")
+object AnyExt {
+    fun Any.asString(indent: Indent = Indent()): String = when (this) {
+        is Unit -> AsmNothingSimple.asString(indent)
+        is String -> "'$this'"
+        is AsmValue -> this.asString(indent)
+        is TypedObject -> this.self.asString(indent)
+        is Formatable -> this.asString(indent)
+        is Collection<*> -> when {
+            isEmpty() -> "[]"
+            1 == size -> "[ ${this.first()?.asString(indent)} ]"
+            else -> {
+                "[\n${this.joinToString(separator = "\n") { "${indent.inc}${it?.asString(indent.inc)}" }}\n$indent]"
+            }
+        }
+
+        else -> this.toString()
     }
+
+    val Any.toAsmSimple: AsmValue
+        get() = when (this) {
+            Unit -> AsmNothingSimple
+            is AsmValue -> this
+            is String -> AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, this)
+            is Boolean -> AsmPrimitiveSimple(StdLibDefault.Boolean.qualifiedTypeName, this)
+            is Int -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this.toLong())
+            is Long -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this)
+            is Float -> AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, this.toDouble())
+            is Double -> AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, this)
+            is ListSeparated<*, *, *> -> AsmListSeparatedSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple }.toSeparatedList())
+            is List<*> -> AsmListSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple })
+            else -> error("Type cannot be converted to AsmValue '${this::class.simpleName}'")
+        }
+}
 
 class AsmReferenceSimple(
     override val reference: String,
@@ -343,16 +366,20 @@ class AsmStructureSimple(
     }
 
     override fun asString(indent: Indent): String {
-        val propsStr = this.property.values.joinToString(separator = "\n") {
-            if (it.isReference) {
-                val ref = it.value as AsmReferenceSimple
-                "${indent.inc}${it.name} = $ref"
-            } else {
-                "${indent.inc}${it.name} = ${it.value.asString(indent.inc)}"
+        return when {
+            this.property.isEmpty() -> ":$typeName { }"
+            else -> {
+                val propsStr = this.property.values.joinToString(separator = "\n") {
+                    if (it.isReference) {
+                        val ref = it.value as AsmReferenceSimple
+                        "${indent.inc}${it.name} = $ref"
+                    } else {
+                        "${indent.inc}${it.name} = ${it.value.asString(indent.inc)}"
+                    }
+                }
+                ":$typeName {\n$propsStr\n$indent}"
             }
         }
-        //return ":$typeName $propsStr"
-        return ":$typeName {\n$propsStr\n$indent}"
     }
 
     override fun equalTo(other: AsmValue): Boolean = when {
@@ -471,7 +498,7 @@ class AsmSetSimple(
 
     override fun asString(indent: Indent): String = when {
         elements.isEmpty() -> "[]"
-        1 == elements.size -> "[ ${elements.first().asString(indent.inc)} ]"
+        1 == elements.size -> "[ ${elements.first().asString(indent)} ]"
         else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
 
@@ -504,7 +531,7 @@ class AsmListSimple(
 
     override fun asString(indent: Indent): String = when {
         elements.isEmpty() -> "[]"
-        1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
+        1 == elements.size -> "[ ${elements[0].asString(indent)} ]"
         else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
 
@@ -537,7 +564,7 @@ class AsmListSeparatedSimple(
 
     override fun asString(indent: Indent): String = when {
         elements.isEmpty() -> "[]"
-        1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
+        1 == elements.size -> "[ ${elements[0].asString(indent)} ]"
         else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
 

@@ -221,8 +221,8 @@ class PropertyTemplateRhsBuilder(
         }
     }
 
-    fun collection(targetName: String?, init: CollectionTemplateBuilder.() -> Unit) {
-        val b = CollectionTemplateBuilder(_typesDomain,targetName)
+    fun collection(targetName: String?, isSubset:Boolean=false, init: CollectionTemplateBuilder.() -> Unit) {
+        val b = CollectionTemplateBuilder(_typesDomain,targetName, isSubset)
         b.init()
         _template = b.build()
     }
@@ -240,14 +240,10 @@ class PropertyTemplateRhsBuilder(
 @M2mModelDslMarker
 class CollectionTemplateBuilder internal constructor(
     private val _typesDomain: TypesDomain,
-    private val _targetName: String?
+    private val _targetName: String?,
+    val _isSubset: Boolean
 ) {
-    private var _isSubset: Boolean = false
     private val _elements = mutableListOf<PropertyTemplateRhs>()
-
-    fun isSubset() {
-        _isSubset = true
-    }
 
     fun element(init: PropertyTemplateRhsBuilder.() -> Unit) {
         val b = PropertyTemplateRhsBuilder(_typesDomain)

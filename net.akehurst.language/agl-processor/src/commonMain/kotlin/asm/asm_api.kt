@@ -18,6 +18,7 @@
 package net.akehurst.language.asm.api
 
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName

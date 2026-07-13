@@ -286,6 +286,7 @@ class ExternalGetterAsmSimple(
 
     override fun getProperty(obj: Any, propertyName: String): Any? {
         return when {
+            obj is Unit -> null
             obj is AsmStructure -> {
                 val v = obj.getPropertyOrNull(PropertyValueName(propertyName))
                 v?.raw

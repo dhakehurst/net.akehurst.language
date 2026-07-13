@@ -3,9 +3,10 @@ package net.akehurst.language.agl.m2mTransform.processor.interpreter
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.asm.simple.AnyExt.asString
+import net.akehurst.language.asm.simple.AnyExt.toAsmSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
-import net.akehurst.language.asm.simple.toAsmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.asm.RootExpressionDefault
@@ -43,7 +44,7 @@ class test_M2mPatternExecutor {
             val res = sut.execute(EvaluationContext.of(typedInput), tgtName)
             val actualResult = res
             val expectedTypedResult = accessorMutator.toTypedObject(expectedResult.toAsmSimple, StdLibDefault.AnyType)
-            assertEquals(expectedTypedResult.self.toAsmSimple.asString(), actualResult.self.toAsmSimple.asString())
+            assertEquals(expectedTypedResult.self.asString(), actualResult.self.asString())
         }
     }
 

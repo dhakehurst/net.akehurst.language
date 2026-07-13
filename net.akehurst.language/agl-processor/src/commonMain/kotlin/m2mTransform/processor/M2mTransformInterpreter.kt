@@ -719,21 +719,11 @@ class M2mTransformInterpreter(
 
         val mappedVars = rule.domainTemplate.map { (k, v) -> v.identifier?.value ?: error("...") }
 
-        val customFunctions = CustomFunctionLib()
-        // fun recordMappingForTarget(tgtValue)
-        customFunctions.registerFunction("recordMappingForTarget") {
-            parameter("tgtValue", "Any") // No need to create an EvaluationContext typedef
-            execution { args ->
-                val tgtValue = m2mExecution.targetAccessorMutator.toTypedObject(args[0], StdLibDefault.AnyType)
-                val mapping = srcs + Pair(m2mExecution.targetDomainRef, tgtValue)
-                m2mExecution.addRecord(rule, mapping)
-            }
+        val recordMapping = ExecutionStep("Record Mapping", mappedVars + tgtName, emptyList()) { evc ->
+            val tgtValue = evc.getOrInParent(tgtName) ?: error("Target value '$tgtName' not found in evaluation context.")
+            val mapping = srcs + Pair(m2mExecution.targetDomainRef, tgtValue)
+            m2mExecution.addRecord(rule, mapping)
         }
-
-        val recordMappingArgs = listOf(RootExpressionDefault(tgtName))
-        val recordExpr = FunctionCallDefault("recordMappingForTarget".asPossiblyQualifiedName, recordMappingArgs)
-        val recordMapping = ExecutionStep("Record Mapping", mappedVars + tgtName, emptyList(), recordExpr)
-
         val initExes = listOf(recordMapping)
         val executor = M2mPatternExecutor2(m2mExecution.issues, m2mExecution.targetAccessorMutator, initExes)
         executor.build(varsAfterWhen, tgtName, template, lhsType)
