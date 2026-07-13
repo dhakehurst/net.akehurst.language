@@ -724,9 +724,10 @@ class M2mTransformInterpreter(
             val mapping = srcs + Pair(m2mExecution.targetDomainRef, tgtValue)
             m2mExecution.addRecord(rule, mapping)
         }
+        val initVars = varsAfterWhen.namedValues.keys
         val initExes = listOf(recordMapping)
-        val executor = M2mPatternExecutor2(m2mExecution.issues, m2mExecution.targetAccessorMutator, initExes)
-        executor.build(varsAfterWhen, tgtName, template, lhsType)
+        val executor = M2mPatternExecutor2(m2mExecution.issues, m2mExecution.targetAccessorMutator, initVars,initExes)
+        executor.build( tgtName, template, lhsType)
         executor.execute(varsAfterWhen, tgtName)
     }
 

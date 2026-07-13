@@ -193,7 +193,7 @@ class AsmPrimitiveSimple(
         fun stdReal(value: Double) = AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, value)
     }
 
-    override fun asString(indent: Indent): String = "'$value'"
+    override fun asString(indent: Indent): String = value.asString(indent)
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmPrimitive -> false
         other.value != this.value -> false
