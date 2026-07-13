@@ -31,7 +31,7 @@ import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.plus
-
+/*
 class M2mPatternExecution2(
     val description: String,
     val inputs: List<String>,
@@ -52,7 +52,7 @@ class M2mPatternExecution2(
 
     override fun toString(): String = "[$index] ${description} | ${inputs} -> ${outputs} ^ [${doMeBefore.joinToString { it.index.toString() }}]"
 }
-
+*/
 class ExecutionStep(
     val description: String,
     val inputs: List<String>,
@@ -162,45 +162,6 @@ class M2mPatternExecutor2(
     private fun createTempVariable() = "temp${_nextTempVarNum++}"
 
     /**
-     * returns a simplified template where all property assignments are from variables
-     * any non-identified template is given an artificial id.
-     * Because we already found out all the inputs based on the initial variables and lhs,
-     * we know that all other variables must be outputs, and constructed objects are inputs
-     * to properties and nested templates
-     */
-    private fun constructExecutions(
-        tgtName: String,
-        preComputedInputs: Map<PropertyTemplateRhs, List<String>>,
-        template: PropertyTemplateRhs,
-        lhsType: TypeInstance
-    ) {
-//       for(step in _executions) {
-//           constructExpression(step)
-//       }
-    }
-
-    /*
-     {
-       outputValueName := <outputExpression>
-       ...
-       Set(Pair(<outputName>, <outputValueName>>),...).toMap()
-     }
-     */
-    private fun createOutputs(outputExpressions: Map<String, Expression>): Expression {
-        val assignments = outputExpressions.map { (n, e) ->
-            VariableAssignmentStatementDefault(VariableDefinitionDefault(n, null), null, e)
-        }
-        val pairList = outputExpressions.map { (n, e) ->
-            val pairContent = listOf(LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName, n), RootExpressionDefault(n))
-            FunctionCallDefault("Pair".asPossiblyQualifiedName, pairContent)
-        }
-        val outputValuesSet = FunctionCallDefault("Set".asPossiblyQualifiedName, pairList)
-        val mapExpr = NavigationExpressionDefault(outputValuesSet, listOf(PropertyCallDefault("asMap")))
-        val block = StatementBlockExpressionDefault(assignments, mapExpr)
-        return block
-    }
-
-    /**
      * traverse the template.
      * create Execution steps
      * set inputs and outputs based on known variables and their properties
@@ -236,7 +197,7 @@ class M2mPatternExecutor2(
             }
             else -> {
                 val vn = "$lhsFullName\$rhs"
-                val freeVars = template.expression.freeVariableNames
+                val freeVars = emptyList<String>() //TODO: template.expression.freeVariableNames
                 createStep("$vn := ${template.expression.asString()}", freeVars, listOf(vn)) { evc ->
                     val value = ExpressionsInterpreterOverTypedObject(accessorMutator).evaluateExpression(evc, template.expression) //TODO: reuse interpreter
                     evc.setNamedValue(vn, value)

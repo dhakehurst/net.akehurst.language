@@ -530,13 +530,16 @@ class PrimitiveTypeBuilder(
         _type.addSupertype(ti)
     }
 
+    //TODO
+    /*
     fun constructor_(init: ConstructorBuilder.() -> Unit) {
         val b = ConstructorBuilder(_namespace, _type, _typeReferences)
         b.init()
         val info = b.build()
-        (_type as ValueTypeSimple).addConstructor(info.parameters)
-    }
 
+        (_type as PrimitiveTypeSimple).addConstructor(info.parameters)
+    }
+*/
     fun derivedPropertyOf(
         propertyName: String,
         typeName: String,

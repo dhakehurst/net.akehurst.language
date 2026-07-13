@@ -616,7 +616,8 @@ class test_M2mPatternExecutor2 {
             }
             state == [... state]
           }
-         */
+        }
+        */
         val types = typesDomain("Test", true) { //TODO:use full sysmlModel from net.akehusrt.omg
             namespace("test") {
                 data("PartDefinition") {
