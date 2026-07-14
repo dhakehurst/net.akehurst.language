@@ -106,6 +106,8 @@ class M2mPatternExecutor2(
     internal val _knownVariables = initialKnownVariableNames.toMutableSet()
     // Keep your initial properties, then add this compilation-state tracker:
     internal val _locallyBoundVars = initialKnownVariableNames.toMutableSet()
+    // Maps variable name -> (parentName, propertyName) to harvest from
+    internal val _harvestSources = mutableMapOf<String, Pair<String, String>>()
     val executionPlan get() = _executions.topologicalSort(::compareExecutions)
 
     fun addExecution(value: ExecutionStep) {
@@ -128,7 +130,7 @@ class M2mPatternExecutor2(
      * and compiles the AST into executable steps.
      */
     fun build(tgtName: String, template: PropertyTemplateRhs, tgtType: TypeInstance) {
-        harvestVariables(_knownVariables.contains(tgtName), template)
+        harvestVariables(_knownVariables.contains(tgtName), null, null, template)
         // 3. Begin main traversal
         traversePropertyTemplateRhs(false, null, StdLibDefault.NothingType, tgtName, tgtType, template)
     }
@@ -144,27 +146,39 @@ class M2mPatternExecutor2(
         return value
     }
 
-    fun harvestVariables(parentIsKnown: Boolean, template: PropertyTemplateRhs) {
+    /**
+     * Pre-scan the template to find variables whose value may exist in the model
+     * (i.e. variables constrained equal to a property of a 'known' object).
+     * For each such variable record its potential harvest source (parentVar, propertyName).
+     * Whether the value is actually read from the model or constructed is a runtime decision,
+     * because it depends on whether the model property is populated.
+     */
+    fun harvestVariables(parentIsKnown: Boolean, parentVar: String?, propName: String?, template: PropertyTemplateRhs) {
         when (template) {
             is ObjectTemplate -> {
                 val objVar = template.identifier?.value
                 val isKnown = parentIsKnown || (objVar != null && _knownVariables.contains(objVar))
                 if (isKnown && objVar != null) {
                     _knownVariables.add(objVar)
+                    if (parentIsKnown && parentVar != null && propName != null && !_harvestSources.containsKey(objVar)) {
+                        _harvestSources[objVar] = Pair(parentVar, propName)
+                    }
                 }
                 template.propertyTemplate.values.forEach { pt ->
-                    harvestVariables(isKnown, pt.rhs)
+                    harvestVariables(isKnown, objVar, pt.propertyName.value, pt.rhs)
                 }
             }
             is PropertyTemplateExpression -> {
                 // Unify variable targeting: look at both the identifier and the RHS expression
                 val templateVarName = template.identifier?.value
-                val isRootExpr = template.expression is RootExpression
                 val rootExprName = (template.expression as? RootExpression)?.name
                 val targetVarName = templateVarName ?: rootExprName
 
                 if (parentIsKnown && targetVarName != null) {
                     _knownVariables.add(targetVarName)
+                    if (parentVar != null && propName != null && !_harvestSources.containsKey(targetVarName)) {
+                        _harvestSources[targetVarName] = Pair(parentVar, propName)
+                    }
                 }
             }
             is CollectionTemplate -> {
@@ -174,7 +188,8 @@ class M2mPatternExecutor2(
                     _knownVariables.add(colVar)
                 }
                 template.elements.forEach { et ->
-                    harvestVariables(isKnown, et)
+                    // collection elements have no property name to harvest from
+                    harvestVariables(isKnown, null, null, et)
                 }
             }
         }
@@ -362,14 +377,25 @@ class M2mPatternExecutor2(
         val conArgTemplates = template.constructorArgumentTemplates
         val conArgNames = conArgTemplates.map { it.propertyName.value }.map { "$objVarName$$it" }
         val hasBoundParent = parentName != null && _locallyBoundVars.contains(parentName)
-        val requireParentInput = hasBoundParent && (parentType.isCollection.not() || isAlreadyBound)
+
+        // 2. CHECK FOR HARVESTING: If this object's variable was constrained (elsewhere in the template)
+        // to equal a property of a 'known' object, it has a registered harvest source.
+        // Whether the value is actually read from the model or freshly constructed is a RUNTIME decision:
+        // it depends on whether the source property is populated in the model.
+        val harvestSource = if (isAlreadyBound) null else _harvestSources[objVarName]
+        val shouldHarvestFromSource = harvestSource != null
+        val harvestSourceParentName = harvestSource?.first
+        val harvestSourcePropName = harvestSource?.second
+
+        val requireParentInput = !shouldHarvestFromSource && hasBoundParent && (parentType.isCollection.not() || isAlreadyBound)
 
         val stepInputs = mutableListOf<String>().apply {
             if (requireParentInput) add(parentName!!)
+            if (shouldHarvestFromSource) add(harvestSourceParentName!!)
             if (isAlreadyBound) {
                 add(objVarName) // If bound, only depend on its identity resolution
             } else {
-                addAll(conArgNames) // CRITICAL: Only require conArgs if we must physically construct it!
+                addAll(conArgNames) // needed to physically construct it (or as fallback when harvesting)
             }
         }
 
@@ -382,20 +408,47 @@ class M2mPatternExecutor2(
         traverseObjectTemplateProperties(false, objVarName, lhsType, conArgTemplates)
 
         // 3. Emit the Object Resolution Step
+        val conStr = "${template.type.typeName.value}(${conArgNames.joinToString()}){}"
         val description = when {
-            null==templateVarName -> when {
+            null == templateVarName -> when {
                 isAlreadyBound -> "$lhsFullName := $objVarName"
-                else -> "$lhsFullName := ${template.type.typeName.value}(${conArgNames.joinToString()}){}"
+                shouldHarvestFromSource -> "$lhsFullName := $harvestSourceParentName.$harvestSourcePropName ?: $conStr"
+                else -> "$lhsFullName := $conStr"
             }
             else -> when {
                 isAlreadyBound -> "$lhsFullName := $templateVarName"
-                else -> "$lhsFullName := $templateVarName := ${template.type.typeName.value}(${conArgNames.joinToString()}){}"
+                shouldHarvestFromSource -> "$lhsFullName := $templateVarName := $harvestSourceParentName.$harvestSourcePropName ?: $conStr"
+                else -> "$lhsFullName := $templateVarName := $conStr"
             }
         }
         createStep(description, stepInputs, stepOutputs) { evc ->
             val boundVar = evc.getOrInParent(objVarName)
             val resolvedObj = when {
                 boundVar != null -> boundVar
+
+                // Try harvest source first if it exists
+                shouldHarvestFromSource && harvestSourceParentName != null && harvestSourcePropName != null -> {
+                    val harvestParent = evc.getOrInParent(harvestSourceParentName as String)
+                    if (harvestParent != null) {
+                        val harvestedValue = harvestParent.getProperty(harvestSourcePropName as String)
+                        if (!accessorMutator.isNothing(harvestedValue)) {
+                            // Success: harvest the existing value
+                            evc.setNamedValue(objVarName, harvestedValue)
+                            harvestedValue
+                        } else {
+                            // Harvest source is null: construct fresh object
+                            val args = conArgTemplates.associate {
+                                val argValName = "$objVarName$${it.propertyName.value}"
+                                it.propertyName.value to (evc.getOrInParent(argValName) ?: error("$argValName not found"))
+                            }
+                            val fresh = accessorMutator.createStructureValue(template.type.qualifiedTypeName, args)
+                            evc.setNamedValue(objVarName, fresh)
+                            fresh
+                        }
+                    } else {
+                        error("$harvestSourceParentName not found for harvest source")
+                    }
+                }
 
                 parentName != null -> {
                     val parentObj = evc.getOrInParent(parentName)

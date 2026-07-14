@@ -289,7 +289,10 @@ class ExternalGetterAsmSimple(
             obj is Unit -> null
             obj is AsmStructure -> {
                 val v = obj.getPropertyOrNull(PropertyValueName(propertyName))
-                v?.raw
+                when (v){
+                    is AsmStructure -> v
+                    else -> v?.raw
+                }
             }
 
             else -> TODO()

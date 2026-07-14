@@ -606,7 +606,7 @@ class test_M2mPatternExecutor2 {
                     }
                     propertyOf(setOf(REF, VAR), "metaData", "MetaData")
                     propertyOf(setOf(CMP, VAL), "documentation", "String")
-                    propertyOf(setOf(CMP, VAL), "observableStatemachine", "StateMachine")
+                    propertyOf(setOf(CMP, VAL), "observableStateMachine", "StateMachine")
                 }
                 data("StateMachine") {
                     constructor_ {
@@ -675,7 +675,7 @@ class test_M2mPatternExecutor2 {
             §result := state := State(state$name){}
             sm$name := pdn
             sm$state$col$el0 := state
-            state$machine := sm := StateMachine(sm$name){}
+            state$machine := sm := pd.observableStateMachine ?: StateMachine(sm$name){}
             state.machine := state$machine
             sm$owner := pd
             pd$observableStateMachine := sm
@@ -692,6 +692,154 @@ class test_M2mPatternExecutor2 {
                     propertyString("name", "part-1")
                     reference("owner", "part-1")
                     propertyListOfElement("state") {
+                        stateObject = element("State") {
+                            propertyString("name", "state-1")
+                            reference("machine", "part-1")
+                        }
+                    }
+                }
+            }
+        }
+
+        doTest(types, crossRefs, tgtType, template, input, expectedPlan, stateObject!!)
+
+        println(input_pd.asString())
+        assertEquals(expectedResult.root[0].asString(), input_pd.asString())
+    }
+
+    @Test
+    fun statemachine_example2() {
+        /*
+        pd already has a statemachine
+
+        state:State {
+          name == n
+          machine == sm:StateMachine {
+            name == pdn
+            owner == pd:PartDefinition {
+              name == pdn
+              observableStateMachine == sm
+            }
+            state == [... state]
+          }
+        }
+        */
+        val types = typesDomain("Test", true) { //TODO:use full sysmlModel from net.akehusrt.omg
+            namespace("test") {
+                data("PartDefinition") {
+                    constructor_ {
+                        parameter(setOf(CMP, VAL), "name", "String")
+                    }
+                    propertyOf(setOf(REF, VAR), "metaData", "MetaData")
+                    propertyOf(setOf(CMP, VAL), "documentation", "String")
+                    propertyOf(setOf(CMP, VAL), "observableStateMachine", "StateMachine")
+                }
+                data("StateMachine") {
+                    constructor_ {
+                        parameter(setOf(CMP, VAL), "name", "String")
+                    }
+                    propertyOf(setOf(REF, VAL), "owner", "PartDefinition")
+                    propertyOf(setOf(CMP, VAL), "state", "List") { typeArgument("State") }
+                }
+                data("State") {
+                    constructor_ {
+                        parameter(setOf(CMP, VAL), "name", "String")
+                    }
+                    propertyOf(setOf(REF, VAR), "machine", "StateMachine")
+                }
+            }
+        }
+        val crossRefs = crossReferenceDomain("Test") {
+            declarationsFor("test") {
+                identify("PartDefinition", "name")
+                identify("StateMachine", "name")
+                identify("State", "name")
+                reference("StateMachine") {
+                    property("owner", listOf("PartDefinition"), null)
+                }
+                reference("State") {
+                    property("machine", listOf("StateMachine"), null)
+                }
+            }
+        }
+        val template = patternTemplate(types) {
+            object_("state", "test.State") {
+                property("name") { expression(null, "n") }
+                property("machine") {
+                    object_("sm", "test.StateMachine") {
+                        property("name") { expression(null, "pdn") }
+                        property("owner") {
+                            object_("pd", "test.PartDefinition") {
+                                property("name") { expression(null, "pdn") }
+                                property("observableStateMachine") { expression(null, "sm") }
+                            }
+                        }
+                        property("state") {
+                            collection(null, isSubset = true) {
+                                element {
+                                    expression(null, "state")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.State"))!!.type()
+        var input_pd:AsmStructure? = null
+        asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
+            input_pd = element("PartDefinition") {
+                propertyString("name", "part-1")
+                propertyElementExplicitType("observableStateMachine", "StateMachine") {
+                    propertyString("name", "part-1")
+                    reference("owner", "part-1")
+                    propertyListOfElement("state") {
+                        element("State") {
+                            propertyString("name", "state-0")
+                            reference("machine", "part-1")
+                        }
+                    }
+                }
+            }
+        }
+
+        val input = mapOf<String, Any>(
+            "n" to "state-1",
+            "pd" to input_pd!!,
+        )
+        // The plan is IDENTICAL to statemachine_example: build() sees the same template and the
+        // same input variable names, so no static plan can distinguish the two cases.
+        // The 'sm := pd.observableStateMachine ?: StateMachine(...)' step decides at RUNTIME:
+        // here pd.observableStateMachine is populated, so sm is harvested from the model
+        // instead of constructing a fresh StateMachine.
+        val expectedPlan = $$"""
+            state$name := n
+            pd$name := pdn := pd.name
+            §result := state := State(state$name){}
+            sm$name := pdn
+            sm$state$col$el0 := state
+            state$machine := sm := pd.observableStateMachine ?: StateMachine(sm$name){}
+            state.machine := state$machine
+            sm$owner := pd
+            pd$observableStateMachine := sm
+            Synchronize Collection sm$state
+            sm.owner := sm$owner
+            pd.observableStateMachine := pd$observableStateMachine
+            sm.state := sm$state
+        """.trimIndent()
+        var stateObject: AsmStructure? = null
+        val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
+            element("PartDefinition") {
+                propertyString("name", "part-1")
+                propertyElementExplicitType("observableStateMachine", "StateMachine") {
+                    propertyString("name", "part-1")
+                    reference("owner", "part-1")
+                    propertyListOfElement("state") {
+                        element("State") {
+                            propertyString("name", "state-0")
+                            reference("machine", "part-1")
+                        }
                         stateObject = element("State") {
                             propertyString("name", "state-1")
                             reference("machine", "part-1")
@@ -768,6 +916,59 @@ class test_M2mPatternExecutor2 {
     }
 
     @Test
+    fun executionPlan_named_subset_collection_multiple_elements_unions_with_existing_variable() {
+        // y: [... a, b]
+        val types = typesDomain("Test", true) { }
+        val template = patternTemplate() {
+            collection("y", true) {
+                element { expression(null, "a") }
+                element { expression(null, "b") }
+            }
+        }
+        val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument))
+        val input = mapOf<String, Any>(
+            "y" to listOf(1),
+            "a" to 2,
+            "b" to 3
+        )
+
+        val expectedPlan = $$"""
+            §result$el0 := a
+            §result$el1 := b
+            Synchronize Collection §result
+        """.trimIndent()
+        val expectedResult = listOf(1, 2, 3)
+
+        doTest(types, null, tgtType, template, input, expectedPlan, expectedResult)
+    }
+
+    @Test
+    fun executionPlan_named_subset_collection_multiple_elements_without_existing_variable() {
+        // y: [... a, b] with no pre-existing y
+        val types = typesDomain("Test", true) { }
+        val template = patternTemplate() {
+            collection("y", true) {
+                element { expression(null, "a") }
+                element { expression(null, "b") }
+            }
+        }
+        val tgtType = StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument))
+        val input = mapOf<String, Any>(
+            "a" to 2,
+            "b" to 3
+        )
+
+        val expectedPlan = $$"""
+            §result$el0 := a
+            §result$el1 := b
+            Synchronize Collection §result
+        """.trimIndent()
+        val expectedResult = listOf(2, 3)
+
+        doTest(types, null, tgtType, template, input, expectedPlan, expectedResult)
+    }
+
+    @Test
     fun executionPlan_harvested_variable_is_planned_before_use() {
         val types = typesDomain("Test", true) {
             namespace("test") {
@@ -814,5 +1015,39 @@ class test_M2mPatternExecutor2 {
         assertTrue(producerIdx < consumerIdx, "Expected pdn producer step to appear before consumer step")
 
         // Plan-order test only: runtime in this scenario needs cross-reference setup beyond this focused case.
+    }
+
+    @Test
+    fun equality_constraint_harvesting_documentation() {
+        /**
+         * This test documents the harvesting behavior for equality constraints in QVT Relations semantics.
+         *
+         * When we have an equality constraint like:
+         *   observableStateMachine == sm:StateMachine { ... }
+         *
+         * And the property `observableStateMachine` already exists in the input with a value,
+         * we HARVEST the value for `sm` from that property, rather than constructing a fresh object.
+         *
+         * This aligns with official QVT Relations semantics where equality constraints are bidirectional:
+         * - If both sides are known, assert equality
+         * - If one side is known and the other is unbound, harvest the unbound from the known
+         * - If neither is known, defer/construct
+         */
+
+        // The tests `statemachine_example()` and `statemachine_example2()` demonstrate this:
+        // - Both use the same template and the same input variable names (n, pd), so build()
+        //   produces the SAME plan for both - the harvest-vs-construct choice cannot be made statically.
+        // - The pre-scan (harvestVariables) records pd.observableStateMachine as a potential
+        //   harvest source for `sm` (because `observableStateMachine == sm` appears inside the
+        //   known object `pd`).
+        // - The plan step `state$machine := sm := pd.observableStateMachine ?: StateMachine(sm$name){}`
+        //   decides at RUNTIME:
+        //   - example2: pd.observableStateMachine is populated -> sm is harvested from the model
+        //   - example:  pd.observableStateMachine is empty -> a fresh StateMachine is constructed
+
+        // A harvest source is only registered when:
+        // 1. The parent object is 'known' (from the original input, or transitively harvestable)
+        // 2. The parent object has an identifier (e.g., `pd`)
+        // 3. The constraint binds a variable to a property of that parent (e.g., `observableStateMachine == sm`)
     }
 }
