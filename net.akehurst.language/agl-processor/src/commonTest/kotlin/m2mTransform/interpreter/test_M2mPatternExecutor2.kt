@@ -787,7 +787,7 @@ class test_M2mPatternExecutor2 {
         }
 
         val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.State"))!!.type()
-        var input_pd:AsmStructure? = null
+        var input_pd: AsmStructure? = null
         asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
             input_pd = element("PartDefinition") {
                 propertyString("name", "part-1")
@@ -827,6 +827,206 @@ class test_M2mPatternExecutor2 {
             sm.owner := sm$owner
             pd.observableStateMachine := pd$observableStateMachine
             sm.state := sm$state
+        """.trimIndent()
+        var stateObject: AsmStructure? = null
+        val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
+            element("PartDefinition") {
+                propertyString("name", "part-1")
+                propertyElementExplicitType("observableStateMachine", "StateMachine") {
+                    propertyString("name", "part-1")
+                    reference("owner", "part-1")
+                    propertyListOfElement("state") {
+                        element("State") {
+                            propertyString("name", "state-0")
+                            reference("machine", "part-1")
+                        }
+                        stateObject = element("State") {
+                            propertyString("name", "state-1")
+                            reference("machine", "part-1")
+                        }
+                    }
+                }
+            }
+        }
+
+        doTest(types, crossRefs, tgtType, template, input, expectedPlan, stateObject!!)
+
+        println(input_pd.asString())
+        assertEquals(expectedResult.root[0].asString(), input_pd.asString())
+    }
+
+    @Test
+    fun statemachine_example3() {
+        /*
+        pd already has a statemachine with 2 states, try to add a transition
+
+        trans:Transition {
+          machine == sm:StateMachine {
+            name == pdn
+            owner == pd:PartDefinition {
+              name == pdn
+              observableStateMachine == sm
+            }
+            state == [... src:State { name == srcStateName }, tgt:State { name == tgtStateName } ]
+            transition == [... trans]
+          }
+          source == src //State { name == srcStateName }
+          target == tgt // State { name == tgtStateName }
+          label == 'event' + exp
+        }
+        */
+        val types = typesDomain("Test", true) { //TODO:use full sysmlModel from net.akehusrt.omg
+            namespace("test") {
+                data("PartDefinition") {
+                    constructor_ {
+                        parameter(setOf(CMP, VAL), "name", "String")
+                    }
+                    propertyOf(setOf(REF, VAR), "metaData", "MetaData")
+                    propertyOf(setOf(CMP, VAL), "documentation", "String")
+                    propertyOf(setOf(CMP, VAL), "observableStateMachine", "StateMachine")
+                }
+                data("StateMachine") {
+                    constructor_ {
+                        parameter(setOf(CMP, VAL), "name", "String")
+                    }
+                    propertyOf(setOf(REF, VAL), "owner", "PartDefinition")
+                    propertyOf(setOf(CMP, VAL), "state", "List") { typeArgument("State") }
+                }
+                data("State") {
+                    constructor_ {
+                        parameter(setOf(CMP, VAL), "name", "String")
+                    }
+                    propertyOf(setOf(REF, VAR), "machine", "StateMachine")
+                }
+                data("Transition") {
+                    propertyOf(setOf(REF, VAR), "machine", "StateMachine")
+                    propertyOf(setOf(REF, VAR), "source", "State")
+                    propertyOf(setOf(REF, VAR), "target", "State")
+                    propertyOf(setOf(CMP, VAL), "label", "String")
+                }
+            }
+        }
+        val crossRefs = crossReferenceDomain("Test") {
+            declarationsFor("test") {
+                identify("PartDefinition", "name")
+                identify("StateMachine", "name")
+                identify("State", "name")
+                reference("StateMachine") {
+                    property("owner", listOf("PartDefinition"), null)
+                }
+                reference("State") {
+                    property("machine", listOf("StateMachine"), null)
+                }
+                reference("Transition") {
+                    property("machine", listOf("StateMachine"), null)
+                    property("source", listOf("State"), null)
+                    property("target", listOf("State"), null)
+                }
+            }
+        }
+        val template = patternTemplate(types) {
+            object_("trans", "test.Transition") {
+                property("machine") {
+                    object_("sm", "test.StateMachine") {
+                        property("name") { expression(null, "pdn") }
+                        property("owner") {
+                            object_("pd", "test.PartDefinition") {
+                                property("name") { expression(null, "pdn") }
+                                property("observableStateMachine") { expression(null, "sm") }
+                            }
+                        }
+                        property("state") {
+                            collection(null, isSubset = true) {
+                                element {
+                                    object_("src", "State") {
+                                        property("name") { expression(null, "srcStateName") }
+                                    }
+                                }
+                                element {
+                                    object_("tgt", "State") {
+                                        property("name") { expression(null, "tgtStateName") }
+                                    }
+                                }
+                            }
+                        }
+                        property("transition") {
+                            collection(null, isSubset = true) {
+                                element {
+                                    expression(null, "trans")
+                                }
+                            }
+                        }
+                    }
+                }
+                property("source") {
+                    expression(null, "src")
+//                    object_(null, "State") {
+//                        property("name") { expression(null, "srcStateName") }
+//                    }
+                }
+                property("target") {
+                    expression(null, "tgt")
+//                    object_(null, "State") {
+//                        property("name") { expression(null, "tgtStateName") }
+//                    }
+                }
+                property("label") {
+                    expression(null, "'event ' + exp")
+                }
+            }
+        }
+
+        val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.State"))!!.type()
+        var input_pd: AsmStructure? = null
+        asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
+            input_pd = element("PartDefinition") {
+                propertyString("name", "part-1")
+                propertyElementExplicitType("observableStateMachine", "StateMachine") {
+                    propertyString("name", "part-1")
+                    reference("owner", "part-1")
+                    propertyListOfElement("state") {
+                        element("State") {
+                            propertyString("name", "state-0")
+                            reference("machine", "part-1")
+                        }
+                    }
+                }
+            }
+        }
+
+        val input = mapOf<String, Any>(
+            "pd" to input_pd!!,
+            "srcStateName" to "state-0",
+            "tgtStateName" to "state-1",
+            "exp" to "<expression>"
+        )
+        val expectedPlan = $$"""
+            §result := trans := Transition(){}
+            pd$name := pdn := pd.name
+            src$name := srcStateName
+            tgt$name := tgtStateName
+            trans$label$rhs := 'event ' + exp
+            sm$transition$col$el0 := trans
+            sm$name := pdn
+            sm$state$col$src := src := State(src$name){}
+            sm$state$col$tgt := tgt := State(tgt$name){}
+            trans$label := trans$label$rhs
+            trans$machine := sm := pd.observableStateMachine ?: StateMachine(sm$name){}
+            trans$source := src
+            trans$target := tgt
+            trans.label := trans$label
+            trans.machine := trans$machine
+            sm$owner := pd
+            pd$observableStateMachine := sm
+            Synchronize Collection sm$state
+            Synchronize Collection sm$transition
+            trans.source := trans$source
+            trans.target := trans$target
+            sm.owner := sm$owner
+            pd.observableStateMachine := pd$observableStateMachine
+            sm.state := sm$state
+            sm.transition := sm$transition
+
         """.trimIndent()
         var stateObject: AsmStructure? = null
         val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
