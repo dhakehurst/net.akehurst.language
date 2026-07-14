@@ -628,7 +628,7 @@ constructor(
 
                             else -> {
                                 val type = tobj.type.resolvedDefinition
-                                val execResult = primitiveExecutor.propertyValue(untyped(tobj), type, propResOriginal)
+                                val execResult = primitiveExecutor.propertyValue(obj, type, propResOriginal)
                                 when (execResult) {
                                     null -> {
                                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)

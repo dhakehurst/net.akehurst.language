@@ -116,7 +116,7 @@ class SemanticAnalyserSimple(
 
     private  fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContext, resolve: Boolean) {
         val resFunc: ((ref: Any) -> AsmStructure?)? = if (resolve) {
-            { ref -> context.resolveScopedItem.invoke(ref) as AsmStructure }
+            { ref -> context.resolveScopedItem.invoke(ref) as? AsmStructure }
         } else {
             null
         }

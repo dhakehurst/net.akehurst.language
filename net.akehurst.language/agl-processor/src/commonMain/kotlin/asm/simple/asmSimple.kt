@@ -223,10 +223,10 @@ val AsmValue.raw: Any
         is AsmReference -> this.value ?: AsmNothingSimple
         is AsmListSeparated -> this.elements.map { it.raw }.toSeparatedList()
         is AsmListSimple -> this.elements.map { it.raw }
-        is AsmStructure -> this.property.values
-            .sortedBy { it.index }
-            .associate { pv -> Pair(pv.name.value, pv.value.raw) }
-
+//        is AsmStructure -> this.property.values
+//            .sortedBy { it.index }
+//            .associate { pv -> Pair(pv.name.value, pv.value.raw) }
+        is AsmStructure -> this
         is AsmLambda -> TODO()
         else -> error("Unknown subtype of AsmValue '${this::class.simpleName}'")
     }
