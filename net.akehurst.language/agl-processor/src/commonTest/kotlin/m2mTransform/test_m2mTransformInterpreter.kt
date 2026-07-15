@@ -25,10 +25,11 @@ import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.M2mTransformString
+import net.akehurst.language.asm.simple.AnyExt.asString
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExternalGetterAsmSimple
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -36,6 +37,7 @@ import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyCharacteristic
+import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -2408,7 +2410,7 @@ class test_m2mTransformInterpreter {
             val transform = M2mTransformString(suite.transform)
             val accMuts = suite.typeDomains.entries.associate { (k, v) ->
                 val cdr = suite.crossReferenceDomains[k]
-                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
+                Pair(v.name, objectGraphSimpleAsm(v, null,issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
             val domains = case.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")
@@ -2416,8 +2418,9 @@ class test_m2mTransformInterpreter {
                     println(obj.asString())
                     val srcTypeDomain = suite.typeDomains[k]!!
                     accMuts[srcTypeDomain.name]!!.let { am ->
-                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
-                        am.typedAs(obj, td.type())
+//                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
+//                        am.typedAs(obj, td.type())
+                        am.toTypedObject(obj, StdLibDefault.AnyType)
                     }
                 }
                 Pair(k, sourceObjects)
@@ -2471,7 +2474,7 @@ class test_m2mTransformInterpreter {
             }
             val ogs = suite.typeDomains.entries.associate { (k, v) ->
                 val cdr = suite.crossReferenceDomains[k]
-                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
+                Pair(v.name, objectGraphSimpleAsm(v, null,issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
             val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
 
@@ -2481,8 +2484,9 @@ class test_m2mTransformInterpreter {
                     println(obj.asString())
                     val srcTypeDomain = suite.typeDomains[k]!!
                     ogs[srcTypeDomain.name]!!.let { am ->
-                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
-                        am.typedAs(obj,td.type())
+//                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
+//                        am.typedAs(obj,td.type())
+                        am.toTypedObject(obj, StdLibDefault.AnyType)
                     }
                 }
                 Pair(k, sourceObjects)

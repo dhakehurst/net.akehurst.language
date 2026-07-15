@@ -17,14 +17,14 @@
 
 package net.akehurst.language.asm.simple
 
-import net.akehurst.language.asm.api.*
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AnyExt.asString
 import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.asm.StdLibDefault
@@ -65,12 +65,12 @@ class AsmPathSimple(
 }
 
 open class AsmSimple(
-    val objectGraph: ObjectGraphAccessorMutatorAsmSimple,
+    val objectGraph: ObjectGraphAccessorMutator,
 ) : Asm {
 
     companion object {
-        fun traverseDepthFirst(roots: List<AsmValue>, walker: AsmTreeWalker) {
-            fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
+        fun traverseDepthFirst(roots: List<Any>, walker: AsmTreeWalker) {
+            fun traverse(owningProperty: AsmStructureProperty?, value: Any) {
                 when (value) {
                     is AsmNothing -> walker.onNothing(owningProperty, value)
                     is AsmPrimitive -> walker.onPrimitive(owningProperty, value)
@@ -107,10 +107,10 @@ open class AsmSimple(
         }
     }
 
-    override val root: List<AsmValue> = mutableListOf()
+    override val root: List<Any> = mutableListOf()
     override val elementIndex = mutableMapOf<AsmPath, AsmStructure>()
 
-    fun addRoot(root: AsmValue) = (this.root as MutableList).add(root)
+    fun addRoot(root: Any) = (this.root as MutableList).add(root)
     fun removeRoot(root: Any) = (this.root as MutableList).remove(root)
 
     fun createStructure(parsePath: String, typeName: QualifiedName): AsmStructureSimple {

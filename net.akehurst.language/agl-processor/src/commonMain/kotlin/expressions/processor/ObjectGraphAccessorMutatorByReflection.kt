@@ -32,6 +32,7 @@ import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 import kotlin.jvm.JvmOverloads
@@ -414,6 +415,16 @@ class ExternalGetterByReflection(
         TODO("not implemented")
     }
 }
+
+fun objectGraphSimpleAsm(
+    typesDomain: TypesDomain,
+    crossRefs: CrossReferenceDomain?,
+    issues: IssueHolder,
+    locationMap: LocationMap,
+    externalGetter: ExternalGetter = ExternalGetterAsmSimple(typesDomain, crossReferenceDomain = crossRefs, issues, locationMap),
+    primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForReflection(),
+    functionLib: FunctionLib = StdFunctionLib
+) = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, locationMap, externalGetter, primitiveExecutor, functionLib)
 
 open class ObjectGraphAccessorMutatorByReflection
 @JvmOverloads //ensure the Java has overloads using the default values

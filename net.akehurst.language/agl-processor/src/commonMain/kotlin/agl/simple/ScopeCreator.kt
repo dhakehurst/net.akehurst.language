@@ -47,10 +47,10 @@ class ScopeCreator(
 
     val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
 
-    override  fun beforeRoot(root: AsmValue) {
+    override  fun beforeRoot(root: Any) {
     }
 
-    override  fun afterRoot(root: AsmValue) {
+    override  fun afterRoot(root: Any) {
 
     }
 

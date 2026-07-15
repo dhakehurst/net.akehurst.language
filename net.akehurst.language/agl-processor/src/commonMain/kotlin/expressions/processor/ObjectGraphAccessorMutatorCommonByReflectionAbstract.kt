@@ -21,6 +21,7 @@ import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.collections.toOrderedSet
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
@@ -36,6 +37,7 @@ private class TypedObjectAny(
     override val self: Any
 ) : TypedObject {
 
+    override val untyped: Any get() = accessor.untyped(this)
     override val isNothing: Boolean get() = accessor.isNothing(this)
 
     override fun getProperty(name: String) = accessor.getProperty(this, name)
@@ -114,6 +116,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         null == obj -> nothing()
         Unit == obj -> nothing()
         obj is TypedObject -> obj as TypedObject
+        obj is AsmStructure -> typedAs(obj, typesDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)?.type() ?: ifNotFound)
         else -> when (obj) {
             is Boolean -> typedAs(obj, StdLibDefault.Boolean)
             is Byte -> typedAs(obj.toLong(), StdLibDefault.Integer)
@@ -180,9 +183,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         }
     }
 
-    override fun untyped(typedObj: TypedObject): Any {
-        return untypedAny(typedObj.self)
-    }
+    override fun untyped(typedObj: TypedObject): Any = untypedAny(typedObj.self)
 
     override fun typedAs(obj: Any, type: TypeInstance): TypedObject =
         TypedObjectAny(this, type, obj)
@@ -305,7 +306,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit) {
         val self = untyped(tobj)
         when (self) {
-            is Collection<*> ->  self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
+            is Collection<*> -> self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
             else -> {
                 issueError(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
                 nothing()

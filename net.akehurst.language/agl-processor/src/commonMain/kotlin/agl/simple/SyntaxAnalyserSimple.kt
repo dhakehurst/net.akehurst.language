@@ -26,7 +26,7 @@ import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.TypesDomain
@@ -53,17 +53,18 @@ class SyntaxAnalyserSimple(
     typesDomain: TypesDomain,
     asmTransformDomain: AsmTransformDomain,
     relevantTrRuleSet: QualifiedName
-) : SyntaxAnalyserFromAsmTransformAbstract<Asm, AsmValue>(
+) : SyntaxAnalyserFromAsmTransformAbstract<Asm, Any>(
     typesDomain,
     asmTransformDomain,
     relevantTrRuleSet,
-    ObjectGraphAccessorMutatorAsmSimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS),LocationMapDefault()) //TODO: what locationMap to use here
+    objectGraphSimpleAsm(typesDomain, null, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS), LocationMapDefault())
+    //ObjectGraphAccessorMutatorAsmSimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS),LocationMapDefault()) //TODO: what locationMap to use here
 ) {
 
-    override fun constructAsm(): Asm = AsmSimple(objectGraph as ObjectGraphAccessorMutatorAsmSimple)
-    override fun rootList(asm: Asm): List<AsmValue> = asm.root
-    override fun addAsmRoot(asm: Asm, root: AsmValue) =(asm as AsmSimple).addRoot(root)
-    override fun removeAsmRoot(asm: Asm, root: AsmValue) = (asm as AsmSimple).removeRoot(root)
+    override fun constructAsm(): Asm = AsmSimple(objectGraph)
+    override fun rootList(asm: Asm): List<Any> = asm.root
+    override fun addAsmRoot(asm: Asm, root: Any) =(asm as AsmSimple).addRoot(root)
+    override fun removeAsmRoot(asm: Asm, root: Any) = (asm as AsmSimple).removeRoot(root)
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<Asm>> = lazyMap { embGramQName ->
         val ruleSetQname = embGramQName

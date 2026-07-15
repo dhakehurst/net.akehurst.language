@@ -27,7 +27,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -81,7 +81,7 @@ class AsmSimpleBuilder(
     private val _sentenceScope = _context?.getOrCreateScopeForSentence(_sentenceId) as ScopeSimple? //TODO
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _locationMap = LocationMapDefault() //TODO: what to use here
-    private val _objectGraph = ObjectGraphAccessorMutatorAsmSimple(_typesDomain, _issues,_locationMap)
+    private val _objectGraph = objectGraphSimpleAsm(_typesDomain, null,_issues,_locationMap)
     private val _interpreter = ExpressionsInterpreterOverTypedObject(_objectGraph)
     private val _asm = AsmSimple(_objectGraph)
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple>()

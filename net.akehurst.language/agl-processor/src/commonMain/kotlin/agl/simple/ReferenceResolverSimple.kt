@@ -79,7 +79,7 @@ class ReferenceResolverSimple(
         )
     }
 
-    override fun beforeRoot(root: AsmValue) {
+    override fun beforeRoot(root: Any) {
         when (root) {
             is AsmStructure -> {
                 //val ref = createReferableFunction.invoke()
@@ -92,7 +92,7 @@ class ReferenceResolverSimple(
         }
     }
 
-    override fun afterRoot(root: AsmValue) {
+    override fun afterRoot(root: Any) {
 
     }
 

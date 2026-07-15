@@ -72,7 +72,7 @@ class SemanticAnalyserSimple(
     private lateinit var _locationMap: LocationMap
 
     private val _interpreter by lazy {
-        ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, _issues, _locationMap))
+        ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, null,_issues, _locationMap))
     }
 
     override fun clear() {

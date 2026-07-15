@@ -180,7 +180,7 @@ open class ExpressionsInterpreterOverTypedObject(
             obj.type.resolvedDefinition.conformsTo(StdLibDefault.List) -> evaluateIndexOperationOnList(evc, obj, indices)
             obj.type.resolvedDefinition.conformsTo(StdLibDefault.Map) -> evaluateIndexOperationOnMap(evc, obj, indices)
             else -> {
-                issues.error(null, "Index operation on non List value is not possible: ${obj.asString()}")
+                issues.error(null, "Index operation on non List value is not possible: '${obj.asString()}'")
                 objectGraph.nothing()
             }
         }
@@ -426,15 +426,15 @@ open class ExpressionsInterpreterOverTypedObject(
 
         "*" -> when {
             lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
-                val lhsv = objectGraph.valueOf(lhs) as Long
-                val rhsv = objectGraph.valueOf(rhs) as Long
+                val lhsv = objectGraph.untyped(lhs) as Long
+                val rhsv = objectGraph.untyped(rhs) as Long
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv * rhsv)
             }
 
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
-                val lhsv = objectGraph.valueOf(lhs) as Double
-                val rhsv = objectGraph.valueOf(rhs) as Double
-                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv * rhsv)
+                val lhsv = objectGraph.untyped(lhs) as Double
+                val rhsv = objectGraph.untyped(rhs) as Double
+                objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv * rhsv)
             }
 
             else -> {
@@ -445,14 +445,14 @@ open class ExpressionsInterpreterOverTypedObject(
 
         "%" -> when {
             lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
-                val lhsv = objectGraph.valueOf(lhs) as Long
-                val rhsv = objectGraph.valueOf(rhs) as Long
+                val lhsv = objectGraph.untyped(lhs) as Long
+                val rhsv = objectGraph.untyped(rhs) as Long
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv % rhsv)
             }
 
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
-                val lhsv = objectGraph.valueOf(lhs) as Double
-                val rhsv = objectGraph.valueOf(rhs) as Double
+                val lhsv = objectGraph.untyped(lhs) as Double
+                val rhsv = objectGraph.untyped(rhs) as Double
                 objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv % rhsv)
             }
 
@@ -466,21 +466,28 @@ open class ExpressionsInterpreterOverTypedObject(
             objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
             objectGraph.isNothing(lhs) -> rhs
             objectGraph.isNothing(rhs) -> lhs
-            lhs.type.conformsTo(StdLibDefault.String) && rhs.type.conformsTo(StdLibDefault.String) -> {
-                val lhsv = objectGraph.valueOf(lhs) as String
-                val rhsv = objectGraph.valueOf(rhs) as String
-                objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, lhsv + rhsv)
+            lhs.type.conformsTo(StdLibDefault.String) -> when {
+                rhs.type.conformsTo(StdLibDefault.String) -> {
+                    val lhsv = objectGraph.untyped(lhs) as String
+                    val rhsv = objectGraph.untyped(rhs) as String
+                    objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, lhsv + rhsv)
+                }
+                else -> {
+                    val lhsv = objectGraph.untyped(lhs) as String
+                    val rhsv = objectGraph.untyped(rhs).toString()
+                    objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, lhsv + rhsv)
+                }
             }
 
             lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
-                val lhsv = objectGraph.valueOf(lhs) as Long
-                val rhsv = objectGraph.valueOf(rhs) as Long
+                val lhsv = objectGraph.untyped(lhs) as Long
+                val rhsv = objectGraph.untyped(rhs) as Long
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv + rhsv)
             }
 
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
-                val lhsv = objectGraph.valueOf(lhs) as Double
-                val rhsv = objectGraph.valueOf(rhs) as Double
+                val lhsv = objectGraph.untyped(lhs) as Double
+                val rhsv = objectGraph.untyped(rhs) as Double
                 objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv + rhsv)
             }
 
@@ -492,14 +499,14 @@ open class ExpressionsInterpreterOverTypedObject(
 
         "-" -> when {
             lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
-                val lhsv = objectGraph.valueOf(lhs) as Long
-                val rhsv = objectGraph.valueOf(rhs) as Long
+                val lhsv = objectGraph.untyped(lhs) as Long
+                val rhsv = objectGraph.untyped(rhs) as Long
                 objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv - rhsv)
             }
 
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
-                val lhsv = objectGraph.valueOf(lhs) as Double
-                val rhsv = objectGraph.valueOf(rhs) as Double
+                val lhsv = objectGraph.untyped(lhs) as Double
+                val rhsv = objectGraph.untyped(rhs) as Double
                 objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv - rhsv)
             }
 

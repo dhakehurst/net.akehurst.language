@@ -10,7 +10,7 @@ import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.asm.RootExpressionDefault
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.PropertyTemplateRhs
@@ -33,7 +33,7 @@ class test_M2mPatternExecutor {
     private companion object {
         fun doTest(types: TypesDomain, lhsType: TypeInstance, template: PropertyTemplateRhs, input: Map<String, Any>, expectedPlan: List<String>, expectedResult: Any) {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val accessorMutator = ObjectGraphAccessorMutatorAsmSimple(types, issues, LocationMapDefault())
+            val accessorMutator = objectGraphSimpleAsm(types, null,issues, LocationMapDefault())
             val sut = M2mPatternExecutor(issues, accessorMutator, emptyList())
 
             val tgtName = template.identifier?.value ?: M2mPatternExecutor.RESULT

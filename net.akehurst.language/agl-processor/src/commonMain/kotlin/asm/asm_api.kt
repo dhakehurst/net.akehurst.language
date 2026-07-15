@@ -35,7 +35,7 @@ interface AsmPath {
 }
 
 interface Asm {
-    val root: List<AsmValue>
+    val root: List<Any>
     val elementIndex: Map<AsmPath, AsmStructure>
 
     fun addToIndex(value: AsmStructure)
@@ -191,8 +191,8 @@ interface AsmLambda : AsmValue {
 }
 
 interface AsmTreeWalker {
-     fun beforeRoot(root: AsmValue)
-     fun afterRoot(root: AsmValue)
+     fun beforeRoot(root: Any)
+     fun afterRoot(root: Any)
      fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing)
      fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive)
      fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
