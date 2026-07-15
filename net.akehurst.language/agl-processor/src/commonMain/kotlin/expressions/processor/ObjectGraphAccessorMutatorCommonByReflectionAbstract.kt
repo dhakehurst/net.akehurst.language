@@ -29,6 +29,8 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.time.Instant
 
 private class TypedObjectAny(
@@ -196,10 +198,16 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
 
     override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value, StdLibDefault.AnyType)
 
-    override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject {
+    override fun createTupleValue(args: Map<String, TypedObject>): TypedObject {
         val tupleType = StdLibDefault.TupleType
-        val tuple = mutableMapOf<String, Any>()
-        return typedAs(tuple, tupleType.type(typeArgs))
+        val typeArgs = args.entries.associate { (k,v) -> k to v.type }
+        return createTupleValue(typeArgs, args)
+    }
+
+    override fun createTupleValue(typeArgs: Map<String, TypeInstance>, args: Map<String, Any>): TypedObject {
+        val tArgs = typeArgs.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k), v) }
+        val type = StdLibDefault.TupleType.type(tArgs)
+        return typedAs(args, type)
     }
 
     override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {

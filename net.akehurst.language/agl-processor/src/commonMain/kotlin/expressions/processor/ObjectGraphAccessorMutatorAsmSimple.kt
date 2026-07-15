@@ -563,7 +563,14 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         else -> error("should not happen")
     }
 
-    override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject {
+    override fun createTupleValue(args: Map<String, TypedObject>): TypedObject {
+        TODO("not implemented")
+    }
+
+    override fun createTupleValue(typeArgs: Map<String, TypeInstance>, args: Map<String, Any>): TypedObject {
+        TODO("not implemented")
+    }
+     fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject {
         val tupleType = StdLibDefault.TupleType
         val tuple = AsmStructureSimple(tupleType.qualifiedName)
         return typedAs(tuple, tupleType.type(typeArgs))

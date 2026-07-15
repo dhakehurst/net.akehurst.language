@@ -73,9 +73,11 @@ class test_ObjectGraphByReflection {
     fun createTupleValue() {
         val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
-        val actual = og.createTupleValue(listOf())
-        actual.setProperty("a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
-        actual.setProperty("b", og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true))
+        val props = mapOf(
+            "a" to og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L),
+            "b" to og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
+        )
+        val actual = og.createTupleValue(props)
         val expected = mapOf(
             "a" to 1L,
             "b" to true

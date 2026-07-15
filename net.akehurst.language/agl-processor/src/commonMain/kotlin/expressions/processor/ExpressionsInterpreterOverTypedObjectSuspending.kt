@@ -578,13 +578,11 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
 
     // mutation
     private suspend fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
-        val typeArgs = mutableListOf<TypeArgumentNamed>()
-        val tuple = objectGraph.createTupleValue(typeArgs)
-        expression.propertyAssignments.forEach {
+        val props = expression.propertyAssignments.associate {
             val value = evaluateExpression(evc, it.rhs)
-            tuple.setPropertySuspend(it.variable.name, value)
-            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.variable.name), value.type))
+            Pair(it.variable.name, value)
         }
+        val tuple = objectGraph.createTupleValue(props)
         return tuple
     }
 

@@ -74,9 +74,11 @@ class test_ObjectGraphByReflectionSuspending {
     fun createTupleValue() = runTest {
         val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
-        val actual = og.createTupleValue(listOf())
-        actual.setPropertySuspend( "a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
-        actual.setPropertySuspend( "b", og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true))
+        val props = mapOf(
+            "a" to og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L),
+            "b" to og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
+        )
+        val actual = og.createTupleValue(props)
         val expected = mapOf(
             "a" to 1L,
             "b" to true

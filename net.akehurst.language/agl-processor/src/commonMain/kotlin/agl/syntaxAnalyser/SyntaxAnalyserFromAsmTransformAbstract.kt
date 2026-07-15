@@ -579,20 +579,22 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 //            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE
 //        }
 
-        val self = objectGraph.createTupleValue(
-            listOf(
-                TypeArgumentNamedSimple(AsmTransformInterpreter.PATH, parsePath.type),
-                TypeArgumentNamedSimple(AsmTransformInterpreter.ALTERNATIVE, alternative.type),
-                TypeArgumentNamedSimple(AsmTransformInterpreter.CHILDREN, childrenAsmList.type), //StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))),
-                TypeArgumentNamedSimple(AsmTransformInterpreter.CHILD, childrenAsmList.type),
-                TypeArgumentNamedSimple(AsmTransformInterpreter.MATCHED_TEXT, asmMatchedText.type),
-            )
+        val props = mapOf(
+            Pair(AsmTransformInterpreter.PATH.value, parsePath),
+            Pair(AsmTransformInterpreter.ALTERNATIVE.value, alternative),
+            Pair(AsmTransformInterpreter.CHILDREN.value, childrenAsmList),
+            Pair(AsmTransformInterpreter.CHILD.value, childrenAsmList),
+            Pair(AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText),
         )
-        self.setProperty(AsmTransformInterpreter.PATH.value, parsePath)
-        self.setProperty(AsmTransformInterpreter.ALTERNATIVE.value, alternative)
-        self.setProperty(AsmTransformInterpreter.CHILDREN.value, childrenAsmList)
-        self.setProperty(AsmTransformInterpreter.CHILD.value, childrenAsmList)
-        self.setProperty(AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText)
+        val typeArgs = mapOf(
+            Pair(AsmTransformInterpreter.PATH.value, parsePath.type),
+            Pair(AsmTransformInterpreter.ALTERNATIVE.value, alternative.type),
+            Pair(AsmTransformInterpreter.CHILDREN.value, childrenAsmList.type), //StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))),
+            Pair(AsmTransformInterpreter.CHILD.value, childrenAsmList.type),
+            Pair(AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText.type)
+        )
+        val self = objectGraph.createTupleValue(typeArgs, props)
+
 
         //TODO: use factory, requires TransformInterpreter to be generic on SelfType
         val typedSelf = self //TypedObjectAsmValue(selfType, self as AsmValue) //asmFactory.toTypedObject(self, selfType)

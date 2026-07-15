@@ -163,7 +163,8 @@ interface ObjectGraphAccessorMutatorCommon {
     fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject
 
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject
-    fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject
+    fun createTupleValue(typeArgs:Map<String, TypeInstance>, args: Map<String, Any>): TypedObject
+    fun createTupleValue(args: Map<String, TypedObject>): TypedObject
     fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject
     fun createCollectionFromQualifiedName(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject
     fun collectionConcatination(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject

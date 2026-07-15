@@ -35,6 +35,8 @@ import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KProperty1
 import kotlin.time.Instant
@@ -560,6 +562,11 @@ constructor(
     ): TypedObject {
         val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
+
+        if (typeDef is TupleType) {
+            return createTupleValue(constructorArgs)
+        }
+
         val obj = when (typeDef) {
             is SingletonType -> typeDef.objectInstance()
             is StructuredType -> externalCreateStructure(
@@ -570,7 +577,7 @@ constructor(
             is SpecialType -> error("Should not create an instance of a SpecialType")
             is PrimitiveType -> error("use 'createPrimitiveValue' for PrimitiveType")
             is EnumType -> error("use '??' for EnumType")
-            is TupleType -> error("use 'createTupleValue' for TupleType")
+            is TupleType ->  error ("should never happen")
             is UnionType -> error("Should not create an instance of a UnionType")
             else -> error("Unsupported subtype of TypeDefinition: '${typeDef::class.simpleName}'")
         }
