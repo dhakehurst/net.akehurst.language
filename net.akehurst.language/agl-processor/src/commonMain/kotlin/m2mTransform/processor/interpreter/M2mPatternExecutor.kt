@@ -460,6 +460,7 @@ class M2mPatternExecutor(
     private fun createFromCollectionTemplate(evc: EvaluationContext, lhsType: TypeInstance, collectionTemplate: CollectionTemplate, elementIds: List<String>): Map<String, TypedObject> {
         //collection may already have been created, (via when/where/etc) and be a captured variable
         val existing = collectionTemplate.identifier?.let { evc.namedValues[it.value] }
+        val elType = lhsType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
         return when {
             null == existing || accessorMutator.isNothing(existing) -> {
                 // create new collection from template elements
@@ -474,7 +475,7 @@ class M2mPatternExecutor(
                 // try to match template elements against existing collection elements, if not matched then create them.
                 val els = elementIds.mapNotNull { evc.getOrInParent(it) }
                 val newEls = accessorMutator.createCollection(existing.type,els)
-                val newColl = existing.accessor.collectionUnion(existing, newEls)
+                val newColl = existing.accessor.collectionUnion(existing, newEls, elType)
                 val matchedVars = mutableMapOf<String, TypedObject>()
                 val mv = collectionTemplate.identifier?.let { matchedVars + Pair(it.value, newColl) } ?: matchedVars
                 mv + Pair(RESULT, newColl)

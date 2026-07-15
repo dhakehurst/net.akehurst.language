@@ -47,6 +47,6 @@ object AglJava {
         domains: Map<DomainReference, List<TypedObject>>,
         targetDomainReference: DomainReference
     ): M2MTransformResult = runBlocking {
-        Agl.transformSuspend(m2m, typeDomains, accessorMutators, domains, targetDomainReference)
+        Agl.transformSuspend(m2m, typeDomains, accessorMutators, domains, emptyMap(), targetDomainReference)
     }
 }

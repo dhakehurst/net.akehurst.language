@@ -36,6 +36,8 @@ private class TypedObjectAny(
     override val self: Any
 ) : TypedObject {
 
+    override val isNothing: Boolean get() = accessor.isNothing(this)
+
     override fun getProperty(name: String) = accessor.getProperty(this, name)
     override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
 
@@ -44,6 +46,10 @@ private class TypedObjectAny(
 
     override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
     override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
+
+    override fun forEachIndexed(body: (index: Int, value: TypedObject) -> Unit) {
+        accessor.forEachIndexed(this, body)
+    }
 
     override fun asString(indent: Indent): String = "$indent$self"
 
@@ -78,17 +84,17 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<StructureType>>()
 
     fun issueError(obj: Any?, message: String) {
-        val loc = obj?.let {  locationMap[obj] }
+        val loc = obj?.let { locationMap[obj] }
         issues.error(loc, message)
     }
 
     fun issueErrorReturnNothing(obj: Any?, message: String): TypedObject {
-        issueError(obj,message)
+        issueError(obj, message)
         return nothing()
     }
 
     fun issueWarningReturnNothing(obj: Any?, message: String): TypedObject {
-        val loc = obj?.let {  locationMap[obj] }
+        val loc = obj?.let { locationMap[obj] }
         issues.warn(loc, message)
         return nothing()
     }
@@ -299,10 +305,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit) {
         val self = untyped(tobj)
         when (self) {
-            is List<*> -> {
-                self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
-            }
-
+            is Collection<*> ->  self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
             else -> {
                 issueError(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
                 nothing()
@@ -310,11 +313,25 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         }
     }
 
-    override fun collectionUnion(collection1: TypedObject, collection2: TypedObject): TypedObject {
+    override fun collectionConcatination(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject {
         //TODO: this is inefficient
         val col1 = untyped(collection1) as Iterable<Any>
         val col2 = untyped(collection2) as Iterable<Any>
-        val union = toTypedObject(col1 + col2, StdLibDefault.Collection.type(listOf(StdLibDefault.AnyType.asTypeArgument)))
+        val untypedConcat = col1 + col2
+        val union = toTypedObject(untypedConcat, StdLibDefault.Collection.type(listOf(elementType.asTypeArgument)))
+        return union
+    }
+
+    override fun collectionUnion(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject {
+        //TODO: this is inefficient
+        val col1Untyped = untyped(collection1)
+        val col1 = col1Untyped as Iterable<Any>
+        val col2 = untyped(collection2) as Iterable<Any>
+        val untypedUnion = when (col1) {
+            is List<*> -> col1.union(col2).toList()
+            else -> col1.union(col2)
+        }
+        val union = toTypedObject(untypedUnion, StdLibDefault.Collection.type(listOf(elementType.asTypeArgument)))
         return union
     }
 

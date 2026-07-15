@@ -405,9 +405,12 @@ class AsmStructureSimple(
 
     }
 
-    override fun hashCode(): Int = parsePath.hashCode()
+    override fun hashCode(): Int = semanticQualifiedPath?.hashCode() ?: parsePath.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
-        is AsmStructureSimple -> this.parsePath == other.parsePath //&& this.asm == other.asm
+        is AsmStructureSimple -> when {
+            null!= this.semanticQualifiedPath && null != other.semanticQualifiedPath -> this.semanticQualifiedPath == other.semanticQualifiedPath
+            else -> this.parsePath == other.parsePath //&& this.asm == other.asm
+        }
         else -> false
     }
 

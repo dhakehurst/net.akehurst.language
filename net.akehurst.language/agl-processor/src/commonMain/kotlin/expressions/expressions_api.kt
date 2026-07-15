@@ -122,12 +122,12 @@ interface IndexOperation : NavigationPart {
     val indices: List<Expression>
 }
 
-interface VariableAssignmentStatement {
+interface VariableAssignmentStatement : Expression {
     val variable: VariableDefinition
     val lhsGrammarRuleIndex: Int?
     val rhs: Expression
 
-    fun asString(indent: Indent, imports: List<Import> = emptyList()): String
+    override fun asString(indent: Indent, imports: List<Import>): String
 }
 
 interface VariableDefinition {

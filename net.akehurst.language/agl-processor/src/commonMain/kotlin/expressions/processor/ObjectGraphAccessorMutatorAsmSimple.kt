@@ -289,7 +289,7 @@ class ExternalGetterAsmSimple(
             obj is Unit -> null
             obj is AsmStructure -> {
                 val v = obj.getPropertyOrNull(PropertyValueName(propertyName))
-                when (v){
+                when (v) {
                     is AsmStructure -> v
                     else -> v?.raw
                 }
@@ -335,6 +335,8 @@ private class TypedObjectAsmValue(
     override val self: AsmValue
 ) : TypedObject {
 
+    override val isNothing: Boolean get() = accessor.isNothing(this)
+
     override fun getProperty(name: String) = accessor.getProperty(this, name)
     override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
 
@@ -343,6 +345,8 @@ private class TypedObjectAsmValue(
 
     override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
     override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
+
+    override fun forEachIndexed(body: (index: Int, value: TypedObject) -> Unit) = accessor.forEachIndexed(this, body)
 
     override fun asString(indent: Indent): String = self.asString(indent)
 
@@ -685,10 +689,8 @@ open class ObjectGraphAccessorMutatorAsmSimple(
     override fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit) {
         val asmValue = tobj.self
         when (asmValue) {
-            is AsmList -> {
-                asmValue.elements.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
-            }
-
+            is AsmCollection -> asmValue.elements.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
+            is Collection<*> -> asmValue.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
             else -> {
                 issues.error(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
                 nothing()
@@ -850,11 +852,25 @@ open class ObjectGraphAccessorMutatorAsmSimple(
         }
     }
 
-    override fun collectionUnion(collection1: TypedObject, collection2: TypedObject): TypedObject {
+    override fun collectionConcatination(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject {
         //TODO: this is inefficient
         val col1 = untyped(collection1) as Iterable<Any>
         val col2 = untyped(collection2) as Iterable<Any>
-        val union = toTypedObject(col1 + col2, StdLibDefault.Collection.type(listOf(StdLibDefault.AnyType.asTypeArgument)))
+        val untypedConcat = col1 + col2
+        val union = toTypedObject(untypedConcat, StdLibDefault.Collection.type(listOf(elementType.asTypeArgument)))
+        return union
+    }
+
+    override fun collectionUnion(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject {
+        //TODO: this is inefficient
+        val col1Untyped = untyped(collection1)
+        val col1 = col1Untyped as Iterable<Any>
+        val col2 = untyped(collection2) as Iterable<Any>
+        val untypedUnion = when (col1) {
+            is List<*> -> col1.union(col2).toList()
+            else -> col1.union(col2)
+        }
+        val union = toTypedObject(untypedUnion, StdLibDefault.Collection.type(listOf(elementType.asTypeArgument)))
         return union
     }
 

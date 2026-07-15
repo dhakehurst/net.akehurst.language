@@ -891,6 +891,7 @@ class test_M2mPatternExecutor2 {
                     }
                     propertyOf(setOf(REF, VAL), "owner", "PartDefinition")
                     propertyOf(setOf(CMP, VAL), "state", "List") { typeArgument("State") }
+                    propertyOf(setOf(CMP, VAL), "transition", "List") { typeArgument("Transition") }
                 }
                 data("State") {
                     constructor_ {
@@ -989,6 +990,10 @@ class test_M2mPatternExecutor2 {
                             propertyString("name", "state-0")
                             reference("machine", "part-1")
                         }
+                        element("State") {
+                            propertyString("name", "state-1")
+                            reference("machine", "part-1")
+                        }
                     }
                 }
             }
@@ -1008,27 +1013,26 @@ class test_M2mPatternExecutor2 {
             trans$label$rhs := 'event ' + exp
             sm$transition$col$el0 := trans
             sm$name := pdn
-            sm$state$col$src := src := State(src$name){}
-            sm$state$col$tgt := tgt := State(tgt$name){}
             trans$label := trans$label$rhs
             trans$machine := sm := pd.observableStateMachine ?: StateMachine(sm$name){}
-            trans$source := src
-            trans$target := tgt
             trans.label := trans$label
             trans.machine := trans$machine
             sm$owner := pd
             pd$observableStateMachine := sm
-            Synchronize Collection sm$state
+            sm$state$col$src := src := sm.state[name==src$name] ?: State(src$name){}
+            sm$state$col$tgt := tgt := sm.state[name==tgt$name] ?: State(tgt$name){}
             Synchronize Collection sm$transition
-            trans.source := trans$source
-            trans.target := trans$target
             sm.owner := sm$owner
             pd.observableStateMachine := pd$observableStateMachine
-            sm.state := sm$state
+            trans$source := src
+            Synchronize Collection sm$state
+            trans$target := tgt
             sm.transition := sm$transition
-
+            trans.source := trans$source
+            sm.state := sm$state
+            trans.target := trans$target
         """.trimIndent()
-        var stateObject: AsmStructure? = null
+        var transObject: AsmStructure? = null
         val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
             element("PartDefinition") {
                 propertyString("name", "part-1")
@@ -1040,16 +1044,24 @@ class test_M2mPatternExecutor2 {
                             propertyString("name", "state-0")
                             reference("machine", "part-1")
                         }
-                        stateObject = element("State") {
+                        element("State") {
                             propertyString("name", "state-1")
                             reference("machine", "part-1")
+                        }
+                    }
+                    propertyListOfElement("transition") {
+                        transObject = element("Transition") {
+                            propertyString("label","event <expression>")
+                            reference("machine", "part-1")
+                            reference("source", "state-0")
+                            reference("target", "state-1")
                         }
                     }
                 }
             }
         }
 
-        doTest(types, crossRefs, tgtType, template, input, expectedPlan, stateObject!!)
+        doTest(types, crossRefs, tgtType, template, input, expectedPlan, transObject!!)
 
         println(input_pd.asString())
         assertEquals(expectedResult.root[0].asString(), input_pd.asString())

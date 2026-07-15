@@ -26,6 +26,7 @@ import net.akehurst.language.expressions.api.*
 import net.akehurst.language.objectgraph.api.FunctionLib
 import net.akehurst.language.types.asm.StdFunctionLib
 import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypeParameterMultiple.name
 
 class CustomFunctionLib() : FunctionLib {
     override val declaration: Map<String, FunctionDefinitionFloating> = mutableMapOf()
@@ -34,7 +35,7 @@ class CustomFunctionLib() : FunctionLib {
         return declaration[functionName]
     }
 
-    fun registerFunction(name: String, init: CustomFunctionBuilder.()->Unit) {
+    fun registerFunction(name: String, init: CustomFunctionBuilder.() -> Unit) {
         val b = CustomFunctionBuilder(name)
         b.init()
         val fd = b.build()
@@ -59,15 +60,15 @@ class ExpressionsNamespaceDefault(
     override val function: List<FunctionDefinition> get() = super.definition
 }
 
- abstract class FunctionDefinitionAbstract(
+abstract class FunctionDefinitionAbstract(
     override val name: SimpleName,
     override val parameters: List<FunctionParameter>,
     override val returnTypeReference: TypeReference?,
     override val body: Expression?
 ) : FunctionDefinitionFloating {
 
-     override var execution: ((args: List<*>) -> Any?)? = null
-     override var executionSuspend: (suspend (args: List<*>) -> Any?)? = null
+    override var execution: ((args: List<*>) -> Any?)? = null
+    override var executionSuspend: (suspend (args: List<*>) -> Any?)? = null
 }
 
 class FunctionDefinitionFloatingDefault(
@@ -75,9 +76,9 @@ class FunctionDefinitionFloatingDefault(
     parameters: List<FunctionParameter>,
     returnTypeReference: TypeReference?,
     body: Expression
-): FunctionDefinitionFloating, Formatable, FunctionDefinitionAbstract(name, parameters, returnTypeReference, body) {
+) : FunctionDefinitionFloating, Formatable, FunctionDefinitionAbstract(name, parameters, returnTypeReference, body) {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let{": ${it.asString(indent, imports)}"}}"
+    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let { ": ${it.asString(indent, imports)}" }}"
 }
 
 class FunctionDefinitionDefault(
@@ -93,7 +94,7 @@ class FunctionDefinitionDefault(
     // --- Definition ---
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let{": ${it.asString(indent, imports)}"}}"
+    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let { ": ${it.asString(indent, imports)}" }}"
 }
 
 class FunctionParameterDefault(
@@ -382,10 +383,11 @@ class VariableDefinitionDefault(
     override val name: String,
     override val typeRef: TypeReference?,
 ) : VariableDefinition {
-    override fun asString(indent: Indent, imports: List<Import>): String  = when (typeRef) {
+    override fun asString(indent: Indent, imports: List<Import>): String = when (typeRef) {
         null -> name
         else -> "$name: ${typeRef.asString(indent, imports)}"
     }
+
     override fun toString(): String = "$name : $typeRef"
 }
 
@@ -461,4 +463,34 @@ class GroupExpressionDefault(
     override fun asString(indent: Indent, imports: List<Import>): String = "(${expression.asString(indent, imports)})"
 
     override fun toString(): String = "($expression)"
+}
+
+object ExpressionExt {
+    val Expression.freeVariables
+        get():List<String> = when (this) {
+            is CastExpression -> this.expression.freeVariables
+            is CreateObjectExpression -> this.constructorArguments.flatMap { it.freeVariables } + this.propertyAssignments.flatMap { it.freeVariables }
+            is CreateTupleExpression -> this.propertyAssignments.flatMap { it.freeVariables }
+            is FunctionCall -> this.arguments.flatMap { it.freeVariables }
+            is GroupExpression -> this.expression.freeVariables
+            is InfixExpression -> this.expressions.flatMap { it.freeVariables }
+            is LambdaExpression -> this.expression.freeVariables - this.variables
+            is LiteralExpression -> emptyList()
+            is NavigationExpression -> this.start.freeVariables + this.parts.flatMap { part ->
+                when (part) {
+                    is PropertyCall -> emptyList()
+                    is MethodCall -> part.arguments.flatMap { it.freeVariables }
+                    is IndexOperation -> part.indices.flatMap { it.freeVariables }
+                    else -> error("Unsupported NavigationPart subtype ${part::class.simpleName}")
+                }
+            }
+            is OnExpression -> this.expression.freeVariables + this.propertyAssignments.flatMap { it.freeVariables }
+            is RootExpression -> listOf(name)
+            is StatementBlockExpression -> this.assignment.flatMap { it.freeVariables } + this.expression.freeVariables
+            is TernaryConditionExpression -> this.condition.freeVariables + this.trueExpression.freeVariables + this.falseExpression.freeVariables
+            is TypeTestExpression -> this.expression.freeVariables
+            is WithExpression -> this.withContext.freeVariables + this.expression.freeVariables
+            is WhenExpression -> this.options.flatMap { it.condition.freeVariables + it.expression.freeVariables } + this.elseOption.expression.freeVariables
+            else -> error("Unsupported Expression subtype ${this::class.simpleName}")
+        }
 }
