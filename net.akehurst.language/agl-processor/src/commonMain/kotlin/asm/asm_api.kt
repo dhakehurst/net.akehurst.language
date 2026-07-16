@@ -91,7 +91,7 @@ interface AsmStructure : AsmValue {
     /**
      * The value of the properties that are not references
      */
-    val children: List<AsmValue>
+    val children: List<Any>
 
     fun setSemanticQualifiedPath(segments:List<String>)
     /*
@@ -107,34 +107,34 @@ interface AsmStructure : AsmValue {
     /**
      * the value of the named property, (throws) error if no property with that name
      */
-    fun getProperty(name: PropertyValueName): AsmValue
+    fun getProperty(name: PropertyValueName): Any
 
     /**
      * the value of the named property, AsmNothing if no property with that name
      */
-    fun getPropertyOrNothing(name: PropertyValueName): AsmValue
+    fun getPropertyOrNothing(name: PropertyValueName): Any
 
     /**
      * the value of the named property, null if no property with that name
      */
-    fun getPropertyOrNull(name: PropertyValueName): AsmValue?
+    fun getPropertyOrNull(name: PropertyValueName): Any?
 
-    fun setProperty(name: PropertyValueName, value: AsmValue, childIndex: Int)
+    fun setProperty(name: PropertyValueName, value: Any, childIndex: Int)
 
     /**
      * get the property as an AsmPrimitive, or null if the property does not exist
      */
-    fun getPropertyAsAsmPrimitiveOrNull(name: String): AsmPrimitive? = getPropertyOrNull(PropertyValueName(name)) as AsmPrimitive
+//    fun getPropertyAsAsmPrimitiveOrNull(name: String): AsmPrimitive? = getPropertyOrNull(PropertyValueName(name)) as AsmPrimitive
 
     /**
      * get the property as an AsmPrimitive, return its value.toString or null if the property does not exist
      */
-    fun getPropertyAsStringOrNull(name: String): String? = getPropertyAsAsmPrimitiveOrNull(name)?.value?.toString()
+//    fun getPropertyAsStringOrNull(name: String): String? = getPropertyAsAsmPrimitiveOrNull(name)?.value?.toString()
 
     /**
      * get the property as an AsmStructure, or null if the property does not exist
      */
-    fun getPropertyAsAsmStructureOrNull(name: String): AsmStructure? = getPropertyOrNull(PropertyValueName(name)) as AsmStructure?
+//    fun getPropertyAsAsmStructureOrNull(name: String): AsmStructure? = getPropertyOrNull(PropertyValueName(name)) as AsmStructure?
 
     /**
      * get the property as an AsmList, or null if the property does not exist
@@ -142,19 +142,19 @@ interface AsmStructure : AsmValue {
     fun getPropertyAsAsmListOrNull(name: String): AsmList? = getPropertyOrNull(PropertyValueName(name)) as AsmList?
 
     fun getPropertyAsListOfAsmPrimitiveOrNull(name: String): List<AsmPrimitive>? = getPropertyAsAsmListOrNull(name)?.elements as? List<AsmPrimitive>
-    fun getPropertyAsListOfAnyOrNull(name: String): List<Any>? = getPropertyAsListOfAsmPrimitiveOrNull(name)?.map { it.value }
-    fun getPropertyAsListOfStringOrNull(name: String): List<String>? = getPropertyAsListOfAsmPrimitiveOrNull(name)?.map { it.toString() }
-    fun getPropertyAsListOfAsmStructureOrNull(name: String): List<AsmStructure>? = getPropertyAsAsmListOrNull(name)?.elements as? List<AsmStructure>
+//    fun getPropertyAsListOfAnyOrNull(name: String): List<Any>? = getPropertyAsListOfAsmPrimitiveOrNull(name)?.map { it.value }
+//    fun getPropertyAsListOfStringOrNull(name: String): List<String>? = getPropertyAsListOfAsmPrimitiveOrNull(name)?.map { it.toString() }
+//    fun getPropertyAsListOfAsmStructureOrNull(name: String): List<AsmStructure>? = getPropertyAsAsmListOrNull(name)?.elements as? List<AsmStructure>
 
     /**
      * get the property as an AsmListSeparated, or null if the property does not exist
      */
-    fun getPropertyAsAsmListSeparatedOrNull(name: String): AsmListSeparated? = getPropertyOrNull(PropertyValueName(name)) as AsmListSeparated?
+//    fun getPropertyAsAsmListSeparatedOrNull(name: String): AsmListSeparated? = getPropertyOrNull(PropertyValueName(name)) as AsmListSeparated?
 }
 
 interface AsmStructureProperty {
     val name: PropertyValueName
-    val value: AsmValue
+    val value: Any
     val index: Int
 
     val isReference: Boolean
@@ -165,39 +165,39 @@ interface AsmStructureProperty {
 }
 
 interface AsmCollection : AsmValue {
-    val elements: Collection<AsmValue>
+    val elements: Collection<Any>
 }
 
 interface AsmSet : AsmCollection {
-    override val elements: Set<AsmValue>
+    override val elements: Set<Any>
 
     val isEmpty: Boolean
     val isNotEmpty: Boolean
 }
 
 interface AsmList : AsmCollection {
-    override val elements: List<AsmValue>
+    override val elements: List<Any>
 
     val isEmpty: Boolean
     val isNotEmpty: Boolean
 }
 
 interface AsmListSeparated : AsmList {
-    override val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
+    override val elements: ListSeparated<Any, Any, Any>
 }
 
 interface AsmLambda : AsmValue {
-     fun invoke(args: Map<String, AsmValue>): AsmValue
+     fun invoke(args: Map<String, Any>): Any
 }
 
 interface AsmTreeWalker {
      fun beforeRoot(root: Any)
      fun afterRoot(root: Any)
-     fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing)
-     fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive)
+     fun onNothing(owningProperty: AsmStructureProperty?, value: Unit)
+     fun onPrimitive(owningProperty: AsmStructureProperty?, value: Any)
      fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
      fun onProperty(owner: AsmStructure, property: AsmStructureProperty)
      fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)
-     fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList)
-     fun afterList(owningProperty: AsmStructureProperty?, value: AsmList)
+     fun beforeList(owningProperty: AsmStructureProperty?, value: Collection<*>)
+     fun afterList(owningProperty: AsmStructureProperty?, value: Collection<*>)
 }

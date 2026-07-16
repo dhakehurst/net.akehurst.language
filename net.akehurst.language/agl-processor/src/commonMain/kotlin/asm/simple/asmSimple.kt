@@ -20,6 +20,7 @@ package net.akehurst.language.asm.simple
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AnyExt.asString
+import net.akehurst.language.asm.simple.AnyExt.equalTo
 import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
@@ -70,9 +71,18 @@ open class AsmSimple(
 
     companion object {
         fun traverseDepthFirst(roots: List<Any>, walker: AsmTreeWalker) {
-            fun traverse(owningProperty: AsmStructureProperty?, value: Any) {
+            fun traverse(owningProperty: AsmStructureProperty?, value: Any?) {
                 when (value) {
-                    is AsmNothing -> walker.onNothing(owningProperty, value)
+                    null -> walker.onNothing(owningProperty, Unit)
+                    is Collection<*> -> {
+                        walker.beforeList(owningProperty, value)
+                        value.forEach { el ->
+                            traverse(owningProperty, el)
+                        }
+                        walker.afterList(owningProperty, value)
+                    }
+
+                    is AsmNothing -> walker.onNothing(owningProperty, Unit)
                     is AsmPrimitive -> walker.onPrimitive(owningProperty, value)
                     is AsmStructure -> {
                         walker.beforeStructure(owningProperty, value)
@@ -85,15 +95,15 @@ open class AsmSimple(
                     }
 
                     is AsmList -> {
-                        walker.beforeList(owningProperty, value)
+                        walker.beforeList(owningProperty, value.elements)
                         value.elements.forEach { el -> traverse(owningProperty, el) }
-                        walker.afterList(owningProperty, value)
+                        walker.afterList(owningProperty, value.elements)
                     }
 
                     is AsmListSeparated -> {
-                        walker.beforeList(owningProperty, value)
+                        walker.beforeList(owningProperty, value.elements)
                         value.elements.forEach { el -> traverse(owningProperty, el) }
-                        walker.afterList(owningProperty, value)
+                        walker.afterList(owningProperty, value.elements)
                     }
 
                     else -> Unit
@@ -137,6 +147,7 @@ abstract class AsmValueAbstract() : AsmValue {
     override val typeName get() = qualifiedTypeName.last
 }
 
+@Deprecated("Use Unit instead")
 object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
     override val qualifiedTypeName: QualifiedName get() = StdLibDefault.NothingType.qualifiedTypeName
     override fun asString(indent: Indent): String = $$"$nothing"
@@ -158,7 +169,7 @@ class AsmAnySimple(
     override val value: Any
 ) : AsmValueAbstract(), AsmAny {
     companion object {
-        fun stdAny(value: Any) = AsmAnySimple(value)
+     //   fun stdAny(value: Any) = AsmAnySimple(value)
     }
 
     override val qualifiedTypeName: QualifiedName get() = StdLibDefault.AnyType.qualifiedTypeName
@@ -181,6 +192,7 @@ class AsmAnySimple(
     override fun toString(): String = "$qualifiedTypeName($value)"
 }
 
+@Deprecated("Use normal kotlin primitive value instead")
 class AsmPrimitiveSimple(
     override val qualifiedTypeName: QualifiedName,
     override val value: Any
@@ -215,12 +227,12 @@ val AsmValue.isStdString get() = this is AsmPrimitive && this.qualifiedTypeName 
 val AsmValue.isStdInteger get() = this is AsmPrimitive && this.qualifiedTypeName == StdLibDefault.Integer.qualifiedTypeName
 val AsmValue.isNothing get() = this is AsmNothing
 
-val AsmValue.raw: Any
+val Any.raw: Any
     get() = when (this) {
         is AsmNothing -> Unit
         is AsmAny -> this.value
         is AsmPrimitive -> this.value
-        is AsmReference -> this.value ?: AsmNothingSimple
+        is AsmReference -> this.value ?: Unit
         is AsmListSeparated -> this.elements.map { it.raw }.toSeparatedList()
         is AsmListSimple -> this.elements.map { it.raw }
 //        is AsmStructure -> this.property.values
@@ -228,7 +240,7 @@ val AsmValue.raw: Any
 //            .associate { pv -> Pair(pv.name.value, pv.value.raw) }
         is AsmStructure -> this
         is AsmLambda -> TODO()
-        else -> error("Unknown subtype of AsmValue '${this::class.simpleName}'")
+        else -> this //error("Unknown subtype of AsmValue '${this::class.simpleName}'")
     }
 
 object AnyExt {
@@ -259,10 +271,18 @@ object AnyExt {
             is Long -> AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, this)
             is Float -> AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, this.toDouble())
             is Double -> AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, this)
-            is ListSeparated<*, *, *> -> AsmListSeparatedSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple }.toSeparatedList())
-            is List<*> -> AsmListSimple(this.map { it?.toAsmSimple ?: AsmNothingSimple })
+            is ListSeparated<*, *, *> -> AsmListSeparatedSimple(this.map { it?.toAsmSimple ?: Unit }.toSeparatedList())
+            is List<*> -> AsmListSimple(this.map { it?.toAsmSimple ?: Unit })
             else -> error("Type cannot be converted to AsmValue '${this::class.simpleName}'")
         }
+
+    fun Any.equalTo(other: Any): Boolean {
+        return when {
+            this is AsmReferenceSimple && other is AsmReferenceSimple -> this.equalTo(other)
+            this is AsmStructureSimple && other is AsmStructureSimple -> this.equalTo(other)
+            else -> this == other
+        }
+    }
 }
 
 class AsmReferenceSimple(
@@ -349,15 +369,15 @@ class AsmStructureSimple(
     fun getPropertyAsReferenceOrNull(name: PropertyValueName): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
     fun getPropertyAsListOrNull(name: PropertyValueName): List<Any>? = property[name]?.value as List<Any>?
 
-    override fun getProperty(name: PropertyValueName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$parsePath' ")
-    override fun getPropertyOrNothing(name: PropertyValueName): AsmValue = property[name]?.value ?: AsmNothingSimple
-    override fun getPropertyOrNull(name: PropertyValueName): AsmValue? = property[name]?.value
+    override fun getProperty(name: PropertyValueName): Any = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$parsePath' ")
+    override fun getPropertyOrNothing(name: PropertyValueName): Any = property[name]?.value ?: Unit
+    override fun getPropertyOrNull(name: PropertyValueName): Any? = property[name]?.value
 
     fun getPropertyAsReference(name: PropertyValueName): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
     fun getPropertyAsList(name: PropertyValueName): List<Any> = getProperty(name) as List<Any>
     fun getPropertyAsListOfElement(name: PropertyValueName): List<AsmStructureSimple> = getProperty(name) as List<AsmStructureSimple>
 
-    override fun setProperty(name: PropertyValueName, value: AsmValue, childIndex: Int) {
+    override fun setProperty(name: PropertyValueName, value: Any, childIndex: Int) {
         _properties[name] = AsmStructurePropertySimple(name, childIndex, value)
     }
 
@@ -408,9 +428,10 @@ class AsmStructureSimple(
     override fun hashCode(): Int = semanticQualifiedPath?.hashCode() ?: parsePath.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
         is AsmStructureSimple -> when {
-            null!= this.semanticQualifiedPath && null != other.semanticQualifiedPath -> this.semanticQualifiedPath == other.semanticQualifiedPath
+            null != this.semanticQualifiedPath && null != other.semanticQualifiedPath -> this.semanticQualifiedPath == other.semanticQualifiedPath
             else -> this.parsePath == other.parsePath //&& this.asm == other.asm
         }
+
         else -> false
     }
 
@@ -421,20 +442,33 @@ class AsmStructureSimple(
 class AsmStructurePropertySimple(
     override val name: PropertyValueName,
     override val index: Int,
-    value: AsmValue
+    value: Any
 ) : AsmStructureProperty {
 
     companion object {
         const val TO_STRING_MAX_LEN = 30
     }
 
-    override var value: AsmValue = value; private set
+    override var value: Any = value; private set
 
     override val isReference: Boolean get() = this.value is AsmReferenceSimple
 
     override fun convertToReferenceTo(referredValue: AsmStructure?) {
         val v = this.value
         when {
+            Unit == v -> error("Cannot convert property '$this' a reference, it has value $AsmNothingSimple")
+            v is String -> {
+                val ref = AsmReferenceSimple(v, referredValue)
+                this.value = ref
+            }
+
+            v is List<*> && v.all { it is String } -> {
+                val refValue = v.joinToString(separator = ".") { it as String }
+                val ref = AsmReferenceSimple(refValue, referredValue)
+                this.value = ref
+            }
+
+            // Deprecated
             v is AsmNothing -> error("Cannot convert property '$this' a reference, it has value $AsmNothingSimple")
             v is AsmReference -> v.resolveAs(referredValue)
             v is AsmPrimitive && v.value is String -> {
@@ -491,6 +525,7 @@ class AsmStructurePropertySimple(
     }
 }
 
+@Deprecated("use kotlin Set")
 class AsmSetSimple(
     override val elements: Set<AsmValue>
 ) : AsmValueAbstract(), AsmSet {
@@ -524,8 +559,9 @@ class AsmSetSimple(
     override fun toString(): String = "Set(${elements.joinToString()})"
 }
 
+@Deprecated("use kotlin List")
 class AsmListSimple(
-    override val elements: List<AsmValue>
+    override val elements: List<Any>
 ) : AsmValueAbstract(), AsmList {
     override val qualifiedTypeName get() = StdLibDefault.List.qualifiedName
 
@@ -557,8 +593,9 @@ class AsmListSimple(
     override fun toString(): String = "List(${elements.joinToString()})"
 }
 
+@Deprecated("use nak ListSeparated")
 class AsmListSeparatedSimple(
-    override val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
+    override val elements: ListSeparated<Any, Any, Any>
 ) : AsmValueAbstract(), AsmListSeparated {
     override val qualifiedTypeName get() = StdLibDefault.ListSeparated.qualifiedName
 
@@ -590,13 +627,14 @@ class AsmListSeparatedSimple(
     override fun toString(): String = elements.toString()
 }
 
+@Deprecated("use kotlin lambda")
 class AsmLambdaSimple(
-    val lambda: (it: AsmValue) -> AsmValue
+    val lambda: (it: Any) -> Any
 ) : AsmValueAbstract(), AsmLambda {
 
     override val qualifiedTypeName = StdLibDefault.Lambda.qualifiedTypeName
 
-    override fun invoke(args: Map<String, AsmValue>): AsmValue {
+    override fun invoke(args: Map<String, Any>): Any {
         val it = args["it"]!!
         return this.lambda.invoke(it)
     }

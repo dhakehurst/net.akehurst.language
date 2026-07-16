@@ -21,7 +21,11 @@ import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.collections.toOrderedSet
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmReference
 import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.PropertyValueName
+import net.akehurst.language.asm.simple.AsmStructurePropertySimple
+import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
@@ -107,6 +111,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return when (possiblyTypedObject) {
             null -> Unit
             is TypedObject -> untyped(possiblyTypedObject as TypedObject)
+            is ListSeparated<*,*,*> -> possiblyTypedObject.map { untypedAny(it) }.toSeparatedList()
             is List<*> -> possiblyTypedObject.map { untypedAny(it) }
             is Set<*> -> possiblyTypedObject.map { untypedAny(it) }.toSet()
             is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
@@ -149,10 +154,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             }
 
             is OrderedSet<*> -> toTypedCollection(obj.toList(), StdLibDefault.OrderedSet, ifNotFound) { it.toOrderedSet() }
-            is ListSeparated<*, *, *> -> {
-                TODO()
-            }
-
+            is ListSeparated<*, *, *> -> toTypedCollection(obj.toSeparatedList(), StdLibDefault.ListSeparated, ifNotFound) { it.toOrderedSet() }
             is Array<*> -> toTypedCollection(obj.toList(), StdLibDefault.List, ifNotFound) { it.toList() }
             //TODO: special array types IntArray, LongArray, etc
             is List<*> -> toTypedCollection(obj, StdLibDefault.List, ifNotFound) { it.toList() }
@@ -191,7 +193,17 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         TypedObjectAny(this, type, obj)
 
     override fun isNothing(obj: TypedObject): Boolean = obj.self == Unit
-    override fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean = lhs.self == rhs.self
+    override fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean {
+        val lhsResolved = when (lhs.self) {
+            is AsmReference -> (lhs.self as AsmReference).value ?: lhs.self
+            else -> lhs.self
+        }
+        val rhsResolved = when (rhs.self) {
+            is AsmReference -> (rhs.self as AsmReference).value ?: rhs.self
+            else -> rhs.self
+        }
+        return lhsResolved == rhsResolved
+    }
 
     override fun nothing(): TypedObject = typedAs(Unit, StdLibDefault.NothingType)
     override fun any(value: Any): TypedObject = typedAs(value, StdLibDefault.AnyType)
@@ -199,7 +211,6 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value, StdLibDefault.AnyType)
 
     override fun createTupleValue(args: Map<String, TypedObject>): TypedObject {
-        val tupleType = StdLibDefault.TupleType
         val typeArgs = args.entries.associate { (k,v) -> k to v.type }
         return createTupleValue(typeArgs, args)
     }
@@ -207,7 +218,10 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override fun createTupleValue(typeArgs: Map<String, TypeInstance>, args: Map<String, Any>): TypedObject {
         val tArgs = typeArgs.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k), v) }
         val type = StdLibDefault.TupleType.type(tArgs)
-        return typedAs(args, type)
+        val obj = AsmStructureSimple(type.qualifiedTypeName)
+        val asmPv = args.entries.mapIndexed { i,(k,v) -> AsmStructurePropertySimple(PropertyValueName(k),i,v) }
+        obj.addAllProperty(asmPv)
+        return typedAs(obj, type)
     }
 
     override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {

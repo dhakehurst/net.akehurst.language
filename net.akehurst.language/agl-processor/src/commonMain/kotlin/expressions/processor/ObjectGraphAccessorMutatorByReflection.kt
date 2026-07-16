@@ -20,6 +20,8 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -563,6 +565,7 @@ constructor(
         val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
 
+        // tuples shoul not be added to the list of structures
         if (typeDef is TupleType) {
             return createTupleValue(constructorArgs)
         }
@@ -577,7 +580,7 @@ constructor(
             is SpecialType -> error("Should not create an instance of a SpecialType")
             is PrimitiveType -> error("use 'createPrimitiveValue' for PrimitiveType")
             is EnumType -> error("use '??' for EnumType")
-            is TupleType ->  error ("should never happen")
+            is TupleType -> error("should never happen")
             is UnionType -> error("Should not create an instance of a UnionType")
             else -> error("Unsupported subtype of TypeDefinition: '${typeDef::class.simpleName}'")
         }
@@ -602,6 +605,13 @@ constructor(
                             null,
                             "Executing property '$propertyName' on Tuple results in null, using value \$nothing."
                         )
+                    }
+
+                    is AsmStructure -> {
+                        val propType = tobj.type.typeArguments.firstOrNull {ta ->  ta is TypeArgumentNamed && ta.name.value == propertyName }?.type ?: StdLibDefault.AnyType
+                        val pv = obj.getPropertyOrNull(PropertyValueName(propertyName))
+                        pv?.let { toTypedObject(it, propType) }
+                            ?: issueErrorReturnNothing(null, "Property '$propertyName' on Tuple not found, using value \$nothing.")
                     }
 
                     else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on Tuple, expected a Map, got '${obj::class.simpleName}', using value \$nothing.")

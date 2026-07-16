@@ -1483,7 +1483,7 @@ class test_m2mTransformInterpreter {
                 typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
-                            propertyOf(setOf(CMP, VAR), "name", "String")
+                            propertyOf(setOf(REF, VAR), "name", "String")
                         }
                         data("Package") {
                             supertypes("UmlModelElement")
@@ -1503,7 +1503,9 @@ class test_m2mTransformInterpreter {
                         }
                         data("PrimitiveDataType") {
                             supertypes("Classifier")
-
+                            constructor_ {
+                                parameter(setOf(REF, VAL), "name", "String")
+                            }
                         }
                         data("Association") {
                             supertypes("PackageElement")
@@ -1581,6 +1583,11 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
+                crossReferenceDomain("uml", "SimpleUML") {
+                    declarationsFor("uml") {
+                        identify("PrimitiveDataType", "name")
+                    }
+                }
                 transform(
                     $$"""
                     namespace test
@@ -1588,9 +1595,9 @@ class test_m2mTransformInterpreter {
                         top table PrimitiveUmlTypeToSqlType {
                             domain  uml :PrimitiveDataType                /**/ domain rdbms :String
                             /*===================================================================*/ 
-                            values uml.PrimitiveDataType(){ name := 'Int'}     to  'NUMBER'
-                            values uml.PrimitiveDataType(){ name := 'Boolean'} to  'BOOLEAN'
-                            values uml.PrimitiveDataType(){ name := 'String'}  to  'VARCHAR'
+                            values uml.PrimitiveDataType(name := 'Int'){}     to  'NUMBER'
+                            values uml.PrimitiveDataType(name := 'Boolean'){} to  'BOOLEAN'
+                            values uml.PrimitiveDataType(name := 'String'){}  to  'VARCHAR'
                         }
                     }
                 """
@@ -2123,7 +2130,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 testCase("1 Class with name, kind & namespace, but no attributes") {
-                    input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
+                    input("uml", resolveReferences = true, sentenceContext = contextAsmSimple(), sentenceId = 0) {
                         element("Package") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
@@ -2163,7 +2170,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 testCase("1 Class with name, kind & namespace and empty attributes") {
-                    input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
+                    input("uml", resolveReferences = true, sentenceContext = contextAsmSimple(), sentenceId = 0) {
                         element("Package") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
@@ -2504,7 +2511,7 @@ class test_m2mTransformInterpreter {
                 for (i in expected.root.indices) {
                     val exp = expected.root[i]
                     val act = trRes.targets[i]
-                    assertEquals(exp.asString(), act.asString())
+                    assertEquals(exp.asString(), act.untyped.asString())
                 }
             }
         }

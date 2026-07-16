@@ -71,8 +71,11 @@ class SemanticAnalyserSimple(
     private var _resolvedReferences = mutableListOf<ResolvedReference>()
     private lateinit var _locationMap: LocationMap
 
+    private val _accessor by lazy {
+        objectGraphSimpleAsm(typesDomain, null, _issues, _locationMap)
+    }
     private val _interpreter by lazy {
-        ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, null,_issues, _locationMap))
+        ExpressionsInterpreterOverTypedObject(_accessor)
     }
 
     override fun clear() {
@@ -129,7 +132,7 @@ class SemanticAnalyserSimple(
                 sentenceId,
                 this::identifyingValueInFor,
                 resFunc,
-                locationMap, _issues
+                locationMap, _accessor
             )
             asm.traverseDepthFirst(resolver)
             _resolvedReferences = resolver.resolvedReferences

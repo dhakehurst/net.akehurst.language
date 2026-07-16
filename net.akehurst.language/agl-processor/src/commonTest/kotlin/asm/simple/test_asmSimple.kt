@@ -37,7 +37,7 @@ class test_asmSimple {
             string("Hello")
         }
         assertEquals(1, asm.root.size)
-        assertEquals("Hello", (asm.root[0] as AsmPrimitive).value as String)
+        assertEquals("Hello", asm.root[0] as String)
     }
 
     //TODO: more tests

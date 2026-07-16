@@ -28,6 +28,7 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
+import net.akehurst.language.asm.simple.asValueName
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.asmTransform.asm.*
@@ -613,7 +614,9 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         _trf.clear()
         val asm = _trf.evaluate(evc, tr)
         if (asm.self is AsmStructureSimple) { //FIXME: don't like this here...hacky!
-            (asm.self as AsmStructureSimple).parsePath = downData.path.toString()
+            val self = asm.self as AsmStructureSimple
+            self.parsePath = downData.path.toString()
+            //self.setProperty(AsmTransformInterpreter.MATCHED_TEXT.asValueName, asmMatchedText, self.property.size)
         }
         _trf.issues.forEach {
             super.issues.error(null, "Error evaluating transformation rule '${it.message}':\n${tr.asString()}")

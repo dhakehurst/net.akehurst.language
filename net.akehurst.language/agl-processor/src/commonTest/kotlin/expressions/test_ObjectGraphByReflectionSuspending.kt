@@ -19,6 +19,8 @@ package net.akehurst.language.expressions.processor
 
 import kotlinx.coroutines.test.runTest
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.asm.api.PropertyValueName
+import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -79,10 +81,10 @@ class test_ObjectGraphByReflectionSuspending {
             "b" to og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
         )
         val actual = og.createTupleValue(props)
-        val expected = mapOf(
-            "a" to 1L,
-            "b" to true
-        )
+        val expected = AsmStructureSimple(StdLibDefault.TupleType.qualifiedName).also {
+            it.setProperty(PropertyValueName("a"),1L,0)
+            it.setProperty(PropertyValueName("b"),true,1)
+        }
         assertEquals(expected, actual.self)
     }
 

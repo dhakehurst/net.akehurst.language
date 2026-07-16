@@ -90,7 +90,7 @@ class AsmSimpleBuilder(
     }
 
     fun string(value: String) {
-        _asm.addRoot(AsmPrimitiveSimple.stdString(value))
+        _asm.addRoot(value)
     }
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
@@ -144,7 +144,7 @@ class AsmSimpleBuilder(
                 _identifyingValueInFor,
                 _context.resolveScopedItem,
                 LocationMapDefault(),
-                _issues
+                _objectGraph
             )
             _asm.traverseDepthFirst(resolver)
             resolvedReferences.addAll(resolver.resolvedReferences)
@@ -235,16 +235,16 @@ class AsmElementSimpleBuilder(
     }
     */
 
-    private fun _property(name: String, value: AsmValue) {
+    private fun _property(name: String, value: Any) {
         _element.setProperty(PropertyValueName(name), value, 0)//TODO childIndex
     }
 
     fun propertyUnnamedString(value: String?) = this.propertyString(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, value)
-    fun propertyBoolean(name: String, value: Boolean?) = this._property(name, value?.let { AsmPrimitiveSimple.stdBoolean(it) } ?: AsmNothingSimple)
-    fun propertyInteger(name: String, value: Long?) = this._property(name, value?.let { AsmPrimitiveSimple.stdInteger(it) } ?: AsmNothingSimple)
-    fun propertyReal(name: String, value: Double?) = this._property(name, value?.let { AsmPrimitiveSimple.stdReal(it) } ?: AsmNothingSimple)
-    fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple.stdString(it) } ?: AsmNothingSimple)
-    fun propertyNothing(name: String) = this._property(name, AsmNothingSimple)
+    fun propertyBoolean(name: String, value: Boolean?) = this._property(name, value?.let { AsmPrimitiveSimple.stdBoolean(it) } ?: Unit)
+    fun propertyInteger(name: String, value: Long?) = this._property(name, value?.let { AsmPrimitiveSimple.stdInteger(it) } ?: Unit)
+    fun propertyReal(name: String, value: Double?) = this._property(name, value?.let { AsmPrimitiveSimple.stdReal(it) } ?: Unit)
+    fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple.stdString(it) } ?: Unit)
+    fun propertyNothing(name: String) = this._property(name, Unit)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
         propertyElementExplicitType(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, typeName, init)
 
