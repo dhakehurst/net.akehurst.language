@@ -307,6 +307,7 @@ abstract class StructuredTypeBuilder(
         typeName: String,
         isNullable: Boolean = false,
         execution: KProperty1<*, *>? = null,
+        mutator: ((self: Any, value:Any) -> Any?)? = null,
         init: TypeArgumentBuilder.() -> Unit = {}
     ): PropertyDeclaration {
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
@@ -316,6 +317,7 @@ abstract class StructuredTypeBuilder(
         val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _structuredType, targs, isNullable)
         return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics).also {
             (it as PropertyDeclarationStored).execution = execution as KProperty1<Any, out Any?>?
+            (it as PropertyDeclarationStored).mutator = mutator
         }
     }
 
@@ -635,7 +637,10 @@ class ValueTypeBuilder(
         val b = ConstructorBuilder(_namespace, _type, _typeReferences)
         b.init()
         val info = b.build()
-        (_type as ValueTypeSimple).addConstructor(info.parameters)
+        (_type as ValueTypeSimple).addConstructor(info.parameters).also {
+            (it as ConstructorDefinitionSimple).execution = info.execution
+            (it as ConstructorDefinitionSimple).executionSuspend = info.executionSuspend
+        }
     }
 
     fun build(): ValueType {
@@ -739,7 +744,10 @@ class CollectionTypeBuilder(
         val b = ConstructorBuilder(_namespace, _type, _typeReferences)
         b.init()
         val info = b.build()
-        (_type as DataTypeSimple).addConstructor(info.parameters)
+        (_type as DataTypeSimple).addConstructor(info.parameters).also {
+            (it as ConstructorDefinitionSimple).execution = info.execution
+            (it as ConstructorDefinitionSimple).executionSuspend = info.executionSuspend
+        }
     }
 
     fun build(): CollectionType {
@@ -789,7 +797,10 @@ class DataTypeBuilder(
         val b = ConstructorBuilder(_namespace, _type, _typeReferences)
         b.init()
         val info = b.build()
-        (_type as DataTypeSimple).addConstructor(info.parameters)
+        (_type as DataTypeSimple).addConstructor(info.parameters).also {
+            (it as ConstructorDefinitionSimple).execution = info.execution
+            (it as ConstructorDefinitionSimple).executionSuspend = info.executionSuspend
+        }
     }
 
     fun build(): DataType {

@@ -378,7 +378,13 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             primitive("Timestamp", kotlin.time.Instant::class)
             primitive("Exception", kotlin.Throwable::class)
 
-            data("Pair", kotlin.Pair::class)
+            data("Pair", kotlin.Pair::class) {
+                typeParameters("F","S")
+                constructor_ {
+                    parameter(setOf(CMP, VAL), "first","F", propertyExecution = kotlin.Pair<*,*>::first)
+                    parameter(setOf(CMP, VAL), "second","S", propertyExecution = kotlin.Pair<*,*>::second)
+                }
+            }
 
             collection(Collection_typeName.value, listOf("E"), kotlin.collections.Collection::class) {
                 propertyPrimitive("size", "Integer", false, "Number of elements in the Collection.", execution = { self -> (self as Collection<*>).size })
@@ -551,6 +557,9 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             }
             collection(Map_typeName.value, listOf("K", "V"), kotlin.collections.Map::class) {
                 supertype("Collection") { ref("Pair") }
+
+                propertyPrimitive("keys", "Set", false, "Keys in the Map.", execution = { self -> (self as Map<*, *>).keys }) { typeArgument("K") }
+                propertyPrimitive("values", "Collection", false, "Values in the Map.", execution = { self -> (self as Map<*, *>).values }) { typeArgument("V") }
             }
         }
         nsb.build()

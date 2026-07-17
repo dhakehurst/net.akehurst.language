@@ -133,77 +133,82 @@ class M2mPatternExecutor(
         template: ObjectTemplate,
         lhsType: TypeInstance
     ): M2mPatternExecution {
-        val decl = template.type.resolvedDefinition
+        val tplType = template.type
+        if (null==tplType) {
+            error("Cannot constructExecutionsFromObjectTemplate type not resolved")
+        } else {
+            val decl = tplType.resolvedDefinition
 
-        val inputs = emptyList<String>()
-        val (id, outputs) = template.identifier?.value?.let { Pair(it, listOf(it)) } ?: Pair(createTempVariable(), emptyList())
+            val inputs = emptyList<String>()
+            val (id, outputs) = template.identifier?.value?.let { Pair(it, listOf(it)) } ?: Pair(createTempVariable(), emptyList())
 
-        val finishSetProperties = M2mPatternExecution("$tgtName := $id // Finish set properties for ${decl.name.value}: ", emptyList(), emptyList()) { evc ->
-            val obj = evc.getOrInParent(id)
-            obj?.let { evc.setNamedValue(tgtName, obj) }
-        }.also { self ->
-            self.doMeBefore.addAll(doAfterMe)
-            doBeforeMe.forEach { it.doMeBefore.add(self) }
-        }
-
-        val startSetProperties = M2mPatternExecution($$"// Start set properties for $${decl.name.value}", emptyList(), emptyList()) { evc ->
-        }.also { self ->
-            self.doMeBefore.addAll(doAfterMe)
-            doBeforeMe.forEach { it.doMeBefore.add(self) }
-            self.doMeBefore.add(finishSetProperties)
-        }
-
-        val constructors = when (decl) {
-            is DataType -> decl.constructors
-            is ValueType -> decl.constructors
-            else -> error("Type '${decl.qualifiedName.value}' has no constructors")
-        }
-        val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-        val conArgNameMap = template.propertyTemplate.keys.mapNotNull { k ->
-            if (possibleConArgNames.contains(k.value)) {
-                Pair(k.value, "${id}_${k.value}")
-            } else {
-                null
+            val finishSetProperties = M2mPatternExecution("$tgtName := $id // Finish set properties for ${decl.name.value}: ", emptyList(), emptyList()) { evc ->
+                val obj = evc.getOrInParent(id)
+                obj?.let { evc.setNamedValue(tgtName, obj) }
+            }.also { self ->
+                self.doMeBefore.addAll(doAfterMe)
+                doBeforeMe.forEach { it.doMeBefore.add(self) }
             }
-        }.associate { it }
-        val conArgNames = conArgNameMap.values.toList()
-        val creation = M2mPatternExecution("$id := ${decl.name.value}(<constructor args>) // Find or Create object ", conArgNames, outputs) { evc ->
-            val rhsMv = findInEnvOrCreateFromObjectTemplate(evc, template.type, template, conArgNameMap)
-            evc.setNamedValue(id, rhsMv[RESULT]!!)
-            rhsMv.entries.forEach { (k, v) ->
-                if (k != RESULT) {
-                    evc.setNamedValue(k, v)
+
+            val startSetProperties = M2mPatternExecution($$"// Start set properties for $${decl.name.value}", emptyList(), emptyList()) { evc ->
+            }.also { self ->
+                self.doMeBefore.addAll(doAfterMe)
+                doBeforeMe.forEach { it.doMeBefore.add(self) }
+                self.doMeBefore.add(finishSetProperties)
+            }
+
+            val constructors = when (decl) {
+                is DataType -> decl.constructors
+                is ValueType -> decl.constructors
+                else -> error("Type '${decl.qualifiedName.value}' has no constructors")
+            }
+            val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
+            val conArgNameMap = template.propertyTemplate.keys.mapNotNull { k ->
+                if (possibleConArgNames.contains(k.value)) {
+                    Pair(k.value, "${id}_${k.value}")
+                } else {
+                    null
+                }
+            }.associate { it }
+            val conArgNames = conArgNameMap.values.toList()
+            val creation = M2mPatternExecution("$id := ${decl.name.value}(<constructor args>) // Find or Create object ", conArgNames, outputs) { evc ->
+                val rhsMv = findInEnvOrCreateFromObjectTemplate(evc, tplType, template, conArgNameMap)
+                evc.setNamedValue(id, rhsMv[RESULT]!!)
+                rhsMv.entries.forEach { (k, v) ->
+                    if (k != RESULT) {
+                        evc.setNamedValue(k, v)
+                    }
+                }
+            }.also { self ->
+                self.doMeBefore.addAll(doAfterMe)
+                doBeforeMe.forEach { it.doMeBefore.add(self) }
+                self.doMeBefore.add(startSetProperties)
+            }
+
+            val startConstructorArgs = M2mPatternExecution("// Start Collect constructor args", inputs, emptyList()) { evc ->
+            }.also { self ->
+                self.doMeBefore.addAll(doAfterMe)
+                doBeforeMe.forEach { it.doMeBefore.add(self) }
+                self.doMeBefore.add(creation)
+            }
+
+            addExecution(startSetProperties)
+            addExecution(finishSetProperties)
+            addExecution(startConstructorArgs)
+            addExecution(creation)
+            val prevArgs = setOf(startConstructorArgs)
+            val prevProps = setOf(startSetProperties)
+            template.propertyTemplate.forEach { (k, v) ->
+                val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
+                if (possibleConArgNames.contains(k.value)) {
+                    constructExecutionForConstructorArg("${id}_${k.value}", prevArgs, setOf(creation), v, propType)
+                } else {
+                    constructExecutionsFromPropertyTemplate(id, k.value, prevProps, setOf(finishSetProperties), v, propType)
                 }
             }
-        }.also { self ->
-            self.doMeBefore.addAll(doAfterMe)
-            doBeforeMe.forEach { it.doMeBefore.add(self) }
-            self.doMeBefore.add(startSetProperties)
-        }
 
-        val startConstructorArgs = M2mPatternExecution("// Start Collect constructor args", inputs, emptyList()) { evc ->
-        }.also { self ->
-            self.doMeBefore.addAll(doAfterMe)
-            doBeforeMe.forEach { it.doMeBefore.add(self) }
-            self.doMeBefore.add(creation)
+            return finishSetProperties
         }
-
-        addExecution(startSetProperties)
-        addExecution(finishSetProperties)
-        addExecution(startConstructorArgs)
-        addExecution(creation)
-        val prevArgs = setOf(startConstructorArgs)
-        val prevProps = setOf(startSetProperties)
-        template.propertyTemplate.forEach { (k, v) ->
-            val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
-            if (possibleConArgNames.contains(k.value)) {
-                constructExecutionForConstructorArg("${id}_${k.value}", prevArgs, setOf(creation), v, propType)
-            } else {
-                constructExecutionsFromPropertyTemplate(id, k.value, prevProps, setOf(finishSetProperties), v, propType)
-            }
-        }
-
-        return finishSetProperties
     }
 
     private fun constructExecutionForConstructorArg(
@@ -425,31 +430,36 @@ class M2mPatternExecutor(
         val existing = id?.let { evc.getOrInParent(it) }
         return when (existing) {
             null -> {
-                val decl = template.type.resolvedDefinition
-                when (decl) {
-                    is DataType, is ValueType -> {
-                        val matchedVars = mutableMapOf<String, TypedObject>()
-                        val constructors = when (decl) {
-                            is DataType -> decl.constructors
-                            is ValueType -> decl.constructors
-                            else -> error("Type '${decl.qualifiedName.value}' has no constructors")
-                        }
-                        val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-                        val conArgs = mutableMapOf<String, TypedObject>()
-                        template.propertyTemplate.forEach { (k, v) ->
-                            if (possibleConArgNames.contains(k.value)) {
-                                val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
-                                val arg = evc.getOrInParent(conArgNames[k.value]!!)
-                                arg?.let { conArgs[k.value] = arg }
+                val tplType = template.type
+                if (null==tplType) {
+                    error("Cannot constructExecutionsFromObjectTemplate type not resolved")
+                } else {
+                    val decl = tplType.resolvedDefinition
+                    when (decl) {
+                        is DataType, is ValueType -> {
+                            val matchedVars = mutableMapOf<String, TypedObject>()
+                            val constructors = when (decl) {
+                                is DataType -> decl.constructors
+                                is ValueType -> decl.constructors
+                                else -> error("Type '${decl.qualifiedName.value}' has no constructors")
                             }
+                            val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
+                            val conArgs = mutableMapOf<String, TypedObject>()
+                            template.propertyTemplate.forEach { (k, v) ->
+                                if (possibleConArgNames.contains(k.value)) {
+                                    val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
+                                    val arg = evc.getOrInParent(conArgNames[k.value]!!)
+                                    arg?.let { conArgs[k.value] = arg }
+                                }
+                            }
+                            //.resolveType(tgtObjectGraph.typesDomain)
+                            val o = accessorMutator.createStructureValue(tplType.qualifiedTypeName, conArgs)
+                            val mv = template.identifier?.let { matchedVars + Pair(it.value, o) } ?: matchedVars
+                            mv + Pair(RESULT, o)
                         }
-                        //.resolveType(tgtObjectGraph.typesDomain)
-                        val o = accessorMutator.createStructureValue(template.type.qualifiedTypeName, conArgs)
-                        val mv = template.identifier?.let { matchedVars + Pair(it.value, o) } ?: matchedVars
-                        mv + Pair(RESULT, o)
-                    }
 
-                    else -> error("Cannot construct object of type ${decl.qualifiedName.value}")
+                        else -> error("Cannot construct object of type ${decl.qualifiedName.value}")
+                    }
                 }
             }
 

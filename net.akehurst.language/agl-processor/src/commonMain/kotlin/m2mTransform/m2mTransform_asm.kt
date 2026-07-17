@@ -244,11 +244,10 @@ data class VariableDefinitionDefault(
 ) : VariableDefinition {
     private var _resolvedType: TypeInstance? = null
 
-    override val type: TypeInstance get() = _resolvedType ?: error("Type not resolved for '$this'")
+    override val type: TypeInstance? get() = typeRef.type
 
-    override fun resolveType(tm: TypesDomain) {
-        val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.typeRef.possiblyQualifiedName) //TODO typeargs
-        _resolvedType = td?.type()
+    override fun resolveType(tm: TypesDomain): List<LanguageIssue> {
+       return typeRef.resolveTypes(tm)
     }
 }
 
@@ -364,29 +363,18 @@ data class ObjectTemplateDefault(
 ) : ObjectTemplate {
 
     // used when type is known
-    constructor(type: TypeInstance, propertyTemplate: Map<SimpleName, PropertyTemplate>) : this(TypeReferenceDefault(type.qualifiedTypeName, emptyList(), type.isNullable), propertyTemplate) {
-        _resolvedType = type
-    }
+    constructor(type: TypeInstance, propertyTemplate: Map<SimpleName, PropertyTemplate>) : this(TypeReferenceDefault(type.qualifiedTypeName, emptyList(), type.isNullable), propertyTemplate)
 
     override var identifier: SimpleName? = null
 
-    private var _resolvedType: TypeInstance? = null
-    override val type: TypeInstance get() = _resolvedType ?: error("Type not resolved for '$this'")
+    override val type: TypeInstance? get() = typeRef.type
 
     override fun setIdentifierValue(value: SimpleName) {
         this.identifier = value
     }
 
     override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
-        val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.typeRef.possiblyQualifiedName)
-        val issues = if (null == td) {
-            val msg = "In ObjectTemplate, cannot resolveType '${this.typeRef.possiblyQualifiedName.value}' in TypesDomain '${tm.name.value}'."
-            listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, null, msg, null))
-        } else {
-            _resolvedType = td.type()
-            emptyList()
-        }
-        return issues + propertyTemplate.values.flatMap { it.rhs.resolveTypes(tm) }
+        return  typeRef.resolveTypes(tm) + propertyTemplate.values.flatMap { it.rhs.resolveTypes(tm) }
     }
 
     override fun asString(indent: Indent): String {

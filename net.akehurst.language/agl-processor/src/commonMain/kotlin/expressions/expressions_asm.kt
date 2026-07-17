@@ -23,7 +23,12 @@ import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.objectgraph.api.FunctionLib
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdFunctionLib
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeParameterMultiple.name
@@ -442,6 +447,27 @@ data class TypeReferenceDefault(
     override val typeArguments: List<TypeReference>,
     override val isNullable: Boolean
 ) : TypeReference {
+
+    private var _resolvedType: TypeInstance? = null
+    override val type: TypeInstance? get() = _resolvedType
+
+    override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
+        val issues = mutableListOf<LanguageIssue>()
+        val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.possiblyQualifiedName)
+        val targs = typeArguments.mapNotNull {
+            issues .addAll(it.resolveTypes(tm))
+            it.type?.asTypeArgument
+        }
+
+        if (null == td) {
+            val msg = "In ObjectTemplate, cannot resolveType '${this.possiblyQualifiedName.value}' in TypesDomain '${tm.name.value}'."
+            issues.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, null, msg, null))
+        } else {
+            _resolvedType = td.type(targs)
+        }
+        return issues
+    }
+
     override fun asString(indent: Indent, imports: List<Import>): String {
         val tn = when {
             imports.any { it.asQualifiedName.value == possiblyQualifiedName.value } -> possiblyQualifiedName.simpleName.value

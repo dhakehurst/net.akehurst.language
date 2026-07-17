@@ -1346,10 +1346,10 @@ class ValueTypeSimple(
             }
         }
 
-    override fun addConstructor(parameters: List<ParameterDeclaration>) {
+    override fun addConstructor(parameters: List<ParameterDeclaration>): ConstructorDefinition {
         val cons = ConstructorDefinitionSimple(this, parameters)
         (constructors as MutableList).add(cons)
-
+        return cons
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
@@ -1498,9 +1498,10 @@ class DataTypeSimple(
         namespace.addDefinition(this)
     }
 
-    override fun addConstructor(parameters: List<ParameterDeclaration>) {
+    override fun addConstructor(parameters: List<ParameterDeclaration>): ConstructorDefinition {
         val cons = ConstructorDefinitionSimple(this, parameters)
         (constructors as MutableList).add(cons)
+        return cons
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
@@ -1647,6 +1648,8 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
 
     override var execution: ((self: Any) -> Any?)? = null
     override var executionSuspend: (suspend (self: Any) -> Any?)? = null
+
+    override var mutator: ((self: Any, value: Any) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
         this,

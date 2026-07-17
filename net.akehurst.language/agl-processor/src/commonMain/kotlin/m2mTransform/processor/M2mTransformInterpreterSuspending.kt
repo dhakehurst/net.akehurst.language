@@ -688,15 +688,19 @@ class M2mTransformInterpreterSuspending(
             val value = createFromRhs(variables, v.rhs, tgtObjectGraph)
             propValues[k.value] = value
         }
-    //    objectTemplate.resolveTypes(tgtObjectGraph.typesDomain)
-        val obj = tgtObjectGraph.createStructureValue(objectTemplate.type.qualifiedTypeName, propValues)
-        propValues.forEach { (k, v) ->
-            val pn = PropertyName(k)
-            if (true == objectTemplate.type.allResolvedProperty[pn]?.isReadWrite) {
-                obj.setPropertySuspend( k, v)
+        val tplType = objectTemplate.type
+        if (null==tplType) {
+            error("Cannot createFromObjectPattern type not resolved")
+        } else {
+            val obj = tgtObjectGraph.createStructureValue(tplType.qualifiedTypeName, propValues)
+            propValues.forEach { (k, v) ->
+                val pn = PropertyName(k)
+                if (true == tplType.allResolvedProperty[pn]?.isReadWrite) {
+                    obj.setPropertySuspend(k, v)
+                }
             }
+            return obj
         }
-        return obj
     }
 
 }

@@ -17,6 +17,7 @@ import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.ValueType
 import net.akehurst.language.types.asm.StdLibDefault
+import kotlin.error
 
 class ExecutionStep(
     val description: String,
@@ -32,7 +33,7 @@ class ExecutionStep(
 object ObjectTemplateObjectTemplateExt {
     val ObjectTemplate.constructorArgumentNames: List<String>
         get() {
-            val typeDef = type.resolvedDefinition
+            val typeDef = type?.resolvedDefinition ?: error("Cannot get constructorArgumentNames, type not resolved")
             val constructors = when (typeDef) {
                 is DataType -> typeDef.constructors
                 is ValueType -> typeDef.constructors
@@ -411,7 +412,8 @@ class M2mPatternExecutor2(
         traverseObjectTemplateProperties(false, objVarName, lhsType, conArgTemplates)
 
         // 3. Emit the Object Resolution Step
-        val conStr = "${template.type.typeName.value}(${conArgNames.joinToString()}){}"
+        val tplType = template.type ?: error("Cannot traverseObjectTemplate, type not resolved")
+        val conStr = "${tplType.typeName.value}(${conArgNames.joinToString()}){}"
         val harvestStr = when {
             !shouldHarvestFromSource -> null
             harvestFromCollection -> {
@@ -438,7 +440,7 @@ class M2mPatternExecutor2(
                     val argValName = "$objVarName$${it.propertyName.value}"
                     it.propertyName.value to (evc.getOrInParent(argValName) ?: error("$argValName not found"))
                 }
-                val fresh = accessorMutator.createStructureValue(template.type.qualifiedTypeName, args)
+                val fresh = accessorMutator.createStructureValue(tplType.qualifiedTypeName, args)
                 evc.setNamedValue(objVarName, fresh)
                 return fresh
             }
@@ -498,7 +500,8 @@ class M2mPatternExecutor2(
                     if (parentObj == null && parentType.isCollection) {
                         constructFresh()
                     } else if (parentObj == null) {
-                        error("$parentName not found")
+                        constructFresh()
+                        //error("$parentName not found")
                     } else if (parentType.isCollection) {
                         var matchedElement: TypedObject? = null
                         accessorMutator.forEachIndexed(parentObj) { _, elValue ->
@@ -545,7 +548,7 @@ class M2mPatternExecutor2(
     fun traverseObjectTemplateProperties(setLhs: Boolean, parentVarName: String, parentType: TypeInstance, propertyTemplates: Collection<PropertyTemplate>) {
         for (pt in propertyTemplates) {
             val propLhsName = pt.propertyName.value
-            val propType = parentType.resolvedDefinition.findAllPropertyOrNull(PropertyName(propLhsName))?.typeInstance ?: StdLibDefault.AnyType
+            val propType =  parentType.allResolvedProperty[PropertyName(propLhsName)]?.typeInstance ?: StdLibDefault.AnyType
             // Pass the parent's actual variable name down as the parentName parameter
             traversePropertyTemplateRhs(setLhs, parentVarName, parentType, propLhsName, propType, pt.rhs)
         }

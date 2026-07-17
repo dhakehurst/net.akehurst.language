@@ -26,6 +26,9 @@ import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
 
 interface ExpressionsDomain : Domain<ExpressionsNamespace, FunctionDefinition>, Expression {
 
@@ -181,6 +184,9 @@ interface TypeReference {
     val possiblyQualifiedName: PossiblyQualifiedName
     val typeArguments: List<TypeReference>
     val isNullable: Boolean
+    val type: TypeInstance?
+
+    fun resolveTypes(tm: TypesDomain): List<LanguageIssue>
 
     fun asString(indent: Indent, imports: List<Import>): String
 }

@@ -329,6 +329,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         val self = untyped(tobj)
         when (self) {
             is Collection<*> -> self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
+            is Map<*,*> -> self.entries.forEachIndexed { index, el -> body(index, toTypedObject(Pair(el.key,el.value), StdLibDefault.AnyType)) } //TODO Pair Type
             else -> {
                 issueError(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
                 nothing()

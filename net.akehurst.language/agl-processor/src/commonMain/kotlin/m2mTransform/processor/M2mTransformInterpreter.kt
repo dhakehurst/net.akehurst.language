@@ -1525,31 +1525,36 @@ class M2mTransformInterpreter(
         lhsType: TypeInstance,
         objectTemplate: ObjectTemplate
     ): Pair<TypedObject, Map<String, TypedObject>> {
-        val decl = objectTemplate.type.resolvedDefinition
-        return when (decl) {
-            is DataType, is ValueType -> {
-                val matchedVars = mutableMapOf<String, TypedObject>()
-                val constructors = when (decl) {
-                    is DataType -> decl.constructors
-                    is ValueType -> decl.constructors
-                    else -> error("Type '${decl.qualifiedName.value}' has no constructors")
-                }
-                val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
-                val conArgs = mutableMapOf<String, TypedObject>()
-                objectTemplate.propertyTemplate.forEach { (k, v) ->
-                    if (possibleConArgNames.contains(k.value)) {
-                        val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
-                        val (value, mv) = createFromRhs(m2mExecution, evc, propType, v.rhs)
-                        matchedVars.putAll(mv)
-                        conArgs[k.value] = value
+        val tplType = objectTemplate.type
+        if (null==tplType) {
+            error("Cannot construct object for ObjectTemplate type not resolved")
+        } else {
+            val decl = tplType.resolvedDefinition
+            return when (decl) {
+                is DataType, is ValueType -> {
+                    val matchedVars = mutableMapOf<String, TypedObject>()
+                    val constructors = when (decl) {
+                        is DataType -> decl.constructors
+                        is ValueType -> decl.constructors
+                        else -> error("Type '${decl.qualifiedName.value}' has no constructors")
                     }
+                    val possibleConArgNames = constructors.flatMap { it -> it.parameters.map { it.name.value } } //FIXME: this is not really accurate!
+                    val conArgs = mutableMapOf<String, TypedObject>()
+                    objectTemplate.propertyTemplate.forEach { (k, v) ->
+                        if (possibleConArgNames.contains(k.value)) {
+                            val propType = lhsType.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
+                            val (value, mv) = createFromRhs(m2mExecution, evc, propType, v.rhs)
+                            matchedVars.putAll(mv)
+                            conArgs[k.value] = value
+                        }
+                    }
+                    val o = m2mExecution.targetAccessorMutator.createStructureValue(tplType.qualifiedTypeName, conArgs)
+                    val mv = objectTemplate.identifier?.let { matchedVars + Pair(it.value, o) } ?: matchedVars
+                    Pair(o, mv)
                 }
-                val o = m2mExecution.targetAccessorMutator.createStructureValue(objectTemplate.type.qualifiedTypeName, conArgs)
-                val mv = objectTemplate.identifier?.let { matchedVars + Pair(it.value, o) } ?: matchedVars
-                Pair(o, mv)
-            }
 
-            else -> error("Cannot construct object of type ${decl.qualifiedName.value}")
+                else -> error("Cannot construct object of type ${tplType.qualifiedTypeName.value}")
+            }
         }
     }
 
@@ -1643,35 +1648,40 @@ class M2mTransformInterpreter(
         evc: EvaluationContext,
         objectTemplate: ObjectTemplate
     ) {
-        val decl = objectTemplate.type.resolvedDefinition
-        return when (decl) {
-            // only DataTypes have properties that can be set
-            is DataType -> {
-                val propValues = mutableMapOf<String, TypedObject>()
-                objectTemplate.propertyTemplate.forEach { (k, v) ->
-                    val propType = obj.type.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
+        val tplType = objectTemplate.type
+        if (null==tplType) {
+            error("Cannot setPropertiesFromObjectTemplate type not resolved")
+        } else {
+            val decl = tplType.resolvedDefinition
+            return when (decl) {
+                // only DataTypes have properties that can be set
+                is DataType -> {
+                    val propValues = mutableMapOf<String, TypedObject>()
+                    objectTemplate.propertyTemplate.forEach { (k, v) ->
+                        val propType = obj.type.allResolvedProperty[PropertyName(k.value)]?.typeInstance ?: StdLibDefault.AnyType
 
-                    // TODO: if property is a constructor arg, it is already set, else it will have no value yet
-                    // can we deduce this rather than getting all properties and just checking for nothing
+                        // TODO: if property is a constructor arg, it is already set, else it will have no value yet
+                        // can we deduce this rather than getting all properties and just checking for nothing
 
-                    val possiblePv = obj.getProperty(k.value)
-                    val pv = when {
-                        m2mExecution.targetAccessorMutator.isNothing(possiblePv) -> {
-                            val (o, vars) = createFromRhs(m2mExecution, evc, propType, v.rhs)
-                            setPropertiesFromRhs(m2mExecution, o, evc, v.rhs)
-                            o
+                        val possiblePv = obj.getProperty(k.value)
+                        val pv = when {
+                            m2mExecution.targetAccessorMutator.isNothing(possiblePv) -> {
+                                val (o, vars) = createFromRhs(m2mExecution, evc, propType, v.rhs)
+                                setPropertiesFromRhs(m2mExecution, o, evc, v.rhs)
+                                o
+                            }
+
+                            else -> {
+                                setPropertiesFromRhs(m2mExecution, possiblePv, evc, v.rhs)
+                                possiblePv
+                            }
                         }
-
-                        else -> {
-                            setPropertiesFromRhs(m2mExecution, possiblePv, evc, v.rhs)
-                            possiblePv
-                        }
+                        propValues[k.value] = pv
                     }
-                    propValues[k.value] = pv
                 }
-            }
 
-            else -> Unit
+                else -> Unit
+            }
         }
     }
 

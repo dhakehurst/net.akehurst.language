@@ -113,9 +113,9 @@ interface DomainSignature {
 interface VariableDefinition {
     val name: SimpleName
     val typeRef: TypeReference
-    val type: TypeInstance
+    val type: TypeInstance?
 
-    fun resolveType(tm: TypesDomain)
+    fun resolveType(tm: TypesDomain): List<LanguageIssue>
 }
 
 interface M2mTransformAbstractRule : M2mTransformRule {
@@ -179,7 +179,7 @@ interface PropertyTemplateRhs {
 }
 
 interface ObjectTemplate : PropertyTemplateRhs {
-    val type: TypeInstance
+    val type: TypeInstance?
     val propertyTemplate: Map<SimpleName, PropertyTemplate>
 }
 

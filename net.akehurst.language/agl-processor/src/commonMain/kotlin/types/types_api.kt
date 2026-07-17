@@ -343,7 +343,7 @@ interface ValueType : StructuredType {
     val constructors: List<ConstructorDefinition>
     val valueProperty: PropertyDeclaration
 
-    fun addConstructor(parameters: List<ParameterDeclaration>)
+    fun addConstructor(parameters: List<ParameterDeclaration>): ConstructorDefinition
 }
 
 interface InterfaceType : StructuredType {
@@ -363,7 +363,7 @@ interface DataType : StructuredType {
     fun addSubtype_dep(qualifiedTypeName: PossiblyQualifiedName)
 
     fun addSubtype(typeInstance: TypeInstance)
-    fun addConstructor(parameters: List<ParameterDeclaration>)
+    fun addConstructor(parameters: List<ParameterDeclaration>): ConstructorDefinition
 }
 
 interface UnionType : TypeDefinition {
@@ -433,6 +433,8 @@ interface PropertyDeclaration {
     // to assist execution by reflection without having MPP reflection support
     val execution: ((self: Any) -> Any?)?
     val executionSuspend: (suspend (self: Any) -> Any?)?
+
+    val mutator: ((self: Any, value:Any) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 
