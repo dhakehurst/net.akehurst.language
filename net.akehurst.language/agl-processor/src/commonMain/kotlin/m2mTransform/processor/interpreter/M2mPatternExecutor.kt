@@ -17,7 +17,7 @@ import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.ValueType
 import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.collections.plus
-
+/*
 class M2mPatternExecution(
     val description: String,
     val inputs: List<String>,
@@ -506,3 +506,5 @@ class M2mPatternExecutor(
     }
 
 }
+
+ */

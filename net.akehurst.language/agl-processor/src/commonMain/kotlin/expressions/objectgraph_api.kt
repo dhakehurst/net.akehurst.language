@@ -33,7 +33,7 @@ interface TypedObject {
     val self: Any
     val type: TypeInstance
 
-    val untyped:Any
+    val untyped: Any
     val isNothing: Boolean
 
     fun getProperty(name: String): TypedObject

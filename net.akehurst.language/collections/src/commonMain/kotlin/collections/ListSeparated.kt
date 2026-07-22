@@ -41,7 +41,7 @@ inline fun <reified E, reified I : E, reified S : E> emptyListSeparated(): ListS
 inline fun <reified E, reified I : E, reified S : E> listSeparatedOf(vararg elements: E): ListSeparated<E, I, S> = ListSeparatedArrayList(elements.toList())
 inline fun <reified E, reified I : E, reified S : E> mutableListSeparated(): MutableListSeparated<E, I, S> = MutableListSeparatedArrayList()
 
-inline fun <reified E, reified I : E, reified S : E> List<E>.toSeparatedList(): ListSeparated<E, I, S> = ListSeparatedArrayList<E, I, S>(this)
+inline fun <reified E, reified I : E, reified S : E> Collection<E>.toSeparatedList(): ListSeparated<E, I, S> = ListSeparatedArrayList<E, I, S>(this.toList())
 
 class ListSeparatedArrayList<E, I : E, S : E>(
     override val elements: List<E>

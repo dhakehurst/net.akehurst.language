@@ -1,25 +1,12 @@
 package net.akehurst.language.agl.generators
 
-import net.akehurst.language.agl.Agl
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
-import net.akehurst.language.agl.generators.GenerateGrammarDomainBuild.Companion.generatedFormat
-import net.akehurst.language.agl.processor.contextFromRegistryGrammars
-import net.akehurst.language.api.processor.FormatString
-import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonState
 import net.akehurst.language.automaton.api.AutomatonTransition
 import net.akehurst.language.automaton.api.LookaheadGuard
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.api.StateNumber
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
-import net.akehurst.language.format.processor.FormatterOverTypedObject
-import net.akehurst.language.grammar.api.GrammarDomain
-import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.types.builder.typesDomain
@@ -81,33 +68,33 @@ format AutomatonDsl {
     override val inputTypesDomain = typesDomain("Automaton", true) {
         namespace("net.akehurst.language.automaton.api") {
             interface_("Automaton", implementation = Automaton::class) {
-                propertyOf(setOf(CMP, VAL), "state", "Set", execution = Automaton::state) { typeArgument("AutomatonState") }
-                propertyOf(setOf(CMP, VAL), "transition", "Set", execution = Automaton::transition) { typeArgument("AutomatonTransition") }
+                propertyOfWithBinding(setOf(CMP, VAL), "state", "Set", accessor = Automaton::state) { typeArgument("AutomatonState") }
+                propertyOfWithBinding(setOf(CMP, VAL), "transition", "Set", accessor = Automaton::transition) { typeArgument("AutomatonTransition") }
             }
             interface_("AutomatonState", implementation = AutomatonState::class) {
-                propertyOf(setOf(CMP, VAL), "number", "StateNumber", execution = AutomatonState::number)
-                propertyOf(setOf(CMP, VAL), "rulePosition", "List", execution = AutomatonState::rulePosition) { typeArgument("RulePosition") }
+                propertyOfWithBinding(setOf(CMP, VAL), "number", "StateNumber", accessor = AutomatonState::number)
+                propertyOfWithBinding(setOf(CMP, VAL), "rulePosition", "List", accessor = AutomatonState::rulePosition) { typeArgument("RulePosition") }
             }
             enum("ParseAction", listOf("HEIGHT", "GRAFT", "WIDTH", "GOAL", "EMBED"), implementation = ParseAction::class)
             interface_("AutomatonTransition", implementation = AutomatonTransition::class) {
-                propertyOf(setOf(CMP, VAL), "action", "ParseAction", execution = AutomatonTransition::action)
-                propertyOf(setOf(REF, VAL), "source", "AutomatonState", execution = AutomatonTransition::source)
-                propertyOf(setOf(REF, VAL), "target", "AutomatonState", execution = AutomatonTransition::target)
-                propertyOf(setOf(REF, VAL), "lookahead", "Set", execution = AutomatonTransition::lookahead) { typeArgument("LookaheadGuard") }
+                propertyOfWithBinding(setOf(CMP, VAL), "action", "ParseAction", accessor = AutomatonTransition::action)
+                propertyOfWithBinding(setOf(REF, VAL), "source", "AutomatonState", accessor = AutomatonTransition::source)
+                propertyOfWithBinding(setOf(REF, VAL), "target", "AutomatonState", accessor = AutomatonTransition::target)
+                propertyOfWithBinding(setOf(REF, VAL), "lookahead", "Set", accessor = AutomatonTransition::lookahead) { typeArgument("LookaheadGuard") }
             }
             interface_("LookaheadGuard") {
-                propertyOf(setOf(CMP, VAL), "guard", "Set", execution = LookaheadGuard::guard) { typeArgument("Rule") }
-                propertyOf(setOf(CMP, VAL), "up", "Set", execution = LookaheadGuard::up) { typeArgument("Rule") }
+                propertyOfWithBinding(setOf(CMP, VAL), "guard", "Set", accessor = LookaheadGuard::guard) { typeArgument("Rule") }
+                propertyOfWithBinding(setOf(CMP, VAL), "up", "Set", accessor = LookaheadGuard::up) { typeArgument("Rule") }
             }
             interface_("RulePosition", implementation = RulePosition::class) {
-                propertyOf(setOf(CMP, VAL), "rule", "Rule", execution = RulePosition::rule)
-                propertyOf(setOf(CMP, VAL), "option", "Integer", execution = RulePosition::option)
-                propertyOf(setOf(CMP, VAL), "position", "Integer", execution = RulePosition::position)
-                propertyOf(setOf(DER, VAL), "asString", "String", execution = RulePosition::asString)
+                propertyOfWithBinding(setOf(CMP, VAL), "rule", "Rule", accessor = RulePosition::rule)
+                propertyOfWithBinding(setOf(CMP, VAL), "option", "Integer", accessor = RulePosition::option)
+                propertyOfWithBinding(setOf(CMP, VAL), "position", "Integer", accessor = RulePosition::position)
+                propertyOfWithBinding(setOf(DER, VAL), "asString", "String", accessor = RulePosition::asString)
             }
             interface_("Rule", implementation = Rule::class) {
-                propertyOf(setOf(CMP, VAL), "ruleSetNumber", "Integer", execution = Rule::ruleSetNumber)
-                propertyOf(setOf(CMP, VAL), "number", "Integer", execution = Rule::number)
+                propertyOfWithBinding(setOf(CMP, VAL), "ruleSetNumber", "Integer", accessor = Rule::ruleSetNumber)
+                propertyOfWithBinding(setOf(CMP, VAL), "number", "Integer", accessor = Rule::number)
             }
             data("StateNumber", implementation = StateNumber::class) {
                 constructor_ {

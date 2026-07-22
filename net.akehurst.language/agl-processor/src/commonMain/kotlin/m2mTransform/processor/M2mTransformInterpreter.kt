@@ -17,9 +17,6 @@
 
 package net.akehurst.language.m2mTransform.processor
 
-import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecution
-import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecutor
-import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecutor.Companion.RESULT
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.ExecutionStep
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecutor2
@@ -43,9 +40,6 @@ import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.ValueType
 import net.akehurst.language.types.asm.StdLibDefault
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.plus
 
 data class M2MTransformResult(
     val issues: IssueHolder,
@@ -222,6 +216,7 @@ class M2mTransformInterpreter(
 ) {
 
     companion object {
+        const val RESULT = "§result"
 
         data class CoverOption<B, R>(val b: B, val r: R)
 
@@ -568,6 +563,7 @@ class M2mTransformInterpreter(
         }
     }
 
+    /*
     private fun executeRelation1(m2mExecution: M2mTransformExecution, rule: M2MTransformRelation, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) {
         m2mExecution.evaluationStep("Executing relation rule '${rule.name.value}'.")
         val domToListOfAlts = matchSourceVariables(m2mExecution, rule, source)
@@ -646,6 +642,7 @@ class M2mTransformInterpreter(
             }
         }
     }
+*/
 
     private fun executeRelation(m2mExecution: M2mTransformExecution, rule: M2MTransformRelation, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) {
         m2mExecution.evaluationStep("Executing relation rule '${rule.name.value}'.")
@@ -731,6 +728,7 @@ class M2mTransformInterpreter(
         executor.execute(varsAfterWhen, tgtName)
     }
 
+    /*
     private fun executeRelationMainBodyOld(m2mExecution: M2mTransformExecution, rule: M2MTransformRelation, srcMatch: Map<DomainReference, TemplateMatchResult>, varsAfterWhen: EvaluationContext) {
 
         val template = rule.domainTemplate[m2mExecution.targetDomainRef] ?: error("...")
@@ -782,7 +780,7 @@ class M2mTransformInterpreter(
         executor.build(tgtName, template, lhsType)
         executor.execute(varsAfterWhen, tgtName)
     }
-
+*/
     private fun extractWhenAndWhereTargets(rule: M2MTransformRelation, tgt: DomainReference): List<String> {
         val fromWhen = rule.when_?.let { extractWhenTarget(it, tgt) } ?: emptyList()
 
@@ -1389,26 +1387,47 @@ class M2mTransformInterpreter(
         source: Map<DomainReference, List<TypedObject>>,
     ): TypedObject? {
         var mappingRecord = m2mExecution.records[rule]
-        if (null == mappingRecord) {
-            executeRule(m2mExecution, rule, source, ruleArguments)
-            mappingRecord = m2mExecution.records[rule]
-        }
-        val alts = mappingRecord?.let {
-            it.alternatives.filter { rec ->
-                source.all { (k, v) ->
-                    val alt = rec[k]!!
-                    v.any { alt.accessor.equalTo(alt, it) }
+        val match = when {
+            null == mappingRecord -> {
+                executeRule(m2mExecution, rule, source, ruleArguments)
+                mappingRecord = m2mExecution.records[rule]
+                mappingRecord?.let { findMatchInMappingRecord(m2mExecution, mappingRecord, source) }
+            }
+
+            else -> {
+                val matchFromExisting = findMatchInMappingRecord(m2mExecution, mappingRecord, source)
+                when {
+                    null == matchFromExisting -> {
+                        executeRule(m2mExecution, rule, source, ruleArguments)
+                        mappingRecord = m2mExecution.records[rule]
+                        mappingRecord?.let { findMatchInMappingRecord(m2mExecution, mappingRecord, source) }
+                    }
+
+                    else -> matchFromExisting
                 }
             }
-        } ?: emptyList()
-        return when (alts.size) {
-            0 -> {
+        }
+
+        return when {
+            null == match -> {
                 m2mExecution.warnIssue("In rule '${owningRule.name.value}' the 'where' clause matched nothing.")
                 null
             }
 
-            1 -> alts.first()[m2mExecution.targetDomainRef]
+            else -> match
+        }
+    }
 
+    fun findMatchInMappingRecord(m2mExecution: M2mTransformExecution, record: MappingRecord, source: Map<DomainReference, List<TypedObject>>): TypedObject? {
+        val alts = record.alternatives.filter { rec ->
+            source.all { (k, v) ->
+                val alt = rec[k]!!
+                v.any { alt.accessor.equalTo(alt, it) }
+            }
+        }
+        return when (alts.size) {
+            0 -> null
+            1 -> alts.first()[m2mExecution.targetDomainRef]
             else -> TODO("handle multiple matches from where")
         }
     }
@@ -1526,7 +1545,7 @@ class M2mTransformInterpreter(
         objectTemplate: ObjectTemplate
     ): Pair<TypedObject, Map<String, TypedObject>> {
         val tplType = objectTemplate.type
-        if (null==tplType) {
+        if (null == tplType) {
             error("Cannot construct object for ObjectTemplate type not resolved")
         } else {
             val decl = tplType.resolvedDefinition
@@ -1649,7 +1668,7 @@ class M2mTransformInterpreter(
         objectTemplate: ObjectTemplate
     ) {
         val tplType = objectTemplate.type
-        if (null==tplType) {
+        if (null == tplType) {
             error("Cannot setPropertiesFromObjectTemplate type not resolved")
         } else {
             val decl = tplType.resolvedDefinition

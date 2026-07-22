@@ -33,13 +33,89 @@ class test_TypesBuilder {
 
         }
     }
-    @Test
-    fun derivedPropertyWithKotlinExection() {
 
+    @Test
+    fun derivedPropertyWithKotlinAccessor() {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("DataClass") {
-                    propertyPrimitive("derProp", "String", false, execution = { "Hello World!" })
+                    propertyPrimitive<DataClass,String>("derProp", "String", false, accessor = { "Hello World!" })
+                }
+            }
+        }
+        val issues = IssueHolder()
+        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+
+        val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
+        assertEquals("Hello World!", actual.self)
+    }
+
+
+    @Test
+    fun propertyPrimitive_via_lambda() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("DataClass") {
+                    propertyPrimitive<DataClass,String>("derProp", "String", false, accessor = { "Hello World!" })
+                }
+            }
+        }
+        val issues = IssueHolder()
+        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+
+        val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
+        assertEquals("Hello World!", actual.self)
+    }
+
+    @Test
+    fun propertyPrimitive_accessor_via_property() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("DataClass") {
+                    propertyPrimitive("derProp", "String", false, accessor = DataClass::id)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun propertyOf_no_accessor() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("DataClass") {
+                    propertyOf(setOf(),"derProp", "String", false)
+                }
+            }
+        }
+        val issues = IssueHolder()
+        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+
+        val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
+        assertEquals("Hello World!", actual.self)
+    }
+
+    @Test
+    fun propertyOf_vai_lambda() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("DataClass") {
+                    propertyOfWithBinding<DataClass,String>(setOf(),"derProp", "String", false, accessor = { o ->  "Hello World!" })
+                }
+            }
+        }
+        val issues = IssueHolder()
+        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+
+        val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
+        assertEquals("Hello World!", actual.self)
+    }
+
+    @Test
+    fun propertyOf_vai_property() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("DataClass") {
+                    propertyOfWithBinding(setOf(),"derProp", "String", false, accessor = DataClass::id)
                 }
             }
         }

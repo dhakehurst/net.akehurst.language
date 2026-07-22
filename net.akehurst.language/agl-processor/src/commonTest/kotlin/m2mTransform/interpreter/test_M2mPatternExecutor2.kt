@@ -22,6 +22,7 @@ import net.akehurst.language.m2mTransform.asm.ObjectTemplateDefault
 import net.akehurst.language.m2mTransform.asm.PropertyTemplateDefault
 import net.akehurst.language.m2mTransform.asm.PropertyTemplateExpressionDefault
 import net.akehurst.language.m2mTransform.builder.patternTemplate
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
@@ -46,7 +47,7 @@ class test_M2mPatternExecutor2 {
             val initVars = input.keys
             val sut = M2mPatternExecutor2(issues, accessorMutator, initVars, emptyList())
 
-            val tgtName = M2mPatternExecutor.RESULT
+            val tgtName = M2mTransformInterpreter.RESULT
             val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
             val evc = EvaluationContext.of(typedInput)
             sut.build(tgtName, template, tgtType)
@@ -1096,10 +1097,10 @@ class test_M2mPatternExecutor2 {
         val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
         val evc = EvaluationContext.of(typedInput)
         val sut = M2mPatternExecutor2(issues, accessorMutator, input.keys, emptyList())
-        sut.build(M2mPatternExecutor.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type())
+        sut.build(M2mTransformInterpreter.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type())
 
         val ex = assertFailsWith<IllegalStateException> {
-            sut.execute(evc, M2mPatternExecutor.RESULT)
+            sut.execute(evc, M2mTransformInterpreter.RESULT)
         }
         assertTrue(ex.message?.contains("Paradox") == true)
     }
@@ -1217,7 +1218,7 @@ class test_M2mPatternExecutor2 {
         val evc = EvaluationContext.of(typedInput)
         val sut = M2mPatternExecutor2(issues, accessorMutator, input.keys, emptyList())
 
-        sut.build(M2mPatternExecutor.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.StateMachine"))!!.type())
+        sut.build(M2mTransformInterpreter.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.StateMachine"))!!.type())
         val plan = sut.executionPlan.map { it.description }
         val producerIdx = plan.indexOfFirst { it.contains("pdn := pd.name") }
         val consumerIdx = plan.indexOfFirst { it.contains("sm\$name := pdn") }

@@ -28,7 +28,6 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.base.api.*
-import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
@@ -220,12 +219,12 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
                 interface_("Namespace") {
                     typeParameters("DT")
                     supertype("Formatable")
-                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false, Namespace<*>::options)
+                    propertyOfWithBinding(setOf(VAL, CMP, STR), "options", "OptionHolder", false, Namespace<*>::options)
                 }
                 interface_("Domain") {
                     typeParameters("NT", "DT")
                     supertype("Formatable")
-                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false, Domain<*, *>::namespace) {
+                    propertyOfWithBinding(setOf(VAR, CMP, STR), "namespace", "List", false, Domain<*, *>::namespace) {
                         typeArgument("NT")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)

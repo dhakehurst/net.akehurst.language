@@ -28,7 +28,6 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.collections.transitiveClosure
-import net.akehurst.language.expressions.api.FunctionDefinition
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -40,6 +39,9 @@ import net.akehurst.language.types.asm.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.jvm.JvmOverloads
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KMutableProperty0
+import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 import kotlin.time.Instant
 
@@ -288,7 +290,7 @@ class StdLibPrimitiveExecutionsForReflection(
 
     /** returns null if execution is not found for the given property on the typeDef */
     private fun propertyValueDirect(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
-        val propExec = property.execution
+        val propExec = property.accessor
         return when {
             null == propExec -> {
                 val typeProps = this._property[typeDef]
@@ -559,7 +561,7 @@ constructor(
      */
     override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject =
         getPropertyInternal(tobj, propertyName, externalGetter::getProperty) { obj, decl ->
-            decl.execution?.invoke(obj)
+            decl.accessor?.invoke(obj)
         }
 
     override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) =
@@ -581,7 +583,7 @@ constructor(
 
     override suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject =
         getPropertyInternal(tobj, propertyName, { o, n -> externalGetter.getPropertySuspend(o, n) }) { obj, decl ->
-            decl.executionSuspend?.invoke(obj) ?: decl.execution?.invoke(obj)
+            decl.accessorSuspend?.invoke(obj) ?: decl.accessor?.invoke(obj)
         }
 
     override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) =
@@ -664,6 +666,7 @@ constructor(
             }
 
             else -> {
+                //TODO: bit mixed up with External and Primitive Accessors - don't think we need both.
                 val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
                 when (propRes) {
                     null -> {
@@ -671,30 +674,30 @@ constructor(
                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
                         value?.let { toTypedObject(value, StdLibDefault.AnyType) }
                         // could be validly null, so only issue warning
-                            ?: issueWarningReturnNothing(null, "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing.")
+                            ?: issueWarningReturnNothing(null, "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing.")
                     }
 
                     else -> {
                         val propResOriginal = propRes.original
                         val obj = untyped(tobj)
                         when {
-                            (null != propResOriginal.execution) -> {
+                            (null != propResOriginal.accessor) -> {
                                 val value = propertyExecution(obj, propResOriginal)
                                 value?.let { toTypedObject(value, propRes.typeInstance) }
                                     ?: when {
                                         propResOriginal.typeInstance.isNullable -> nothing()
-                                        else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing.")
+                                        else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing.")
                                     }
                             }
 
-                            (null != propResOriginal.executionSuspend) -> {
+                            (null != propResOriginal.accessorSuspend) -> {
                                 val value = propertyExecution(obj, propResOriginal)
                                 value?.let { toTypedObject(value, propRes.typeInstance) }
                                     ?: when {
                                         propResOriginal.typeInstance.isNullable -> nothing()
                                         else -> issueErrorReturnNothing(
                                             null,
-                                            "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                                            "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing."
                                         )
                                     }
                             }
@@ -710,7 +713,7 @@ constructor(
                                                 propResOriginal.typeInstance.isNullable -> nothing()
                                                 else -> issueErrorReturnNothing(
                                                     null,
-                                                    "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                                                    "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing."
                                                 )
                                             }
                                     }
@@ -741,6 +744,7 @@ constructor(
             }
 
             else -> {
+                //TODO: bit mixed up with External and Primitive Accessors/Mutators - don't think we need both.
                 val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
                 val r = propRes?.isReference ?: false
                 when (propRes) {
@@ -753,9 +757,13 @@ constructor(
                         val propResOriginal = propRes.original
                         val obj = untyped(tobj)
                         when {
-                            (null != propResOriginal.execution) -> {
-                                propResOriginal.execution.invoke()
+                            propResOriginal.accessor is KMutableProperty1<*, *> -> {
+                                (propResOriginal.accessor as KMutableProperty1<Any, Any>).set(obj, value.untyped)
                             }
+                            (null != propResOriginal.mutator) -> {
+                                propResOriginal.mutator!!.invoke(obj, value.untyped)
+                            }
+                            //TODO suspend !
                             else -> {
                                 val type = tobj.type.resolvedDefinition
                                 val execResult = primitiveExecutor.propertyValue(obj, type, propResOriginal)

@@ -1,12 +1,12 @@
 [versions]
-project = "4.2.3.21-SNAPSHOT"
+project = "4.2.3.21"
 
 kotlin = "2.3.21"
 dokka = "2.1.0"
 buildconfig = "6.0.10"
-exportPublic = "2.3.21-SNAPSHOT"
-nak-kotlinx = "2.3.21-SNAPSHOT"
-jsIntegration = "2.3.21-SNAPSHOT"
+exportPublic = "2.3.21"
+nak-kotlinx = "2.3.21"
+jsIntegration = "2.3.21"
 vanniktech = "0.37.0"
 
 korlibs = "6.0.2"

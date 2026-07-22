@@ -138,45 +138,45 @@ format AutomatonDsl {
     override val inputTypesDomain = typesDomain("Automaton", true) {
         namespace("net.akehurst.language.automaton.api") {
             interface_("Rule", implementation = Rule::class) {
-                propertyOf(setOf(CMP, VAL), "ruleSetNumber", "Integer", execution = Rule::ruleSetNumber)
-                propertyOf(setOf(CMP, VAL), "number", "Integer", execution = Rule::number)
-                propertyOf(setOf(DER, VAL), "isTerminal", "Boolean", execution = Rule::isTerminal)
+                propertyOfWithBinding(setOf(CMP, VAL), "ruleSetNumber", "Integer", accessor = Rule::ruleSetNumber)
+                propertyOfWithBinding(setOf(CMP, VAL), "number", "Integer", accessor = Rule::number)
+                propertyOfWithBinding(setOf(DER, VAL), "isTerminal", "Boolean", accessor = Rule::isTerminal)
             }
             interface_("RulePosition", implementation = RulePosition::class) {
-                propertyOf(setOf(CMP, VAL), "rule", "Rule", execution = RulePosition::rule)
-                propertyOf(setOf(CMP, VAL), "option", "Integer", execution = RulePosition::option)
-                propertyOf(setOf(CMP, VAL), "position", "Integer", execution = RulePosition::position)
-                propertyOf(setOf(DER, VAL), "asString", "String", execution = RulePosition::asString)
+                propertyOfWithBinding(setOf(CMP, VAL), "rule", "Rule", accessor = RulePosition::rule)
+                propertyOfWithBinding(setOf(CMP, VAL), "option", "Integer", accessor = RulePosition::option)
+                propertyOfWithBinding(setOf(CMP, VAL), "position", "Integer", accessor = RulePosition::position)
+                propertyOfWithBinding(setOf(DER, VAL), "asString", "String", accessor = RulePosition::asString)
             }
             interface_("RuleSet", implementation = RuleSet::class) {
-                propertyOf(setOf(CMP, VAL), "rule", "List", execution = RuleSet::rule) { typeArgument("Rule") }
+                propertyOfWithBinding(setOf(CMP, VAL), "rule", "List", accessor = RuleSet::rule) { typeArgument("Rule") }
             }
             interface_("Automaton", implementation = Automaton::class) {
-                propertyOf(setOf(CMP, VAL), "ruleSet", "RuleSet", execution = Automaton::ruleSet)
-                propertyOf(setOf(CMP, VAL), "state", "Set", execution = Automaton::state) { typeArgument("AutomatonState") }
-                propertyOf(setOf(CMP, VAL), "transition", "Set", execution = Automaton::transition) { typeArgument("AutomatonTransition") }
+                propertyOfWithBinding(setOf(CMP, VAL), "ruleSet", "RuleSet", accessor = Automaton::ruleSet)
+                propertyOfWithBinding(setOf(CMP, VAL), "state", "Set", accessor = Automaton::state) { typeArgument("AutomatonState") }
+                propertyOfWithBinding(setOf(CMP, VAL), "transition", "Set", accessor = Automaton::transition) { typeArgument("AutomatonTransition") }
             }
             interface_("AutomatonState", implementation = AutomatonState::class) {
-                propertyOf(setOf(CMP, VAL), "number", "StateNumber", execution = AutomatonState::number)
-                propertyOf(setOf(CMP, VAL), "rulePosition", "List", execution = AutomatonState::rulePosition) { typeArgument("RulePosition") }
+                propertyOfWithBinding(setOf(CMP, VAL), "number", "StateNumber", accessor = AutomatonState::number)
+                propertyOfWithBinding(setOf(CMP, VAL), "rulePosition", "List", accessor = AutomatonState::rulePosition) { typeArgument("RulePosition") }
             }
             enum("ParseAction", listOf("HEIGHT", "GRAFT", "WIDTH", "GOAL", "EMBED"), implementation = ParseAction::class)
             interface_("AutomatonTransition", implementation = AutomatonTransition::class) {
-                propertyOf(setOf(VAL), "action", "ParseAction", execution = AutomatonTransition::action)
-                propertyOf(setOf(VAL), "source", "AutomatonState", execution = AutomatonTransition::source)
-                propertyOf(setOf(VAL), "target", "AutomatonState", execution = AutomatonTransition::target)
-                propertyOf(setOf(VAL), "lookahead", "Set", execution = AutomatonTransition::lookahead) { typeArgument("LookaheadGuard") }
-                propertyOf(setOf(VAL), "prev", "Set", execution = AutomatonTransition::prev) { typeArgument("AutomatonState") }
-                propertyOf(setOf(VAL), "prevPrev", "Set", execution = AutomatonTransition::prevPrev) { typeArgument("AutomatonState") }
-                propertyOf(setOf(VAL), "transContext", "Set", execution = AutomatonTransition::transContext) { typeArgument("TransitionContext") }
+                propertyOfWithBinding(setOf(VAL), "action", "ParseAction", accessor = AutomatonTransition::action)
+                propertyOfWithBinding(setOf(VAL), "source", "AutomatonState", accessor = AutomatonTransition::source)
+                propertyOfWithBinding(setOf(VAL), "target", "AutomatonState", accessor = AutomatonTransition::target)
+                propertyOfWithBinding(setOf(VAL), "lookahead", "Set", accessor = AutomatonTransition::lookahead) { typeArgument("LookaheadGuard") }
+                propertyOfWithBinding(setOf(VAL), "prev", "Set", accessor = AutomatonTransition::prev) { typeArgument("AutomatonState") }
+                propertyOfWithBinding(setOf(VAL), "prevPrev", "Set", accessor = AutomatonTransition::prevPrev) { typeArgument("AutomatonState") }
+                propertyOfWithBinding(setOf(VAL), "transContext", "Set", accessor = AutomatonTransition::transContext) { typeArgument("TransitionContext") }
             }
             interface_("TransitionContext", implementation = TransitionContext::class) {
-                propertyOf(setOf(CMP, VAL), "prevPrev", "AutomatonState", execution = TransitionContext::prevPrev)
-                propertyOf(setOf(CMP, VAL), "prev", "AutomatonState", execution = TransitionContext::prev)
+                propertyOfWithBinding(setOf(CMP, VAL), "prevPrev", "AutomatonState", accessor = TransitionContext::prevPrev)
+                propertyOfWithBinding(setOf(CMP, VAL), "prev", "AutomatonState", accessor = TransitionContext::prev)
             }
             interface_("LookaheadGuard") {
-                propertyOf(setOf(CMP, VAL), "guard", "Set", execution = LookaheadGuard::guard) { typeArgument("Rule") }
-                propertyOf(setOf(CMP, VAL), "up", "Set", execution = LookaheadGuard::up) { typeArgument("Rule") }
+                propertyOfWithBinding(setOf(CMP, VAL), "guard", "Set", accessor = LookaheadGuard::guard) { typeArgument("Rule") }
+                propertyOfWithBinding(setOf(CMP, VAL), "up", "Set", accessor = LookaheadGuard::up) { typeArgument("Rule") }
             }
             data("StateNumber", implementation = StateNumber::class) {
                 constructor_ {
