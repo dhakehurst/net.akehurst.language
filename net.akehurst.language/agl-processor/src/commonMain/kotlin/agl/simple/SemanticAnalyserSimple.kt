@@ -54,8 +54,10 @@ class SemanticAnalyserSimple(
                             val elType = interpreter.typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
                             val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, elType)), exp).self
                             when {
+                                value is String -> value
                                 value is AsmPrimitive && value.isStdString -> value.value as String
                                 value is AsmList && value.elements.all { it is AsmPrimitive && it.isStdString } -> value.elements.map { (it as AsmPrimitive).value as String }
+                                value is AsmAny && value.value is String -> value.value
                                 else -> null//error("Cannot get identifying value for $value")
                             }
                         }
@@ -69,8 +71,11 @@ class SemanticAnalyserSimple(
     private var _resolvedReferences = mutableListOf<ResolvedReference>()
     private lateinit var _locationMap: LocationMap
 
+    private val _accessor by lazy {
+        objectGraphSimpleAsm(typesDomain, null, _issues, _locationMap)
+    }
     private val _interpreter by lazy {
-        ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, _issues, _locationMap))
+        ExpressionsInterpreterOverTypedObject(_accessor)
     }
 
     override fun clear() {
@@ -114,7 +119,7 @@ class SemanticAnalyserSimple(
 
     private  fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContext, resolve: Boolean) {
         val resFunc: ((ref: Any) -> AsmStructure?)? = if (resolve) {
-            { ref -> context.resolveScopedItem.invoke(ref) as AsmStructure }
+            { ref -> context.resolveScopedItem.invoke(ref) as? AsmStructure }
         } else {
             null
         }
@@ -127,7 +132,7 @@ class SemanticAnalyserSimple(
                 sentenceId,
                 this::identifyingValueInFor,
                 resFunc,
-                locationMap, _issues
+                locationMap, _accessor
             )
             asm.traverseDepthFirst(resolver)
             _resolvedReferences = resolver.resolvedReferences

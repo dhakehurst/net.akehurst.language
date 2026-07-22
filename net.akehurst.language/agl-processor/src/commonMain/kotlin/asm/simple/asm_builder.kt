@@ -27,7 +27,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -42,6 +42,13 @@ import net.akehurst.language.types.builder.typesDomain
 @DslMarker
 annotation class AsmSimpleBuilderMarker
 
+/**
+ * To resolve references, there must be:
+ * a) a crossReferenceDomain
+ * b) a sentenceContext
+ * c) the crossReferenceDomain must define the identity of anything that is referenced
+ * d) the crossReferenceDomain must define any referencing property
+ */
 fun asmSimple(
     typesDomain: TypesDomain = typesDomain("StdLib", false) {},
     defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
@@ -74,7 +81,7 @@ class AsmSimpleBuilder(
     private val _sentenceScope = _context?.getOrCreateScopeForSentence(_sentenceId) as ScopeSimple? //TODO
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _locationMap = LocationMapDefault() //TODO: what to use here
-    private val _objectGraph = ObjectGraphAccessorMutatorAsmSimple(_typesDomain, _issues,_locationMap)
+    private val _objectGraph = objectGraphSimpleAsm(_typesDomain, null,_issues,_locationMap)
     private val _interpreter = ExpressionsInterpreterOverTypedObject(_objectGraph)
     private val _asm = AsmSimple(_objectGraph)
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple>()
@@ -83,7 +90,7 @@ class AsmSimpleBuilder(
     }
 
     fun string(value: String) {
-        _asm.addRoot(AsmPrimitiveSimple.stdString(value))
+        _asm.addRoot(value)
     }
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
@@ -137,7 +144,7 @@ class AsmSimpleBuilder(
                 _identifyingValueInFor,
                 _context.resolveScopedItem,
                 LocationMapDefault(),
-                _issues
+                _objectGraph
             )
             _asm.traverseDepthFirst(resolver)
             resolvedReferences.addAll(resolver.resolvedReferences)
@@ -228,13 +235,16 @@ class AsmElementSimpleBuilder(
     }
     */
 
-    private fun _property(name: String, value: AsmValue) {
+    private fun _property(name: String, value: Any) {
         _element.setProperty(PropertyValueName(name), value, 0)//TODO childIndex
     }
 
     fun propertyUnnamedString(value: String?) = this.propertyString(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, value)
-    fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple.stdString(it) } ?: AsmNothingSimple)
-    fun propertyNothing(name: String) = this._property(name, AsmNothingSimple)
+    fun propertyBoolean(name: String, value: Boolean?) = this._property(name, value?.let { AsmPrimitiveSimple.stdBoolean(it) } ?: Unit)
+    fun propertyInteger(name: String, value: Long?) = this._property(name, value?.let { AsmPrimitiveSimple.stdInteger(it) } ?: Unit)
+    fun propertyReal(name: String, value: Double?) = this._property(name, value?.let { AsmPrimitiveSimple.stdReal(it) } ?: Unit)
+    fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple.stdString(it) } ?: Unit)
+    fun propertyNothing(name: String) = this._property(name, Unit)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
         propertyElementExplicitType(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, typeName, init)
 

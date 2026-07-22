@@ -69,7 +69,8 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                             if (null == typesDomain) {
                                 _issues.error(null, "TypesDomain '$dr' not found in rule '${k}'")
                             } else {
-                                dv.variable.resolveType(typesDomain)
+                                val typeIssues = dv.variable.resolveType(typesDomain)
+                                _issues.addAll(typeIssues)
                             }
                         }
                         // resolve where and when rule refs

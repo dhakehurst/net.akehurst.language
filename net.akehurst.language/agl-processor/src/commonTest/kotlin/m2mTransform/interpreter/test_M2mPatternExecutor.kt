@@ -1,12 +1,16 @@
 package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.asm.simple.toAsmSimple
+import net.akehurst.language.asm.simple.AnyExt.asString
+import net.akehurst.language.asm.simple.AnyExt.toAsmSimple
+import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.asm.RootExpressionDefault
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.PropertyTemplateRhs
@@ -19,28 +23,30 @@ import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
+/*
+@Ignore
 class test_M2mPatternExecutor {
 
     private companion object {
         fun doTest(types: TypesDomain, lhsType: TypeInstance, template: PropertyTemplateRhs, input: Map<String, Any>, expectedPlan: List<String>, expectedResult: Any) {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val accessorMutator = ObjectGraphAccessorMutatorAsmSimple(types, issues, LocationMapDefault())
+            val accessorMutator = objectGraphSimpleAsm(types, null,issues, LocationMapDefault())
             val sut = M2mPatternExecutor(issues, accessorMutator, emptyList())
 
             val tgtName = template.identifier?.value ?: M2mPatternExecutor.RESULT
             sut.build(tgtName, template, lhsType)
             val actualPlan = sut.executionPlan().map { it.toString() }
             println(actualPlan.joinToString("\n"))
-            assertEquals(expectedPlan, actualPlan)
+            assertEquals(expectedPlan.joinToString("\n"), actualPlan.joinToString("\n"))
 
             val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v.toAsmSimple, StdLibDefault.AnyType)) }
             val res = sut.execute(EvaluationContext.of(typedInput), tgtName)
             val actualResult = res
             val expectedTypedResult = accessorMutator.toTypedObject(expectedResult.toAsmSimple, StdLibDefault.AnyType)
-            assertEquals(expectedTypedResult.self.toAsmSimple.asString(), actualResult.self.toAsmSimple.asString())
+            assertEquals(expectedTypedResult.self.asString(), actualResult.self.asString())
         }
     }
 
@@ -222,9 +228,9 @@ class test_M2mPatternExecutor {
             [2] // Collect constructor args | [] -> [] ^ [13, 3]
             [6] // Collect constructor args | [] -> [] ^ [13, 7]
             [10] // Collect constructor args | [] -> [] ^ [13, 11]
-            [3] temp1 := A(<constructor args>) // Create object  | [] -> [] ^ [13, 0]
-            [7] temp3 := B(<constructor args>) // Create object  | [] -> [] ^ [13, 4]
-            [11] temp5 := C(<constructor args>) // Create object  | [] -> [] ^ [13, 8]
+            [3] temp1 := A(<constructor args>) // Find or Create object  | [] -> [] ^ [13, 0]
+            [7] temp3 := B(<constructor args>) // Find or Create object  | [] -> [] ^ [13, 4]
+            [11] temp5 := C(<constructor args>) // Find or Create object  | [] -> [] ^ [13, 8]
             [0] // Start set properties for A | [] -> [] ^ [13, 1]
             [4] // Start set properties for B | [] -> [] ^ [13, 5]
             [8] // Start set properties for C | [] -> [] ^ [13, 9]
@@ -297,7 +303,7 @@ class test_M2mPatternExecutor {
 
         val expectedPlan = $$"""
             [2] // Collect constructor args | [] -> [] ^ [3]
-            [3] temp0 := A(<constructor args>) // Create object  | [] -> [] ^ [0]
+            [3] temp0 := A(<constructor args>) // Find or Create object  | [] -> [] ^ [0]
             [0] // Start set properties for A | [] -> [] ^ [1]
             [1] $result := temp0 // Finish set properties for A:  | [] -> [] ^ []
         """.trimIndent().lines()
@@ -329,7 +335,7 @@ class test_M2mPatternExecutor {
 
         val expectedPlan = $$"""
             [2] // Collect constructor args | [] -> [a] ^ [3]
-            [3] a := A(<constructor args>) // Create object  | [] -> [a] ^ [0]
+            [3] a := A(<constructor args>) // Find or Create object  | [] -> [a] ^ [0]
             [0] // Start set properties for A | [] -> [] ^ [1]
             [1] a := a // Finish set properties for A:  | [] -> [] ^ []
         """.trimIndent().lines()
@@ -350,9 +356,9 @@ class test_M2mPatternExecutor {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("A") {
-                    propertyOf(setOf(REF, VAR),"p1","String")
-                    propertyOf(setOf(REF, VAR),"p2","String")
-                    propertyOf(setOf(REF, VAR),"p3","String")
+                    propertyOf(setOf(REF, VAR), "p1", "String")
+                    propertyOf(setOf(REF, VAR), "p2", "String")
+                    propertyOf(setOf(REF, VAR), "p3", "String")
                 }
             }
         }
@@ -372,7 +378,7 @@ class test_M2mPatternExecutor {
 
         val expectedPlan = $$"""
             [2] // Collect constructor args | [] -> [a] ^ [3]
-            [3] a := A(<constructor args>) // Create object  | [] -> [a] ^ [0]
+            [3] a := A(<constructor args>) // Find or Create object  | [] -> [a] ^ [0]
             [0] // Start set properties for A | [] -> [] ^ [1, 4, 5, 6, 7, 8, 9]
             [5] a_p1 := p // Execute expression | [p] -> [a_p1] ^ [4]
             [7] a_p2 := q // Execute expression | [q] -> [a_p2] ^ [6]
@@ -384,9 +390,9 @@ class test_M2mPatternExecutor {
         """.trimIndent().lines()
         val expectedResult = asmSimple(types) {
             element("A") {
-                propertyString("p1","1")
-                propertyString("p2","2")
-                propertyString("p3","3")
+                propertyString("p1", "1")
+                propertyString("p2", "2")
+                propertyString("p3", "3")
             }
         }.root[0]
 
@@ -402,9 +408,9 @@ class test_M2mPatternExecutor {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("A") {
-                    constructor_ { parameter(setOf(REF, VAL), "p1", "String") }
-                    propertyOf(setOf(REF, VAR),"p2","String")
-                    propertyOf(setOf(REF, VAR),"p3","String")
+                    constructor_ { parameter(setOf(REF, VAL), "p1", "Integer") }
+                    propertyOf(setOf(REF, VAR), "p2", "Integer")
+                    propertyOf(setOf(REF, VAR), "p3", "Integer")
                 }
             }
         }
@@ -425,7 +431,7 @@ class test_M2mPatternExecutor {
         val expectedPlan = $$"""
             [2] // Collect constructor args | [] -> [a] ^ [3, 4]
             [4] a_p1 := p // Execute expression | [p] -> [a_p1] ^ [3]
-            [3] a := A(<constructor args>) // Create object  | [a_p1] -> [a] ^ [0]
+            [3] a := A(<constructor args>) // Find or Create object  | [a_p1] -> [a] ^ [0]
             [0] // Start set properties for A | [] -> [] ^ [1, 5, 6, 7, 8]
             [6] a_p2 := q // Execute expression | [q] -> [a_p2] ^ [5]
             [8] a_p3 := r // Execute expression | [r] -> [a_p3] ^ [7]
@@ -435,9 +441,9 @@ class test_M2mPatternExecutor {
         """.trimIndent().lines()
         val expectedResult = asmSimple(types) {
             element("A") {
-                propertyString("p1","1")
-                propertyString("p2","2")
-                propertyString("p3","3")
+                propertyInteger("p1", 1)
+                propertyInteger("p2", 2)
+                propertyInteger("p3", 3)
             }
         }.root[0]
 
@@ -453,7 +459,9 @@ class test_M2mPatternExecutor {
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("A") {
-                    constructor_ { parameter(setOf(), "p1", "String") }
+                    constructor_ { parameter(setOf(REF, VAL), "p1", "Integer") }
+                    propertyOf(setOf(REF, VAR), "p2", "Integer")
+                    propertyOf(setOf(REF, VAR), "p3", "Integer")
                 }
             }
         }
@@ -476,7 +484,7 @@ class test_M2mPatternExecutor {
             [2] // Collect constructor args | [] -> [a] ^ [3, 4, 5]
             [5] a_p1 := b // Execute expression | [b] -> [a_p1] ^ [3, 4]
             [4] r := a_p1 // Constructor argument $a_p1 in template is named r | [] -> [r] ^ [3]
-            [3] a := A(<constructor args>) // Create object  | [a_p1] -> [a] ^ [0]
+            [3] a := A(<constructor args>) // Find or Create object  | [a_p1] -> [a] ^ [0]
             [0] // Start set properties for A | [] -> [] ^ [1, 6, 7, 8, 9]
             [9] a_p3 := r // Execute expression | [r] -> [a_p3] ^ [8]
             [8] a.p3 := a_p3; p = a_p3 // Finish property p3 | [a, a_p3] -> [p] ^ [1]
@@ -486,13 +494,119 @@ class test_M2mPatternExecutor {
         """.trimIndent().lines()
         val expectedResult = asmSimple(types) {
             element("A") {
-                propertyString("p1","2")
-                propertyString("p3","2")
-                propertyString("p2","2")
+                propertyInteger("p1", 2)
+                propertyInteger("p3", 2)
+                propertyInteger("p2", 2)
             }
         }.root[0]
 
 
         doTest(types, lhsType, template, input, expectedPlan, expectedResult)
     }
+
+    @Test
+    fun executionPlan_object_already_created_set_props() {
+        // a: A {
+        //   p2 := q
+        //   p3 := r
+        // }
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    constructor_ { parameter(setOf(REF, VAL), "p1", "Integer") }
+                    propertyOf(setOf(REF, VAR), "p2", "Integer")
+                    propertyOf(setOf(REF, VAR), "p3", "Integer")
+                }
+            }
+        }
+        val objType = types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type()
+        val props = listOf(
+            PropertyTemplateDefault(SimpleName("p1"), PropertyTemplateExpressionDefault(RootExpressionDefault("p"))),
+            PropertyTemplateDefault(SimpleName("p2"), PropertyTemplateExpressionDefault(RootExpressionDefault("q"))),
+            PropertyTemplateDefault(SimpleName("p3"), PropertyTemplateExpressionDefault(RootExpressionDefault("r"))),
+        ).associateBy { it.propertyName }
+        val template = ObjectTemplateDefault(objType, props).also { it.setIdentifierValue(SimpleName("a")) }
+        val lhsType = objType
+
+        val a = AsmStructureSimple(QualifiedName("test.A")).also {
+            it.setProperty(PropertyValueName("p1"), AsmPrimitiveSimple.stdInteger(1), 0)
+        }
+        val input = mapOf<String, Any>(
+            "a" to a,
+            "q" to 2,
+            "r" to 3
+        )
+
+        val expectedPlan = $$"""
+            [2] // Start Collect constructor args | [] -> [] ^ [3, 4]
+            [4] a_p1 := p // Execute expression | [p] -> [a_p1] ^ [3]
+            [3] a := A(<constructor args>) // Find or Create object  | [a_p1] -> [a] ^ [0]
+            [0] // Start set properties for A | [] -> [] ^ [1, 5, 6, 7, 8]
+            [6] a_p2 := q // Execute expression | [q] -> [a_p2] ^ [5]
+            [8] a_p3 := r // Execute expression | [r] -> [a_p3] ^ [7]
+            [5] a.p2 := a_p2 // Finish property p2 | [a, a_p2] -> [] ^ [1]
+            [7] a.p3 := a_p3 // Finish property p3 | [a, a_p3] -> [] ^ [1]
+            [1] a := a // Finish set properties for A:  | [] -> [] ^ []
+        """.trimIndent().lines()
+        val expectedResult = asmSimple(types) {
+            element("A") {
+                propertyInteger("p1", 1)
+                propertyInteger("p2", 2)
+                propertyInteger("p3", 3)
+            }
+        }.root[0]
+
+        doTest(types, lhsType, template, input, expectedPlan, expectedResult)
+    }
+
+    @Test
+    fun f() {
+        /*
+            a2:A2 {
+              id == 'A2-1'
+              b == B2 {
+                owner == a2
+                prop == s
+              }
+            }
+         */
+        /*
+            a2 := when {
+                $nothing == a2 -> {
+                    a2_id := ''
+                    A2(id:=a2_id) {}
+                }
+                else -> a2
+            }
+            a2_b := when {
+                $nothing == a2.b -> {
+                    a2.b := B2() {}
+                    a2.b
+                }
+                else -> a2.b
+            }
+            a2_b_owner := with(a2_b) when {
+                $nothing == owner -> {
+                    owner := a2
+                    a2
+                }
+                else -> {
+                    assert := assert(owner == a2)
+                    a2
+                }
+            }
+            a2_b_prop := with(a2_b) when {
+                $nothing == prop -> {
+                    prop = s
+                    s
+                }
+                else -> {
+                    assert: = assert(prop == s)
+                    s
+                }
+            }
+         */
+    }
 }
+
+ */

@@ -1,7 +1,5 @@
 plugins {
     id("project-conventions")
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.kotest)
     //alias(libs.plugins.reflex)
 }
 

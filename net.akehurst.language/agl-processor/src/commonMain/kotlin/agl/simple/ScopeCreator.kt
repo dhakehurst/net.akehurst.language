@@ -47,16 +47,16 @@ class ScopeCreator(
 
     val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
 
-    override  fun beforeRoot(root: AsmValue) {
+    override  fun beforeRoot(root: Any) {
     }
 
-    override  fun afterRoot(root: AsmValue) {
+    override  fun afterRoot(root: Any) {
 
     }
 
-    override  fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
+    override  fun onNothing(owningProperty: AsmStructureProperty?, value: Unit) {}
 
-    override  fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
+    override  fun onPrimitive(owningProperty: AsmStructureProperty?, value: Any) {}
 
     override  fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         val scope = currentScope.peek()
@@ -74,9 +74,9 @@ class ScopeCreator(
         currentScope.pop()
     }
 
-    override  fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+    override  fun beforeList(owningProperty: AsmStructureProperty?, value: Collection<*>) {}
 
-    override  fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+    override  fun afterList(owningProperty: AsmStructureProperty?, value: Collection<*>) {}
 
     private  fun createScope(parentScope: Scope, el: AsmStructure): Scope {
         return if (crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)) {

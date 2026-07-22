@@ -301,7 +301,7 @@ class test_m2mTransformLanguage {
                     namespace test
                     transform Test(d1:D1, d2:D2) {
                       top table Rel1 {
-                        domain d1 :Int  /**/   domain d2 :Int
+                        domain d1 :Integer  /**/   domain d2 :Integer
                         values  1        to    2
                       }
                     }
@@ -320,7 +320,7 @@ class test_m2mTransformLanguage {
                     namespace test
                     transform Test(d1:D1, d2:D2) {
                       top table Rel1 {
-                        domain d1 :Int    domain d2 :String
+                        domain d1 :Integer    domain d2 :String
                         values  1    to   'a'
                         values  2    to   'b'
                       }
@@ -340,7 +340,7 @@ class test_m2mTransformLanguage {
                     namespace test
                     transform Test(d1:D1, d2:D2, d3:D3) {
                       top table Rel1 {
-                        domain d1 :Int    domain d2 :String  domain d3 :Boolean
+                        domain d1 :Integer    domain d2 :String  domain d3 :Boolean
                         values  1    to   'a'    to           true
                         values  2    to   'b'    to           false
                         values  3    to   'c'    to           true
@@ -611,7 +611,7 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                       relation Map1 {
                         domain d1 x:String == 'abc'
-                        domain d2 y:Int == 3
+                        domain d2 y:Integer == 3
                       }
                     }
                 """.trimIndent()
@@ -642,7 +642,7 @@ class test_m2mTransformLanguage {
                     transform Test(d1:D1, d2:D2) {
                       relation Map1 {
                         domain d1 x:String == 'abc' + 'def' + 'ghi'
-                        domain d2 y:Int == x.y.z.size
+                        domain d2 y:Integer == x.y.z.size
                       }
                     }
                 """.trimIndent()

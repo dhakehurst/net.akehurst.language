@@ -15,9 +15,11 @@
  *
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.asm.api.PropertyValueName
+import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -40,7 +42,7 @@ class test_ObjectGraphByReflection {
         )
 
         val testTypeModel = typesDomain("Test", true) {
-            namespace("net.akehurst.language.agl.expressions.processor") {
+            namespace("net.akehurst.language.expressions.processor") {
                 data("TestClass") {
                 }
             }
@@ -73,13 +75,15 @@ class test_ObjectGraphByReflection {
     fun createTupleValue() {
         val og = ObjectGraphAccessorMutatorByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
 
-        val actual = og.createTupleValue(listOf())
-        actual.setProperty("a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
-        actual.setProperty("b", og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true))
-        val expected = mapOf(
-            "a" to 1L,
-            "b" to true
+        val props = mapOf(
+            "a" to og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L),
+            "b" to og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
         )
+        val actual = og.createTupleValue(props)
+        val expected = AsmStructureSimple(StdLibDefault.TupleType.qualifiedName).also {
+            it.setProperty(PropertyValueName("a"),1L,0)
+            it.setProperty(PropertyValueName("b"),true,1)
+        }
         assertEquals(expected, actual.self)
     }
 

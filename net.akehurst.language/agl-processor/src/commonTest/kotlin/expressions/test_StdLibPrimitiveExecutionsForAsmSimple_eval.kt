@@ -24,6 +24,7 @@ import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.TypesDomain
@@ -35,12 +36,12 @@ import kotlin.test.assertEquals
 class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
 
     companion object Companion {
-        fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
-            val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+        fun test(typesDomain: TypesDomain, self: Any, pqn:String, expression: String, expected: Any) {
+            val st = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn.asPossiblyQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues, LocationMapDefault(), primitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple))
+            val interpreter = ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault(), primitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple))
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
-            assertEquals(expected, actual.self)
+            assertEquals(expected, actual.untyped)
         }
     }
 
@@ -60,7 +61,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
         }
         val self = asm.root[0]
 
-        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger(0))
+        test(tm, self, "Test", "list.size", 0L)
     }
 
     @Test
@@ -78,7 +79,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger(4L))
+        test(tm, self,"Test", "list.size", 4L)
     }
 
     @Test
@@ -96,7 +97,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list2.size", AsmNothingSimple)
+        test(tm, self, "Test", "list2.size", Unit)
     }
 
     @Test
@@ -114,7 +115,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.first", AsmPrimitiveSimple.stdString("A"))
+        test(tm, self, "Test", "list.first", "A")
     }
 
     @Test
@@ -132,7 +133,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.last", AsmPrimitiveSimple.stdString("D"))
+        test(tm, self, "Test", "list.last", "D")
     }
 
     @Test
@@ -150,7 +151,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.back", AsmListSimple(listOf("B", "C", "D").map { AsmPrimitiveSimple.stdString(it) }))
+        test(tm, self, "Test", "list.back", listOf("B", "C", "D"))
     }
 
     @Test
@@ -168,7 +169,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.front", AsmListSimple(listOf("A", "B", "C").map { AsmPrimitiveSimple.stdString(it) }))
+        test(tm, self,"Test", "list.front", listOf("A", "B", "C"))
     }
 
     @Test
@@ -186,7 +187,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.join", AsmPrimitiveSimple.stdString("ABCD"))
+        test(tm, self, "Test", "list.join", "ABCD")
     }
 
     @Test
@@ -204,7 +205,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.map({it -> it + '1' })", AsmListSimple(listOf("A1", "B1", "C1", "D1").map { AsmPrimitiveSimple.stdString(it) }))
+        test(tm, self, "Test", "list.map({it -> it + '1' })", listOf("A1", "B1", "C1", "D1"))
     }
 
     @Test
@@ -222,7 +223,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.filter({it -> it != 'B' })", AsmListSimple(listOf("A", "C", "D").map { AsmPrimitiveSimple.stdString(it) }))
+        test(tm, self, "Test", "list.filter({it -> it != 'B' })", listOf("A", "C", "D"))
     }
 
     @Test
@@ -264,7 +265,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
             }
         }
         val self = asm.root[0]
-        val expected = AsmListSimple(listOf("1.1", "1.2", "1.3", "1.1.1", "1.3.1").map { AsmPrimitiveSimple.stdString(it) })
-        test(tm, self, "list.transitiveClosure({it -> it.list }).map({it -> it.id})", expected)
+        val expected = listOf("1.1", "1.2", "1.3", "1.1.1", "1.3.1")
+        test(tm, self, "Test", "list.transitiveClosure({it -> it.list }).map({it -> it.id})", expected)
     }
 }

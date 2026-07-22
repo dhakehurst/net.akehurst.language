@@ -43,7 +43,6 @@ interface AsmListSeparated {
 
                 }
                 interface_("AsmStructureProperty") {
-
                     propertyOf(setOf(VAL, CMP, STR), "value", "AsmValue", false)
                 }
                 interface_("AsmStructure") {

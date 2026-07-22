@@ -1,10 +1,10 @@
 package net.akehurst.language.agl.m2mTransform.testing
 
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.AsmSimpleBuilder
-import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.issues.api.LanguageIssue
@@ -129,14 +129,17 @@ class M2MTransformTestCaseBuilder(
     private var _expected: Asm? = null
     private val _expectedIssues = mutableSetOf<LanguageIssue>()
 
+    /**
+     * Make sure sentenceContext is provided if you want references to be resolved and elements to have a semantic path for equality
+     */
     fun input(
         domainReference: String,
         defaultNamespace: String = StdLibDefault.qualifiedName.value,
         sentenceId: Any? = null,
-        context: SentenceContext? = null,
-        /** need to pass in a context if you want to resolveReferences */
+        sentenceContext: SentenceContext? = contextAsmSimple{},
+        /** need to pass in a sentenceContext if you want to resolveReferences */
         resolveReferences: Boolean = true,
-        failIfIssues: Boolean = true,
+        failIfIssues: Boolean = false,
         resolvedReferences: MutableList<ResolvedReference> = mutableListOf(),
         init: AsmSimpleBuilder.() -> Unit
     ) {
@@ -144,7 +147,7 @@ class M2MTransformTestCaseBuilder(
         val typesDomain: TypesDomain = this.typeDomains[dr]!!
         val defNs = typesDomain.findNamespaceOrNull( defaultNamespace.asQualifiedName) ?: StdLibDefault
         val crd = crossReferenceDomain[dr] ?: CrossReferenceDomainDefault(SimpleName("CrossReference"))
-        val b = AsmSimpleBuilder(typesDomain, defNs, crd, sentenceId, context, resolveReferences, failIfIssues, resolvedReferences)
+        val b = AsmSimpleBuilder(typesDomain, defNs, crd, sentenceId, sentenceContext, resolveReferences, failIfIssues, resolvedReferences)
         b.init()
         _input[dr] = b.build()
     }

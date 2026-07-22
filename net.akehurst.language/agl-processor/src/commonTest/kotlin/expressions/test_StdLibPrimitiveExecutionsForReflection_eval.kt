@@ -17,8 +17,6 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
-import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -205,7 +203,7 @@ class test_StdLibPrimitiveExecutionsForReflection_eval {
         val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("TestContainer") {
-                    propertyOf(setOf(VAR), "list", "TestContainer", false, TestContainer::list)
+                    propertyOfWithBinding(setOf(VAR), "list", "TestContainer", false, TestContainer::list)
                 }
             }
         }

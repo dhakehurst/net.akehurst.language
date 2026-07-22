@@ -202,7 +202,7 @@ grammar SQL {
 
         //check paths
         val asmRoot = result.asm!!.root[0] as AsmStructure
-        assertEquals("/0/terminatedStatement/0", asmRoot["terminatedStatement"].ass<AsmList>().elements[0].ass<AsmStructure>().parsePath.toString())
+        assertEquals("/0/terminatedStatement/0", asmRoot["terminatedStatement"].ass<List<*>>()[0]!!.ass<AsmStructure>().parsePath)
     }
 
     @Test
@@ -263,6 +263,8 @@ grammar SQL {
 
     @Test
     fun select_with_one_column_ref() {
+        //TODO: need to update definition to handle ColumnRefOrAny !
+
         val sentence = """
             CREATE TABLE table1 (
                 col1 int,

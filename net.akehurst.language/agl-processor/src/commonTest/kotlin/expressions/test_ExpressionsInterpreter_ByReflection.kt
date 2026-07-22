@@ -18,8 +18,8 @@
 package net.akehurst.language.expressions.processor
 
 import kotlinx.coroutines.test.runTest
-import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
-import net.akehurst.language.agl.expressions.processor.StdLibPrimitiveExecutionsForReflection
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
+import net.akehurst.language.expressions.processor.StdLibPrimitiveExecutionsForReflection
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -210,7 +210,7 @@ class test_ExpressionsInterpreter_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Index operation on non List value is not possible: strValue"
+                "Index operation on non List value is not possible: 'strValue'"
             )
         )
         test_fail(tm, self, "ns.TestObj", "prop1[0]", Unit, expectedIssues)

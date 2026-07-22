@@ -33,6 +33,9 @@ interface TypedObject {
     val self: Any
     val type: TypeInstance
 
+    val untyped: Any
+    val isNothing: Boolean
+
     fun getProperty(name: String): TypedObject
     suspend fun getPropertySuspend(name: String): TypedObject
 
@@ -41,6 +44,8 @@ interface TypedObject {
 
     fun executeMethod(name: String, argValues: List<TypedObject>): TypedObject
     suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>): TypedObject
+
+    fun forEachIndexed(body: (index: Int, value: TypedObject) -> Unit)
 
     fun asString(indent: Indent = Indent()): String
 }
@@ -70,6 +75,8 @@ class EvaluationContext(
     fun getOrInParent(name: String): TypedObject? =
         namedValues[name]
             ?: parent?.getOrInParent(name)
+
+    fun hasValue(name: String): Boolean = (null != getOrInParent(name))
 
     fun child(namedValues: Map<String, TypedObject> = emptyMap()) = of(namedValues, this)
 
@@ -152,14 +159,16 @@ interface ObjectGraphAccessorMutatorCommon {
     fun getFromMapWithKey(tobj: TypedObject, key: TypedObject): TypedObject
     fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit)
 
-    fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject
+    fun callFunction(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject
     fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject
 
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject
-    fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject
+    fun createTupleValue(typeArgs:Map<String, TypeInstance>, args: Map<String, Any>): TypedObject
+    fun createTupleValue(args: Map<String, TypedObject>): TypedObject
     fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject
     fun createCollectionFromQualifiedName(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject>): TypedObject
-    fun collectionUnion(collection1: TypedObject, collection2: TypedObject): TypedObject
+    fun collectionConcatination(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject
+    fun collectionUnion(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject
 
     fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject>): ObjectGraph
 }
@@ -168,10 +177,11 @@ interface ExternalGetter {
     fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance
     fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     fun getProperty(obj: Any, propertyName: String): Any?
-    fun setProperty(obj: Any, propertyName: String, value: Any?)
+    fun setProperty(obj: Any, propertyName: String, isReference: Boolean, value: Any?)
 
     fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     suspend fun getPropertySuspend(obj: Any, propertyName: String): Any?
+    suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?)
 }
 
 interface FunctionLib {

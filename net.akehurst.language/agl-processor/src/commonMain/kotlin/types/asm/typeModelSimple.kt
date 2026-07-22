@@ -29,6 +29,7 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.builder.typesDomain
 import net.akehurst.language.util.cached
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 class TypesDomainSimple(
     override val name: SimpleName,
@@ -730,7 +731,7 @@ abstract class TypesNamespaceAbstract(
     override fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName, typeParameters: List<TypeParameter>): CollectionType {
         val existing = findOwnedTypeNamed(typeName)
         return if (null == existing) {
-            CollectionTypeSimple(this, typeName).also { collType->
+            CollectionTypeSimple(this, typeName).also { collType ->
                 typeParameters.forEach { collType.addTypeParameter(it) }
             }
         } else {
@@ -786,8 +787,8 @@ abstract class TypesNamespaceAbstract(
                     val otherEnd = ends[j]
                     val otherEndDef = otherEnd.endType
                     val pd = otherEndDef.appendPropertyStored(thisEnd.endName, thisEndType, thisEnd.characteristics)
-                    thisEnd.byEvaluation?.let { (pd as PropertyDeclarationAbstract).execution = it.invoke(pd) }
-                    thisEnd.byEvaluationSuspend?.let { (pd as PropertyDeclarationAbstract).executionSuspend = it.invoke(pd) }
+                    thisEnd.byEvaluation?.let { (pd as PropertyDeclarationAbstract).accessor = it.invoke(pd) }
+                    thisEnd.byEvaluationSuspend?.let { (pd as PropertyDeclarationAbstract).accessorSuspend = it.invoke(pd) }
                     props.add(pd)
                 }
             }
@@ -1236,9 +1237,16 @@ abstract class StructuredTypeSimpleAbstract : TypeDefinitionSimpleAbstract(), St
     /**
      * append property, if index < 0 then use next property number
      */
-    override fun appendPropertyStored(name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int): PropertyDeclaration {
+    override fun appendPropertyStored(
+        name: PropertyName, typeInstance: TypeInstance,
+        characteristics: Set<PropertyCharacteristic>, index: Int,
+        accessor: ((self: Any) -> Any?)?,
+        mutator: ((self: Any, value: Any?) -> Unit)?
+    ): PropertyDeclaration {
         val propIndex = if (index >= 0) index else property.size
         val pd = PropertyDeclarationStored(this, name, typeInstance, characteristics + PropertyCharacteristic.STORED, propIndex)
+        pd.accessor = accessor
+        pd.mutator = mutator
         this.addProperty(pd)
         return pd
     }
@@ -1346,10 +1354,10 @@ class ValueTypeSimple(
             }
         }
 
-    override fun addConstructor(parameters: List<ParameterDeclaration>) {
+    override fun addConstructor(parameters: List<ParameterDeclaration>): ConstructorDefinition {
         val cons = ConstructorDefinitionSimple(this, parameters)
         (constructors as MutableList).add(cons)
-
+        return cons
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
@@ -1498,9 +1506,10 @@ class DataTypeSimple(
         namespace.addDefinition(this)
     }
 
-    override fun addConstructor(parameters: List<ParameterDeclaration>) {
+    override fun addConstructor(parameters: List<ParameterDeclaration>): ConstructorDefinition {
         val cons = ConstructorDefinitionSimple(this, parameters)
         (constructors as MutableList).add(cons)
+        return cons
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
@@ -1645,8 +1654,10 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
 
     override var opposite: List<PropertyDeclaration> = emptyList()
 
-    override var execution: ((self: Any) -> Any?)? = null
-    override var executionSuspend: (suspend (self: Any) -> Any?)? = null
+    override var accessor: ((self: Any) -> Any?)? = null
+    override var accessorSuspend: (suspend (self: Any) -> Any?)? = null
+
+    override var mutator: ((self: Any, value: Any?) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
         this,

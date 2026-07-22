@@ -94,7 +94,7 @@ class test_Vistraq_References {
             })
             println(sentenceContext.asString())
             println(result.asm?.asString())
-            assertEquals(expectedIssues, result.allIssues.errors, result.allIssues.toString())
+            assertEquals(expectedIssues.joinToString("\n"), result.allIssues.errors.joinToString("\n"), result.allIssues.toString())
             assertEquals(expectedContext.asString(), sentenceContext.asString())
             expectedAsm?.let { assertEquals(expectedAsm.asString(), result.asm!!.asString()) }
             TestContextSimple.assertMatches(expectedContext, sentenceContext)

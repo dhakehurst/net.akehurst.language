@@ -109,7 +109,7 @@ object StdLibDefault1 : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMa
         typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
     }
 
-    val Map = super.findOwnedOrCreateCollectionTypeNamed(Map_typeName,listOf(TypeParameterSimple(SimpleName("K")), TypeParameterSimple(SimpleName("V")))).also { typeDecl ->
+    val Map = super.findOwnedOrCreateCollectionTypeNamed(Map_typeName, listOf(TypeParameterSimple(SimpleName("K")), TypeParameterSimple(SimpleName("V")))).also { typeDecl ->
         typeDecl.addSupertype(
             Collection.type(
                 listOf(
@@ -378,21 +378,31 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             primitive("Timestamp", kotlin.time.Instant::class)
             primitive("Exception", kotlin.Throwable::class)
 
-            data("Pair", kotlin.Pair::class)
+            data("Pair", kotlin.Pair::class) {
+                typeParameters("F", "S")
+                constructor_ {
+                    execution { Pair(it[0], it[1]) }
+                    parameter(setOf(CMP, VAL), "first", "F", accessor = kotlin.Pair<*, *>::first)
+                    parameter(setOf(CMP, VAL), "second", "S", accessor = kotlin.Pair<*, *>::second)
+                }
+            }
 
             collection(Collection_typeName.value, listOf("E"), kotlin.collections.Collection::class) {
-                propertyPrimitive("size", "Integer", false, "Number of elements in the Collection.", execution = { self -> (self as Collection<*>).size })
-                propertyPrimitive("isEmpty", "Boolean", false, "True if the Collection has no elements.", execution = { self -> (self as Collection<*>).isEmpty() })
-                propertyPrimitive("isNotEmpty", "Boolean", false, "True if the Collection has some elements.", execution = { self -> (self as Collection<*>).isNotEmpty() })
-                propertyPrimitive(
+                propertyPrimitive<Collection<*>, Int>("size", "Integer", false, "Number of elements in the Collection.", accessor = { self -> self.size })
+                propertyPrimitive<Collection<*>, Boolean>("isEmpty", "Boolean", false, "True if the Collection has no elements.", accessor = { self -> self.isEmpty() })
+                propertyPrimitive<Collection<*>, Boolean>("isNotEmpty", "Boolean", false, "True if the Collection has some elements.", accessor = { self -> self.isNotEmpty() })
+                propertyPrimitive<Collection<*>, Map<*, *>?>(
                     "asMap", "Map", true,
                     "Returns a Map object with elements being the Pairs of this Collection. If elements are not Pairs, or Map with 'key' and 'value' entry, then returns nothing.",
-                    execution = { self -> self?.let { Collection_asMap(self) } }
+                    accessor = { self -> self?.let { Collection_asMap(self) } }
                 ) {
                     typeArgument("Any")
                     typeArgument("Any")
                 }
-                propertyPrimitive("separate", "ListSeparated") {
+                propertyPrimitive<Collection<*>, ListSeparated<*, *, *>>(
+                    "separate", "ListSeparated",
+                    accessor = { self -> self.toSeparatedList() }
+                ) {
                     typeArgument("Any")
                     typeArgument("Any")
                 }
@@ -432,7 +442,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                     }
                     executionSuspend { self, args ->
                         check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
-                        check(args[0] is Function2<*, *, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                        check(args[0] is Function2<*, *, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
                         val lambda: suspend (Any) -> Boolean = args[0] as suspend (Any) -> Boolean
                         (self as Collection<Any>).filter {
                             lambda.invoke(it)
@@ -474,11 +484,11 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             }
             collection(List_typeName.value, listOf("E"), kotlin.collections.List::class) {
                 supertype("Collection") { ref("E") }
-                propertyPrimitive("first", "E", false, "First element in the List.", execution = { self -> (self as List<*>).first() })
-                propertyPrimitive("last", "E", false, "Last element in the List.", execution = { self -> (self as List<*>).last() })
-                propertyPrimitive("front", "List", false, "All elements in the List except the last one.", execution = { self -> (self as List<*>).dropLast(1) }) { typeArgument("E") }
-                propertyPrimitive("back", "List", false, "All elements in the List except the first one.", execution = { self -> (self as List<*>).drop(1) }) { typeArgument("E") }
-                propertyPrimitive("join", "String", false, "The String value of all elements (toString) concatenated.", execution = { self ->
+                propertyPrimitive<List<*>, Any?>("first", "E", false, "First element in the List.", accessor = { self -> self.firstOrNull() })
+                propertyPrimitive<List<*>, Any?>("last", "E", false, "Last element in the List.", accessor = { self -> (self as List<*>).last() })
+                propertyPrimitive<List<*>, Any?>("front", "List", false, "All elements in the List except the last one.", accessor = { self -> (self as List<*>).dropLast(1) }) { typeArgument("E") }
+                propertyPrimitive<List<*>, Any?>("back", "List", false, "All elements in the List except the first one.", accessor = { self -> (self as List<*>).drop(1) }) { typeArgument("E") }
+                propertyPrimitive<List<*>, Any?>("join", "String", false, "The String value of all elements (toString) concatenated.", accessor = { self ->
                     (self as List<*>).joinToString(separator = "") {
                         when (it) {
                             is TypedObject -> it.self.toString()
@@ -497,7 +507,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                     }
                     executionSuspend { self, args ->
                         check(1 == args.size) { "Method '${methodName}' has wrong number of argument, expecting 1, received ${args.size}" }
-                        check(args[0] is Long) { "Method '${methodName}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0]?.let {it::class.simpleName}}" }
+                        check(args[0] is Long) { "Method '${methodName}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0]?.let { it::class.simpleName }}" }
                         //check(StdLibDefault.Integer.qualifiedTypeName == args[0].qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
                         val idx = args[0] as Long
                         (self as List<*>)[idx.toInt()] as Any
@@ -531,7 +541,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                     executionSuspend { self, args ->
                         check(1 == args.size) { "Method '${methodName}' takes 1 lambda argument got ${args.size} arguments." }
                         // Lambda has extra paramter for coroutine (because it is a suspend function)
-                        check(args[0] is Function2<*, *, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let {it::class.simpleName}}'." }
+                        check(args[0] is Function2<*, *, *>) { "Method '${methodName}' first argument must be a lambda, got '${args[0]?.let { it::class.simpleName }}'." }
                         val lambda: suspend (Any) -> List<Any> = args[0] as suspend (Any) -> List<Any>
                         (self as List<Any>).transitiveClosure {
                             //val args = mapOf("it" to it)
@@ -542,15 +552,18 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             }
             collection(ListSeparated_typeName.value, listOf("E", "I", "S"), net.akehurst.language.collections.ListSeparated::class) {
                 supertype("List") { ref("E") }
-                propertyPrimitive("elements", "List", false, "Elements in the ListSeparated.", execution = { self -> (self as ListSeparated<*, *, *>).elements }) { typeArgument("E") }
-                propertyPrimitive("items", "List", false, "Items in the ListSeparated.", execution = { self -> (self as ListSeparated<*, *, *>).items }) { typeArgument("I") }
-                propertyPrimitive("separators", "List", false, "Separators in the ListSeparated.", execution = { self -> (self as ListSeparated<*, *, *>).separators }) { typeArgument("S") }
+                propertyPrimitive<ListSeparated<*, *, *>, Any?>("elements", "List", false, "Elements in the ListSeparated.", accessor = { self -> (self as ListSeparated<*, *, *>).elements }) { typeArgument("E") }
+                propertyPrimitive<ListSeparated<*, *, *>, Any?>("items", "List", false, "Items in the ListSeparated.", accessor = { self -> (self as ListSeparated<*, *, *>).items }) { typeArgument("I") }
+                propertyPrimitive<ListSeparated<*, *, *>, Any?>("separators", "List", false, "Separators in the ListSeparated.", accessor = { self -> (self as ListSeparated<*, *, *>).separators }) { typeArgument("S") }
             }
             collection(OrderedSet_typeName.value, listOf("E"), net.akehurst.kotlinx.collections.OrderedSet::class) {
                 //TODO:
             }
             collection(Map_typeName.value, listOf("K", "V"), kotlin.collections.Map::class) {
                 supertype("Collection") { ref("Pair") }
+
+                propertyPrimitive<Map<*, *>, Any?>("keys", "Set", false, "Keys in the Map.", accessor = { self -> (self as Map<*, *>).keys }) { typeArgument("K") }
+                propertyPrimitive<Map<*, *>, Any?>("values", "Collection", false, "Values in the Map.", accessor = { self -> (self as Map<*, *>).values }) { typeArgument("V") }
             }
         }
         nsb.build()

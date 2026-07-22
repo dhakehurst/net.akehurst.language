@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect

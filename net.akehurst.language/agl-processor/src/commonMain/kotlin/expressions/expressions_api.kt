@@ -26,6 +26,9 @@ import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
 
 interface ExpressionsDomain : Domain<ExpressionsNamespace, FunctionDefinition>, Expression {
 
@@ -42,8 +45,8 @@ interface FunctionDefinitionFloating {
     val body: Expression?
 
     // to assist execution by reflection without having MPP reflection support
-    val execution: ((args:List<*>) -> Any?)?
-    val executionSuspend: (suspend (args:List<*>) -> Any?)?
+    val execution: ((args: List<*>) -> Any?)?
+    val executionSuspend: (suspend (args: List<*>) -> Any?)?
 }
 
 interface FunctionDefinition : FunctionDefinitionFloating, Definition<FunctionDefinition> {
@@ -56,7 +59,7 @@ interface FunctionParameter {
     val defaultValueExpression: Expression?
 }
 
-interface Expression: Formatable {
+interface Expression : Formatable {
 }
 
 interface RootExpression : Expression {
@@ -95,7 +98,9 @@ interface NavigationExpression : Expression {
     val parts: List<NavigationPart>
 }
 
-interface NavigationPart
+interface NavigationPart : Formatable {
+
+}
 
 interface PropertyCall : NavigationPart {
     val propertyName: String
@@ -120,15 +125,15 @@ interface IndexOperation : NavigationPart {
     val indices: List<Expression>
 }
 
-interface VariableAssignmentStatement {
+interface VariableAssignmentStatement : Expression {
     val variable: VariableDefinition
     val lhsGrammarRuleIndex: Int?
     val rhs: Expression
 
-    fun asString(indent: Indent, imports: List<Import> = emptyList()): String
+    override fun asString(indent: Indent, imports: List<Import>): String
 }
 
-interface VariableDefinition  {
+interface VariableDefinition {
     val name: String
     val typeRef: TypeReference?
 
@@ -179,6 +184,9 @@ interface TypeReference {
     val possiblyQualifiedName: PossiblyQualifiedName
     val typeArguments: List<TypeReference>
     val isNullable: Boolean
+    val type: TypeInstance?
+
+    fun resolveTypes(tm: TypesDomain): List<LanguageIssue>
 
     fun asString(indent: Indent, imports: List<Import>): String
 }

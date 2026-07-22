@@ -18,10 +18,35 @@ package net.akehurst.language.expressions.asm
 
 import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.agl.expressions.processor.CustomFunctionBuilder
 import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.objectgraph.api.FunctionLib
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdFunctionLib
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypeParameterMultiple.name
+
+class CustomFunctionLib() : FunctionLib {
+    override val declaration: Map<String, FunctionDefinitionFloating> = mutableMapOf()
+
+    override fun findFirstFunctionNamed(functionName: String): FunctionDefinitionFloating? {
+        return declaration[functionName]
+    }
+
+    fun registerFunction(name: String, init: CustomFunctionBuilder.() -> Unit) {
+        val b = CustomFunctionBuilder(name)
+        b.init()
+        val fd = b.build()
+        (declaration as MutableMap)[name] = fd
+    }
+}
 
 class ExpressionsDomainDefault(
     override val name: SimpleName,
@@ -40,15 +65,25 @@ class ExpressionsNamespaceDefault(
     override val function: List<FunctionDefinition> get() = super.definition
 }
 
- abstract class FunctionDefinitionAbstract(
+abstract class FunctionDefinitionAbstract(
     override val name: SimpleName,
     override val parameters: List<FunctionParameter>,
     override val returnTypeReference: TypeReference?,
     override val body: Expression?
 ) : FunctionDefinitionFloating {
 
-     override var execution: ((args: List<*>) -> Any?)? = null
-     override var executionSuspend: (suspend (args: List<*>) -> Any?)? = null
+    override var execution: ((args: List<*>) -> Any?)? = null
+    override var executionSuspend: (suspend (args: List<*>) -> Any?)? = null
+}
+
+class FunctionDefinitionFloatingDefault(
+    name: SimpleName,
+    parameters: List<FunctionParameter>,
+    returnTypeReference: TypeReference?,
+    body: Expression
+) : FunctionDefinitionFloating, Formatable, FunctionDefinitionAbstract(name, parameters, returnTypeReference, body) {
+
+    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let { ": ${it.asString(indent, imports)}" }}"
 }
 
 class FunctionDefinitionDefault(
@@ -64,7 +99,7 @@ class FunctionDefinitionDefault(
     // --- Definition ---
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let{": ${it.asString(indent, imports)}"}}"
+    override fun asString(indent: Indent, imports: List<Import>): String = "fun ${name.value}()${returnTypeReference?.let { ": ${it.asString(indent, imports)}" }}"
 }
 
 class FunctionParameterDefault(
@@ -114,11 +149,16 @@ data class CreateObjectExpressionDefault(
             else -> possiblyQualifiedTypeName.value
         }
         val cArgs = constructorArguments.joinToString(separator = ", ") { it.asString(Indent(), imports) }
-        sb.append("$pqn($cArgs) {\n")
-        val ni = indent.inc
-        val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
-        sb.append("${props}\n")
-        sb.append("${indent}}")
+        sb.append("$pqn($cArgs) {")
+        if (propertyAssignments.isEmpty()) {
+            sb.append(" }")
+        } else {
+            sb.append("\n")
+            val ni = indent.inc
+            val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
+            sb.append("${props}\n")
+            sb.append("${indent}}")
+        }
         return sb.toString()
     }
 
@@ -152,7 +192,7 @@ class WithExpressionDefault(
         val sb = StringBuilder()
         sb.append("with(${withContext.asString(indent, imports)}) ")
         val ni = indent.inc
-        sb.append(expression.asString(ni, imports))
+        sb.append(expression.asString(indent, imports))
         return sb.toString()
     }
 
@@ -166,11 +206,14 @@ class WhenExpressionDefault(
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
-        sb.append("when {\n")
         val ni = indent.inc
-        val opts = options.joinToString(separator = "\n") { "${it.condition.asString(ni, imports)} -> ${it.expression.asString(ni.inc, imports)}" }
+        sb.append("when {\n")
+        val ni2 = ni.inc
+        val opts = options.joinToString(separator = "\n") { "$ni${it.condition.asString(ni, imports)} -> ${it.expression.asString(ni, imports)}" }
         sb.append("${opts}\n")
-        sb.append("${indent}}")
+        val elseOpt = elseOption.expression.asString(ni, imports)
+        sb.append("${ni}else -> $elseOpt\n")
+        sb.append("$indent}")
         return sb.toString()
     }
 
@@ -222,7 +265,14 @@ data class LiteralExpressionDefault(
     override val value: Any
 ) : ExpressionAbstract(), LiteralExpression {
 
-    override fun toString(): String = value.toString()
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        return when {
+            qualifiedTypeName == StdLibDefault.String.qualifiedTypeName -> return "'${value}'"
+            else -> value.toString()
+        }
+    }
+
+    override fun toString(): String = this.asString()
 }
 
 data class NavigationExpressionDefault(
@@ -230,12 +280,29 @@ data class NavigationExpressionDefault(
     override val parts: List<NavigationPart>
 ) : ExpressionAbstract(), NavigationExpression {
 
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        sb.append(start.asString(indent, imports))
+        for (part in parts) {
+            sb.append(part.asString(indent, imports))
+        }
+        return sb.toString()
+    }
+
     override fun toString(): String = "$start${parts.joinToString(separator = "")}"
 }
 
 data class PropertyCallDefault(
     override val propertyName: String
 ) : PropertyCall {
+
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        sb.append(".")
+        sb.append(propertyName)
+        return sb.toString()
+    }
+
     override fun toString(): String = ".$propertyName"
 }
 
@@ -243,6 +310,17 @@ data class MethodCallDefault(
     override val methodName: String,
     override val arguments: List<Expression>
 ) : MethodCall {
+
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        sb.append(".")
+        sb.append(methodName)
+        sb.append("(")
+        sb.append(arguments.joinToString(separator = ", ") { it.asString(indent, imports) })
+        sb.append(")")
+        return sb.toString()
+    }
+
 
     override fun toString(): String = ".$methodName(${arguments.joinToString()})"
 }
@@ -269,13 +347,9 @@ data class StatementBlockExpressionDefault(
         return when {
             assignment.isEmpty() -> "{ ${expression.asString(Indent(), imports)} }"
             else -> {
-                val ass = assignment.joinToString(separator = "\n") { it.asString(indent.inc, imports) }
-                """
-                $indent{
-                $ass
-                ${expression.asString(indent.inc, imports)}
-                $indent}
-                """.trimIndent()
+                val ni = indent.inc
+                val ass = assignment.joinToString(separator = "\n") { "$ni${it.asString(ni, imports)}" }
+                "{\n$ass\n$ni${expression.asString(ni, imports)}\n$indent}"
             }
         }
     }
@@ -286,6 +360,14 @@ data class StatementBlockExpressionDefault(
 data class IndexOperationDefault(
     override val indices: List<Expression>
 ) : IndexOperation {
+
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        sb.append("[")
+        sb.append(indices.joinToString(separator = ", ") { it.asString(indent, imports) })
+        sb.append("]")
+        return sb.toString()
+    }
 
     override fun toString(): String = "[${indices.joinToString { it.toString() }}]"
 }
@@ -306,10 +388,11 @@ class VariableDefinitionDefault(
     override val name: String,
     override val typeRef: TypeReference?,
 ) : VariableDefinition {
-    override fun asString(indent: Indent, imports: List<Import>): String  = when (typeRef) {
+    override fun asString(indent: Indent, imports: List<Import>): String = when (typeRef) {
         null -> name
         else -> "$name: ${typeRef.asString(indent, imports)}"
     }
+
     override fun toString(): String = "$name : $typeRef"
 }
 
@@ -319,7 +402,9 @@ class TernaryConditionExpressionDefault(
     override val falseExpression: Expression
 ) : TernaryConditionExpression {
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "$indent$this"
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        return "${condition.asString(indent, imports)} ? ${trueExpression.asString(indent, imports)} : ${falseExpression.asString(indent, imports)}"
+    }
 
     override fun toString(): String = "${condition} ? $trueExpression : $falseExpression"
 }
@@ -328,7 +413,7 @@ class InfixExpressionDefault(
     override val expressions: List<Expression>,
     override val operators: List<String>
 ) : InfixExpression {
-    override fun asString(indent: Indent, imports: List<Import>): String = "$indent$this"
+    override fun asString(indent: Indent, imports: List<Import>): String = "$this"
 
     override fun toString(): String = "${expressions.first()} ${operators.indices.joinToString { operators[it] + " " + expressions[it + 1] }}"
 }
@@ -362,6 +447,27 @@ data class TypeReferenceDefault(
     override val typeArguments: List<TypeReference>,
     override val isNullable: Boolean
 ) : TypeReference {
+
+    private var _resolvedType: TypeInstance? = null
+    override val type: TypeInstance? get() = _resolvedType
+
+    override fun resolveTypes(tm: TypesDomain): List<LanguageIssue> {
+        val issues = mutableListOf<LanguageIssue>()
+        val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.possiblyQualifiedName)
+        val targs = typeArguments.mapNotNull {
+            issues .addAll(it.resolveTypes(tm))
+            it.type?.asTypeArgument
+        }
+
+        if (null == td) {
+            val msg = "In ObjectTemplate, cannot resolveType '${this.possiblyQualifiedName.value}' in TypesDomain '${tm.name.value}'."
+            issues.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, null, msg, null))
+        } else {
+            _resolvedType = td.type(targs)
+        }
+        return issues
+    }
+
     override fun asString(indent: Indent, imports: List<Import>): String {
         val tn = when {
             imports.any { it.asQualifiedName.value == possiblyQualifiedName.value } -> possiblyQualifiedName.simpleName.value
@@ -383,4 +489,34 @@ class GroupExpressionDefault(
     override fun asString(indent: Indent, imports: List<Import>): String = "(${expression.asString(indent, imports)})"
 
     override fun toString(): String = "($expression)"
+}
+
+object ExpressionExt {
+    val Expression.freeVariables
+        get():List<String> = when (this) {
+            is CastExpression -> this.expression.freeVariables
+            is CreateObjectExpression -> this.constructorArguments.flatMap { it.freeVariables } + this.propertyAssignments.flatMap { it.freeVariables }
+            is CreateTupleExpression -> this.propertyAssignments.flatMap { it.freeVariables }
+            is FunctionCall -> this.arguments.flatMap { it.freeVariables }
+            is GroupExpression -> this.expression.freeVariables
+            is InfixExpression -> this.expressions.flatMap { it.freeVariables }
+            is LambdaExpression -> this.expression.freeVariables - this.variables
+            is LiteralExpression -> emptyList()
+            is NavigationExpression -> this.start.freeVariables + this.parts.flatMap { part ->
+                when (part) {
+                    is PropertyCall -> emptyList()
+                    is MethodCall -> part.arguments.flatMap { it.freeVariables }
+                    is IndexOperation -> part.indices.flatMap { it.freeVariables }
+                    else -> error("Unsupported NavigationPart subtype ${part::class.simpleName}")
+                }
+            }
+            is OnExpression -> this.expression.freeVariables + this.propertyAssignments.flatMap { it.freeVariables }
+            is RootExpression -> listOf(name)
+            is StatementBlockExpression -> this.assignment.flatMap { it.freeVariables } + this.expression.freeVariables
+            is TernaryConditionExpression -> this.condition.freeVariables + this.trueExpression.freeVariables + this.falseExpression.freeVariables
+            is TypeTestExpression -> this.expression.freeVariables
+            is WithExpression -> this.withContext.freeVariables + this.expression.freeVariables
+            is WhenExpression -> this.options.flatMap { it.condition.freeVariables + it.expression.freeVariables } + this.elseOption.expression.freeVariables
+            else -> error("Unsupported Expression subtype ${this::class.simpleName}")
+        }
 }

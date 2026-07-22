@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl
 
-import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.SentenceContextAny
@@ -410,6 +410,7 @@ object Agl {
         typeDomains: Map<DomainReference, TypesDomain>,
         accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
         domains: Map<DomainReference, List<TypedObject>>,
+        ruleArguments: Map<String, TypedObject>,
         targetDomainReference: DomainReference
     ): M2MTransformResult {
         val sentenceContext = SentenceContextAny()
@@ -431,7 +432,7 @@ object Agl {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
         val interpreter = M2mTransformInterpreter(m2m, accessorMutators, issueHolder)
         val tgtTransform = m2m.allTransformRuleSet.first() //TODO: allow caller to choose
-        val transResult = interpreter.transform(tgtTransform, targetDomainReference, domains)
+        val transResult = interpreter.transform(tgtTransform, targetDomainReference, ruleArguments, domains)
         return transResult
     }
 
@@ -440,6 +441,7 @@ object Agl {
         typeDomains: Map<DomainReference, TypesDomain>,
         accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
         domains: Map<DomainReference, List<TypedObject>>,
+        ruleArguments: Map<String, TypedObject>,
         targetDomainReference: DomainReference
     ): M2MTransformResult {
         val sentenceContext = SentenceContextAny()

@@ -15,12 +15,17 @@
  *
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.collections.toOrderedSet
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmReference
+import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.PropertyValueName
+import net.akehurst.language.asm.simple.AsmStructurePropertySimple
+import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
@@ -28,6 +33,8 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.time.Instant
 
 private class TypedObjectAny(
@@ -35,6 +42,9 @@ private class TypedObjectAny(
     override val type: TypeInstance,
     override val self: Any
 ) : TypedObject {
+
+    override val untyped: Any get() = accessor.untyped(this)
+    override val isNothing: Boolean get() = accessor.isNothing(this)
 
     override fun getProperty(name: String) = accessor.getProperty(this, name)
     override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
@@ -44,6 +54,10 @@ private class TypedObjectAny(
 
     override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
     override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
+
+    override fun forEachIndexed(body: (index: Int, value: TypedObject) -> Unit) {
+        accessor.forEachIndexed(this, body)
+    }
 
     override fun asString(indent: Indent): String = "$indent$self"
 
@@ -78,17 +92,17 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<StructureType>>()
 
     fun issueError(obj: Any?, message: String) {
-        val loc = obj?.let {  locationMap[obj] }
+        val loc = obj?.let { locationMap[obj] }
         issues.error(loc, message)
     }
 
     fun issueErrorReturnNothing(obj: Any?, message: String): TypedObject {
-        issueError(obj,message)
+        issueError(obj, message)
         return nothing()
     }
 
     fun issueWarningReturnNothing(obj: Any?, message: String): TypedObject {
-        val loc = obj?.let {  locationMap[obj] }
+        val loc = obj?.let { locationMap[obj] }
         issues.warn(loc, message)
         return nothing()
     }
@@ -97,6 +111,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return when (possiblyTypedObject) {
             null -> Unit
             is TypedObject -> untyped(possiblyTypedObject as TypedObject)
+            is ListSeparated<*,*,*> -> possiblyTypedObject.map { untypedAny(it) }.toSeparatedList()
             is List<*> -> possiblyTypedObject.map { untypedAny(it) }
             is Set<*> -> possiblyTypedObject.map { untypedAny(it) }.toSet()
             is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
@@ -108,6 +123,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         null == obj -> nothing()
         Unit == obj -> nothing()
         obj is TypedObject -> obj as TypedObject
+        obj is AsmStructure -> typedAs(obj, typesDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)?.type() ?: ifNotFound)
         else -> when (obj) {
             is Boolean -> typedAs(obj, StdLibDefault.Boolean)
             is Byte -> typedAs(obj.toLong(), StdLibDefault.Integer)
@@ -138,10 +154,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             }
 
             is OrderedSet<*> -> toTypedCollection(obj.toList(), StdLibDefault.OrderedSet, ifNotFound) { it.toOrderedSet() }
-            is ListSeparated<*, *, *> -> {
-                TODO()
-            }
-
+            is ListSeparated<*, *, *> -> toTypedCollection(obj.toSeparatedList(), StdLibDefault.ListSeparated, ifNotFound) { it.toOrderedSet() }
             is Array<*> -> toTypedCollection(obj.toList(), StdLibDefault.List, ifNotFound) { it.toList() }
             //TODO: special array types IntArray, LongArray, etc
             is List<*> -> toTypedCollection(obj, StdLibDefault.List, ifNotFound) { it.toList() }
@@ -174,24 +187,41 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         }
     }
 
-    override fun untyped(typedObj: TypedObject): Any {
-        return untypedAny(typedObj.self)
-    }
+    override fun untyped(typedObj: TypedObject): Any = untypedAny(typedObj.self)
 
-    override fun typedAs(obj: Any, type: TypeInstance): TypedObject = TypedObjectAny(this, type, obj)
+    override fun typedAs(obj: Any, type: TypeInstance): TypedObject =
+        TypedObjectAny(this, type, obj)
 
     override fun isNothing(obj: TypedObject): Boolean = obj.self == Unit
-    override fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean = lhs.self == rhs.self
+    override fun equalTo(lhs: TypedObject, rhs: TypedObject): Boolean {
+        val lhsResolved = when (lhs.self) {
+            is AsmReference -> (lhs.self as AsmReference).value ?: lhs.self
+            else -> lhs.self
+        }
+        val rhsResolved = when (rhs.self) {
+            is AsmReference -> (rhs.self as AsmReference).value ?: rhs.self
+            else -> rhs.self
+        }
+        return lhsResolved == rhsResolved
+    }
 
     override fun nothing(): TypedObject = typedAs(Unit, StdLibDefault.NothingType)
     override fun any(value: Any): TypedObject = typedAs(value, StdLibDefault.AnyType)
 
     override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value, StdLibDefault.AnyType)
 
-    override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject {
-        val tupleType = StdLibDefault.TupleType
-        val tuple = mutableMapOf<String, Any>()
-        return typedAs(tuple, tupleType.type(typeArgs))
+    override fun createTupleValue(args: Map<String, TypedObject>): TypedObject {
+        val typeArgs = args.entries.associate { (k,v) -> k to v.type }
+        return createTupleValue(typeArgs, args)
+    }
+
+    override fun createTupleValue(typeArgs: Map<String, TypeInstance>, args: Map<String, Any>): TypedObject {
+        val tArgs = typeArgs.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k), v) }
+        val type = StdLibDefault.TupleType.type(tArgs)
+        val obj = AsmStructureSimple(type.qualifiedTypeName)
+        val asmPv = args.entries.mapIndexed { i,(k,v) -> AsmStructurePropertySimple(PropertyValueName(k),i,v) }
+        obj.addAllProperty(asmPv)
+        return typedAs(obj, type)
     }
 
     override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {
@@ -298,10 +328,8 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit) {
         val self = untyped(tobj)
         when (self) {
-            is List<*> -> {
-                self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
-            }
-
+            is Collection<*> -> self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
+            is Map<*,*> -> self.entries.forEachIndexed { index, el -> body(index, toTypedObject(Pair(el.key,el.value), StdLibDefault.AnyType)) } //TODO Pair Type
             else -> {
                 issueError(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
                 nothing()
@@ -309,11 +337,25 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         }
     }
 
-    override fun collectionUnion(collection1: TypedObject, collection2: TypedObject): TypedObject {
+    override fun collectionConcatination(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject {
         //TODO: this is inefficient
         val col1 = untyped(collection1) as Iterable<Any>
         val col2 = untyped(collection2) as Iterable<Any>
-        val union = toTypedObject(col1 + col2, StdLibDefault.Collection.type(listOf(StdLibDefault.AnyType.asTypeArgument)))
+        val untypedConcat = col1 + col2
+        val union = toTypedObject(untypedConcat, StdLibDefault.Collection.type(listOf(elementType.asTypeArgument)))
+        return union
+    }
+
+    override fun collectionUnion(collection1: TypedObject, collection2: TypedObject, elementType: TypeInstance): TypedObject {
+        //TODO: this is inefficient
+        val col1Untyped = untyped(collection1)
+        val col1 = col1Untyped as Iterable<Any>
+        val col2 = untyped(collection2) as Iterable<Any>
+        val untypedUnion = when (col1) {
+            is List<*> -> col1.union(col2).toList()
+            else -> col1.union(col2)
+        }
+        val union = toTypedObject(untypedUnion, StdLibDefault.Collection.type(listOf(elementType.asTypeArgument)))
         return union
     }
 

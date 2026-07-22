@@ -15,11 +15,13 @@
  *
  */
 
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -31,9 +33,15 @@ import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.jvm.JvmOverloads
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KMutableProperty0
+import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 import kotlin.time.Instant
 
@@ -282,7 +290,7 @@ class StdLibPrimitiveExecutionsForReflection(
 
     /** returns null if execution is not found for the given property on the typeDef */
     private fun propertyValueDirect(obj: Any, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
-        val propExec = property.execution
+        val propExec = property.accessor
         return when {
             null == propExec -> {
                 val typeProps = this._property[typeDef]
@@ -376,12 +384,51 @@ class ExternalGetterByReflection(
         val typeDef = typesDomain.findByQualifiedNameOrNull(qualifiedName)
         return when (typeDef) {
             null -> error("Type Definition for '${qualifiedName.value}' not found.")
-            is DataType -> typeDef.constructDataType(*(constructorArgs.values.toTypedArray<Any>()))
-            is ValueType -> typeDef.constructValueType(constructorArgs.values.first()) //TODO: special method
-            is CollectionType -> error("use 'createCollection' for CollectionType")
-            is InterfaceType -> error("Should not create an instance of a InterfaceType")
+            is DataType -> tryCreateFromConstructor(typeDef.constructors, constructorArgs) ?: typeDef.constructDataType(*(constructorArgs.values.toTypedArray<Any>()))
+            is ValueType -> tryCreateFromConstructor(typeDef.constructors, constructorArgs) ?: typeDef.constructValueType(constructorArgs.values.first())
+
             else -> error("Unsupported subtype of StructuredType: '${typeDef::class.simpleName}'")
         }
+    }
+
+    private fun tryCreateFromConstructor(
+        constructors: List<ConstructorDefinition>,
+        constructorArgs: Map<String, Any>
+    ): Any? {
+        val matchingConstructor = constructors.firstOrNull { con ->
+            when {
+                con.parameters.size != constructorArgs.size -> false
+                else -> {
+                    for (p in con.parameters) {
+                        val arg = constructorArgs[p.name.value]
+                        if (null == arg) {
+                            return@firstOrNull false
+                        }
+//TODO                        if (arg.type.conformsTo(p.typeInstance).not()) {
+//                            return@firstOrNull false
+//                        }
+                    }
+                    true
+                }
+            }
+        }
+        val obj = when {
+            null != matchingConstructor -> when {
+                null != matchingConstructor.execution -> {
+                    val args = matchingConstructor.parameters.map { p -> constructorArgs[p.name.value]!! }
+                    matchingConstructor.execution!!.invoke(args)
+                }
+                //TODO
+//                null != matchingConstructor.executionSuspend->{
+//                    val args = matchingConstructor.parameters.map { p -> constructorArgs[p.name.value]!!.untyped }
+//                    matchingConstructor.executionSuspend!!.invoke(args)
+//                }
+                else -> null
+            }
+
+            else -> null
+        }
+        return obj
     }
 
     override fun getProperty(obj: Any, propertyName: String): Any? {
@@ -393,8 +440,12 @@ class ExternalGetterByReflection(
         }
     }
 
-    override fun setProperty(obj: Any, propertyName: String, value: Any?) {
-        TODO()
+    override fun setProperty(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
+        try {
+            obj.reflect().setProperty(propertyName, value)
+        } catch (t: Throwable) {
+            issues.error(null, "Could not set property $propertyName to $value")
+        }
     }
 
     /** may be overridden to create object from suspending source */
@@ -404,7 +455,21 @@ class ExternalGetterByReflection(
     /** may be overridden to get property from suspending source */
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? =
         getProperty(obj, propertyName)
+
+    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
+        TODO("not implemented")
+    }
 }
+
+fun objectGraphSimpleAsm(
+    typesDomain: TypesDomain,
+    crossRefs: CrossReferenceDomain?,
+    issues: IssueHolder,
+    locationMap: LocationMap,
+    externalGetter: ExternalGetter = ExternalGetterAsmSimple(typesDomain, crossReferenceDomain = crossRefs, issues, locationMap),
+    primitiveExecutor: PrimitiveExecutor = StdLibPrimitiveExecutionsForReflection(),
+    functionLib: FunctionLib = StdFunctionLib
+) = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, locationMap, externalGetter, primitiveExecutor, functionLib)
 
 open class ObjectGraphAccessorMutatorByReflection
 @JvmOverloads //ensure the Java has overloads using the default values
@@ -429,7 +494,9 @@ constructor(
             is Char,
             is String -> StdLibDefault.String
 
+            is Float,
             is Double -> StdLibDefault.Real
+
             is Instant -> StdLibDefault.Timestamp
             is Throwable -> StdLibDefault.Exception
             is Pair<*, *> -> {
@@ -460,7 +527,7 @@ constructor(
 
             is Iterator<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             is Function<*> -> StdLibDefault.Lambda
-            else -> typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
+            else -> externalGetter.typeFor(obj, ifNotFound)//typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
         }
     }
 
@@ -475,8 +542,8 @@ constructor(
             decl.execution?.invoke(obj, args)
         }
 
-    override fun callFunction(functionName: String, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
-        callFunctionInternal(functionName, args, typeReferenceResolver) { decl, args ->
+    override fun callFunction(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunctionInternal(function, args, typeReferenceResolver) { decl, args ->
             decl.execution?.invoke(args)
         }
 
@@ -494,29 +561,13 @@ constructor(
      */
     override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject =
         getPropertyInternal(tobj, propertyName, externalGetter::getProperty) { obj, decl ->
-            decl.execution?.invoke(obj)
+            decl.accessor?.invoke(obj)
         }
 
-    override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) {
-        when {
-            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
-                when (tobj.self) {
-                    is MutableMap<*, *> -> {
-                        (tobj.self as MutableMap<String, Any>)[propertyName] = untyped(value)
-                    }
-                }
-            }
-
-            else -> {
-                try {
-                    val obj = tobj.self
-                    obj.reflect().setProperty(propertyName, untyped(value))
-                } catch (t: Throwable) {
-                    issueError(null, "Could not set property $propertyName to $value")
-                }
-            }
+    override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) =
+        setPropertyInternal(tobj, propertyName, value) { o, n, r, v ->
+            externalGetter.setProperty(o, n, r, v)
         }
-    }
 
     // --- Suspend ---
     override suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject {
@@ -532,12 +583,14 @@ constructor(
 
     override suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject =
         getPropertyInternal(tobj, propertyName, { o, n -> externalGetter.getPropertySuspend(o, n) }) { obj, decl ->
-            decl.executionSuspend?.invoke(obj) ?: decl.execution?.invoke(obj)
+            decl.accessorSuspend?.invoke(obj) ?: decl.accessor?.invoke(obj)
         }
 
-    override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) {
-        setProperty(tobj, propertyName, value) //TODO: internal and suspend versions
-    }
+    override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) =
+        setPropertyInternal(tobj, propertyName, value) { o, n, r, v ->
+            externalGetter.setPropertySuspend(o, n, r, v)
+        }
+
 
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
         executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
@@ -552,6 +605,12 @@ constructor(
     ): TypedObject {
         val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
+
+        // tuples should not be added to the list of structures
+        if (typeDef is TupleType) {
+            return createTupleValue(constructorArgs)
+        }
+
         val obj = when (typeDef) {
             is SingletonType -> typeDef.objectInstance()
             is StructuredType -> externalCreateStructure(
@@ -559,17 +618,23 @@ constructor(
                 constructorArgs.map { (k, v) -> Pair(k, v.self) }.toMap()
             ) ?: issueErrorReturnNothing(null, "Creating Structure '${typeDef.qualifiedName.value}' results in null, using value \$nothing.")
 
+            is InterfaceType -> error("Should not create an instance of an InterfaceType")
+            is CollectionType -> error("use 'createCollection' for CollectionType")
             is SpecialType -> error("Should not create an instance of a SpecialType")
             is PrimitiveType -> error("use 'createPrimitiveValue' for PrimitiveType")
             is EnumType -> error("use '??' for EnumType")
-            is TupleType -> error("use 'createTupleValue' for TupleType")
+            is TupleType -> error("should never happen")
             is UnionType -> error("Should not create an instance of a UnionType")
             else -> error("Unsupported subtype of TypeDefinition: '${typeDef::class.simpleName}'")
         }
         val type = typeDef.type()
         addCreatedStructure(type, obj)
-        return typedAs(obj, type)
+        return when {
+            obj is TypedObject -> obj
+            else -> typedAs(obj, type)
+        }
     }
+
 
     private inline fun getPropertyInternal(
         tobj: TypedObject,
@@ -589,11 +654,19 @@ constructor(
                         )
                     }
 
+                    is AsmStructure -> {
+                        val propType = tobj.type.typeArguments.firstOrNull { ta -> ta is TypeArgumentNamed && ta.name.value == propertyName }?.type ?: StdLibDefault.AnyType
+                        val pv = obj.getPropertyOrNull(PropertyValueName(propertyName))
+                        pv?.let { toTypedObject(it, propType) }
+                            ?: issueErrorReturnNothing(null, "Property '$propertyName' on Tuple not found, using value \$nothing.")
+                    }
+
                     else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on Tuple, expected a Map, got '${obj::class.simpleName}', using value \$nothing.")
                 }
             }
 
             else -> {
+                //TODO: bit mixed up with External and Primitive Accessors - don't think we need both.
                 val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
                 when (propRes) {
                     null -> {
@@ -601,37 +674,37 @@ constructor(
                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
                         value?.let { toTypedObject(value, StdLibDefault.AnyType) }
                         // could be validly null, so only issue warning
-                            ?: issueWarningReturnNothing(null, "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing.")
+                            ?: issueWarningReturnNothing(null, "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing.")
                     }
 
                     else -> {
                         val propResOriginal = propRes.original
                         val obj = untyped(tobj)
                         when {
-                            (null != propResOriginal.execution) -> {
+                            (null != propResOriginal.accessor) -> {
                                 val value = propertyExecution(obj, propResOriginal)
                                 value?.let { toTypedObject(value, propRes.typeInstance) }
                                     ?: when {
                                         propResOriginal.typeInstance.isNullable -> nothing()
-                                        else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing.")
+                                        else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing.")
                                     }
                             }
 
-                            (null != propResOriginal.executionSuspend) -> {
+                            (null != propResOriginal.accessorSuspend) -> {
                                 val value = propertyExecution(obj, propResOriginal)
                                 value?.let { toTypedObject(value, propRes.typeInstance) }
                                     ?: when {
                                         propResOriginal.typeInstance.isNullable -> nothing()
                                         else -> issueErrorReturnNothing(
                                             null,
-                                            "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                                            "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing."
                                         )
                                     }
                             }
 
                             else -> {
                                 val type = tobj.type.resolvedDefinition
-                                val execResult = primitiveExecutor.propertyValue(untyped(tobj), type, propResOriginal)
+                                val execResult = primitiveExecutor.propertyValue(obj, type, propResOriginal)
                                 when (execResult) {
                                     null -> {
                                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
@@ -640,7 +713,7 @@ constructor(
                                                 propResOriginal.typeInstance.isNullable -> nothing()
                                                 else -> issueErrorReturnNothing(
                                                     null,
-                                                    "Executing property '$propertyName' on '${obj::class.simpleName}' results in null, using value \$nothing."
+                                                    "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing."
                                                 )
                                             }
                                     }
@@ -655,6 +728,63 @@ constructor(
         }
     }
 
+    private inline fun setPropertyInternal(
+        tobj: TypedObject,
+        propertyName: String,
+        value: TypedObject,
+        externalPropertyMutator: (obj: Any, name: String, isReference: Boolean, value: Any?) -> Unit,
+    ) {
+        when {
+            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
+                when (tobj.self) {
+                    is MutableMap<*, *> -> {
+                        (tobj.self as MutableMap<String, Any>)[propertyName] = untyped(value)
+                    }
+                }
+            }
+
+            else -> {
+                //TODO: bit mixed up with External and Primitive Accessors/Mutators - don't think we need both.
+                val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                val r = propRes?.isReference ?: false
+                when (propRes) {
+                    null -> {
+                        val obj = untyped(tobj)
+                        val uv = untyped(value)
+                        externalPropertyMutator.invoke(obj, propertyName, r, uv)
+                    }
+                    else -> {
+                        val propResOriginal = propRes.original
+                        val obj = untyped(tobj)
+                        when {
+                            propResOriginal.accessor is KMutableProperty1<*, *> -> {
+                                (propResOriginal.accessor as KMutableProperty1<Any, Any>).set(obj, value.untyped)
+                            }
+                            (null != propResOriginal.mutator) -> {
+                                propResOriginal.mutator!!.invoke(obj, value.untyped)
+                            }
+                            //TODO suspend !
+                            else -> {
+                                val type = tobj.type.resolvedDefinition
+                                val execResult = primitiveExecutor.propertyValue(obj, type, propResOriginal)
+                                when (execResult) {
+                                    null -> {
+                                        val obj = untyped(tobj)
+                                        val uv = untyped(value)
+                                        externalPropertyMutator(obj, propertyName,r, uv) //externalGetter.getProperty(obj, propertyName)
+                                    }
+
+                                    else -> toTypedObject(execResult.value, propRes.typeInstance)
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+            }
+        }
+    }
 
     private inline fun executeMethodInternal(
         tobj: TypedObject,
@@ -733,39 +863,32 @@ constructor(
     }
 
     private inline fun callFunctionInternal(
-        functionName: String,
+        function: FunctionDefinitionFloating,
         args: List<TypedObject>,
         typeReferenceResolver: (TypeReference) -> TypeInstance,
         functionExecution: (decl: FunctionDefinitionFloating, args: List<*>) -> Any?
     ): TypedObject {
-        val decl = functionLib.declaration[functionName]
-        return when (decl) {
-            null -> issueErrorReturnNothing(null, "No function named '${functionName}' was declared, using value \$nothing.")
+
+        val arguments = args.map { untyped(it) }
+        val returnType = function.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
+        return when {
+            (null != function.execution) -> {
+                val value = functionExecution.invoke(function, arguments)
+                value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${function.name.value}' results in null, using value \$nothing.")
+            }
+
+            (null != function.executionSuspend) -> {
+                val value = functionExecution.invoke(function, arguments)
+                value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${function.name.value}' results in null, using value \$nothing.")
+            }
 
             else -> {
-                val arguments = args.map { untyped(it) }
-                val returnType = decl.returnTypeReference?.let { typeReferenceResolver.invoke(it) } ?: StdLibDefault.AnyType
-                when {
-                    (null != decl.execution) -> {
-                        val value = functionExecution.invoke(decl, arguments)
-                        value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${functionName}' results in null, using value \$nothing.")
-                    }
-
-                    (null != decl.executionSuspend) -> {
-                        val value = functionExecution.invoke(decl, arguments)
-                        value?.let { toTypedObject(value, returnType) } ?: issueErrorReturnNothing(null, "Executing function '${functionName}' results in null, using value \$nothing.")
-                    }
-
-                    else -> {
-                        val execResult = primitiveExecutor.functionCall(functionName, arguments)
-                        when (execResult) {
-                            null -> error("Function '${functionName}' not executed.")
-                            else -> toTypedObject(execResult.value, returnType)
-                        }
-                    }
+                val execResult = primitiveExecutor.functionCall(function.name.value, arguments)
+                when (execResult) {
+                    null -> error("Function '${function.name.value}' not executed.")
+                    else -> toTypedObject(execResult.value, returnType)
                 }
             }
         }
     }
-
 }

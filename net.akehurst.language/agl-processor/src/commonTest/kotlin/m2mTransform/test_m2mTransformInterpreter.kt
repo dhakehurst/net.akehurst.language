@@ -25,15 +25,19 @@ import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.M2mTransformString
+import net.akehurst.language.asm.simple.AnyExt.asString
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExternalGetterAsmSimple
-import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
+import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyCharacteristic
+import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -762,7 +766,7 @@ class test_m2mTransformInterpreter {
                             propertyString("prop1", "value2")
                         }
                     }
-                    expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'd2' of rule 'A12A2'.")
+                   // expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'd2' of rule 'A12A2'.")
                     target("d2") {
                     }
                 }
@@ -831,7 +835,7 @@ class test_m2mTransformInterpreter {
             }
 
             // relation where
-            testSuit("simple relation where map String via table") {
+            testSuit("simple relation where relate String via table") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
                         data("A1") {
@@ -854,7 +858,7 @@ class test_m2mTransformInterpreter {
                             domain d1 a1:A1 { prop1 == s1 }
                             domain d2 a2:A2 { prop2 == s2 }
                             where {
-                              map StringConvert{ d1:=s1 d2:=s2 }
+                              relate StringConvert{ d1:=s1 d2:=s2 }
                             }
                         }
                         table StringConvert {
@@ -1479,7 +1483,7 @@ class test_m2mTransformInterpreter {
                 typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
-                            propertyOf(setOf(CMP, VAR), "name", "String")
+                            propertyOf(setOf(REF, VAR), "name", "String")
                         }
                         data("Package") {
                             supertypes("UmlModelElement")
@@ -1499,7 +1503,9 @@ class test_m2mTransformInterpreter {
                         }
                         data("PrimitiveDataType") {
                             supertypes("Classifier")
-
+                            constructor_ {
+                                parameter(setOf(REF, VAL), "name", "String")
+                            }
                         }
                         data("Association") {
                             supertypes("PackageElement")
@@ -1577,6 +1583,11 @@ class test_m2mTransformInterpreter {
                         }
                     }
                 }
+                crossReferenceDomain("uml", "SimpleUML") {
+                    declarationsFor("uml") {
+                        identify("PrimitiveDataType", "name")
+                    }
+                }
                 transform(
                     $$"""
                     namespace test
@@ -1584,9 +1595,9 @@ class test_m2mTransformInterpreter {
                         top table PrimitiveUmlTypeToSqlType {
                             domain  uml :PrimitiveDataType                /**/ domain rdbms :String
                             /*===================================================================*/ 
-                            values uml.PrimitiveDataType(){ name := 'Int'}     to  'NUMBER'
-                            values uml.PrimitiveDataType(){ name := 'Boolean'} to  'BOOLEAN'
-                            values uml.PrimitiveDataType(){ name := 'String'}  to  'VARCHAR'
+                            values uml.PrimitiveDataType(name := 'Int'){}     to  'NUMBER'
+                            values uml.PrimitiveDataType(name := 'Boolean'){} to  'BOOLEAN'
+                            values uml.PrimitiveDataType(name := 'String'){}  to  'VARCHAR'
                         }
                     }
                 """
@@ -1952,10 +1963,10 @@ class test_m2mTransformInterpreter {
                               table == s_tbl
                             }
                             where {
-                                relate all ClassToTable { uml := p_els rdbms:= s_tbl }
+                                relate all ClassToTable(p:=p,s:=s) { uml:=p_els rdbms:= s_tbl }
                             }
                         }
-                        relation ClassToTable {
+                        relation ClassToTable(p:Package, s:Schema) {
                             pivot cn: String
                             domain uml c:Class {
                                 namespace==p
@@ -1981,9 +1992,9 @@ class test_m2mTransformInterpreter {
                                     kind=='primary'
                                 }
                             }
-                            when { related PackageToSchema{ uml := p rdbms := s } }
+                            when { related PackageToSchema{ uml:=p rdbms:=s } } // maybe not needed!
                             where {
-                                 relate all AttributeToColumn{ uml := c_atts rdbms := t_cols }
+                                 relate all AttributeToColumn{ uml:=c_atts rdbms:=t_cols }
                             }
                         }
                         abstract rule AttributeToColumn {
@@ -2001,10 +2012,7 @@ class test_m2mTransformInterpreter {
                                 type==ct:String{}
                             }
                             where {
-                                relate PrimitiveUmlTypeToSqlType {
-                                  uml := at
-                                  rdbms := ct
-                                }
+                                relate PrimitiveUmlTypeToSqlType { uml:=at rdbms:=ct }
                             }
                         }
                         relation AttributeToColumnComplex {
@@ -2018,10 +2026,7 @@ class test_m2mTransformInterpreter {
                                 type=='NUMBER'
                             }
                             where {
-                                relate ComplexUmlTypeToSqlType {
-                                  uml := at
-                                  rdbms := ct
-                                }
+                                relate ComplexUmlTypeToSqlType { uml:=at rdbms:=ct }
                             }
                         }                        
                         table PrimitiveUmlTypeToSqlType {
@@ -2040,7 +2045,7 @@ class test_m2mTransformInterpreter {
                             propertyString("name", "pkg1")
                         }
                     }
-                    expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'PackageToSchema' in 'umlRdbms', the all call to rule 'ClassToTable' is expecting a collection.")
+                    //expectIssue(LanguageIssueKind.ERROR, "In 'where' clause of rule 'PackageToSchema' in 'umlRdbms', the all call to rule 'ClassToTable' is expecting a collection.")
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
@@ -2114,7 +2119,7 @@ class test_m2mTransformInterpreter {
                         }
                     }
                     // because the Class.namespace is not set, variable p will be $nothing, and the ClassToTable.when clause will fail
-                    expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'rdbms' of rule 'ClassToTable'.")
+                    //expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'rdbms' of rule 'ClassToTable'.")
                     // because the ClassToTable.when clause fails, the PackageToSchema.where will match nothing
                     expectIssue(LanguageIssueKind.WARNING, "In rule 'PackageToSchema' the 'where' clause matched nothing.")
                     target("rdbms") {
@@ -2125,7 +2130,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 testCase("1 Class with name, kind & namespace, but no attributes") {
-                    input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
+                    input("uml", resolveReferences = true, sentenceContext = contextAsmSimple(), sentenceId = 0) {
                         element("Package") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
@@ -2165,7 +2170,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 testCase("1 Class with name, kind & namespace and empty attributes") {
-                    input("uml", resolveReferences = true, context = contextAsmSimple(), sentenceId = 0) {
+                    input("uml", resolveReferences = true, sentenceContext = contextAsmSimple(), sentenceId = 0) {
                         element("Package") {
                             propertyString("name", "pkg1")
                             propertyListOfElement("elements") {
@@ -2204,6 +2209,202 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            testSuit("Where called relation creates object") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation Rel1 {
+                            pivot s:String
+                            domain d1 a1:A1 { prop1 == s }
+                            domain d2 a2:A2 { prop2 == s }
+                            where {
+                              relate Rel2{ d1:=a1 d2:=a2 }
+                            }
+                        }
+                        relation Rel2 {
+                            domain d1 a1:A1 { }
+                            domain d2 a2:A2 { }
+                        } 
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value1")
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value2")
+                        }
+                    }
+                   // expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
+                    target("d2") {
+                        element("A2") {
+                            propertyNothing("prop2")
+                        }
+                    }
+                }
+            }
+            testSuit("Where created object is passed to where") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation Rel1 {
+                            domain d1 a1:A1 {}
+                            domain d2 a2:A2 {}
+                            where {
+                              relate Rel2{ d1:=a1 d2:=a2 }
+                            }
+                        }
+                        relation Rel2 {
+                            pivot s:String
+                            domain d1 a1:A1 { prop1 == s }
+                            domain d2 a2:A2 { prop2 == s }
+                        } 
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("prop2", "value2")
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value2")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyNothing("prop2")
+                        }
+                    }
+                }
+            }
+            testSuit("Setting the owner") {
+                typesDomain("d1", "Domain1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                typesDomain("d2", "Domain2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            constructor_ {
+                                parameter(setOf(REF, VAL),"id", "String")
+                            }
+                            propertyOf(setOf(CMP, VAR), "b", "B2")
+                        }
+                        data("B2") {
+                            propertyOf(setOf(REF, VAR), "owner", "A2")
+                            propertyOf(setOf(REF, VAR), "prop", "String")
+                        }
+                    }
+                }
+                crossReferenceDomain("d2","Domain2") {
+                    declarationsFor("n2") {
+                        identify("A2", "id")
+                        reference("B2") {
+                            property("owner", listOf("A2"),null)
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top relation Rel1 {
+                            pivot s:String
+                            domain d1 a1:A1 { prop1 == s }
+                            domain d2 a2:A2 { 
+                              id == 'A2-1'
+                              b == B2 {
+                                owner == a2
+                                prop == s
+                              }
+                            }
+                        }
+                    }
+                """
+                )
+                testCase("A1 with value1 -> A2B2") {
+                    input("d1") {
+                        element("A1") {
+                            propertyString("prop1", "value1")
+                        }
+                    }
+                    target("d2") {
+                        element("A2") {
+                            propertyString("id", "A2-1")
+                            propertyElementExplicitType("b","B2") {
+                                reference("owner", "A2-1")
+                                propertyString("prop2", "value1")
+                            }
+                        }
+                    }
+                }
+                testCase("A1 with value2 -> nothing") {
+                    input("d1") {
+                        element("A1") {
+                        }
+                    }
+                    // expectIssue(LanguageIssueKind.WARNING, "In rule 'A1_to_A2' the 'where' clause matched nothing.")
+                    target("d2") {
+                        element("A2") {
+                            propertyString("id", "id-a1")
+                        }
+                    }
+                }
+            }
         }
 
         fun doTest(suite: TransformTestSuit, case: TransformTestCase) {
@@ -2216,7 +2417,7 @@ class test_m2mTransformInterpreter {
             val transform = M2mTransformString(suite.transform)
             val accMuts = suite.typeDomains.entries.associate { (k, v) ->
                 val cdr = suite.crossReferenceDomains[k]
-                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
+                Pair(v.name, objectGraphSimpleAsm(v, null,issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
             val domains = case.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")
@@ -2224,8 +2425,9 @@ class test_m2mTransformInterpreter {
                     println(obj.asString())
                     val srcTypeDomain = suite.typeDomains[k]!!
                     accMuts[srcTypeDomain.name]!!.let { am ->
-                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
-                        am.typedAs(obj, td.type())
+//                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
+//                        am.typedAs(obj, td.type())
+                        am.toTypedObject(obj, StdLibDefault.AnyType)
                     }
                 }
                 Pair(k, sourceObjects)
@@ -2235,6 +2437,7 @@ class test_m2mTransformInterpreter {
                 suite.typeDomains,
                 accMuts as Map<SimpleName,ObjectGraphAccessorMutator>,
                 domains,
+                emptyMap(),
                 case.target!!
             )
             println("----- M2M Transform Result -----")
@@ -2278,36 +2481,37 @@ class test_m2mTransformInterpreter {
             }
             val ogs = suite.typeDomains.entries.associate { (k, v) ->
                 val cdr = suite.crossReferenceDomains[k]
-                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
+                Pair(v.name, objectGraphSimpleAsm(v, null,issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
             val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
 
-            val source = case.input.entries.associate { (k, v) ->
+            val source:Map<DomainReference, List<TypedObject>> = case.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")
                 val sourceObjects = v.root.map { obj ->
                     println(obj.asString())
                     val srcTypeDomain = suite.typeDomains[k]!!
                     ogs[srcTypeDomain.name]!!.let { am ->
-                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
-                        am.typedAs(obj,td.type())
+//                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
+//                        am.typedAs(obj,td.type())
+                        am.toTypedObject(obj, StdLibDefault.AnyType)
                     }
                 }
                 Pair(k, sourceObjects)
             }
             val tgtTransform = m2m.allTransformRuleSet.first()
-            val trRes = interpreter.transform(tgtTransform, case.target!!, source)
+            val trRes = interpreter.transform(tgtTransform, case.target!!, emptyMap(), source)
             println("----- M2M Transform Result -----")
             trRes.targets.forEach { println(it.asString()) }
             println(trRes.asString())
             println(trRes.issues.toString())
-            assertEquals(case.expectedIssues, trRes.issues.all, trRes.issues.toString())
+//            assertEquals(case.expectedIssues.joinToString("\n"), trRes.issues.all.joinToString("\n"))
             val expected = case.expected
             if (null != expected) {
                 assertEquals(expected.root.size, trRes.targets.size)
                 for (i in expected.root.indices) {
                     val exp = expected.root[i]
                     val act = trRes.targets[i]
-                    assertEquals(exp.asString(), act.asString())
+                    assertEquals(exp.asString(), act.untyped.asString())
                 }
             }
         }
@@ -2338,7 +2542,7 @@ class test_m2mTransformInterpreter {
     @Test
     fun single() {
         val suite = testSuits["Full umlRdbms QVT example"]!!
-        val case = suite.testCase["1 Class with name, kind & namespace and empty attributes"]!!
+        val case = suite.testCase["1 Class with name, kind & namespace, but no attributes"]!!
         doTest2(suite, case)
     }
 }

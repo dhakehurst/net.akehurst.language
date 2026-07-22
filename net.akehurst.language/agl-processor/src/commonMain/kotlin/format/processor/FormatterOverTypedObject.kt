@@ -18,7 +18,7 @@ package net.akehurst.language.format.processor
 
 import net.akehurst.kotlinx.collections.lazyMap
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.expressions.processor.ObjectGraphAccessorMutatorByReflection
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.objectgraph.api.EvaluationContext
@@ -601,7 +601,9 @@ class FormatterOverTypedObject(
         }
         return when (func) {
             null -> {
-                objectGraph.callFunction(expression.possiblyQualifiedName.value, argValues) { tr -> evaluateTypeReference(tr) }
+                val decl = objectGraph.functionLib.findFirstFunctionNamed(expression.possiblyQualifiedName.value)
+                    ?: error("Function named '${expression.possiblyQualifiedName.value}' not found.")
+                objectGraph.callFunction(decl, argValues) { tr -> evaluateTypeReference(tr) }
             }
 
             else -> when {

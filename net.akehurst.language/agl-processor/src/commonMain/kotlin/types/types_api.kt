@@ -49,8 +49,8 @@ data class AssociationEnd(
     val characteristics: Set<PropertyCharacteristic>,
     val navigable: Boolean,
 ) {
-    var byEvaluation: ((PropertyDeclaration) -> ((Any)->Any?)?)? = null
-    var byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any)->Any?)?)? = null
+    var byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null
+    var byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
 }
 
 interface TypesNamespace : Namespace<TypeDefinition> {
@@ -109,7 +109,7 @@ interface TypesNamespace : Namespace<TypeDefinition> {
     fun findOwnedOrCreateValueTypeNamed(typeName: SimpleName): ValueType
     fun findOwnedOrCreateInterfaceTypeNamed(typeName: SimpleName): InterfaceType
     fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType
-    fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName, typeParameters:List<TypeParameter>): CollectionType
+    fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName, typeParameters: List<TypeParameter>): CollectionType
     fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate: (UnionType) -> Unit): UnionType
 
     /**
@@ -278,7 +278,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
     fun addTypeParameter(name: TypeParameter)
 
     @Deprecated("Create a TypeInstance and use addSupertype(TypeInstance). This (deprecated) method does not add TypeArgs to the supertype.")
-    fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName, typeArgNames:List<PossiblyQualifiedName>)
+    fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName, typeArgNames: List<PossiblyQualifiedName>)
 
     fun addSupertype(typeInstance: TypeInstance)
     fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String): PropertyDeclaration
@@ -314,7 +314,11 @@ interface StructuredType : TypeDefinition {
     /**
      * append property at the next index
      */
-    fun appendPropertyStored(name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
+    fun appendPropertyStored(
+        name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1,
+        accessor: ((self: Any) -> Any?)? = null,
+        mutator: ((self: Any, value: Any?) -> Unit)? = null
+    ): PropertyDeclaration
 
     override fun findInOrCloneTo(other: TypesDomain): StructuredType
 }
@@ -343,7 +347,7 @@ interface ValueType : StructuredType {
     val constructors: List<ConstructorDefinition>
     val valueProperty: PropertyDeclaration
 
-    fun addConstructor(parameters: List<ParameterDeclaration>)
+    fun addConstructor(parameters: List<ParameterDeclaration>): ConstructorDefinition
 }
 
 interface InterfaceType : StructuredType {
@@ -363,7 +367,7 @@ interface DataType : StructuredType {
     fun addSubtype_dep(qualifiedTypeName: PossiblyQualifiedName)
 
     fun addSubtype(typeInstance: TypeInstance)
-    fun addConstructor(parameters: List<ParameterDeclaration>)
+    fun addConstructor(parameters: List<ParameterDeclaration>): ConstructorDefinition
 }
 
 interface UnionType : TypeDefinition {
@@ -431,8 +435,10 @@ interface PropertyDeclaration {
     val isPrimitive: Boolean
 
     // to assist execution by reflection without having MPP reflection support
-    val execution: ((self: Any) -> Any?)?
-    val executionSuspend: (suspend (self: Any) -> Any?)?
+    val accessor: ((self: Any) -> Any?)?
+    val accessorSuspend: (suspend (self: Any) -> Any?)?
+
+    val mutator: ((self: Any, value: Any) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 
@@ -520,8 +526,8 @@ interface MethodDefinition {
     val description: String
 
     // to assist execution by reflection without having MPP reflection support
-    val execution: ((self: Any, args:List<*>) -> Any?)?
-    val executionSuspend: (suspend (self: Any, args:List<*>) -> Any?)?
+    val execution: ((self: Any, args: List<*>) -> Any?)?
+    val executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDefinitionResolved
     fun findInOrCloneTo(other: TypesDomain): MethodDefinition
@@ -538,8 +544,8 @@ interface ConstructorDefinition {
     val parameters: List<ParameterDeclaration>
 
     // to assist execution by reflection without having MPP reflection support
-    val execution: ((args:List<*>) -> Any?)?
-    val executionSuspend: (suspend (args:List<*>) -> Any?)?
+    val execution: ((args: List<*>) -> Any?)?
+    val executionSuspend: (suspend (args: List<*>) -> Any?)?
 
     fun findInOrCloneTo(other: TypesDomain): ConstructorDefinition
 }
