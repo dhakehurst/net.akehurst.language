@@ -57,7 +57,8 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
             
                 references = 'references' '{' referenceDefinitions '}' ;
                 referenceDefinitions = referenceDefinition* ;
-                referenceDefinition = 'in' simpleTypeName '{' referenceExpression* '}' ;
+                referenceDefinition = 'in' simpleTypeName '{' referenceExpressionList '}' ;
+                referenceExpressionList = referenceExpression* ;
                 referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
                 propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
                 from = 'from' navigationExpression ;

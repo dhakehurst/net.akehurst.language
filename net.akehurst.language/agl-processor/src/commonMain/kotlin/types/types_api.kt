@@ -438,7 +438,8 @@ interface PropertyDeclaration {
     val accessor: ((self: Any) -> Any?)?
     val accessorSuspend: (suspend (self: Any) -> Any?)?
 
-    val mutator: ((self: Any, value: Any) -> Any?)?
+    val mutator: ((self: Any, value: Any?) -> Any?)?
+    val mutatorSuspend: (suspend (self: Any, value: Any?) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 

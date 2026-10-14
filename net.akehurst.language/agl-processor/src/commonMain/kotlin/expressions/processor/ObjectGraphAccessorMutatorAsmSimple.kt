@@ -248,7 +248,11 @@ class ExternalGetterAsmSimple(
                 val qn = obj.qualifiedTypeName
                 typesDomain.findByQualifiedNameOrNull(qn)
             }
-
+            obj is AsmReference -> {
+                obj.value?.qualifiedTypeName ?.let {
+                    typesDomain.findByQualifiedNameOrNull(it)
+                }
+            }
             else -> {
                 typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
             }

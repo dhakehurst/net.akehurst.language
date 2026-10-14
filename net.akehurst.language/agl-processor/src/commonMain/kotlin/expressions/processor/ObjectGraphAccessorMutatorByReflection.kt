@@ -565,8 +565,10 @@ constructor(
         }
 
     override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) =
-        setPropertyInternal(tobj, propertyName, value) { o, n, r, v ->
+        setPropertyInternal(tobj, propertyName, value, { o, n, r, v ->
             externalGetter.setProperty(o, n, r, v)
+        }) { obj, decl, value ->
+            decl.mutator?.invoke(obj,value)
         }
 
     // --- Suspend ---
@@ -587,8 +589,10 @@ constructor(
         }
 
     override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) =
-        setPropertyInternal(tobj, propertyName, value) { o, n, r, v ->
+        setPropertyInternal(tobj, propertyName, value, { o, n, r, v ->
             externalGetter.setPropertySuspend(o, n, r, v)
+        }) { obj, decl, value ->
+            decl.mutatorSuspend?.invoke(obj,value)
         }
 
 
@@ -634,7 +638,6 @@ constructor(
             else -> typedAs(obj, type)
         }
     }
-
 
     private inline fun getPropertyInternal(
         tobj: TypedObject,
@@ -733,6 +736,7 @@ constructor(
         propertyName: String,
         value: TypedObject,
         externalPropertyMutator: (obj: Any, name: String, isReference: Boolean, value: Any?) -> Unit,
+        propertyMutation: (obj: Any, decl: PropertyDeclaration,value: Any?) -> Unit
     ) {
         when {
             StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
@@ -760,8 +764,14 @@ constructor(
                             propResOriginal.accessor is KMutableProperty1<*, *> -> {
                                 (propResOriginal.accessor as KMutableProperty1<Any, Any>).set(obj, value.untyped)
                             }
+                            propResOriginal.accessorSuspend is KMutableProperty1<*, *> -> {
+                                (propResOriginal.accessorSuspend as KMutableProperty1<Any, Any>).set(obj, value.untyped)
+                            }
                             (null != propResOriginal.mutator) -> {
-                                propResOriginal.mutator!!.invoke(obj, value.untyped)
+                                propertyMutation.invoke(obj, propResOriginal, value.untyped)
+                            }
+                            (null != propResOriginal.mutatorSuspend) -> {
+                                propertyMutation.invoke(obj, propResOriginal, value.untyped)
                             }
                             //TODO suspend !
                             else -> {

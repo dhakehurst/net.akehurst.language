@@ -305,7 +305,9 @@ abstract class StructuredTypeBuilder(
         typeName: String,
         isNullable: Boolean = false,
         accessor: ((self: T) -> V)? = null,
-        mutator: ((self: T, value: V) -> Unit)? = null,
+        mutator: ((self: T, value: V?) -> Unit)? = null,
+        accessorSuspend: ((self: T?) -> V?)? = null,
+        mutatorSuspend: (suspend (self: T, value: V?) -> Unit)? = null,
         init: TypeArgumentBuilder.() -> Unit = {}
     ): PropertyDeclaration {
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
@@ -316,6 +318,8 @@ abstract class StructuredTypeBuilder(
         return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics).also {
             (it as PropertyDeclarationStored).accessor = accessor as ((self: Any) -> Any?)?
             (it as PropertyDeclarationStored).mutator = mutator as ((self: Any, value: Any?) -> Unit)?
+            (it as PropertyDeclarationStored).accessorSuspend = accessorSuspend as (suspend (self: Any) -> Any?)?
+            (it as PropertyDeclarationStored).mutatorSuspend = mutatorSuspend as (suspend (self: Any, value:Any?) -> Unit)?
         }
     }
 
@@ -325,7 +329,11 @@ abstract class StructuredTypeBuilder(
         typeName: String,
         isNullable: Boolean = false,
         init: TypeArgumentBuilder.() -> Unit = {}
-    ): PropertyDeclaration = propertyOfWithBinding<Any,Any>(characteristics, propertyName, typeName, isNullable, null,null,init)
+    ): PropertyDeclaration = propertyOfWithBinding<Any,Any>(
+        characteristics, propertyName, typeName, isNullable,
+        null,null,null,null,
+        init
+    )
 
     fun <T : Any, V> propertyPrimitive(
         propertyName: String,

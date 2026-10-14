@@ -1658,6 +1658,7 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
     override var accessorSuspend: (suspend (self: Any) -> Any?)? = null
 
     override var mutator: ((self: Any, value: Any?) -> Any?)? = null
+    override var mutatorSuspend: (suspend (self: Any, value: Any?) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
         this,
