@@ -233,6 +233,8 @@ class AssociationBuilder(
     val REF = PropertyCharacteristic.REFERENCE
     val VAL = PropertyCharacteristic.READ_ONLY
     val VAR = PropertyCharacteristic.READ_WRITE
+    val STR = PropertyCharacteristic.STORED
+    val DER = PropertyCharacteristic.DERIVED
 
     private val _ends = mutableListOf<AssocEnd>()
 
@@ -291,10 +293,8 @@ abstract class StructuredTypeBuilder(
 
     val CMP = PropertyCharacteristic.COMPOSITE
     val REF = PropertyCharacteristic.REFERENCE
-
     val VAL = PropertyCharacteristic.READ_ONLY
     val VAR = PropertyCharacteristic.READ_WRITE
-
     val STR = PropertyCharacteristic.STORED
     val DER = PropertyCharacteristic.DERIVED
 

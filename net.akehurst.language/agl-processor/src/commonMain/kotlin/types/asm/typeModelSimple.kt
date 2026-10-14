@@ -957,14 +957,22 @@ abstract class TypeDefinitionSimpleAbstract(
      * append a derived property, with the expression that derived it
      */
     override fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String): PropertyDeclarationDerived {
-        val propIndex = property.size
+        val propIndex = run {
+            val max = propertyByIndex.keys.max()
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val prop = PropertyDeclarationDerived(this, name, typeInstance, description, expression, propIndex)
         this.addProperty(prop)
         return prop
     }
 
     override fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String): PropertyDeclarationPrimitive {
-        val propIndex = property.size
+        val propIndex = run {
+            val max = propertyByIndex.keys.max()
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val prop = PropertyDeclarationPrimitive(this, name, typeInstance, description, propIndex)
         this.addProperty(prop)
         return prop
@@ -1243,7 +1251,11 @@ abstract class StructuredTypeSimpleAbstract : TypeDefinitionSimpleAbstract(), St
         accessor: ((self: Any) -> Any?)?,
         mutator: ((self: Any, value: Any?) -> Unit)?
     ): PropertyDeclaration {
-        val propIndex = if (index >= 0) index else property.size
+        val propIndex = if (index >= 0) index else {
+            val max = propertyByIndex.keys.max()
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val pd = PropertyDeclarationStored(this, name, typeInstance, characteristics + PropertyCharacteristic.STORED, propIndex)
         pd.accessor = accessor
         pd.mutator = mutator
