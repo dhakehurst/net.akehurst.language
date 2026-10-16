@@ -20,8 +20,12 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmReference
 import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.api.PropertyValueName
+import net.akehurst.language.asm.simple.AsmReferenceSimple
+import net.akehurst.language.asm.simple.raw
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -432,20 +436,81 @@ class ExternalGetterByReflection(
     }
 
     override fun getProperty(obj: Any, propertyName: String): Any? {
-        return try {
-            obj.reflect().getProperty(propertyName)
-        } catch (t: Throwable) {
-            issues.error(null, "Unable to evaluate property '$propertyName': ${t.message}")
-            null
+        return when (obj) {
+            is Unit -> null
+            is AsmStructure -> {
+                val v = obj.getPropertyOrNull(PropertyValueName(propertyName))
+                when (v) {
+                    is AsmStructure -> v
+                    is AsmReference -> v
+                    else -> v?.raw
+                }
+            }
+
+            is AsmReference -> obj.value?.let {
+                val v = it.property[PropertyValueName(propertyName)]?.value
+                when (v) {
+                    is AsmStructure -> v
+                    is AsmReference -> v
+                    else -> v?.raw
+                }
+            }
+
+            else -> try {
+                obj.reflect().getProperty(propertyName)
+            } catch (t: Throwable) {
+                issues.error(null, "Unable to evaluate property '$propertyName': ${t.message}")
+                null
+            }
         }
     }
 
     override fun setProperty(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
-        try {
-            obj.reflect().setProperty(propertyName, value)
-        } catch (t: Throwable) {
-            issues.error(null, "Could not set property $propertyName to $value")
+        when (obj) {
+            is Unit -> Unit // do nothin
+            is AsmStructure -> {
+                val v = when {
+                    null == value -> Unit
+                    value is AsmValue -> value.raw
+                    else -> value //AsmAnySimple(value)
+                }
+                val v2 = when {
+                    isReference && v is AsmStructure -> {
+                        val refStr = v.semanticQualifiedPath?.joinToString(separator = ".")
+                        refStr?.let { AsmReferenceSimple(refStr, v) } ?: error("Cannot create reference for ${v} it has no semanticQualifiedPath")
+                    }
+
+                    else -> v
+                }
+                val nextIndex = obj.property.maxOf { it.value.index } +1 //TODO: MAXINT
+                obj.setProperty(PropertyValueName(propertyName), v2, nextIndex)
+            }
+
+            is AsmReference -> obj.value?.let { refrd ->
+                val v = when {
+                    null == value -> Unit
+                    value is AsmValue -> value.raw
+                    else -> value //AsmAnySimple(value)
+                }
+                val v2 = when {
+                    isReference && v is AsmStructure -> {
+                        val refStr = v.semanticQualifiedPath?.joinToString(separator = ".")
+                        refStr?.let { AsmReferenceSimple(refStr, v) } ?: error("Cannot create reference for ${v} it has no semanticQualifiedPath")
+                    }
+
+                    else -> v
+                }
+                val nextIndex = refrd.property.maxOf { it.value.index } +1 //TODO: MAXINT
+                refrd.setProperty(PropertyValueName(propertyName), v2, nextIndex)
+            }
+
+            else -> try {
+                obj.reflect().setProperty(propertyName, value)
+            } catch (t: Throwable) {
+                issues.error(null, "Could not set property $propertyName to $value")
+            }
         }
+
     }
 
     /** may be overridden to create object from suspending source */
