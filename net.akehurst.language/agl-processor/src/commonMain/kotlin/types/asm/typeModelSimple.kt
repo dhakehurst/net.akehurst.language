@@ -958,7 +958,7 @@ abstract class TypeDefinitionSimpleAbstract(
      */
     override fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String): PropertyDeclarationDerived {
         val propIndex = run {
-            val max = propertyByIndex.keys.max()
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
             check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
             max+1
         }
@@ -969,7 +969,7 @@ abstract class TypeDefinitionSimpleAbstract(
 
     override fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String): PropertyDeclarationPrimitive {
         val propIndex = run {
-            val max = propertyByIndex.keys.max()
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
             check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
             max+1
         }
@@ -1252,7 +1252,7 @@ abstract class StructuredTypeSimpleAbstract : TypeDefinitionSimpleAbstract(), St
         mutator: ((self: Any, value: Any?) -> Unit)?
     ): PropertyDeclaration {
         val propIndex = if (index >= 0) index else {
-            val max = propertyByIndex.keys.max()
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
             check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
             max+1
         }
