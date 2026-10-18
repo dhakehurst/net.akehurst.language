@@ -8,6 +8,10 @@ import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.processor.FormatString
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.issues.ram.IssueHolder
@@ -27,10 +31,16 @@ class AglTextDatastore(
                 configuration.getAsString(AglTextProvider.CONFIG_GRAMMAR_STR)
             }
 
-            val processor by lazy {
+            val formatStr by lazy {
+                configuration.getAsString(AglTextProvider.CONFIG_FORMAT_STR)
+            }
+
+            val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
                 Agl.processorFromString(
                     grammarDefinitionStr = grammarStr,
-                    configuration = Agl.configurationSimple(),
+                    configuration = Agl.configuration(base = Agl.configurationSimple()){
+                        this.formatString(FormatString(formatStr))
+                    },
                     aglOptions = Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } }
                 ).let {
                     check(it.issues.errors.isEmpty()) { "Failed to construct AglTextDatastore Configuration:\n${it.issues}" }

@@ -9,6 +9,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agl-datastore-common"))
+                implementation(libs.nak.kotlinx.filesystem)
             }
         }
     }

@@ -1,4 +1,34 @@
 package net.akehurst.datastore.filesystem
 
-class FilesystemProvider {
+import net.akehurst.datastore.api.Datastore
+import net.akehurst.datastore.api.DatastoreConfiguration
+import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DatastoreProvider
+import net.akehurst.datastore.api.DatastoreProviderIdentity
+import net.akehurst.datastore.api.datastoreProviderConfiguration
+
+class FilesystemProvider : DatastoreProvider {
+
+    companion object {
+        const val CONFIG_FS_ROOT = "config.fs-root"
+    }
+
+    override val identity = DatastoreProviderIdentity("net.akehurst.datastore.filesystem.FilesystemProvider")
+
+    override val configuration = datastoreProviderConfiguration {
+        datastore {
+            parameter(CONFIG_FS_ROOT, "Grammar String", false) {
+                type("String")
+            }
+        }
+
+        access {
+
+        }
+    }
+
+    override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore =
+        FilesystemDatastore(datastoreIdentity, configuration)
+
 }
+
