@@ -72,3 +72,8 @@ interface Datastore {
     suspend fun write(accessConfiguration:DatastoreConfiguration, input:Flow<TypedObject>): Flow<TypedObject>
 
 }
+
+interface DatastoreComposition {
+    fun read(): Flow<TypedObject>
+    fun write(input: Flow<TypedObject>)
+}

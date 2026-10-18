@@ -4,12 +4,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import net.akehurst.datastore.api.DatastoreIdentity
-import net.akehurst.datastore.api.datastoreConfiguration
+import net.akehurst.datastore.common.datastoreConfiguration
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.asm.simple.AnyExt.asString
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test

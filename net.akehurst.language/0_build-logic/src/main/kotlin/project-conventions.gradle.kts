@@ -128,6 +128,8 @@ kotlin {
             implementation(kotlin("test-annotations-common"))
         }
         jvmTest.dependencies {
+            implementation(kotlin("test-junit5"))
+
             implementation(libs.kotest.runner.junit5)
             implementation("org.junit.jupiter:junit-jupiter")
             runtimeOnly("org.junit.platform:junit-platform-launcher")
@@ -164,7 +166,7 @@ val sonatype_pwd = null/*creds.forKey("SONATYPE_PASSWORD")*/
 project.ext.set("signing.password", sonatype_pwd)
 
 signing {
-    setRequired( {  gradle.taskGraph.hasTask("uploadArchives") })
+    setRequired({ gradle.taskGraph.hasTask("uploadArchives") })
     useGpgCmd()
     val publishing = project.properties["publishing"] as PublishingExtension
     sign(publishing.publications)

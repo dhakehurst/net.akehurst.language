@@ -5,11 +5,12 @@ import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
-import net.akehurst.datastore.api.datastoreProviderConfiguration
+import net.akehurst.datastore.common.datastoreProviderConfiguration
 
 class AglTextProvider : DatastoreProvider {
 
     companion object {
+        val IDENTITY = DatastoreProviderIdentity("net.akehurst.datastore.text.AglTextProvider")
         const val CONFIG_GRAMMAR_STR = "config.grammar"
         const val CONFIG_FORMAT_STR = "config.format"
 
@@ -17,7 +18,7 @@ class AglTextProvider : DatastoreProvider {
 
     }
 
-    override val identity = DatastoreProviderIdentity("net.akehurst.datastore.text.AglTextProvider")
+    override val identity get() = IDENTITY
 
     override val configuration = datastoreProviderConfiguration {
         datastore {

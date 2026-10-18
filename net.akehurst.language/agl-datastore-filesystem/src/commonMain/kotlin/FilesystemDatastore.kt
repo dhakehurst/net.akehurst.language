@@ -55,7 +55,9 @@ class FilesystemDatastore(
      * output: File
      */
     override suspend fun read(accessConfiguration: DatastoreConfiguration, input: Flow<TypedObject>): Flow<TypedObject> {
-        return input.map { parseString(accessConfiguration, it) }
+        return input.map {
+            TODO()
+        }
     }
 
     /**
@@ -63,6 +65,8 @@ class FilesystemDatastore(
      * output: String
      */
     override suspend fun write(accessConfiguration: DatastoreConfiguration, input: Flow<TypedObject>): Flow<TypedObject> {
-        return input.map { formatObject(accessConfiguration, it) }
+        return input.map {
+            TODO()
+        }
     }
 }

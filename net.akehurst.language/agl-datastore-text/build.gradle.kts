@@ -11,5 +11,11 @@ kotlin {
                 api(project(":agl-datastore-common"))
             }
         }
+
+        commonTest {
+            dependencies {
+                implementation(project(":agl-datastore-filesystem"))
+            }
+        }
     }
 }

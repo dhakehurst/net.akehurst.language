@@ -1,5 +1,6 @@
 package net.akehurst.datastore.filesystem
 
+import net.akehurst.datastore.filesystem.FilesystemProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

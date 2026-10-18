@@ -1,4 +1,6 @@
-package net.akehurst.datastore.api
+package net.akehurst.datastore.common
+
+import net.akehurst.datastore.api.DatastoreConfiguration
 
 fun datastoreConfiguration(init: DatastoreConfigurationBuilder.() -> Unit): DatastoreConfiguration {
     val b = DatastoreConfigurationBuilder()

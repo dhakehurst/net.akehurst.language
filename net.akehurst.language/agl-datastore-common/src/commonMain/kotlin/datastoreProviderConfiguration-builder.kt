@@ -1,5 +1,11 @@
-package net.akehurst.datastore.api
+package net.akehurst.datastore.common
 
+import net.akehurst.datastore.api.DatastoreProviderConfiguration
+import net.akehurst.datastore.api.DsConfigParameterChoice
+import net.akehurst.datastore.api.DsConfigParameterDefinition
+import net.akehurst.datastore.api.DsConfigParameterGroup
+import net.akehurst.datastore.api.DsConfigParameterInfo
+import net.akehurst.datastore.api.DsParameterSet
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
