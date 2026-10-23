@@ -85,7 +85,12 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
     }
 
     override fun mergeNamespace(value: TypesNamespace) {
-        TODO("not implemented")
+        if (_namespace.value.containsKey(value.qualifiedName)) {
+            _namespace.value[value.qualifiedName]!!.merge(value)
+        } else {
+            (namespace as MutableList).add( value)
+            value.options.parent = this.options //FIXME: could cause wrong parent if namespace in multiple Domains!
+        }
     }
 
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypesNamespace {
@@ -130,6 +135,17 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
     override fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypesNamespace>) {
         namespaces.forEach { this.addNamespace(it) }
         this.resolveImports()
+    }
+
+    override fun merge(other: Domain<TypesNamespace, TypeDefinition>): Domain<TypesNamespace, TypeDefinition> {
+        return this.merge(other)
+    }
+
+    override fun merge(other: TypesDomain): TypesDomain {
+        other.namespace.forEach {
+            mergeNamespace(it)
+        }
+        return this
     }
 
     // --- DefinitionBlock ---

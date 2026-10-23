@@ -39,6 +39,8 @@ interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
     // --- DefinitionBlock ---
     override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypesNamespace?
 
+    fun merge(other: TypesDomain): TypesDomain
+
 }
 
 data class AssociationEnd(

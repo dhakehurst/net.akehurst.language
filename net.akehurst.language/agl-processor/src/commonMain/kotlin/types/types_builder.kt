@@ -306,7 +306,7 @@ abstract class StructuredTypeBuilder(
         isNullable: Boolean = false,
         accessor: ((self: T) -> V)? = null,
         mutator: ((self: T, value: V?) -> Unit)? = null,
-        accessorSuspend: ((self: T?) -> V?)? = null,
+        accessorSuspend: (suspend (self: T) -> V?)? = null,
         mutatorSuspend: (suspend (self: T, value: V?) -> Unit)? = null,
         init: TypeArgumentBuilder.() -> Unit = {}
     ): PropertyDeclaration {

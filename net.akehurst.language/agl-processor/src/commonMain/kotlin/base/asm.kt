@@ -100,6 +100,13 @@ abstract class DomainAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
         this.namespace.forEach { it.options.parent = this.options }
     }
 
+    override fun merge(other: Domain<NT, DT>): Domain<NT, DT> {
+        other.namespace.forEach {
+            mergeNamespace(it)
+        }
+        return this
+    }
+
     override fun addNamespace(value: NT) {
         if (_namespace.containsKey(value.qualifiedName)) {
             if (_namespace[value.qualifiedName] === value) {

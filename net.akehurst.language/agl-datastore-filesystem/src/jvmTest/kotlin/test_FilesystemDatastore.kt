@@ -1,9 +1,12 @@
 package net.akehurst.datastore.filesystem
 
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
+import net.akehurst.datastore.common.accessConfiguration
 import net.akehurst.datastore.common.datastoreConfiguration
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.builder.asmSimple
@@ -11,20 +14,26 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 import java.nio.file.Files
 import kotlin.io.path.absolutePathString
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_FilesystemDatasource {
+class test_FilesystemDatastore {
 
     companion object {
     }
 
     val tempDir = Files.createTempDirectory("test_FilesystemDatasource")
 
+    @BeforeTest
+    fun before() {
+        DatastoreProviderRegistryDefault.GLOBAL.register(FilesystemProvider())
+    }
+
     @Test
     fun construct() {
-        val cfg = datastoreConfiguration {
+        val cfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
             argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
@@ -36,7 +45,7 @@ class test_FilesystemDatasource {
 
     @Test
     fun types() = runTest {
-        val cfg = datastoreConfiguration {
+        val cfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
             argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
@@ -64,7 +73,7 @@ class test_FilesystemDatasource {
 
     @Test
     fun accessorMutator() = runTest {
-        val cfg = datastoreConfiguration {
+        val cfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
             argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
@@ -77,22 +86,22 @@ class test_FilesystemDatasource {
 
     @Test
     fun read() = runTest {
-        val dscfg = datastoreConfiguration {
+        tempDir.resolve("test.txt").toFile().createNewFile()
+
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
             argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)
         val og = sut.accessorMutator()
 
-        val cfg = datastoreConfiguration {
+        val cfg = accessConfiguration(FilesystemProvider.IDENTITY) {
 
         }
-        val actual = sut.read(cfg, flowOf(og.toTypedObject("Hello World !", StdLibDefault.String))).toList()
+        val actual = sut.read(cfg, emptyFlow()).toList()
 
         val expected = asmSimple(sut.types()) {
-            element("S") {
-                propertyString("name", "World")
-            }
+            element("FileHandle") {}
         }
 
         assertNotNull(actual)
@@ -101,7 +110,7 @@ class test_FilesystemDatasource {
 
     @Test
     fun write() = runTest {
-        val dscfg = datastoreConfiguration {
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
             argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
@@ -113,7 +122,7 @@ class test_FilesystemDatasource {
                 propertyString("name", "World")
             }
         }.root[0] as AsmStructure
-        val cfg = datastoreConfiguration { }
+        val cfg = accessConfiguration(FilesystemProvider.IDENTITY) { }
         val actual = sut.write(cfg, flowOf(og.toTypedObject(asm, StdLibDefault.AnyType))).toList()
 
         assertNotNull(actual)

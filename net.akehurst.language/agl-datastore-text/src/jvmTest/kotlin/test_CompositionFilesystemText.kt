@@ -2,14 +2,17 @@ package net.akehurst.datastore.composition
 
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
+import net.akehurst.datastore.common.accessConfiguration
 import net.akehurst.datastore.common.datastoreComposition
-import net.akehurst.datastore.common.datastoreConfiguration
 import net.akehurst.datastore.filesystem.FilesystemProvider
 import net.akehurst.datastore.text.AglTextProvider
 import net.akehurst.datastore.text.test_AglTextDatastore
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.types.builder.typesDomain
 import java.nio.file.Files
 import kotlin.io.path.absolutePathString
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -35,6 +38,32 @@ class test_CompositionFilesystemText {
 
     val tempDir = Files.createTempDirectory("test_FilesystemDatasource")
 
+    @BeforeTest
+    fun before() {
+        DatastoreProviderRegistryDefault.GLOBAL.register(FilesystemProvider())
+        DatastoreProviderRegistryDefault.GLOBAL.register(AglTextProvider())
+    }
+
+    @Test
+    fun types()= runTest {
+        val composition = datastoreComposition {
+            datastore("fs", FilesystemProvider.IDENTITY) {
+                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+            }
+            datastore("txt", AglTextProvider.IDENTITY) {
+                argument(AglTextProvider.CONFIG_GRAMMAR_STR, test_AglTextDatastore.grammarStr)
+                argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
+            }
+        }
+
+        val actual = composition.types()
+        val expected = typesDomain("",true) {
+
+        }
+
+        assertEquals(expected.asString(), actual.asString())
+    }
+
     @Test
     fun compose() = runTest {
 
@@ -53,25 +82,25 @@ class test_CompositionFilesystemText {
             }
         }
 
-        val cfg = datastoreCompositeConfiguration {
-            datastore("fs") {
+        val acc = composition.accessConfiguration {
+            access("fs") {
                 argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
             }
-            datastore("txt") {
+            access("txt") {
 
             }
         }
-        val actual = composition.read().toList()
+        val actual = composition.read(acc).toList()
 
         val expected = listOf(
-            asmSimple {
+            asmSimple(typesDomain = composition.types()) {
                 element("S") {
                     propertyString("name", "World")
                 }
             }
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected.map { it.root[0] }, actual)
     }
 
 }

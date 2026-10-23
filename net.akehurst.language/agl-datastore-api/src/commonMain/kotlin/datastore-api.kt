@@ -13,7 +13,15 @@ value class DatastoreProviderIdentity(val value:String)
 @JvmInline
 value class DatastoreIdentity(val value:String)
 
-interface DsConfigParameterInfo
+interface DatastoreProviderRegistry {
+    fun register(provider: DatastoreProvider)
+    fun getOrNull(providerIdentity: DatastoreProviderIdentity): DatastoreProvider?
+    fun provide(providerIdentity: DatastoreProviderIdentity, datastoreIdentity: DatastoreIdentity, datastoreConfiguration: DatastoreConfiguration): Datastore
+}
+
+sealed interface DsConfigParameterInfo {
+    fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition?
+}
 
 interface DsConfigParameterDefinition : DsConfigParameterInfo{
     val identity: String
@@ -21,25 +29,44 @@ interface DsConfigParameterDefinition : DsConfigParameterInfo{
     val optional: Boolean
     val description:String
     val type: TypeDefinition
+
+    override fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition? = when (parameterIdentity) {
+        identity -> this
+        else -> null
+    }
+
 }
 
 interface DsConfigParameterGroup : DsConfigParameterInfo {
     val name:String
     val parameterInfo: List<DsConfigParameterInfo>
+
+    override fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition? =
+        parameterInfo.firstNotNullOfOrNull { pi ->
+            pi.getParameterOrNull(parameterIdentity)
+        }
 }
 
 interface DsConfigParameterChoice : DsConfigParameterInfo {
     val alternative: Map<String, DsParameterSet>
+
+    override fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition? =
+        alternative.firstNotNullOfOrNull { alt ->
+            alt.value.getParameterOrNull(parameterIdentity)
+        }
 }
 
 
 interface DsParameterSet {
     val parameterInfo: List<DsConfigParameterInfo>
+
+    fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition?
 }
 
 interface DatastoreProviderConfiguration {
     val datastore: DsParameterSet
     val access:DsParameterSet
+
 }
 
 interface DatastoreProvider {
@@ -50,6 +77,8 @@ interface DatastoreProvider {
 }
 
 interface DatastoreConfiguration {
+
+    val providerIdentity:DatastoreProviderIdentity
 
     val argument: Map<String, Any>
 
@@ -73,7 +102,26 @@ interface Datastore {
 
 }
 
+
+interface DatastoreCompositionConfiguration {
+    val part: Map<Pair<DatastoreProviderIdentity,DatastoreIdentity>, DatastoreConfiguration>
+}
+
+interface AccessCompositionConfiguration {
+
+    val datastoreConfiguration: DatastoreCompositionConfiguration
+    val part: Map<DatastoreIdentity, DatastoreConfiguration>
+}
+
 interface DatastoreComposition {
-    fun read(): Flow<TypedObject>
-    fun write(input: Flow<TypedObject>)
+
+    val configuration: DatastoreCompositionConfiguration
+
+    fun create(registry: DatastoreProviderRegistry)
+
+    suspend fun types(): TypesDomain
+
+    suspend fun accessorMutator(): ObjectGraphAccessorMutator
+    suspend fun read(configuration: AccessCompositionConfiguration): Flow<TypedObject>
+    suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<TypedObject>)
 }

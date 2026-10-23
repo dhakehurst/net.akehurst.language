@@ -40,10 +40,7 @@ class DatastoreProviderConfigurationBuilder(
         _access = b.build()
     }
 
-    fun build() = object : DatastoreProviderConfiguration {
-        override val datastore = _datastore
-        override val access = _access
-    }
+    fun build() = DatastoreProviderConfigurationDefault(_datastore, _access)
 }
 
 @DatastoreProviderConfigurationDslMarker
@@ -56,17 +53,18 @@ class DsParameterSetBuilder(
     fun group(name:String, init: DsParameterSetBuilder.() -> Unit) {
         val b = DsParameterSetBuilder(_availableTypes)
         b.init()
-        val paramSet = b.build()
+        val ps = b.build()
         _parameterInfo.add(object : DsConfigParameterGroup {
             override val name = name
-            override val parameterInfo = paramSet.parameterInfo
+            override val parameterInfo = ps.parameterInfo
         })
     }
 
     fun choice(init: DsParameterSetChoiceBuilder.() -> Unit) {
         val b = DsParameterSetChoiceBuilder(_availableTypes)
         b.init()
-        val x = b.build()
+        val ch = b.build()
+        _parameterInfo.add(ch)
     }
 
     fun parameter(id:String, name: String, optional:Boolean, init: DsParameterBuilder.() -> Unit) {
@@ -76,9 +74,8 @@ class DsParameterSetBuilder(
         _parameterInfo.add(pd)
     }
 
-    fun build() = object : DsParameterSet {
-        override val parameterInfo = _parameterInfo
-    }
+    fun build() = DsParameterSetDefault(_parameterInfo)
+
 }
 
 @DatastoreProviderConfigurationDslMarker
