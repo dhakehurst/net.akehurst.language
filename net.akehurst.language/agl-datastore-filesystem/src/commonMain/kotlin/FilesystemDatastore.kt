@@ -79,7 +79,7 @@ class FilesystemDatastore(
                     )
                 }
             }
-            }
+        }
     }
 
     private val _accessorMutator by lazy {
