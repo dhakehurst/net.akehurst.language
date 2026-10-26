@@ -89,6 +89,7 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
             _namespace.value[value.qualifiedName]!!.merge(value)
         } else {
             (namespace as MutableList).add( value)
+            _namespace.reset()
             value.options.parent = this.options //FIXME: could cause wrong parent if namespace in multiple Domains!
         }
     }
