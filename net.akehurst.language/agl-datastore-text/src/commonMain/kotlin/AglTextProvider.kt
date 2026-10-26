@@ -5,7 +5,7 @@ import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
-import net.akehurst.datastore.common.datastoreProviderConfiguration
+import net.akehurst.datastore.common.datastoreProviderSchema
 
 class AglTextProvider : DatastoreProvider {
 
@@ -20,7 +20,7 @@ class AglTextProvider : DatastoreProvider {
 
     override val identity get() = IDENTITY
 
-    override val configuration = datastoreProviderConfiguration {
+    override val configuration = datastoreProviderSchema {
         datastore {
             choice {
                 alternative("String Definitions") {

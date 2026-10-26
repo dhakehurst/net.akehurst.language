@@ -5,7 +5,7 @@ import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
-import net.akehurst.datastore.common.datastoreProviderConfiguration
+import net.akehurst.datastore.common.datastoreProviderSchema
 
 class FilesystemProvider : DatastoreProvider {
 
@@ -18,7 +18,7 @@ class FilesystemProvider : DatastoreProvider {
 
     override val identity get() = IDENTITY
 
-    override val configuration = datastoreProviderConfiguration {
+    override val configuration = datastoreProviderSchema {
         datastore {
             parameter(CONFIG_FS_ROOT, "Filesystem Root", false) {
                 type("String")

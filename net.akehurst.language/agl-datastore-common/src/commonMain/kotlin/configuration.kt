@@ -10,7 +10,7 @@ import net.akehurst.datastore.api.DatastoreComposition
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
-import net.akehurst.datastore.api.DatastoreProviderConfiguration
+import net.akehurst.datastore.api.DatastoreProviderSchema
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
 import net.akehurst.datastore.api.DsConfigParameterDefinition
@@ -24,10 +24,10 @@ import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
-class DatastoreProviderConfigurationDefault(
+class DatastoreProviderSchemaDefault(
     override val datastore: DsParameterSet,
     override val access: DsParameterSet
-) : DatastoreProviderConfiguration {
+) : DatastoreProviderSchema {
 
 }
 

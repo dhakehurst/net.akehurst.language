@@ -63,7 +63,7 @@ interface DsParameterSet {
     fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition?
 }
 
-interface DatastoreProviderConfiguration {
+interface DatastoreProviderSchema {
     val datastore: DsParameterSet
     val access:DsParameterSet
 
@@ -71,7 +71,7 @@ interface DatastoreProviderConfiguration {
 
 interface DatastoreProvider {
     val identity:DatastoreProviderIdentity
-    val configuration: DatastoreProviderConfiguration
+    val configuration: DatastoreProviderSchema
 
     fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration):Datastore
 }

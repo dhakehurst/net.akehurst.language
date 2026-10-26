@@ -1,6 +1,6 @@
 package net.akehurst.datastore.common
 
-import net.akehurst.datastore.api.DatastoreProviderConfiguration
+import net.akehurst.datastore.api.DatastoreProviderSchema
 import net.akehurst.datastore.api.DsConfigParameterChoice
 import net.akehurst.datastore.api.DsConfigParameterDefinition
 import net.akehurst.datastore.api.DsConfigParameterGroup
@@ -11,17 +11,17 @@ import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
-fun datastoreProviderConfiguration(availableTypes:TypesDomain = typesDomain("Default", true){}, init: DatastoreProviderConfigurationBuilder.() -> Unit): DatastoreProviderConfiguration {
-    val b = DatastoreProviderConfigurationBuilder(availableTypes)
+fun datastoreProviderSchema(availableTypes:TypesDomain = typesDomain("Default", true){}, init: DatastoreProviderSchemaBuilder.() -> Unit): DatastoreProviderSchema {
+    val b = DatastoreProviderSchemaBuilder(availableTypes)
     b.init()
     return b.build()
 }
 
 @DslMarker
-annotation class DatastoreProviderConfigurationDslMarker
+annotation class DatastoreProviderSchemaDslMarker
 
-@DatastoreProviderConfigurationDslMarker
-class DatastoreProviderConfigurationBuilder(
+@DatastoreProviderSchemaDslMarker
+class DatastoreProviderSchemaBuilder(
     val _availableTypes: TypesDomain,
 ) {
 
@@ -40,10 +40,10 @@ class DatastoreProviderConfigurationBuilder(
         _access = b.build()
     }
 
-    fun build() = DatastoreProviderConfigurationDefault(_datastore, _access)
+    fun build() = DatastoreProviderSchemaDefault(_datastore, _access)
 }
 
-@DatastoreProviderConfigurationDslMarker
+@DatastoreProviderSchemaDslMarker
 class DsParameterSetBuilder(
     val _availableTypes: TypesDomain,
 ) {
@@ -78,7 +78,7 @@ class DsParameterSetBuilder(
 
 }
 
-@DatastoreProviderConfigurationDslMarker
+@DatastoreProviderSchemaDslMarker
 class DsParameterSetChoiceBuilder(
     val _availableTypes: TypesDomain,
 ) {
@@ -96,7 +96,7 @@ class DsParameterSetChoiceBuilder(
     }
 }
 
-@DatastoreProviderConfigurationDslMarker
+@DatastoreProviderSchemaDslMarker
 class DsParameterBuilder(
     val _availableTypes: TypesDomain,
     val _identity: String,

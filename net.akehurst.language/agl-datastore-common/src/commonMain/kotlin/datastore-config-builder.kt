@@ -27,7 +27,7 @@ fun accessConfiguration(
 @DslMarker
 annotation class DatastoreConfigurationDslMarker
 
-@DatastoreProviderConfigurationDslMarker
+@DatastoreProviderSchemaDslMarker
 class DatastoreConfigurationBuilder(
     private val _registry: DatastoreProviderRegistry,
     private val _providerIdentity: DatastoreProviderIdentity,
