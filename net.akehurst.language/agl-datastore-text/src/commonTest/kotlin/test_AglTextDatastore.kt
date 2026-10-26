@@ -158,7 +158,7 @@ class test_AglTextDatastore {
         val actual = sut.read(cfg, flowOf(root)).toList()
 
         assertEquals(listOf(DataItemIdentity("root")), root.qualifiedIdentity)
-        assertEquals(listOf(DataItemIdentity("root"), DataItemIdentity("root")), actual[0].qualifiedIdentity)
+        assertEquals(listOf(DataItemIdentity("root"), DataItemIdentity("0")), actual[0].qualifiedIdentity)
     }
 
     @Test

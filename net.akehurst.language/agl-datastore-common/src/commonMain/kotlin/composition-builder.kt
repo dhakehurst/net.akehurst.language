@@ -44,13 +44,19 @@ class DatastoreCompositionBuilder(
     /**
      * Connect the output of datastore 'source' to the input of datastore 'target'.
      * Each source item is adapted to an instance of 'targetType', whose constructor arguments are given by the connection's ends.
+     * 'name' is needed when there are several connections from 'source' to 'target' with the same 'targetType' (fan-out),
+     * see DatastoreConnection.identity.
      */
-    fun connect(source: String, target: String, targetType: String, init: DatastoreConnectionBuilder.() -> Unit) {
+    fun connect(source: String, target: String, targetType: String, name: String? = null, init: DatastoreConnectionBuilder.() -> Unit) {
         check(_cfg.keys.any { it.second.value == source }) { "Datastore with id '$source' not defined (define datastores before connecting them)." }
         check(_cfg.keys.any { it.second.value == target }) { "Datastore with id '$target' not defined (define datastores before connecting them)." }
-        val b = DatastoreConnectionBuilder(DatastoreIdentity(source), DatastoreIdentity(target), targetType)
+        val b = DatastoreConnectionBuilder(DatastoreIdentity(source), DatastoreIdentity(target), targetType, name)
         b.init()
-        _connection.add(b.build())
+        val conn = b.build()
+        check(_connection.none { it.source == conn.source && it.target == conn.target && it.identity == conn.identity }) {
+            "A connection from '$source' to '$target' with identity '${conn.identity}' is already defined, give the connections different names."
+        }
+        _connection.add(conn)
     }
 
     fun build(): DatastoreComposition = DatastoreCompositionDefault(DatastoreCompositionConfigurationDefault(_cfg, _connection))
@@ -61,6 +67,7 @@ class DatastoreConnectionBuilder(
     private val _source: DatastoreIdentity,
     private val _target: DatastoreIdentity,
     private val _targetType: String,
+    private val _name: String? = null,
 ) {
     private val _end = mutableListOf<DatastoreConnectionEnd>()
 
@@ -74,7 +81,7 @@ class DatastoreConnectionBuilder(
         _end.add(DatastoreConnectionEndDefault(name, typeName, expression))
     }
 
-    fun build(): DatastoreConnection = DatastoreConnectionDefault(_source, _target, _targetType, _end)
+    fun build(): DatastoreConnection = DatastoreConnectionDefault(_source, _target, _targetType, _end, _name)
 }
 
 //--------------------------

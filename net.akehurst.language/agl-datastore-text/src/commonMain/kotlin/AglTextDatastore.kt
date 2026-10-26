@@ -3,6 +3,7 @@ package net.akehurst.datastore.text
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import net.akehurst.datastore.api.DataItem
+import net.akehurst.datastore.api.DataItemIdentity
 import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
@@ -140,9 +141,10 @@ class AglTextDatastore(
 
     // ---
 
-    private fun derivedItem(parent: DataItem, data: TypedObject, issues: IssueCollection<DataItemIssueLocation> = net.akehurst.kotlinx.issues.ram.IssueHolder()): DataItem = DataItemDefault(
+    /** the derived item's identity is its index among the items derived from the same parent (currently always 0) */
+    private fun derivedItem(parent: DataItem, data: TypedObject, issues: IssueCollection<DataItemIssueLocation> = net.akehurst.kotlinx.issues.ram.IssueHolder(), index: Int = 0): DataItem = DataItemDefault(
         parent = parent,
-        identity = parent.identity,
+        identity = DataItemIdentity(index.toString()),
         data = data,
         provenance = AglTextProvenance(identity),
         issues = issues

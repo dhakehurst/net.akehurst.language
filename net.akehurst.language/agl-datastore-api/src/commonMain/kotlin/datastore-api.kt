@@ -156,6 +156,16 @@ interface DatastoreConnection {
     val source: DatastoreIdentity
     val target: DatastoreIdentity
 
+    /** optional name, needed to tell apart several connections from the same source to the same target (fan-out) */
+    val name: String?
+
+    /**
+     * identifies the connection among the connections from the same source to the same target:
+     * 'name' if given, otherwise the simple name of targetType with a lower-case first letter (e.g. 'parsableUnit').
+     * It is the identity of the DataItems the connection creates, and the name of the derived association end on the source type.
+     */
+    val identity: String get() = name ?: targetType.substringAfterLast('.').replaceFirstChar { it.lowercaseChar() }
+
     /** (possibly qualified) name of a type, known to the target datastore, that the target reads as input */
     val targetType: String
 

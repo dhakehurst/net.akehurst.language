@@ -33,6 +33,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | D2 | A `DataItem` has `parent: DataItem?` (the item it was derived from), `identity: DataItemIdentity`, `data: TypedObject` and `provenance: DataItemProvenance`. | done |
 | D3 | Each datastore implementation defines its own provenance, by implementing `DataItemProvenance`. | done |
 | D4 | A `DataItem` has `issues: IssueCollection<DataItemIssueLocation>`, using the generic issues of `net.akehurst.kotlinx.issues`, not AGL's `LanguageIssue`. Each datastore defines its own `DataItemIssueLocation` (e.g. `AglTextIssueLocation` wraps an `InputLocation`). A failure to read or write one item (e.g. a parse error) gives an item with the issues, and the rest of the flow carries on. | done (text datastore) |
+| D6 | A derived item's identity is unique among the items derived from the same parent: a connection item uses the connection identity, a parsed or formatted item its root index (e.g. `[/a/test.txt, parsableUnit, 0]`). | done |
 | D5 | A `DataItem` has `qualifiedIdentity: List<DataItemIdentity>`, which is the parent's `qualifiedIdentity` followed by its own `identity`. | done |
 
 ### Composition
@@ -42,9 +43,10 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | C1 | A composition is a chain of datastores (parts). Each part reads the output of the part before it. | done |
 | C2 | A connection joins the output of one part to the input of the next. For each source item it creates an instance of the connection's `targetType`, which must be a type the target datastore reads. | done |
 | C3 | A connection has ends: `end(name, typeName, expression)`. `expression` is evaluated with `$self` = the source item's data, and `typeName` is the type of its result. | done |
-| C4 | One part can feed several connections into the next part (fan-out), e.g. a requirement's title and its description each parsed. Joining several sources is not required. | todo |
+| C4 | One part can feed several connections into the next part (fan-out), e.g. a requirement's title and its description each parsed. Joining several sources is not required. | done |
 | C5 | The composed types are the merge of the parts' types, plus a namespace `composition`. | done |
 | C6 | For each connection end whose type is a `DataType`, the composition generates an association in the `composition` namespace, e.g. `ParsableUnit.owner : FileHandle` and the derived `FileHandle.parsableUnit : ParsableUnit?`. The association owns these end properties; they are not added to the end types. Ends with a primitive type (e.g. `String`) are constructor arguments of the target type. | done |
+| C8 | A connection has an optional `name`. Its `identity` is the name, or else the target type's simple name with a lower-case first letter (e.g. `parsableUnit`). Connections from the same source to the same target must have different identities. The identity is used for the created items and for the derived association end on the source type. | done |
 | C7 | The target object of a connection is constructed inside read/write. The derived association end returns the object that read/write constructed; it does not construct one. | done |
 
 ### Types (agl-processor)

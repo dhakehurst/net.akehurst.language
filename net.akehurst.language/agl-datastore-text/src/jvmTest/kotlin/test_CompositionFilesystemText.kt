@@ -2,6 +2,7 @@ package net.akehurst.datastore.composition
 
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import net.akehurst.datastore.api.DataItemIdentity
 import net.akehurst.datastore.common.ConnectionProvenance
 import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.accessConfiguration
@@ -154,6 +155,55 @@ class test_CompositionFilesystemText {
         val parsableUnit = types.findFirstDefinitionByPossiblyQualifiedNameOrNull(AglTextProvider.PARSABLE_UNIT_TYPE.asPossiblyQualifiedName) as StructuredType
         assertNull(fileHandle.findOwnedPropertyOrNull(PropertyName("parsableUnit")))
         assertNull(parsableUnit.findOwnedPropertyOrNull(PropertyName("owner")))
+
+        // identities: file path, then the connection identity, then the parsed root index
+        assertEquals(listOf(DataItemIdentity("parsableUnit"), DataItemIdentity("0")), actual[0].qualifiedIdentity.drop(1))
+    }
+
+    @Test
+    fun compose_fan_out() = runTest {
+        tempDir.resolve("test.txt").toFile().also {
+            it.createNewFile()
+            it.writeText("Hello World!")
+        }
+
+        val composition = datastoreComposition {
+            datastore("fs", FilesystemProvider.IDENTITY) {
+                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+            }
+            datastore("txt", AglTextProvider.IDENTITY) {
+                argument(AglTextProvider.CONFIG_GRAMMAR_STR, test_AglTextDatastore.grammarStr)
+                argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
+            }
+            connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE, name = "first") {
+                end("owner", "filesystem.FileHandle", "\$self")
+                end("text", "String", "content.asString")
+            }
+            connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE, name = "second") {
+                end("owner", "filesystem.FileHandle", "\$self")
+                end("text", "String", "content.asString")
+            }
+        }
+        val acc = composition.accessConfiguration {
+            access("fs") {
+                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+            }
+            access("txt") {}
+        }
+
+        val actual = composition.read(acc).toList()
+
+        // one parsed item per connection
+        assertEquals(2, actual.size)
+        assertEquals(
+            listOf(listOf("first", "0"), listOf("second", "0")),
+            actual.map { it.qualifiedIdentity.drop(1).map { id -> id.value } }
+        )
+        // each connection has its own derived association end on FileHandle
+        val am = composition.accessorMutator()
+        val fileData = actual[0].parent!!.parent!!.data
+        assertEquals(actual[0].parent!!.data.self, am.getPropertySuspend(fileData, "first").self)
+        assertEquals(actual[1].parent!!.data.self, am.getPropertySuspend(fileData, "second").self)
     }
 
 }

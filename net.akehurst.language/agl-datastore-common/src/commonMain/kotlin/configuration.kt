@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import net.akehurst.datastore.api.AccessCompositionConfiguration
 import net.akehurst.datastore.api.DataItem
 import net.akehurst.datastore.api.DataItemIdentity
@@ -126,7 +127,7 @@ class DatastoreCompositionDefault(
     private fun createAssociations(types: TypesDomain, ns: TypesNamespace, connection: DatastoreConnection) {
         val targetDef = types.findFirstDefinitionByPossiblyQualifiedNameOrNull(connection.targetType.asPossiblyQualifiedName) as? DataType
             ?: error("Connection '${connection.source}' -> '${connection.target}': target type '${connection.targetType}' is not a DataType")
-        val targetEndName = targetDef.name.value.replaceFirstChar { it.lowercaseChar() }
+        val targetEndName = connection.identity
         val targets = _targetBySource.getOrPut(connection) { mutableMapOf() }
         connection.end.forEach { connEnd ->
             val endDef = dataTypeOrNull(types, connEnd.typeName)
@@ -145,7 +146,7 @@ class DatastoreCompositionDefault(
 
     /**
      * Reads the parts in order, passing each part's output to the next part's input.
-     * If a connection is configured from the previous part to the next, each item is adapted through it.
+     * If connections are configured from the previous part to the next, each item is adapted through each of them (fan-out).
      */
     override suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem> {
         var previous: Datastore? = null
@@ -154,9 +155,9 @@ class DatastoreCompositionDefault(
             val dsCfg = configuration.part[ds.identity]
                 ?: error("Can't find access configuration for datastore '${ds.identity}'")
             val prev = previous
-            val conn = prev?.let { p -> this.configuration.connection.firstOrNull { it.source == p.identity && it.target == ds.identity } }
+            val conns = prev?.let { p -> this.configuration.connection.filter { it.source == p.identity && it.target == ds.identity } } ?: emptyList()
             val input = when {
-                null != prev && null != conn -> adapt(conn, flow)
+                conns.isNotEmpty() -> adapt(conns, flow)
                 else -> flow
             }
             flow = ds.read(dsCfg, input)
@@ -166,31 +167,38 @@ class DatastoreCompositionDefault(
     }
 
     /**
-     * Creates the connection's target object for each source item.
+     * For each source item, creates the target object of each connection.
      * Each end's expression is evaluated with $self = the source item's data.
      * Ends with a primitive type are constructor arguments, ends with a DataType are set through the association.
+     * The created item's identity is the connection's identity.
      */
-    private suspend fun adapt(connection: DatastoreConnection, input: Flow<DataItem>): Flow<DataItem> {
+    private suspend fun adapt(connections: List<DatastoreConnection>, input: Flow<DataItem>): Flow<DataItem> {
         val types = types()
         val am = accessorMutator()
         val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(am)
-        val targetType = connection.targetType.asPossiblyQualifiedName
-        val (assocEnds, ctorEnds) = connection.end.partition { null != dataTypeOrNull(types, it.typeName) }
-        val targets = _targetBySource.getOrPut(connection) { mutableMapOf() }
-        return input.map { item ->
-            val evc = EvaluationContext.ofSelf(item.data)
-            val ctorArgs = ctorEnds.associate { end -> Pair(end.name, interpreter.evaluateStr(evc, end.expression)) }
-            val data = am.createStructureValueSuspend(targetType, ctorArgs)
-            assocEnds.forEach { end ->
-                am.setProperty(data, end.name, interpreter.evaluateStr(evc, end.expression))
+        val adapters = connections.map { connection ->
+            val targetType = connection.targetType.asPossiblyQualifiedName
+            val (assocEnds, ctorEnds) = connection.end.partition { null != dataTypeOrNull(types, it.typeName) }
+            val targets = _targetBySource.getOrPut(connection) { mutableMapOf() }
+            val adapter: suspend (DataItem) -> DataItem = { item ->
+                val evc = EvaluationContext.ofSelf(item.data)
+                val ctorArgs = ctorEnds.associate { end -> Pair(end.name, interpreter.evaluateStr(evc, end.expression)) }
+                val data = am.createStructureValueSuspend(targetType, ctorArgs)
+                assocEnds.forEach { end ->
+                    am.setProperty(data, end.name, interpreter.evaluateStr(evc, end.expression))
+                }
+                targets[item.data.self] = data.self
+                DataItemDefault(
+                    parent = item,
+                    identity = DataItemIdentity(connection.identity),
+                    data = data,
+                    provenance = ConnectionProvenance(connection.source, connection.target, connection.identity)
+                )
             }
-            targets[item.data.self] = data.self
-            DataItemDefault(
-                parent = item,
-                identity = item.identity,
-                data = data,
-                provenance = ConnectionProvenance(connection.source, connection.target)
-            )
+            adapter
+        }
+        return input.transform { item ->
+            adapters.forEach { emit(it.invoke(item)) }
         }
     }
 
@@ -203,7 +211,8 @@ class DatastoreCompositionDefault(
 /** Provenance of a DataItem created by adapting a source item through a DatastoreConnection. */
 data class ConnectionProvenance(
     val source: DatastoreIdentity,
-    val target: DatastoreIdentity
+    val target: DatastoreIdentity,
+    val connection: String
 ) : DataItemProvenance
 
 data class DatastoreConnectionEndDefault(
@@ -216,7 +225,8 @@ data class DatastoreConnectionDefault(
     override val source: DatastoreIdentity,
     override val target: DatastoreIdentity,
     override val targetType: String,
-    override val end: List<DatastoreConnectionEnd>
+    override val end: List<DatastoreConnectionEnd>,
+    override val name: String? = null
 ) : DatastoreConnection
 
 data class DataItemDefault(
