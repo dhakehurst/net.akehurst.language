@@ -9,6 +9,7 @@ import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.common.DataItemDefault
+import net.akehurst.datastore.common.DatastoreAbstract
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
@@ -57,9 +58,9 @@ data class AglTextProvenance(
 ) : DataItemProvenance
 
 class AglTextDatastore(
-    override val identity: DatastoreIdentity,
-    override val configuration: DatastoreConfiguration
-) : Datastore {
+    identity: DatastoreIdentity,
+    configuration: DatastoreConfiguration
+) : DatastoreAbstract(identity, configuration) {
 
     companion object {
 
@@ -89,7 +90,6 @@ class AglTextDatastore(
     }
 
     private val _parsedConfig by lazy { AglTextConfig(configuration) }
-    private val _issues = IssueHolder()
 
     private val _inputTypes by lazy {
         typesDomain("AglTextDatastore", true) {
@@ -105,23 +105,10 @@ class AglTextDatastore(
     }
 
     /** the processor's types plus the input types (ParsableUnit) */
-    private val _types by lazy {
+    override suspend fun createTypes(): TypesDomain =
         typesDomain("AglText", true) {}
             .merge(_parsedConfig.processor.typesDomain)
             .merge(_inputTypes)
-    }
-
-    override suspend fun types(): TypesDomain = _types
-
-    private val _accessorMutator by lazy {
-        ObjectGraphAccessorMutatorByReflection(
-            typesDomain = _types,
-            locationMap = LocationMapDefault(),
-            issues = _issues,
-        )
-    }
-
-    override suspend fun accessorMutator() = _accessorMutator
 
     /**
      * input: DataItem with String or ParsableUnit data

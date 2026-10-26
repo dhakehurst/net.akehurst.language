@@ -21,7 +21,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | P2 | A provider describes its configuration parameters with a `DatastoreProviderSchema`: one parameter set for creating a datastore, one for each access (read/write). | done |
 | P3 | `Datastore.types()` returns the types of the data the datastore reads and writes. It takes no configuration. | done |
 | P4 | `Datastore.accessorMutator()` returns the accessor/mutator for that data. It takes no configuration. | done |
-| P5 | `types()` and `accessorMutator()` return the same instances on every call, and every object a datastore emits is typed against those types. | done (documented here, not enforced) |
+| P5 | `types()` and `accessorMutator()` return the same instances on every call, and every object a datastore emits is typed against those types. Implementations extend `DatastoreAbstract` (agl-datastore-common), which creates both once, from `createTypes()` and an overridable `createAccessorMutator(types)`. | done |
 | P7 | A datastore's types are never changed by a composition that uses it. | done |
 | P6 | The namespaces of a datastore's types are created by its provider. They are not prefixed by the datastore identity: two datastores from the same provider in one composition share the same types. | done |
 

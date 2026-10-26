@@ -10,6 +10,7 @@ import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.common.DataItemDefault
+import net.akehurst.datastore.common.DatastoreAbstract
 import net.akehurst.kotlinx.filesystem.UserFileSystemDefault
 import net.akehurst.kotlinx.filesystem.api.DirectoryHandle
 import net.akehurst.kotlinx.filesystem.api.FileHandle
@@ -32,9 +33,9 @@ data class FilesystemProvenance(
 ) : DataItemProvenance
 
 class FilesystemDatastore(
-    override val identity: DatastoreIdentity,
-    override val configuration: DatastoreConfiguration
-) : Datastore {
+    identity: DatastoreIdentity,
+    configuration: DatastoreConfiguration
+) : DatastoreAbstract(identity, configuration) {
 
     companion object {
 
@@ -51,10 +52,8 @@ class FilesystemDatastore(
     }
 
     private val _parsedConfig by lazy { FilesystemConfig(configuration) }
-    private val _issues = IssueHolder()
 
-    // cached, so that objects read by this datastore are typed by the same TypeDefinitions that a composition merges (and adds associations to)
-    private val _types: TypesDomain by lazy {
+    override suspend fun createTypes(): TypesDomain =
         typesDomain("Filesystem", true) {
             namespace("filesystem") {
                 data("FileSystemObjectHandle", implementation = FileSystemObjectHandle::class) {
@@ -71,7 +70,7 @@ class FilesystemDatastore(
                         accessorSuspend = { FileContent(it) }
                     )
                 }
-                data("FileContent") {
+                data("FileContent", implementation = FileContent::class) {
                     propertyOfWithBinding<FileContent, String>(
                         setOf(REF, VAR), "asString", "String",
                         accessorSuspend = { it.file.readContent() },
@@ -80,19 +79,6 @@ class FilesystemDatastore(
                 }
             }
         }
-    }
-
-    private val _accessorMutator by lazy {
-        ObjectGraphAccessorMutatorByReflection(
-            typesDomain = _types,
-            locationMap = LocationMapDefault(),
-            issues = _issues,
-        )
-    }
-
-    override suspend fun types(): TypesDomain = _types
-
-    override suspend fun accessorMutator() = _accessorMutator
 
     /**
      * input: empty
