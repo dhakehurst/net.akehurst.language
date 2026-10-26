@@ -17,13 +17,14 @@ import kotlin.test.assertSame
 class test_TypesAssociation {
 
     private companion object {
-        // property 'a' (for end A) is owned by the association, property 'b' (for end B) is added to type A
+        // property 'a' (for end A) is owned by the association, property 'b' (for end B) is added to type A.
+        // 'a' is composite: setting a reference on an AsmStructure needs a semanticQualifiedPath, which these objects don't have.
         val types = typesDomain("Test", true) {
             namespace("test") {
                 data("A")
                 data("B")
                 association {
-                    end("A", setOf(REF, VAR), "a", ownedByAssociation = true)
+                    end("A", setOf(CMP, VAR), "a", ownedByAssociation = true)
                     end("B", setOf(REF, VAR), "b")
                 }
             }
