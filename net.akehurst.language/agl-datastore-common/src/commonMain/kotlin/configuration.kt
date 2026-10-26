@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.fold
 import net.akehurst.datastore.api.AccessCompositionConfiguration
+import net.akehurst.datastore.api.DataItem
+import net.akehurst.datastore.api.DataItemIdentity
+import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreComposition
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
@@ -67,13 +70,13 @@ class DatastoreCompositionDefault(
         locationMap = LocationMapDefault(),
     )
 
-    override suspend fun read(configuration: AccessCompositionConfiguration): Flow<TypedObject> {
-        return datastore.values.asFlow().fold(emptyFlow<TypedObject>()) { input, ds ->
+    override suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem> {
+        return datastore.values.asFlow().fold(emptyFlow<DataItem>()) { input, ds ->
             ds.read(configuration.accessConfigurationFor(ds), input)
         }
     }
 
-    override suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<TypedObject>) {
+    override suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>) {
         TODO("Not yet implemented")
     }
 
@@ -81,6 +84,13 @@ class DatastoreCompositionDefault(
         this.part[ds.identity] ?: error("Can't find access configuration for datastore '${ds.identity}'")
 
 }
+
+data class DataItemDefault(
+    override val parent: DataItem?,
+    override val identity: DataItemIdentity,
+    override val data: TypedObject,
+    override val provenance: DataItemProvenance
+) : DataItem
 
 class DatastoreCompositionConfigurationDefault(
     override val part: Map<Pair<DatastoreProviderIdentity, DatastoreIdentity>, DatastoreConfiguration>

@@ -2,9 +2,12 @@ package net.akehurst.datastore.text
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import net.akehurst.datastore.api.DataItem
+import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.common.DataItemDefault
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
@@ -18,6 +21,13 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
+
+/**
+ * Provenance of a DataItem produced by an AglTextDatastore.
+ */
+data class AglTextProvenance(
+    val datastoreIdentity: DatastoreIdentity
+) : DataItemProvenance
 
 class AglTextDatastore(
     override val identity: DatastoreIdentity,
@@ -63,22 +73,29 @@ class AglTextDatastore(
     )
 
     /**
-     * input: String
-     * output: Asm
+     * input: DataItem with String data
+     * output: DataItem with Asm data, whose parent is the input item
      */
-    override suspend fun read(accessConfiguration: DatastoreConfiguration, input: Flow<TypedObject>): Flow<TypedObject> {
-        return input.map { parseString(accessConfiguration, it) }
+    override suspend fun read(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
+        return input.map { derivedItem(it, parseString(accessConfiguration, it.data)) }
     }
 
     /**
-     * input: Asm
-     * output: String
+     * input: DataItem with Asm data
+     * output: DataItem with String data, whose parent is the input item
      */
-    override suspend fun write(accessConfiguration: DatastoreConfiguration, input: Flow<TypedObject>): Flow<TypedObject> {
-        return input.map { formatObject(accessConfiguration, it) }
+    override suspend fun write(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
+        return input.map { derivedItem(it, formatObject(accessConfiguration, it.data)) }
     }
 
     // ---
+
+    private fun derivedItem(parent: DataItem, data: TypedObject): DataItem = DataItemDefault(
+        parent = parent,
+        identity = parent.identity,
+        data = data,
+        provenance = AglTextProvenance(identity)
+    )
 
     private suspend fun parseString(accessConfiguration: DatastoreConfiguration, input: TypedObject): TypedObject {
         return when {

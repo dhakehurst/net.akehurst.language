@@ -109,7 +109,7 @@ class test_CompositionFilesystemText {
             }
         )
 
-        assertEquals(expected.map { it.root[0] }, actual)
+        assertEquals(expected.map { it.root[0] }, actual.map { it.data })
     }
 
 }

@@ -3,7 +3,10 @@ package net.akehurst.datastore.text
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import net.akehurst.datastore.api.DataItemIdentity
+import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.common.DataItemDefault
 import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.accessConfiguration
 import net.akehurst.datastore.common.datastoreConfiguration
@@ -15,6 +18,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+
+private object TestProvenance : DataItemProvenance
 
 class test_AglTextDatastore {
 
@@ -104,7 +109,7 @@ class test_AglTextDatastore {
         val cfg = accessConfiguration(AglTextProvider.IDENTITY) {
 
         }
-        val actual = sut.read(cfg, flowOf(og.toTypedObject("Hello World !", StdLibDefault.String))).toList()
+        val actual = sut.read(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject("Hello World !", StdLibDefault.String), TestProvenance))).toList()
 
         val expected = asmSimple(sut.types(acc)) {
             element("S") {
@@ -113,7 +118,7 @@ class test_AglTextDatastore {
         }
 
         assertNotNull(actual)
-        assertEquals(expected.asString(), (actual[0].self as AsmStructure).asString())
+        assertEquals(expected.asString(), (actual[0].data.self as AsmStructure).asString())
     }
 
     @Test
@@ -133,9 +138,9 @@ class test_AglTextDatastore {
             }
         }.root[0] as AsmStructure
         val cfg = datastoreConfiguration(AglTextProvider.IDENTITY) { }
-        val actual = sut.write(cfg, flowOf(og.toTypedObject(asm, StdLibDefault.AnyType))).toList()
+        val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(asm, StdLibDefault.AnyType), TestProvenance))).toList()
 
         assertNotNull(actual)
-        assertEquals("Hello World !", actual[0].self as String)
+        assertEquals("Hello World !", actual[0].data.self as String)
     }
 }

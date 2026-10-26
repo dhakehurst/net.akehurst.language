@@ -3,9 +3,13 @@ package net.akehurst.datastore.filesystem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
+import net.akehurst.datastore.api.DataItem
+import net.akehurst.datastore.api.DataItemIdentity
+import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.common.DataItemDefault
 import net.akehurst.kotlinx.filesystem.UserFileSystem
 import net.akehurst.kotlinx.filesystem.api.DirectoryHandle
 import net.akehurst.kotlinx.filesystem.api.FileHandle
@@ -18,6 +22,14 @@ import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
+
+/**
+ * Provenance of a DataItem read from a FilesystemDatastore.
+ */
+data class FilesystemProvenance(
+    val datastoreIdentity: DatastoreIdentity,
+    val path: String
+) : DataItemProvenance
 
 class FilesystemDatastore(
     override val identity: DatastoreIdentity,
@@ -79,13 +91,20 @@ class FilesystemDatastore(
      */
     override suspend fun read(
         accessConfiguration: DatastoreConfiguration,
-        input: Flow<TypedObject>
-    ): Flow<TypedObject> {
+        input: Flow<DataItem>
+    ): Flow<DataItem> {
         val glob = "**".toRegexFromGlob('/') //TODO
         val am = accessorMutator(accessConfiguration)
         return _parsedConfig.fsRoot().listContent()
             .filter { glob.matches(it.path) }
-            .map { am.toTypedObject(it, StdLibDefault.AnyType) }
+            .map {
+                DataItemDefault(
+                    parent = null,
+                    identity = DataItemIdentity(it.path),
+                    data = am.toTypedObject(it, StdLibDefault.AnyType),
+                    provenance = FilesystemProvenance(identity, it.path)
+                )
+            }
             .asFlow()
     }
 
@@ -95,8 +114,8 @@ class FilesystemDatastore(
      */
     override suspend fun write(
         accessConfiguration: DatastoreConfiguration,
-        input: Flow<TypedObject>
-    ): Flow<TypedObject> {
+        input: Flow<DataItem>
+    ): Flow<DataItem> {
         return input.map {
             TODO()
         }

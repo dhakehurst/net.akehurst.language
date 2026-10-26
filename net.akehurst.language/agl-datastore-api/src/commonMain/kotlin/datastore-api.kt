@@ -13,6 +13,26 @@ value class DatastoreProviderIdentity(val value:String)
 @JvmInline
 value class DatastoreIdentity(val value:String)
 
+@JvmInline
+value class DataItemIdentity(val value:String)
+
+/**
+ * Where a DataItem came from.
+ * Each Datastore implementation defines its own provenance by implementing this interface.
+ */
+interface DataItemProvenance
+
+/**
+ * A unit of data passed to and from Datastore read/write.
+ */
+interface DataItem {
+    /** the item this item was derived from, if any */
+    val parent: DataItem?
+    val identity: DataItemIdentity
+    val data: TypedObject
+    val provenance: DataItemProvenance
+}
+
 interface DatastoreProviderRegistry {
     fun register(provider: DatastoreProvider)
     fun getOrNull(providerIdentity: DatastoreProviderIdentity): DatastoreProvider?
@@ -96,9 +116,9 @@ interface Datastore {
 
     suspend fun accessorMutator(accessConfiguration:DatastoreConfiguration) : ObjectGraphAccessorMutator
 
-    suspend fun read(accessConfiguration:DatastoreConfiguration, input:Flow<TypedObject>): Flow<TypedObject>
+    suspend fun read(accessConfiguration:DatastoreConfiguration, input:Flow<DataItem>): Flow<DataItem>
 
-    suspend fun write(accessConfiguration:DatastoreConfiguration, input:Flow<TypedObject>): Flow<TypedObject>
+    suspend fun write(accessConfiguration:DatastoreConfiguration, input:Flow<DataItem>): Flow<DataItem>
 
 }
 
@@ -122,6 +142,6 @@ interface DatastoreComposition {
     suspend fun types(configuration: AccessCompositionConfiguration): TypesDomain
 
     suspend fun accessorMutator(configuration: AccessCompositionConfiguration): ObjectGraphAccessorMutator
-    suspend fun read(configuration: AccessCompositionConfiguration): Flow<TypedObject>
-    suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<TypedObject>)
+    suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem>
+    suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>)
 }
