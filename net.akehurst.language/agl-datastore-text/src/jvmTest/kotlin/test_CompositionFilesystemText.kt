@@ -128,7 +128,7 @@ class test_CompositionFilesystemText {
             }
         )
 
-        assertEquals(expected.map { it.root[0].asString() }, actual.map { (it.data.self as AsmStructure).asString() })
+        assertEquals(expected.map { (it.root[0] as AsmStructure).asString() }, actual.map { (it.data.self as AsmStructure).asString() })
 
         // the parsed item's parent is the adapted ParsableUnit, whose parent is the file item
         val unitItem = actual[0].parent!!
