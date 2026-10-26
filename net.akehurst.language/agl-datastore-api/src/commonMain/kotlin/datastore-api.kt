@@ -122,9 +122,21 @@ interface Datastore {
 }
 
 /**
+ * One end of a DatastoreConnection: a constructor argument of the connection's targetType,
+ * derived by evaluating 'expression' with `$self` = the source item's data.
+ */
+interface DatastoreConnectionEnd {
+    val name: String
+
+    /** (possibly qualified) name of the type of the expression result */
+    val typeName: String
+
+    val expression: String
+}
+
+/**
  * Connects the output of one datastore (source) to the input of another (target).
- * For each source item, an instance of targetType is created; each constructor argument
- * is derived by evaluating an expression with `$self` = the source item's data.
+ * For each source item, an instance of targetType is created from the connection's ends.
  */
 interface DatastoreConnection {
     val source: DatastoreIdentity
@@ -133,8 +145,7 @@ interface DatastoreConnection {
     /** (possibly qualified) name of a type, known to the target datastore, that the target reads as input */
     val targetType: String
 
-    /** constructor argument name -> expression evaluated on the source item's data */
-    val argument: Map<String, String>
+    val end: List<DatastoreConnectionEnd>
 }
 
 interface DatastoreCompositionConfiguration {

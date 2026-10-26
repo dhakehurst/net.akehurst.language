@@ -105,8 +105,8 @@ class test_CompositionFilesystemText {
                 argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
             }
             connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE) {
-                argument("owner", "\$self")
-                argument("text", "content.asString")
+                end("owner", "filesystem.FileHandle", "\$self")
+                end("text", "String", "content.asString")
             }
         }
 

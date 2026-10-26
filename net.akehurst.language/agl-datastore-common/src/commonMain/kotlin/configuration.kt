@@ -14,6 +14,7 @@ import net.akehurst.datastore.api.DatastoreComposition
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreConnection
+import net.akehurst.datastore.api.DatastoreConnectionEnd
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProviderSchema
 import net.akehurst.datastore.api.DatastoreProviderIdentity
@@ -104,7 +105,7 @@ class DatastoreCompositionDefault(
         val targetType = connection.targetType.asPossiblyQualifiedName
         return input.map { item ->
             val evc = EvaluationContext.ofSelf(item.data)
-            val args = connection.argument.mapValues { (_, expression) -> interpreter.evaluateStr(evc, expression) }
+            val args = connection.end.associate { end -> Pair(end.name, interpreter.evaluateStr(evc, end.expression)) }
             val data = targetAm.createStructureValueSuspend(targetType, args)
             DataItemDefault(
                 parent = item,
@@ -127,11 +128,17 @@ data class ConnectionProvenance(
     val target: DatastoreIdentity
 ) : DataItemProvenance
 
+data class DatastoreConnectionEndDefault(
+    override val name: String,
+    override val typeName: String,
+    override val expression: String
+) : DatastoreConnectionEnd
+
 data class DatastoreConnectionDefault(
     override val source: DatastoreIdentity,
     override val target: DatastoreIdentity,
     override val targetType: String,
-    override val argument: Map<String, String>
+    override val end: List<DatastoreConnectionEnd>
 ) : DatastoreConnection
 
 data class DataItemDefault(

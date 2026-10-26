@@ -5,6 +5,7 @@ import net.akehurst.datastore.api.DatastoreComposition
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreConnection
+import net.akehurst.datastore.api.DatastoreConnectionEnd
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
@@ -42,7 +43,7 @@ class DatastoreCompositionBuilder(
 
     /**
      * Connect the output of datastore 'source' to the input of datastore 'target'.
-     * Each source item is adapted to an instance of 'targetType', whose constructor arguments are given by expressions over the source item.
+     * Each source item is adapted to an instance of 'targetType', whose constructor arguments are given by the connection's ends.
      */
     fun connect(source: String, target: String, targetType: String, init: DatastoreConnectionBuilder.() -> Unit) {
         check(_cfg.keys.any { it.second.value == source }) { "Datastore with id '$source' not defined (define datastores before connecting them)." }
@@ -61,14 +62,19 @@ class DatastoreConnectionBuilder(
     private val _target: DatastoreIdentity,
     private val _targetType: String,
 ) {
-    private val _argument = mutableMapOf<String, String>()
+    private val _end = mutableListOf<DatastoreConnectionEnd>()
 
-    /** expression is evaluated with `$self` = the source item's data */
-    fun argument(name: String, expression: String) {
-        _argument[name] = expression
+    /**
+     * name: the targetType constructor argument
+     * typeName: (possibly qualified) name of the type of the expression result
+     * expression: evaluated with `$self` = the source item's data
+     */
+    fun end(name: String, typeName: String, expression: String) {
+        check(_end.none { it.name == name }) { "Connection end '$name' already defined" }
+        _end.add(DatastoreConnectionEndDefault(name, typeName, expression))
     }
 
-    fun build(): DatastoreConnection = DatastoreConnectionDefault(_source, _target, _targetType, _argument)
+    fun build(): DatastoreConnection = DatastoreConnectionDefault(_source, _target, _targetType, _end)
 }
 
 //--------------------------
