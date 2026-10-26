@@ -9,7 +9,11 @@ import net.akehurst.datastore.common.datastoreComposition
 import net.akehurst.datastore.filesystem.FilesystemProvider
 import net.akehurst.datastore.text.AglTextProvider
 import net.akehurst.datastore.text.ParsableUnit
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.api.asQualifiedName
+import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.api.StructuredType
+import kotlin.test.assertNull
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.datastore.text.test_AglTextDatastore
 import net.akehurst.language.asm.builder.asmSimple
@@ -143,6 +147,13 @@ class test_CompositionFilesystemText {
         println(composition.types().findNamespaceOrNull("composition".asQualifiedName)?.asString())
         assertEquals(unitItem.parent!!.data.self, am.getPropertySuspend(unitItem.data, "owner").self)
         assertEquals(unit, am.getPropertySuspend(unitItem.parent!!.data, "parsableUnit").self)
+
+        // the association owns those properties, the parts' types are not changed
+        val types = composition.types()
+        val fileHandle = types.findFirstDefinitionByPossiblyQualifiedNameOrNull("filesystem.FileHandle".asPossiblyQualifiedName) as StructuredType
+        val parsableUnit = types.findFirstDefinitionByPossiblyQualifiedNameOrNull(AglTextProvider.PARSABLE_UNIT_TYPE.asPossiblyQualifiedName) as StructuredType
+        assertNull(fileHandle.findOwnedPropertyOrNull(PropertyName("parsableUnit")))
+        assertNull(parsableUnit.findOwnedPropertyOrNull(PropertyName("owner")))
     }
 
 }

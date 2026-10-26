@@ -149,6 +149,18 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
         return this
     }
 
+    override fun findAssociationOwnedPropertyOrNull(type: TypeInstance, propertyName: PropertyName): PropertyDeclarationResolved? {
+        val def = type.resolvedDefinition
+        val candidates = setOf(def) + def.allSuperTypes.map { it.resolvedDefinition }
+        for (ns in namespace) {
+            for (assoc in ns.association) {
+                val p = assoc.ownedProperty.firstOrNull { it.name == propertyName && candidates.contains(it.owner) }
+                if (null != p) return p.resolved(emptyMap())
+            }
+        }
+        return null
+    }
+
     // --- DefinitionBlock ---
     override val allDefinitions: List<TypeDefinition> get() = namespace.flatMap { it.definition }
 
@@ -576,6 +588,13 @@ class UnnamedSupertypeTypeInstance(
     }
 }*/
 
+class TypesAssociationSimple(
+    override val namespace: TypesNamespace,
+    override val end: List<AssociationEnd>,
+    override val property: List<PropertyDeclaration>,
+    override val ownedProperty: List<PropertyDeclaration>
+) : TypesAssociation
+
 class TypesNamespaceSimple(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
@@ -786,8 +805,12 @@ abstract class TypesNamespaceAbstract(
         }
     }
 
+    private val _association = mutableListOf<TypesAssociation>()
+    override val association: List<TypesAssociation> get() = _association
+
     override fun findOrCreateAssociation(ends: List<AssociationEnd>): List<PropertyDeclaration> {
         val props = mutableListOf<PropertyDeclaration>()
+        val owned = mutableListOf<PropertyDeclaration>()
         for (i in ends.indices) {
             val thisEnd = ends[i]
             val thisEndType = if (null == thisEnd.collectionTypeName) {
@@ -803,7 +826,11 @@ abstract class TypesNamespaceAbstract(
                 } else {
                     val otherEnd = ends[j]
                     val otherEndDef = otherEnd.endType
-                    val pd = otherEndDef.appendPropertyStored(thisEnd.endName, thisEndType, thisEnd.characteristics)
+                    val pd = when {
+                        thisEnd.ownedByAssociation -> PropertyDeclarationStored(otherEndDef, thisEnd.endName, thisEndType, thisEnd.characteristics + PropertyCharacteristic.STORED, -1)
+                            .also { owned.add(it) }
+                        else -> otherEndDef.appendPropertyStored(thisEnd.endName, thisEndType, thisEnd.characteristics)
+                    }
                     thisEnd.byEvaluation?.let { (pd as PropertyDeclarationAbstract).accessor = it.invoke(pd) }
                     thisEnd.byEvaluationSuspend?.let { (pd as PropertyDeclarationAbstract).accessorSuspend = it.invoke(pd) }
                     props.add(pd)
@@ -811,6 +838,7 @@ abstract class TypesNamespaceAbstract(
             }
         }
         props.forEach { p -> (p as PropertyDeclarationAbstract).setOpposite(props - p) }
+        _association.add(TypesAssociationSimple(this, ends, props, owned))
         return props
     }
 
@@ -840,9 +868,19 @@ abstract class TypesNamespaceAbstract(
             .sortedWith(compareBy<Map.Entry<SimpleName, TypeDefinition>> { it.value::class.simpleName }.thenBy { it.value.name.value })
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asStringInContext(this) }
         val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}" }
+        val assocs = this.association.filter { it.ownedProperty.isNotEmpty() }
+        val assocstr = if (assocs.isEmpty()) "" else assocs.joinToString(prefix = "\n  ", separator = "\n  ") { a ->
+            a.property.joinToString(prefix = "association {\n    ", separator = "\n    ", postfix = "\n  }") { p ->
+                val chrs = p.characteristics
+                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val owner = if (a.ownedProperty.contains(p)) "" else " // owned by type"
+                "$chrs ${p.owner.signature(this, 0)}.${p.name}: ${p.typeInstance.signature(this, 0)}$owner"
+            }
+        }
         val s = """namespace $qualifiedName
 $importstr
-$types
+$types$assocstr
 """.trimIndent()
         return s
     }

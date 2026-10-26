@@ -41,6 +41,12 @@ interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
 
     fun merge(other: TypesDomain): TypesDomain
 
+    /**
+     * find a property, owned by an association in this domain (AssociationEnd.ownedByAssociation),
+     * whose owner is the given type or one of its supertypes.
+     */
+    fun findAssociationOwnedPropertyOrNull(type: TypeInstance, propertyName: PropertyName): PropertyDeclarationResolved?
+
 }
 
 data class AssociationEnd(
@@ -50,9 +56,28 @@ data class AssociationEnd(
     val collectionTypeName: PossiblyQualifiedName?,
     val characteristics: Set<PropertyCharacteristic>,
     val navigable: Boolean,
+    /**
+     * false (default): the property for this end is added to the type at the other end.
+     * true: the property for this end is owned by the association, and the type at the other end is not changed.
+     */
+    val ownedByAssociation: Boolean = false,
 ) {
     var byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null
     var byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
+}
+
+/**
+ * An association between DataTypes, created by TypesNamespace.findOrCreateAssociation.
+ */
+interface TypesAssociation {
+    val namespace: TypesNamespace
+    val end: List<AssociationEnd>
+
+    /** all properties created for the ends */
+    val property: List<PropertyDeclaration>
+
+    /** the properties for ends that are ownedByAssociation; these are not added to their owner types */
+    val ownedProperty: List<PropertyDeclaration>
 }
 
 interface TypesNamespace : Namespace<TypeDefinition> {
@@ -120,6 +145,9 @@ interface TypesNamespace : Namespace<TypeDefinition> {
      * TODO: support directionality and
      */
     fun findOrCreateAssociation(ends: List<AssociationEnd>): List<PropertyDeclaration>
+
+    /** the associations created in this namespace */
+    val association: List<TypesAssociation>
 
     fun createTypeInstance(
         contextQualifiedTypeName: QualifiedName?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false

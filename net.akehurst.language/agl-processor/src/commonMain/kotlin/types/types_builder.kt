@@ -225,7 +225,8 @@ class AssociationBuilder(
             val isNullable: Boolean,
             val collectionTypeName: String?,
             val byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null,
-            val byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
+            val byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null,
+            val ownedByAssociation: Boolean = false
         )
     }
 
@@ -244,9 +245,10 @@ class AssociationBuilder(
         endName: String,
         isNullable: Boolean = false,
         collectionTypeName: String? = null,
-        byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null
+        byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null,
+        ownedByAssociation: Boolean = false
     ) {
-        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluation))
+        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluation, ownedByAssociation = ownedByAssociation))
     }
 
     fun endSuspend(
@@ -255,9 +257,10 @@ class AssociationBuilder(
         endName: String,
         isNullable: Boolean = false,
         collectionTypeName: String? = null,
-        byEvaluation: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
+        byEvaluation: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null,
+        ownedByAssociation: Boolean = false
     ) {
-        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluationSuspend = byEvaluation))
+        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluationSuspend = byEvaluation, ownedByAssociation = ownedByAssociation))
     }
 
     fun build(): List<PropertyDeclaration> {
@@ -271,7 +274,7 @@ class AssociationBuilder(
             val collectionTypeName = thisEnd.collectionTypeName?.asPossiblyQualifiedName
             val characteristics = thisEnd.characteristics
             val navigable = true //TODO
-            val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable)
+            val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable, thisEnd.ownedByAssociation)
             ae.byEvaluation = thisEnd.byEvaluation
             ae.byEvaluationSuspend = thisEnd.byEvaluationSuspend
             assocEnds.add(ae)

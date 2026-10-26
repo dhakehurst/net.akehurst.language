@@ -771,6 +771,7 @@ constructor(
             else -> {
                 //TODO: bit mixed up with External and Primitive Accessors - don't think we need both.
                 val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                    ?: typesDomain.findAssociationOwnedPropertyOrNull(tobj.type, PropertyName(propertyName))
                 when (propRes) {
                     null -> {
                         val obj = untyped(tobj)
@@ -850,6 +851,7 @@ constructor(
             else -> {
                 //TODO: bit mixed up with External and Primitive Accessors/Mutators - don't think we need both.
                 val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                    ?: typesDomain.findAssociationOwnedPropertyOrNull(tobj.type, PropertyName(propertyName))
                 val r = propRes?.isReference ?: false
                 when (propRes) {
                     null -> {

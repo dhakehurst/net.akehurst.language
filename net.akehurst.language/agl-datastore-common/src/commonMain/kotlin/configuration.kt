@@ -75,7 +75,7 @@ class DatastoreCompositionDefault(
         const val COMPOSITION_NAMESPACE = "composition"
     }
 
-    // cached, because generating the associations changes the (shared) types of the parts
+    // cached, so the same types and accessor-mutator (which finds the association-owned properties) are used throughout
     private var _types: TypesDomain? = null
     private var _accessorMutator: ObjectGraphAccessorMutator? = null
 
@@ -119,6 +119,7 @@ class DatastoreCompositionDefault(
      *   ParsableUnit.owner : FileHandle          (set when the ParsableUnit is created by read/write)
      *   FileHandle.parsableUnit : ParsableUnit?  (derived, the ParsableUnit created from that FileHandle)
      * Ends whose type is not a DataType (e.g. String) are constructor arguments, not association ends.
+     * Both properties are owned by the association, so the parts' types are not changed.
      */
     private fun createAssociations(types: TypesDomain, ns: TypesNamespace, connection: DatastoreConnection) {
         val targetDef = types.findFirstDefinitionByPossiblyQualifiedNameOrNull(connection.targetType.asPossiblyQualifiedName) as? DataType
@@ -130,8 +131,8 @@ class DatastoreCompositionDefault(
             if (null != endDef) {
                 AssociationBuilder(ns, mutableListOf()).apply {
                     // end i becomes a property on the type of the other end
-                    end(endDef.qualifiedName.value, setOf(REF, VAR, STR), connEnd.name)
-                    end(targetDef.qualifiedName.value, setOf(REF, VAL, DER), targetEndName, isNullable = true, byEvaluation = { _ -> { obj -> targets[obj] } })
+                    end(endDef.qualifiedName.value, setOf(REF, VAR, STR), connEnd.name, ownedByAssociation = true)
+                    end(targetDef.qualifiedName.value, setOf(REF, VAL, DER), targetEndName, isNullable = true, byEvaluation = { _ -> { obj -> targets[obj] } }, ownedByAssociation = true)
                 }.build()
             }
         }
