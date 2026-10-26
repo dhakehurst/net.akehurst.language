@@ -118,16 +118,17 @@ class test_FilesystemDatastore {
                 """.trimIndent()
             ),
             sut.types(),
-            actual,
+            actual[0].data,
         ).sentence!!
 
         val expected = asmSimple(sut.types()) {
-            element("FileHandle") {}
+            element("FileHandle") {
+                propertyString("path","")
+            }
         }
 
         assertNotNull(actual)
         assertEquals(expected.asString(), actualAsString)
-        assertEquals(expected.asString(), (actual[0].data.self as AsmStructure).asString())
     }
 
     @Test

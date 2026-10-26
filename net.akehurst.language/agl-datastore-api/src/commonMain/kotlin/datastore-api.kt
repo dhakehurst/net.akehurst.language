@@ -76,7 +76,6 @@ interface DsConfigParameterChoice : DsConfigParameterInfo {
         }
 }
 
-
 interface DsParameterSet {
     val parameterInfo: List<DsConfigParameterInfo>
 
