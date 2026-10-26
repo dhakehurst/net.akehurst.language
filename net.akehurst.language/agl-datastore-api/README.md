@@ -21,8 +21,9 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | P2 | A provider describes its configuration parameters with a `DatastoreProviderSchema`: one parameter set for creating a datastore, one for each access (read/write). | done |
 | P3 | `Datastore.types()` returns the types of the data the datastore reads and writes. It takes no configuration. | done |
 | P4 | `Datastore.accessorMutator()` returns the accessor/mutator for that data. It takes no configuration. | done |
-| P5 | `types()` and `accessorMutator()` return the same instances on every call, and every object a datastore emits is typed against those types. A composition adds properties to them (see C6). | done (documented here, not enforced) |
-| P6 | The namespaces of a datastore's types are created by its provider, prefixed by the datastore identity. This is done in the datastore's implementation of `types()`. | todo |
+| P5 | `types()` and `accessorMutator()` return the same instances on every call, and every object a datastore emits is typed against those types. | done (documented here, not enforced) |
+| P7 | A datastore's types are never changed by a composition that uses it. | todo (see C6) |
+| P6 | The namespaces of a datastore's types are created by its provider. They are not prefixed by the datastore identity: two datastores from the same provider in one composition share the same types. | done |
 
 ### Data items
 
@@ -41,7 +42,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | C3 | A connection has ends: `end(name, typeName, expression)`. `expression` is evaluated with `$self` = the source item's data, and `typeName` is the type of its result. | done |
 | C4 | One part can feed several connections into the next part (fan-out), e.g. a requirement's title and its description each parsed. Joining several sources is not required. | todo |
 | C5 | The composed types are the merge of the parts' types, plus a namespace `composition`. | done |
-| C6 | For each connection end whose type is a `DataType`, the composition generates an association, e.g. `ParsableUnit.owner : FileHandle` and the derived `FileHandle.parsableUnit : ParsableUnit?`. Ends with a primitive type (e.g. `String`) are constructor arguments of the target type. | done |
+| C6 | For each connection end whose type is a `DataType`, the composition generates an association in the `composition` namespace, e.g. `ParsableUnit.owner : FileHandle` and the derived `FileHandle.parsableUnit : ParsableUnit?`. The association owns these end properties; they are not added to the end types. Ends with a primitive type (e.g. `String`) are constructor arguments of the target type. | partly: generated, but the properties are currently added to the end types |
 | C7 | The target object of a connection is constructed inside read/write. The derived association end returns the object that read/write constructed; it does not construct one. | done |
 
 ### Example uses
