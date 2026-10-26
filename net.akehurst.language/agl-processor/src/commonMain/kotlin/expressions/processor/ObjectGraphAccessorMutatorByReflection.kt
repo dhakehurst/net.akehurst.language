@@ -18,6 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.kotlinx.collections.OrderedSet
+import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.AsmReference
@@ -25,6 +26,7 @@ import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.simple.AsmReferenceSimple
+import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.asm.simple.raw
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
@@ -373,7 +375,12 @@ class ExternalGetterByReflection(
     val issues: IssueHolder,
 ) : ExternalGetter {
     override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
-        val tp = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+        val tp = when (obj) {
+            // fallback objects created when no implementation class exists
+            is AsmStructure -> typesDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)
+            is AsmReference -> obj.value?.qualifiedTypeName?.let { typesDomain.findByQualifiedNameOrNull(it) }
+            else -> typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+        }
         return when (tp) {
             null -> {
                 issues.warn(null, "ExternalGetterByReflection cannot get type for ${obj::class.simpleName}, using '${ifNotFound.typeName.value}'")
@@ -388,11 +395,27 @@ class ExternalGetterByReflection(
         val typeDef = typesDomain.findByQualifiedNameOrNull(qualifiedName)
         return when (typeDef) {
             null -> error("Type Definition for '${qualifiedName.value}' not found.")
-            is DataType -> tryCreateFromConstructor(typeDef.constructors, constructorArgs) ?: typeDef.constructDataType(*(constructorArgs.values.toTypedArray<Any>()))
+            is DataType -> tryCreateFromConstructor(typeDef.constructors, constructorArgs)
+                ?: when {
+                    hasImplementationClass(typeDef) -> typeDef.constructDataType(*(constructorArgs.values.toTypedArray<Any>()))
+                    else -> createAsmStructure(qualifiedName, constructorArgs)
+                }
             is ValueType -> tryCreateFromConstructor(typeDef.constructors, constructorArgs) ?: typeDef.constructValueType(constructorArgs.values.first())
 
             else -> error("Unsupported subtype of StructuredType: '${typeDef::class.simpleName}'")
         }
+    }
+
+    private fun hasImplementationClass(typeDef: TypeDefinition): Boolean =
+        null != typeDef.implementation || null != runCatching { KotlinxReflect.classForName(typeDef.qualifiedName.value) }.getOrNull()
+
+    /** Used when there is no implementation class for the type, so it cannot be constructed by reflection. */
+    private fun createAsmStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): AsmStructure {
+        val obj = AsmStructureSimple(qualifiedName)
+        constructorArgs.forEach { (k, v) ->
+            obj.setProperty(PropertyValueName(k), v, obj.property.size)
+        }
+        return obj
     }
 
     private fun tryCreateFromConstructor(
@@ -482,7 +505,7 @@ class ExternalGetterByReflection(
 
                     else -> v
                 }
-                val nextIndex = obj.property.maxOf { it.value.index } +1 //TODO: MAXINT
+                val nextIndex = (obj.property.maxOfOrNull { it.value.index } ?: -1) + 1 //TODO: MAXINT
                 obj.setProperty(PropertyValueName(propertyName), v2, nextIndex)
             }
 
@@ -500,7 +523,7 @@ class ExternalGetterByReflection(
 
                     else -> v
                 }
-                val nextIndex = refrd.property.maxOf { it.value.index } +1 //TODO: MAXINT
+                val nextIndex = (refrd.property.maxOfOrNull { it.value.index } ?: -1) + 1 //TODO: MAXINT
                 refrd.setProperty(PropertyValueName(propertyName), v2, nextIndex)
             }
 
