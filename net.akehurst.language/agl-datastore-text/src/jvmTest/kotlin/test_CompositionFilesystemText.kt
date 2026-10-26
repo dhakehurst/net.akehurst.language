@@ -140,9 +140,9 @@ class test_CompositionFilesystemText {
 
         // the generated association: ParsableUnit.owner and the derived FileHandle.parsableUnit
         val am = composition.accessorMutator()
+        println(composition.types().findNamespaceOrNull("composition".asQualifiedName)?.asString())
         assertEquals(unitItem.parent!!.data.self, am.getPropertySuspend(unitItem.data, "owner").self)
         assertEquals(unit, am.getPropertySuspend(unitItem.parent!!.data, "parsableUnit").self)
-        println(composition.types().findNamespaceOrNull("composition".asQualifiedName)?.asString())
     }
 
 }

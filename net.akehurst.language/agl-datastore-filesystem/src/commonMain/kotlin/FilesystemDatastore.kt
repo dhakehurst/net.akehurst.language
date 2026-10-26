@@ -53,37 +53,46 @@ class FilesystemDatastore(
     private val _parsedConfig by lazy { FilesystemConfig(configuration) }
     private val _issues = IssueHolder()
 
-    override suspend fun types(): TypesDomain = typesDomain("Filesystem", true) {
-        namespace("filesystem") {
-            data("FileSystemObjectHandle", implementation = FileSystemObjectHandle::class) {
-                propertyOf(setOf(REF, VAL), "name", "String")
+    // cached, so that objects read by this datastore are typed by the same TypeDefinitions that a composition merges (and adds associations to)
+    private val _types: TypesDomain by lazy {
+        typesDomain("Filesystem", true) {
+            namespace("filesystem") {
+                data("FileSystemObjectHandle", implementation = FileSystemObjectHandle::class) {
+                    propertyOf(setOf(REF, VAL), "name", "String")
+                }
+                data("DirectoryHandle", implementation = DirectoryHandle::class) {
+                    supertype("FileSystemObjectHandle")
+                }
+                data("FileHandle", implementation = FileHandle::class) {
+                    supertype("FileSystemObjectHandle")
+                    propertyOf(setOf(REF, VAL), "extension", "String")
+                    propertyOfWithBinding<FileHandle, FileContent>(
+                        setOf(REF, VAL), "content", "FileContent",
+                        accessorSuspend = { FileContent(it) }
+                    )
+                }
+                data("FileContent") {
+                    propertyOfWithBinding<FileContent, String>(
+                        setOf(REF, VAR), "asString", "String",
+                        accessorSuspend = { it.file.readContent() },
+                        mutatorSuspend = { it, value -> it.file.writeContent(value ?: "") }
+                    )
+                }
             }
-            data("DirectoryHandle", implementation = DirectoryHandle::class) {
-                supertype("FileSystemObjectHandle")
             }
-            data("FileHandle", implementation = FileHandle::class) {
-                supertype("FileSystemObjectHandle")
-                propertyOf(setOf(REF, VAL), "extension", "String")
-                propertyOfWithBinding<FileHandle, FileContent>(
-                    setOf(REF, VAL), "content", "FileContent",
-                    accessorSuspend = { FileContent(it) }
-                )
-            }
-            data("FileContent") {
-                propertyOfWithBinding<FileContent, String>(
-                    setOf(REF, VAR), "asString", "String",
-                    accessorSuspend = { it.file.readContent() },
-                    mutatorSuspend = { it, value -> it.file.writeContent(value ?: "") }
-                )
-            }
-        }
     }
 
-    override suspend fun accessorMutator() = ObjectGraphAccessorMutatorByReflection(
-        typesDomain = types(),
-        locationMap = LocationMapDefault(),
-        issues = _issues,
-    )
+    private val _accessorMutator by lazy {
+        ObjectGraphAccessorMutatorByReflection(
+            typesDomain = _types,
+            locationMap = LocationMapDefault(),
+            issues = _issues,
+        )
+    }
+
+    override suspend fun types(): TypesDomain = _types
+
+    override suspend fun accessorMutator() = _accessorMutator
 
     /**
      * input: empty
