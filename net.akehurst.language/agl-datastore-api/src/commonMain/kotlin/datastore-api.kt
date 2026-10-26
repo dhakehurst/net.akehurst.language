@@ -1,8 +1,7 @@
 package net.akehurst.datastore.api
 
 import kotlinx.coroutines.flow.Flow
-import net.akehurst.language.issues.api.IssueCollection
-import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.kotlinx.issues.api.IssueCollection
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypeDefinition
@@ -25,6 +24,12 @@ value class DataItemIdentity(val value:String)
 interface DataItemProvenance
 
 /**
+ * Where, within a DataItem, an issue was found (e.g. a position in parsed text, or a spreadsheet cell).
+ * Each Datastore implementation defines its own issue location by implementing this interface.
+ */
+interface DataItemIssueLocation
+
+/**
  * A unit of data passed to and from Datastore read/write.
  */
 interface DataItem {
@@ -39,7 +44,7 @@ interface DataItem {
     val provenance: DataItemProvenance
 
     /** issues found when this item was read or written, e.g. parse errors. If there are errors, 'data' may be nothing. */
-    val issues: IssueCollection<LanguageIssue>
+    val issues: IssueCollection<DataItemIssueLocation>
 }
 
 interface DatastoreProviderRegistry {

@@ -29,8 +29,8 @@ import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectSuspending
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.objectgraph.api.EvaluationContext
-import net.akehurst.language.issues.api.IssueCollection
-import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.datastore.api.DataItemIssueLocation
+import net.akehurst.kotlinx.issues.api.IssueCollection
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
@@ -224,7 +224,7 @@ data class DataItemDefault(
     override val identity: DataItemIdentity,
     override val data: TypedObject,
     override val provenance: DataItemProvenance,
-    override val issues: IssueCollection<LanguageIssue> = IssueHolder()
+    override val issues: IssueCollection<DataItemIssueLocation> = net.akehurst.kotlinx.issues.ram.IssueHolder()
 ) : DataItem
 
 class DatastoreCompositionConfigurationDefault(

@@ -17,11 +17,12 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
-import net.akehurst.language.issues.api.IssueCollection
-import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.datastore.api.DataItemIssueLocation
+import net.akehurst.kotlinx.issues.api.IssueCollection
+import net.akehurst.kotlinx.issues.api.IssueKind
+import net.akehurst.kotlinx.issues.ram.IssueDefault
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
@@ -39,6 +40,13 @@ class ParsableUnit(
 
     override fun toString(): String = "ParsableUnit(owner=$owner, text=$text)"
 }
+
+/**
+ * Location of an issue in a DataItem produced by an AglTextDatastore: the position in the parsed text, if known.
+ */
+data class AglTextIssueLocation(
+    val inputLocation: InputLocation?
+) : DataItemIssueLocation
 
 /**
  * Provenance of a DataItem produced by an AglTextDatastore.
@@ -132,7 +140,7 @@ class AglTextDatastore(
 
     // ---
 
-    private fun derivedItem(parent: DataItem, data: TypedObject, issues: IssueCollection<LanguageIssue> = IssueHolder()): DataItem = DataItemDefault(
+    private fun derivedItem(parent: DataItem, data: TypedObject, issues: IssueCollection<DataItemIssueLocation> = net.akehurst.kotlinx.issues.ram.IssueHolder()): DataItem = DataItemDefault(
         parent = parent,
         identity = parent.identity,
         data = data,
@@ -158,7 +166,9 @@ class AglTextDatastore(
                     text,
                     //TODO: process options !
                 )
-                val issues = IssueHolder(LanguageProcessorPhase.ALL, res.allIssues.all)
+                val issues = net.akehurst.kotlinx.issues.ram.IssueHolder<DataItemIssueLocation>(
+                    res.allIssues.all.map { IssueDefault(IssueKind.valueOf(it.kind.name), AglTextIssueLocation(it.location), it.message, it.data) }
+                )
                 when {
                     res.allIssues.errors.isEmpty() -> {
                         val v = res.asm?.root[0]
@@ -171,9 +181,9 @@ class AglTextDatastore(
 
             else -> derivedItem(
                 item, am.nothing(),
-                IssueHolder(LanguageProcessorPhase.ALL).also {
-                    it.raise(LanguageIssueKind.ERROR, LanguageProcessorPhase.ALL, null, "the read input to an AglTextDatastore must be a String or a ParsableUnit.")
-                }
+                net.akehurst.kotlinx.issues.ram.IssueHolder<DataItemIssueLocation>(
+                    listOf(IssueDefault(IssueKind.ERROR, AglTextIssueLocation(null), "the read input to an AglTextDatastore must be a String or a ParsableUnit."))
+                )
             )
         }
     }
