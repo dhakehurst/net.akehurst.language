@@ -5,7 +5,6 @@ import kotlinx.coroutines.test.runTest
 import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.accessConfiguration
 import net.akehurst.datastore.common.datastoreComposition
-import net.akehurst.datastore.filesystem.FilesystemDatastore.Companion.FileContent
 import net.akehurst.datastore.filesystem.FilesystemProvider
 import net.akehurst.datastore.text.AglTextProvider
 import net.akehurst.datastore.text.test_AglTextDatastore
@@ -73,6 +72,11 @@ class test_CompositionFilesystemText {
                 }
                 data("FileContent") {
                     propertyOf(setOf(REF, VAR), "asString", "String")
+                }
+            }
+            namespace("test.Test") {
+                data("S") {
+                    propertyOf(setOf(REF, VAR), "name", "String")
                 }
             }
         }

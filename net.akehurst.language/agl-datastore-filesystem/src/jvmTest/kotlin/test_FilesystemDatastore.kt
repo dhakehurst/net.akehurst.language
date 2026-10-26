@@ -70,10 +70,13 @@ class test_FilesystemDatastore {
                 data("FileHandle") {
                     supertype("FileSystemObjectHandle")
                     propertyOf(setOf(REF, VAL), "extension", "String")
+                    propertyOf(setOf(REF, VAL), "content", "FileContent")
+                }
+                data("FileContent") {
+                    propertyOf(setOf(REF, VAR), "asString", "String")
                 }
             }
         }
-
 
         assertEquals(expected.asString(), actual.asString())
     }
@@ -106,29 +109,23 @@ class test_FilesystemDatastore {
 
         }
         val actual = sut.read(cfg, emptyFlow()).toList()
+        assertEquals(1, actual.size)
         val actualAsString = Agl.formatByReflection(
             FormatString(
-        $$"""
+                $$"""
                     namespace filesystem
                     format Test {
-                       FileHandle -> "FileHandle {
-                          path = '$path'
-                       }"
+                       FileHandle -> "FileHandle { name = '$name' }"
                     }
                 """.trimIndent()
             ),
             sut.types(),
-            actual[0].data,
-        ).sentence!!
+            actual[0].data.self,
+        ).sentence
 
-        val expected = asmSimple(sut.types()) {
-            element("FileHandle") {
-                propertyString("path","")
-            }
-        }
+        val expected = "FileHandle { name = 'test.txt' }"
 
-        assertNotNull(actual)
-        assertEquals(expected.asString(), actualAsString)
+        assertEquals(expected, actualAsString)
     }
 
     @Test
