@@ -23,14 +23,19 @@ import net.akehurst.datastore.api.DsConfigParameterDefinition
 import net.akehurst.datastore.api.DsConfigParameterInfo
 import net.akehurst.datastore.api.DsParameterSet
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.asPossiblyQualifiedName
+import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectSuspending
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
+import net.akehurst.language.types.api.DataType
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.api.TypesNamespace
+import net.akehurst.language.types.builder.AssociationBuilder
 import net.akehurst.language.types.builder.typesDomain
 
 class DatastoreProviderSchemaDefault(
@@ -65,16 +70,75 @@ class DatastoreCompositionDefault(
         }
     }
 
-    override suspend fun types(): TypesDomain =
-        datastore.values.fold(typesDomain("Composition", true) {}) { acc, it ->
-            acc.merge(it.types())
-        }
+    companion object {
+        /** the namespace that holds the associations generated from the connections */
+        const val COMPOSITION_NAMESPACE = "composition"
+    }
 
-    override suspend fun accessorMutator() = ObjectGraphAccessorMutatorByReflection(
+    // cached, because generating the associations changes the (shared) types of the parts
+    private var _types: TypesDomain? = null
+    private var _accessorMutator: ObjectGraphAccessorMutator? = null
+
+    /**
+     * for each connection, the target objects created by read/write, keyed by the source object.
+     * The derived association end on the source type finds its target here.
+     */
+    private val _targetBySource = mutableMapOf<DatastoreConnection, MutableMap<Any, Any>>()
+
+    override suspend fun types(): TypesDomain = _types ?: createTypes().also { _types = it }
+
+    override suspend fun accessorMutator(): ObjectGraphAccessorMutator = _accessorMutator ?: ObjectGraphAccessorMutatorByReflection(
         typesDomain = types(),
         issues = issues,
         locationMap = LocationMapDefault(),
-    )
+    ).also { _accessorMutator = it }
+
+    /**
+     * Merges the types of all parts, then adds a namespace for the composition,
+     * with an association for each connection end whose type is a DataType.
+     */
+    private suspend fun createTypes(): TypesDomain {
+        val merged = datastore.values.fold(typesDomain("Composition", true) {}) { acc, it ->
+            acc.merge(it.types())
+        }
+        if (configuration.connection.isNotEmpty()) {
+            val imports = configuration.connection
+                .flatMap { conn -> listOf(conn.targetType) + conn.end.map { it.typeName } }
+                .mapNotNull { tn -> merged.findFirstDefinitionByPossiblyQualifiedNameOrNull(tn.asPossiblyQualifiedName)?.namespace?.qualifiedName?.value }
+                .distinct()
+                .map { Import(it) }
+            val compNs = merged.findOrCreateNamespace(COMPOSITION_NAMESPACE.asQualifiedName, imports)
+            merged.resolveImports()
+            configuration.connection.forEach { conn -> createAssociations(merged, compNs, conn) }
+        }
+        return merged
+    }
+
+    /**
+     * For connection 'fs -> txt' with target type ParsableUnit and end 'owner: FileHandle', creates
+     *   ParsableUnit.owner : FileHandle          (set when the ParsableUnit is created by read/write)
+     *   FileHandle.parsableUnit : ParsableUnit?  (derived, the ParsableUnit created from that FileHandle)
+     * Ends whose type is not a DataType (e.g. String) are constructor arguments, not association ends.
+     */
+    private fun createAssociations(types: TypesDomain, ns: TypesNamespace, connection: DatastoreConnection) {
+        val targetDef = types.findFirstDefinitionByPossiblyQualifiedNameOrNull(connection.targetType.asPossiblyQualifiedName) as? DataType
+            ?: error("Connection '${connection.source}' -> '${connection.target}': target type '${connection.targetType}' is not a DataType")
+        val targetEndName = targetDef.name.value.replaceFirstChar { it.lowercaseChar() }
+        val targets = _targetBySource.getOrPut(connection) { mutableMapOf() }
+        connection.end.forEach { connEnd ->
+            val endDef = dataTypeOrNull(types, connEnd.typeName)
+            if (null != endDef) {
+                AssociationBuilder(ns, mutableListOf()).apply {
+                    // end i becomes a property on the type of the other end
+                    end(endDef.qualifiedName.value, setOf(REF, VAR, STR), connEnd.name)
+                    end(targetDef.qualifiedName.value, setOf(REF, VAL, DER), targetEndName, isNullable = true, byEvaluation = { _ -> { obj -> targets[obj] } })
+                }.build()
+            }
+        }
+    }
+
+    private fun dataTypeOrNull(types: TypesDomain, typeName: String): DataType? =
+        types.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName.asPossiblyQualifiedName) as? DataType
 
     /**
      * Reads the parts in order, passing each part's output to the next part's input.
@@ -89,7 +153,7 @@ class DatastoreCompositionDefault(
             val prev = previous
             val conn = prev?.let { p -> this.configuration.connection.firstOrNull { it.source == p.identity && it.target == ds.identity } }
             val input = when {
-                null != prev && null != conn -> adapt(conn, prev, ds, flow)
+                null != prev && null != conn -> adapt(conn, flow)
                 else -> flow
             }
             flow = ds.read(dsCfg, input)
@@ -98,15 +162,26 @@ class DatastoreCompositionDefault(
         return flow
     }
 
-    private suspend fun adapt(connection: DatastoreConnection, source: Datastore, target: Datastore, input: Flow<DataItem>): Flow<DataItem> {
-        val sourceAm = source.accessorMutator()
-        val targetAm = target.accessorMutator()
-        val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(sourceAm)
+    /**
+     * Creates the connection's target object for each source item.
+     * Each end's expression is evaluated with $self = the source item's data.
+     * Ends with a primitive type are constructor arguments, ends with a DataType are set through the association.
+     */
+    private suspend fun adapt(connection: DatastoreConnection, input: Flow<DataItem>): Flow<DataItem> {
+        val types = types()
+        val am = accessorMutator()
+        val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(am)
         val targetType = connection.targetType.asPossiblyQualifiedName
+        val (assocEnds, ctorEnds) = connection.end.partition { null != dataTypeOrNull(types, it.typeName) }
+        val targets = _targetBySource.getOrPut(connection) { mutableMapOf() }
         return input.map { item ->
             val evc = EvaluationContext.ofSelf(item.data)
-            val args = connection.end.associate { end -> Pair(end.name, interpreter.evaluateStr(evc, end.expression)) }
-            val data = targetAm.createStructureValueSuspend(targetType, args)
+            val ctorArgs = ctorEnds.associate { end -> Pair(end.name, interpreter.evaluateStr(evc, end.expression)) }
+            val data = am.createStructureValueSuspend(targetType, ctorArgs)
+            assocEnds.forEach { end ->
+                am.setProperty(data, end.name, interpreter.evaluateStr(evc, end.expression))
+            }
+            targets[item.data.self] = data.self
             DataItemDefault(
                 parent = item,
                 identity = item.identity,

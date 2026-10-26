@@ -9,6 +9,7 @@ import net.akehurst.datastore.common.datastoreComposition
 import net.akehurst.datastore.filesystem.FilesystemProvider
 import net.akehurst.datastore.text.AglTextProvider
 import net.akehurst.datastore.text.ParsableUnit
+import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.datastore.text.test_AglTextDatastore
 import net.akehurst.language.asm.builder.asmSimple
@@ -136,6 +137,12 @@ class test_CompositionFilesystemText {
         val unit = assertIs<ParsableUnit>(unitItem.data.self)
         assertEquals("Hello World!", unit.text)
         assertEquals(unitItem.parent!!.data.self, unit.owner)
+
+        // the generated association: ParsableUnit.owner and the derived FileHandle.parsableUnit
+        val am = composition.accessorMutator()
+        assertEquals(unitItem.parent!!.data.self, am.getPropertySuspend(unitItem.data, "owner").self)
+        assertEquals(unit, am.getPropertySuspend(unitItem.parent!!.data, "parsableUnit").self)
+        println(composition.types().findNamespaceOrNull("composition".asQualifiedName)?.asString())
     }
 
 }

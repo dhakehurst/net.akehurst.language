@@ -24,12 +24,17 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 
 /**
- * A unit of text to be parsed, together with the object that owns the text (e.g. a FileHandle).
+ * A unit of text to be parsed.
+ * 'owner' is the object that owns the text (e.g. a FileHandle).
+ * It is not a constructor argument, it is an association end, set when a composition connects a datastore to this one.
  */
-data class ParsableUnit(
-    val owner: Any,
+class ParsableUnit(
     val text: String
-)
+) {
+    var owner: Any? = null
+
+    override fun toString(): String = "ParsableUnit(owner=$owner, text=$text)"
+}
 
 /**
  * Provenance of a DataItem produced by an AglTextDatastore.
@@ -78,9 +83,8 @@ class AglTextDatastore(
             namespace("net.akehurst.datastore.text") {
                 data("ParsableUnit", implementation = ParsableUnit::class) {
                     constructor_ {
-                        parameter(setOf(REF, VAL), "owner", "Any")
                         parameter(setOf(REF, VAL), "text", "String")
-                        execution { args -> ParsableUnit(args[0]!!, args[1] as String) }
+                        execution { args -> ParsableUnit(args[0] as String) }
                     }
                 }
             }
