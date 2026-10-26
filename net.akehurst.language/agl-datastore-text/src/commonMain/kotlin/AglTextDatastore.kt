@@ -64,9 +64,9 @@ class AglTextDatastore(
     private val _parsedConfig by lazy { AglTextConfig(configuration) }
     private val _issues = IssueHolder()
 
-    override suspend fun types(accessConfiguration: DatastoreConfiguration): TypesDomain = _parsedConfig.processor.typesDomain
+    override suspend fun types(): TypesDomain = _parsedConfig.processor.typesDomain
 
-    override suspend fun accessorMutator(accessConfiguration: DatastoreConfiguration) = ObjectGraphAccessorMutatorByReflection(
+    override suspend fun accessorMutator() = ObjectGraphAccessorMutatorByReflection(
         typesDomain = _parsedConfig.processor.typesDomain,
         locationMap = LocationMapDefault(),
         issues = _issues,
@@ -108,7 +108,7 @@ class AglTextDatastore(
                 when {
                     res.allIssues.errors.isEmpty() -> {
                         val v = res.asm?.root[0]
-                        accessorMutator(accessConfiguration).toTypedObject(v, StdLibDefault.AnyType)
+                        accessorMutator().toTypedObject(v, StdLibDefault.AnyType)
                     }
                     else -> {
                         error("Could not parse")
@@ -123,7 +123,7 @@ class AglTextDatastore(
     private suspend fun formatObject(accessConfiguration: DatastoreConfiguration, input: TypedObject): TypedObject {
         return when {
             input.self!=Unit -> {
-                val og = accessorMutator(accessConfiguration)
+                val og = accessorMutator()
                 val asm = AsmSimple(og)
                 asm.addRoot(input.self)
                 val res = _parsedConfig.processor.formatAsm(
@@ -133,7 +133,7 @@ class AglTextDatastore(
                 when {
                     res.issues.errors.isEmpty() -> {
                         val v = res.sentence ?: ""
-                        accessorMutator(accessConfiguration).toTypedObject(v, StdLibDefault.String)
+                        accessorMutator().toTypedObject(v, StdLibDefault.String)
                     }
                     else -> {
                         error("Could not parse")

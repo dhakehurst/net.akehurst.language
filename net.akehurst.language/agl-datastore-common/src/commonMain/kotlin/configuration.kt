@@ -59,29 +59,28 @@ class DatastoreCompositionDefault(
         }
     }
 
-    override suspend fun types(configuration: AccessCompositionConfiguration): TypesDomain =
-        datastore.values.fold(typesDomain("Composition", true) {}) { acc, ds ->
-            acc.merge(ds.types(configuration.accessConfigurationFor(ds)))
+    override suspend fun types(): TypesDomain =
+        datastore.values.fold(typesDomain("Composition", true) {}) { acc, it ->
+            acc.merge(it.types())
         }
 
-    override suspend fun accessorMutator(configuration: AccessCompositionConfiguration) = ObjectGraphAccessorMutatorByReflection(
-        typesDomain = types(configuration),
+    override suspend fun accessorMutator() = ObjectGraphAccessorMutatorByReflection(
+        typesDomain = types(),
         issues = issues,
         locationMap = LocationMapDefault(),
     )
 
     override suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem> {
         return datastore.values.asFlow().fold(emptyFlow<DataItem>()) { input, ds ->
-            ds.read(configuration.accessConfigurationFor(ds), input)
+            val dsCfg = configuration.part[ds.identity]
+                ?: error("Can't find access configuration for datastore '${ds.identity}'")
+            ds.read(dsCfg, input)
         }
     }
 
     override suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>) {
         TODO("Not yet implemented")
     }
-
-    private fun AccessCompositionConfiguration.accessConfigurationFor(ds: Datastore): DatastoreConfiguration =
-        this.part[ds.identity] ?: error("Can't find access configuration for datastore '${ds.identity}'")
 
 }
 

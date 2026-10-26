@@ -55,9 +55,8 @@ class test_FilesystemDatastore {
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
-        val acc = accessConfiguration(FilesystemProvider.IDENTITY) { }
 
-        val actual = sut.types(acc)
+        val actual = sut.types()
         val expected = typesDomain("Filesystem",true) {
             namespace("filesystem") {
                 data("FileSystemObjectHandle") {
@@ -84,9 +83,8 @@ class test_FilesystemDatastore {
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
-        val acc = accessConfiguration(FilesystemProvider.IDENTITY) { }
 
-        val actual = sut.accessorMutator(acc)
+        val actual = sut.accessorMutator()
 
         assertNotNull(actual)
     }
@@ -100,15 +98,14 @@ class test_FilesystemDatastore {
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)
-        val acc = accessConfiguration(FilesystemProvider.IDENTITY) { }
-        val og = sut.accessorMutator(acc)
+        val og = sut.accessorMutator()
 
         val cfg = accessConfiguration(FilesystemProvider.IDENTITY) {
 
         }
         val actual = sut.read(cfg, emptyFlow()).toList()
 
-        val expected = asmSimple(sut.types(acc)) {
+        val expected = asmSimple(sut.types()) {
             element("FileHandle") {}
         }
 
@@ -123,10 +120,9 @@ class test_FilesystemDatastore {
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)
-        val acc = accessConfiguration(FilesystemProvider.IDENTITY) { }
-        val og = sut.accessorMutator(acc)
+        val og = sut.accessorMutator()
 
-        val asm = asmSimple(sut.types(acc)) {
+        val asm = asmSimple(sut.types()) {
             element("S") {
                 propertyString("name", "World")
             }

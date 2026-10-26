@@ -66,9 +66,8 @@ class test_AglTextDatastore {
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
-        val acc = accessConfiguration(AglTextProvider.IDENTITY) { }
 
-        val actual = sut.types(acc)
+        val actual = sut.types()
         val expected = typesDomain("Test", true) {
             namespace("test.Test") {
                 data("S") {
@@ -88,9 +87,8 @@ class test_AglTextDatastore {
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
-        val acc = accessConfiguration(AglTextProvider.IDENTITY) { }
 
-        val actual = sut.accessorMutator(acc)
+        val actual = sut.accessorMutator()
 
         assertNotNull(actual)
     }
@@ -103,15 +101,14 @@ class test_AglTextDatastore {
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)
-        val acc = accessConfiguration(AglTextProvider.IDENTITY) { }
-        val og = sut.accessorMutator(acc)
+        val og = sut.accessorMutator()
 
         val cfg = accessConfiguration(AglTextProvider.IDENTITY) {
 
         }
         val actual = sut.read(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject("Hello World !", StdLibDefault.String), TestProvenance))).toList()
 
-        val expected = asmSimple(sut.types(acc)) {
+        val expected = asmSimple(sut.types()) {
             element("S") {
                 propertyString("name", "World")
             }
@@ -129,10 +126,9 @@ class test_AglTextDatastore {
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)
-        val acc = accessConfiguration(AglTextProvider.IDENTITY) { }
-        val og = sut.accessorMutator(acc)
+        val og = sut.accessorMutator()
 
-        val asm = asmSimple(sut.types(acc)) {
+        val asm = asmSimple(sut.types()) {
             element("S") {
                 propertyString("name", "World")
             }
