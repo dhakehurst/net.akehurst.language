@@ -10,7 +10,7 @@ import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.common.DataItemDefault
-import net.akehurst.kotlinx.filesystem.UserFileSystem
+import net.akehurst.kotlinx.filesystem.UserFileSystemDefault
 import net.akehurst.kotlinx.filesystem.api.DirectoryHandle
 import net.akehurst.kotlinx.filesystem.api.FileHandle
 import net.akehurst.kotlinx.filesystem.api.FileSystemObjectHandle
@@ -44,7 +44,7 @@ class FilesystemDatastore(
             suspend fun fsRoot(): DirectoryHandle {
                 val rootPathStr = configuration.getAsStringOrNull(FilesystemProvider.CONFIG_FS_ROOT)
                     ?: error("Filesystem Root is a compulsory configuration argument")
-                return UserFileSystem.getDirectory(rootPathStr)
+                return UserFileSystemDefault.getDirectory(rootPathStr)
                     ?: error("Filesystem Root '$rootPathStr' is not found")
             }
         }
