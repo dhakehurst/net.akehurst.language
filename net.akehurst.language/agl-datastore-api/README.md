@@ -55,6 +55,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 |----|-------------|--------|
 | T1 | An association end has a flag `ownedByAssociation`. When false (the default, existing behaviour) the end's property is added to the type at the other end. When true the property is owned by the association and the type is not changed. | done |
 | T2 | Association-owned properties are found through the `TypesDomain` that contains the association, so they are navigable with an accessor-mutator for that domain. | done |
+| T3 | `ExternalGetterByReflection.typeFor` matches a Kotlin object to a type by its declared `implementation` class first, and only then by simple class name, because several datastores may define types with the same simple name. | done |
 
 ### Example uses
 

@@ -20,6 +20,7 @@ class test_ExternalGetterByReflection {
         interface Pet : Animal
         class Dog : Pet
         class Rock
+        class Item
 
         // types with implementation classes, but no class named 'Dog' or 'Rock'
         val implTypes = typesDomain("Impl", true) {
@@ -28,6 +29,16 @@ class test_ExternalGetterByReflection {
                 data("Pet", implementation = Pet::class) {
                     supertype("Animal")
                 }
+            }
+        }
+
+        // two types named 'Item'; only 'second.Item' has the implementation class Item
+        val sameNameTypes = typesDomain("SameName", true) {
+            namespace("first") {
+                data("Item")
+            }
+            namespace("second") {
+                data("Item", implementation = Item::class)
             }
         }
 
@@ -69,6 +80,15 @@ class test_ExternalGetterByReflection {
         val actual = sut.typeFor(Dog(), StdLibDefault.AnyType)
 
         assertEquals("test.impl.Pet", actual.qualifiedTypeName.value)
+    }
+
+    @Test
+    fun typeFor_implementation_class_before_simple_name() {
+        val sut = ExternalGetterByReflection(sameNameTypes, IssueHolder(LanguageProcessorPhase.INTERPRET))
+
+        val actual = sut.typeFor(Item(), StdLibDefault.AnyType)
+
+        assertEquals("second.Item", actual.qualifiedTypeName.value)
     }
 
     @Test

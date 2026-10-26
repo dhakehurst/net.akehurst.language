@@ -379,8 +379,9 @@ class ExternalGetterByReflection(
             // fallback objects created when no implementation class exists
             is AsmStructure -> typesDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)
             is AsmReference -> obj.value?.qualifiedTypeName?.let { typesDomain.findByQualifiedNameOrNull(it) }
-            else -> typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
-                ?: mostSpecificTypeByImplementation(obj)
+            // match by declared implementation class first, as simple names can be the same in different namespaces
+            else -> mostSpecificTypeByImplementation(obj)
+                ?: typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
         }
         return when (tp) {
             null -> {
