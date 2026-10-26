@@ -16,6 +16,21 @@ import kotlin.test.assertIs
 class test_ExternalGetterByReflection {
 
     private companion object {
+        interface Animal
+        interface Pet : Animal
+        class Dog : Pet
+        class Rock
+
+        // types with implementation classes, but no class named 'Dog' or 'Rock'
+        val implTypes = typesDomain("Impl", true) {
+            namespace("test.impl") {
+                data("Animal", implementation = Animal::class)
+                data("Pet", implementation = Pet::class) {
+                    supertype("Animal")
+                }
+            }
+        }
+
         // 'Thing' has no implementation class, so it cannot be constructed by reflection
         val types = typesDomain("Test", true) {
             namespace("test.nonexistent") {
@@ -45,6 +60,24 @@ class test_ExternalGetterByReflection {
         val actual = sut.typeFor(obj, StdLibDefault.AnyType)
 
         assertEquals("test.nonexistent.Thing", actual.qualifiedTypeName.value)
+    }
+
+    @Test
+    fun typeFor_by_implementation_class_picks_most_specific() {
+        val sut = ExternalGetterByReflection(implTypes, IssueHolder(LanguageProcessorPhase.INTERPRET))
+
+        val actual = sut.typeFor(Dog(), StdLibDefault.AnyType)
+
+        assertEquals("test.impl.Pet", actual.qualifiedTypeName.value)
+    }
+
+    @Test
+    fun typeFor_no_matching_implementation_class() {
+        val sut = ExternalGetterByReflection(implTypes, IssueHolder(LanguageProcessorPhase.INTERPRET))
+
+        val actual = sut.typeFor(Rock(), StdLibDefault.AnyType)
+
+        assertEquals(StdLibDefault.AnyType, actual)
     }
 
     @Test

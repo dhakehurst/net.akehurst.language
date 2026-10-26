@@ -380,6 +380,7 @@ class ExternalGetterByReflection(
             is AsmStructure -> typesDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)
             is AsmReference -> obj.value?.qualifiedTypeName?.let { typesDomain.findByQualifiedNameOrNull(it) }
             else -> typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+                ?: mostSpecificTypeByImplementation(obj)
         }
         return when (tp) {
             null -> {
@@ -404,6 +405,17 @@ class ExternalGetterByReflection(
 
             else -> error("Unsupported subtype of StructuredType: '${typeDef::class.simpleName}'")
         }
+    }
+
+    /**
+     * Finds a type whose 'implementation' class the object is an instance of
+     * (e.g. obj is FileHandleJVM, type 'FileHandle' has implementation = FileHandle::class).
+     * If several match, prefer the most specific (one that no other match conforms to).
+     */
+    private fun mostSpecificTypeByImplementation(obj: Any): TypeDefinition? {
+        val candidates = typesDomain.allDefinitions.filter { it.implementation?.isInstance(obj) == true }
+        return candidates.firstOrNull { c -> candidates.none { o -> o !== c && o.conformsTo(c) } }
+            ?: candidates.firstOrNull()
     }
 
     private fun hasImplementationClass(typeDef: TypeDefinition): Boolean =
