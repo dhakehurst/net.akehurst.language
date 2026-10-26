@@ -2,11 +2,14 @@ package net.akehurst.datastore.composition
 
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import net.akehurst.datastore.common.ConnectionProvenance
 import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.accessConfiguration
 import net.akehurst.datastore.common.datastoreComposition
 import net.akehurst.datastore.filesystem.FilesystemProvider
 import net.akehurst.datastore.text.AglTextProvider
+import net.akehurst.datastore.text.ParsableUnit
+import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.datastore.text.test_AglTextDatastore
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.types.builder.typesDomain
@@ -15,6 +18,7 @@ import kotlin.io.path.absolutePathString
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class test_CompositionFilesystemText {
 
@@ -100,6 +104,10 @@ class test_CompositionFilesystemText {
                 argument(AglTextProvider.CONFIG_GRAMMAR_STR, test_AglTextDatastore.grammarStr)
                 argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
             }
+            connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE) {
+                argument("owner", "\$self")
+                argument("text", "content.asString")
+            }
         }
 
         val acc = composition.accessConfiguration {
@@ -120,7 +128,14 @@ class test_CompositionFilesystemText {
             }
         )
 
-        assertEquals(expected.map { it.root[0] }, actual.map { it.data })
+        assertEquals(expected.map { it.root[0].asString() }, actual.map { (it.data.self as AsmStructure).asString() })
+
+        // the parsed item's parent is the adapted ParsableUnit, whose parent is the file item
+        val unitItem = actual[0].parent!!
+        assertIs<ConnectionProvenance>(unitItem.provenance)
+        val unit = assertIs<ParsableUnit>(unitItem.data.self)
+        assertEquals("Hello World!", unit.text)
+        assertEquals(unitItem.parent!!.data.self, unit.owner)
     }
 
 }

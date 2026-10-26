@@ -16,6 +16,9 @@ class AglTextProvider : DatastoreProvider {
 
         const val CONFIG_LANGUAGE_DIRECTORY = "config.lang-dir"
 
+        /** input type for AglTextDatastore.read, for use as a DatastoreConnection targetType */
+        const val PARSABLE_UNIT_TYPE = "net.akehurst.datastore.text.ParsableUnit"
+
     }
 
     override val identity get() = IDENTITY

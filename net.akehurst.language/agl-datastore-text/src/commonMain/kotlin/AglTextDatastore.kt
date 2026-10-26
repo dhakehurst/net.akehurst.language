@@ -21,6 +21,15 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
+
+/**
+ * A unit of text to be parsed, together with the object that owns the text (e.g. a FileHandle).
+ */
+data class ParsableUnit(
+    val owner: Any,
+    val text: String
+)
 
 /**
  * Provenance of a DataItem produced by an AglTextDatastore.
@@ -64,16 +73,37 @@ class AglTextDatastore(
     private val _parsedConfig by lazy { AglTextConfig(configuration) }
     private val _issues = IssueHolder()
 
-    override suspend fun types(): TypesDomain = _parsedConfig.processor.typesDomain
+    private val _inputTypes by lazy {
+        typesDomain("AglTextDatastore", true) {
+            namespace("net.akehurst.datastore.text") {
+                data("ParsableUnit", implementation = ParsableUnit::class) {
+                    constructor_ {
+                        parameter(setOf(REF, VAL), "owner", "Any")
+                        parameter(setOf(REF, VAL), "text", "String")
+                        execution { args -> ParsableUnit(args[0]!!, args[1] as String) }
+                    }
+                }
+            }
+        }
+    }
+
+    /** the processor's types plus the input types (ParsableUnit) */
+    private val _types by lazy {
+        typesDomain("AglText", true) {}
+            .merge(_parsedConfig.processor.typesDomain)
+            .merge(_inputTypes)
+    }
+
+    override suspend fun types(): TypesDomain = _types
 
     override suspend fun accessorMutator() = ObjectGraphAccessorMutatorByReflection(
-        typesDomain = _parsedConfig.processor.typesDomain,
+        typesDomain = _types,
         locationMap = LocationMapDefault(),
         issues = _issues,
     )
 
     /**
-     * input: DataItem with String data
+     * input: DataItem with String or ParsableUnit data
      * output: DataItem with Asm data, whose parent is the input item
      */
     override suspend fun read(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
@@ -98,9 +128,14 @@ class AglTextDatastore(
     )
 
     private suspend fun parseString(accessConfiguration: DatastoreConfiguration, input: TypedObject): TypedObject {
+        val text = when {
+            input.self is ParsableUnit -> (input.self as ParsableUnit).text
+            input.type == StdLibDefault.String && input.self is String -> input.self as String
+            else -> null
+        }
         return when {
-            input.type == StdLibDefault.String && input.self is String -> {
-                val value = input.self as String
+            null != text -> {
+                val value = text
                 val res = _parsedConfig.processor.process(
                     value,
                     //TODO: process options !
@@ -116,7 +151,7 @@ class AglTextDatastore(
                 }
             }
 
-            else -> error("the read input to an AglTextDatastore must be a String.")
+            else -> error("the read input to an AglTextDatastore must be a String or a ParsableUnit.")
         }
     }
 

@@ -4,6 +4,7 @@ import net.akehurst.datastore.api.AccessCompositionConfiguration
 import net.akehurst.datastore.api.DatastoreComposition
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
 import net.akehurst.datastore.api.DatastoreConfiguration
+import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
@@ -37,11 +38,37 @@ class DatastoreCompositionBuilder(
         _cfg[Pair(providerId, DatastoreIdentity(id))] = ds
     }
 
-    fun connect() {
+    private val _connection = mutableListOf<DatastoreConnection>()
 
+    /**
+     * Connect the output of datastore 'source' to the input of datastore 'target'.
+     * Each source item is adapted to an instance of 'targetType', whose constructor arguments are given by expressions over the source item.
+     */
+    fun connect(source: String, target: String, targetType: String, init: DatastoreConnectionBuilder.() -> Unit) {
+        check(_cfg.keys.any { it.second.value == source }) { "Datastore with id '$source' not defined (define datastores before connecting them)." }
+        check(_cfg.keys.any { it.second.value == target }) { "Datastore with id '$target' not defined (define datastores before connecting them)." }
+        val b = DatastoreConnectionBuilder(DatastoreIdentity(source), DatastoreIdentity(target), targetType)
+        b.init()
+        _connection.add(b.build())
     }
 
-    fun build(): DatastoreComposition = DatastoreCompositionDefault(DatastoreCompositionConfigurationDefault(_cfg))
+    fun build(): DatastoreComposition = DatastoreCompositionDefault(DatastoreCompositionConfigurationDefault(_cfg, _connection))
+}
+
+@DatastoreCompositionDslMarker
+class DatastoreConnectionBuilder(
+    private val _source: DatastoreIdentity,
+    private val _target: DatastoreIdentity,
+    private val _targetType: String,
+) {
+    private val _argument = mutableMapOf<String, String>()
+
+    /** expression is evaluated with `$self` = the source item's data */
+    fun argument(name: String, expression: String) {
+        _argument[name] = expression
+    }
+
+    fun build(): DatastoreConnection = DatastoreConnectionDefault(_source, _target, _targetType, _argument)
 }
 
 //--------------------------
