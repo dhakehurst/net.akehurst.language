@@ -414,7 +414,8 @@ class ExternalGetterByReflection(
      * If several match, prefer the most specific (one that no other match conforms to).
      */
     private fun mostSpecificTypeByImplementation(obj: Any): TypeDefinition? {
-        val candidates = typesDomain.allDefinitions.filter { it.implementation?.isInstance(obj) == true }
+        // std.Any has implementation kotlin.Any, which matches every object, so it is not a useful candidate
+        val candidates = typesDomain.allDefinitions.filter { it.implementation != Any::class && it.implementation?.isInstance(obj) == true }
         return candidates.firstOrNull { c -> candidates.none { o -> o !== c && o.conformsTo(c) } }
             ?: candidates.firstOrNull()
     }
