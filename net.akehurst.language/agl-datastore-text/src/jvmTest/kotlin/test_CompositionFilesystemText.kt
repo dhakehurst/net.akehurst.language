@@ -56,7 +56,16 @@ class test_CompositionFilesystemText {
             }
         }
 
-        val actual = composition.types()
+        val acc = composition.accessConfiguration {
+            access("fs") {
+                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+            }
+            access("txt") {
+
+            }
+        }
+
+        val actual = composition.types(acc)
         val expected = typesDomain("",true) {
 
         }
@@ -93,7 +102,7 @@ class test_CompositionFilesystemText {
         val actual = composition.read(acc).toList()
 
         val expected = listOf(
-            asmSimple(typesDomain = composition.types()) {
+            asmSimple(typesDomain = composition.types(acc)) {
                 element("S") {
                     propertyString("name", "World")
                 }

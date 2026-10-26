@@ -61,8 +61,9 @@ class test_AglTextDatastore {
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
+        val acc = accessConfiguration(AglTextProvider.IDENTITY) { }
 
-        val actual = sut.types()
+        val actual = sut.types(acc)
         val expected = typesDomain("Test", true) {
             namespace("test.Test") {
                 data("S") {
@@ -82,8 +83,9 @@ class test_AglTextDatastore {
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
+        val acc = accessConfiguration(AglTextProvider.IDENTITY) { }
 
-        val actual = sut.accessorMutator()
+        val actual = sut.accessorMutator(acc)
 
         assertNotNull(actual)
     }
@@ -96,14 +98,15 @@ class test_AglTextDatastore {
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)
-        val og = sut.accessorMutator()
+        val acc = accessConfiguration(AglTextProvider.IDENTITY) { }
+        val og = sut.accessorMutator(acc)
 
         val cfg = accessConfiguration(AglTextProvider.IDENTITY) {
 
         }
         val actual = sut.read(cfg, flowOf(og.toTypedObject("Hello World !", StdLibDefault.String))).toList()
 
-        val expected = asmSimple(sut.types()) {
+        val expected = asmSimple(sut.types(acc)) {
             element("S") {
                 propertyString("name", "World")
             }
@@ -121,9 +124,10 @@ class test_AglTextDatastore {
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)
-        val og = sut.accessorMutator()
+        val acc = accessConfiguration(AglTextProvider.IDENTITY) { }
+        val og = sut.accessorMutator(acc)
 
-        val asm = asmSimple(sut.types()) {
+        val asm = asmSimple(sut.types(acc)) {
             element("S") {
                 propertyString("name", "World")
             }

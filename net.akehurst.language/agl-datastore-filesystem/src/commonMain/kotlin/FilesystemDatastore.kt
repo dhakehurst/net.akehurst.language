@@ -41,7 +41,7 @@ class FilesystemDatastore(
     private val _parsedConfig by lazy { FilesystemConfig(configuration) }
     private val _issues = IssueHolder()
 
-    override suspend fun types(): TypesDomain = typesDomain("Filesystem", true) {
+    override suspend fun types(accessConfiguration: DatastoreConfiguration): TypesDomain = typesDomain("Filesystem", true) {
         namespace("filesystem") {
             data("FileSystemObjectHandle", implementation = FileSystemObjectHandle::class) {
                 propertyOf(setOf(REF, VAL), "name", "String")
@@ -67,8 +67,8 @@ class FilesystemDatastore(
         }
     }
 
-    override suspend fun accessorMutator() = ObjectGraphAccessorMutatorByReflection(
-        typesDomain = types(),
+    override suspend fun accessorMutator(accessConfiguration: DatastoreConfiguration) = ObjectGraphAccessorMutatorByReflection(
+        typesDomain = types(accessConfiguration),
         locationMap = LocationMapDefault(),
         issues = _issues,
     )
@@ -82,7 +82,7 @@ class FilesystemDatastore(
         input: Flow<TypedObject>
     ): Flow<TypedObject> {
         val glob = "**".toRegexFromGlob('/') //TODO
-        val am = accessorMutator()
+        val am = accessorMutator(accessConfiguration)
         return _parsedConfig.fsRoot().listContent()
             .filter { glob.matches(it.path) }
             .map { am.toTypedObject(it, StdLibDefault.AnyType) }

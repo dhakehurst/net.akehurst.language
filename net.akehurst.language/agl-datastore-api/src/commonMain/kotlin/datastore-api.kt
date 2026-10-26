@@ -92,9 +92,9 @@ interface Datastore {
 
     val configuration:DatastoreConfiguration
 
-    suspend fun types() : TypesDomain
+    suspend fun types(accessConfiguration:DatastoreConfiguration) : TypesDomain
 
-    suspend fun accessorMutator() : ObjectGraphAccessorMutator
+    suspend fun accessorMutator(accessConfiguration:DatastoreConfiguration) : ObjectGraphAccessorMutator
 
     suspend fun read(accessConfiguration:DatastoreConfiguration, input:Flow<TypedObject>): Flow<TypedObject>
 
@@ -119,9 +119,9 @@ interface DatastoreComposition {
 
     fun create(registry: DatastoreProviderRegistry)
 
-    suspend fun types(): TypesDomain
+    suspend fun types(configuration: AccessCompositionConfiguration): TypesDomain
 
-    suspend fun accessorMutator(): ObjectGraphAccessorMutator
+    suspend fun accessorMutator(configuration: AccessCompositionConfiguration): ObjectGraphAccessorMutator
     suspend fun read(configuration: AccessCompositionConfiguration): Flow<TypedObject>
     suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<TypedObject>)
 }
