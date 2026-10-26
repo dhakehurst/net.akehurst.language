@@ -11,6 +11,8 @@ import net.akehurst.datastore.common.DataItemDefault
 import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.accessConfiguration
 import net.akehurst.datastore.common.datastoreConfiguration
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.types.asm.StdLibDefault
@@ -39,7 +41,7 @@ class test_FilesystemDatastore {
     @Test
     fun construct() {
         val cfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
-            argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
@@ -51,23 +53,23 @@ class test_FilesystemDatastore {
     @Test
     fun types() = runTest {
         val cfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
-            argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
 
         val actual = sut.types()
-        val expected = typesDomain("Filesystem",true) {
+        val expected = typesDomain("Filesystem", true) {
             namespace("filesystem") {
                 data("FileSystemObjectHandle") {
-                    propertyOf(setOf(REF, VAL),"name","String")
+                    propertyOf(setOf(REF, VAL), "name", "String")
                 }
                 data("DirectoryHandle") {
                     supertype("FileSystemObjectHandle")
                 }
                 data("FileHandle") {
                     supertype("FileSystemObjectHandle")
-                    propertyOf(setOf(REF, VAL),"extension","String")
+                    propertyOf(setOf(REF, VAL), "extension", "String")
                 }
             }
         }
@@ -79,7 +81,7 @@ class test_FilesystemDatastore {
     @Test
     fun accessorMutator() = runTest {
         val cfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
-            argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
@@ -94,7 +96,7 @@ class test_FilesystemDatastore {
         tempDir.resolve("test.txt").toFile().createNewFile()
 
         val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
-            argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)
@@ -104,19 +106,34 @@ class test_FilesystemDatastore {
 
         }
         val actual = sut.read(cfg, emptyFlow()).toList()
+        val actualAsString = Agl.formatByReflection(
+            FormatString(
+        $$"""
+                    namespace filesystem
+                    format Test {
+                       FileHandle -> "FileHandle {
+                          path = '$path'
+                       }"
+                    }
+                """.trimIndent()
+            ),
+            sut.types(),
+            actual,
+        ).sentence!!
 
         val expected = asmSimple(sut.types()) {
             element("FileHandle") {}
         }
 
         assertNotNull(actual)
+        assertEquals(expected.asString(), actualAsString)
         assertEquals(expected.asString(), (actual[0].data.self as AsmStructure).asString())
     }
 
     @Test
     fun write() = runTest {
         val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
-            argument(FilesystemProvider.CONFIG_FS_ROOT,tempDir.absolutePathString())
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
         }
         val prov = FilesystemProvider()
         val sut = prov.provide(DatastoreIdentity("test"), dscfg)

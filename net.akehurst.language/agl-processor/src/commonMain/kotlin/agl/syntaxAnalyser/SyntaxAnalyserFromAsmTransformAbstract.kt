@@ -171,8 +171,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             override fun endBranch(nodeInfo: SpptDataNodeInfo) {
                 val opt = nodeInfo.alt.option
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
-                val children = stack.pop(numChildren)
-                val adjChildren = children.reversed()
+                val adjChildren = stack.pop(numChildren)
                 val downData = downStack.pop()
                 val value = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack

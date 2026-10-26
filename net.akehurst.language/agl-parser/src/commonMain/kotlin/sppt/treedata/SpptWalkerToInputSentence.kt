@@ -101,7 +101,7 @@ internal class SpptWalkerToInputSentence(
 
     override fun endBranch(nodeInfo: SpptDataNodeInfo) {
         val numChildren = nodeInfo.numChildrenAlternatives[nodeInfo.alt.option]!!
-        val chText = textStack.pop(numChildren).reversed()
+        val chText = textStack.pop(numChildren)
         val text = chText.joinToString(separator = "") { it.second }
         pushText(nodeInfo, text)
     }
@@ -112,7 +112,7 @@ internal class SpptWalkerToInputSentence(
 
     override fun endEmbedded(nodeInfo: SpptDataNodeInfo) {
         val numChildren = nodeInfo.numChildrenAlternatives[RulePosition.OPTION_NONE]!!
-        val chText = textStack.pop(numChildren).reversed()
+        val chText = textStack.pop(numChildren)
         val text = chText.joinToString(separator = "") { it.second }
         pushText(nodeInfo, text)
     }

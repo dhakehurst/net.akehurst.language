@@ -122,7 +122,6 @@ interface Datastore {
 
 }
 
-
 interface DatastoreCompositionConfiguration {
     val part: Map<Pair<DatastoreProviderIdentity,DatastoreIdentity>, DatastoreConfiguration>
 }

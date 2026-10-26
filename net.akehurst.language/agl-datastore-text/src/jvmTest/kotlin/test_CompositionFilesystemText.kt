@@ -5,6 +5,7 @@ import kotlinx.coroutines.test.runTest
 import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.accessConfiguration
 import net.akehurst.datastore.common.datastoreComposition
+import net.akehurst.datastore.filesystem.FilesystemDatastore.Companion.FileContent
 import net.akehurst.datastore.filesystem.FilesystemProvider
 import net.akehurst.datastore.text.AglTextProvider
 import net.akehurst.datastore.text.test_AglTextDatastore
@@ -58,7 +59,22 @@ class test_CompositionFilesystemText {
 
         val actual = composition.types()
         val expected = typesDomain("",true) {
-
+            namespace("filesystem") {
+                data("FileSystemObjectHandle") {
+                    propertyOf(setOf(REF, VAL), "name", "String")
+                }
+                data("DirectoryHandle") {
+                    supertype("FileSystemObjectHandle")
+                }
+                data("FileHandle") {
+                    supertype("FileSystemObjectHandle")
+                    propertyOf(setOf(REF, VAL), "extension", "String")
+                    propertyOf(setOf(REF, VAL), "content", "FileContent")
+                }
+                data("FileContent") {
+                    propertyOf(setOf(REF, VAR), "asString", "String")
+                }
+            }
         }
 
         assertEquals(expected.asString(), actual.asString())

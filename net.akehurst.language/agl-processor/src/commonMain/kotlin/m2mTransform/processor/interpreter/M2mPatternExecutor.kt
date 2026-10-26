@@ -1,5 +1,5 @@
 package net.akehurst.language.agl.m2mTransform.processor.interpreter
-
+/*
 import net.akehurst.kotlinx.collections.topologicalSort
 import net.akehurst.kotlinx.collections.transitveClosure
 import net.akehurst.language.expressions.api.CreateObjectExpression
@@ -17,7 +17,7 @@ import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.ValueType
 import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.collections.plus
-/*
+
 class M2mPatternExecution(
     val description: String,
     val inputs: List<String>,

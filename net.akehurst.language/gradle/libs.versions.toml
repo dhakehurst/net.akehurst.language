@@ -9,13 +9,13 @@ nak-kotlinx = "2.4.0-SNAPSHOT"
 jsIntegration = "2.4.0-SNAPSHOT"
 vanniktech = "0.37.0"
 
-korlibs = "6.0.2"
+korlibs = "6.1.0"
 kotest = "6.1.11"
 #ksp = "2.2.21-2.0.4"
 kotlinx-coroutines = "1.11.0"
 
 [libraries]
-korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
+korlibs-korio = { module = "org.korge:korlibs-io", version.ref = "korlibs" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
 nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections", version.ref = "nak-kotlinx" }
 nak-kotlinx-utils = { module = "net.akehurst.kotlinx:kotlinx-utils", version.ref = "nak-kotlinx" }

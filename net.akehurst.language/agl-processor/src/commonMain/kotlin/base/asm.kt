@@ -207,7 +207,8 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
     override fun merge(value: Namespace<DT>) {
         value.definition.forEach {
             if(_definition.containsKey(it.name)) {
-                error("Namespace '${qualifiedName}' already contains a definition named '${it.name}', cannot merge another")
+                // Do nothing it already exists !, maybe should warn
+                //error("Namespace '${qualifiedName}' already contains a definition named '${it.name}', cannot merge another")
             } else {
                 addDefinition(it)
             }
