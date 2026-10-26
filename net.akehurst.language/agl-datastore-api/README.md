@@ -32,6 +32,8 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | D1 | `read` and `write` take and return a `Flow<DataItem>`. | done |
 | D2 | A `DataItem` has `parent: DataItem?` (the item it was derived from), `identity: DataItemIdentity`, `data: TypedObject` and `provenance: DataItemProvenance`. | done |
 | D3 | Each datastore implementation defines its own provenance, by implementing `DataItemProvenance`. | done |
+| D4 | A `DataItem` has `issues`. A failure to read or write one item (e.g. a parse error) gives an item with the issues, and the rest of the flow carries on. | done (text datastore) |
+| D5 | A `DataItem` has `qualifiedIdentity: List<DataItemIdentity>`, which is the parent's `qualifiedIdentity` followed by its own `identity`. | done |
 
 ### Composition
 

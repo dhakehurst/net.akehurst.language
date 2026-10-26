@@ -1,6 +1,8 @@
 package net.akehurst.datastore.api
 
 import kotlinx.coroutines.flow.Flow
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypeDefinition
@@ -29,8 +31,15 @@ interface DataItem {
     /** the item this item was derived from, if any */
     val parent: DataItem?
     val identity: DataItemIdentity
+
+    /** the identities of the parents (outermost first) followed by this item's identity */
+    val qualifiedIdentity: List<DataItemIdentity> get() = (parent?.qualifiedIdentity ?: emptyList()) + identity
+
     val data: TypedObject
     val provenance: DataItemProvenance
+
+    /** issues found when this item was read or written, e.g. parse errors. If there are errors, 'data' may be nothing. */
+    val issues: IssueCollection<LanguageIssue>
 }
 
 interface DatastoreProviderRegistry {

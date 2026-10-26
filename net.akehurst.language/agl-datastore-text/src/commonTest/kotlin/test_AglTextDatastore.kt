@@ -17,7 +17,9 @@ import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 private object TestProvenance : DataItemProvenance
 
@@ -116,6 +118,47 @@ class test_AglTextDatastore {
 
         assertNotNull(actual)
         assertEquals(expected.asString(), (actual[0].data.self as AsmStructure).asString())
+    }
+
+    @Test
+    fun read_parse_error_gives_item_with_issues() = runTest {
+        val dscfg = datastoreConfiguration(AglTextProvider.IDENTITY) {
+            argument(AglTextProvider.CONFIG_GRAMMAR_STR, grammarStr)
+            argument(AglTextProvider.CONFIG_FORMAT_STR, formatStr)
+        }
+        val sut = AglTextProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        val cfg = accessConfiguration(AglTextProvider.IDENTITY) {}
+        val input = flowOf(
+            DataItemDefault(null, DataItemIdentity("bad"), og.toTypedObject("not valid", StdLibDefault.String), TestProvenance),
+            DataItemDefault(null, DataItemIdentity("good"), og.toTypedObject("Hello World !", StdLibDefault.String), TestProvenance),
+        )
+
+        val actual = sut.read(cfg, input).toList()
+
+        // the bad item does not stop the read
+        assertEquals(2, actual.size)
+        assertTrue(actual[0].issues.errors.isNotEmpty())
+        assertTrue(og.isNothing(actual[0].data))
+        assertTrue(actual[1].issues.errors.isEmpty())
+        assertIs<AsmStructure>(actual[1].data.self)
+    }
+
+    @Test
+    fun qualifiedIdentity() = runTest {
+        val dscfg = datastoreConfiguration(AglTextProvider.IDENTITY) {
+            argument(AglTextProvider.CONFIG_GRAMMAR_STR, grammarStr)
+            argument(AglTextProvider.CONFIG_FORMAT_STR, formatStr)
+        }
+        val sut = AglTextProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        val cfg = accessConfiguration(AglTextProvider.IDENTITY) {}
+        val root = DataItemDefault(null, DataItemIdentity("root"), og.toTypedObject("Hello World !", StdLibDefault.String), TestProvenance)
+
+        val actual = sut.read(cfg, flowOf(root)).toList()
+
+        assertEquals(listOf(DataItemIdentity("root")), root.qualifiedIdentity)
+        assertEquals(listOf(DataItemIdentity("root"), DataItemIdentity("root")), actual[0].qualifiedIdentity)
     }
 
     @Test

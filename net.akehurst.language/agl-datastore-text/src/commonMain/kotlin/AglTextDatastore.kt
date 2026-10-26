@@ -17,6 +17,10 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypesDomain
@@ -100,18 +104,22 @@ class AglTextDatastore(
 
     override suspend fun types(): TypesDomain = _types
 
-    override suspend fun accessorMutator() = ObjectGraphAccessorMutatorByReflection(
-        typesDomain = _types,
-        locationMap = LocationMapDefault(),
-        issues = _issues,
-    )
+    private val _accessorMutator by lazy {
+        ObjectGraphAccessorMutatorByReflection(
+            typesDomain = _types,
+            locationMap = LocationMapDefault(),
+            issues = _issues,
+        )
+    }
+
+    override suspend fun accessorMutator() = _accessorMutator
 
     /**
      * input: DataItem with String or ParsableUnit data
      * output: DataItem with Asm data, whose parent is the input item
      */
     override suspend fun read(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
-        return input.map { derivedItem(it, parseString(accessConfiguration, it.data)) }
+        return input.map { parseString(accessConfiguration, it) }
     }
 
     /**
@@ -124,38 +132,49 @@ class AglTextDatastore(
 
     // ---
 
-    private fun derivedItem(parent: DataItem, data: TypedObject): DataItem = DataItemDefault(
+    private fun derivedItem(parent: DataItem, data: TypedObject, issues: IssueCollection<LanguageIssue> = IssueHolder()): DataItem = DataItemDefault(
         parent = parent,
         identity = parent.identity,
         data = data,
-        provenance = AglTextProvenance(identity)
+        provenance = AglTextProvenance(identity),
+        issues = issues
     )
 
-    private suspend fun parseString(accessConfiguration: DatastoreConfiguration, input: TypedObject): TypedObject {
+    /**
+     * Parses the text of the input item.
+     * If parsing fails, the result item has the issues and its data is nothing, so the rest of the flow is still read.
+     */
+    private suspend fun parseString(accessConfiguration: DatastoreConfiguration, item: DataItem): DataItem {
+        val input = item.data
         val text = when {
             input.self is ParsableUnit -> (input.self as ParsableUnit).text
             input.type == StdLibDefault.String && input.self is String -> input.self as String
             else -> null
         }
+        val am = accessorMutator()
         return when {
             null != text -> {
-                val value = text
                 val res = _parsedConfig.processor.process(
-                    value,
+                    text,
                     //TODO: process options !
                 )
+                val issues = IssueHolder(LanguageProcessorPhase.ALL, res.allIssues.all)
                 when {
                     res.allIssues.errors.isEmpty() -> {
                         val v = res.asm?.root[0]
-                        accessorMutator().toTypedObject(v, StdLibDefault.AnyType)
+                        derivedItem(item, am.toTypedObject(v, StdLibDefault.AnyType), issues)
                     }
-                    else -> {
-                        error("Could not parse")
-                    }
+
+                    else -> derivedItem(item, am.nothing(), issues)
                 }
             }
 
-            else -> error("the read input to an AglTextDatastore must be a String or a ParsableUnit.")
+            else -> derivedItem(
+                item, am.nothing(),
+                IssueHolder(LanguageProcessorPhase.ALL).also {
+                    it.raise(LanguageIssueKind.ERROR, LanguageProcessorPhase.ALL, null, "the read input to an AglTextDatastore must be a String or a ParsableUnit.")
+                }
+            )
         }
     }
 
