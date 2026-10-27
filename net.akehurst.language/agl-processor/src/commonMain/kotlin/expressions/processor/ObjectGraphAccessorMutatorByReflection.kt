@@ -558,6 +558,11 @@ class ExternalGetterByReflection(
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? =
         getProperty(obj, propertyName)
 
+    private val _links = AssociationLinkStore()
+
+    override fun getLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any): Any? = _links.get(association, end, obj)
+    override fun setLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) = _links.set(association, end, obj, value)
+
     override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
         TODO("not implemented")
     }
@@ -662,14 +667,14 @@ constructor(
      * }
      */
     override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject =
-        getPropertyInternal(tobj, propertyName, externalGetter::getProperty) { obj, decl ->
+        getPropertyInternal(tobj, propertyName, externalGetter::getProperty, externalGetter::getLinkEnd) { obj, decl ->
             decl.accessor?.invoke(obj)
         }
 
     override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) =
         setPropertyInternal(tobj, propertyName, value, { o, n, r, v ->
             externalGetter.setProperty(o, n, r, v)
-        }) { obj, decl, value ->
+        }, externalGetter::setLinkEnd) { obj, decl, value ->
             decl.mutator?.invoke(obj,value)
         }
 
@@ -686,14 +691,14 @@ constructor(
         }
 
     override suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject =
-        getPropertyInternal(tobj, propertyName, { o, n -> externalGetter.getPropertySuspend(o, n) }) { obj, decl ->
+        getPropertyInternal(tobj, propertyName, { o, n -> externalGetter.getPropertySuspend(o, n) }, { a, e, o -> externalGetter.getLinkEndSuspend(a, e, o) }) { obj, decl ->
             decl.accessorSuspend?.invoke(obj) ?: decl.accessor?.invoke(obj)
         }
 
     override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) =
         setPropertyInternal(tobj, propertyName, value, { o, n, r, v ->
             externalGetter.setPropertySuspend(o, n, r, v)
-        }) { obj, decl, value ->
+        }, { a, e, o, v -> externalGetter.setLinkEndSuspend(a, e, o, v) }) { obj, decl, value ->
             decl.mutatorSuspend?.invoke(obj,value)
         }
 
@@ -745,6 +750,7 @@ constructor(
         tobj: TypedObject,
         propertyName: String,
         externalPropertyAccessor: (obj: Any, name: String) -> Any?,
+        linkEndAccessor: (association: TypesAssociation, end: AssociationEnd, obj: Any) -> Any?,
         propertyExecution: (obj: Any, decl: PropertyDeclaration) -> Any?
     ): TypedObject {
         return when {
@@ -772,9 +778,16 @@ constructor(
 
             else -> {
                 //TODO: bit mixed up with External and Primitive Accessors - don't think we need both.
-                val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
-                    ?: typesDomain.findAssociationOwnedPropertyOrNull(tobj.type, PropertyName(propertyName))
-                when (propRes) {
+                val typeProp = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                // a property owned by an association is a link end; its value is not held by the object
+                val linkEnd = if (null == typeProp) typesDomain.findAssociationOwnedEndOrNull(tobj.type, PropertyName(propertyName)) else null
+                val propRes = typeProp ?: linkEnd?.property
+                when {
+                    null != linkEnd -> {
+                        val value = linkEndAccessor(linkEnd.association, linkEnd.end, untyped(tobj))
+                        value?.let { toTypedObject(it, linkEnd.property.typeInstance) } ?: nothing()
+                    }
+                    else -> when (propRes) {
                     null -> {
                         val obj = untyped(tobj)
                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
@@ -830,6 +843,7 @@ constructor(
                         }
                     }
                 }
+                    }
             }
         }
     }
@@ -839,6 +853,7 @@ constructor(
         propertyName: String,
         value: TypedObject,
         externalPropertyMutator: (obj: Any, name: String, isReference: Boolean, value: Any?) -> Unit,
+        linkEndMutator: (association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) -> Unit,
         propertyMutation: (obj: Any, decl: PropertyDeclaration,value: Any?) -> Unit
     ) {
         when {
@@ -853,9 +868,15 @@ constructor(
             else -> {
                 //TODO: bit mixed up with External and Primitive Accessors/Mutators - don't think we need both.
                 val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
-                    ?: typesDomain.findAssociationOwnedPropertyOrNull(tobj.type, PropertyName(propertyName))
+                // a property owned by an association is a link end; its value is not held by the object
+                val linkEnd = if (null == propRes) typesDomain.findAssociationOwnedEndOrNull(tobj.type, PropertyName(propertyName)) else null
                 val r = propRes?.isReference ?: false
-                when (propRes) {
+                when {
+                    null != linkEnd -> {
+                        val uv = if (value.type.resolvedDefinition == StdLibDefault.NothingType.resolvedDefinition) null else untyped(value)
+                        linkEndMutator(linkEnd.association, linkEnd.end, untyped(tobj), uv)
+                    }
+                    else -> when (propRes) {
                     null -> {
                         val obj = untyped(tobj)
                         val uv = untyped(value)
@@ -894,6 +915,7 @@ constructor(
                         }
                     }
                 }
+                    }
 
 
             }

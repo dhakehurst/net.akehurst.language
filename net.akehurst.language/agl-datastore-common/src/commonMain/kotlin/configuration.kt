@@ -204,12 +204,6 @@ class DatastoreCompositionDefault(
     private var _types: TypesDomain? = null
     private var _accessorMutator: ObjectGraphAccessorMutator? = null
 
-    /**
-     * for each connection, the target objects created by read/write, keyed by the source object.
-     * The derived association end on the source type finds its target here.
-     */
-    private val _targetBySource = mutableMapOf<DatastoreConnection, MutableMap<Any, Any>>()
-
     override suspend fun types(): TypesDomain = _types ?: createTypes().also { _types = it }
 
     override suspend fun accessorMutator(): ObjectGraphAccessorMutator = _accessorMutator ?: ObjectGraphAccessorMutatorByReflection(
@@ -242,7 +236,8 @@ class DatastoreCompositionDefault(
     /**
      * For connection 'fs -> txt' with target type ParsableUnit and end 'owner: FileHandle', creates
      *   ParsableUnit.owner : FileHandle          (set when the ParsableUnit is created by read/write)
-     *   FileHandle.parsableUnit : ParsableUnit?  (derived, the ParsableUnit created from that FileHandle)
+     *   FileHandle.parsableUnit : ParsableUnit?  (the opposite end of the same link)
+     * The links are stored by the accessor-mutator's ExternalGetter (getLinkEnd/setLinkEnd), not in the objects.
      * Ends whose type is not a DataType (e.g. String) are constructor arguments, not association ends.
      * Both properties are owned by the association, so the parts' types are not changed.
      */
@@ -250,14 +245,14 @@ class DatastoreCompositionDefault(
         val targetDef = types.findFirstDefinitionByPossiblyQualifiedNameOrNull(connection.targetType.asPossiblyQualifiedName) as? DataType
             ?: error("Connection '${connection.source}' -> '${connection.target}': target type '${connection.targetType}' is not a DataType")
         val targetEndName = connection.identity
-        val targets = _targetBySource.getOrPut(connection) { mutableMapOf() }
         connection.end.forEach { connEnd ->
             val endDef = dataTypeOrNull(types, connEnd.typeName)
             if (null != endDef) {
                 AssociationBuilder(ns, mutableListOf()).apply {
                     // end i becomes a property on the type of the other end
                     end(endDef.qualifiedName.value, setOf(REF, VAR, STR), connEnd.name, ownedByAssociation = true)
-                    end(targetDef.qualifiedName.value, setOf(REF, VAL, DER), targetEndName, isNullable = true, byEvaluation = { _ -> { obj -> targets[obj] } }, ownedByAssociation = true)
+                    // both ends are owned by the association: the links are held by the accessor-mutator's ExternalGetter, not by the objects
+                    end(targetDef.qualifiedName.value, setOf(REF, VAR, STR), targetEndName, isNullable = true, ownedByAssociation = true)
                 }.build()
             }
         }
@@ -302,15 +297,16 @@ class DatastoreCompositionDefault(
         val adapters = connections.map { connection ->
             val targetType = connection.targetType.asPossiblyQualifiedName
             val (assocEnds, ctorEnds) = connection.end.partition { null != dataTypeOrNull(types, it.typeName) }
-            val targets = _targetBySource.getOrPut(connection) { mutableMapOf() }
             val adapter: suspend (DataItem) -> DataItem = { item ->
                 val evc = EvaluationContext.ofSelf(item.data)
                 val ctorArgs = ctorEnds.associate { end -> Pair(end.name, interpreter.evaluateStr(evc, end.expression)) }
                 val data = am.createStructureValueSuspend(targetType, ctorArgs)
                 assocEnds.forEach { end ->
-                    am.setProperty(data, end.name, interpreter.evaluateStr(evc, end.expression))
+                    // link from the end object's side: its end name (the connection identity) is unique for each connection,
+                    // whereas the target's end name (e.g. 'owner') can be the same in several connections (fan-out)
+                    val endObj = interpreter.evaluateStr(evc, end.expression)
+                    am.setProperty(endObj, connection.identity, data)
                 }
-                targets[item.data.self] = data.self
                 DataItemDefault(
                     parent = item,
                     identity = DataItemIdentity(connection.identity),

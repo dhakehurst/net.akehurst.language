@@ -32,15 +32,13 @@ import net.akehurst.language.types.builder.typesDomain
 
 /**
  * A unit of text to be parsed.
- * 'owner' is the object that owns the text (e.g. a FileHandle).
- * It is not a constructor argument, it is an association end, set when a composition connects a datastore to this one.
+ * When a composition connects a datastore to this one, the object that owns the text (e.g. a FileHandle) is linked
+ * through an association end 'owner'; the link is held by the composition's accessor-mutator, not by this object.
  */
 class ParsableUnit(
     val text: String
 ) {
-    var owner: Any? = null
-
-    override fun toString(): String = "ParsableUnit(owner=$owner, text=$text)"
+    override fun toString(): String = "ParsableUnit(text=$text)"
 }
 
 /**

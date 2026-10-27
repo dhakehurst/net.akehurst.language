@@ -47,7 +47,20 @@ interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
      */
     fun findAssociationOwnedPropertyOrNull(type: TypeInstance, propertyName: PropertyName): PropertyDeclarationResolved?
 
+    /**
+     * as findAssociationOwnedPropertyOrNull, but also gives the association and the end that the property navigates to.
+     * The values of such properties are links, stored outside the objects (see ExternalGetter.getLinkEnd).
+     */
+    fun findAssociationOwnedEndOrNull(type: TypeInstance, propertyName: PropertyName): AssociationOwnedEnd?
+
 }
+
+/** a property owned by an association: navigating it from an object at the other end gives the object(s) at 'end' */
+data class AssociationOwnedEnd(
+    val association: TypesAssociation,
+    val end: AssociationEnd,
+    val property: PropertyDeclarationResolved
+)
 
 data class AssociationEnd(
     val endName: PropertyName,

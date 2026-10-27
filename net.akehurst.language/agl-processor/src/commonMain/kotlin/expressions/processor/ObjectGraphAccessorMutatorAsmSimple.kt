@@ -338,6 +338,11 @@ class ExternalGetterAsmSimple(
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? = getProperty(obj, propertyName) //TODO:
 
     override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) = setProperty(obj, propertyName, isReference, value) //TODO:
+
+    private val _links = AssociationLinkStore()
+
+    override fun getLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any): Any? = _links.get(association, end, obj)
+    override fun setLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) = _links.set(association, end, obj, value)
 }
 
 private class TypedObjectAsmValue(

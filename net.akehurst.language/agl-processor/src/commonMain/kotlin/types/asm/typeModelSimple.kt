@@ -149,13 +149,20 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
         return this
     }
 
-    override fun findAssociationOwnedPropertyOrNull(type: TypeInstance, propertyName: PropertyName): PropertyDeclarationResolved? {
+    override fun findAssociationOwnedPropertyOrNull(type: TypeInstance, propertyName: PropertyName): PropertyDeclarationResolved? =
+        findAssociationOwnedEndOrNull(type, propertyName)?.property
+
+    override fun findAssociationOwnedEndOrNull(type: TypeInstance, propertyName: PropertyName): AssociationOwnedEnd? {
         val def = type.resolvedDefinition
         val candidates = setOf(def) + def.allSuperTypes.map { it.resolvedDefinition }
         for (ns in namespace) {
             for (assoc in ns.association) {
                 val p = assoc.ownedProperty.firstOrNull { it.name == propertyName && candidates.contains(it.owner) }
-                if (null != p) return p.resolved(emptyMap())
+                if (null != p) {
+                    // the property for an end is named after that end
+                    val end = assoc.end.first { it.endName == propertyName }
+                    return AssociationOwnedEnd(assoc, end, p.resolved(emptyMap()))
+                }
             }
         }
         return null
@@ -826,6 +833,14 @@ abstract class TypesNamespaceAbstract(
                 } else {
                     val otherEnd = ends[j]
                     val otherEndDef = otherEnd.endType
+                    if (thisEnd.ownedByAssociation) {
+                        // navigation from an object is by a unique name (a subtype may redefine one)
+                        val clash = otherEndDef.findOwnedPropertyOrNull(thisEnd.endName)
+                            ?: (_association.flatMap { it.ownedProperty } + owned).firstOrNull { it.owner == otherEndDef && it.name == thisEnd.endName }
+                        check(null == clash) {
+                            "Association end '${thisEnd.endName.value}' clashes with an existing property or association end of the same name on '${otherEndDef.qualifiedName.value}'"
+                        }
+                    }
                     val pd = when {
                         thisEnd.ownedByAssociation -> PropertyDeclarationStored(otherEndDef, thisEnd.endName, thisEndType, thisEnd.characteristics + PropertyCharacteristic.STORED, -1)
                             .also { owned.add(it) }

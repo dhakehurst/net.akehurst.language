@@ -52,11 +52,11 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | C3 | A connection has ends: `end(name, typeName, expression)`. `expression` is evaluated with `$self` = the source item's data, and `typeName` is the type of its result. | done |
 | C4 | One part can feed several connections into the next part (fan-out), e.g. a requirement's title and its description each parsed. Joining several sources is not required. | done |
 | C5 | The composed types are the merge of the parts' types, plus a namespace `composition`. | done |
-| C6 | For each connection end whose type is a `DataType`, the composition generates an association in the `composition` namespace, e.g. `ParsableUnit.owner : FileHandle` and the derived `FileHandle.parsableUnit : ParsableUnit?`. The association owns these end properties; they are not added to the end types. Ends with a primitive type (e.g. `String`) are constructor arguments of the target type. | done |
+| C6 | For each connection end whose type is a `DataType`, the composition generates an association in the `composition` namespace, e.g. `ParsableUnit.owner : FileHandle` and `FileHandle.parsableUnit : ParsableUnit?` (named by the connection identity). The association owns both end properties; they are not added to the end types, and the objects are not changed. Ends with a primitive type (e.g. `String`) are constructor arguments of the target type. | done |
 | C8 | A connection has an optional `name`. Its `identity` is the name, or else the target type's simple name with a lower-case first letter (e.g. `parsableUnit`). Connections from the same source to the same target must have different identities. The identity is used for the created items and for the derived association end on the source type. | done |
 | C9 | A composition's `open()` opens its parts in chain order; if one fails, the parts already opened are closed again. `close()` closes them in reverse order, closing every part even if one fails. `read` fails unless the composition is open, and it has `use { }` too. | done |
 | C10 | A composition's transaction commits all or nothing (two-phase commit): it begins a transaction on every part, prepares every part (if one fails, every part is rolled back), and commits the parts only once all are prepared. If a part still fails to commit, it and the parts after it are rolled back; if parts before it had committed, a `PartialCommitException` names which committed and which did not. | done (composition `write` itself is still TODO) |
-| C7 | The target object of a connection is constructed inside read/write. The derived association end returns the object that read/write constructed; it does not construct one. | done |
+| C7 | The target object of a connection is constructed inside read/write, which links it to the end objects. Both association ends then navigate through that link. | done |
 
 ### Types (agl-processor)
 
@@ -65,6 +65,8 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | T1 | An association end has a flag `ownedByAssociation`. When false (the default, existing behaviour) the end's property is added to the type at the other end. When true the property is owned by the association and the type is not changed. | done |
 | T2 | Association-owned properties are found through the `TypesDomain` that contains the association, so they are navigable with an accessor-mutator for that domain. | done |
 | T3 | `ExternalGetterByReflection.typeFor` matches a Kotlin object to a type by its declared `implementation` class first, and only then by simple class name, because several datastores may define types with the same simple name. | done |
+| T4 | The value of an association-owned end is a link, not held by the objects: the accessor-mutator gets and sets it through `ExternalGetter.getLinkEnd`/`setLinkEnd`. The default getters keep the links in memory (`AssociationLinkStore`), keyed by the end objects using `equals`/`hashCode`, so every object must have a unique identity by that contract. Links are navigable in both directions (so expressions and m2m transformations over a read result can follow them), and keep the multiplicity of both ends. Links belong to the accessor-mutator that set them. |  done |
+| T5 | Navigation from an object, by property or link, is by a unique name: an association-owned end may not have the same name as another property or association-owned end of the same type (a subtype may redefine a name). | done |
 
 ### Example uses
 

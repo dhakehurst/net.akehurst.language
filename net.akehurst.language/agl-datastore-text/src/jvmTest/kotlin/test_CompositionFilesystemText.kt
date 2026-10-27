@@ -24,6 +24,7 @@ import kotlin.io.path.absolutePathString
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 
 class test_CompositionFilesystemText {
@@ -140,9 +141,8 @@ class test_CompositionFilesystemText {
         assertIs<ConnectionProvenance>(unitItem.provenance)
         val unit = assertIs<ParsableUnit>(unitItem.data.self)
         assertEquals("Hello World!", unit.text)
-        assertEquals(unitItem.parent!!.data.self, unit.owner)
 
-        // the generated association: ParsableUnit.owner and the derived FileHandle.parsableUnit
+        // the generated association: ParsableUnit.owner and FileHandle.parsableUnit, both navigable through the link
         val am = composition.accessorMutator()
         println(composition.types().findNamespaceOrNull("composition".asQualifiedName)?.asString())
         assertEquals(unitItem.parent!!.data.self, am.getPropertySuspend(unitItem.data, "owner").self)
@@ -175,11 +175,11 @@ class test_CompositionFilesystemText {
                 argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
             }
             connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE, name = "first") {
-                end("owner", "filesystem.FileHandle", "\$self")
+                end("firstOwner", "filesystem.FileHandle", "\$self")
                 end("text", "String", "content.asString")
             }
             connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE, name = "second") {
-                end("owner", "filesystem.FileHandle", "\$self")
+                end("secondOwner", "filesystem.FileHandle", "\$self")
                 end("text", "String", "content.asString")
             }
         }
@@ -203,6 +203,32 @@ class test_CompositionFilesystemText {
         val fileData = actual[0].parent!!.parent!!.data
         assertEquals(actual[0].parent!!.data.self, am.getPropertySuspend(fileData, "first").self)
         assertEquals(actual[1].parent!!.data.self, am.getPropertySuspend(fileData, "second").self)
+        // and back, each by its own end name
+        assertEquals(fileData.self, am.getPropertySuspend(actual[0].parent!!.data, "firstOwner").self)
+        assertEquals(fileData.self, am.getPropertySuspend(actual[1].parent!!.data, "secondOwner").self)
+    }
+
+    @Test
+    fun compose_fan_out_with_same_end_name_fails() = runTest {
+        val composition = datastoreComposition {
+            datastore("fs", FilesystemProvider.IDENTITY) {
+                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+            }
+            datastore("txt", AglTextProvider.IDENTITY) {
+                argument(AglTextProvider.CONFIG_GRAMMAR_STR, test_AglTextDatastore.grammarStr)
+                argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
+            }
+            connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE, name = "first") {
+                end("owner", "filesystem.FileHandle", "\$self")
+                end("text", "String", "content.asString")
+            }
+            connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE, name = "second") {
+                end("owner", "filesystem.FileHandle", "\$self")
+                end("text", "String", "content.asString")
+            }
+        }
+        // ParsableUnit would have two association ends named 'owner'
+        assertFailsWith<IllegalStateException> { composition.types() }
     }
 
 }
