@@ -104,10 +104,16 @@ class DsParameterBuilder(
     val _optional: Boolean
 ) {
     var _description: String = ""
+    var _sensitive: Boolean = false
     lateinit var _type: TypeDefinition
 
     fun description(value: String) {
         _description = value
+    }
+
+    /** marks the parameter as sensitive (e.g. a password or token), so its value is masked when shown */
+    fun sensitive(value: Boolean = true) {
+        _sensitive = value
     }
 
     fun type(typeName: String) {
@@ -121,6 +127,7 @@ class DsParameterBuilder(
         override val optional = _optional
         override val description = _description
         override val type = _type
+        override val sensitive = _sensitive
     }
 
 }

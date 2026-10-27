@@ -64,11 +64,26 @@ class DatastoreConfigurationBuilder(
         check(errors.isEmpty()) {
             "Invalid ${if (_access) "access" else "datastore"} configuration for provider '${_providerIdentity.value}':\n  ${errors.joinToString("\n  ")}"
         }
-        return object : DatastoreConfiguration {
-            override val providerIdentity = _providerIdentity
-            override val argument = _argument.toMap()
-        }
+        return DatastoreConfigurationDefault(_providerIdentity, _argument.toMap(), parameterSet)
     }
+}
+
+class DatastoreConfigurationDefault(
+    override val providerIdentity: DatastoreProviderIdentity,
+    override val argument: Map<String, Any>,
+    /** the parameters this configuration was built against */
+    val parameterSet: DsParameterSet,
+) : DatastoreConfiguration {
+
+    companion object {
+        const val MASK = "****"
+    }
+
+    override fun isSensitive(parameterIdentity: String): Boolean =
+        parameterSet.getParameterOrNull(parameterIdentity)?.sensitive ?: false
+
+    override fun toString(): String =
+        "DatastoreConfiguration(${providerIdentity.value}, ${argument.entries.joinToString(prefix = "{", postfix = "}") { (k, v) -> "$k=${if (isSensitive(k)) MASK else v}" }})"
 }
 
 object DatastoreConfigurationValidator {

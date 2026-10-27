@@ -64,6 +64,12 @@ interface DsConfigParameterDefinition : DsConfigParameterInfo{
     val description:String
     val type: TypeDefinition
 
+    /**
+     * true if the value must not be shown, e.g. a password or an API token.
+     * A DatastoreConfiguration masks the values of sensitive parameters in toString().
+     */
+    val sensitive: Boolean get() = false
+
     override fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition? = when (parameterIdentity) {
         identity -> this
         else -> null
@@ -114,6 +120,9 @@ interface DatastoreConfiguration {
     val providerIdentity:DatastoreProviderIdentity
 
     val argument: Map<String, Any>
+
+    /** true if the parameter is declared sensitive in the provider's schema; its value must not be logged or shown */
+    fun isSensitive(parameterIdentity: String): Boolean = false
 
     fun getAsString(parameterIdentity:String): String = argument[parameterIdentity] as String
     fun getAsStringOrNull(parameterIdentity:String): String? = argument[parameterIdentity] as String?
