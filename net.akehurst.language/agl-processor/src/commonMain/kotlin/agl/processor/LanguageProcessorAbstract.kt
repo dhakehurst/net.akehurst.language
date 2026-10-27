@@ -275,8 +275,14 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
         val opts = defaultOptions(options)
-        val parserExpected = this.parser?.expectedTerminalsAt(sentence, position, opts.parse)
+        val parserExpectedAt = this.parser?.expectedAt(sentence, position, opts.parse)
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
+        // only use spines for the 'unfinished word' reading (the parser also returns spines for the 'complete word' reading, at 'position')
+        val parserExpected = parserExpectedAt.spines
+            .filter { it.usedPosition == parserExpectedAt.usedPosition }
+            .flatMap { it.expectedNextTerminals }
+            .filter { it.isTerminal }
+            .toSet()
         val terminalItems = parserExpected.mapNotNull {
             when {
                 it.isEndOfText -> null // FIXME: maybe indicate EOT ?
@@ -303,7 +309,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val opts = defaultOptions(options)
                 val parserExpected = this.parser?.expectedAt(sentence, position, opts.parse)
                     ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
-                val spines = parserExpected.spines.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
+                // only use spines for the 'unfinished word' reading (the parser also returns spines for the 'complete word' reading, at 'position')
+                val spines = parserExpected.spines
+                    .filter { it.usedPosition == parserExpected.usedPosition }
+                    .map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
                 val items = completionProvider!!.provide(spines, opts.completionProvider)
                 if (parserExpected.usedPosition == position) {
                     ExpectedAtResultDefault(position, parserExpected.usedPosition, items, IssueHolder(LanguageProcessorPhase.ALL))

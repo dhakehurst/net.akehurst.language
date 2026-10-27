@@ -166,9 +166,21 @@ interface RuntimeSpine {
     val expectedNextTerminals: Set<Rule>
     val elements: List<RulePosition>
     val nextChildNumber: Int
+
+    /**
+     * position in the sentence up to which the text was parsed to produce this spine,
+     * i.e. the position at which the [expectedNextTerminals] are expected to start.
+     * In an [ExpectedAtResult] this can differ between spines, e.g. at the end of a partially typed word
+     * one spine may be for the word being unfinished (position of the word start)
+     * and another for the word being complete (the requested position).
+     */
+    val usedPosition: Int
 }
 
 interface ExpectedAtResult {
+    /**
+     * start of the word containing/preceding the requested position (each spine has its own [RuntimeSpine.usedPosition])
+     */
     val usedPosition: Int
     val spines: Set<RuntimeSpine>
 }

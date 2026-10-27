@@ -314,11 +314,45 @@ class LeftCornerParser(
     }
 
     override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult {
-        val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
-        val cacheSkip = options.cacheSkip
         val revWordStartPosition = findReverseStartPosition(sentenceText, position, options)
         val wordStartPosition = position - revWordStartPosition
-        val usedText = sentenceText.substring(0, wordStartPosition) // parse from start (0) to position - ignore rest of text
+        // the text between word start and position (if any) could be either
+        //  1) an unfinished token - so expected terminals are those at the word start, that could start with the partial word
+        //  2) a complete token - so expected terminals are those after the partial word
+        // the result is the union of both, each spine records the position it was computed for
+        val atWordStart = expectedSpinesAt(sentenceText, wordStartPosition, options)
+        val spines: Set<RuntimeSpine> = if (wordStartPosition == position) {
+            atWordStart.map { RuntimeSpineAt(it, wordStartPosition, it.expectedNextTerminals) }.toSet()
+        } else {
+            val partial = sentenceText.substring(wordStartPosition, position)
+            val unfinished = atWordStart.mapNotNull { sp ->
+                val exp = sp.expectedNextTerminals.filter { rr ->
+                    when {
+                        rr.isLiteral -> rr.unescapedTerminalValue.startsWith(partial)
+                        rr.isPattern -> true // pattern might match the partial word, keep it
+                        rr.isTerminal -> false // e.g. <EOT>, <EMPTY> cannot be the partial word
+                        else -> true
+                    }
+                }.toSet()
+                when {
+                    exp.isEmpty() -> null
+                    else -> RuntimeSpineAt(sp, wordStartPosition, exp)
+                }
+            }.toSet()
+            val complete = expectedSpinesAt(sentenceText, position, options).map { RuntimeSpineAt(it, position, it.expectedNextTerminals) }
+            unfinished + complete
+        }
+        return ExpectedAtResultDefault(wordStartPosition, spines)
+    }
+
+    /**
+     * parse the sentence from 0 up to 'usedPosition' (ignoring the rest of the text)
+     * and return the spines of the parse that fail at that position, i.e. what is expected next
+     */
+    private fun expectedSpinesAt(sentenceText: String, usedPosition: Int, options: ParseOptions): Set<RuntimeSpineDefault> {
+        val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
+        val cacheSkip = options.cacheSkip
+        val usedText = sentenceText.substring(0, usedPosition) // parse from start (0) to position - ignore rest of text
         scanner.reset()
         val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity.invoke()), goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
@@ -332,20 +366,8 @@ class LeftCornerParser(
             rp.grow3(possibleEndOfText, parseArgs) //TODO: maybe no need to build tree!
             seasons++
         }
-        /*
-        return rp.nextExpected.flatMap {
-            when(it) {
-                is RuntimeRule -> listOf(it)
-                is Set<*> -> it as Set<RuntimeRule>
-                is List<*> -> it as List<RuntimeRule>
-                is LookaheadSet -> it.fullContent
-                else -> error("Internl Error: Not handled - $it")
-            }
-        }.toSet()
-         */
-        //val nextExpected = this.findNextExpected(rp, matches, possibleEndOfText)
         return if (rp.failedReasons.isEmpty()) {
-            ExpectedAtResultDefault(wordStartPosition, emptySet())
+            emptySet()
         } else {
             // need to include the 'startSkipFailures',
             val map = rp.failedReasons //no need to clone it as it will not be modified after this point
@@ -354,20 +376,17 @@ class LeftCornerParser(
                 l.addAll(it.value)
                 map[it.key] = l
             }
-            //val nextExpected = this.findNextExpectedAfterError3(scanner.sentence, map, rp.stateSet.automatonKind, rp.stateSet, position)
-            //nextExpected.second
             val validFailReasons = map[map.keys.max()]?.flatMap {
                 when (it) {
-                    is FailedParseReasonEmbedded -> it.embededFailedParseReasons.filter { it.skipFailure.not() && it.failedAtPosition == wordStartPosition }
+                    is FailedParseReasonEmbedded -> it.embededFailedParseReasons.filter { it.skipFailure.not() && it.failedAtPosition == usedPosition }
                     else -> when {
-                        it.skipFailure.not() && it.failedAtPosition == wordStartPosition -> listOf(it)
+                        it.skipFailure.not() && it.failedAtPosition == usedPosition -> listOf(it)
                         else -> emptyList()
                     }
                 }
             } ?: emptyList()
             // parse might fail BEFORE the requested 'position' - so filter to get {} if it does
-            val rspines = validFailReasons.map { it.spine }
-            return ExpectedAtResultDefault(wordStartPosition, rspines.toSet())
+            validFailReasons.map { it.spine }.toSet()
         }
     }
 

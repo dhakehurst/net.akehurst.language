@@ -30,30 +30,51 @@ class test_expectedAt_wordStart {
     private companion object {
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
-            concatenation("S") { literal("class"); ref("NAME"); literal(";") }
+            choiceLongest("S") { ref("class"); ref("interface") }
+            concatenation("class") { literal("class"); ref("NAME"); literal(";") }
+            concatenation("interface") { literal("interface"); ref("NAME"); literal(";") }
             pattern("NAME", "[a-zA-Z]+")
         } as RuntimeRuleSet
     }
 
-    private fun check(text: String, position: Int, expectedUsedPosition: Int, expected: Set<String>) {
+    /**
+     * expected: map of each spine's usedPosition to the expected terminals for that position
+     */
+    private fun check(text: String, position: Int, expectedUsedPosition: Int, expected: Map<Int, Set<String>>) {
         val sut = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
         val res = sut.expectedAt(text, position, ParseOptionsDefault(goalRuleName = "S"))
         assertEquals(expectedUsedPosition, res.usedPosition, "usedPosition for '$text' at $position")
-        assertEquals(expected, res.spines.flatMap { it.expectedNextTerminals }.map { it.tag }.toSet(), "expected for '$text' at $position")
+        val actual = res.spines
+            .groupBy { it.usedPosition }
+            .mapValues { (_, sps) -> sps.flatMap { it.expectedNextTerminals }.map { it.tag }.toSet() }
+        assertEquals(expected, actual, "expected for '$text' at $position")
     }
 
     @Test
-    fun unfinished_first_word() = check("cla", 3, 0, setOf("'class'"))
+    fun start_of_text() = check("", 0, 0, mapOf(0 to setOf("'class'", "'interface'")))
+
+    // 'cla' can only be an unfinished 'class', parsing 'cla' as a complete word fails before position 3
+    @Test
+    fun unfinished_first_word() = check("cla", 3, 0, mapOf(0 to setOf("'class'")))
+
+    // 'class' might be unfinished (e.g. 'classX') or complete
+    @Test
+    fun end_of_keyword() = check("class", 5, 0, mapOf(0 to setOf("'class'"), 5 to setOf("NAME")))
 
     @Test
-    fun after_whitespace() = check("class ", 6, 6, setOf("NAME"))
+    fun after_whitespace() = check("class ", 6, 6, mapOf(6 to setOf("NAME")))
+
+    // 'A' might be the start of a NAME, or a complete NAME
+    @Test
+    fun middle_of_word_after_whitespace() = check("class Abc", 7, 6, mapOf(6 to setOf("NAME"), 7 to setOf("';'")))
 
     @Test
-    fun middle_of_word_after_whitespace() = check("class Abc", 7, 6, setOf("NAME"))
+    fun end_of_word_after_whitespace() = check("class Abc", 9, 6, mapOf(6 to setOf("NAME"), 9 to setOf("';'")))
 
     @Test
-    fun end_of_word_after_whitespace() = check("class Abc", 9, 6, setOf("NAME"))
+    fun end_of_word_after_several_whitespace() = check("class   Abc", 11, 8, mapOf(8 to setOf("NAME"), 11 to setOf("';'")))
 
+    // at 10 only ';' is expected, which cannot start with 'xyz', and parsing 'class Abc xyz' fails before 13
     @Test
-    fun end_of_word_after_several_whitespace() = check("class   Abc", 11, 8, setOf("NAME"))
+    fun word_not_valid_here() = check("class Abc xyz", 13, 10, emptyMap())
 }
