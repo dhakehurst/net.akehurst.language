@@ -404,4 +404,33 @@ class test_CompositionFilesystemText {
         assertFailsWith<IllegalStateException> { composition.write(acc, emptyFlow()) }
         composition.rollback()
     }
+
+    @Test
+    fun write_new_unit_creates_new_file_on_commit() = runTest {
+        val composition = writeComposition()
+        val acc = composition.accessConfiguration {
+            access("fs") {}
+            access("txt") {}
+        }
+        composition.open()
+        composition.beginTransaction()
+        // as an m2m would: create a new unit and a new file, and link them
+        val am = composition.accessorMutator()
+        val file = am.createStructureValueSuspend("filesystem.FileHandle".asPossiblyQualifiedName, mapOf("path" to am.toTypedObject("out/moon.txt", StdLibDefault.String)))
+        val unit = am.createStructureValueSuspend(AglTextProvider.PARSABLE_UNIT_TYPE.asPossiblyQualifiedName, mapOf("text" to am.toTypedObject("", StdLibDefault.String)))
+        (unit.self as ParsableUnit).asm = asmSimple(typesDomain = composition.types()) {
+            element("S") { propertyString("name", "Moon") }
+        }.root[0]
+        am.setPropertySuspend(file, "parsableUnit", unit)
+        val item = DataItemDefault(null, DataItemIdentity("moon"), unit, object : DataItemProvenance {})
+
+        val actual = composition.write(acc, flowOf(item)).toList()
+
+        assertEquals(1, actual.size)
+        assertTrue(actual[0].issues.errors.isEmpty(), actual[0].issues.toString())
+        assertSame(file.self, actual[0].data.self)
+        assertTrue(tempDir.resolve("out/moon.txt").toFile().exists().not())
+        composition.commit()
+        assertEquals("Hello Moon !", tempDir.resolve("out/moon.txt").toFile().readText())
+    }
 }

@@ -24,6 +24,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.test.assertFalse
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import kotlin.test.assertFailsWith
 
 private object TestProvenance : DataItemProvenance
@@ -211,6 +213,72 @@ class test_FilesystemDatastore {
         ).toList()
 
         assertTrue(actual[0].issues.errors.isNotEmpty())
+    }
+
+    private suspend fun newFile(sut: net.akehurst.datastore.api.Datastore, path: String) = sut.accessorMutator().let { og ->
+        og.createStructureValueSuspend("filesystem.FileHandle".asPossiblyQualifiedName, mapOf("path" to og.toTypedObject(path, StdLibDefault.String)))
+    }
+
+    @Test
+    fun new_file_is_created_on_commit() = runTest {
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        sut.open()
+        sut.beginTransaction()
+        val file = newFile(sut, "out/new.txt")
+        file.getPropertySuspend("content").setPropertySuspend("asString", og.toTypedObject("hello", StdLibDefault.String))
+        val actual = sut.write(accessConfiguration(FilesystemProvider.IDENTITY) {}, flowOf(DataItemDefault(null, DataItemIdentity("new"), file, TestProvenance))).toList()
+
+        assertTrue(actual[0].issues.errors.isEmpty())
+        assertEquals("new.txt", file.getPropertySuspend("name").self)
+        assertFalse(tempDir.resolve("out").toFile().exists())
+        sut.commit()
+        assertEquals("hello", tempDir.resolve("out/new.txt").toFile().readText())
+    }
+
+    @Test
+    fun new_file_is_not_created_on_rollback() = runTest {
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        sut.open()
+        sut.beginTransaction()
+        val file = newFile(sut, "new.txt")
+        file.getPropertySuspend("content").setPropertySuspend("asString", og.toTypedObject("hello", StdLibDefault.String))
+        sut.rollback()
+
+        assertFalse(tempDir.resolve("new.txt").toFile().exists())
+    }
+
+    @Test
+    fun new_file_with_path_outside_root_fails() = runTest {
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        sut.open()
+        assertFailsWith<IllegalStateException> { newFile(sut, "../x.txt") }
+        assertFailsWith<IllegalStateException> { newFile(sut, "/x.txt") }
+    }
+
+    @Test
+    fun new_file_where_a_directory_is_fails_on_commit() = runTest {
+        tempDir.resolve("d").toFile().mkdir()
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        sut.open()
+        sut.beginTransaction()
+        newFile(sut, "d").getPropertySuspend("content").setPropertySuspend("asString", og.toTypedObject("hello", StdLibDefault.String))
+
+        assertFailsWith<IllegalStateException> { sut.prepare() }
     }
 
     @Test

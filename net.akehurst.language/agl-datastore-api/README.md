@@ -76,7 +76,8 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | Id | Requirement | Status |
 |----|-------------|--------|
 | F1 | Setting `FileHandle.content.asString` stages the new content in the datastore's active transaction (it fails outside a transaction). Reading it gives the staged content, if any. `commit()` writes the staged contents to the files, `rollback()` discards them. | done |
-| F2 | Write takes `FileHandle` items (whose content has been set) and returns them; any other item gets an error issue. Creating new files is not supported yet. | done |
+| F2 | Write takes `FileHandle` items (whose content has been set) and returns them; any other item gets an error issue. | done |
+| F3 | A new file is created through the `FileHandle` constructor, `FileHandle(path)`, with a path relative to the filesystem root (no leading `/`, no `.` or `..` segments), e.g. from an m2m via the accessor-mutator's `createStructureValue`. It returns a pending handle; nothing is on disk until commit. Its content is set like any file's, and on commit the file and any missing directories are created (an existing file at that path is overwritten). Rollback leaves nothing. `prepare()` fails if a directory is in the way. The constructor does not add a `path` property to the types. | done |
 
 ### Types (agl-processor)
 

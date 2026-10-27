@@ -79,6 +79,11 @@ class FilesystemDatastore(
                 }
                 data("FileHandle", implementation = FileHandle::class) {
                     supertype("FileSystemObjectHandle")
+                    // a new file, at a path relative to the filesystem root; it is created on commit
+                    constructor_ {
+                        parameter(emptySet(), "path", "String")
+                        execution { args -> newFile(args[0] as String) }
+                    }
                     propertyOf(setOf(REF, VAL), "extension", "String")
                     propertyOfWithBinding<FileHandle, FileContent>(
                         setOf(REF, VAL), "content", "FileContent",
@@ -144,6 +149,60 @@ class FilesystemDatastore(
         }
     }
 
+    // --- new files ---
+
+    /**
+     * A file that does not exist yet, at 'relativePath' under the filesystem root.
+     * It is created on commit, if content was set for it; until then nothing is on disk.
+     */
+    class NewFileHandle internal constructor(
+        val relativePath: String,
+        rootPath: String,
+        internal val datastore: FilesystemDatastore
+    ) : FileHandle {
+        override val parent: DirectoryHandle? get() = null
+        override val name: String = relativePath.substringAfterLast('/')
+        override val path: String = rootPath + relativePath
+        override val absolutePath: String get() = path
+        override val extension: String get() = if (name.contains('.')) name.substringAfterLast('.') else ""
+        override suspend fun exists(): Boolean = false
+        override suspend fun readContent(): String? = null
+        override suspend fun writeContent(content: String) = error("Set 'content.asString' of a new file; it is written on commit")
+        override suspend fun openAsZipDirectory(): DirectoryHandle? = null
+        override fun hashCode(): Int = path.hashCode()
+        override fun equals(other: Any?): Boolean = other is NewFileHandle && other.path == this.path && other.datastore === this.datastore
+        override fun toString(): String = "NewFileHandle($relativePath)"
+    }
+
+    private var _rootPath: String? = null
+
+    override suspend fun onOpen() {
+        _rootPath = _parsedConfig.fsRoot().path.trimEnd('/') + "/"
+    }
+
+    /** a handle for a new file at 'relativePath' (e.g. 'out/new.txt') under the filesystem root */
+    internal fun newFile(relativePath: String): NewFileHandle {
+        checkOpen()
+        val segments = relativePath.split('/')
+        check(relativePath.isNotBlank() && !relativePath.startsWith("/") && segments.none { it.isEmpty() || it == "." || it == ".." }) {
+            "The path of a new file must be relative to the filesystem root, without '.' or '..' segments: '$relativePath'"
+        }
+        return NewFileHandle(relativePath, _rootPath!!, this)
+    }
+
+    /** the directory holding 'file', creating missing directories if 'create'; null if not found, or an entry on the path is not a directory */
+    private suspend fun directoryFor(file: NewFileHandle, create: Boolean): DirectoryHandle? {
+        var dir: DirectoryHandle = _parsedConfig.fsRoot()
+        for (seg in file.relativePath.split('/').dropLast(1)) {
+            dir = when (val e = dir.entry(seg)) {
+                null -> if (create) dir.createDirectory(seg) ?: return null else return null
+                is DirectoryHandle -> e
+                else -> error("Cannot create '${file.relativePath}': '$seg' is not a directory")
+            }
+        }
+        return dir
+    }
+
     // --- staged content: file path -> (file, content), applied on commit ---
 
     private val _staged = mutableMapOf<String, Pair<FileHandle, String>>()
@@ -155,9 +214,27 @@ class FilesystemDatastore(
         _staged[file.path] = Pair(file, content)
     }
 
+    /** checks that each new file can be created: no entry on its path is a file where a directory is needed, and its name is not a directory */
+    override suspend fun onPrepare() {
+        _staged.values.map { it.first }.filterIsInstance<NewFileHandle>().forEach { file ->
+            val dir = directoryFor(file, create = false)
+            if (null != dir) {
+                check(dir.entry(file.name).let { null == it || it is FileHandle }) { "Cannot create '${file.relativePath}': it is a directory" }
+            }
+        }
+    }
+
+    /** writes the staged contents; a new file is created first, with any missing directories (an existing file at its path is overwritten) */
     override suspend fun onCommit() {
         try {
-            _staged.values.forEach { (file, content) -> file.writeContent(content) }
+            _staged.values.forEach { (file, content) ->
+                val f = when (file) {
+                    is NewFileHandle -> directoryFor(file, create = true)?.getOrCreateFile(file.name)
+                        ?: error("Cannot create '${file.relativePath}'")
+                    else -> file
+                }
+                f.writeContent(content)
+            }
         } finally {
             _staged.clear()
         }
