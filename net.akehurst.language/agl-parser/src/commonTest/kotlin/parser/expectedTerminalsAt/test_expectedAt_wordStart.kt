@@ -77,4 +77,11 @@ class test_expectedAt_wordStart {
     // at 10 only ';' is expected, which cannot start with 'xyz', and parsing 'class Abc xyz' fails before 13
     @Test
     fun word_not_valid_here() = check("class Abc xyz", 13, 10, emptyMap())
+
+    // the text is a complete sentence, so end-of-text is expected
+    @Test
+    fun end_of_complete_sentence() = check("class Abc ;", 11, 10, mapOf(10 to setOf("';'"), 11 to setOf("<EOT>")))
+
+    @Test
+    fun after_complete_sentence() = check("class Abc ; ", 12, 12, mapOf(12 to setOf("<EOT>")))
 }

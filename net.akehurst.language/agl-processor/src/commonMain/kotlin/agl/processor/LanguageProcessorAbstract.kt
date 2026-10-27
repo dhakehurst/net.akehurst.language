@@ -310,8 +310,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val parserExpected = this.parser?.expectedAt(sentence, position, opts.parse)
                     ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
                 // only use spines for the 'unfinished word' reading (the parser also returns spines for the 'complete word' reading, at 'position')
+                // and not the spine that only expects end-of-text (the text so far being a complete sentence)
                 val spines = parserExpected.spines
                     .filter { it.usedPosition == parserExpected.usedPosition }
+                    .filterNot { sp -> sp.expectedNextTerminals.all { it.isEndOfText } }
                     .map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
                 val items = completionProvider!!.provide(spines, opts.completionProvider)
                 if (parserExpected.usedPosition == position) {

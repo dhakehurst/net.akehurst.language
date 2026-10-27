@@ -322,11 +322,11 @@ class LeftCornerParser(
         // the result is the union of both, each spine records the position it was computed for
         val atWordStart = expectedSpinesAt(sentenceText, wordStartPosition, options)
         val spines: Set<RuntimeSpine> = if (wordStartPosition == position) {
-            atWordStart.map { RuntimeSpineAt(it, wordStartPosition, it.expectedNextTerminals) }.toSet()
+            atWordStart.map { RuntimeSpineAt(it, wordStartPosition, it.expectedNextTerminals.filterIsInstance<RuntimeRule>().toSet()) }.toSet()
         } else {
             val partial = sentenceText.substring(wordStartPosition, position)
             val unfinished = atWordStart.mapNotNull { sp ->
-                val exp = sp.expectedNextTerminals.filter { rr ->
+                val exp = sp.expectedNextTerminals.filterIsInstance<RuntimeRule>().filter { rr ->
                     when {
                         rr.isLiteral -> rr.unescapedTerminalValue.startsWith(partial)
                         rr.isPattern -> true // pattern might match the partial word, keep it
@@ -339,7 +339,7 @@ class LeftCornerParser(
                     else -> RuntimeSpineAt(sp, wordStartPosition, exp)
                 }
             }.toSet()
-            val complete = expectedSpinesAt(sentenceText, position, options).map { RuntimeSpineAt(it, position, it.expectedNextTerminals) }
+            val complete = expectedSpinesAt(sentenceText, position, options).map { RuntimeSpineAt(it, position, it.expectedNextTerminals.filterIsInstance<RuntimeRule>().toSet()) }
             unfinished + complete
         }
         return ExpectedAtResultDefault(wordStartPosition, spines)
@@ -347,9 +347,10 @@ class LeftCornerParser(
 
     /**
      * parse the sentence from 0 up to 'usedPosition' (ignoring the rest of the text)
-     * and return the spines of the parse that fail at that position, i.e. what is expected next
+     * and return the spines of the parse that fail at that position, i.e. what is expected next.
+     * If the text up to 'usedPosition' is a complete sentence, a spine expecting <EOT> is also returned.
      */
-    private fun expectedSpinesAt(sentenceText: String, usedPosition: Int, options: ParseOptions): Set<RuntimeSpineDefault> {
+    private fun expectedSpinesAt(sentenceText: String, usedPosition: Int, options: ParseOptions): Set<RuntimeSpine> {
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val cacheSkip = options.cacheSkip
         val usedText = sentenceText.substring(0, usedPosition) // parse from start (0) to position - ignore rest of text
@@ -366,7 +367,12 @@ class LeftCornerParser(
             rp.grow3(possibleEndOfText, parseArgs) //TODO: maybe no need to build tree!
             seasons++
         }
-        return if (rp.failedReasons.isEmpty()) {
+        // if the text parsed is a complete sentence, then end-of-text is a valid next 'terminal'
+        val eotSpines: Set<RuntimeSpine> = when {
+            rp.graph.goals.isNotEmpty() && rp.graph.goalMatchedAll -> setOf(RuntimeSpineEndOfText(rp.stateSet.finishRulePosition, usedPosition))
+            else -> emptySet()
+        }
+        return eotSpines + if (rp.failedReasons.isEmpty()) {
             emptySet()
         } else {
             // need to include the 'startSkipFailures',

@@ -58,3 +58,23 @@ internal class RuntimeSpineAt(
 
     override fun toString(): String = "RTSpine@$usedPosition ${elements.joinToString(separator = "->") { it.toString() }}"
 }
+
+/**
+ * spine for a complete sentence, i.e. the goal rule is complete and only end-of-text is expected next
+ */
+internal class RuntimeSpineEndOfText(
+    finishRulePosition: RulePositionRuntime,
+    override val usedPosition: Int
+) : RuntimeSpine {
+    override val expectedNextTerminals: Set<RuntimeRule> = setOf(RuntimeRuleSet.END_OF_TEXT)
+    override val elements: List<RulePositionRuntime> = listOf(finishRulePosition)
+    override val nextChildNumber: Int = 1
+
+    override fun hashCode(): Int = arrayOf(elements, usedPosition).contentHashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is RuntimeSpineEndOfText -> false
+        else -> this.elements == other.elements && this.usedPosition == other.usedPosition
+    }
+
+    override fun toString(): String = "RTSpine@$usedPosition <EOT> ${elements.joinToString(separator = "->") { it.toString() }}"
+}
