@@ -475,7 +475,7 @@ internal class RuntimeParserAgl(
                     }
                     /*
                     val trgs = grp.value.filter { it.action == ParseAction.GRAFT }
-                        // if multiple GRAFT trans to same rule, prefer left most target
+                        // if multiple GRAFT trans to same rule, prefer left most target (i.e. the one least far along the rule, END_OF_RULE last)
                         .sortedWith(Comparator { t1, t2 ->
                             val p1 = t1.to.rulePositions.first().position
                             val p2 = t2.to.rulePositions.first().position
@@ -536,8 +536,8 @@ internal class RuntimeParserAgl(
     }
 
     private fun resolveGrafts1(grafts: List<Pair<Transition, LookaheadSetPart>>): List<Transition> {
-        // if multiple GRAFT trans to same rule, prefer left most target
-        grafts.sortedWith(Comparator { t1, t2 ->
+        // if multiple GRAFT trans to same rule, prefer left most target (i.e. the one least far along the rule, END_OF_RULE last)
+        val sortedGrafts = grafts.sortedWith(Comparator { t1, t2 ->
             val p1 = t1.first.target.rulePosition.first().position
             val p2 = t2.first.target.rulePosition.first().position
             when {
@@ -549,7 +549,7 @@ internal class RuntimeParserAgl(
                 else -> 0// should never happen !
             }
         })
-        return listOf(grafts.last().first)
+        return listOf(sortedGrafts.first().first)
     }
 
     private fun resolveGrafts2(grafts: List<Pair<Transition, LookaheadSetPart>>): List<Transition> {
