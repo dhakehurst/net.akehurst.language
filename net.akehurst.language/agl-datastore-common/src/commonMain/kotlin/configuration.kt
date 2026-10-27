@@ -20,6 +20,8 @@ import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProviderSchema
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
+import net.akehurst.datastore.api.PartialCommitException
+import net.akehurst.datastore.api.TransactionState
 import net.akehurst.datastore.api.DsConfigParameterDefinition
 import net.akehurst.datastore.api.DsConfigParameterInfo
 import net.akehurst.datastore.api.DsParameterSet
@@ -93,17 +95,98 @@ class DatastoreCompositionDefault(
 
     override suspend fun close() {
         if (_isOpen) {
+            val rb = try {
+                rollback(); null
+            } catch (t: Throwable) {
+                t
+            }
             _isOpen = false
-            closeAll(datastore.values.reversed())?.let { throw it }
+            val cl = closeAll(datastore.values.reversed())
+            when {
+                null != rb -> throw rb.also { e -> cl?.let { e.addSuppressed(it) } }
+                null != cl -> throw cl
+            }
         }
     }
 
+    private var _transactionState = TransactionState.NONE
+    override val transactionState: TransactionState get() = _transactionState
+
+    override suspend fun beginTransaction() {
+        check(_isOpen) { "Composition is not open" }
+        check(_transactionState == TransactionState.NONE) { "Composition already has a transaction" }
+        val begun = mutableListOf<Datastore>()
+        try {
+            for (ds in datastore.values) {
+                ds.beginTransaction()
+                begun.add(ds)
+            }
+        } catch (t: Throwable) {
+            rollbackAll(begun.reversed())?.let { t.addSuppressed(it) }
+            throw t
+        }
+        _transactionState = TransactionState.ACTIVE
+    }
+
+    /** prepares every part; if one fails, every part is rolled back and the failure is rethrown */
+    override suspend fun prepare() {
+        check(_transactionState == TransactionState.ACTIVE) { "Composition has no active transaction to prepare" }
+        try {
+            for (ds in datastore.values) {
+                ds.prepare()
+            }
+        } catch (t: Throwable) {
+            _transactionState = TransactionState.NONE
+            rollbackAll(datastore.values.reversed())?.let { t.addSuppressed(it) }
+            throw t
+        }
+        _transactionState = TransactionState.PREPARED
+    }
+
+    /**
+     * prepares (if not yet prepared), then commits the parts in chain order.
+     * If a part fails to commit, it and the parts after it are rolled back; if parts before it had committed,
+     * a PartialCommitException names them, otherwise the failure is rethrown (nothing was committed).
+     */
+    override suspend fun commit() {
+        check(_transactionState != TransactionState.NONE) { "Composition has no transaction to commit" }
+        if (_transactionState == TransactionState.ACTIVE) prepare()
+        val parts = datastore.values.toList()
+        for ((i, ds) in parts.withIndex()) {
+            try {
+                ds.commit()
+            } catch (t: Throwable) {
+                _transactionState = TransactionState.NONE
+                val notCommitted = parts.subList(i, parts.size)
+                rollbackAll(notCommitted.reversed())?.let { t.addSuppressed(it) }
+                when {
+                    0 == i -> throw t
+                    else -> throw PartialCommitException(parts.subList(0, i).map { it.identity }, notCommitted.map { it.identity }, t)
+                }
+            }
+        }
+        _transactionState = TransactionState.NONE
+    }
+
+    override suspend fun rollback() {
+        if (_transactionState != TransactionState.NONE) {
+            _transactionState = TransactionState.NONE
+            rollbackAll(datastore.values.reversed())?.let { throw it }
+        }
+    }
+
+    /** rolls back each datastore, in the given order, even if one fails; returns the first failure */
+    private suspend fun rollbackAll(datastores: List<Datastore>): Throwable? = forAll(datastores) { it.rollback() }
+
     /** closes each datastore, in the given order, even if closing one fails; returns the first failure */
-    private suspend fun closeAll(datastores: List<Datastore>): Throwable? {
+    private suspend fun closeAll(datastores: List<Datastore>): Throwable? = forAll(datastores) { it.close() }
+
+    /** does 'action' for each datastore, in the given order, even if it fails for one; returns the first failure */
+    private suspend fun forAll(datastores: List<Datastore>, action: suspend (Datastore) -> Unit): Throwable? {
         var first: Throwable? = null
         for (ds in datastores) {
             try {
-                ds.close()
+                action(ds)
             } catch (t: Throwable) {
                 val f = first
                 if (null == f) first = t else f.addSuppressed(t)

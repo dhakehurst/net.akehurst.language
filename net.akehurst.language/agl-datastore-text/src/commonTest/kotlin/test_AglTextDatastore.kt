@@ -185,6 +185,7 @@ class test_AglTextDatastore {
         }.root[0] as AsmStructure
         val cfg = accessConfiguration(AglTextProvider.IDENTITY) { }
         sut.open()
+        sut.beginTransaction()
         val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(asm, StdLibDefault.AnyType), TestProvenance))).toList()
 
         assertNotNull(actual)

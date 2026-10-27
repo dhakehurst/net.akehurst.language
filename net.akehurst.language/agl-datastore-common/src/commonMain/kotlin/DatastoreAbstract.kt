@@ -8,6 +8,7 @@ import net.akehurst.datastore.api.DataItem
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.TransactionState
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.issues.ram.IssueHolder
@@ -23,6 +24,10 @@ import net.akehurst.language.types.api.TypesDomain
  *
  * It also keeps the open/closed state: read and write fail unless the datastore is open.
  * Override onOpen()/onClose() to connect and disconnect, and implement doRead()/doWrite().
+ *
+ * It keeps the transaction state too: write fails unless a transaction is active.
+ * Override onBeginTransaction(), onPrepare(), onCommit() and onRollback(); they do nothing by default,
+ * which suits a datastore that does not change anything (e.g. one that only formats text).
  */
 abstract class DatastoreAbstract(
     override val identity: DatastoreIdentity,
@@ -64,9 +69,63 @@ abstract class DatastoreAbstract(
 
     final override suspend fun close() {
         if (_isOpen) {
-            _isOpen = false
-            onClose()
+            try {
+                rollback()
+            } finally {
+                _isOpen = false
+                onClose()
+            }
         }
+    }
+
+    private var _transactionState = TransactionState.NONE
+
+    final override val transactionState: TransactionState get() = _transactionState
+
+    /** called by beginTransaction() */
+    protected open suspend fun onBeginTransaction() {}
+
+    /** called by prepare(): throw if the staged changes cannot be committed */
+    protected open suspend fun onPrepare() {}
+
+    /** called by commit(): apply the staged changes */
+    protected open suspend fun onCommit() {}
+
+    /** called by rollback(): discard the staged changes */
+    protected open suspend fun onRollback() {}
+
+    final override suspend fun beginTransaction() {
+        checkOpen()
+        check(_transactionState == TransactionState.NONE) { "Datastore '${identity.value}' already has a transaction" }
+        onBeginTransaction()
+        _transactionState = TransactionState.ACTIVE
+    }
+
+    final override suspend fun prepare() {
+        check(_transactionState == TransactionState.ACTIVE) { "Datastore '${identity.value}' has no active transaction to prepare" }
+        onPrepare()
+        _transactionState = TransactionState.PREPARED
+    }
+
+    final override suspend fun commit() {
+        check(_transactionState != TransactionState.NONE) { "Datastore '${identity.value}' has no transaction to commit" }
+        if (_transactionState == TransactionState.ACTIVE) prepare()
+        onCommit()
+        _transactionState = TransactionState.NONE
+    }
+
+    final override suspend fun rollback() {
+        if (_transactionState != TransactionState.NONE) {
+            try {
+                onRollback()
+            } finally {
+                _transactionState = TransactionState.NONE
+            }
+        }
+    }
+
+    protected fun checkInTransaction() {
+        check(_transactionState == TransactionState.ACTIVE) { "Datastore '${identity.value}' has no active transaction; write inside a transaction" }
     }
 
     protected fun checkOpen() {
@@ -76,7 +135,7 @@ abstract class DatastoreAbstract(
     /** the read of this datastore; only called while it is open */
     protected abstract suspend fun doRead(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem>
 
-    /** the write of this datastore; only called while it is open */
+    /** the write of this datastore; only called while it is open and in a transaction. Stage the changes, apply them in onCommit(). */
     protected abstract suspend fun doWrite(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem>
 
     // checked when called, and again when the flow is collected, as the flow may be collected later
@@ -87,7 +146,8 @@ abstract class DatastoreAbstract(
 
     final override suspend fun write(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
         checkOpen()
-        return doWrite(accessConfiguration, input).onStart { checkOpen() }
+        checkInTransaction()
+        return doWrite(accessConfiguration, input).onStart { checkOpen(); checkInTransaction() }
     }
 
     final override suspend fun types(): TypesDomain =

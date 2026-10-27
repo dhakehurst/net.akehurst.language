@@ -141,7 +141,74 @@ interface DatastoreConfiguration {
 
 }
 
-interface Datastore {
+enum class TransactionState {
+    /** no transaction */
+    NONE,
+
+    /** begun; changes are staged, not applied */
+    ACTIVE,
+
+    /** prepare() succeeded: commit() is expected to succeed */
+    PREPARED
+}
+
+/**
+ * Transactions, with two-phase commit so that several datastores (e.g. the parts of a composition) commit all or nothing.
+ * A write stages its changes; nothing is applied until commit().
+ */
+interface Transactional {
+    val transactionState: TransactionState
+
+    /** starts a transaction. Fails if one is already active. */
+    suspend fun beginTransaction()
+
+    /** checks that commit() will succeed (e.g. validation, locks, permissions), and fails if not. Changes nothing. */
+    suspend fun prepare()
+
+    /** applies the staged changes. Calls prepare() first if it was not called. */
+    suspend fun commit()
+
+    /** discards the staged changes and ends the transaction. Does nothing if there is no transaction. */
+    suspend fun rollback()
+}
+
+/**
+ * Runs 'block' in a transaction: begins, runs the block, then prepares and commits.
+ * If anything fails, the transaction is rolled back and the failure is rethrown.
+ */
+suspend fun <T : Transactional, R> T.transaction(block: suspend (T) -> R): R {
+    beginTransaction()
+    try {
+        val result = block(this)
+        prepare()
+        commit()
+        return result
+    } catch (t: Throwable) {
+        if (transactionState != TransactionState.NONE) {
+            try {
+                rollback()
+            } catch (r: Throwable) {
+                t.addSuppressed(r)
+            }
+        }
+        throw t
+    }
+}
+
+/**
+ * A composition's commit failed after some of its datastores had committed, so the composition is not all-or-nothing.
+ * The datastores in 'notCommitted' were rolled back.
+ */
+class PartialCommitException(
+    val committed: List<DatastoreIdentity>,
+    val notCommitted: List<DatastoreIdentity>,
+    cause: Throwable
+) : RuntimeException(
+    "Commit failed part way: committed [${committed.joinToString { it.value }}], not committed (rolled back) [${notCommitted.joinToString { it.value }}]: ${cause.message}",
+    cause
+)
+
+interface Datastore : Transactional {
     val identity:DatastoreIdentity
 
     val configuration:DatastoreConfiguration
@@ -156,7 +223,7 @@ interface Datastore {
      */
     suspend fun open()
 
-    /** Releases what open() acquired, e.g. disconnects. Does nothing if the datastore is not open. */
+    /** Releases what open() acquired, e.g. disconnects; an active transaction is rolled back first. Does nothing if the datastore is not open. */
     suspend fun close()
 
     /**
@@ -173,6 +240,7 @@ interface Datastore {
      */
     suspend fun read(accessConfiguration:DatastoreConfiguration, input:Flow<DataItem>): Flow<DataItem>
 
+    /** must be called, and the flow collected, inside a transaction; the changes are applied by commit() */
     suspend fun write(accessConfiguration:DatastoreConfiguration, input:Flow<DataItem>): Flow<DataItem>
 
 }
@@ -235,7 +303,13 @@ interface AccessCompositionConfiguration {
     val part: Map<DatastoreIdentity, DatastoreConfiguration>
 }
 
-interface DatastoreComposition {
+/**
+ * A composition's transaction spans all of its parts, and commits all or nothing:
+ * beginTransaction() begins one on every part, prepare() prepares every part (if one fails, every part is rolled back),
+ * and commit() commits the parts only once all are prepared. If a part still fails to commit, the parts not yet committed
+ * are rolled back and a PartialCommitException names which parts committed.
+ */
+interface DatastoreComposition : Transactional {
 
     val configuration: DatastoreCompositionConfiguration
 
@@ -247,7 +321,7 @@ interface DatastoreComposition {
     /** opens the parts in chain order. If one fails, the parts already opened are closed again. */
     suspend fun open()
 
-    /** closes the parts in reverse chain order; every part is closed even if closing another one fails */
+    /** rolls back an active transaction, then closes the parts in reverse chain order; every part is closed even if closing another one fails */
     suspend fun close()
 
     suspend fun types(): TypesDomain
