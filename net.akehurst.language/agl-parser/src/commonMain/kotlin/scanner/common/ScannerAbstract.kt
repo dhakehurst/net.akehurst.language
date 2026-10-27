@@ -53,6 +53,12 @@ data class ScanResultDefault(
     override val allTokens: List<LeafData> by lazy { tokensByLine.flatten() }
 }
 
+data class ScanByLineEndState(
+    val tokens:List<LeafData>,
+    val eolPosition: Int,
+    val leftOverText: String
+)
+
 /**
  * @param literalOverLongerPattern when false (the default) the longest match wins and a literal only beats
  *   a pattern when both match the same length. When true a literal always beats a pattern, even a longer one.
@@ -181,6 +187,79 @@ abstract class ScannerAbstract(
             }
         }
         return lines
+    }
+
+    /*
+     * if tokens pass over an eol then we must scan that portion twice
+     * once for each line
+     */
+    fun scanByLine(previousState:ScanByLineEndState, sentence: Sentence, offsetPosition:Int): ScanByLineEndState {
+        val result = mutableListOf<LeafData>()
+        // start scanning at start of leftOverText
+        val startPosition = previousState.eolPosition - previousState.leftOverText.length  + 1
+        var currentUndefinedText = ""
+        var currentUndefinedStart = -1
+        var nextInputPosition = startPosition
+        while (nextInputPosition < sentence.text.length) {
+            val matches: List<LeafData> = this.matchables.mapNotNull {
+                val matchLength = it.matchedLength(sentence, nextInputPosition)
+                when (matchLength) {
+                    -1 -> null
+                    0 -> null
+                    else -> {
+                        LeafData(it.tag, it.kind == MatchableKind.REGEX, nextInputPosition + offsetPosition, matchLength, emptyList())
+                    }
+                }
+            }
+            // prefer literals over patterns
+            val longest = matches.maxWithOrNull(Comparator<LeafData> { l1, l2 ->
+                when {
+                    l1.isPattern.not() && l2.isPattern -> 1
+                    l1.isPattern && l2.isPattern.not() -> -1
+                    else -> when {
+//                        l1.location.length > l2.location.length -> 1
+//                        l2.location.length > l1.location.length -> -1
+                        l1.length > l2.length -> 1
+                        l2.length > l1.length -> -1
+                        else -> 0
+                    }
+                }
+            })
+            when {
+                //(null == longest || longest.location.length == 0) -> {
+                (null == longest || longest.length == 0) -> {
+                    val text = sentence.text[nextInputPosition].toString()
+                    if (-1 == currentUndefinedStart) {
+                        currentUndefinedStart = nextInputPosition
+                    }
+                    currentUndefinedText += text
+                    nextInputPosition += 1
+                }
+
+                else -> {
+                    if (-1 != currentUndefinedStart) {
+//                        val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
+//                        val ud = LeafData(undefined.tag, false, loc, emptyList())
+                        val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
+                        result.add(ud)
+                        currentUndefinedStart = -1
+                        currentUndefinedText = ""
+                    }
+                    result.add(longest)
+//                    nextInputPosition += longest.location.length
+                    nextInputPosition += longest.length
+                }
+            }
+        }
+        //catch undefined stuff at end
+        if (-1 != currentUndefinedStart) {
+            val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
+//            val ud = LeafData(undefined.tag, false, loc, emptyList())
+            val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
+            result.add(ud)
+        }
+        val leftOverText = ""
+        return ScanByLineEndState(result, nextInputPosition, leftOverText)
     }
 
 }
