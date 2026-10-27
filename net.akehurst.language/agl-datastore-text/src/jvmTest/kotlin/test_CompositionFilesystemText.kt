@@ -24,6 +24,9 @@ import kotlin.io.path.absolutePathString
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotSame
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 
@@ -145,8 +148,11 @@ class test_CompositionFilesystemText {
         // the generated association: ParsableUnit.owner and FileHandle.parsableUnit, both navigable through the link
         val am = composition.accessorMutator()
         println(composition.types().findNamespaceOrNull("composition".asQualifiedName)?.asString())
-        assertEquals(unitItem.parent!!.data.self, am.getPropertySuspend(unitItem.data, "owner").self)
-        assertEquals(unit, am.getPropertySuspend(unitItem.parent!!.data, "parsableUnit").self)
+        // navigation from the items' own data follows the links of this read
+        assertEquals(unitItem.parent!!.data.self, unitItem.data.getPropertySuspend("owner").self)
+        assertEquals(unit, unitItem.parent!!.data.getPropertySuspend("parsableUnit").self)
+        // the composition's own accessor-mutator holds no links
+        assertTrue(am.getPropertySuspend(unitItem.parent!!.data, "parsableUnit").isNothing)
 
         // the association owns those properties, the parts' types are not changed
         val types = composition.types()
@@ -199,13 +205,12 @@ class test_CompositionFilesystemText {
             actual.map { it.qualifiedIdentity.drop(1).map { id -> id.value } }
         )
         // each connection has its own derived association end on FileHandle
-        val am = composition.accessorMutator()
         val fileData = actual[0].parent!!.parent!!.data
-        assertEquals(actual[0].parent!!.data.self, am.getPropertySuspend(fileData, "first").self)
-        assertEquals(actual[1].parent!!.data.self, am.getPropertySuspend(fileData, "second").self)
+        assertEquals(actual[0].parent!!.data.self, fileData.getPropertySuspend("first").self)
+        assertEquals(actual[1].parent!!.data.self, fileData.getPropertySuspend("second").self)
         // and back, each by its own end name
-        assertEquals(fileData.self, am.getPropertySuspend(actual[0].parent!!.data, "firstOwner").self)
-        assertEquals(fileData.self, am.getPropertySuspend(actual[1].parent!!.data, "secondOwner").self)
+        assertEquals(fileData.self, actual[0].parent!!.data.getPropertySuspend("firstOwner").self)
+        assertEquals(fileData.self, actual[1].parent!!.data.getPropertySuspend("secondOwner").self)
     }
 
     @Test
@@ -231,4 +236,41 @@ class test_CompositionFilesystemText {
         assertFailsWith<IllegalStateException> { composition.types() }
     }
 
+
+    @Test
+    fun two_reads_have_independent_links() = runTest {
+        tempDir.resolve("test.txt").toFile().also {
+            it.createNewFile()
+            it.writeText("Hello World!")
+        }
+        val composition = datastoreComposition {
+            datastore("fs", FilesystemProvider.IDENTITY) {
+                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+            }
+            datastore("txt", AglTextProvider.IDENTITY) {
+                argument(AglTextProvider.CONFIG_GRAMMAR_STR, test_AglTextDatastore.grammarStr)
+                argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
+            }
+            connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE) {
+                end("owner", "filesystem.FileHandle", "\$self")
+                end("text", "String", "content.asString")
+            }
+        }
+        val acc = composition.accessConfiguration {
+            access("fs") {}
+            access("txt") {}
+        }
+        composition.open()
+
+        val first = composition.read(acc).toList()
+        val second = composition.read(acc).toList()
+
+        val unit1 = first[0].parent!!
+        val unit2 = second[0].parent!!
+        assertNotSame(unit1.data.self, unit2.data.self)
+        // the second read does not change the links of the first
+        assertSame(unit1.data.self, unit1.parent!!.data.getPropertySuspend("parsableUnit").self)
+        assertSame(unit2.data.self, unit2.parent!!.data.getPropertySuspend("parsableUnit").self)
+        assertEquals(unit1.parent!!.data.self, unit1.data.getPropertySuspend("owner").self)
+    }
 }

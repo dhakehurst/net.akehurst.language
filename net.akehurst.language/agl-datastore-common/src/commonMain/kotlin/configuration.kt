@@ -200,17 +200,24 @@ class DatastoreCompositionDefault(
         const val COMPOSITION_NAMESPACE = "composition"
     }
 
-    // cached, so the same types and accessor-mutator (which finds the association-owned properties) are used throughout
+    // cached, so the same types are used throughout
     private var _types: TypesDomain? = null
     private var _accessorMutator: ObjectGraphAccessorMutator? = null
 
     override suspend fun types(): TypesDomain = _types ?: createTypes().also { _types = it }
 
-    override suspend fun accessorMutator(): ObjectGraphAccessorMutator = _accessorMutator ?: ObjectGraphAccessorMutatorByReflection(
+    /**
+     * an accessor-mutator over the composed types, e.g. for building expressions.
+     * It holds no links: each read has its own accessor-mutator (see read), and the items it emits are typed by that one.
+     */
+    override suspend fun accessorMutator(): ObjectGraphAccessorMutator = _accessorMutator ?: newAccessorMutator().also { _accessorMutator = it }
+
+    /** a new accessor-mutator over the composed types, with its own (empty) store of association links */
+    private suspend fun newAccessorMutator(): ObjectGraphAccessorMutator = ObjectGraphAccessorMutatorByReflection(
         typesDomain = types(),
         issues = issues,
         locationMap = LocationMapDefault(),
-    ).also { _accessorMutator = it }
+    )
 
     /**
      * Merges the types of all parts, then adds a namespace for the composition,
@@ -265,8 +272,15 @@ class DatastoreCompositionDefault(
      * Reads the parts in order, passing each part's output to the next part's input.
      * If connections are configured from the previous part to the next, each item is adapted through each of them (fan-out).
      */
+    /**
+     * Each read has its own accessor-mutator, which holds the links that the read creates.
+     * Every item emitted (and its parents) is typed by it, so navigating from an item's data, e.g.
+     * item.data.getProperty("parsableUnit"), follows that read's links. Two reads never share links,
+     * and the links are freed with the items.
+     */
     override suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem> {
         check(_isOpen) { "Composition is not open" }
+        val am = newAccessorMutator()
         var previous: Datastore? = null
         var flow = emptyFlow<DataItem>()
         for (ds in datastore.values) {
@@ -275,14 +289,23 @@ class DatastoreCompositionDefault(
             val prev = previous
             val conns = prev?.let { p -> this.configuration.connection.filter { it.source == p.identity && it.target == ds.identity } } ?: emptyList()
             val input = when {
-                conns.isNotEmpty() -> adapt(conns, flow)
+                conns.isNotEmpty() -> adapt(conns, flow, am)
                 else -> flow
             }
             flow = ds.read(dsCfg, input)
             previous = ds
         }
-        return flow
+        return flow.map { retype(it, am) }
     }
+
+    /** the item, with its data and the data of its parents typed by 'am' */
+    private fun retype(item: DataItem, am: ObjectGraphAccessorMutator): DataItem = DataItemDefault(
+        parent = item.parent?.let { retype(it, am) },
+        identity = item.identity,
+        data = if (item.data.accessor === am) item.data else am.typedAs(item.data.self, item.data.type),
+        provenance = item.provenance,
+        issues = item.issues
+    )
 
     /**
      * For each source item, creates the target object of each connection.
@@ -290,9 +313,8 @@ class DatastoreCompositionDefault(
      * Ends with a primitive type are constructor arguments, ends with a DataType are set through the association.
      * The created item's identity is the connection's identity.
      */
-    private suspend fun adapt(connections: List<DatastoreConnection>, input: Flow<DataItem>): Flow<DataItem> {
+    private suspend fun adapt(connections: List<DatastoreConnection>, input: Flow<DataItem>, am: ObjectGraphAccessorMutator): Flow<DataItem> {
         val types = types()
-        val am = accessorMutator()
         val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(am)
         val adapters = connections.map { connection ->
             val targetType = connection.targetType.asPossiblyQualifiedName
