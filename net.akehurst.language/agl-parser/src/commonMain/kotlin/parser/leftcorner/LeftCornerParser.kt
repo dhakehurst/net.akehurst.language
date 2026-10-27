@@ -57,7 +57,9 @@ class ParseOptionsDefault(
         sentenceIdentity = sentenceIdentity,
         reportErrors = reportErrors,
         reportGrammarAmbiguities = reportGrammarAmbiguities,
-        cacheSkip = cacheSkip
+        cacheSkip = cacheSkip,
+        reverseFindWordStartRegex = reverseFindWordStartRegex,
+        reverseFindWordStartBySkipRules = reverseFindWordStartBySkipRules
     )
 }
 
@@ -185,7 +187,7 @@ class LeftCornerParser(
             // find embedded failures
             val map2 = map1.values.flatten().flatMap { v ->
                 when (v) {
-                    is FailedParseReasonEmbedded -> v.embededFailedParseReasons.map { it }
+                    is FailedParseReasonEmbedded -> v.embededFailedParseReasons.ifEmpty { listOf(v) }
                     else -> listOf(v)
                 }
             }.groupBy { it.failedAtPosition }
@@ -414,31 +416,27 @@ class LeftCornerParser(
         }
     }
 
-    private fun findLastMatchOf2(text:String, matchables: List<Matchable>):Int ? {
-        val str = matchables.joinToString(separator = "|") {
-            when (it.kind) {
-                MatchableKind.EOT -> ""
-                else -> "(${it.expression.escapedForRegex})"
-            }
-        }
-        val regex = str.toRegex()
+    /**
+     * Finds the start of the word being typed at the end of [text]:
+     * the end of the last skip match before the end of [text].
+     * Returns how many characters before the end of [text] the word starts,
+     * or null if no skip text is found (i.e. the word starts at the beginning of [text]).
+     */
+    private fun findLastMatchOf2(text: String, matchables: List<Matchable>): Int? {
+        val exprs = matchables
+            .filter { it.kind != MatchableKind.EOT }
+            .map { "(${it.expression.escapedForRegex})" }
+        if (exprs.isEmpty()) return null
+        val regex = exprs.joinToString(separator = "|").toRegex()
         var pos = text.length - 1
-        var lastMatchLen:Int? = null
-        while(null==lastMatchLen && pos >=0 ){
+        while (pos >= 0) {
             val match = regex.matchAt(text, pos)
-            if(null==match) {
-                //try one character more
-            } else {
-                if( text.length-1 == match.range.last) {
-                    lastMatchLen = pos+match.value.length
-                } else {
-                    // matched something that finished in wrong place, thus nothing found
-                    lastMatchLen = null
-                    break
-                }
+            if (null != match && match.value.isNotEmpty()) {
+                val wordStart = pos + match.value.length
+                return text.length - wordStart
             }
-            pos-=1
+            pos -= 1
         }
-        return lastMatchLen?.let { text.length - it }
+        return null
     }
 }

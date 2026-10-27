@@ -390,7 +390,7 @@ internal class ParseGraph(
         val newReasonList = reasonList+MergeReason.DYNAMIC_PRIORITY
         val extList = existingParent.dynamicPriority
         val newList = newParent.dynamicPriority
-        for (i in extList.indices) {
+        for (i in 0 until minOf(extList.size, newList.size)) {
             val e = extList[i]
             val n = newList[i]
             when {

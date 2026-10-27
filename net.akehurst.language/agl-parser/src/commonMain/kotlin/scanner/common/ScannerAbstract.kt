@@ -28,6 +28,7 @@ import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.regex.api.RegexEngine
 import net.akehurst.language.scanner.api.*
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.LeafData
 
 class ScanOptionsDefault(
@@ -52,14 +53,14 @@ data class ScanResultDefault(
     override val allTokens: List<LeafData> by lazy { tokensByLine.flatten() }
 }
 
-data class ScanByLineEndState(
-    val tokens:List<LeafData>,
-    val eolPosition: Int,
-    val leftOverText: String
-)
-
+/**
+ * @param literalOverLongerPattern when false (the default) the longest match wins and a literal only beats
+ *   a pattern when both match the same length. When true a literal always beats a pattern, even a longer one.
+ *   Only affects which token is chosen when a scanner picks one token per position, i.e. [scan] and [ScannerClassic].
+ */
 abstract class ScannerAbstract(
-    override val regexEngine: RegexEngine
+    override val regexEngine: RegexEngine,
+    val literalOverLongerPattern: Boolean = false
 ) : Scanner {
 
     abstract val validTerminals: List<Rule>
@@ -78,169 +79,108 @@ abstract class ScannerAbstract(
         return len
     }
 
+    /**
+     * Orders two matches at the same position; the greater one is preferred.
+     */
+    protected fun compareMatches(isPattern1: Boolean, length1: Int, isPattern2: Boolean, length2: Int): Int {
+        val byKind = when {
+            isPattern1.not() && isPattern2 -> 1
+            isPattern1 && isPattern2.not() -> -1
+            else -> 0
+        }
+        val byLength = length1.compareTo(length2)
+        return when {
+            literalOverLongerPattern -> if (0 != byKind) byKind else byLength
+            else -> if (0 != byLength) byLength else byKind
+        }
+    }
+
     override fun scan(sentence: Sentence, options: ScanOptions?): ScanResult {
         val opts = options ?: ScanOptionsDefault()
         //TODO: improve this algorithm...it is not efficient
         this.reset()
-        val startAtPosition = opts.startAtPosition
-        val offsetPosition = opts.offsetPosition
-        val inputText = sentence.text
         val issues = IssueHolder(LanguageProcessorPhase.SCAN)
+        val tokens = scanTokens(sentence, opts.startAtPosition, opts.offsetPosition)
         return when {
-            opts.resultsByLine -> {
-                val result = mutableListOf<List<LeafData>>()
-                val lines = sentence.text.split("\n")
-                var state = ScanByLineEndState(emptyList(), -1, "")
-                for(ln in lines) {
-                    val res = scanByLine(state,sentence, offsetPosition)
-                    result.add(res.tokens)
-                    state = res
-                }
-                ScanResultDefault(result, issues)
-            }
-            else -> {
-                val result = mutableListOf<LeafData>()
-                var position = startAtPosition
-                var nextInputPosition = position
-                var currentUndefinedText = ""
-                var currentUndefinedStart = -1
-                while (nextInputPosition < inputText.length) {
-                    val matches: List<LeafData> = this.matchables.mapNotNull {
-                        val matchLength = it.matchedLength(sentence, position)
-                        when (matchLength) {
-                            -1 -> null
-                            0 -> null
-                            else -> {
-                                //val loc = sentence.locationFor(startPosition, matchLength)
-                                //val matchedText = inputText.substring(startPosition, startPosition + matchLength)
-                                LeafData(it.tag, it.kind == MatchableKind.REGEX, position + offsetPosition, matchLength, emptyList())
-                            }
-                        }
-                    }
-                    // prefer literals over patterns
-                    val longest = matches.maxWithOrNull(Comparator<LeafData> { l1, l2 ->
-                        when {
-                            l1.isPattern.not() && l2.isPattern -> 1
-                            l1.isPattern && l2.isPattern.not() -> -1
-                            else -> when {
-//                        l1.location.length > l2.location.length -> 1
-//                        l2.location.length > l1.location.length -> -1
-                                l1.length > l2.length -> 1
-                                l2.length > l1.length -> -1
-                                else -> 0
-                            }
-                        }
-                    })
-                    when {
-                        //(null == longest || longest.location.length == 0) -> {
-                        (null == longest || longest.length == 0) -> {
-                            val text = inputText[nextInputPosition].toString()
-                            if (-1 == currentUndefinedStart) {
-                                currentUndefinedStart = nextInputPosition
-                            }
-                            currentUndefinedText += text
-                            nextInputPosition += 1
-                        }
-
-                        else -> {
-                            if (-1 != currentUndefinedStart) {
-//                        val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
-//                        val ud = LeafData(undefined.tag, false, loc, emptyList())
-                                val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
-                                result.add(ud)
-                                currentUndefinedStart = -1
-                                currentUndefinedText = ""
-                            }
-                            result.add(longest)
-//                    nextInputPosition += longest.location.length
-                            nextInputPosition += longest.length
-                        }
-                    }
-                    position = nextInputPosition
-                }
-                //catch undefined stuff at end
-                if (-1 != currentUndefinedStart) {
-                    val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
-//            val ud = LeafData(undefined.tag, false, loc, emptyList())
-                    val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
-                    result.add(ud)
-                }
-                 ScanResultDefault(listOf(result), issues)
-            }
+            opts.resultsByLine -> ScanResultDefault(splitByLine(sentence, tokens, opts.offsetPosition), issues)
+            else -> ScanResultDefault(listOf(tokens), issues)
         }
     }
 
-    /*
-     * if tokens pass over an eol then we must scan that portion twice
-     * once for each line
-     */
-    fun scanByLine(previousState:ScanByLineEndState, sentence: Sentence, offsetPosition:Int): ScanByLineEndState {
+    private fun scanTokens(sentence: Sentence, startAtPosition: Int, offsetPosition: Int): List<LeafData> {
+        val inputText = sentence.text
         val result = mutableListOf<LeafData>()
-        // start scanning at start of leftOverText
-        val startPosition = previousState.eolPosition - previousState.leftOverText.length  + 1
-        var currentUndefinedText = ""
+        var position = startAtPosition
         var currentUndefinedStart = -1
-        var nextInputPosition = startPosition
-        while (nextInputPosition < sentence.text.length) {
+        while (position < inputText.length) {
             val matches: List<LeafData> = this.matchables.mapNotNull {
-                val matchLength = it.matchedLength(sentence, nextInputPosition)
+                val matchLength = it.matchedLength(sentence, position)
                 when (matchLength) {
                     -1 -> null
                     0 -> null
-                    else -> {
-                        LeafData(it.tag, it.kind == MatchableKind.REGEX, nextInputPosition + offsetPosition, matchLength, emptyList())
-                    }
+                    else -> LeafData(it.tag, it.kind == MatchableKind.REGEX, position + offsetPosition, matchLength, emptyList())
                 }
             }
-            // prefer literals over patterns
-            val longest = matches.maxWithOrNull(Comparator<LeafData> { l1, l2 ->
-                when {
-                    l1.isPattern.not() && l2.isPattern -> 1
-                    l1.isPattern && l2.isPattern.not() -> -1
-                    else -> when {
-//                        l1.location.length > l2.location.length -> 1
-//                        l2.location.length > l1.location.length -> -1
-                        l1.length > l2.length -> 1
-                        l2.length > l1.length -> -1
-                        else -> 0
-                    }
-                }
-            })
-            when {
-                //(null == longest || longest.location.length == 0) -> {
-                (null == longest || longest.length == 0) -> {
-                    val text = sentence.text[nextInputPosition].toString()
+            val best = matches.maxWithOrNull { l1, l2 -> compareMatches(l1.isPattern, l1.length, l2.isPattern, l2.length) }
+            when (best) {
+                null -> {
                     if (-1 == currentUndefinedStart) {
-                        currentUndefinedStart = nextInputPosition
+                        currentUndefinedStart = position
                     }
-                    currentUndefinedText += text
-                    nextInputPosition += 1
+                    position += 1
                 }
 
                 else -> {
                     if (-1 != currentUndefinedStart) {
-//                        val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
-//                        val ud = LeafData(undefined.tag, false, loc, emptyList())
-                        val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
+                        val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, position - currentUndefinedStart, emptyList())
                         result.add(ud)
                         currentUndefinedStart = -1
-                        currentUndefinedText = ""
                     }
-                    result.add(longest)
-//                    nextInputPosition += longest.location.length
-                    nextInputPosition += longest.length
+                    result.add(best)
+                    position += best.length
                 }
             }
         }
         //catch undefined stuff at end
         if (-1 != currentUndefinedStart) {
-            val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
-//            val ud = LeafData(undefined.tag, false, loc, emptyList())
-            val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
+            val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, position - currentUndefinedStart, emptyList())
             result.add(ud)
         }
-        val leftOverText = ""
-        return ScanByLineEndState(result, nextInputPosition, leftOverText)
+        return result
+    }
+
+    /**
+     * Puts each token on the line where it is found (one list per line of the sentence).
+     * A token that passes over an EOL is split into segments, one per line,
+     * and the EOL character is its own segment, the last one on its line
+     * (the same convention as SharedPackedParseTree.tokensByLine).
+     */
+    private fun splitByLine(sentence: Sentence, tokens: List<LeafData>, offsetPosition: Int): List<List<LeafData>> {
+        val text = sentence.text
+        val eolPositions = SentenceDefault.eolPositions(text)
+        val lines = List(eolPositions.size + 1) { mutableListOf<LeafData>() }
+        var line = 0
+        for (tk in tokens) {
+            val start = tk.position - offsetPosition
+            val end = start + tk.length
+            while (line < eolPositions.size && eolPositions[line] < start) line++
+            var segStart = start
+            while (segStart < end) {
+                val eol = text.indexOf('\n', segStart)
+                if (-1 == eol || eol >= end) {
+                    lines[line].add(tk.copy(position = segStart + offsetPosition, length = end - segStart))
+                    segStart = end
+                } else {
+                    if (eol > segStart) {
+                        lines[line].add(tk.copy(position = segStart + offsetPosition, length = eol - segStart))
+                    }
+                    lines[line].add(tk.copy(position = eol + offsetPosition, length = 1))
+                    line++
+                    segStart = eol + 1
+                }
+            }
+        }
+        return lines
     }
 
 }

@@ -31,12 +31,14 @@ import net.akehurst.language.sppt.treedata.CompleteTreeDataNode
  * Classical scanner that does the scanning up-front and fixes the token list.
  * When there are multiple options to match,
  * Longest match takes priority.
- * Literal values take priority over patterns (i.e. Keywords will take priority over identifiers).
+ * For matches of the same length, literal values take priority over patterns (i.e. Keywords will take priority over identifiers).
+ * Set [literalOverLongerPattern] to true to make literals take priority even over longer pattern matches.
  */
 class ScannerClassic(
     regexEngine: RegexEngine,
-    terminals: List<Rule>
-) : ScannerAbstract(regexEngine) {
+    terminals: List<Rule>,
+    literalOverLongerPattern: Boolean = false
+) : ScannerAbstract(regexEngine, literalOverLongerPattern) {
 
     companion object {
         val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, RulePosition.OPTION_NONE, emptyList())
@@ -99,17 +101,8 @@ class ScannerClassic(
                 }
             }
         }
-        // prefer literals over patterns
         val longest = matches.maxWithOrNull { l1, l2 ->
-            when {
-                l1.rule.isPattern.not() && l2.rule.isPattern -> 1
-                l1.rule.isPattern && l2.rule.isPattern.not() -> -1
-                else -> when {
-                    l1.nextInputPosition > l2.nextInputPosition -> 1
-                    l2.nextInputPosition > l1.nextInputPosition -> -1
-                    else -> 0
-                }
-            }
+            compareMatches(l1.rule.isPattern, l1.nextInputPosition - position, l2.rule.isPattern, l2.nextInputPosition - position)
         }
         return when (longest) {
             null -> LEAF_NONE

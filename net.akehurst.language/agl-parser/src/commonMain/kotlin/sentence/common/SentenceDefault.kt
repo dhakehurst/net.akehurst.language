@@ -98,9 +98,10 @@ abstract class SentenceAbstract(
         val forTextAfterLastEol = forText.substring(s)
         //val startOrStartOfLine = startIndex + startOfLine
         val prefix = when {
-            startOfLine > 0 -> ""
-            startIndex > 0 -> "..."
-            else -> ""
+            startOfLine >= 0 -> "" // context starts at the beginning of a line
+            0 == startIndex -> "" // context starts at the beginning of the text
+            this.text[startIndex - 1] == '\n' || this.text[startIndex - 1] == '\r' -> "" // context starts at the beginning of a line
+            else -> "..."
         }
         val postFix = if (endIndex < this.text.length) "..." else ""
         return "$prefix$forTextAfterLastEol^$aftText$postFix"

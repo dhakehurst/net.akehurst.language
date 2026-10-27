@@ -93,7 +93,7 @@ internal class RuntimeParserAgl(
     private val skipParser = skipStateSet?.let {
         if (this.stateSet.preBuilt) this.skipStateSet.build()
         val skipScanner = when (scanner) {
-            is ScannerOnDemand -> ScannerOnDemand(this.scanner.regexEngine, skipStateSet.usedTerminalRules.toList())
+            is ScannerOnDemand -> ScannerOnDemand(this.scanner.regexEngine, skipStateSet.usedTerminalRules.toList(), this.scanner.literalOverLongerPattern)
             is ScannerClassic -> scanner //ScannerClassic(this.scanner.sentence.text, skipStateSet.usedTerminalRules.toList())
             else -> error("subtype of Scanner unsupported - ${scanner::class.simpleName}")
         }
@@ -1205,7 +1205,8 @@ internal class RuntimeParserAgl(
                 parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
                 else -> emptyMap()
             }
-            val fr = failedEmbeddedReasons[failedEmbeddedReasons.keys.max()]!!
+            // embedded parser may not have recorded any reasons
+            val fr = failedEmbeddedReasons.keys.maxOrNull()?.let { failedEmbeddedReasons[it] } ?: emptyList()
             failedReasonsAdd(FailedParseReasonEmbedded(this.isSkipParser, failedAtPosition, head, transition, gssSnapshot, fr))
         }
     }

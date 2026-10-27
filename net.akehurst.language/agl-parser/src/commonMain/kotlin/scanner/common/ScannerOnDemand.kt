@@ -29,8 +29,9 @@ import net.akehurst.language.sppt.treedata.CompleteTreeDataNode
 
 class ScannerOnDemand(
     regexEngine: RegexEngine,
-    terminals: List<Rule>
-) : ScannerAbstract(regexEngine) {
+    terminals: List<Rule>,
+    literalOverLongerPattern: Boolean = false
+) : ScannerAbstract(regexEngine, literalOverLongerPattern) {
 
     companion object {
         val END_OF_TEXT = 3.toChar().toString()
