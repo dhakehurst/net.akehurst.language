@@ -50,6 +50,14 @@ internal data class RuntimeContext(
     val prevPrev: GrowingNodeIndex? // null if head is goal
 )
 
+/**
+ * Thrown when the parser exceeds the number of non-progressing steps.
+ * Caught by LeftCornerParser.parse and reported as an error issue.
+ */
+internal class ParserWontStopException(
+    val position: Int
+) : RuntimeException(IssueMessage.PARSER_WONT_STOP)
+
 internal class RuntimeParserAgl(
     val sentence: Sentence, //FIXME: should really be a method argument
     val isSkipParser: Boolean,
@@ -244,7 +252,8 @@ internal class RuntimeParserAgl(
 
             val progStep = progressSteps[head] //FIXME: maybe slow - is there a better way?
             if (progStep > 1000) { //FIXME: make part of config
-                this.interrupt(IssueMessage.PARSER_WONT_STOP) //TODO: include why - which node/rule
+                //TODO: include why - which node/rule
+                throw ParserWontStopException(head.nextInputPositionAfterSkip)
             } else {
                 progressSteps[head] = progStep + 1
             }

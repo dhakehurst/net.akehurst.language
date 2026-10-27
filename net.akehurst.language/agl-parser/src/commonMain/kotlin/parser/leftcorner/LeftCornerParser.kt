@@ -27,6 +27,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.*
+import net.akehurst.language.parsermessages.IssueMessage
 import net.akehurst.language.scanner.api.Matchable
 import net.akehurst.language.scanner.api.MatchableKind
 import net.akehurst.language.scanner.api.Scanner
@@ -148,17 +149,24 @@ class LeftCornerParser(
             false,
             false
         )
-        val startSkipFailures = rp.start(0, possibleEndOfText, parseArgs)
         var seasons = 1
-        var maxNumHeads = rp.graph.numberOfHeads
-        var totalWork = maxNumHeads
+        var maxNumHeads = 0
+        try {
+            val startSkipFailures = rp.start(0, possibleEndOfText, parseArgs)
+            maxNumHeads = rp.graph.numberOfHeads
+            var totalWork = maxNumHeads
 
-        while (rp.graph.hasNextHead && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
-            if (Debug.OUTPUT_RUNTIME) println("season $seasons ===================================")
-            val steps = rp.grow3(possibleEndOfText, parseArgs)
-            seasons += steps
-            maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
-            totalWork += rp.graph.numberOfHeads
+            while (rp.graph.hasNextHead && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
+                if (Debug.OUTPUT_RUNTIME) println("season $seasons ===================================")
+                val steps = rp.grow3(possibleEndOfText, parseArgs)
+                seasons += steps
+                maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
+                totalWork += rp.graph.numberOfHeads
+            }
+        } catch (e: ParserWontStopException) {
+            val length = if (e.position < sentence.text.length) 1 else 0
+            this._issues.error(sentence.locationFor(e.position, length), IssueMessage.PARSER_WONT_STOP)
+            return ParseResultDefault(null, this._issues)
         }
 
         val match = rp.graph.treeData.complete

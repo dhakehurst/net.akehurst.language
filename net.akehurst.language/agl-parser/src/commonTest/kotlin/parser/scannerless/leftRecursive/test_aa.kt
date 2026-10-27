@@ -20,6 +20,9 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
+import net.akehurst.language.parsermessages.IssueMessage
+import kotlin.test.assertTrue
+import kotlin.test.assertNull
 import kotlin.test.assertFailsWith
 
 class test_aa : test_LeftCornerParserAbstract() {
@@ -70,15 +73,10 @@ class test_aa : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<IllegalStateException> {
-            super.test_pass(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-            )
-        }
+        // parser does not terminate for this grammar, reported as an error issue
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertTrue(issues.errors.any { it.message == IssueMessage.PARSER_WONT_STOP }, issues.toString())
     }
 
     @Test
@@ -95,14 +93,9 @@ class test_aa : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<IllegalStateException> {
-            super.test_pass(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-            )
-        }
+        // parser does not terminate for this grammar, reported as an error issue
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertTrue(issues.errors.any { it.message == IssueMessage.PARSER_WONT_STOP }, issues.toString())
     }
 }
