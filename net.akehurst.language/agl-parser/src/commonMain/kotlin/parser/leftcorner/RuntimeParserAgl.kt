@@ -475,7 +475,7 @@ internal class RuntimeParserAgl(
                     }
                     /*
                     val trgs = grp.value.filter { it.action == ParseAction.GRAFT }
-                        // if multiple GRAFT trans to same rule, prefer left most target (i.e. the one least far along the rule, END_OF_RULE last)
+                        // if multiple GRAFT trans to same rule, prefer left most target
                         .sortedWith(Comparator { t1, t2 ->
                             val p1 = t1.to.rulePositions.first().position
                             val p2 = t2.to.rulePositions.first().position
