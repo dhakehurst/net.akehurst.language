@@ -45,7 +45,7 @@ class test_Embedded : test_ExpectedTerminasAtAbstract() {
 
         val testData = listOf(
             TestData("", 0, setOf("'a'", "'d'", "'e'")),
-            TestData("a", 1, setOf("<EOT>")),
+            TestData("a", 1, setOf("'a'", "<EOT>")),
         )
 
     }

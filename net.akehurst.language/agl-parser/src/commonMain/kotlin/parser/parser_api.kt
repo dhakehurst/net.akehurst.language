@@ -246,6 +246,17 @@ interface ParseOptions {
      */
     var reverseFindWordStartBySkipRules: Boolean
 
+    /**
+     * Only used by expectedAt when [reverseFindWordStartBySkipRules] is true.
+     * The text between the last skip match (e.g. whitespace) and the position is scanned into tokens.
+     * When false, only the start of the last of those tokens is used as the start of a possibly unfinished word.
+     * When true, the start of every one of those tokens is used,
+     * e.g. so that 'ab' (scanned as 'a' 'b') can also be the start of an unfinished 'abc'.
+     *
+     * Default value: `false`.
+     */
+    var expectedAtFromAllTokenStarts: Boolean
+
     fun clone(): ParseOptions
 }
 

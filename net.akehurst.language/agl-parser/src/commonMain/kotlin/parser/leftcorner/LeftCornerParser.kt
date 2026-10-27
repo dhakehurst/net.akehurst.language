@@ -31,6 +31,7 @@ import net.akehurst.language.parsermessages.IssueMessage
 import net.akehurst.language.scanner.api.Matchable
 import net.akehurst.language.scanner.api.MatchableKind
 import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.scanner.common.ScanOptionsDefault
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
@@ -50,7 +51,8 @@ class ParseOptionsDefault(
     override var reportGrammarAmbiguities: Boolean = false,
     override var cacheSkip: Boolean = true,
     override var reverseFindWordStartRegex: String? = null,
-    override var reverseFindWordStartBySkipRules: Boolean = true
+    override var reverseFindWordStartBySkipRules: Boolean = true,
+    override var expectedAtFromAllTokenStarts: Boolean = false
 ) : ParseOptions {
     override fun clone() = ParseOptionsDefault(
         enabled = enabled,
@@ -60,7 +62,8 @@ class ParseOptionsDefault(
         reportGrammarAmbiguities = reportGrammarAmbiguities,
         cacheSkip = cacheSkip,
         reverseFindWordStartRegex = reverseFindWordStartRegex,
-        reverseFindWordStartBySkipRules = reverseFindWordStartBySkipRules
+        reverseFindWordStartBySkipRules = reverseFindWordStartBySkipRules,
+        expectedAtFromAllTokenStarts = expectedAtFromAllTokenStarts
     )
 }
 
@@ -314,35 +317,74 @@ class LeftCornerParser(
     }
 
     override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult {
-        val revWordStartPosition = findReverseStartPosition(sentenceText, position, options)
-        val wordStartPosition = position - revWordStartPosition
-        // the text between word start and position (if any) could be either
+        // the text between a word start and position (if any) could be either
         //  1) an unfinished token - so expected terminals are those at the word start, that could start with the partial word
         //  2) a complete token - so expected terminals are those after the partial word
         // the result is the union of both, each spine records the position it was computed for
-        val atWordStart = expectedSpinesAt(sentenceText, wordStartPosition, options)
-        val spines: Set<RuntimeSpine> = if (wordStartPosition == position) {
-            atWordStart.map { RuntimeSpineAt(it, wordStartPosition, it.expectedNextTerminals.filterIsInstance<RuntimeRule>().toSet()) }.toSet()
-        } else {
-            val partial = sentenceText.substring(wordStartPosition, position)
-            val unfinished = atWordStart.mapNotNull { sp ->
-                val exp = sp.expectedNextTerminals.filterIsInstance<RuntimeRule>().filter { rr ->
+        val wordStarts = findWordStartPositions(sentenceText, position, options)
+        val wordStartPosition = wordStarts.last()
+        val unfinished = wordStarts.flatMap { ws ->
+            val atWordStart = expectedSpinesAt(sentenceText, ws, options)
+            if (ws == position) {
+                atWordStart.map { RuntimeSpineAt(it, ws, it.expectedNextTerminals.filterIsInstance<RuntimeRule>().toSet()) }
+            } else {
+                val partial = sentenceText.substring(ws, position)
+                atWordStart.mapNotNull { sp ->
+                    val exp = sp.expectedNextTerminals.filterIsInstance<RuntimeRule>().filter { rr ->
+                        when {
+                            rr.isLiteral -> rr.unescapedTerminalValue.startsWith(partial)
+                            rr.isPattern -> true // pattern might match the partial word, keep it
+                            rr.isTerminal -> false // e.g. <EOT>, <EMPTY> cannot be the partial word
+                            else -> true
+                        }
+                    }.toSet()
                     when {
-                        rr.isLiteral -> rr.unescapedTerminalValue.startsWith(partial)
-                        rr.isPattern -> true // pattern might match the partial word, keep it
-                        rr.isTerminal -> false // e.g. <EOT>, <EMPTY> cannot be the partial word
-                        else -> true
+                        exp.isEmpty() -> null
+                        else -> RuntimeSpineAt(sp, ws, exp)
                     }
-                }.toSet()
-                when {
-                    exp.isEmpty() -> null
-                    else -> RuntimeSpineAt(sp, wordStartPosition, exp)
                 }
-            }.toSet()
-            val complete = expectedSpinesAt(sentenceText, position, options).map { RuntimeSpineAt(it, position, it.expectedNextTerminals.filterIsInstance<RuntimeRule>().toSet()) }
-            unfinished + complete
+            }
+        }.toSet()
+        val complete = when {
+            wordStartPosition == position -> emptySet()
+            else -> expectedSpinesAt(sentenceText, position, options).map { RuntimeSpineAt(it, position, it.expectedNextTerminals.filterIsInstance<RuntimeRule>().toSet()) }.toSet()
         }
-        return ExpectedAtResultDefault(wordStartPosition, spines)
+        return ExpectedAtResultDefault(wordStartPosition, unfinished + complete)
+    }
+
+    /**
+     * possible start positions (ascending) of a word that might be unfinished at 'position'.
+     * When finding the word start by skip rules, the text after the last skip match (or from 0 if there are no skip rules)
+     * is scanned into tokens, and the start of the last token (or of all tokens, see [ParseOptions.expectedAtFromAllTokenStarts]) is used.
+     * The last entry is the start of the last token.
+     */
+    private fun findWordStartPositions(sentenceText: String, position: Int, options: ParseOptions): List<Int> {
+        return when {
+            options.reverseFindWordStartBySkipRules -> {
+                val matchables = this.runtimeRuleSet.skipParserStateSet?.let {
+                    it.usedTerminalRules.mapNotNull { (it.rhs as RuntimeRuleRhsTerminal).matchable }
+                }
+                val afterSkip = when (matchables) {
+                    null -> 0
+                    else -> position - (findLastMatchOf2(sentenceText.substring(0, position), matchables) ?: position)
+                }
+                val tokenStarts = when {
+                    afterSkip >= position -> emptyList()
+                    else -> {
+                        scanner.reset()
+                        val sr = scanner.scan(SentenceDefault(sentenceText.substring(0, position), options.sentenceIdentity.invoke()), ScanOptionsDefault(startAtPosition = afterSkip))
+                        sr.allTokens.map { it.position }.filter { it in afterSkip until position }.distinct().sorted()
+                    }
+                }
+                when {
+                    tokenStarts.isEmpty() -> listOf(afterSkip)
+                    options.expectedAtFromAllTokenStarts -> tokenStarts
+                    else -> listOf(tokenStarts.last())
+                }
+            }
+
+            else -> listOf(position - findReverseStartPosition(sentenceText, position, options))
+        }
     }
 
     /**

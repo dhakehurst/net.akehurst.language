@@ -49,7 +49,7 @@ class test_ab : test_ExpectedTerminasAtAbstract() {
             TestData(" a ", 3, setOf("'b'")),
             TestData("ab", 0, setOf("'a'")),
             TestData("ab", 1, setOf("'a'", "'b'")),
-            TestData("ab", 2, setOf("<EOT>")),
+            TestData("ab", 2, setOf("'b'", "<EOT>")),
         )
     }
 

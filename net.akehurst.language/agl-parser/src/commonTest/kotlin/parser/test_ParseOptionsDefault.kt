@@ -30,7 +30,8 @@ class test_ParseOptionsDefault {
             reportGrammarAmbiguities = true,
             cacheSkip = false,
             reverseFindWordStartRegex = "[a-z]+",
-            reverseFindWordStartBySkipRules = false
+            reverseFindWordStartBySkipRules = false,
+            expectedAtFromAllTokenStarts = true
         )
         val actual = orig.clone()
         assertEquals(orig.enabled, actual.enabled)
@@ -41,5 +42,6 @@ class test_ParseOptionsDefault {
         assertEquals(orig.cacheSkip, actual.cacheSkip)
         assertEquals(orig.reverseFindWordStartRegex, actual.reverseFindWordStartRegex)
         assertEquals(orig.reverseFindWordStartBySkipRules, actual.reverseFindWordStartBySkipRules)
+        assertEquals(orig.expectedAtFromAllTokenStarts, actual.expectedAtFromAllTokenStarts)
     }
 }

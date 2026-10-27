@@ -64,6 +64,7 @@ class ParseOptionsBuilder(
     private var _cacheSkip: Boolean = base.cacheSkip
     private var _reverseFindWordStartRegex = base.reverseFindWordStartRegex
     private var _reverseFindWordStartBySkipRules = base.reverseFindWordStartBySkipRules
+    private var _expectedAtFromAllTokenStarts = base.expectedAtFromAllTokenStarts
 
     fun enabled(value: Boolean) {
         _enabled = value
@@ -97,6 +98,10 @@ class ParseOptionsBuilder(
         _reverseFindWordStartBySkipRules = value
     }
 
+    fun expectedAtFromAllTokenStarts(value: Boolean) {
+        _expectedAtFromAllTokenStarts = value
+    }
+
     fun build(): ParseOptions {
         return ParseOptionsDefault(
             _enabled,
@@ -106,7 +111,8 @@ class ParseOptionsBuilder(
             _reportGrammarAmbiguities,
             _cacheSkip,
             _reverseFindWordStartRegex,
-            _reverseFindWordStartBySkipRules
+            _reverseFindWordStartBySkipRules,
+            _expectedAtFromAllTokenStarts
         )
     }
 }
