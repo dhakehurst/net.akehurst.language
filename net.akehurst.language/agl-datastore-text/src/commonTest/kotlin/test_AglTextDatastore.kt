@@ -110,6 +110,7 @@ class test_AglTextDatastore {
         val cfg = accessConfiguration(AglTextProvider.IDENTITY) {
 
         }
+        sut.open()
         val actual = sut.read(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject("Hello World !", StdLibDefault.String), TestProvenance))).toList()
 
         val expected = asmSimple(sut.types()) {
@@ -136,6 +137,8 @@ class test_AglTextDatastore {
             DataItemDefault(null, DataItemIdentity("good"), og.toTypedObject("Hello World !", StdLibDefault.String), TestProvenance),
         )
 
+        sut.open()
+
         val actual = sut.read(cfg, input).toList()
 
         // the bad item does not stop the read
@@ -156,6 +159,8 @@ class test_AglTextDatastore {
         val og = sut.accessorMutator()
         val cfg = accessConfiguration(AglTextProvider.IDENTITY) {}
         val root = DataItemDefault(null, DataItemIdentity("root"), og.toTypedObject("Hello World !", StdLibDefault.String), TestProvenance)
+
+        sut.open()
 
         val actual = sut.read(cfg, flowOf(root)).toList()
 
@@ -179,6 +184,7 @@ class test_AglTextDatastore {
             }
         }.root[0] as AsmStructure
         val cfg = accessConfiguration(AglTextProvider.IDENTITY) { }
+        sut.open()
         val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(asm, StdLibDefault.AnyType), TestProvenance))).toList()
 
         assertNotNull(actual)

@@ -27,6 +27,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | P3b | An access configuration selects which objects a read or write deals with (e.g. a glob of file paths, or a query). It filters the objects retrieved, it does not change their types. | done (the filesystem datastore applies `access.glob` to paths relative to its root) |
 | P4 | `Datastore.accessorMutator()` returns the accessor/mutator for that data. It takes no configuration. | done |
 | P5 | `types()` and `accessorMutator()` return the same instances on every call, and every object a datastore emits is typed against those types. Implementations extend `DatastoreAbstract` (agl-datastore-common), which creates both once, from `createTypes()` and an overridable `createAccessorMutator(types)`. | done |
+| P8 | A datastore has a lifecycle: `open()` prepares it (e.g. connects and logs in to a remote tool) and `close()` releases it. `read`/`write` fail unless it is open, also when a returned flow is collected after close. `open()` on an open datastore fails, `close()` on a closed one does nothing, and it can be opened again. `use { }` opens, runs the block, and closes even if the block throws. `DatastoreAbstract` keeps the state; implementations override `onOpen()`/`onClose()` (no-ops by default) and implement `doRead()`/`doWrite()`. | done |
 | P7 | A datastore's types are never changed by a composition that uses it. | done |
 | P6 | The namespaces of a datastore's types are created by its provider. They are not prefixed by the datastore identity: two datastores from the same provider in one composition share the same types. | done |
 
@@ -52,6 +53,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | C5 | The composed types are the merge of the parts' types, plus a namespace `composition`. | done |
 | C6 | For each connection end whose type is a `DataType`, the composition generates an association in the `composition` namespace, e.g. `ParsableUnit.owner : FileHandle` and the derived `FileHandle.parsableUnit : ParsableUnit?`. The association owns these end properties; they are not added to the end types. Ends with a primitive type (e.g. `String`) are constructor arguments of the target type. | done |
 | C8 | A connection has an optional `name`. Its `identity` is the name, or else the target type's simple name with a lower-case first letter (e.g. `parsableUnit`). Connections from the same source to the same target must have different identities. The identity is used for the created items and for the derived association end on the source type. | done |
+| C9 | A composition's `open()` opens its parts in chain order; if one fails, the parts already opened are closed again. `close()` closes them in reverse order, closing every part even if one fails. `read` fails unless the composition is open, and it has `use { }` too. | done |
 | C7 | The target object of a connection is constructed inside read/write. The derived association end returns the object that read/write constructed; it does not construct one. | done |
 
 ### Types (agl-processor)

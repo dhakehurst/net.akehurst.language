@@ -146,6 +146,19 @@ interface Datastore {
 
     val configuration:DatastoreConfiguration
 
+    /** true between open() and close() */
+    val isOpen: Boolean
+
+    /**
+     * Prepares the datastore for read and write, e.g. connects and logs in to a remote tool.
+     * read and write fail unless the datastore is open. Fails if it is already open.
+     * After close() it can be opened again.
+     */
+    suspend fun open()
+
+    /** Releases what open() acquired, e.g. disconnects. Does nothing if the datastore is not open. */
+    suspend fun close()
+
     /**
      * The types of the data this datastore reads and writes.
      * They are fixed for this datastore: they may depend on its datastore configuration, never on an access configuration.
@@ -162,6 +175,16 @@ interface Datastore {
 
     suspend fun write(accessConfiguration:DatastoreConfiguration, input:Flow<DataItem>): Flow<DataItem>
 
+}
+
+/** opens this datastore, runs 'block', and closes the datastore even if 'block' throws */
+suspend fun <D : Datastore, R> D.use(block: suspend (D) -> R): R {
+    open()
+    try {
+        return block(this)
+    } finally {
+        close()
+    }
 }
 
 /**
@@ -218,9 +241,28 @@ interface DatastoreComposition {
 
     fun create(registry: DatastoreProviderRegistry)
 
+    /** true between open() and close() */
+    val isOpen: Boolean
+
+    /** opens the parts in chain order. If one fails, the parts already opened are closed again. */
+    suspend fun open()
+
+    /** closes the parts in reverse chain order; every part is closed even if closing another one fails */
+    suspend fun close()
+
     suspend fun types(): TypesDomain
 
     suspend fun accessorMutator(): ObjectGraphAccessorMutator
     suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem>
     suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>)
+}
+
+/** opens this composition, runs 'block', and closes the composition even if 'block' throws */
+suspend fun <C : DatastoreComposition, R> C.use(block: suspend (C) -> R): R {
+    open()
+    try {
+        return block(this)
+    } finally {
+        close()
+    }
 }

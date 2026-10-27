@@ -122,6 +122,7 @@ class test_CompositionFilesystemText {
 
             }
         }
+        composition.open()
         val actual = composition.read(acc).toList()
 
         val expected = listOf(
@@ -186,6 +187,8 @@ class test_CompositionFilesystemText {
             access("fs") {}
             access("txt") {}
         }
+
+        composition.open()
 
         val actual = composition.read(acc).toList()
 

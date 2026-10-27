@@ -114,7 +114,7 @@ class AglTextDatastore(
      * input: DataItem with String or ParsableUnit data
      * output: DataItem with Asm data, whose parent is the input item
      */
-    override suspend fun read(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
+    override suspend fun doRead(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
         return input.map { parseString(accessConfiguration, it) }
     }
 
@@ -122,7 +122,7 @@ class AglTextDatastore(
      * input: DataItem with Asm data
      * output: DataItem with String data, whose parent is the input item
      */
-    override suspend fun write(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
+    override suspend fun doWrite(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
         return input.map { derivedItem(it, formatObject(accessConfiguration, it.data)) }
     }
 

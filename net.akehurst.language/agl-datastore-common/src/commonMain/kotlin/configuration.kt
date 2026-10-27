@@ -73,6 +73,45 @@ class DatastoreCompositionDefault(
         }
     }
 
+    private var _isOpen = false
+    override val isOpen: Boolean get() = _isOpen
+
+    override suspend fun open() {
+        check(_isOpen.not()) { "Composition is already open" }
+        val opened = mutableListOf<Datastore>()
+        try {
+            for (ds in datastore.values) {
+                ds.open()
+                opened.add(ds)
+            }
+        } catch (t: Throwable) {
+            closeAll(opened.reversed())?.let { t.addSuppressed(it) }
+            throw t
+        }
+        _isOpen = true
+    }
+
+    override suspend fun close() {
+        if (_isOpen) {
+            _isOpen = false
+            closeAll(datastore.values.reversed())?.let { throw it }
+        }
+    }
+
+    /** closes each datastore, in the given order, even if closing one fails; returns the first failure */
+    private suspend fun closeAll(datastores: List<Datastore>): Throwable? {
+        var first: Throwable? = null
+        for (ds in datastores) {
+            try {
+                ds.close()
+            } catch (t: Throwable) {
+                val f = first
+                if (null == f) first = t else f.addSuppressed(t)
+            }
+        }
+        return first
+    }
+
     companion object {
         /** the namespace that holds the associations generated from the connections */
         const val COMPOSITION_NAMESPACE = "composition"
@@ -149,6 +188,7 @@ class DatastoreCompositionDefault(
      * If connections are configured from the previous part to the next, each item is adapted through each of them (fan-out).
      */
     override suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem> {
+        check(_isOpen) { "Composition is not open" }
         var previous: Datastore? = null
         var flow = emptyFlow<DataItem>()
         for (ds in datastore.values) {

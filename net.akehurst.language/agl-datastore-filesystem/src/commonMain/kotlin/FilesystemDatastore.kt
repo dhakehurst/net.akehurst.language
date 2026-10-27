@@ -84,7 +84,7 @@ class FilesystemDatastore(
      * input: empty
      * output: the files and directories under the filesystem root whose path, relative to the root, matches the access glob
      */
-    override suspend fun read(
+    override suspend fun doRead(
         accessConfiguration: DatastoreConfiguration,
         input: Flow<DataItem>
     ): Flow<DataItem> {
@@ -111,7 +111,7 @@ class FilesystemDatastore(
      * input: Asm
      * output: String
      */
-    override suspend fun write(
+    override suspend fun doWrite(
         accessConfiguration: DatastoreConfiguration,
         input: Flow<DataItem>
     ): Flow<DataItem> {

@@ -108,6 +108,7 @@ class test_FilesystemDatastore {
         val cfg = accessConfiguration(FilesystemProvider.IDENTITY) {
 
         }
+        sut.open()
         val actual = sut.read(cfg, emptyFlow()).toList()
         assertEquals(1, actual.size)
         val actualAsString = Agl.formatByReflection(
@@ -143,6 +144,7 @@ class test_FilesystemDatastore {
             }
         }.root[0] as AsmStructure
         val cfg = accessConfiguration(FilesystemProvider.IDENTITY) { }
+        sut.open()
         val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(asm, StdLibDefault.AnyType), TestProvenance))).toList()
 
         assertNotNull(actual)
@@ -161,6 +163,8 @@ class test_FilesystemDatastore {
         val cfg = accessConfiguration(FilesystemProvider.IDENTITY) {
             argument(FilesystemProvider.ACCESS_GLOB, "*.txt")
         }
+
+        sut.open()
 
         val actual = sut.read(cfg, emptyFlow()).toList()
 
