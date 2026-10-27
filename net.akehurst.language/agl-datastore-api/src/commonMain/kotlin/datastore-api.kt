@@ -137,10 +137,18 @@ interface Datastore {
 
     val configuration:DatastoreConfiguration
 
+    /**
+     * The types of the data this datastore reads and writes.
+     * They are fixed for this datastore: they may depend on its datastore configuration, never on an access configuration.
+     * Returns the same instance on every call (see DatastoreAbstract).
+     */
     suspend fun types() : TypesDomain
 
     suspend fun accessorMutator() : ObjectGraphAccessorMutator
 
+    /**
+     * 'accessConfiguration' selects which objects are read (e.g. a glob, or a query); it filters, it does not change their types.
+     */
     suspend fun read(accessConfiguration:DatastoreConfiguration, input:Flow<DataItem>): Flow<DataItem>
 
     suspend fun write(accessConfiguration:DatastoreConfiguration, input:Flow<DataItem>): Flow<DataItem>
