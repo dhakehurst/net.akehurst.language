@@ -148,4 +148,22 @@ class test_FilesystemDatastore {
         assertNotNull(actual)
         assertEquals("Hello World !", actual[0].data.self as String)
     }
+
+    @Test
+    fun read_with_glob() = runTest {
+        tempDir.resolve("a.txt").toFile().createNewFile()
+        tempDir.resolve("b.md").toFile().createNewFile()
+
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val cfg = accessConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.ACCESS_GLOB, "*.txt")
+        }
+
+        val actual = sut.read(cfg, emptyFlow()).toList()
+
+        assertEquals(listOf("a.txt"), actual.map { it.identity.value.substringAfterLast('/') })
+    }
 }

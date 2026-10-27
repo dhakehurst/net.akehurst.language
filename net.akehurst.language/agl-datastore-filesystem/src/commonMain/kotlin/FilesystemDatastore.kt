@@ -82,16 +82,20 @@ class FilesystemDatastore(
 
     /**
      * input: empty
-     * output: File
+     * output: the files and directories under the filesystem root whose path, relative to the root, matches the access glob
      */
     override suspend fun read(
         accessConfiguration: DatastoreConfiguration,
         input: Flow<DataItem>
     ): Flow<DataItem> {
-        val glob = "**".toRegexFromGlob('/') //TODO
+        // the glob selects files by their path relative to the filesystem root; it defaults to all ('**')
+        val globStr = accessConfiguration.getAsStringOrNull(FilesystemProvider.ACCESS_GLOB) ?: "**"
+        val glob = globStr.toRegexFromGlob('/')
         val am = accessorMutator()
-        return _parsedConfig.fsRoot().listContent()
-            .filter { glob.matches(it.path) }
+        val root = _parsedConfig.fsRoot()
+        val rootPath = root.path.trimEnd('/') + "/"
+        return root.listContent()
+            .filter { glob.matches(it.path.removePrefix(rootPath)) }
             .map {
                 DataItemDefault(
                     parent = null,

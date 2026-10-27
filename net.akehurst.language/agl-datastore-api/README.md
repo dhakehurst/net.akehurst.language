@@ -23,7 +23,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | P2b | `DatastoreConfiguration` has typed getters (`getAsString`, `getAsInt`, `getAsLong`, `getAsDouble`, `getAsBoolean`, each with an `OrNull` variant). | done |
 | P3 | `Datastore.types()` returns the types of the data the datastore reads and writes. It takes no configuration. | done |
 | P3a | A datastore's types are fixed for that datastore. They may depend on its datastore configuration (e.g. the grammar of a text datastore, or the schema of an XML file), but never on an access configuration. | done |
-| P3b | An access configuration selects which objects a read or write deals with (e.g. a glob of file paths, or a query). It filters the objects retrieved, it does not change their types. | done (documented; the filesystem glob is not yet applied) |
+| P3b | An access configuration selects which objects a read or write deals with (e.g. a glob of file paths, or a query). It filters the objects retrieved, it does not change their types. | done (the filesystem datastore applies `access.glob` to paths relative to its root) |
 | P4 | `Datastore.accessorMutator()` returns the accessor/mutator for that data. It takes no configuration. | done |
 | P5 | `types()` and `accessorMutator()` return the same instances on every call, and every object a datastore emits is typed against those types. Implementations extend `DatastoreAbstract` (agl-datastore-common), which creates both once, from `createTypes()` and an overridable `createAccessorMutator(types)`. | done |
 | P7 | A datastore's types are never changed by a composition that uses it. | done |
