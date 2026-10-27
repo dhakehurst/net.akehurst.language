@@ -18,7 +18,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | Id | Requirement | Status |
 |----|-------------|--------|
 | P1 | New kinds of datastore can be added in other modules, by implementing `DatastoreProvider` and `Datastore` and registering the provider in a `DatastoreProviderRegistry`. | done |
-| P2 | A provider describes its configuration parameters with a `DatastoreProviderSchema`: one parameter set for creating a datastore, one for each access (read/write). | done |
+| P2 | A provider describes its configuration parameters with a `DatastoreProviderSchema` (`DatastoreProvider.schema`): one parameter set for creating a datastore, one for each access (read/write). | done |
 | P2a | A configuration is checked against the provider's schema when it is built: unknown parameters, missing required parameters, values of the wrong type, and choices with no satisfied alternative are errors. Datastore configurations are checked against the datastore parameters, access configurations against the access parameters. | done |
 | P2c | A parameter can be marked `sensitive` (e.g. a password or API token): `parameter(...) { sensitive() }`. `DatastoreConfiguration.isSensitive(id)` reports it, and `toString()` masks sensitive values. Values are still read with the normal getters. | done |
 | P2b | `DatastoreConfiguration` has typed getters (`getAsString`, `getAsInt`, `getAsLong`, `getAsDouble`, `getAsBoolean`, each with an `OrNull` variant). | done |

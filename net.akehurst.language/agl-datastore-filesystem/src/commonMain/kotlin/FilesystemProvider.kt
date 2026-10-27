@@ -18,7 +18,7 @@ class FilesystemProvider : DatastoreProvider {
 
     override val identity get() = IDENTITY
 
-    override val configuration = datastoreProviderSchema {
+    override val schema = datastoreProviderSchema {
         datastore {
             parameter(CONFIG_FS_ROOT, "Filesystem Root", false) {
                 type("String")

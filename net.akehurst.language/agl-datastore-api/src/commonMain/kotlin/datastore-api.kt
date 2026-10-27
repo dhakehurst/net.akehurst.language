@@ -110,7 +110,8 @@ interface DatastoreProviderSchema {
 
 interface DatastoreProvider {
     val identity:DatastoreProviderIdentity
-    val configuration: DatastoreProviderSchema
+    /** the parameters of this provider's datastore and access configurations */
+    val schema: DatastoreProviderSchema
 
     fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration):Datastore
 }

@@ -17,7 +17,7 @@ class test_DatastoreConfiguration {
 
         val provider = object : DatastoreProvider {
             override val identity = IDENTITY
-            override val configuration = datastoreProviderSchema {
+            override val schema = datastoreProviderSchema {
                 datastore {
                     parameter("url", "URL", false) { type("String") }
                     parameter("password", "Password", false) {
@@ -41,13 +41,13 @@ class test_DatastoreConfiguration {
 
     @Test
     fun parameter_is_not_sensitive_by_default() {
-        val url = provider.configuration.datastore.getParameterOrNull("url")!!
+        val url = provider.schema.datastore.getParameterOrNull("url")!!
         assertFalse(url.sensitive)
     }
 
     @Test
     fun sensitive_parameter() {
-        assertTrue(provider.configuration.datastore.getParameterOrNull("password")!!.sensitive)
+        assertTrue(provider.schema.datastore.getParameterOrNull("password")!!.sensitive)
 
         val cfg = datastoreConfiguration(IDENTITY, registry) {
             argument("url", "http://example.com")

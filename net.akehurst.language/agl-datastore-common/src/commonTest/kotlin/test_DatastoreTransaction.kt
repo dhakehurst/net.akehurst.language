@@ -52,7 +52,7 @@ class test_DatastoreTransaction {
         fun registry(log: MutableList<String>, fail: Map<String, Set<String>> = emptyMap()) = DatastoreProviderRegistryDefault().also {
             it.register(object : DatastoreProvider {
                 override val identity = PROVIDER
-                override val configuration = datastoreProviderSchema {
+                override val schema = datastoreProviderSchema {
                     datastore { }
                     access { }
                 }

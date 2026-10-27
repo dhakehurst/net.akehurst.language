@@ -53,7 +53,7 @@ class test_DatastoreLifecycle {
         fun registry(log: MutableList<String>, failOpen: Set<String> = emptySet()) = DatastoreProviderRegistryDefault().also {
             it.register(object : DatastoreProvider {
                 override val identity = PROVIDER
-                override val configuration = datastoreProviderSchema {
+                override val schema = datastoreProviderSchema {
                     datastore { }
                     access { }
                 }

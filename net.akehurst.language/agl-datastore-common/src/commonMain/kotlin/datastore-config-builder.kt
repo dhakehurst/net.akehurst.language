@@ -46,9 +46,9 @@ class DatastoreConfigurationBuilder(
 
     fun argument(key: String, value: Any) {
         if (_access) {
-            check(provider.configuration.access.getParameterOrNull(key) != null) { "'$key' is not an access parameter of provider '${_providerIdentity.value}'" }
+            check(provider.schema.access.getParameterOrNull(key) != null) { "'$key' is not an access parameter of provider '${_providerIdentity.value}'" }
         } else {
-            check(provider.configuration.datastore.getParameterOrNull(key) != null) { "'$key' is not a datastore parameter of provider '${_providerIdentity.value}'" }
+            check(provider.schema.datastore.getParameterOrNull(key) != null) { "'$key' is not a datastore parameter of provider '${_providerIdentity.value}'" }
         }
         _argument[key] = value
     }
@@ -59,7 +59,7 @@ class DatastoreConfigurationBuilder(
      * or no alternative of a choice has all its required parameters.
      */
     fun build(): DatastoreConfiguration {
-        val parameterSet = if (_access) provider.configuration.access else provider.configuration.datastore
+        val parameterSet = if (_access) provider.schema.access else provider.schema.datastore
         val errors = DatastoreConfigurationValidator.validate(parameterSet, _argument)
         check(errors.isEmpty()) {
             "Invalid ${if (_access) "access" else "datastore"} configuration for provider '${_providerIdentity.value}':\n  ${errors.joinToString("\n  ")}"

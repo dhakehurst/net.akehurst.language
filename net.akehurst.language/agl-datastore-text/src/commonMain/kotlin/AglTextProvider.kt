@@ -23,7 +23,7 @@ class AglTextProvider : DatastoreProvider {
 
     override val identity get() = IDENTITY
 
-    override val configuration = datastoreProviderSchema {
+    override val schema = datastoreProviderSchema {
         datastore {
             choice {
                 alternative("String Definitions") {
