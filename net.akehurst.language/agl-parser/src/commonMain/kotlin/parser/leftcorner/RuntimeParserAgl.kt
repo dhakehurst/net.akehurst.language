@@ -97,6 +97,13 @@ internal class RuntimeParserAgl(
 
     private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeData?>()
 
+    // furthest position at which the skip parse (for the same key as _skip_cache) recorded a failure, null if none
+    private val _skip_failedAt_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, Int?>()
+
+    // furthest failure position of the skip parse whose result was returned by the last call to tryParseSkipUntilNone
+    // (taken from the cache when the skip result is cached, so it always belongs to that skip parse)
+    private var _lastSkipFailedAtPosition: Int? = null
+
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
     private val skipParser = skipStateSet?.let {
         if (this.stateSet.preBuilt) this.skipStateSet.build()
@@ -110,6 +117,8 @@ internal class RuntimeParserAgl(
 
     fun reset() {
         this._skip_cache.clear()
+        this._skip_failedAt_cache.clear()
+        this._lastSkipFailedAtPosition = null
         this.graph.reset()
         this.failedReasons.clear()
     }
@@ -827,11 +836,9 @@ internal class RuntimeParserAgl(
                             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
                             this.graph.pushToStackOf(head, transition.target, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
                         } else {
-                            val pos = if (null != skipParser && skipParser.failedReasons.isNotEmpty()) {
-                                skipParser.failedReasons.keys.max()//maxOf { it.position }
-                            } else {
-                                nextInputPositionAfterSkip
-                            }
+                            // use the failure position of the skip parse done for this token (parseSkipIfAny above),
+                            // not whatever skip parse ran last (which differs when the skip result came from the cache)
+                            val pos = _lastSkipFailedAtPosition ?: nextInputPositionAfterSkip
                             recordFailedWidthLH(parseArgs, head, pos, transition, runtimeLhs, possibleEndOfText)
                             false
                         }
@@ -1005,17 +1012,28 @@ internal class RuntimeParserAgl(
             val key = Pair(startPosition, slh)
             if (_skip_cache.containsKey(key)) {
                 // can cache null as a valid result
+                _lastSkipFailedAtPosition = _skip_failedAt_cache[key]
                 _skip_cache[key]
             } else {
                 val skipData = when (skipParser) { //TODO: raise test to outer level
-                    null -> null
+                    null -> {
+                        _lastSkipFailedAtPosition = null
+                        null
+                    }
                     else -> tryParseSkip(slh, startPosition, growArgs)
                 }
                 _skip_cache[key] = skipData
+                _skip_failedAt_cache[key] = _lastSkipFailedAtPosition
                 skipData
             }
         } else {
-            tryParseSkip(slh, startPosition, growArgs)
+            when (skipParser) {
+                null -> {
+                    _lastSkipFailedAtPosition = null
+                    null
+                }
+                else -> tryParseSkip(slh, startPosition, growArgs)
+            }
         }
     }
 
@@ -1032,6 +1050,7 @@ internal class RuntimeParserAgl(
         } while (skipParser.graph.canGrow && (skipParser.graph.goals.isEmpty() || skipParser.graph.goalMatchedAll.not()))
         //TODO: get longest skip match
         if (Debug.OUTPUT_RUNTIME) println("*** End skip Parser")
+        _lastSkipFailedAtPosition = skipParser.failedReasons.keys.maxOrNull()
         return when {
             skipParser.graph.goals.isEmpty() -> null
             else -> {
