@@ -117,9 +117,7 @@ class test_CompositionFilesystemText {
         }
 
         val acc = composition.accessConfiguration {
-            access("fs") {
-                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
-            }
+            access("fs") {}
             access("txt") {
 
             }
@@ -185,9 +183,7 @@ class test_CompositionFilesystemText {
             }
         }
         val acc = composition.accessConfiguration {
-            access("fs") {
-                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
-            }
+            access("fs") {}
             access("txt") {}
         }
 

@@ -114,7 +114,7 @@ class AccessCompositeConfigurationBuilder(
     fun access(id: String,init: DatastoreConfigurationBuilder.() -> Unit) {
         check(_datastoreConfiguration.part.keys.any { it.second.value == id }) { "DatastoreComposition part with id '$id' not found." }
         val providerId = _datastoreConfiguration.part.keys.first { it.second.value == id }.first
-        val b = DatastoreConfigurationBuilder(_registry,providerId, false)
+        val b = DatastoreConfigurationBuilder(_registry, providerId, true)
         b.init()
         val acc = b.build()
         _cfg[DatastoreIdentity(id)] = acc

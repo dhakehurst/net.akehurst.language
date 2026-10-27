@@ -118,6 +118,18 @@ interface DatastoreConfiguration {
     fun getAsString(parameterIdentity:String): String = argument[parameterIdentity] as String
     fun getAsStringOrNull(parameterIdentity:String): String? = argument[parameterIdentity] as String?
 
+    fun getAsInt(parameterIdentity: String): Int = (argument[parameterIdentity] as Number).toInt()
+    fun getAsIntOrNull(parameterIdentity: String): Int? = (argument[parameterIdentity] as Number?)?.toInt()
+
+    fun getAsLong(parameterIdentity: String): Long = (argument[parameterIdentity] as Number).toLong()
+    fun getAsLongOrNull(parameterIdentity: String): Long? = (argument[parameterIdentity] as Number?)?.toLong()
+
+    fun getAsDouble(parameterIdentity: String): Double = (argument[parameterIdentity] as Number).toDouble()
+    fun getAsDoubleOrNull(parameterIdentity: String): Double? = (argument[parameterIdentity] as Number?)?.toDouble()
+
+    fun getAsBoolean(parameterIdentity: String): Boolean = argument[parameterIdentity] as Boolean
+    fun getAsBooleanOrNull(parameterIdentity: String): Boolean? = argument[parameterIdentity] as Boolean?
+
 }
 
 interface Datastore {

@@ -19,6 +19,8 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 |----|-------------|--------|
 | P1 | New kinds of datastore can be added in other modules, by implementing `DatastoreProvider` and `Datastore` and registering the provider in a `DatastoreProviderRegistry`. | done |
 | P2 | A provider describes its configuration parameters with a `DatastoreProviderSchema`: one parameter set for creating a datastore, one for each access (read/write). | done |
+| P2a | A configuration is checked against the provider's schema when it is built: unknown parameters, missing required parameters, values of the wrong type, and choices with no satisfied alternative are errors. Datastore configurations are checked against the datastore parameters, access configurations against the access parameters. | done |
+| P2b | `DatastoreConfiguration` has typed getters (`getAsString`, `getAsInt`, `getAsLong`, `getAsDouble`, `getAsBoolean`, each with an `OrNull` variant). | done |
 | P3 | `Datastore.types()` returns the types of the data the datastore reads and writes. It takes no configuration. | done |
 | P4 | `Datastore.accessorMutator()` returns the accessor/mutator for that data. It takes no configuration. | done |
 | P5 | `types()` and `accessorMutator()` return the same instances on every call, and every object a datastore emits is typed against those types. Implementations extend `DatastoreAbstract` (agl-datastore-common), which creates both once, from `createTypes()` and an overridable `createAccessorMutator(types)`. | done |

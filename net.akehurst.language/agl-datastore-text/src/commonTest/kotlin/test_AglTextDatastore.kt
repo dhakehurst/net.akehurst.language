@@ -17,6 +17,7 @@ import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -51,7 +52,8 @@ class test_AglTextDatastore {
     @Test
     fun construct() {
         val cfg = datastoreConfiguration(AglTextProvider.IDENTITY) {
-
+            argument(AglTextProvider.CONFIG_GRAMMAR_STR, grammarStr)
+            argument(AglTextProvider.CONFIG_FORMAT_STR, formatStr)
         }
         val prov = AglTextProvider()
         val sut = prov.provide(DatastoreIdentity("test"), cfg)
@@ -176,10 +178,38 @@ class test_AglTextDatastore {
                 propertyString("name", "World")
             }
         }.root[0] as AsmStructure
-        val cfg = datastoreConfiguration(AglTextProvider.IDENTITY) { }
+        val cfg = accessConfiguration(AglTextProvider.IDENTITY) { }
         val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(asm, StdLibDefault.AnyType), TestProvenance))).toList()
 
         assertNotNull(actual)
         assertEquals("Hello World !", actual[0].data.self as String)
+    }
+
+    @Test
+    fun configuration_missing_required_parameter_fails() {
+        val e = assertFailsWith<IllegalStateException> {
+            datastoreConfiguration(AglTextProvider.IDENTITY) { }
+        }
+        assertTrue(e.message!!.contains(AglTextProvider.CONFIG_FORMAT_STR), e.message)
+    }
+
+    @Test
+    fun configuration_wrong_value_type_fails() {
+        val e = assertFailsWith<IllegalStateException> {
+            datastoreConfiguration(AglTextProvider.IDENTITY) {
+                argument(AglTextProvider.CONFIG_GRAMMAR_STR, grammarStr)
+                argument(AglTextProvider.CONFIG_FORMAT_STR, 42)
+            }
+        }
+        assertTrue(e.message!!.contains("must be a"), e.message)
+    }
+
+    @Test
+    fun configuration_unknown_parameter_fails() {
+        assertFailsWith<IllegalStateException> {
+            datastoreConfiguration(AglTextProvider.IDENTITY) {
+                argument("not.a.parameter", "x")
+            }
+        }
     }
 }
