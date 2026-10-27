@@ -36,6 +36,14 @@ data class CompletionItem(
     var id: Int? = 0
     var description: String = ""
     var detail: RuleItem? = null
+
+    /**
+     * position in the sentence from which this item replaces the text (up to the requested position).
+     * Items in one result can have different positions, e.g. completing a partially typed word (its start)
+     * or inserting what is expected next (the requested position).
+     * null if not set, in which case use [ExpectedAtResult.offeredPosition].
+     */
+    var offeredPosition: Int? = null
 }
 
 interface SpineNode {

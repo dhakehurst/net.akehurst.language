@@ -40,6 +40,7 @@ import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.api.CrossReferenceDomain
@@ -273,34 +274,58 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return frmtr.formatSelf(formatSetName, asm)
     }
 
+    /*
+     * The parser returns spines for two readings of the text between a word start and 'position':
+     *  - the word is unfinished: spines at the word start (usedPosition < position)
+     *  - the word is complete: spines at 'position'
+     * Both are offered: completions of the typed word (a literal that starts with it, but is not equal to it), from the word start,
+     * and what is expected next, at 'position'. Each item has its own offeredPosition.
+     * The result's offeredPosition is the word start if there are any completions of the typed word, otherwise 'position'.
+     */
     override fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
         val opts = defaultOptions(options)
         val parserExpectedAt = this.parser?.expectedAt(sentence, position, opts.parse)
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
-        // only use spines for the 'unfinished word' reading (the parser also returns spines for the 'complete word' reading, at 'position')
-        val parserExpected = parserExpectedAt.spines
-            .filter { it.usedPosition == parserExpectedAt.usedPosition }
+        val byPosition = parserExpectedAt.spines.groupBy { it.usedPosition }
+        val wordCompletions = byPosition.keys.filter { it < position }.sorted().flatMap { wordStart ->
+            val prefix = sentence.substring(wordStart, position)
+            byPosition[wordStart]!!
+                .flatMap { it.expectedNextTerminals }
+                .filter { it.isLiteral && it.unescapedTerminalValue.startsWith(prefix) && it.unescapedTerminalValue != prefix }
+                .toSet()
+                .flatMap { completionItemsForTerminal(it, opts) }
+                .onEach { it.offeredPosition = wordStart }
+        }
+        val next = (byPosition[position] ?: emptyList())
             .flatMap { it.expectedNextTerminals }
             .filter { it.isTerminal }
             .toSet()
-        val terminalItems = parserExpected.mapNotNull {
-            when {
-                it.isEndOfText -> null // FIXME: maybe indicate EOT ?
-                it.isEmptyTerminal -> null
-                it.isEmptyListTerminal -> null
-                else -> {
-                    val rr = it as RuntimeRule
-                    val terminalRuleItem = mapToGrammar(rr.ruleSetNumber, rr.number) as Terminal?
-                    terminalRuleItem?.let { CompletionProviderAbstract.provideForTangible(it, opts.completionProvider) }
-                    //when {
-                    //    it.isLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.unescapedTerminalValue, it.tag)
-                    //    it.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<${it.tag}>", "${it.tag}")
-                    //    else -> CompletionItem(CompletionItemKind.SEGMENT, it.tag, it.tag) //TODO
-                    //}
+            .flatMap { completionItemsForTerminal(it, opts) }
+            .onEach { it.offeredPosition = position }
+        val offered = wordCompletions.firstOrNull()?.offeredPosition ?: position
+        return ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
+    }
+
+    private fun completionItemsForTerminal(rule: Rule, opts: ProcessOptions<AsmType, ContextType>): List<CompletionItem> = when {
+        rule.isEndOfText -> emptyList() // FIXME: maybe indicate EOT ?
+        rule.isEmptyTerminal -> emptyList()
+        rule.isEmptyListTerminal -> emptyList()
+        else -> {
+            val rr = rule as RuntimeRule
+            val ruleItem = mapToGrammar(rr.ruleSetNumber, rr.number)
+            when (ruleItem) {
+                null -> emptyList()
+                is Terminal -> CompletionProviderAbstract.provideForTangible(ruleItem, opts.completionProvider)
+                // e.g. the rhs of a leaf rule, that is not a single terminal
+                else -> when {
+                    ruleItem.owningRule.isLeaf -> listOf(
+                        CompletionItem(CompletionItemKind.PATTERN, ruleItem.owningRule.compressedLeaf.unescapedValue.value, "<${ruleItem.owningRule.name.value}>").apply { detail = ruleItem }
+                    )
+
+                    else -> emptyList()
                 }
             }
-        }.flatten()
-        return ExpectedAtResultDefault(position, position, terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
+        }
     }
 
     override fun expectedItemsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
@@ -309,29 +334,30 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val opts = defaultOptions(options)
                 val parserExpected = this.parser?.expectedAt(sentence, position, opts.parse)
                     ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
-                // only use spines for the 'unfinished word' reading (the parser also returns spines for the 'complete word' reading, at 'position')
-                // and not the spine that only expects end-of-text (the text so far being a complete sentence)
-                val spines = parserExpected.spines
-                    .filter { it.usedPosition == parserExpected.usedPosition }
+                // see comment on expectedTerminalsAt
+                // not the spine that only expects end-of-text (the text so far being a complete sentence)
+                val byPosition = parserExpected.spines
                     .filterNot { sp -> sp.expectedNextTerminals.all { it.isEndOfText } }
-                    .map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
-                val items = completionProvider!!.provide(spines, opts.completionProvider)
-                if (parserExpected.usedPosition == position) {
-                    ExpectedAtResultDefault(position, parserExpected.usedPosition, items, IssueHolder(LanguageProcessorPhase.ALL))
-                } else {
-                    val prefix = sentence.substring(parserExpected.usedPosition, position)
-                    val filtered = items
+                    .groupBy { it.usedPosition }
+                val wordCompletions = byPosition.keys.filter { it < position }.sorted().flatMap { wordStart ->
+                    val prefix = sentence.substring(wordStart, position)
+                    val spines = byPosition[wordStart]!!.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
+                    completionProvider!!.provide(spines, opts.completionProvider)
                         .filter {
                             when (it.kind) {
-                                CompletionItemKind.LITERAL -> prefix!=it.text && it.text.startsWith(prefix) //do not include if terminal already complete
+                                CompletionItemKind.LITERAL -> prefix != it.text && it.text.startsWith(prefix) //do not include if terminal already complete
                                 CompletionItemKind.PATTERN -> false //TODO: try a match for patterns
                                 CompletionItemKind.SEGMENT -> false
                                 CompletionItemKind.REFERRED -> false //TODO: should be able to complete these!
                             }
                         }
-                    val used = if(filtered.isEmpty()) position else parserExpected.usedPosition
-                    ExpectedAtResultDefault(position, used, filtered, IssueHolder(LanguageProcessorPhase.ALL))
+                        .onEach { it.offeredPosition = wordStart }
                 }
+                val nextSpines = (byPosition[position] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
+                val next = completionProvider!!.provide(nextSpines, opts.completionProvider)
+                    .onEach { it.offeredPosition = position }
+                val offered = wordCompletions.firstOrNull()?.offeredPosition ?: position
+                ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
             }
 
             else -> expectedTerminalsAt(sentence, position, options)
