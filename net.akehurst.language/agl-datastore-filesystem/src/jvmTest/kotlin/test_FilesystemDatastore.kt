@@ -23,6 +23,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.test.assertFailsWith
 
 private object TestProvenance : DataItemProvenance
 
@@ -129,27 +131,86 @@ class test_FilesystemDatastore {
         assertEquals(expected, actualAsString)
     }
 
+    private suspend fun readFile(sut: net.akehurst.datastore.api.Datastore, name: String) =
+        sut.read(accessConfiguration(FilesystemProvider.IDENTITY) {}, emptyFlow()).toList().first { it.identity.value.endsWith("/$name") }
+
     @Test
-    fun write() = runTest {
+    fun write_is_applied_on_commit() = runTest {
+        val file = tempDir.resolve("w.txt").toFile().also { it.writeText("old") }
         val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
             argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
         }
-        val prov = FilesystemProvider()
-        val sut = prov.provide(DatastoreIdentity("test"), dscfg)
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
         val og = sut.accessorMutator()
+        sut.open()
+        val item = readFile(sut, "w.txt")
 
-        val asm = asmSimple(sut.types()) {
-            element("S") {
-                propertyString("name", "World")
-            }
-        }.root[0] as AsmStructure
-        val cfg = accessConfiguration(FilesystemProvider.IDENTITY) { }
+        sut.beginTransaction()
+        val content = item.data.getPropertySuspend("content")
+        content.setPropertySuspend("asString", og.toTypedObject("new", StdLibDefault.String))
+        val actual = sut.write(accessConfiguration(FilesystemProvider.IDENTITY) {}, flowOf(item)).toList()
+
+        assertEquals(1, actual.size)
+        assertTrue(actual[0].issues.errors.isEmpty())
+        // staged: the file is unchanged, but reading through the datastore gives the staged content
+        assertEquals("old", file.readText())
+        assertEquals("new", item.data.getPropertySuspend("content").getPropertySuspend("asString").self)
+
+        sut.commit()
+        assertEquals("new", file.readText())
+    }
+
+    @Test
+    fun write_is_discarded_on_rollback() = runTest {
+        val file = tempDir.resolve("w.txt").toFile().also { it.writeText("old") }
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        sut.open()
+        val item = readFile(sut, "w.txt")
+
+        sut.beginTransaction()
+        item.data.getPropertySuspend("content").setPropertySuspend("asString", og.toTypedObject("new", StdLibDefault.String))
+        sut.write(accessConfiguration(FilesystemProvider.IDENTITY) {}, flowOf(item)).toList()
+        sut.rollback()
+
+        assertEquals("old", file.readText())
+        assertEquals("old", item.data.getPropertySuspend("content").getPropertySuspend("asString").self)
+    }
+
+    @Test
+    fun set_content_outside_transaction_fails() = runTest {
+        tempDir.resolve("w.txt").toFile().writeText("old")
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        sut.open()
+        val item = readFile(sut, "w.txt")
+
+        assertFailsWith<IllegalStateException> {
+            item.data.getPropertySuspend("content").setPropertySuspend("asString", og.toTypedObject("new", StdLibDefault.String))
+        }
+    }
+
+    @Test
+    fun write_non_file_gives_issue() = runTest {
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
         sut.open()
         sut.beginTransaction()
-        val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(asm, StdLibDefault.AnyType), TestProvenance))).toList()
+        val actual = sut.write(
+            accessConfiguration(FilesystemProvider.IDENTITY) {},
+            flowOf(DataItemDefault(null, DataItemIdentity("x"), og.toTypedObject("not a file", StdLibDefault.String), TestProvenance))
+        ).toList()
 
-        assertNotNull(actual)
-        assertEquals("Hello World !", actual[0].data.self as String)
+        assertTrue(actual[0].issues.errors.isNotEmpty())
     }
 
     @Test

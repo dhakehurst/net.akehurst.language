@@ -563,9 +563,9 @@ class ExternalGetterByReflection(
     override fun getLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any): Any? = _links.get(association, end, obj)
     override fun setLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) = _links.set(association, end, obj, value)
 
-    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
-        TODO("not implemented")
-    }
+    /** may be overridden to set property on suspending source */
+    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) =
+        setProperty(obj, propertyName, isReference, value)
 }
 
 fun objectGraphSimpleAsm(
@@ -699,7 +699,8 @@ constructor(
         setPropertyInternal(tobj, propertyName, value, { o, n, r, v ->
             externalGetter.setPropertySuspend(o, n, r, v)
         }, { a, e, o, v -> externalGetter.setLinkEndSuspend(a, e, o, v) }) { obj, decl, value ->
-            decl.mutatorSuspend?.invoke(obj,value)
+            // a property may have only a non-suspend mutator
+            decl.mutatorSuspend?.invoke(obj, value) ?: decl.mutator?.invoke(obj, value)
         }
 
 

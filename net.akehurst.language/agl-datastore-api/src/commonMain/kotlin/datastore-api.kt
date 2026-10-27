@@ -329,7 +329,16 @@ interface DatastoreComposition : Transactional {
 
     suspend fun accessorMutator(): ObjectGraphAccessorMutator
     suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem>
-    suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>)
+    /**
+     * Writes the items through the parts in reverse chain order, inside the composition's active transaction
+     * (must be collected inside it, like Datastore.write); commit() applies the changes.
+     * Each part's write output is mapped back to the previous part through the connections: the source object is found
+     * through the link of the DataType end whose expression is '$self', and the value of each other end is assigned
+     * to the source along its expression, which must be an assignable property path (e.g. 'content.asString').
+     * An item that is not linked to a source object gets an error issue and is emitted as it is.
+     * Returns the items written by the first part, plus the items that could not be written, with their issues.
+     */
+    suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>): Flow<DataItem>
 }
 
 /** opens this composition, runs 'block', and closes the composition even if 'block' throws */

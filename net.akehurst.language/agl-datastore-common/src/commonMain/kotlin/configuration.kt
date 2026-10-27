@@ -6,6 +6,11 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.emitAll
+import net.akehurst.kotlinx.issues.api.IssueKind
+import net.akehurst.kotlinx.issues.ram.IssueDefault
 import net.akehurst.datastore.api.AccessCompositionConfiguration
 import net.akehurst.datastore.api.DataItem
 import net.akehurst.datastore.api.DataItemIdentity
@@ -198,6 +203,8 @@ class DatastoreCompositionDefault(
     companion object {
         /** the namespace that holds the associations generated from the connections */
         const val COMPOSITION_NAMESPACE = "composition"
+        private const val SELF = "\$self"
+        private val PATH_REGEX = Regex("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*")
     }
 
     // cached, so the same types are used throughout
@@ -343,11 +350,112 @@ class DatastoreCompositionDefault(
         }
     }
 
-    override suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>) {
-        TODO("Not yet implemented")
+    /**
+     * Writes the parts in reverse chain order. Between two parts, each item written by the later part is mapped back
+     * to the source object of a connection (see reverseAdapt), which is then written by the earlier part.
+     * Items that cannot be mapped back are emitted, with an error issue, after the items of the first part.
+     */
+    override suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>): Flow<DataItem> {
+        check(_isOpen) { "Composition is not open" }
+        checkInTransaction()
+        val parts = datastore.values.toList()
+        val notWritten = mutableListOf<DataItem>()
+        var flow = input
+        for (i in parts.indices.reversed()) {
+            val ds = parts[i]
+            val dsCfg = configuration.part[ds.identity]
+                ?: error("Can't find access configuration for datastore '${ds.identity}'")
+            flow = ds.write(dsCfg, flow)
+            if (i > 0) {
+                val prev = parts[i - 1]
+                val conns = this.configuration.connection.filter { it.source == prev.identity && it.target == ds.identity }
+                if (conns.isNotEmpty()) flow = reverseAdapt(conns, flow, notWritten)
+            }
+        }
+        return flow
+            .onStart { check(_isOpen) { "Composition is not open" }; checkInTransaction(); notWritten.clear() }
+            .onCompletion { cause -> if (null == cause) emitAll(notWritten.asFlow()) }
+    }
+
+    private fun checkInTransaction() {
+        check(_transactionState == TransactionState.ACTIVE) { "Composition has no active transaction; write inside a transaction" }
+    }
+
+    /**
+     * The reverse of adapt. For each target item, and each connection whose source end ('$self') links it to a source object:
+     * the value of each primitive end of the target is assigned to the source along that end's expression,
+     * and the source item is emitted (the target item's parent, if that holds the source object).
+     * A target item with errors is not assigned; its issues are passed on with the source item.
+     * A target item that no connection links to a source object is added to 'notWritten' with an error issue.
+     */
+    private suspend fun reverseAdapt(connections: List<DatastoreConnection>, input: Flow<DataItem>, notWritten: MutableList<DataItem>): Flow<DataItem> {
+        val types = types()
+        val reversers = connections.map { connection ->
+            val (assocEnds, valueEnds) = connection.end.partition { null != dataTypeOrNull(types, it.typeName) }
+            val sourceEnd = assocEnds.firstOrNull { it.expression.trim() == SELF }
+                ?: error("Connection '${connection.identity}': cannot write, it has no end of a DataType with expression '$SELF' to link back to the source")
+            val paths = valueEnds.associateWith { end ->
+                assignablePathOrNull(end.expression)
+                    ?: error("Connection '${connection.identity}': cannot write, the expression '${end.expression}' of end '${end.name}' is not an assignable property path")
+            }
+            Pair(connection, Pair(sourceEnd, paths))
+        }
+        return input.transform { item ->
+            var linked = false
+            for ((connection, rev) in reversers) {
+                val (sourceEnd, paths) = rev
+                val source = item.data.getPropertySuspend(sourceEnd.name)
+                if (source.isNothing) continue
+                linked = true
+                if (item.issues.errors.isEmpty()) {
+                    paths.forEach { (end, path) -> assign(source, path, item.data.getPropertySuspend(end.name)) }
+                }
+                val parent = item.parent
+                val sourceItem = when {
+                    null != parent && parent.data.self == source.self -> parent
+                    else -> DataItemDefault(null, item.identity, source, ConnectionProvenance(connection.source, connection.target, connection.identity))
+                }
+                emit(withIssues(sourceItem, item.issues))
+            }
+            if (!linked) {
+                notWritten.add(
+                    withIssues(
+                        item, net.akehurst.kotlinx.issues.ram.IssueHolder<DataItemIssueLocation>(
+                            listOf(IssueDefault(IssueKind.ERROR, CompositionIssueLocation(item.qualifiedIdentity), "the item is not linked to a source object by any connection, so it cannot be written"))
+                        )
+                    )
+                )
+            }
+        }
+    }
+
+    /** assigns 'value' to the property at the end of 'path', navigating the path from 'obj' */
+    private suspend fun assign(obj: TypedObject, path: List<String>, value: TypedObject) {
+        var o = obj
+        for (name in path.dropLast(1)) o = o.getPropertySuspend(name)
+        o.setPropertySuspend(path.last(), value)
+    }
+
+    /** 'a.b.c' or '$self.a.b.c' as [a, b, c]; null if the expression is not such a path */
+    private fun assignablePathOrNull(expression: String): List<String>? {
+        val e = expression.trim().removePrefix("$SELF.")
+        return when {
+            PATH_REGEX.matches(e) -> e.split('.')
+            else -> null
+        }
+    }
+
+    private fun withIssues(item: DataItem, issues: IssueCollection<DataItemIssueLocation>): DataItem = when {
+        issues.isEmpty() -> item
+        else -> DataItemDefault(item.parent, item.identity, item.data, item.provenance, net.akehurst.kotlinx.issues.ram.IssueHolder(item.issues.all + issues.all))
     }
 
 }
+
+/** Location of an issue raised by a composition: the qualified identity of the item. */
+data class CompositionIssueLocation(
+    val itemIdentity: List<DataItemIdentity>
+) : DataItemIssueLocation
 
 /** Provenance of a DataItem created by adapting a source item through a DatastoreConnection. */
 data class ConnectionProvenance(

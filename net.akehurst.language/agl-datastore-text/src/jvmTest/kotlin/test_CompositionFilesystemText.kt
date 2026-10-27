@@ -1,6 +1,15 @@
 package net.akehurst.datastore.composition
 
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
+import net.akehurst.datastore.api.DataItem
+import net.akehurst.datastore.api.DataItemProvenance
+import net.akehurst.datastore.common.DataItemDefault
+import net.akehurst.language.asm.api.PropertyValueName
+import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.types.asm.StdLibDefault
 import kotlinx.coroutines.test.runTest
 import net.akehurst.datastore.api.DataItemIdentity
 import net.akehurst.datastore.common.ConnectionProvenance
@@ -137,13 +146,11 @@ class test_CompositionFilesystemText {
             }
         )
 
-        assertEquals(expected.map { (it.root[0] as AsmStructure).asString() }, actual.map { (it.data.self as AsmStructure).asString() })
-
-        // the parsed item's parent is the adapted ParsableUnit, whose parent is the file item
-        val unitItem = actual[0].parent!!
-        assertIs<ConnectionProvenance>(unitItem.provenance)
+        // each item is the adapted ParsableUnit, whose asm is set by the text datastore, and whose parent is the file item
+        val unitItem = actual[0]
         val unit = assertIs<ParsableUnit>(unitItem.data.self)
         assertEquals("Hello World!", unit.text)
+        assertEquals(expected.map { (it.root[0] as AsmStructure).asString() }, actual.map { ((it.data.self as ParsableUnit).asm as AsmStructure).asString() })
 
         // the generated association: ParsableUnit.owner and FileHandle.parsableUnit, both navigable through the link
         val am = composition.accessorMutator()
@@ -161,8 +168,8 @@ class test_CompositionFilesystemText {
         assertNull(fileHandle.findOwnedPropertyOrNull(PropertyName("parsableUnit")))
         assertNull(parsableUnit.findOwnedPropertyOrNull(PropertyName("owner")))
 
-        // identities: file path, then the connection identity, then the parsed root index
-        assertEquals(listOf(DataItemIdentity("parsableUnit"), DataItemIdentity("0")), actual[0].qualifiedIdentity.drop(1))
+        // identities: file path, then the connection identity
+        assertEquals(listOf(DataItemIdentity("parsableUnit")), actual[0].qualifiedIdentity.drop(1))
     }
 
     @Test
@@ -198,19 +205,19 @@ class test_CompositionFilesystemText {
 
         val actual = composition.read(acc).toList()
 
-        // one parsed item per connection
+        // one unit item per connection
         assertEquals(2, actual.size)
         assertEquals(
-            listOf(listOf("first", "0"), listOf("second", "0")),
+            listOf(listOf("first"), listOf("second")),
             actual.map { it.qualifiedIdentity.drop(1).map { id -> id.value } }
         )
         // each connection has its own derived association end on FileHandle
-        val fileData = actual[0].parent!!.parent!!.data
-        assertEquals(actual[0].parent!!.data.self, fileData.getPropertySuspend("first").self)
-        assertEquals(actual[1].parent!!.data.self, fileData.getPropertySuspend("second").self)
+        val fileData = actual[0].parent!!.data
+        assertEquals(actual[0].data.self, fileData.getPropertySuspend("first").self)
+        assertEquals(actual[1].data.self, fileData.getPropertySuspend("second").self)
         // and back, each by its own end name
-        assertEquals(fileData.self, actual[0].parent!!.data.getPropertySuspend("firstOwner").self)
-        assertEquals(fileData.self, actual[1].parent!!.data.getPropertySuspend("secondOwner").self)
+        assertEquals(fileData.self, actual[0].data.getPropertySuspend("firstOwner").self)
+        assertEquals(fileData.self, actual[1].data.getPropertySuspend("secondOwner").self)
     }
 
     @Test
@@ -265,12 +272,136 @@ class test_CompositionFilesystemText {
         val first = composition.read(acc).toList()
         val second = composition.read(acc).toList()
 
-        val unit1 = first[0].parent!!
-        val unit2 = second[0].parent!!
+        val unit1 = first[0]
+        val unit2 = second[0]
         assertNotSame(unit1.data.self, unit2.data.self)
         // the second read does not change the links of the first
         assertSame(unit1.data.self, unit1.parent!!.data.getPropertySuspend("parsableUnit").self)
         assertSame(unit2.data.self, unit2.parent!!.data.getPropertySuspend("parsableUnit").self)
         assertEquals(unit1.parent!!.data.self, unit1.data.getPropertySuspend("owner").self)
+    }
+
+    private fun writeComposition() = datastoreComposition {
+        datastore("fs", FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        datastore("txt", AglTextProvider.IDENTITY) {
+            argument(AglTextProvider.CONFIG_GRAMMAR_STR, test_AglTextDatastore.grammarStr)
+            argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
+        }
+        connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE) {
+            end("owner", "filesystem.FileHandle", "\$self")
+            end("text", "String", "content.asString")
+        }
+    }
+
+    private fun setName(item: DataItem, name: String) {
+        val s = (item.data.self as ParsableUnit).asm as AsmStructure
+        val p = s.property[PropertyValueName("name")]!!
+        s.setProperty(PropertyValueName("name"), AsmPrimitiveSimple.stdString(name), p.index)
+    }
+
+    @Test
+    fun write_changes_file_on_commit() = runTest {
+        val file = tempDir.resolve("test.txt").toFile().also { it.writeText("Hello World!") }
+        val composition = writeComposition()
+        val acc = composition.accessConfiguration {
+            access("fs") {}
+            access("txt") {}
+        }
+        composition.open()
+        val items = composition.read(acc).toList()
+        setName(items[0], "Earth")
+
+        composition.beginTransaction()
+        val actual = composition.write(acc, items.asFlow()).toList()
+
+        // the file item is written; the file is changed only on commit
+        assertEquals(1, actual.size)
+        assertTrue(actual[0].issues.errors.isEmpty(), actual[0].issues.toString())
+        assertSame(items[0].parent!!.data.self, actual[0].data.self)
+        assertEquals("Hello World!", file.readText())
+        composition.commit()
+        assertEquals("Hello Earth !", file.readText())
+    }
+
+    @Test
+    fun write_rollback_leaves_file_unchanged() = runTest {
+        val file = tempDir.resolve("test.txt").toFile().also { it.writeText("Hello World!") }
+        val composition = writeComposition()
+        val acc = composition.accessConfiguration {
+            access("fs") {}
+            access("txt") {}
+        }
+        composition.open()
+        val items = composition.read(acc).toList()
+        setName(items[0], "Earth")
+
+        composition.beginTransaction()
+        composition.write(acc, items.asFlow()).toList()
+        composition.rollback()
+
+        assertEquals("Hello World!", file.readText())
+    }
+
+    @Test
+    fun write_unlinked_item_gives_issue() = runTest {
+        tempDir.resolve("test.txt").toFile().also { it.writeText("Hello World!") }
+        val composition = writeComposition()
+        val acc = composition.accessConfiguration {
+            access("fs") {}
+            access("txt") {}
+        }
+        composition.open()
+        val am = composition.accessorMutator()
+        val unit = ParsableUnit("Hello Moon !")
+        val parsed = composition.read(acc).toList()[0].data.self as ParsableUnit
+        unit.asm = parsed.asm
+        // created, but not linked to a FileHandle
+        val item = DataItemDefault(null, DataItemIdentity("new"), am.toTypedObject(unit, StdLibDefault.AnyType), object : DataItemProvenance {})
+
+        composition.beginTransaction()
+        val actual = composition.write(acc, flowOf(item)).toList()
+
+        assertEquals(1, actual.size)
+        assertSame(unit, actual[0].data.self)
+        assertTrue(actual[0].issues.errors.isNotEmpty())
+        composition.rollback()
+    }
+
+    @Test
+    fun write_outside_transaction_fails() = runTest {
+        val composition = writeComposition()
+        val acc = composition.accessConfiguration {
+            access("fs") {}
+            access("txt") {}
+        }
+        composition.open()
+        assertFailsWith<IllegalStateException> { composition.write(acc, emptyFlow()) }
+    }
+
+    @Test
+    fun write_with_end_expression_not_assignable_fails() = runTest {
+        val composition = datastoreComposition {
+            datastore("fs", FilesystemProvider.IDENTITY) {
+                argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+            }
+            datastore("txt", AglTextProvider.IDENTITY) {
+                argument(AglTextProvider.CONFIG_GRAMMAR_STR, test_AglTextDatastore.grammarStr)
+                argument(AglTextProvider.CONFIG_FORMAT_STR, test_AglTextDatastore.formatStr)
+            }
+            connect("fs", "txt", AglTextProvider.PARSABLE_UNIT_TYPE) {
+                end("owner", "filesystem.FileHandle", "\$self")
+                end("text", "String", "content.asString + '!'")
+            }
+        }
+        val acc = composition.accessConfiguration {
+            access("fs") {}
+            access("txt") {}
+        }
+        composition.open()
+        composition.beginTransaction()
+        assertFailsWith<IllegalStateException> { composition.write(acc, emptyFlow()) }
+        composition.rollback()
     }
 }

@@ -9,6 +9,9 @@ import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DataItemIssueLocation
+import net.akehurst.kotlinx.issues.api.IssueKind
+import net.akehurst.kotlinx.issues.ram.IssueDefault
 import net.akehurst.datastore.common.DataItemDefault
 import net.akehurst.datastore.common.DatastoreAbstract
 import net.akehurst.kotlinx.filesystem.UserFileSystemDefault
@@ -27,6 +30,10 @@ import net.akehurst.language.types.builder.typesDomain
 /**
  * Provenance of a DataItem read from a FilesystemDatastore.
  */
+data class FilesystemIssueLocation(
+    val path: String?
+) : DataItemIssueLocation
+
 data class FilesystemProvenance(
     val datastoreIdentity: DatastoreIdentity,
     val path: String
@@ -39,7 +46,15 @@ class FilesystemDatastore(
 
     companion object {
 
-        class FileContent(val file: FileHandle)
+        /**
+         * The content of a file. Setting 'asString' stages the new content in the datastore's transaction;
+         * the file is written on commit. Reading 'asString' gives the staged content, if any, else the file's content.
+         */
+        class FileContent(val file: FileHandle, internal val datastore: FilesystemDatastore) {
+            override fun hashCode(): Int = file.hashCode()
+            override fun equals(other: Any?): Boolean = other is FileContent && other.file == this.file && other.datastore === this.datastore
+            override fun toString(): String = "FileContent(${file.path})"
+        }
 
         class FilesystemConfig(val configuration: DatastoreConfiguration) {
             suspend fun fsRoot(): DirectoryHandle {
@@ -67,14 +82,14 @@ class FilesystemDatastore(
                     propertyOf(setOf(REF, VAL), "extension", "String")
                     propertyOfWithBinding<FileHandle, FileContent>(
                         setOf(REF, VAL), "content", "FileContent",
-                        accessorSuspend = { FileContent(it) }
+                        accessorSuspend = { FileContent(it, this@FilesystemDatastore) }
                     )
                 }
                 data("FileContent", implementation = FileContent::class) {
                     propertyOfWithBinding<FileContent, String>(
                         setOf(REF, VAR), "asString", "String",
-                        accessorSuspend = { it.file.readContent() },
-                        mutatorSuspend = { it, value -> it.file.writeContent(value ?: "") }
+                        accessorSuspend = { it.datastore.contentOf(it.file) },
+                        mutatorSuspend = { it, value -> it.datastore.stageContent(it.file, value ?: "") }
                     )
                 }
             }
@@ -108,15 +123,47 @@ class FilesystemDatastore(
     }
 
     /**
-     * input: Asm
-     * output: String
+     * input: DataItems with FileHandle data, whose content has been set (staged) through 'content.asString'
+     * output: the same items. The staged content is written to the files on commit, and discarded on rollback.
+     * An item whose data is not a FileHandle of this datastore gets an error issue.
      */
     override suspend fun doWrite(
         accessConfiguration: DatastoreConfiguration,
         input: Flow<DataItem>
     ): Flow<DataItem> {
-        return input.map {
-            TODO()
+        return input.map { item ->
+            when (item.data.self) {
+                is FileHandle -> item
+                else -> DataItemDefault(
+                    item.parent, item.identity, item.data, item.provenance,
+                    net.akehurst.kotlinx.issues.ram.IssueHolder<DataItemIssueLocation>(
+                        item.issues.all.toList() + IssueDefault(IssueKind.ERROR, FilesystemIssueLocation(null), "the write input to a FilesystemDatastore must be a FileHandle.")
+                    )
+                )
+            }
         }
+    }
+
+    // --- staged content: file path -> (file, content), applied on commit ---
+
+    private val _staged = mutableMapOf<String, Pair<FileHandle, String>>()
+
+    internal suspend fun contentOf(file: FileHandle): String? = _staged[file.path]?.second ?: file.readContent()
+
+    internal fun stageContent(file: FileHandle, content: String) {
+        checkInTransaction()
+        _staged[file.path] = Pair(file, content)
+    }
+
+    override suspend fun onCommit() {
+        try {
+            _staged.values.forEach { (file, content) -> file.writeContent(content) }
+        } finally {
+            _staged.clear()
+        }
+    }
+
+    override suspend fun onRollback() {
+        _staged.clear()
     }
 }

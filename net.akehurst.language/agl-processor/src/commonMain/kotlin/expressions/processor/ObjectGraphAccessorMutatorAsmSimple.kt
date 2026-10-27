@@ -358,7 +358,7 @@ private class TypedObjectAsmValue(
     override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
 
     override fun setProperty(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
-    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setPropertySuspend(this, name, value)
 
     override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
     override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)

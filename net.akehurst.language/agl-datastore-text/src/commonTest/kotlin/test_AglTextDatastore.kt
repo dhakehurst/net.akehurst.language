@@ -120,7 +120,30 @@ class test_AglTextDatastore {
         }
 
         assertNotNull(actual)
-        assertEquals(expected.asString(), (actual[0].data.self as AsmStructure).asString())
+        val unit = actual[0].data.self as ParsableUnit
+        assertEquals("Hello World !", unit.text)
+        assertEquals(expected.asString(), (unit.asm as AsmStructure).asString())
+    }
+
+    @Test
+    fun read_ParsableUnit_sets_asm_and_keeps_item() = runTest {
+        val dscfg = datastoreConfiguration(AglTextProvider.IDENTITY) {
+            argument(AglTextProvider.CONFIG_GRAMMAR_STR, grammarStr)
+            argument(AglTextProvider.CONFIG_FORMAT_STR, formatStr)
+        }
+        val sut = AglTextProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        val cfg = accessConfiguration(AglTextProvider.IDENTITY) {}
+        val unit = ParsableUnit("Hello World !")
+        val item = DataItemDefault(null, DataItemIdentity("unit"), og.toTypedObject(unit, StdLibDefault.AnyType), TestProvenance)
+
+        sut.open()
+        val actual = sut.read(cfg, flowOf(item)).toList()
+
+        assertEquals(1, actual.size)
+        assertTrue(actual[0].data.self === unit)
+        assertEquals(item.qualifiedIdentity, actual[0].qualifiedIdentity)
+        assertIs<AsmStructure>(unit.asm)
     }
 
     @Test
@@ -144,9 +167,9 @@ class test_AglTextDatastore {
         // the bad item does not stop the read
         assertEquals(2, actual.size)
         assertTrue(actual[0].issues.errors.isNotEmpty())
-        assertTrue(og.isNothing(actual[0].data))
+        assertEquals(null, (actual[0].data.self as ParsableUnit).asm)
         assertTrue(actual[1].issues.errors.isEmpty())
-        assertIs<AsmStructure>(actual[1].data.self)
+        assertIs<AsmStructure>((actual[1].data.self as ParsableUnit).asm)
     }
 
     @Test
@@ -165,7 +188,7 @@ class test_AglTextDatastore {
         val actual = sut.read(cfg, flowOf(root)).toList()
 
         assertEquals(listOf(DataItemIdentity("root")), root.qualifiedIdentity)
-        assertEquals(listOf(DataItemIdentity("root"), DataItemIdentity("0")), actual[0].qualifiedIdentity)
+        assertEquals(listOf(DataItemIdentity("root"), DataItemIdentity("parsableUnit")), actual[0].qualifiedIdentity)
     }
 
     @Test
@@ -186,10 +209,32 @@ class test_AglTextDatastore {
         val cfg = accessConfiguration(AglTextProvider.IDENTITY) { }
         sut.open()
         sut.beginTransaction()
-        val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(asm, StdLibDefault.AnyType), TestProvenance))).toList()
+        val unit = ParsableUnit("")
+        unit.asm = asm
+        val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(unit, StdLibDefault.AnyType), TestProvenance))).toList()
 
         assertNotNull(actual)
-        assertEquals("Hello World !", actual[0].data.self as String)
+        assertTrue(actual[0].issues.errors.isEmpty(), actual[0].issues.toString())
+        assertTrue(actual[0].data.self === unit)
+        assertEquals("Hello World !", unit.text)
+    }
+
+    @Test
+    fun write_without_asm_gives_issue() = runTest {
+        val dscfg = datastoreConfiguration(AglTextProvider.IDENTITY) {
+            argument(AglTextProvider.CONFIG_GRAMMAR_STR, grammarStr)
+            argument(AglTextProvider.CONFIG_FORMAT_STR, formatStr)
+        }
+        val sut = AglTextProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        val cfg = accessConfiguration(AglTextProvider.IDENTITY) { }
+        val unit = ParsableUnit("unchanged")
+        sut.open()
+        sut.beginTransaction()
+        val actual = sut.write(cfg, flowOf(DataItemDefault(null, DataItemIdentity("test"), og.toTypedObject(unit, StdLibDefault.AnyType), TestProvenance))).toList()
+
+        assertTrue(actual[0].issues.errors.isNotEmpty())
+        assertEquals("unchanged", unit.text)
     }
 
     @Test
