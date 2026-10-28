@@ -171,6 +171,10 @@ class LeftCornerParser(
             this._issues.error(sentence.locationFor(e.position, length), IssueMessage.PARSER_WONT_STOP)
             return ParseResultDefault(null, this._issues)
         }
+        catch (e: ParserInterruptedException) {
+            this._issues.error(sentence.locationFor(e.position, 0), IssueMessage.parserTerminated(e.reason))
+            return ParseResultDefault(null, this._issues)
+        }
 
         val match = rp.graph.treeData.complete
 
@@ -317,6 +321,15 @@ class LeftCornerParser(
     }
 
     override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult {
+        return try {
+            expectedAtUninterrupted(sentenceText, position, options)
+        } catch (e: ParserInterruptedException) {
+            // terminated on request: nothing is expected
+            ExpectedAtResultDefault(position, emptySet())
+        }
+    }
+
+    private fun expectedAtUninterrupted(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult {
         // the text between a word start and position (if any) could be either
         //  1) an unfinished token - so expected terminals are those at the word start, that could start with the partial word
         //  2) a complete token - so expected terminals are those after the partial word

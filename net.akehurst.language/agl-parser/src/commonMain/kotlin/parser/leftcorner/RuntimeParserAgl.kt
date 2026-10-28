@@ -58,6 +58,15 @@ internal class ParserWontStopException(
     val position: Int
 ) : RuntimeException(IssueMessage.PARSER_WONT_STOP)
 
+/**
+ * Thrown when the parser is asked to stop, via [RuntimeParserAgl.interrupt].
+ * Caught by LeftCornerParser (parse, expectedAt) so callers get a normal result, it is never thrown to them.
+ */
+internal class ParserInterruptedException(
+    val position: Int,
+    val reason: String
+) : RuntimeException(IssueMessage.parserTerminated(reason))
+
 internal class RuntimeParserAgl(
     val sentence: Sentence, //FIXME: should really be a method argument
     val isSkipParser: Boolean,
@@ -155,7 +164,8 @@ internal class RuntimeParserAgl(
         if (null == m) {
             //do nothing
         } else {
-            error("ParserTerminated: $m")//throw ParserTerminatedException(m)
+            val position = if (this.graph.hasNextHead) this.graph.nextHeadNextInputPosition else 0
+            throw ParserInterruptedException(position, m)
         }
     }
 
