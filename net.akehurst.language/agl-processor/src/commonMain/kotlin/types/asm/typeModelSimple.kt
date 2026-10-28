@@ -955,7 +955,7 @@ abstract class TypeDefinitionSimpleAbstract(
 
     override val method = mutableListOf<MethodDefinition>()
 
-    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.resolvedDefinition as DataType).allSuperTypes }
+    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { it.resolvedDefinition.allSuperTypes }
 
     override val allProperty: Map<PropertyName, PropertyDeclaration>
         get() = supertypes.flatMap {
