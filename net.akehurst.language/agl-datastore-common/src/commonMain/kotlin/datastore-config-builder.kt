@@ -10,6 +10,7 @@ import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
+import net.akehurst.datastore.api.SecretReference
 
 fun datastoreConfiguration(
     providerIdentity: DatastoreProviderIdentity,
@@ -52,6 +53,9 @@ class DatastoreConfigurationBuilder(
         }
         _argument[key] = value
     }
+
+    /** a reference to the secret 'key' in the SecretSource 'source', to give as the argument of a sensitive parameter */
+    fun secret(source: String, key: String) = SecretReference(source, key)
 
     /**
      * Checks the arguments against the provider's schema, then builds the configuration.
@@ -100,6 +104,8 @@ object DatastoreConfigurationValidator {
             val value = argument[info.identity]
             when {
                 null == value -> if (info.optional) emptyList() else listOf("Required parameter '${info.identity}' (${info.name}) is missing")
+                // a secret is read, and its type checked, when the datastore is opened
+                value is SecretReference -> if (info.sensitive) emptyList() else listOf("Parameter '${info.identity}' (${info.name}) is not sensitive, so it cannot be given a secret reference")
                 conformsTo(value, info.type).not() -> listOf("Parameter '${info.identity}' (${info.name}) must be a '${info.type.qualifiedName.value}', got a '${value::class.simpleName}'")
                 else -> emptyList()
             }

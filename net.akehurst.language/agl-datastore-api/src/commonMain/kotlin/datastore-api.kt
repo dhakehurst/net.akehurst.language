@@ -47,6 +47,20 @@ interface DataItem {
     val issues: IssueCollection<DataItemIssueLocation>
 }
 
+/**
+ * A reference to a secret, given as the argument of a sensitive parameter instead of its value,
+ * e.g. argument(PASSWORD, secret("keychain", "rm-tool/david")).
+ * The secret is read from the named SecretSource (net.akehurst.kotlinx.secure.storage) when the datastore is opened; the configuration only holds the reference.
+ */
+data class SecretReference(
+    /** the identity of the SecretSource */
+    val source: String,
+    /** the key of the secret in that source */
+    val key: String
+) {
+    override fun toString(): String = "secret($source, $key)"
+}
+
 interface DatastoreProviderRegistry {
     fun register(provider: DatastoreProvider)
     fun getOrNull(providerIdentity: DatastoreProviderIdentity): DatastoreProvider?

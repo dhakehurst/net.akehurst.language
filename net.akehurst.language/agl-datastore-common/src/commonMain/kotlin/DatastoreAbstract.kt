@@ -9,6 +9,8 @@ import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.TransactionState
+import net.akehurst.kotlinx.secure.storage.SecretSourceRegistry
+import net.akehurst.kotlinx.secure.storage.SecretSourceRegistryDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.issues.ram.IssueHolder
@@ -31,8 +33,19 @@ import net.akehurst.language.types.api.TypesDomain
  */
 abstract class DatastoreAbstract(
     override val identity: DatastoreIdentity,
-    override val configuration: DatastoreConfiguration
+    configuration: DatastoreConfiguration,
+    /** where the secrets referenced by the configuration (SecretReference arguments) are read from, when the datastore is opened */
+    private val secretSources: SecretSourceRegistry = SecretSourceRegistryDefault.GLOBAL
 ) : Datastore {
+
+    private val _configuration = configuration
+    private var _resolvedConfiguration: DatastoreConfiguration? = null
+
+    /**
+     * the configuration. While the datastore is open, its secret references are replaced by the secrets
+     * (read when it was opened); after close() they are references again. Read secrets while open, do not keep them.
+     */
+    final override val configuration: DatastoreConfiguration get() = _resolvedConfiguration ?: _configuration
 
     /** issues raised by the accessor-mutator */
     protected val accessorMutatorIssues = IssueHolder()
@@ -63,7 +76,13 @@ abstract class DatastoreAbstract(
 
     final override suspend fun open() {
         check(_isOpen.not()) { "Datastore '${identity.value}' is already open" }
-        onOpen()
+        _resolvedConfiguration = _configuration.withSecretsResolved(secretSources)
+        try {
+            onOpen()
+        } catch (t: Throwable) {
+            _resolvedConfiguration = null
+            throw t
+        }
         _isOpen = true
     }
 
@@ -73,7 +92,11 @@ abstract class DatastoreAbstract(
                 rollback()
             } finally {
                 _isOpen = false
-                onClose()
+                try {
+                    onClose()
+                } finally {
+                    _resolvedConfiguration = null
+                }
             }
         }
     }
@@ -141,13 +164,13 @@ abstract class DatastoreAbstract(
     // checked when called, and again when the flow is collected, as the flow may be collected later
     final override suspend fun read(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
         checkOpen()
-        return doRead(accessConfiguration, input).onStart { checkOpen() }
+        return doRead(accessConfiguration.withSecretsResolved(secretSources), input).onStart { checkOpen() }
     }
 
     final override suspend fun write(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
         checkOpen()
         checkInTransaction()
-        return doWrite(accessConfiguration, input).onStart { checkOpen(); checkInTransaction() }
+        return doWrite(accessConfiguration.withSecretsResolved(secretSources), input).onStart { checkOpen(); checkInTransaction() }
     }
 
     final override suspend fun types(): TypesDomain =
