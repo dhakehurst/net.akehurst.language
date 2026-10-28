@@ -618,4 +618,19 @@ class test_BinaryHeapMin {
             ), sut.entries
         )
     }
+
+    @Test
+    fun remove_from_middle_moves_replacement_up() {
+        // heap array after these inserts is [1, 10, 2, 11, 12, 3, 4]
+        listOf(1, 10, 2, 11, 12, 3, 4).forEach { sut.insert(it, it.toString()) }
+        assertEquals(listOf(1, 10, 2, 11, 12, 3, 4), sut.entries.map { it.key })
+
+        // removing 11 moves 4 (last element) into its place, below 10, so 4 must move up
+        assertEquals("11", sut.remove(11))
+        assertEquals(listOf(1, 4, 2, 10, 12, 3), sut.entries.map { it.key })
+
+        val extracted = mutableListOf<String>()
+        while (sut.isNotEmpty()) extracted.add(sut.extractRoot()!!)
+        assertEquals(listOf("1", "2", "3", "4", "10", "12"), extracted)
+    }
 }

@@ -179,7 +179,9 @@ class BinaryHeapComparable<K, V>(
                 if (index >= 0) {
                     this.swap(index, this._elements.size - 1)
                     val old = this._elements.removeAt(this._elements.size - 1)
-                    this.downHeap(index)
+                    // the element moved into 'index' came from the end of the heap, it may need to go down or up
+                    val newIndex = this.downHeap(index)
+                    if (newIndex == index) this.upHeap(index, this._elements[index].key)
                     old.value
                 } else {
                     null
