@@ -324,9 +324,47 @@ class AsmReferenceSimple(
     }
 }
 
+/** the identity the syntax analyser gives a structure: the identity of the sentence, the structure's type, and the path of the parse node that created it */
+data class AsmStructureParseIdentity(
+    val sentenceIdentity: Any?,
+    val qualifiedTypeName: QualifiedName,
+    val parsePath: String
+) {
+    override fun toString(): String = "${sentenceIdentity ?: ""}:${qualifiedTypeName.value}@$parsePath"
+}
+
+/** an identity generated for a structure that was given none: equal only to itself */
+class AsmStructureGeneratedIdentity {
+    override fun toString(): String = "generated#${hashCode()}"
+}
+
 class AsmStructureSimple(
-    override val qualifiedTypeName: QualifiedName
+    override val qualifiedTypeName: QualifiedName,
+    identity: Any? = null
 ) : AsmValueAbstract(), AsmStructure {
+
+    private var _identity: Any? = identity
+    private var _identityUsed = false
+
+    /** see AsmStructure.identity. If none was given, one is generated when it is first used. */
+    override val identity: Any
+        get() {
+            val id = _identity ?: AsmStructureGeneratedIdentity().also { _identity = it }
+            _identityUsed = true
+            return id
+        }
+
+    /** true if an identity was given (by the constructor or setIdentity), or generated */
+    val hasIdentity: Boolean get() = null != _identity
+
+    /**
+     * Sets the identity. Fails if a different identity has already been used (e.g. by equals or hashCode, so the
+     * structure may be in a map or set), because changing it then would lose the structure in that map or set.
+     */
+    fun setIdentity(value: Any) {
+        check(_identityUsed.not() || _identity == value) { "The identity of $this has already been used, it cannot be changed to '$value'" }
+        _identity = value
+    }
 
     private var _properties = mutableMapOf<PropertyValueName, AsmStructureProperty>()
 
@@ -425,13 +463,9 @@ class AsmStructureSimple(
 
     }
 
-    override fun hashCode(): Int = semanticQualifiedPath?.hashCode() ?: parsePath.hashCode()
+    override fun hashCode(): Int = identity.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
-        is AsmStructureSimple -> when {
-            null != this.semanticQualifiedPath && null != other.semanticQualifiedPath -> this.semanticQualifiedPath == other.semanticQualifiedPath
-            else -> this.parsePath == other.parsePath //&& this.asm == other.asm
-        }
-
+        is AsmStructureSimple -> this.identity == other.identity
         else -> false
     }
 

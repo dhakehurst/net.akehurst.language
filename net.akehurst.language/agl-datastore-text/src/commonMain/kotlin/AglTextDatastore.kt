@@ -235,27 +235,18 @@ class AglTextDatastore(
     private fun toItemIssues(issues: Iterable<LanguageIssue>) =
         issues.map { IssueDefault<DataItemIssueLocation>(IssueKind.valueOf(it.kind.name), AglTextIssueLocation(it.location), it.message, it.data) }
 
-    /**
-     * A unit being read. 'locations' is a list, not a map, because the hash code of an AsmStructureSimple changes when
-     * semantic analysis gives it a qualified name; the map is built (again) after each step that may change it.
-     */
+    /** a unit being read */
     private class Parsed(
         val item: DataItem,
         val unit: ParsableUnit,
         val sentenceIdentity: List<DataItemIdentity>,
         val asm: Asm?,
-        val locations: List<Pair<Any, InputLocation>>,
+        val locations: Map<Any, InputLocation>,
         val issues: MutableList<LanguageIssue>
     ) {
         var resolvedReferences: List<ResolvedReference> = emptyList()
         val hasErrors get() = issues.any { it.kind == LanguageIssueKind.ERROR }
-        fun locationMap(others: Map<Any, InputLocation> = emptyMap()) = LocationMapOf(locations.toMap().toMutableMap(), others)
-
-        /**
-         * the locations of the elements that have a qualified name in the scope (the possible targets of references from other units).
-         * Other elements are left out: an AsmStructureSimple with no qualified name is equal to one in another unit at the same parse path.
-         */
-        fun scopedLocations() = locations.filter { (it.first as? AsmStructure)?.semanticQualifiedPath != null }
+        fun locationMap(others: Map<Any, InputLocation> = emptyMap()) = LocationMapOf(locations.toMutableMap(), others)
     }
 
     /** parses the unit's text, without semantic analysis; for an input that is not a unit, the item with an error */
@@ -266,7 +257,7 @@ class AglTextDatastore(
         val asm = res.asm
         val lm = res.syntaxAnalysis?.locationMap
         // copied now: the processor clears its location map on the next parse
-        val locations = if (null != asm && null != lm) locationsOf(asm, lm) else emptyList()
+        val locations = if (null != asm && null != lm) locationsOf(asm, lm) else emptyMap()
         return Parsed(item, unit, sentenceIdentity, asm, locations, relevant(res.allIssues.all).toMutableList())
     }
 
@@ -292,7 +283,7 @@ class AglTextDatastore(
         val ok = p.hasErrors.not()
         // one parse gives one root
         p.unit.asm = if (ok) p.asm?.root?.firstOrNull() else null
-        p.unit.locations = if (ok) p.locations.toMap() else emptyMap()
+        p.unit.locations = if (ok) p.locations else emptyMap()
         p.unit.resolvedReferences = if (ok) p.resolvedReferences else emptyList()
         return unitItem(p.item, p.unit, net.akehurst.kotlinx.issues.ram.IssueHolder(toItemIssues(p.issues)))
     }
@@ -346,11 +337,12 @@ class AglTextDatastore(
             }
         }
         // pass 2: resolve the references of each unit; the locations of targets in other units come from those units
-        val scopedLocations = parsed.filterIsInstance<Parsed>().flatMap { it.scopedLocations() }.toMap()
+        // (the identity of an AsmStructureSimple includes its sentence identity, so elements of different units are never equal)
+        val allLocations = parsed.filterIsInstance<Parsed>().flatMap { it.locations.entries }.associate { it.key to it.value }
         for (p in parsed) {
             emit(
                 when (p) {
-                    is Parsed -> resolvePass(p, context, scopedLocations)
+                    is Parsed -> resolvePass(p, context, allLocations)
                     else -> p as DataItem
                 }
             )
@@ -358,10 +350,10 @@ class AglTextDatastore(
     }
 
     /** copies the locations of the elements of 'asm' from 'locationMap' */
-    private fun locationsOf(asm: Asm, locationMap: LocationMap): List<Pair<Any, InputLocation>> {
-        val result = mutableListOf<Pair<Any, InputLocation>>()
+    private fun locationsOf(asm: Asm, locationMap: LocationMap): Map<Any, InputLocation> {
+        val result = mutableMapOf<Any, InputLocation>()
         fun put(value: Any?) {
-            if (null != value) locationMap[value]?.let { result.add(Pair(value, it)) }
+            if (null != value) locationMap[value]?.let { result[value] = it }
         }
         asm.traverseDepthFirst(object : AsmTreeWalker {
             override fun beforeRoot(root: Any) = put(root)
