@@ -71,7 +71,10 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | Id | Requirement | Status |
 |----|-------------|--------|
 | X1 | Read takes a `ParsableUnit` (or a `String`, for which a unit is created) and outputs the same unit, with `asm` set to the root of parsing its `text` (null if parsing fails, with the issues on the item). One parse gives one root. | done |
-| X2 | Write takes a `ParsableUnit` and sets its `text` to the result of formatting its `asm`. If there is no `asm`, or formatting fails, `text` is unchanged and the item has the issues. | done |
+| X2 | Write takes a `ParsableUnit` and sets its `text` to the result of formatting its `asm`. If there is no `asm`, or formatting fails, `text` is unchanged and the item has the issues. When `text` changes, the unit's locations and resolved references are cleared. | done |
+| X3 | Read keeps the parser's locations on the unit: `ParsableUnit.locationOf(element)` gives the `InputLocation` (position, length, line, column) of an element of `asm` (or of a `TypedObject` of it) in `text`, e.g. so that a chunker can take the exact source text of a parsed element. The location's `sentenceIdentity` is the qualified identity of the unit's item. A plain Kotlin function, not part of the types. | done |
+| X4 | An optional datastore parameter `config.crossReference` (`CONFIG_CROSS_REFERENCE_STR`) gives the language's scopes and references. With it, read resolves references and keeps them on the unit: `ParsableUnit.resolvedReferences` (source and target elements, and their locations). Without it, no references are resolved. | done |
+| X5 | By default references are resolved within each unit. The access parameter `access.resolve-across-units` (`ACCESS_RESOLVE_ACROSS_UNITS`, Boolean) set to true resolves them across all the units of one read, with one context for that read only: read collects all its input, parses every unit and builds its scope, then resolves each unit's references, and emits the items (in input order) only then, so it does not stream. A unit with the same qualified identity as an earlier one gets an error issue and its references are resolved within it only. | done |
 
 ### Filesystem datastore
 
@@ -111,3 +114,8 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
       end("text", "String", "description")
   }
   ```
+
+- Chunking for RAG (agreed, not part of this project): source datastores do not chunk; they give the text, the parsed
+  structure, the locations (X3) and the resolved references (X4). A chunker can be a datastore at the end of a
+  composition (e.g. `fs → txt → chunker`), whose chunks are `DataItem`s with the parsed unit as `parent`.
+  Embedding is outside the datastores.

@@ -14,6 +14,15 @@ class AglTextProvider : DatastoreProvider {
         const val CONFIG_GRAMMAR_STR = "config.grammar"
         const val CONFIG_FORMAT_STR = "config.format"
 
+        /** optional cross-reference definition (scopes and references) for the grammar; without it no references are resolved */
+        const val CONFIG_CROSS_REFERENCE_STR = "config.crossReference"
+
+        /**
+         * access parameter: true resolves references across all the units of one read (one context for the read);
+         * false (the default) resolves them within each unit. When true, the read collects all its input before it emits anything.
+         */
+        const val ACCESS_RESOLVE_ACROSS_UNITS = "access.resolve-across-units"
+
         const val CONFIG_LANGUAGE_DIRECTORY = "config.lang-dir"
 
         /** input type for AglTextDatastore.read, for use as a DatastoreConnection targetType */
@@ -33,6 +42,10 @@ class AglTextProvider : DatastoreProvider {
                     parameter(CONFIG_FORMAT_STR, "Format String", false) {
                         type("String")
                     }
+                    parameter(CONFIG_CROSS_REFERENCE_STR, "Cross-Reference String", true) {
+                        type("String")
+                        description("Scopes and references of the language. Without it, no references are resolved.")
+                    }
                 }
                 alternative("Language Directory") {
                     parameter(CONFIG_FORMAT_STR, "Format String", false) {
@@ -43,7 +56,10 @@ class AglTextProvider : DatastoreProvider {
         }
 
         access {
-
+            parameter(ACCESS_RESOLVE_ACROSS_UNITS, "Resolve references across units", optional = true) {
+                type("Boolean")
+                description("true: references resolve across all the units of one read, and the read waits for all its input. false (default): references resolve within each unit.")
+            }
         }
     }
 
