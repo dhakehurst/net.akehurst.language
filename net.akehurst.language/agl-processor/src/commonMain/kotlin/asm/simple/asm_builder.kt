@@ -189,7 +189,8 @@ class AsmElementSimpleBuilder(
             }
         }
     }
-    private val _element = _asm.createStructure("/", _elementQualifiedTypeName).also {
+    // each element needs its own parsePath: it is used for equality (and indexing) when there is no semantic path
+    private val _element = _asm.createStructure(_asmPath.value, _elementQualifiedTypeName).also {
         it.syntaxAnalyserPath = _asmPath
         if (_isRoot) _asm.addRoot(it)
     }
