@@ -189,6 +189,7 @@ class BinaryHeapFifoComparable<K, V>(
 
     override fun clear() {
         this._elements.clear()
+        this._keys.clear()
     }
 
     private fun parentIndexOf(childIndex: Int) = (childIndex - 1) / 2

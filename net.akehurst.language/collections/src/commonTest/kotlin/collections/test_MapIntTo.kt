@@ -74,5 +74,24 @@ class test_MapIntTo {
         assertEquals("index 9", map[9])
     }
 
+    @Test
+    fun size_does_not_count_overwrite() {
+        val map = MapIntTo<String>(3)
+        map[1] = "a"
+        map[1] = "b"
+        assertEquals(1, map.size)
+        assertEquals("b", map[1])
+    }
+
+    @Test
+    fun loadFactor_1_never_fills_the_table() {
+        // capacity 4, load factor 1.0: a full table would make lookup of a missing key loop forever
+        val map = MapIntTo<String>(2, 1.0)
+        for (k in 1..10) map[k] = "v$k"
+        assertEquals(10, map.size)
+        for (k in 1..10) assertEquals("v$k", map[k])
+        assertEquals(null, map[99])
+    }
+
     //TODO: test performance ?
 }

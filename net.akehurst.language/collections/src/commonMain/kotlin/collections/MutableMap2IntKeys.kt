@@ -37,14 +37,15 @@ internal class MutableMap2IntKeys<V>(val key1Max:Int, val key2Max:Int) {
     val size: Int get() = this._size
 
     operator fun set(key1: Int, key2: Int, value: V) {
+        if (_isOutOfRange(key1, key2)) error("Internal Error: keys $key1, $key2 are outside the range of this map, key1 in -5 until $key1Max, key2 in 0 until $key2Max")
         val index = _calcValueIndex(key1, key2)
         //check(0 != index) { "Internal Error: MutableMap2IntKeys index of $key1 and $key2 is 0" } //TODO: could remove this if certain!
         when {
             index < _currentCapacity -> {
                 //_keys1[index] = if(0==key1) ZERO else key1
                 //_keys2[index] = key2
+                if (null == _values[index]) this._size++ // only count a new key
                 _values[index] = value
-                this._size++
                 //this._growIfNeeded()
                 return
             }
@@ -55,6 +56,7 @@ internal class MutableMap2IntKeys<V>(val key1Max:Int, val key2Max:Int) {
     }
 
     operator fun get(key1: Int, key2: Int): V? {
+        if (_isOutOfRange(key1, key2)) return null // cannot be in the map
         val index = _calcValueIndex(key1, key2)
         return _values[index] as V
     }
@@ -64,6 +66,9 @@ internal class MutableMap2IntKeys<V>(val key1Max:Int, val key2Max:Int) {
     //private var _keys1 = IntArray(_currentCapacity)
     //private var _keys2 = IntArray(_currentCapacity)
     private var _values = arrayOfNulls<Any>(_currentCapacity)
+
+    // key2 outside 0 until key2Max would give the index of a different pair of keys
+    private fun _isOutOfRange(k1: Int, k2: Int): Boolean = k1 < -5 || k1 >= key1Max || k2 < 0 || k2 >= key2Max
 
     private fun _calcHash(k1: Int, k2: Int): Int = k2 + (k1*key2Max)
     private fun _calcValueIndex(k1: Int, k2: Int): Int {

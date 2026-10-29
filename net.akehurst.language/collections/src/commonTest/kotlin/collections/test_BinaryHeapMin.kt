@@ -370,7 +370,7 @@ class test_BinaryHeapMin {
 
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
-        assertEquals(listOf("I", "I2"), sut[9])
+        assertEquals(setOf("I", "I2"), sut[9].toSet())
         assertEquals("C", sut.peekRoot)
     }
 
@@ -382,7 +382,7 @@ class test_BinaryHeapMin {
 
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
-        assertEquals(listOf("M", "M2"), sut[13])
+        assertEquals(setOf("M", "M2"), sut[13].toSet())
         assertEquals("C", sut.peekRoot)
     }
 
@@ -444,7 +444,7 @@ class test_BinaryHeapMin {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("I", "I2"), sut[9])
+        assertEquals(setOf("I", "I2"), sut[9].toSet())
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }
@@ -457,7 +457,7 @@ class test_BinaryHeapMin {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("M", "M2"), sut[13])
+        assertEquals(setOf("M", "M2"), sut[13].toSet())
         assertEquals(emptyList(), sut[3])
     }
 

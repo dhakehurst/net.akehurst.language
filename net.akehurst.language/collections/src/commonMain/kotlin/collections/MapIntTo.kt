@@ -39,9 +39,9 @@ class MapIntTo<V> private constructor(val loadFactor: Double, initialCapacity: I
         } else {
             this._growIfNeeded()
             val index = this._calcIndex(key)
+            if (EMPTY == this._keys[index]) this._size++ // only count a new key
             this._keys[index] = key
             // initialised value already in _values
-            this._size++
         }
     }
 
@@ -64,9 +64,9 @@ class MapIntTo<V> private constructor(val loadFactor: Double, initialCapacity: I
         } else {
             this._growIfNeeded()
             val index = _calcIndex(key)
+            if (EMPTY == _keys[index]) this._size++ // only count a new key
             _keys[index] = key
             _values[index] = value
-            this._size++
         }
     }
 
@@ -80,7 +80,8 @@ class MapIntTo<V> private constructor(val loadFactor: Double, initialCapacity: I
 
     private var _currentCapacity = initialCapacity
     private var _mask: Int = _currentCapacity - 1
-    private var _maxBeforeResize = (_currentCapacity * loadFactor).toInt()
+    // always keep at least one EMPTY slot, else _calcIndex never ends for a key that is not in the map
+    private var _maxBeforeResize = minOf((_currentCapacity * loadFactor).toInt(), _currentCapacity - 1)
     private var _size: Int = 0
     private var _zeroIsEmpty = true
     private var _zeroValue: V? = null
@@ -114,7 +115,7 @@ class MapIntTo<V> private constructor(val loadFactor: Double, initialCapacity: I
     }
 
     private fun _growIfNeeded() {
-        if (this._size > _maxBeforeResize) {
+        if (this._size >= _maxBeforeResize) {
             this._grow()
         }
     }

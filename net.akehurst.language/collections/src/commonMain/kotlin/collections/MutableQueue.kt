@@ -35,7 +35,10 @@ class MutableQueue<T>() {
         list.add(item)
     }
 
-    fun peek(): T = list.last()
+    /**
+     * the item that dequeue will return next
+     */
+    fun peek(): T = list.first()
     fun dequeue(): T = list.removeAt(0)
 
     override fun toString(): String = this.list.joinToString(separator = ",") { it.toString() }

@@ -702,4 +702,20 @@ class test_BinaryHeapFifoMin {
             ), sut.keys
         )
     }
+
+    @Test
+    fun clear_then_insert() {
+        sut.insert(5, "E")
+        sut.insert(3, "C")
+        sut.clear()
+        assertEquals(0, sut.size)
+        assertEquals(emptyList(), sut.keys)
+
+        sut.insert(4, "D")
+        sut.insert(2, "B")
+        assertEquals(2, sut.size)
+        assertEquals("B", sut.extractRoot())
+        assertEquals("D", sut.extractRoot())
+        assertEquals(null, sut.extractRoot())
+    }
 }

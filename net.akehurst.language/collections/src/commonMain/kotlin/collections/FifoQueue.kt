@@ -80,8 +80,11 @@ class FifoQueue<E> : Iterable<E> {
      */
     fun removeBack(): E {
         val back = this._back ?: error("FifoQueue is empty")
-        back.previous?.next = null
-        this._back = back.previous
+        val previous = back.previous
+        previous?.next = null
+        this._back = previous
+        if (null == previous) this._front = null // queue is now empty
+        back.previous = null
         this._size--
         return back.value
     }
@@ -91,11 +94,14 @@ class FifoQueue<E> : Iterable<E> {
      * remove element from front of queue
      */
     fun removeFront(): E {
-        val back = this._back ?: error("FifoQueue is empty")
-        back.previous?.next = null
-        this._back = back.previous
+        val front = this._front ?: error("FifoQueue is empty")
+        val next = front.next
+        next?.previous = null
+        this._front = next
+        if (null == next) this._back = null // queue is now empty
+        front.next = null
         this._size--
-        return back.value
+        return front.value
     }
 
     // --- Iterable<E> ---

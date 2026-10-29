@@ -251,12 +251,13 @@ class test_BinaryHeapMax {
     fun _1_element_insertAndThenExtractRoot_larger() {
         sut.insert(2, "B")
 
+        // max heap: the inserted key is larger than the root, so it is extracted straight away
         val actual = sut.insertAndThenExtractRoot(3, "C")
 
-        assertEquals("B", actual)
+        assertEquals("C", actual)
         assertEquals(1, sut.size)
-        assertEquals(listOf("C"), sut[3])
-        assertEquals(emptyList(), sut[2])
+        assertEquals(listOf("B"), sut[2])
+        assertEquals(emptyList(), sut[3])
     }
 
     @Test
@@ -324,7 +325,7 @@ class test_BinaryHeapMax {
 
         assertEquals("M", actual)
         assertEquals(9, sut.size)
-        assertEquals(emptyList(), sut[3])
+        assertEquals(emptyList(), sut[13])
     }
 
     @Test
@@ -429,11 +430,11 @@ class test_BinaryHeapMax {
 
         val actual = sut.extractRootAndThenInsert(7, "G")
 
-        assertEquals("C", actual)
+        assertEquals("M", actual)
         assertEquals(10, sut.size)
         assertEquals(listOf("G"), sut[7])
-        assertEquals(emptyList(), sut[3])
-        assertEquals("D", sut.peekRoot)
+        assertEquals(emptyList(), sut[13])
+        assertEquals("L", sut.peekRoot)
     }
 
     @Test
@@ -442,11 +443,11 @@ class test_BinaryHeapMax {
 
         val actual = sut.extractRootAndThenInsert(9, "I2")
 
-        assertEquals("C", actual)
+        assertEquals("M", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("I", "I2"), sut[9])
-        assertEquals(emptyList(), sut[3])
-        assertEquals("D", sut.peekRoot)
+        assertEquals(setOf("I", "I2"), sut[9].toSet())
+        assertEquals(emptyList(), sut[13])
+        assertEquals("L", sut.peekRoot)
     }
 
     @Test
@@ -455,10 +456,10 @@ class test_BinaryHeapMax {
 
         val actual = sut.extractRootAndThenInsert(13, "M2")
 
-        assertEquals("C", actual)
+        assertEquals("M", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("M", "M2"), sut[13])
-        assertEquals(emptyList(), sut[3])
+        assertEquals(listOf("M2"), sut[13])
+        assertEquals("M2", sut.peekRoot)
     }
 
     @Test
@@ -477,13 +478,14 @@ class test_BinaryHeapMax {
     fun _10_element_insertAndThenExtractRoot_smallest() {
         insert_10()
 
+        // max heap: the inserted key is smaller than the root, so the root is extracted
         val actual = sut.insertAndThenExtractRoot(1, "A")
 
-        assertEquals("A", actual)
+        assertEquals("M", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("C"), sut[3])
-        assertEquals(emptyList(), sut[1])
-        assertEquals("C", sut.peekRoot)
+        assertEquals(listOf("A"), sut[1])
+        assertEquals(emptyList(), sut[13])
+        assertEquals("L", sut.peekRoot)
     }
 
     @Test
@@ -495,7 +497,7 @@ class test_BinaryHeapMax {
         assertEquals("M", actual)
         assertEquals(10, sut.size)
         assertEquals(setOf("C", "C2"), sut[3].toSet())
-        assertEquals("M", sut.peekRoot)
+        assertEquals("L", sut.peekRoot)
     }
 
     @Test
@@ -517,11 +519,11 @@ class test_BinaryHeapMax {
 
         val actual = sut.insertAndThenExtractRoot(9, "I2")
 
-        assertEquals("C", actual)
+        assertEquals("M", actual)
         assertEquals(10, sut.size)
         assertEquals(setOf("I", "I2"), sut[9].toSet())
-        assertEquals(emptyList(), sut[3])
-        assertEquals("D", sut.peekRoot)
+        assertEquals(emptyList(), sut[13])
+        assertEquals("L", sut.peekRoot)
     }
 
     @Test
