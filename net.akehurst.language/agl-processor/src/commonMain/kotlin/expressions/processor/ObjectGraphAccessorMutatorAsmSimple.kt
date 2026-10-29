@@ -27,9 +27,9 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.asm.TypeReferenceDefault

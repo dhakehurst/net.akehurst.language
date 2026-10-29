@@ -27,7 +27,7 @@ import net.akehurst.language.agl.util.debug
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.*
 import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
-import net.akehurst.language.collections.clone
+import net.akehurst.kotlinx.collections.clone
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder

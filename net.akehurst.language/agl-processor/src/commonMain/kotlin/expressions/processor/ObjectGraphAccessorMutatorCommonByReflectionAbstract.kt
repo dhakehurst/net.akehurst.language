@@ -27,8 +27,8 @@ import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.simple.AsmStructurePropertySimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*

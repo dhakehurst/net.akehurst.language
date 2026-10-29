@@ -30,7 +30,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.asm.VariableAssignmentStatementDefault

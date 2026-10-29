@@ -22,7 +22,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.reference.api.CrossReferenceDomain

@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import net.akehurst.language.parser.api.*
 import net.akehurst.language.regex.api.UnescapedLiteral
 import net.akehurst.language.regex.api.UnescapedPattern
-import std.extensions.implies
+import net.akehurst.kotlinx.utils.implies
 
 fun ruleSet(name: String, init: RuleSetBuilder.() -> Unit) : RuleSet = runtimeRuleSet(name, init)
 

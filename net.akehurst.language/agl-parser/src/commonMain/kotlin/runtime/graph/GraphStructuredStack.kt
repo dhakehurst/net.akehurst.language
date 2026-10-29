@@ -18,8 +18,8 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.collections.BinaryHeap
-import net.akehurst.language.collections.deepClone
+import net.akehurst.kotlinx.collections.BinaryHeap
+import net.akehurst.kotlinx.collections.deepClone
 
 class GraphStructuredStack<E>(
     val _growingHeadHeap: BinaryHeap<E, E>,

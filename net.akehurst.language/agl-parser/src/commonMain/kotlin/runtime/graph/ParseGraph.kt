@@ -23,7 +23,7 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
 import net.akehurst.language.automaton.leftcorner.ParserState
-import net.akehurst.language.collections.binaryHeap
+import net.akehurst.kotlinx.collections.binaryHeap
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
