@@ -105,6 +105,8 @@ class RegexValueProvider(
             }
             MatcherKind.ONE_OF -> provideFor(matcher.options[0])
             MatcherKind.RANGE -> matcher.min
+            MatcherKind.PREDICATE, MatcherKind.ALL_OF -> PRINTABLE_ASCII.firstOrNull { matchesChar(matcher, it) } ?: anyChar
+            else -> null // zero width assertions do not provide a char
         }
     }
 
@@ -119,6 +121,7 @@ class RegexValueProvider(
                 MatcherKind.LITERAL -> chars.remove(it.literal)
                 MatcherKind.ONE_OF -> it.options.forEach { chars.removeAll(allOf(it)) }
                 MatcherKind.RANGE -> chars.removeAll(it.min .. it.max)
+                else -> chars.removeAll { c -> matchesChar(it, c) }
             }
         }
         return chars.first()
@@ -133,6 +136,9 @@ class RegexValueProvider(
             MatcherKind.LITERAL -> listOf(cm.literal)
             MatcherKind.ONE_OF -> cm.options.flatMap { allOf(it) }
             MatcherKind.RANGE -> (cm.min .. cm.max).toList()
+            else -> PRINTABLE_ASCII.filter { matchesChar(cm, it) }
         }
     }
+
+    private fun matchesChar(matcher: CharacterMatcher, c: Char): Boolean = _matcher.matches(matcher, c.toString(), 0)
 }

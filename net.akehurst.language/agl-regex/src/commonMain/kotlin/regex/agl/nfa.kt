@@ -22,7 +22,16 @@ internal class State(
 ) {
     val outgoing = mutableListOf<Transition>()
 
+    /** for the split state of a loop (x* or x+): the transition that leaves the loop */
+    var loopExit: Transition? = null
+
+    /** for the state that starts each iteration of a loop: the split state of that loop */
+    var iterationStartOf: State? = null
+
     val isGoal get() = this == RegexMatcherImpl.MATCH_STATE
+
+    /** a zero width assertion: one transition of kind ASSERT */
+    val isAssertion get() = isSplit.not() && outgoing.size == 1 && outgoing[0].kind == TransitionKind.ASSERT
 
     override fun hashCode(): Int = this.number
     override fun equals(other: Any?): Boolean {
@@ -42,14 +51,36 @@ internal class Fragment(
 }
 
 internal enum class MatcherKind {
-    EMPTY, ANY, END_OF_LINE_OR_INPUT, NEGATED, LITERAL, ONE_OF, RANGE
+    EMPTY, ANY, END_OF_LINE_OR_INPUT, NEGATED, LITERAL, ONE_OF, RANGE,
+
+    // match one character
+    PREDICATE, // the character satisfies 'predicate'
+    ALL_OF, // the character matches all of 'options' (class intersection)
+
+    // zero width assertions, used on transitions of kind ASSERT
+    ASSERT_START_OF_INPUT, // ^ (not multiline), \A
+    ASSERT_START_OF_LINE, // ^ (multiline)
+    ASSERT_END_OF_INPUT, // \z
+    ASSERT_END_OF_INPUT_OR_FINAL_TERMINATOR, // $ (not multiline), \Z
+    ASSERT_END_OF_LINE, // $ (multiline)
+    ASSERT_WORD_BOUNDARY, // \b
+    ASSERT_NOT_WORD_BOUNDARY, // \B
+    ASSERT_START_OF_MATCH, // \G
+    ASSERT_LOOKAHEAD, // (?=X), X starts at 'subStart'
+    ASSERT_NEGATIVE_LOOKAHEAD, // (?!X)
+    ASSERT_LOOKBEHIND, // (?<=X), X has at most 'maxLength' characters
+    ASSERT_NEGATIVE_LOOKBEHIND // (?<!X)
 }
 
 internal class CharacterMatcher(
     val kind: MatcherKind,
     val literal: Char = '\u0000', // min
     val max: Char = '\u0000',
-    val options: Array<CharacterMatcher> = arrayOf()//CharacterMatcher.EMPTY)
+    val options: Array<CharacterMatcher> = arrayOf(),//CharacterMatcher.EMPTY)
+    val name: String = "",
+    val predicate: ((Char) -> Boolean)? = null,
+    val subStart: State? = null, // for lookaround: start of the NFA of the looked-at pattern, which ends at MATCH_STATE
+    val maxLength: Int = 0 // for lookbehind: maximum number of characters the looked-at pattern can match
 ) {
     internal companion object {
         val EMPTY = CharacterMatcher(MatcherKind.EMPTY)
@@ -65,6 +96,7 @@ internal class CharacterMatcher(
         MatcherKind.LITERAL -> options.isEmpty() || options.all{ it.notEmpty }
         MatcherKind.ONE_OF -> true
         MatcherKind.RANGE -> true
+        else -> true
     }
 
     // for range
@@ -83,6 +115,9 @@ internal class CharacterMatcher(
         MatcherKind.LITERAL -> "'$literal'"
         MatcherKind.ONE_OF -> "{${options.joinToString(",")}}"
         MatcherKind.RANGE -> "[$min-$max]"
+        MatcherKind.PREDICATE -> name
+        MatcherKind.ALL_OF -> "{${options.joinToString("&&")}}"
+        else -> "${kind.name}"
     }
 }
 /*
@@ -121,13 +156,22 @@ class CharacterRange(
 }
 */
 
-internal fun addNextStates(nextStates: MutableList<State>, next: State?): Boolean {
-    //TODO: don't add duplicate states
-    return if (null == next) {
+internal fun addNextStates(nextStates: MutableList<State>, next: State?): Boolean = addNextStates(nextStates, next, mutableSetOf())
+
+/**
+ * adds the non-split states reachable from 'next' by empty transitions, in priority order, each only once.
+ * returns true if the goal is one of them.
+ * (all branches are followed, and 'visited' stops loops over things that can match empty, e.g. (a?)* )
+ */
+internal fun addNextStates(nextStates: MutableList<State>, next: State?, visited: MutableSet<State>): Boolean {
+    return if (null == next || visited.contains(next)) {
         false
     } else {
+        visited.add(next)
         if (next.isSplit) {
-            next.outgoing.any { addNextStates(nextStates, it.to) }
+            var toGoal = false
+            next.outgoing.forEach { if (addNextStates(nextStates, it.to, visited)) toGoal = true }
+            toGoal
         } else {
             nextStates.add(next)
             next == RegexMatcherImpl.MATCH_STATE
@@ -136,7 +180,8 @@ internal fun addNextStates(nextStates: MutableList<State>, next: State?): Boolea
 }
 
 internal enum class TransitionKind {
-    MATCHER, EMPTY, END_OF_LINE_OR_INPUT
+    MATCHER, EMPTY, END_OF_LINE_OR_INPUT,
+    ASSERT // zero width, the matcher is one of the ASSERT_ kinds
 }
 
 internal class Transition(val kind: TransitionKind, val matcher: CharacterMatcher) {
