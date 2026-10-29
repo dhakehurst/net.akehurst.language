@@ -25,7 +25,7 @@ import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import std.extensions.capitalise
+import net.akehurst.kotlinx.utils.capitalise
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

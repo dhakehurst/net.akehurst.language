@@ -23,8 +23,8 @@ import net.akehurst.language.asm.simple.AnyExt.asString
 import net.akehurst.language.asm.simple.AnyExt.equalTo
 import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.PropertyName

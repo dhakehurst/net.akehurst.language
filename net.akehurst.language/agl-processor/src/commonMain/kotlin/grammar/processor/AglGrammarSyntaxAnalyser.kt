@@ -22,7 +22,7 @@ import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase

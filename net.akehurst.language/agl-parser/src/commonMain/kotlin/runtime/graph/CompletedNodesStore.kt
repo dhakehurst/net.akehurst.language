@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.collections.MapIntTo
+import net.akehurst.kotlinx.collections.MapIntTo
 import kotlin.math.pow
 
 internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {

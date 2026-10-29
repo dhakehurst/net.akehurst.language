@@ -20,9 +20,9 @@ package net.akehurst.language.types.asm
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.FunctionParameter
@@ -550,7 +550,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                     }
                 }
             }
-            collection(ListSeparated_typeName.value, listOf("E", "I", "S"), net.akehurst.language.collections.ListSeparated::class) {
+            collection(ListSeparated_typeName.value, listOf("E", "I", "S"), net.akehurst.kotlinx.collections.ListSeparated::class) {
                 supertype("List") { ref("E") }
                 propertyPrimitive<ListSeparated<*, *, *>, Any?>("elements", "List", false, "Elements in the ListSeparated.", accessor = { self -> (self as ListSeparated<*, *, *>).elements }) { typeArgument("E") }
                 propertyPrimitive<ListSeparated<*, *, *>, Any?>("items", "List", false, "Items in the ListSeparated.", accessor = { self -> (self as ListSeparated<*, *, *>).items }) { typeArgument("I") }

@@ -38,7 +38,7 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.StructuredTypeSimpleAbstract
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
-import std.extensions.capitalise
+import net.akehurst.kotlinx.utils.capitalise
 import kotlin.reflect.KClass
 
 

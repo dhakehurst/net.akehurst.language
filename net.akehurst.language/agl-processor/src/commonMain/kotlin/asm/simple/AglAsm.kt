@@ -27,7 +27,7 @@ interface AsmListSeparated {
 
     val typesDomain: TypesDomain by lazy {
         typesDomain("Asm", true, AglBase.typesDomain.namespace) {
-            namespace("net.akehurst.language.asm.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.collections")) {
+            namespace("net.akehurst.language.asm.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.kotlinx.collections")) {
                 // TODO: value classes don't work (fully) in js and wasm
                 data("PropertyValueName") {
                     supertype("PublicValueType")
@@ -91,7 +91,7 @@ interface AsmListSeparated {
                     }
                 }
             }
-            namespace("net.akehurst.language.asm.simple", listOf("net.akehurst.language.asm.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.collections")) {
+            namespace("net.akehurst.language.asm.simple", listOf("net.akehurst.language.asm.api", "std", "net.akehurst.language.base.api", "net.akehurst.kotlinx.collections")) {
                 singleton("AsmNothingSimple")
                 singleton("AglAsm")
                 data("AsmValueAbstract") {
@@ -216,7 +216,7 @@ interface AsmListSeparated {
                     //propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
                 }
             }
-            namespace("net.akehurst.language.collections", listOf("std")) {
+            namespace("net.akehurst.kotlinx.collections", listOf("std")) {
                 interface_("ListSeparated") {
                     typeParameters("E", "I", "S")
                     supertype("List"){ ref("E") }
