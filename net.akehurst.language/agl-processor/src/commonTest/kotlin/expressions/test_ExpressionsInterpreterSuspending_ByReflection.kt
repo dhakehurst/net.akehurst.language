@@ -163,7 +163,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
         val self = TestObj("strValue")
 
         val expectedIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "Unable to evaluate property 'prop2': Property prop2 not found on object TestObj(prop1=strValue, propList=[], propListA=[])"),
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "Unable to evaluate property 'prop2': Property 'prop2' not found on class 'TestObj'"),
             LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.INTERPRET, null, "Executing property 'prop2' on 'TestObj' results in null, using value \$nothing.", null)
         )
         test_fail(tm, self, "ns.TestObj", "prop2", Unit, expectedIssues)

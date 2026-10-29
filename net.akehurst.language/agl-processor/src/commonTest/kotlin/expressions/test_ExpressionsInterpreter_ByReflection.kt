@@ -166,7 +166,7 @@ class test_ExpressionsInterpreter_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Unable to evaluate property 'prop2': Property prop2 not found on object TestObj(prop1=strValue, propList=[], propListA=[])"
+                "Unable to evaluate property 'prop2': Property 'prop2' not found on class 'TestObj'"
             ),
             LanguageIssue(
                 LanguageIssueKind.WARNING, LanguageProcessorPhase.INTERPRET,
