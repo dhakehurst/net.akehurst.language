@@ -117,6 +117,9 @@ internal class RegexMatcherImpl(
         fun toSet(): Set<Int> = generateSequence(this) { it.next }.map { it.loop.number }.toSet()
     }
 
+    /** true if all of 'text' matches the pattern (as Kotlin's Regex.matches) */
+    fun matchesEntirely(text: CharSequence): Boolean = Simulation(text, 0).matchesExactly(this.start, 0, text.length)
+
     /**
      * Runs the NFA on 'text', following all choices in parallel (one 'thread' per state), so the time taken is
      * linear in the length of the text times the number of states.
@@ -163,6 +166,7 @@ internal class RegexMatcherImpl(
 
         /** true if some way through the NFA from 'startState', starting at 'from', ends exactly at 'target' */
         fun matchesExactly(startState: State, from: Int, target: Int): Boolean {
+            if (startState == ERROR_STATE) return false
             var current = ArrayList<State>()
             stamp++
             addThreads(current, startState, from)

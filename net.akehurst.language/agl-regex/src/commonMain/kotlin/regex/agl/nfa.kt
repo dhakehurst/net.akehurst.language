@@ -28,6 +28,9 @@ internal class State(
     /** for the state that starts each iteration of a loop: the split state of that loop */
     var iterationStartOf: State? = null
 
+    /** for the split state of an optional (x?): the transition that skips it */
+    var optionalSkip: Transition? = null
+
     val isGoal get() = this == RegexMatcherImpl.MATCH_STATE
 
     /** a zero width assertion: one transition of kind ASSERT */

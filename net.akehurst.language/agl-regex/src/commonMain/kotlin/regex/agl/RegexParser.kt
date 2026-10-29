@@ -692,7 +692,7 @@ private fun predicate(name: String, p: (Char) -> Boolean) = CharacterMatcher(Mat
 
 private fun charsOf(name: String, chars: String) = CharacterMatcher(MatcherKind.ONE_OF, name = name, options = chars.map { CharacterMatcher(MatcherKind.LITERAL, it) }.toTypedArray())
 
-private val NOT_LINE_TERMINATOR = CharacterMatcher(MatcherKind.NEGATED, options = arrayOf(charsOf("line terminator", "\n\r\u0085  ")))
+private val NOT_LINE_TERMINATOR = CharacterMatcher(MatcherKind.NEGATED, name = ".", options = arrayOf(charsOf("line terminator", "\n\r\u0085  ")))
 
 private val HORIZONTAL_WHITESPACE = CharacterMatcher(
     MatcherKind.ONE_OF, options = arrayOf(

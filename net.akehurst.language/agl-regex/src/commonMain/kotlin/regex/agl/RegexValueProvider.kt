@@ -17,6 +17,7 @@
 package net.akehurst.language.regex.agl
 
 import net.akehurst.language.regex.api.RegexMatcher
+import kotlin.random.Random
 
 class RegexValueProvider(
     pattern: String,
@@ -41,9 +42,11 @@ class RegexValueProvider(
 
     private val start: State = _matcher.start
     private val nfa = _matcher.nfa
-    private val chars = mutableListOf<Char>()
 
     private val startStates: Array<State>
+
+    // the fewest chars needed to reach the goal from each state (Int.MAX_VALUE if the goal cannot be reached)
+    private val distance = mutableMapOf<State, Int>()
 
     init {
         val ns = mutableListOf<State>()
@@ -54,43 +57,124 @@ class RegexValueProvider(
                 it.init()
             }
         }
+        this.computeDistances()
     }
 
-    fun provide(): String {
-        var currentStates = arrayOf<State>()
-        currentStates = this.startStates
-        var lastState: State? = null
-        //TODO: find shorted path to goal - better algorithm required
-        while (currentStates.isNotEmpty()) {
-            // pick state by
-            // - is Goal
-            // - has a transition to goal
-            // - not the last state
-            // - first one
-            lastState = currentStates.firstOrNull { it.isGoal}
-                ?: currentStates.firstOrNull { it.outgoing.any { it.isToGoal } }
-                ?: currentStates.firstOrNull { it != lastState }
-                ?: currentStates.first()
-            // pick the transition by
-            // - goes to goal
-            // - first one
-            val outgoing = lastState.outgoing.firstOrNull { it.isToGoal }
-                ?: lastState.outgoing.firstOrNull()
-            if (null == outgoing) {
-                currentStates = arrayOf()
-            } else {
-                val c = provideFor(outgoing.matcher)
-                if (c != null) {
-                    chars.add(c)
+    private fun distanceOf(s: State?): Int = when {
+        null == s -> Int.MAX_VALUE
+        s.isGoal -> 0
+        else -> distance[s] ?: Int.MAX_VALUE
+    }
+
+    private fun computeDistances() {
+        var changed = true
+        while (changed) {
+            changed = false
+            for (s in nfa) {
+                var d = distanceOf(s)
+                for (t in s.outgoing) {
+                    val dt = distanceOf(t.to)
+                    if (dt != Int.MAX_VALUE) {
+                        val w = if (t.kind == TransitionKind.MATCHER) 1 else 0
+                        if (dt + w < d) d = dt + w
+                    }
                 }
-                currentStates = if (outgoing.isToGoal) {
-                    emptyArray()
-                } else {
-                    outgoing.nextStates
+                if (d < distanceOf(s)) {
+                    distance[s] = d
+                    changed = true
                 }
             }
         }
-        return chars.joinToString("")
+    }
+
+    /**
+     * A string that matches the pattern, always the same one: the first alternative of each choice,
+     * the fewest repetitions, and the first char of each character class.
+     */
+    fun provide(): String {
+        val first = this.walk(null, Int.MAX_VALUE)
+        return when {
+            _matcher.matchesEntirely(first) -> first
+            // assertions (e.g. lookahead) can make the simple choice fail, try some others
+            else -> (0 until 50).map { this.walk(Random(it), 20) }.firstOrNull { _matcher.matchesEntirely(it) } ?: first
+        }
+    }
+
+    /**
+     * A random string that matches the pattern. Repetitions stop being added once the string has about
+     * 'maxLength' chars. If no matching string is found after some attempts, the result of provide() is given.
+     */
+    fun provideRandom(random: Random = Random.Default, maxLength: Int = 20): String {
+        for (i in 0 until 50) {
+            val s = this.walk(random, maxLength)
+            if (_matcher.matchesEntirely(s)) return s
+        }
+        return this.provide()
+    }
+
+    // a walk through the NFA from the start to the goal. With no 'random', the first or shortest choices are taken
+    private fun walk(random: Random?, maxLength: Int): String {
+        val chars = StringBuilder()
+        var state: State? = this.start
+        var steps = 0
+        while (null != state && state.isGoal.not() && steps < 100_000) {
+            steps++
+            val finishing = null == random || chars.length >= maxLength
+            val outgoing = state.outgoing.filter { distanceOf(it.to) != Int.MAX_VALUE }
+            if (outgoing.isEmpty()) break
+            val t = when {
+                state.isSplit -> when {
+                    finishing -> this.shortestChoice(state, outgoing, null == random)
+                    else -> outgoing[random!!.nextInt(outgoing.size)]
+                }
+
+                else -> outgoing[0]
+            }
+            if (t.kind == TransitionKind.MATCHER) {
+                val c = if (finishing) this.firstCharFor(t.matcher) else this.randomCharFor(t.matcher, random!!)
+                if (null != c) chars.append(c)
+            }
+            state = t.to
+        }
+        return chars.toString()
+    }
+
+    // provide() takes the first alternative of a choice, and leaves loops and optionals as soon as possible.
+    // Finishing a random walk takes a shortest way to the goal
+    private fun shortestChoice(state: State, outgoing: List<Transition>, firstAlternative: Boolean): Transition {
+        val leave = state.loopExit ?: state.optionalSkip
+        return when {
+            null != leave && outgoing.contains(leave) -> leave
+            firstAlternative -> outgoing[0]
+            else -> outgoing.minBy { distanceOf(it.to) }
+        }
+    }
+
+    private fun firstCharFor(matcher: CharacterMatcher): Char? {
+        if (matcher.name == "." && matchesChar(matcher, anyChar)) return anyChar
+        val c = this.provideFor(matcher)
+        return when {
+            null == c -> null
+            matchesChar(matcher, c) -> c
+            else -> PRINTABLE_ASCII.firstOrNull { matchesChar(matcher, it) } ?: c
+        }
+    }
+
+    private fun randomCharFor(matcher: CharacterMatcher, random: Random): Char? {
+        val candidates = (PRINTABLE_ASCII + charsIn(matcher)).distinct().filter { matchesChar(matcher, it) }
+        return when {
+            candidates.isEmpty() -> this.firstCharFor(matcher)
+            else -> candidates[random.nextInt(candidates.size)]
+        }
+    }
+
+    // chars named in the matcher, so that e.g. [\u00e9] or \n can be chosen
+    private fun charsIn(matcher: CharacterMatcher): List<Char> = when (matcher.kind) {
+        MatcherKind.LITERAL -> listOf(matcher.literal)
+        MatcherKind.RANGE -> listOf(matcher.min, matcher.max)
+        MatcherKind.ONE_OF, MatcherKind.NEGATED, MatcherKind.ALL_OF -> matcher.options.flatMap { charsIn(it) }
+        MatcherKind.ANY -> listOf(anyChar)
+        else -> emptyList()
     }
 
     internal fun provideFor(matcher: CharacterMatcher): Char? {

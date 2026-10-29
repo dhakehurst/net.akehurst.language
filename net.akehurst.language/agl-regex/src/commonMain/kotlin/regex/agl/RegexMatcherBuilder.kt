@@ -49,6 +49,7 @@ internal class RegexMatcherBuilder(val pattern: String) {
                     c.loopExit = if (idx >= 0) c.outgoing[idx] else this.cloneTransition(it, nullTransitions, map)
                 }
                 orig.iterationStartOf?.let { c.iterationStartOf = this.cloneState(it, nullTransitions, map) }
+                orig.optionalSkip?.let { c.optionalSkip = c.outgoing[orig.outgoing.indexOf(it)] }
                 c
             } else {
                 clone
@@ -262,6 +263,7 @@ internal class RegexMatcherBuilder(val pattern: String) {
         take.to = f1.start
         val skip = Transition(TransitionKind.EMPTY, CharacterMatcher.EMPTY)
         val split = if (lazy) this.split(skip, take) else this.split(take, skip)
+        split.optionalSkip = skip
         return Fragment(split, f1.outgoing + skip)
     }
 
