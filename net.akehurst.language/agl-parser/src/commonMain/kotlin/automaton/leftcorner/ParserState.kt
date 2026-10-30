@@ -70,8 +70,10 @@ class ParserState(
             //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
             // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
             val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calTransitionsForGoal(this, previous).toList()
-            val storedTrans = filteredTransitions.map { this.outTransitions.addTransitionForIncomplete(previous, it) }
-            storedTrans
+            filteredTransitions.forEach { this.outTransitions.addTransitionForIncomplete(previous, it) }
+            // adding a transition can merge it with one added before (same action and target),
+            // so return what is now stored, not each intermediate transition
+            this.outTransitions.findTransitionForIncompleteByPrevious(previous)?.toList() ?: emptyList()
         } else {
             cache
         }
@@ -85,8 +87,10 @@ class ParserState(
             //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
             // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
             val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcTransitionsForInComplete(this, previous).toList()
-            val storedTrans = filteredTransitions.map { this.outTransitions.addTransitionForIncomplete(previous, it) }
-            storedTrans
+            filteredTransitions.forEach { this.outTransitions.addTransitionForIncomplete(previous, it) }
+            // adding a transition can merge it with one added before (same action and target),
+            // so return what is now stored, not each intermediate transition
+            this.outTransitions.findTransitionForIncompleteByPrevious(previous)?.toList() ?: emptyList()
         } else {
             cache
         }
@@ -100,8 +104,10 @@ class ParserState(
             //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
             // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
             val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcTransitionsForComplete(this, previous, prevPrev).toList()
-            val storedTrans = filteredTransitions.map { this.outTransitions.addTransitionForComplete(previous, prevPrev, it) }
-            storedTrans
+            filteredTransitions.forEach { this.outTransitions.addTransitionForComplete(previous, prevPrev, it) }
+            // adding a transition can merge it with one added before (same action and target),
+            // so return what is now stored, not each intermediate transition
+            this.outTransitions.findTransitionForCompleteByPrevious(previous, prevPrev)?.toList() ?: emptyList()
         } else {
             cache
         }

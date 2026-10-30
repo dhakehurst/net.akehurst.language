@@ -19,6 +19,8 @@ package net.akehurst.language.automaton.leftcorner
 import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsConcatenation
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart.Companion.unionAll
@@ -813,7 +815,35 @@ internal class BuildCacheLC1(
     }
 
     //private fun mergeStates(rulePositions: Iterable<RulePosition>): Set<StateInfo> = mergeStates1(rulePositions)
-    private fun mergeStates(rulePositions: Iterable<RulePositionRuntime>): Set<StateInfo> = noMergeStates(rulePositions)
+    private fun mergeStates(rulePositions: Iterable<RulePositionRuntime>): Set<StateInfo> = mergeStatesByCommonPrefix(rulePositions)
+
+    /**
+     * Merge rule positions that have recognised exactly the same prefix of the same rule,
+     * i.e. options of one choice rule that start with the same items (Nederhof's ELR / common-prefix idea).
+     * A growing node in such a state has the same children whichever option it ends up as,
+     * so the parser can carry all the options in one node until they diverge.
+     * Only positions inside a choice option that is a concatenation are merged; everything else
+     * (end positions, lists, optionals, goal, terminals) stays one rule position per state.
+     */
+    private fun mergeStatesByCommonPrefix(rulePositions: Iterable<RulePositionRuntime>): Set<StateInfo> {
+        val (canMerge, notMerge) = rulePositions.partition { it.commonPrefix != null }
+        val merged = canMerge.groupBy { Triple(it.rule, it.position, it.commonPrefix) }.values.map { StateInfo(it.toSet()) }
+        return merged.toSet() + notMerge.map { StateInfo(setOf(it)) }.toSet()
+    }
+
+    /** the items already recognised before this position, or null if this position must not be merged */
+    private val RulePositionRuntime.commonPrefix: List<RuntimeRule>?
+        get() {
+            val rhs = this.rule.rhs
+            return when {
+                this.isAtEnd || this.isAtStart -> null
+                rhs !is RuntimeRuleRhsChoice -> null
+                else -> when (val opt = rhs.options[this.option.asIndex]) {
+                    is RuntimeRuleRhsConcatenation -> opt.concatItems.subList(0, this.position)
+                    else -> null
+                }
+            }
+        }
 
     private fun noMergeStates(rulePositions: Iterable<RulePositionRuntime>): Set<StateInfo> {
         return rulePositions.map { StateInfo(setOf(it)) }.toSet()

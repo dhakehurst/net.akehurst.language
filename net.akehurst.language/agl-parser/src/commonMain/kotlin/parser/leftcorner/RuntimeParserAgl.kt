@@ -434,61 +434,57 @@ internal class RuntimeParserAgl(
         var grownHeight = false
         var grownGraft = false
         val transitions = head.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
-        val trans2 = resolveTransitionAmbiguity(runtimeContext, transitions, possibleEndOfText, parseArgs)
-        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
-        val grouped = trans2.groupBy { it.target.runtimeRulesAsSet }
-        for (grp in grouped) {
-            when {
-                1 == grp.value.size -> {
-                    val tr = grp.value[0]
-                    when (tr.action) {
-                        ParseAction.HEIGHT -> {
-                            val b = doHeight(head, previous, tr, possibleEndOfText, parseArgs)
-                            grownHeight = grownHeight || b
-                        }
-
-                        ParseAction.GRAFT -> {
-                            val b = doGraft(head, previous, prevPrev, tr, possibleEndOfText, parseArgs)
-                            grownGraft = grownGraft || b
-                        }
-
-                        ParseAction.GOAL -> {
-                            val b = doGoal(head, previous, tr, possibleEndOfText, parseArgs)
-                            grownGraft = grownGraft || b
-                        }
-
-                        else -> error("Internal Error: should only have GOAL, HEIGHT or GRAFT transitions here")
-                    }
-                }
-
-                else -> {
-                    val trgs = mutableListOf<Transition>()
-                    val trhs = mutableListOf<Transition>()
-                    for (tr in grp.value) {
+        // take each transition at most once, even when it is a choice for more than one rule position of a merged previous
+        val taken = mutableMapOf<Transition, Boolean>()
+        fun take(tr: Transition): Boolean = taken.getOrPut(tr) {
+            when (tr.action) {
+                ParseAction.HEIGHT -> doHeight(head, previous, tr, possibleEndOfText, parseArgs)
+                ParseAction.GRAFT -> doGraft(head, previous, prevPrev, tr, possibleEndOfText, parseArgs)
+                ParseAction.GOAL -> doGoal(head, previous, tr, possibleEndOfText, parseArgs)
+                else -> error("Internal Error: should only have GOAL, HEIGHT or GRAFT transitions here")
+            }
+        }
+        for (transForPrevRp in transitionsByPreviousRulePosition(previous.state, transitions)) {
+            val trans2 = resolveTransitionAmbiguity(runtimeContext, transForPrevRp, possibleEndOfText, parseArgs)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
+            val grouped = trans2.groupBy { it.target.runtimeRulesAsSet }
+            for (grp in grouped) {
+                when {
+                    1 == grp.value.size -> {
+                        val tr = grp.value[0]
                         when (tr.action) {
-                            ParseAction.GRAFT -> trgs.add(tr)
-                            ParseAction.HEIGHT -> trhs.add(tr)
-                            else -> error("should not happen")
+                            ParseAction.HEIGHT -> {
+                                val b = take(tr)
+                                grownHeight = grownHeight || b
+                            }
+
+                            ParseAction.GRAFT -> {
+                                val b = take(tr)
+                                grownGraft = grownGraft || b
+                            }
+
+                            ParseAction.GOAL -> {
+                                val b = take(tr)
+                                grownGraft = grownGraft || b
+                            }
+
+                            else -> error("Internal Error: should only have GOAL, HEIGHT or GRAFT transitions here")
                         }
                     }
-                    trgs.sortWith { t1, t2 ->
-                        val p1 = t1.target.rulePosition.first().position
-                        val p2 = t2.target.rulePosition.first().position
-                        when {
-                            p1 == p2 -> 0
-                            RulePosition.END_OF_RULE == p1 -> 1
-                            RulePosition.END_OF_RULE == p2 -> -1
-                            p1 > p2 -> 1
-                            p1 < p2 -> -1
-                            else -> 0// should never happen !
+
+                    else -> {
+                        val trgs = mutableListOf<Transition>()
+                        val trhs = mutableListOf<Transition>()
+                        for (tr in grp.value) {
+                            when (tr.action) {
+                                ParseAction.GRAFT -> trgs.add(tr)
+                                ParseAction.HEIGHT -> trhs.add(tr)
+                                else -> error("should not happen")
+                            }
                         }
-                    }
-                    /*
-                    val trgs = grp.value.filter { it.action == ParseAction.GRAFT }
-                        // if multiple GRAFT trans to same rule, prefer left most target
-                        .sortedWith(Comparator { t1, t2 ->
-                            val p1 = t1.to.rulePositions.first().position
-                            val p2 = t2.to.rulePositions.first().position
+                        trgs.sortWith { t1, t2 ->
+                            val p1 = t1.target.rulePosition.first().position
+                            val p2 = t2.target.rulePosition.first().position
                             when {
                                 p1 == p2 -> 0
                                 RulePosition.END_OF_RULE == p1 -> 1
@@ -497,52 +493,88 @@ internal class RuntimeParserAgl(
                                 p1 < p2 -> -1
                                 else -> 0// should never happen !
                             }
-                        })
-                    val trhs = grp.value.filter { it.action == ParseAction.HEIGHT }
-                    */
-                    if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
-                        var doneIt = false
-                        var i = 0
-                        while (doneIt.not() && i < trgs.size) {
-                            val b = doGraft(head, previous, prevPrev, trgs[i], possibleEndOfText, parseArgs)
-                            grownGraft = grownGraft || b
-                            doneIt = doneIt || b
-                            ++i
                         }
-                        i = 0
-                        while (doneIt.not() && i < trhs.size) {
-                            val b = doHeight(head, previous, trhs[i], possibleEndOfText, parseArgs)
-                            grownHeight = grownHeight || b
-                            doneIt = doneIt || b
-                            ++i
-                        }
-                    } else {
-                        for (tr in grp.value) {
-                            when (tr.action) {
-                                ParseAction.HEIGHT -> {
-                                    val b = doHeight(head, previous, tr, possibleEndOfText, parseArgs)
-                                    grownHeight = grownHeight || b
+                        /*
+                        val trgs = grp.value.filter { it.action == ParseAction.GRAFT }
+                            // if multiple GRAFT trans to same rule, prefer left most target
+                            .sortedWith(Comparator { t1, t2 ->
+                                val p1 = t1.to.rulePositions.first().position
+                                val p2 = t2.to.rulePositions.first().position
+                                when {
+                                    p1 == p2 -> 0
+                                    RulePosition.END_OF_RULE == p1 -> 1
+                                    RulePosition.END_OF_RULE == p2 -> -1
+                                    p1 > p2 -> 1
+                                    p1 < p2 -> -1
+                                    else -> 0// should never happen !
                                 }
+                            })
+                        val trhs = grp.value.filter { it.action == ParseAction.HEIGHT }
+                        */
+                        if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
+                            var doneIt = false
+                            var i = 0
+                            while (doneIt.not() && i < trgs.size) {
+                                val b = take(trgs[i])
+                                grownGraft = grownGraft || b
+                                doneIt = doneIt || b
+                                ++i
+                            }
+                            i = 0
+                            while (doneIt.not() && i < trhs.size) {
+                                val b = take(trhs[i])
+                                grownHeight = grownHeight || b
+                                doneIt = doneIt || b
+                                ++i
+                            }
+                        } else {
+                            for (tr in grp.value) {
+                                when (tr.action) {
+                                    ParseAction.HEIGHT -> {
+                                        val b = take(tr)
+                                        grownHeight = grownHeight || b
+                                    }
 
-                                ParseAction.GRAFT -> {
-                                    val b = doGraft(head, previous, prevPrev, tr, possibleEndOfText, parseArgs)
-                                    grownGraft = grownGraft || b
+                                    ParseAction.GRAFT -> {
+                                        val b = take(tr)
+                                        grownGraft = grownGraft || b
+                                    }
+
+                                    ParseAction.GOAL -> {
+                                        val b = take(tr)
+                                        grownGraft = grownGraft || b
+                                    }
+
+                                    else -> error("Internal Error: should only have HEIGHT or GRAFT or GOAL transitions here")
                                 }
-
-                                ParseAction.GOAL -> {
-                                    val b = doGoal(head, previous, tr, possibleEndOfText, parseArgs)
-                                    grownGraft = grownGraft || b
-                                }
-
-                                else -> error("Internal Error: should only have HEIGHT or GRAFT or GOAL transitions here")
                             }
                         }
                     }
                 }
             }
+
         }
 
         return Pair(grownHeight, grownGraft)
+    }
+
+    /**
+     * When the previous state is merged (it holds several rule positions with a common prefix),
+     * the choice between transitions must be made separately for each of those rule positions,
+     * just as it would be if each was its own (unmerged) previous state.
+     * A GRAFT belongs to the rule positions of previous that it continues; any other transition belongs to all of them.
+     */
+    private fun transitionsByPreviousRulePosition(previous: ParserState, transitions: List<Transition>): List<List<Transition>> = when {
+        2 > previous.rulePosition.size -> listOf(transitions)
+        else -> previous.rulePosition.map { prevRp ->
+            val nextRps = prevRp.next()
+            transitions.filter { tr ->
+                when (tr.action) {
+                    ParseAction.GRAFT -> tr.target.rulePosition.any { nextRps.contains(it) }
+                    else -> true
+                }
+            }
+        }.filter { it.isNotEmpty() }.distinct()
     }
 
     private fun resolveGrafts1(grafts: List<Pair<Transition, LookaheadSetPart>>): List<Transition> {
