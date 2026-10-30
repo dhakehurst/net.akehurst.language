@@ -161,6 +161,13 @@ internal class ParseGraph(
 
     var treeData = TreeDataGrowing<GrowingNodeIndex, SpptDataNode>(stateSetNumber)
 
+    /**
+     * incomplete growing nodes by (startPosition, nextInputPositionAfterSkip).
+     * Used to find nodes on other stacks that cover the same input,
+     * i.e. nodes that would be one node if their parser states were merged.
+     */
+    private val _incompleteByPosition = hashMapOf<Pair<Int, Int>, MutableSet<GrowingNodeIndex>>()
+
     val goals: Set<SpptDataNode> get() = this._goals
 
     var goalMatchedAll = true
@@ -248,6 +255,7 @@ internal class ParseGraph(
         //       this.completeNodes.clear()
         this._gss.clear()
         this._goals.clear()
+        this._incompleteByPosition.clear()
         this.treeData = TreeDataGrowing(stateSetNumber)
     }
 
@@ -255,6 +263,9 @@ internal class ParseGraph(
      * return next if a new head was created else oldHead
      */
     private fun addGrowingHead(oldHead: GrowingNodeIndex?, next: GrowingNodeIndex) {
+        if (next.isComplete.not()) {
+            this._incompleteByPosition.getOrPut(Pair(next.startPosition, next.nextInputPositionAfterSkip)) { hashSetOf() }.add(next)
+        }
         when {
             null == oldHead -> {
                 this._gss.root(next)
@@ -457,6 +468,15 @@ internal class ParseGraph(
     }
 
     fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peekPrevious(gn)
+
+    /**
+     * Other incomplete nodes still in the GSS that cover the same input as 'gn'
+     * (same start, same next input position, same number of children) but are in a different parser state.
+     */
+    fun siblingsOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> {
+        val all = this._incompleteByPosition[Pair(gn.startPosition, gn.nextInputPositionAfterSkip)] ?: return emptySet()
+        return all.filter { it != gn && it.state != gn.state && it.numNonSkipChildren == gn.numNonSkipChildren && this._gss.contains(it) }.toSet()
+    }
 
     /**
      * START
