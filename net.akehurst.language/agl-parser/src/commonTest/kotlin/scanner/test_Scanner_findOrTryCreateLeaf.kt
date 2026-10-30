@@ -21,12 +21,15 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
+import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.treedata.CompleteTreeDataNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class test_Scanner_findOrTryCreateLeaf {
 
@@ -266,7 +269,9 @@ class test_Scanner_findOrTryCreateLeaf {
         val leaves = mutableListOf<CompleteTreeDataNode>()
         val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
         val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!
-        val l3 = scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, patName)!!
+        // Classic scanner: the second 'class' is scanned as the keyword, not as a NAME
+        assertNull(scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, patName))
+        val l3 = scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, litClass)!!
         val l4 = scanner.findOrTryCreateLeaf(sentence, l3.nextInputPosition, litSemi)!!
         val actual = listOf(l1, l2, l3, l4)
 
@@ -277,6 +282,12 @@ class test_Scanner_findOrTryCreateLeaf {
             CompleteTreeDataNode(litSemi, 11, 12, 12, RulePosition.OPTION_NONE, emptyList())
         )
         assertEquals(expected, actual)
+
+        // so the parse fails, as S expects a NAME after 'class'
+        val parser = LeftCornerParser(ScannerClassic(RegexEnginePlatform, rrs.terminals), rrs)
+        val result = parser.parseForGoal("S", sentence.text)
+        assertNull(result.sppt)
+        assertTrue(result.issues.errors.isNotEmpty())
     }
 
 }

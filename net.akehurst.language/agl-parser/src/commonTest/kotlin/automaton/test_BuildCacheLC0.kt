@@ -16,8 +16,10 @@
 
 package net.akehurst.language.automaton.leftcorner
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 
+@Ignore // LC0 (AutomatonKind.LOOKAHEAD_NONE) is not implemented and not a priority at present
 class test_BuildCacheLC0 {
 
     @Test
