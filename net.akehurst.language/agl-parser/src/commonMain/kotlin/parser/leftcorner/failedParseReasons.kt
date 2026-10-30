@@ -118,18 +118,25 @@ internal class FailedParseReasonEmbedded(
     val embededFailedParseReasons: List<FailedParseReason>
 ) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
 
-    override val spine by lazy {
+    override val spine by lazy { spineFor(embededFailedParseReasons) }
+
+    /**
+     * spine of the outer (embedding) head, with the terminals expected by the given embedded failures.
+     * Used per position of the embedded failures, so that the error is reported where the embedded parse stopped,
+     * but in the context of the outer rule.
+     */
+    fun spineFor(embeddedReasons: List<FailedParseReason>): RuntimeSpineDefault {
         // Outer skip terms are part of the 'possibleEndOfText' and thus could be in the expected terms
         // if these skip terms are not part of the embedded 'normal' terms...remove them
         val embeddedRhs = transition.target.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
         val embeddedStateSet = embeddedRhs.embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, head.state.stateSet.automatonKind)
         //val x = findNextExpectedAfterError3(sentence, embededFailedParseReasons, head.state.stateSet.automatonKind, embeddedStateSet, failedAtPosition)
-        val x = embededFailedParseReasons.map { it.spine }
+        val x = embeddedReasons.map { it.spine }
         val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
         val embeddedTerms = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, head.state.stateSet.automatonKind).usedTerminalRules
         val skipTerms = head.state.stateSet.runtimeRuleSet.skipParserStateSet?.usedTerminalRules ?: emptySet()
         val exp = x.flatMap { it.expectedNextTerminals }.minus(skipTerms.minus(embeddedTerms)).toSet()
-        RuntimeSpineDefault(head, gssSnapshot, exp, head.numNonSkipChildren)
+        return RuntimeSpineDefault(head, gssSnapshot, exp, head.numNonSkipChildren)
     }
 
 }

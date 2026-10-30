@@ -199,17 +199,24 @@ class LeftCornerParser(
             //             map[it.key] = l
             //         }
 
-            // find embedded failures
-            val map2 = map1.values.flatten().flatMap { v ->
-                when (v) {
-                    is FailedParseReasonEmbedded -> v.embededFailedParseReasons.ifEmpty { listOf(v) }
-                    else -> listOf(v)
+            // an embedded failure is reported at the position where the embedded parse stopped,
+            // but in the context of the outer (embedding) rule, i.e. using the spine of the embedding head
+            // (which also removes outer skip terminals that are not terminals of the embedded grammar)
+            // Triple(position, isSkipFailure, spine)
+            val failures: List<Triple<Int, Boolean, RuntimeSpineDefault>> = map1.values.flatten().flatMap { v ->
+                when {
+                    v is FailedParseReasonEmbedded && v.embededFailedParseReasons.isNotEmpty() -> v.embededFailedParseReasons
+                        .groupBy { Pair(it.failedAtPosition, it.skipFailure) }
+                        .map { (key, reasons) -> Triple(key.first, key.second, v.spineFor(reasons)) }
+
+                    else -> listOf(Triple(v.failedAtPosition, v.skipFailure, v.spine))
                 }
-            }.groupBy { it.failedAtPosition }
+            }
+            val map2 = failures.groupBy { it.first }
 
             if (map2.isNotEmpty()) {
                 val failedAtPosition = map2.keys.max()
-                val nextExpected = map2[failedAtPosition]?.filter { it.skipFailure.not() }?.map { it.spine } ?: emptyList()
+                val nextExpected = map2[failedAtPosition]?.filter { it.second.not() }?.map { it.third } ?: emptyList()
                 val loc = sentence.locationFor(failedAtPosition, 0)
                 addParseIssue(sentence, loc, nextExpected)
             }
