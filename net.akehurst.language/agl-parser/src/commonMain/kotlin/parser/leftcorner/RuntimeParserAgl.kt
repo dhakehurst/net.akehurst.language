@@ -444,8 +444,20 @@ internal class RuntimeParserAgl(
                 else -> error("Internal Error: should only have GOAL, HEIGHT or GRAFT transitions here")
             }
         }
-        for (transForPrevRp in transitionsByPreviousRulePosition(previous.state, transitions)) {
-            val trans2 = resolveTransitionAmbiguity(runtimeContext, transForPrevRp, possibleEndOfText, parseArgs)
+        // Preference rules compare the alternatives of all rule positions of a merged previous together
+        // (as resolvePrecedence does with sibling stacks when states are not merged).
+        // Without preference rules, choose separately for each rule position, as if previous were not merged.
+        val resolvedPerPrevRp = when {
+            null != this.stateSet.precedenceRulesFor(head.state) -> {
+                val resolved = resolveTransitionAmbiguity(runtimeContext, transitions, possibleEndOfText, parseArgs)
+                transitionsByPreviousRulePosition(previous.state, resolved)
+            }
+
+            else -> transitionsByPreviousRulePosition(previous.state, transitions).map {
+                resolveTransitionAmbiguity(runtimeContext, it, possibleEndOfText, parseArgs)
+            }
+        }
+        for (trans2 in resolvedPerPrevRp) {
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
             val grouped = trans2.groupBy { it.target.runtimeRulesAsSet }
             for (grp in grouped) {
