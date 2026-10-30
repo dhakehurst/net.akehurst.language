@@ -221,7 +221,7 @@ class test_ifThenElse_Priority : test_LeftCornerParserAbstract() {
                 conditional {
                   ifThen {
                     'if' WS:' '
-                      expr { var : 'a' WS:' ' }
+                      expr { var : 'x' WS:' ' }
                       'then' WS:' '
                       expr {
                         conditional {
