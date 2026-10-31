@@ -358,7 +358,7 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             RP(rG, oN, SOR), RP(rG, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 FirstTerminalInfo(a, LHS(b, EOT)),
-                FirstTerminalInfo(EMPTY, LHS(EOT))
+                FirstTerminalInfo(EMPTY_LIST, LHS(EOT))
             )
         )
 
