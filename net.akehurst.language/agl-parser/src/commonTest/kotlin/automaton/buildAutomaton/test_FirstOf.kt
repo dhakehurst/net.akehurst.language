@@ -72,8 +72,8 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         check_expectedAt(RP(rG, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(rG, oN, ER), LookaheadSetPart.EMPTY, expected = emptySet())
 
-        check_expectedAt(RP(S, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        check_expectedAt(RP(S, oN, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+        check_expectedAt(RP(S, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        check_expectedAt(RP(S, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
 
         check_expectedAt(RP(S, o1, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, o1, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
@@ -101,8 +101,8 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         check_expectedAt(RP(rG, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(rG, oN, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
 
-        check_expectedAt(RP(S, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        check_expectedAt(RP(S, oN, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+        check_expectedAt(RP(S, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        check_expectedAt(RP(S, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
 
         check_expectedAt(RP(S, o1, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, o1, p1), LookaheadSetPart.EOT, expected = setOf(a))
@@ -144,8 +144,8 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         check_expectedAt(RP(rG, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(rG, oN, ER), LookaheadSetPart.EMPTY, expected = emptySet())
 
-        check_expectedAt(RP(S, oN, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        check_expectedAt(RP(S, oN, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+        check_expectedAt(RP(S, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        check_expectedAt(RP(S, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
 
         check_expectedAt(RP(S, o1, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         check_expectedAt(RP(S, o1, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
@@ -201,8 +201,10 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         check_expectedAt(RP(rG, oN, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER, oc))
         check_expectedAt(RP(rG, oN, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
 
-        check_expectedAt(RP(NavigableExpression, oN, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER, oc))
-        check_expectedAt(RP(NavigableExpression, oN, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+        check_expectedAt(RP(NavigableExpression, o0, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER))
+        check_expectedAt(RP(NavigableExpression, o1, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER, oc))
+        check_expectedAt(RP(NavigableExpression, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+        check_expectedAt(RP(NavigableExpression, o1, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
 
 
     }
@@ -229,9 +231,9 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         check_expectedAt(RP(rG, oN, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
 
         // S = . 'a'
-        check_expectedAt(RP(S, oN, SR), LookaheadSetPart.EOT, expected = setOf(a))
+        check_expectedAt(RP(S, o0, SR), LookaheadSetPart.EOT, expected = setOf(a))
         // S = 'a' .
-        check_expectedAt(RP(S, oN, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+        check_expectedAt(RP(S, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
 
         // S = . E
         check_expectedAt(RP(S, o1, SR), LookaheadSetPart.EOT, expected = setOf(EOT))
@@ -314,7 +316,7 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         val rG = rrs.goalRuleFor[S]
 
         // S = . E*
-        check_expectedAt(RP(S, oN, SR), LookaheadSetPart.EOT, expected = setOf(EOT))
+        check_expectedAt(RP(S, oLI, SR), LookaheadSetPart.EOT, expected = setOf(EOT))
 
     }
 
