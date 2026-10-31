@@ -16,11 +16,13 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class test_GrowingChildNode {
 
 
+    @Ignore //placeholder: test not written yet
     @Test
     fun t() {
         TODO()
