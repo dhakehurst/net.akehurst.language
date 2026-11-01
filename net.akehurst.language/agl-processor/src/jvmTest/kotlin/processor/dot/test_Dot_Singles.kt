@@ -1039,7 +1039,7 @@ digraph G {
             })
 
         assertNotNull(result.asm, result.allIssues.toString())
-        assertEquals(13, result.asm!!.allDefinitions.size)
+        assertEquals(12, result.asm!!.allDefinitions[0].allRules.size)
         assertEquals(0, result.allIssues.size, result.allIssues.joinToString("\n") { "$it" })
     }
 }

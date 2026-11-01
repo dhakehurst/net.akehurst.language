@@ -13,6 +13,7 @@ import net.akehurst.language.types.asm.StdLibDefault
 import kotlinx.coroutines.test.runTest
 import net.akehurst.datastore.api.DataItemIdentity
 import net.akehurst.datastore.common.ConnectionProvenance
+import net.akehurst.datastore.common.DatastoreCompositionExt.accessConfiguration
 import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.accessConfiguration
 import net.akehurst.datastore.common.datastoreComposition

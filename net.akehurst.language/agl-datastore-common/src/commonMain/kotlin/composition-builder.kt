@@ -85,12 +85,12 @@ class DatastoreConnectionBuilder(
 }
 
 //--------------------------
-
-fun DatastoreComposition.accessConfiguration(
-    registry: DatastoreProviderRegistry = DatastoreProviderRegistryDefault.GLOBAL,
-    init: AccessCompositeConfigurationBuilder.() -> Unit
-) = accessCompositeConfiguration(this.configuration, registry, init)
-
+object DatastoreCompositionExt {
+    fun DatastoreComposition.accessConfiguration(
+        registry: DatastoreProviderRegistry = DatastoreProviderRegistryDefault.GLOBAL,
+        init: AccessCompositeConfigurationBuilder.() -> Unit
+    ) = accessCompositeConfiguration(this.configuration, registry, init)
+}
 fun accessCompositeConfiguration(
     datastoreConfiguration: DatastoreCompositionConfiguration,
     registry: DatastoreProviderRegistry = DatastoreProviderRegistryDefault.GLOBAL,
