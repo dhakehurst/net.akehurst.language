@@ -59,6 +59,7 @@ class test_CompletionProvider {
         """
         val sentence = ""
         val expected = listOf(
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "unit", text = "<namespace>"),
             CompletionItem(kind = CompletionItemKind.SEGMENT, label = "unit", text = "<namespace> <styleSet>"),
             CompletionItem(kind = CompletionItemKind.LITERAL, label = "'namespace'", text = "namespace")
         )

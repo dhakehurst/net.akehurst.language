@@ -137,20 +137,25 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         ?: list.first()
                 }
             }
+            // stable sort, so items with the same kind and label stay in expansion order
             val sorted = filtered.sortedWith(
                 compareByDescending(CompletionItem::kind)
                     .thenBy(CompletionItem::label)
-                    .thenByDescending({ it.text.length })
-                    .thenByDescending(CompletionItem::text)
             )
             return sorted
         }
 
-        fun expansionToCompletionItem(expansions: List<Expansion>): List<CompletionItem> = expansions.mapIndexed { idx, exp ->
-            val label = exp.name ?: "???"
-            val text = exp.list//.joinToString(separator = " ") { textFor(it) }
-            CompletionItem(CompletionItemKind.SEGMENT, label, text).also {
-                it.id = idx
+        // id is the index in [expansions] (used by CompletionProviderOptions.path), empty segments are not offered
+        fun expansionToCompletionItem(expansions: List<Expansion>): List<CompletionItem> = expansions.mapIndexedNotNull { idx, exp ->
+            when {
+                exp.list.isBlank() -> null
+                else -> {
+                    val label = exp.name ?: "???"
+                    val text = exp.list//.joinToString(separator = " ") { textFor(it) }
+                    CompletionItem(CompletionItemKind.SEGMENT, label, text).also {
+                        it.id = idx
+                    }
+                }
             }
         }.toSet().toList()
 
@@ -211,10 +216,11 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                 }
                 for (concItem in item.items) {
                     val expand = expandItem(curDepth, concItem, options, targetGrammar)
-                    val newResults = expand.flatMap { exp ->
-                        val expName = nameFunc.invoke(exp)
-                        val expRl = exp.ruleItem
-                        results.map { res ->
+                    // earlier items vary slowest, so the segments are in the order of the alternatives
+                    val newResults = results.flatMap { res ->
+                        expand.map { exp ->
+                            val expName = nameFunc.invoke(exp)
+                            val expRl = exp.ruleItem
                             when {
                                 exp.list.isBlank() -> res // do not concat blank/empty items
                                 res.list.isBlank() -> Expansion(expRl, res.name ?: expName, exp.list) // first item
@@ -230,6 +236,15 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
 
             is ConcatenationItem -> when (item) {
                 is OptionalItem -> expandItem(curDepth, item.item, options, targetGrammar) + Expansion(item, null, "")
+                is SimpleList -> {
+                    // the minimum number of items, and also one item if the minimum is 0
+                    val itemExps = expandItem(curDepth, item.item, options, targetGrammar)
+                    when (item.min) {
+                        0 -> listOf(Expansion(item, null, "")) + itemExps
+                        else -> repeatExpansions(item, itemExps, item.min)
+                    }
+                }
+
                 is ListOfItems -> expandItem(curDepth, item.item, options, targetGrammar)
                 is SimpleItem -> when (item) {
                     is Group -> expandItem(curDepth, item.groupedContent, options, targetGrammar)
@@ -260,6 +275,26 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             }
 
             else -> error("Unsupported subtype of RuleItem: ${item::class.simpleName}")
+        }
+
+        /**
+         * all combinations of [count] items, each one of [itemExpansions], separated by a space.
+         * A combination of more than one item refers to [list].
+         */
+        fun repeatExpansions(list: ListOfItems, itemExpansions: List<Expansion>, count: Int): List<Expansion> {
+            var results = itemExpansions
+            for (i in 1 until count) {
+                results = results.flatMap { res ->
+                    itemExpansions.map { exp ->
+                        when {
+                            exp.list.isBlank() -> res
+                            res.list.isBlank() -> exp
+                            else -> Expansion(list, res.name ?: exp.name, "${res.list} ${exp.list}")
+                        }
+                    }
+                }
+            }
+            return results
         }
 
         fun <ContextType : Any> textFor(item: RuleItem, options: CompletionProviderOptions<ContextType>): Expansion = when (item) {

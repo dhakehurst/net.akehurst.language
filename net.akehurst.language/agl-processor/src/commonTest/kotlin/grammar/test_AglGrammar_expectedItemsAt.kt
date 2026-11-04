@@ -31,7 +31,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 0)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option>"),
             CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option> <namespace>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace"),
@@ -47,7 +48,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 0)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option>"),
             CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option> <namespace>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace"),
@@ -64,7 +66,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option>"),
             CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option> <namespace>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace"),
