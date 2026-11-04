@@ -279,7 +279,7 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             rG,
             RP(rG, oN, SR), RP(rG, oN, SR), S,
             setOf(
-                ParentNext(true, RP(rG, oN, ER), LHS(EOT), LHS()),
+                ParentNext(true, RP(rG, oN, ER), LHS(EOT), LHS(EOT)),
                 ParentNext(true, RP(S1, oN, p1), LHS(a), LHS(EOT)),
                 ParentNext(true, RP(S1, oN, p1), LHS(a), LHS(a))
             )
