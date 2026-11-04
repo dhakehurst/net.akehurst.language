@@ -315,7 +315,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             val ruleItem = mapToGrammar(rr.ruleSetNumber, rr.number)
             when (ruleItem) {
                 null -> emptyList()
-                is Terminal -> CompletionProviderAbstract.provideForTangible(ruleItem, opts.completionProvider)
+                is Terminal -> CompletionProviderAbstract.provideForTangible(ruleItem, opts.completionProvider, targetGrammar)
                 // e.g. the rhs of a leaf rule, that is not a single terminal
                 else -> when {
                     ruleItem.owningRule.isLeaf -> listOf(
@@ -341,7 +341,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                     .groupBy { it.usedPosition }
                 val wordCompletions = byPosition.keys.filter { it < position }.sorted().flatMap { wordStart ->
                     val prefix = sentence.substring(wordStart, position)
-                    val spines = byPosition[wordStart]!!.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
+                    val spines = byPosition[wordStart]!!.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
                     completionProvider!!.provide(spines, opts.completionProvider)
                         .filter {
                             when (it.kind) {
@@ -353,7 +353,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                         }
                         .onEach { it.offeredPosition = wordStart }
                 }
-                val nextSpines = (byPosition[position] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
+                val nextSpines = (byPosition[position] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
                 val next = completionProvider!!.provide(nextSpines, opts.completionProvider)
                     .onEach { it.offeredPosition = position }
                 val offered = wordCompletions.firstOrNull()?.offeredPosition ?: position

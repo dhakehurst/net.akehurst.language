@@ -17,6 +17,7 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.grammar.api.Concatenation
+import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarRule
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.TangibleItem
@@ -59,6 +60,13 @@ interface Spine {
     val expectedNextRuleItems: Set<RuleItem>
     val elements: List<SpineNode>
     val nextChildNumber: Int
+
+    /**
+     * the grammar that the sentence is parsed with.
+     * Rule references are resolved in it, so that overridden rules are used.
+     * null if not known, in which case a reference is resolved in the grammar that owns it.
+     */
+    val targetGrammar: Grammar? get() = null
 }
 
 interface CompletionProvider<AsmType : Any, ContextType : Any> {
