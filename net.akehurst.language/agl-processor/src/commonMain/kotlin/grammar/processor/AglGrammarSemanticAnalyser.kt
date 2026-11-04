@@ -244,8 +244,13 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
             is Choice -> rhs.alternative.forEach { analyseRuleItem(context, grammar, it) }
             is Group -> analyseRuleItem(context, grammar, rhs.groupedContent)
             is OptionalItem -> analyseRuleItem(context, grammar, rhs.item)
-            is SimpleList -> analyseRuleItem(context, grammar, rhs.item)
+            is SimpleList -> {
+                if (0 == rhs.max) issueError(rhs, "A list must have a maximum greater than 0", null)
+                analyseRuleItem(context, grammar, rhs.item)
+            }
+
             is SeparatedList -> {
+                if (0 == rhs.max) issueError(rhs, "A list must have a maximum greater than 0", null)
                 analyseRuleItem(context, grammar, rhs.item)
                 analyseRuleItem(context, grammar, rhs.separator)
             }
