@@ -1106,6 +1106,9 @@ internal class RuntimeParserAgl(
             }
 
             //check if skip node is required - i.e. if parsing last token could overlap next token without a skip
+            // OPEN ISSUE (2026-11-04): this cannot tell 'keyid' (skip wanted between keyword and ID) from Xml '>' then
+            // CHARDATA "[^<]+" (no skip wanted); both look the same from the terminals. For now the grammar option
+            // '#skipRequiredBetweenTokens: false' turns the check off per grammar. A finer, per-terminal setting may be needed.
             var needSkip = false
             if (this.stateSet.runtimeRuleSet.skipRequiredBetweenTokens) for (lh in skipLh) {
                 for (lhr in lh.content) {
