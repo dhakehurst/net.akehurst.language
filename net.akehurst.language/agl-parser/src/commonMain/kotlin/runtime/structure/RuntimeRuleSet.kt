@@ -29,7 +29,14 @@ class RuntimeRuleSet(
     val number: Int,
     val qualifiedName: String, //QualifiedName,
     val runtimeRules: List<RuntimeRule>,
-    val precedenceRules: List<PrefRule>
+    val precedenceRules: List<PrefRule>,
+    /**
+     * true (default): a skip (e.g. whitespace) is required between two tokens when the next token,
+     * matched from the start of the previous one, would run past the end of the previous one (e.g. keyword then identifier).
+     * false: skips are always optional.
+     * Set per grammar with the grammar option '#skipRequiredBetweenTokens: false'.
+     */
+    val skipRequiredBetweenTokens: Boolean = true
 ) : RuleSet {
 
     companion object {
@@ -477,7 +484,7 @@ class RuntimeRuleSet(
             }
             RuntimePreferenceRule(clonedCtx, clonedPrecRules)
         }
-        val clone = RuntimeRuleSet(cloneNumber, qualifiedName, rules, clonedPrecedenceRules)
+        val clone = RuntimeRuleSet(cloneNumber, qualifiedName, rules, clonedPrecedenceRules, skipRequiredBetweenTokens)
         return clone
     }
 

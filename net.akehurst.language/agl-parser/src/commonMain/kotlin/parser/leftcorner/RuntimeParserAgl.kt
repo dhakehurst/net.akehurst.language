@@ -1107,7 +1107,7 @@ internal class RuntimeParserAgl(
 
             //check if skip node is required - i.e. if parsing last token could overlap next token without a skip
             var needSkip = false
-            for (lh in skipLh) {
+            if (this.stateSet.runtimeRuleSet.skipRequiredBetweenTokens) for (lh in skipLh) {
                 for (lhr in lh.content) {
                     val ml = this.graph.scanner.matchedLength(sentence, lastTokenStart, lhr)
                     when {

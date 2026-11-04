@@ -22,6 +22,8 @@
 namespace net.akehurst.language.example.dot
 
 grammar Xml {
+	// text (CHARDATA) can directly follow a tag, so do not require a skip between tokens
+	#skipRequiredBetweenTokens: false
 
 	skip COMMENT = "<!-- [.]* -->" ;
 
