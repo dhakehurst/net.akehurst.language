@@ -83,7 +83,49 @@ class test_CompletionProviderSimple_with_depth {
             }
         """
 
+        val grammarStrSepList1 = """
+            namespace test
+            grammar Test {
+                S = [A / ',']+ ;
+                A = 'a' ;
+            }
+        """
+
+        val grammarStrSepList0 = """
+            namespace test
+            grammar Test {
+                S = [A / ',']* ;
+                A = 'a' ;
+            }
+        """
+
         val testSuit = testSuit {
+            testData("SeparatedList min 1") {
+                grammarStr(grammarStrSepList1)
+                sentencePass("") {
+                    options(Agl.options { completionProvider { depth(0) } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A> , <A>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                        )
+                    )
+                }
+            }
+            testData("SeparatedList min 0") {
+                grammarStr(grammarStrSepList0)
+                sentencePass("") {
+                    options(Agl.options { completionProvider { depth(1) } })
+                    expectedCompletionItems(
+                        listOf(
+                            // the segment 'a' is the same text as the literal, so only the literal is offered
+                            CompletionItem(CompletionItemKind.SEGMENT, "A", "a , a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                        )
+                    )
+                }
+            }
             testData("Concats 0") {
                 grammarStr(grammarStrConcat)
                 sentencePass("") {

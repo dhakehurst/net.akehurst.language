@@ -245,6 +245,28 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     }
                 }
 
+                is SeparatedList -> {
+                    // the minimum number of items (also one item if the minimum is 0),
+                    // and 'item sep item' if the maximum allows 2 items, so that the separator is shown
+                    val itemExps = expandItem(curDepth, item.item, options, targetGrammar)
+                    val sepExps = expandItem(curDepth, item.separator, options, targetGrammar)
+                    val counts = when (item.min) {
+                        0 -> listOf(0, 1)
+                        else -> listOf(item.min)
+                    }
+                    val withTwo = when {
+                        counts.any { it >= 2 } -> counts
+                        -1 == item.max || item.max >= 2 -> counts + 2
+                        else -> counts
+                    }
+                    withTwo.flatMap { n ->
+                        when (n) {
+                            0 -> listOf(Expansion(item, null, ""))
+                            else -> repeatExpansions(item, itemExps, n, sepExps)
+                        }
+                    }
+                }
+
                 is ListOfItems -> expandItem(curDepth, item.item, options, targetGrammar)
                 is SimpleItem -> when (item) {
                     is Group -> expandItem(curDepth, item.groupedContent, options, targetGrammar)
@@ -278,21 +300,22 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
         }
 
         /**
-         * all combinations of [count] items, each one of [itemExpansions], separated by a space.
+         * all combinations of [count] items, each one of [itemExpansions], separated by a space
+         * (and by one of [separatorExpansions] if there are any).
          * A combination of more than one item refers to [list].
          */
-        fun repeatExpansions(list: ListOfItems, itemExpansions: List<Expansion>, count: Int): List<Expansion> {
+        fun repeatExpansions(list: ListOfItems, itemExpansions: List<Expansion>, count: Int, separatorExpansions: List<Expansion> = emptyList()): List<Expansion> {
+            fun join(res: Expansion, exp: Expansion) = when {
+                exp.list.isBlank() -> res
+                res.list.isBlank() -> exp
+                else -> Expansion(list, res.name ?: exp.name, "${res.list} ${exp.list}")
+            }
             var results = itemExpansions
             for (i in 1 until count) {
-                results = results.flatMap { res ->
-                    itemExpansions.map { exp ->
-                        when {
-                            exp.list.isBlank() -> res
-                            res.list.isBlank() -> exp
-                            else -> Expansion(list, res.name ?: exp.name, "${res.list} ${exp.list}")
-                        }
-                    }
+                if (separatorExpansions.isNotEmpty()) {
+                    results = results.flatMap { res -> separatorExpansions.map { sep -> join(res, sep) } }
                 }
+                results = results.flatMap { res -> itemExpansions.map { exp -> join(res, exp) } }
             }
             return results
         }
