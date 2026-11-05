@@ -75,9 +75,16 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
 //        val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name)
 //            ?: aglBaseNamespace.findTypeForRule(nextExpected.owningRule.name)
 //            ?: error("Should not be null")
-        val itemType = styleTransformRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(nextExpected.owningRule.name)?.resolvedType
-            ?: error("Should not be null")
-        return when (nextExpected.owningRule.name) {
+        // A literal terminal (e.g. ':') is shared by all rules that use it, so its owningRule can be any of them (even one in AglBase).
+        // Use the rule of the spine, which is the rule that expects it here.
+        val ruleName = when {
+            nextExpected is Terminal && nextExpected.isLiteral -> spine.elements.firstOrNull()?.rule?.name ?: nextExpected.owningRule.name
+            else -> nextExpected.owningRule.name
+        }
+        val itemType = styleTransformRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(ruleName)?.resolvedType
+            // e.g. a rule from AglBase that has no transform rule in the style rule set
+            ?: return CompletionProviderAbstract.provideDefaultForSpine(spine, options)
+        return when (ruleName) {
             GrammarRuleName("LITERAL") -> LITERAL(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("PATTERN") -> PATTERN(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("IDENTIFIER") -> IDENTIFIER(nextExpected, itemType, options.sentenceContext!!)
@@ -85,8 +92,10 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
             GrammarRuleName("STYLE_ID") -> STYLE_ID(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("STYLE_VALUE") -> STYLE_VALUE(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("selectorAndComposition") -> selectorAndComposition(nextExpected, itemType, options.sentenceContext!!)
-            GrammarRuleName("rule") -> rule(nextExpected, itemType, options.sentenceContext!!)
+            GrammarRuleName("rule"), GrammarRuleName("tagRule"), GrammarRuleName("metaRule") -> rule(nextExpected, itemType, options.sentenceContext!!)
+                ?: CompletionProviderAbstract.provideDefaultForSpine(spine, options)
             GrammarRuleName("style") -> style(nextExpected, itemType, options.sentenceContext!!)
+                ?: CompletionProviderAbstract.provideDefaultForSpine(spine, options)
             else -> CompletionProviderAbstract.provideDefaultForSpine(spine, options)
         }
     }
@@ -146,7 +155,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
         )
     }
 
-    private fun rule(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
+    private fun rule(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem>? {
         return when (nextExpected) {
             is Terminal -> when (nextExpected.id) {
                 "'{'" -> listOf(
@@ -155,22 +164,22 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
                 )
 
                 "'}'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "rule", "}"))
-                else -> error("Internal error: RuleItem $nextExpected not handled")
+                else -> null // not handled here, the default is used
             }
 
-            else -> error("Internal error: RuleItem $nextExpected not handled")
+            else -> null // not handled here, the default is used
         }
     }
 
-    private fun style(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
+    private fun style(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem>? {
         return when (nextExpected) {
             is Terminal -> when (nextExpected.id) {
                 "':'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "style", ":"))
                 "';'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "style", ";"))
-                else -> error("Internal error: RuleItem $nextExpected not handled")
+                else -> null // not handled here, the default is used
             }
 
-            else -> error("Internal error: RuleItem $nextExpected not handled")
+            else -> null // not handled here, the default is used
         }
     }
 }

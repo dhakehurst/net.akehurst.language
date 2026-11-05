@@ -31,8 +31,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 0)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<namespace>"),
-            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "option", "<option>"),
             CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option> <namespace>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace"),
@@ -48,8 +48,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 0)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<namespace>"),
-            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "option", "<option>"),
             CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option> <namespace>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace"),
@@ -66,8 +66,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<namespace>"),
-            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "<namespace>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "option", "<option>"),
             CompletionItem(CompletionItemKind.SEGMENT, "unit", "<option> <namespace>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace"),
@@ -128,12 +128,21 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, options = Agl.options { completionProvider { depth(1) } })
 
         val expected = listOf<CompletionItem>(
+            CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> <extends> { <rule> }"),
             CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> <extends> { <option> <rule> }"),
+            CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> { <rule> }"),
             CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> { <option> <rule> }"),
-            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <option> <import> <definition>"),
-            CompletionItem(CompletionItemKind.SEGMENT, "option", "# <IDENTIFIER> : <IDENTIFIER"),
+            CompletionItem(CompletionItemKind.SEGMENT, "import", "import <possiblyQualifiedName>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <grammar>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <import>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <import> <grammar>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <option>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <option> <grammar>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <option> <import>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "namespace", "namespace <possiblyQualifiedName> <option> <import> <grammar>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "option", "# <IDENTIFIER> : <optionValue>"),
             CompletionItem(CompletionItemKind.SEGMENT, "option", "# <IDENTIFIER>"),
-            CompletionItem(CompletionItemKind.SEGMENT, "possiblyQualifiedName", "import <possiblyQualifiedName>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'.'", "."),
             CompletionItem(CompletionItemKind.LITERAL, "'grammar'", "grammar"),

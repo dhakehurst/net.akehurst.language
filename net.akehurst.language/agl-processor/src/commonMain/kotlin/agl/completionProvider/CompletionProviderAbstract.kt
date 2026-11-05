@@ -209,23 +209,19 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             is Choice -> item.alternative.flatMap { expandItem(curDepth, it, options, targetGrammar) }
             is Concatenation -> {
                 //FIXME: SPACE may not be valid skip rule !
+                // label (Expansion.name): the innermost rule whose right-hand side holds the whole segment.
+                // A segment of one part keeps the name of that part, a segment of more parts gets its name from the enclosing rule.
                 var results = listOf<Expansion>(Expansion(item, null, ""))
-                val nameFunc = when {
-                    item.items.count { (it is Terminal && it.isLiteral).not() } > 1 -> { exp: Expansion -> null }
-                    else -> { exp: Expansion -> exp.name }
-                }
                 for (concItem in item.items) {
                     val expand = expandItem(curDepth, concItem, options, targetGrammar)
                     // earlier items vary slowest, so the segments are in the order of the alternatives
                     val newResults = results.flatMap { res ->
                         expand.map { exp ->
-                            val expName = nameFunc.invoke(exp)
-                            val expRl = exp.ruleItem
                             when {
                                 exp.list.isBlank() -> res // do not concat blank/empty items
-                                res.list.isBlank() -> Expansion(expRl, res.name ?: expName, exp.list) // first item
+                                res.list.isBlank() -> Expansion(exp.ruleItem, exp.name, exp.list) // first item
                                 // more than one part, so the segment is the concatenation (used when it is expanded further, see CompletionProviderOptions.path)
-                                else -> Expansion(item, res.name ?: expName, "${res.list} ${exp.list}")
+                                else -> Expansion(item, null, "${res.list} ${exp.list}")
                             }
                         }
                     }
@@ -314,7 +310,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             fun join(res: Expansion, exp: Expansion) = when {
                 exp.list.isBlank() -> res
                 res.list.isBlank() -> exp
-                else -> Expansion(list, res.name ?: exp.name, "${res.list} ${exp.list}")
+                else -> Expansion(list, null, "${res.list} ${exp.list}") // more than one part, named by the enclosing rule
             }
             var results = itemExpansions
             for (i in 1 until count) {

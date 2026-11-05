@@ -107,7 +107,7 @@ class test_CompletionProviderSimple_with_depth {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "A", "<A>"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A> , <A>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "<A> , <A>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
@@ -121,7 +121,7 @@ class test_CompletionProviderSimple_with_depth {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "A", "<A>"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A> , <A>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "<A> , <A>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
@@ -133,8 +133,7 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(1) } })
                     expectedCompletionItems(
                         listOf(
-                            // the segment 'a' is the same text as the literal, so only the literal is offered
-                            CompletionItem(CompletionItemKind.SEGMENT, "A", "a , a"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a , a"),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
@@ -278,8 +277,8 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(2) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "ABC", "<ABC> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "DEF", "<DEF> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<ABC> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<DEF> ."),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                             CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
                             CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
@@ -295,11 +294,11 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(3) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "B", "<B> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "C", "<C> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "D", "<D> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "EF", "<EF> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<A> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<B> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<C> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<D> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<EF> ."),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                             CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
                             CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
@@ -315,11 +314,11 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(4) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "A", "a ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "B", "b ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "C", "c ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "D", "d ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "EF", "<E> <F> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "a ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "b ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "c ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "d ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<E> <F> ."),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                             CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
                             CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
@@ -335,11 +334,11 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(5) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "A", "a ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "B", "b ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "C", "c ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "D", "d ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "EF", "e f ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "a ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "b ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "c ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "d ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "e f ."),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                             CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
                             CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
@@ -384,8 +383,8 @@ class test_CompletionProviderSimple_with_depth {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "ABC", "<ABC> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "DEF", "<DEF> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<ABC> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<DEF> ."),
                         )
                     )
                 }
@@ -398,7 +397,7 @@ class test_CompletionProviderSimple_with_depth {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "ABC", "<ABC> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<ABC> ."),
                         )
                     )
                 }
@@ -411,7 +410,7 @@ class test_CompletionProviderSimple_with_depth {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "DEF", "<DEF> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<DEF> ."),
                         )
                     )
                 }
@@ -424,9 +423,9 @@ class test_CompletionProviderSimple_with_depth {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "B", "<B> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "C", "<C> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<A> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<B> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<C> ."),
                         )
                     )
                 }
