@@ -34,7 +34,8 @@ data class CompletionItem(
     val label: String,
     val text: String
 ) {
-    var id: Int? = 0
+    /** index of the expansion this item comes from (see CompletionProviderOptions.path), null if not from an expansion */
+    var id: Int? = null
     var description: String = ""
     var detail: RuleItem? = null
 

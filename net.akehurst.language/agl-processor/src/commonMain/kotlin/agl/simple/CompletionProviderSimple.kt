@@ -71,6 +71,12 @@ class CompletionProviderSimple(
                     val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options, targetGrammar) }
                     expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
                 } else {
+                    // the expansions and tangibles of all spines, computed once (it is the same for each spine)
+                    val allSpinesItems by lazy {
+                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options, targetGrammar) }
+                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options, targetGrammar) }
+                        expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                    }
                     val items = nextExpected.flatMap { sp ->
                         val firstSpineNode = sp.elements.firstOrNull()
                         when (firstSpineNode) {
@@ -78,17 +84,8 @@ class CompletionProviderSimple(
                             else -> {
                                 val type = typeFor(firstSpineNode.rule)
                                 when (type) {
-                                    null -> {
-                                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options, targetGrammar) }
-                                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options, targetGrammar) }
-                                        expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
-                                    }
-                                    else -> {
-                                        val forTypes = provideForType(type, firstSpineNode, sentenceContext)
-                                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options, targetGrammar) }
-                                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options, targetGrammar) }
-                                        forTypes + expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
-                                    }
+                                    null -> allSpinesItems
+                                    else -> provideForType(type, firstSpineNode, sentenceContext) + allSpinesItems
                                 }
                             }
                         }
@@ -136,8 +133,10 @@ class CompletionProviderSimple(
                 null -> emptyList()
                 else -> {
                     var strProps: Set<PropertyDeclaration> = setOf(prop)
+                    // properties already looked at, so that a type whose first property is (or leads back to) itself does not loop for ever
+                    var visited: Set<PropertyDeclaration> = strProps
                     while (strProps.isNotEmpty() && strProps.all { it.typeInstance != StdLibDefault.String }) {
-                        strProps = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
+                        val next = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
                                 strProps.filter { it.typeInstance != StdLibDefault.String }.flatMap { prp ->
                                     val type = prp.typeInstance
                                     val td = type.resolvedDefinition
@@ -147,6 +146,8 @@ class CompletionProviderSimple(
                                         else -> emptyList()
                                     }
                                 }.toSet()
+                        strProps = next - visited
+                        visited = visited + next
                     }
                     strProps.flatMap { prp ->
                         val refTypeNames = crossReferenceDomain.referenceForProperty(prp.owner.qualifiedName, prp.name.value)

@@ -235,13 +235,17 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             }
 
             is ConcatenationItem -> when (item) {
-                is OptionalItem -> expandItem(curDepth, item.item, options, targetGrammar) + Expansion(item, null, "")
+                is OptionalItem -> when {
+                    options.showOptionalItems -> expandItem(curDepth, item.item, options, targetGrammar) + Expansion(item, null, "")
+                    else -> listOf(Expansion(item, null, ""))
+                }
                 is SimpleList -> {
                     // the minimum number of items, and also one item if the minimum is 0
                     val itemExps = expandItem(curDepth, item.item, options, targetGrammar)
-                    when (item.min) {
-                        0 -> listOf(Expansion(item, null, "")) + itemExps
-                        else -> repeatExpansions(item, itemExps, item.min)
+                    when {
+                        0 != item.min -> repeatExpansions(item, itemExps, item.min)
+                        options.showOptionalItems -> listOf(Expansion(item, null, "")) + itemExps
+                        else -> listOf(Expansion(item, null, ""))
                     }
                 }
 
@@ -250,11 +254,13 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     // and 'item sep item' if the maximum allows 2 items, so that the separator is shown
                     val itemExps = expandItem(curDepth, item.item, options, targetGrammar)
                     val sepExps = expandItem(curDepth, item.separator, options, targetGrammar)
-                    val counts = when (item.min) {
-                        0 -> listOf(0, 1)
-                        else -> listOf(item.min)
+                    val counts = when {
+                        0 != item.min -> listOf(item.min)
+                        options.showOptionalItems -> listOf(0, 1)
+                        else -> listOf(0)
                     }
                     val withTwo = when {
+                        counts == listOf(0) -> counts
                         counts.any { it >= 2 } -> counts
                         -1 == item.max || item.max >= 2 -> counts + 2
                         else -> counts

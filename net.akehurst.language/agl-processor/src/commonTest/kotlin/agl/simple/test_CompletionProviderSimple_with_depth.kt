@@ -112,6 +112,20 @@ class test_CompletionProviderSimple_with_depth {
                         )
                     )
                 }
+                sentencePass("") {
+                    // min is 1, so not affected
+                    options(Agl.options { completionProvider {
+                        depth(0)
+                        showOptionalItems(false)
+                    } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A> , <A>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                        )
+                    )
+                }
             }
             testData("SeparatedList min 0") {
                 grammarStr(grammarStrSepList0)
@@ -121,6 +135,17 @@ class test_CompletionProviderSimple_with_depth {
                         listOf(
                             // the segment 'a' is the same text as the literal, so only the literal is offered
                             CompletionItem(CompletionItemKind.SEGMENT, "A", "a , a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                        )
+                    )
+                }
+                sentencePass("") {
+                    options(Agl.options { completionProvider {
+                        depth(1)
+                        showOptionalItems(false)
+                    } })
+                    expectedCompletionItems(
+                        listOf(
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )

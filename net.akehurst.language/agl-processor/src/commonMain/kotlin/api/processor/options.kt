@@ -72,6 +72,11 @@ interface CompletionProviderOptions<ContextType : Any> {
      */
     var path: List<Pair<Int, Int>>
 
+    /**
+     * true (default): optional items, and lists with min 0, are expanded both with and without the item(s).
+     * false: they are left out, only the expansion without them is given.
+     * TODO: future enhancement, more flexibility in configuring the output (e.g. show them as a placeholder)
+     */
     var showOptionalItems: Boolean
 
     var provideValuesForPatternTerminals: Boolean

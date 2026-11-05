@@ -71,6 +71,18 @@ class test_CompletionProviderSimple_Optional {
                         )
                     )
                 }
+                sentencePass("") {
+                    options(Agl.options { completionProvider {
+                        depth(1)
+                        showOptionalItems(false)
+                    } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "<A> . <DE> <F> ."),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                        )
+                    )
+                }
             }
             testData("Optional 2") {
                 grammarStr(grammarStrConcat)
