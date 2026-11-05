@@ -278,8 +278,8 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(2) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<ABC> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<DEF> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABC", "<ABC> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEF", "<DEF> ."),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                             CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
                             CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
@@ -384,8 +384,8 @@ class test_CompletionProviderSimple_with_depth {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<ABC> ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<DEF> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABC", "<ABC> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEF", "<DEF> ."),
                         )
                     )
                 }
@@ -398,7 +398,7 @@ class test_CompletionProviderSimple_with_depth {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<ABC> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABC", "<ABC> ."),
                         )
                     )
                 }
@@ -411,7 +411,7 @@ class test_CompletionProviderSimple_with_depth {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<DEF> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEF", "<DEF> ."),
                         )
                     )
                 }
