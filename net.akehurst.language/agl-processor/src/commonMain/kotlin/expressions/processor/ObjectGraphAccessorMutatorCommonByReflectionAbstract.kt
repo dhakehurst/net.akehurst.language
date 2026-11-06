@@ -224,6 +224,9 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return typedAs(obj, type)
     }
 
+    //TODO: the elements of the created List/Set (and Map keys/values) are the TypedObjects themselves, not plain values,
+    // so callers (e.g. constructor executions) get e.g. List<TypedObject> and must unwrap them.
+    // Unwrapping here changes how elements are read back everywhere (getFromListWithIndex etc.), so postponed.
     override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {
         return when (collectionType.qualifiedTypeName) {
             StdLibDefault.List.qualifiedName -> {
