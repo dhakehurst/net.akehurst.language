@@ -73,9 +73,15 @@ internal class ParseStreamer(
 
     private var graph: ParseGraph? = null
 
+    private var started = false
+
     fun start(graph: ParseGraph) {
         this.graph = graph
         graph.treeData.recordCompleteChains = true
+        if (started.not()) {
+            started = true
+            listener.start(sentence)
+        }
     }
 
     /**
@@ -317,7 +323,7 @@ internal class ParseStreamer(
             val td = item.treeData
             when {
                 item.expanded -> {
-                    listener.branch(node, item.numChildren)
+                    if (node.rule.isEmbedded) listener.endEmbedded(node) else listener.branch(node, item.numChildren)
                     markSent(node)
                     td.skipDataAfter(node)?.let { sendSkip(it) }
                     // a zero-length node can be a child in more than one place, so keep it
@@ -332,6 +338,7 @@ internal class ParseStreamer(
                         td.skipDataAfter(node)?.let { sendSkip(it) }
                     } else {
                         // the embedded tree is sent whole, after its initial skip
+                        listener.beginEmbedded(node)
                         stack.add(Item(node, td, item.growing, true, 1))
                         stack.add(Item(emb.userRoot, emb, null, false, 0))
                         emb.initialSkip?.let { sendSkip(it) }

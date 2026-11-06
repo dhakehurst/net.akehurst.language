@@ -22,6 +22,7 @@ import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.api.SpptDataNode
 
@@ -292,6 +293,9 @@ interface ParseOptions {
  * an error is raised in the parse issues and the parse stops: [failed] is called.
  */
 interface ParseStreamListener {
+    /** called once, before any node, with the sentence being parsed */
+    fun start(sentence: Sentence) {}
+
     /** a terminal */
     fun leaf(node: SpptDataNode)
 
@@ -300,6 +304,15 @@ interface ParseStreamListener {
 
     /** a non-terminal, its [numChildren] children were the most recent nodes sent and not yet used by another branch */
     fun branch(node: SpptDataNode, numChildren: Int)
+
+    /**
+     * an embedded (other grammar) node starts: the nodes of the embedded tree follow, then [endEmbedded].
+     * Not called for an embedded node that has no embedded tree; that is sent with [leaf].
+     */
+    fun beginEmbedded(node: SpptDataNode) {}
+
+    /** the embedded node, after its embedded tree; it has one child, the embedded root. By default this is [branch] with one child */
+    fun endEmbedded(node: SpptDataNode) = branch(node, 1)
 
     /** the parse finished and the whole sentence was sent; [issues] holds any warnings */
     fun finished(issues: IssueCollection<LanguageIssue>)
