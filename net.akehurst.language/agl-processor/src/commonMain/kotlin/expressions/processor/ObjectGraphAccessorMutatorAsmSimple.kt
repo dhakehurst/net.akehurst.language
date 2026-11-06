@@ -213,7 +213,7 @@ object StdFunctionLibForAsmSimple : FunctionLib {
         (declaration as MutableMap)["Set"] = FunctionDefinitionPrimitive(
             SimpleName("Set"),
             listOf(), //TODO
-            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            TypeReferenceDefault(StdLibDefault.Set.qualifiedName, emptyList(), false),
             null
         ).also {
             it.execution = { args -> args.toSet() }
@@ -221,10 +221,18 @@ object StdFunctionLibForAsmSimple : FunctionLib {
         (declaration as MutableMap)["List"] = FunctionDefinitionPrimitive(
             SimpleName("List"),
             listOf(), //TODO
-            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            TypeReferenceDefault(StdLibDefault.List.qualifiedName, emptyList(), false),
             null
         ).also {
             it.execution = { args -> args }
+        }
+        (declaration as MutableMap)["Map"] = FunctionDefinitionPrimitive(
+            SimpleName("Map"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Map.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> args.associate { a -> a as Pair<*, *> } }
         }
     }
 

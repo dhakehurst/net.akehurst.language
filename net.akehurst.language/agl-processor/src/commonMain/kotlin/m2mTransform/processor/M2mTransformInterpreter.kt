@@ -462,6 +462,9 @@ class M2mTransformInterpreter(
         val domainAccessorMutator = targetTransform.domainParameters.entries.associate { (k, v) ->
             Pair(k, domainAccessorMutatorByDomainName[v] ?: error("Domain ObjectGraph not found for domain $k"))
         }
+        // issues raised before this call (earlier transforms on the same interpreter or accessor-mutators) are not part of this result
+        val issuesBefore = issues.all.toSet()
+        val accessorIssuesBefore = domainAccessorMutatorByDomainName.mapValues { (_, am) -> am.issues.all.toSet() }
         val m2mExecution = M2mTransformExecution(targetTransform, targetDomainRef, domainAccessorMutator, issues)
         m2mExecution.evaluationStep("Executing transform rule set '${targetTransform.qualifiedName}' with target domain '${targetDomainRef.value}'.")
         when {
@@ -470,7 +473,12 @@ class M2mTransformInterpreter(
                 executeRule(m2mExecution, topRule, domainGraphs, ruleArguments)
             }
         }
-        val allIssues = domainAccessorMutatorByDomainName.values.map { it.issues }.fold(issues) { acc, it -> acc.addAllFrom(it); acc }
+        val allIssues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+        allIssues.addAll(issues.all.filter { it !in issuesBefore })
+        domainAccessorMutatorByDomainName.forEach { (dn, am) ->
+            val before = accessorIssuesBefore[dn] ?: emptySet()
+            allIssues.addAll(am.issues.all.filter { it !in before })
+        }
         return M2MTransformResult(allIssues, m2mExecution.records, targetDomainRef)
     }
 
@@ -522,7 +530,7 @@ class M2mTransformInterpreter(
                                 val evcForWhen = EvaluationContext.of(ruleArguments + allVars.matchedVariables)
                                 val whenResult = rule.when_?.let {
                                     executeWhen(m2mExecution, rule, it, evcForWhen)
-                                } ?: Pair(true, EvaluationContext.of(allVars.matchedVariables))
+                                } ?: Pair(true, evcForWhen)
                                 if (whenResult.first) {
                                     val varsAfterWhen = whenResult.second// + allVars.matchedVariables
                                     // construct
@@ -660,7 +668,7 @@ class M2mTransformInterpreter(
                         val allVars = alt.values.merge()
                         val evcForWhen = EvaluationContext.of(ruleArguments + allVars.matchedVariables)
                         val whenResult = rule.when_?.let { executeWhen(m2mExecution, rule, it, evcForWhen) }
-                            ?: Pair(true, EvaluationContext.of(allVars.matchedVariables))
+                            ?: Pair(true, evcForWhen)
 
                         if (whenResult.first) {
                             val whereClauseSteps = compileRelationWhereClause(m2mExecution, rule, whenResult.second)

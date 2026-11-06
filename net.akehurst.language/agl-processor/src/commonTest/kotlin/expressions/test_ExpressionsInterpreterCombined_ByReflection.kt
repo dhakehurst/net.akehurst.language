@@ -133,6 +133,32 @@ class test_ExpressionsInterpreterCombined_ByReflection {
     }
 
     @Test
+    fun Map_function() {
+        val expression = $$"Map(Pair('a', 1), Pair('b', 2))['b']"
+        val tm = typesDomain("test", true) {
+        }
+        val self = Unit
+
+        test(
+            tm, self, StdLibDefault.NothingType.qualifiedTypeName.value, expression,
+            2L
+        )
+    }
+
+    @Test
+    fun List_function_index() {
+        val expression = $$"List('a', 'b', 'c')[1]"
+        val tm = typesDomain("test", true) {
+        }
+        val self = Unit
+
+        test(
+            tm, self, StdLibDefault.NothingType.qualifiedTypeName.value, expression,
+            "b"
+        )
+    }
+
+    @Test
     fun structure_self() {
         val expression = $$"$self"
         val tm = typesDomain("test", true) {
