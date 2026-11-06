@@ -8,6 +8,8 @@ exportPublic = "2.4.0-SNAPSHOT"
 nak-kotlinx = "2.4.0-SNAPSHOT"
 jsIntegration = "2.4.0-SNAPSHOT"
 vanniktech = "0.37.0"
+compose-multiplatform = "1.12.2"
+compose-material3 = "1.9.0"
 
 korlibs = "6.1.0"
 kotest = "6.1.11"
@@ -22,6 +24,10 @@ nak-kotlinx-utils = { module = "net.akehurst.kotlinx:kotlinx-utils", version.ref
 nak-kotlinx-filesystem = { module = "net.akehurst.kotlinx:kotlinx-filesystem", version.ref = "nak-kotlinx" }
 nak-kotlinx-secure-storage = { module = "net.akehurst.kotlinx:kotlinx-secure-storage", version.ref = "nak-kotlinx" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
 
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
@@ -47,3 +53,5 @@ buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig
 #reflex = { id = "net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref = "nak-kotlinx" }
 jsIntegration = { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
