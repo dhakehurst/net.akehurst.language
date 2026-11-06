@@ -15,6 +15,7 @@ korlibs = "6.1.0"
 kotest = "6.1.11"
 #ksp = "2.2.21-2.0.4"
 kotlinx-coroutines = "1.11.0"
+kotlinx-serialization = "1.11.0"
 
 [libraries]
 korlibs-korio = { module = "org.korge:korlibs-io", version.ref = "korlibs" }
@@ -23,6 +24,7 @@ nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections",
 nak-kotlinx-utils = { module = "net.akehurst.kotlinx:kotlinx-utils", version.ref = "nak-kotlinx" }
 nak-kotlinx-filesystem = { module = "net.akehurst.kotlinx:kotlinx-filesystem", version.ref = "nak-kotlinx" }
 nak-kotlinx-secure-storage = { module = "net.akehurst.kotlinx:kotlinx-secure-storage", version.ref = "nak-kotlinx" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
@@ -53,5 +55,6 @@ buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig
 #reflex = { id = "net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref = "nak-kotlinx" }
 jsIntegration = { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
