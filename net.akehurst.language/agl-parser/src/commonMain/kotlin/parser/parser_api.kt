@@ -23,6 +23,7 @@ import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SpptDataNode
 
 interface RuleSet {
     val rule : List<Rule>
@@ -257,7 +258,57 @@ interface ParseOptions {
      */
     var expectedAtFromAllTokenStarts: Boolean
 
+    /**
+     * When not null, the parse is streamed to this listener while parsing,
+     * and no parse tree is kept: [ParseResult.sppt] is null.
+     * Nodes are sent bottom-up (post-order), left to right, once they can no longer change.
+     *
+     * Default value: `null` (no streaming, the parse tree is built as normal).
+     */
+    var streamListener: ParseStreamListener?
+
+    /**
+     * Only used when [streamListener] is not null.
+     * When the text parsed but not yet sent to the listener gets longer than this (in characters),
+     * one warning is raised, naming the rules that are still competing.
+     *
+     * Default value: `10000`.
+     */
+    var streamLagWarningLimit: Int
+
     fun clone(): ParseOptions
+}
+
+/**
+ * Receives a parse bottom-up while it is parsed.
+ *
+ * Nodes arrive in post-order, left to right: the children of a branch are sent before the branch.
+ * A consumer can keep its own stack of values: push one value for each [leaf],
+ * and for each [branch] pop [numChildren] values and push one.
+ * Skip (e.g. whitespace) is not counted as a child; it is reported with [skip].
+ *
+ * A node is sent only once nothing later in the sentence can change it.
+ * If the parser chose between more than one way to parse some text, a warning is raised in the parse issues
+ * and the node the parser chose is sent.
+ */
+interface ParseStreamListener {
+    /** a terminal */
+    fun leaf(node: SpptDataNode)
+
+    /** skip text (e.g. whitespace or comments) from [startPosition] up to (not including) [nextInputPosition] */
+    fun skip(startPosition: Int, nextInputPosition: Int)
+
+    /** a non-terminal, its [numChildren] children were the most recent nodes sent and not yet used by another branch */
+    fun branch(node: SpptDataNode, numChildren: Int)
+
+    /** the parse finished and the whole sentence was sent; [issues] holds any warnings */
+    fun finished(issues: IssueCollection<LanguageIssue>)
+
+    /**
+     * the parse failed; the nodes sent so far are correct but the sentence is not complete.
+     * [committedUpTo] is the sentence position up to which nodes were sent.
+     */
+    fun failed(issues: IssueCollection<LanguageIssue>, committedUpTo: Int)
 }
 
 interface ParseResult {

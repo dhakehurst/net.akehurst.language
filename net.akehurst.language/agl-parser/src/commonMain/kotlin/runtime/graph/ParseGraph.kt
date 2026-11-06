@@ -174,6 +174,12 @@ internal class ParseGraph(
 
     val canGrow: Boolean get() = this._gss.isEmpty.not()
 
+    /**
+     * When set (e.g. when streaming), called with the existing node when a new parse of the same text
+     * is found and the merge cannot pick one (undecidable, or the choice is marked ambiguous).
+     */
+    var onAmbiguity: ((existing: SpptDataNode) -> Unit)? = null
+
     val numberOfHeads get() = this._gss.numberOfHeads
 
     val hasNextHead: Boolean get() = this._gss.hasNextHead
@@ -470,6 +476,14 @@ internal class ParseGraph(
     fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peekPrevious(gn)
 
     /**
+     * Used when streaming, to keep memory flat: forget the index entries that can not be looked up again,
+     * i.e. those whose next input position is before [position], the smallest next input position of any head.
+     */
+    internal fun dropIncompleteIndexBefore(position: Int) {
+        this._incompleteByPosition.keys.removeAll { it.second < position }
+    }
+
+    /**
      * Other incomplete nodes still in the GSS that cover the same input as 'gn'
      * (same start, same next input position, same number of children) but are in a different parser state.
      */
@@ -578,8 +592,12 @@ internal class ParseGraph(
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentFirstChild(existingComplete, parent, child, previous)
                     MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentFirstChild(existingComplete, parent, child, previous)
-                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
+                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> {
+                        onAmbiguity?.invoke(existingComplete)
+                        keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
+                    }
                     MergeChoice.UNDECIDABLE -> {
+                        onAmbiguity?.invoke(existingComplete)
                         useExistingCompleteParentFirstChild(parent, child, previous)
                         //keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     }
@@ -638,8 +656,12 @@ internal class ParseGraph(
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentLastChild(previous, parent, child, prevPrev)
                     MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentLastChild(previous, parent, child, prevPrev)
-                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
+                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> {
+                        onAmbiguity?.invoke(existingComplete)
+                        keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
+                    }
                     MergeChoice.UNDECIDABLE -> {
+                        onAmbiguity?.invoke(existingComplete)
                         useExistingCompleteParentLastChild(parent, child, prevPrev)
                         //keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
                     }

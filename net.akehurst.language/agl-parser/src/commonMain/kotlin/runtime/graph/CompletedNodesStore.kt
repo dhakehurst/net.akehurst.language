@@ -117,6 +117,12 @@ internal class CompletedNodesStore<T>(val num: Int) {
     private var _eot = HashMap<Int, T>()//MapIntTo<T>()
     private var _skip: T? = null
 
+    /** forget the entries for input positions before [position] */
+    fun dropBefore(position: Int) {
+        this._map.keys.removeAll { it.second < position }
+        this._eot.keys.removeAll { it < position }
+    }
+
     fun clear() {
         this._map.clear()
         this._goal = null

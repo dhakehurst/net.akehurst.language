@@ -52,7 +52,9 @@ class ParseOptionsDefault(
     override var cacheSkip: Boolean = true,
     override var reverseFindWordStartRegex: String? = null,
     override var reverseFindWordStartBySkipRules: Boolean = true,
-    override var expectedAtFromAllTokenStarts: Boolean = false
+    override var expectedAtFromAllTokenStarts: Boolean = false,
+    override var streamListener: ParseStreamListener? = null,
+    override var streamLagWarningLimit: Int = 10000
 ) : ParseOptions {
     override fun clone() = ParseOptionsDefault(
         enabled = enabled,
@@ -63,7 +65,9 @@ class ParseOptionsDefault(
         cacheSkip = cacheSkip,
         reverseFindWordStartRegex = reverseFindWordStartRegex,
         reverseFindWordStartBySkipRules = reverseFindWordStartBySkipRules,
-        expectedAtFromAllTokenStarts = expectedAtFromAllTokenStarts
+        expectedAtFromAllTokenStarts = expectedAtFromAllTokenStarts,
+        streamListener = streamListener,
+        streamLagWarningLimit = streamLagWarningLimit
     )
 }
 
@@ -154,8 +158,15 @@ class LeftCornerParser(
         )
         var seasons = 1
         var maxNumHeads = 0
+        val streamListener = options.streamListener
+        val streamer = streamListener?.let { ParseStreamer(it, sentence, this._issues, options.streamLagWarningLimit) }
+        if (null != streamer) {
+            rp.graph.onAmbiguity = { streamer.ambiguity(it) }
+            streamer.start(rp.graph)
+        }
         try {
             val startSkipFailures = rp.start(0, possibleEndOfText, parseArgs)
+            if (null != streamer) streamer.start(rp.graph)
             maxNumHeads = rp.graph.numberOfHeads
             var totalWork = maxNumHeads
 
@@ -165,24 +176,34 @@ class LeftCornerParser(
                 seasons += steps
                 maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
                 totalWork += rp.graph.numberOfHeads
+                // once a goal is found, the remaining heads may still fail, so nothing more is sent until the end
+                if (null != streamer && rp.graph.goals.isEmpty()) streamer.seasonEnd(rp)
             }
         } catch (e: ParserWontStopException) {
             val length = if (e.position < sentence.text.length) 1 else 0
             this._issues.error(sentence.locationFor(e.position, length), IssueMessage.PARSER_WONT_STOP)
+            streamer?.fail()
             return ParseResultDefault(null, this._issues)
         }
         catch (e: ParserInterruptedException) {
             this._issues.error(sentence.locationFor(e.position, 0), IssueMessage.parserTerminated(e.reason))
+            streamer?.fail()
             return ParseResultDefault(null, this._issues)
         }
 
         val match = rp.graph.treeData.complete
 
         return if (match.root != null) {
-            val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
-            ParseResultDefault(sppt, this._issues)
+            if (null != streamer) {
+                streamer.finish(rp.graph.treeData)
+                ParseResultDefault(null, this._issues)
+            } else {
+                val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
+                ParseResultDefault(sppt, this._issues)
+            }
         } else {
             createParseIssuesFromFailures(sentence, options, rp)
+            streamer?.fail()
 
             val sppt = null//TODO: provide best effort - SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
             ParseResultDefault(sppt, this._issues)
