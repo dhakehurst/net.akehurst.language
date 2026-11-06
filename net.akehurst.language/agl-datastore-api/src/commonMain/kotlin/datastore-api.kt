@@ -258,6 +258,22 @@ interface Datastore : Transactional {
     /** must be called, and the flow collected, inside a transaction; the changes are applied by commit() */
     suspend fun write(accessConfiguration:DatastoreConfiguration, input:Flow<DataItem>): Flow<DataItem>
 
+    /**
+     * true if this datastore can delete items. If false, delete() throws UnsupportedOperationException,
+     * e.g. for a read-only datastore.
+     */
+    val supportsDelete: Boolean get() = false
+
+    /**
+     * Deletes the items with the given identities.
+     * Like write, it must be called, and the flow collected, inside a transaction; the deletions are applied by commit().
+     * 'accessConfiguration' selects which objects the deletion deals with, as for read and write.
+     * Returns the identities of the items that are deleted.
+     * Throws UnsupportedOperationException unless 'supportsDelete' is true.
+     */
+    suspend fun delete(accessConfiguration: DatastoreConfiguration, input: Flow<DataItemIdentity>): Flow<DataItemIdentity> =
+        throw UnsupportedOperationException("Datastore '${identity.value}' does not support delete")
+
 }
 
 object DatastoreExt{

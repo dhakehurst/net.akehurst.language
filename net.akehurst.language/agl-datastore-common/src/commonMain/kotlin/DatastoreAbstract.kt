@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.akehurst.datastore.api.DataItem
+import net.akehurst.datastore.api.DataItemIdentity
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
@@ -26,6 +27,7 @@ import net.akehurst.language.types.api.TypesDomain
  *
  * It also keeps the open/closed state: read and write fail unless the datastore is open.
  * Override onOpen()/onClose() to connect and disconnect, and implement doRead()/doWrite().
+ * A datastore that can delete items overrides supportsDelete to return true, and doDelete().
  *
  * It keeps the transaction state too: write fails unless a transaction is active.
  * Override onBeginTransaction(), onPrepare(), onCommit() and onRollback(); they do nothing by default,
@@ -171,6 +173,20 @@ abstract class DatastoreAbstract(
         checkOpen()
         checkInTransaction()
         return doWrite(accessConfiguration.withSecretsResolved(secretSources), input).onStart { checkOpen(); checkInTransaction() }
+    }
+
+    /** false by default; a datastore that can delete items overrides it to return true, and implements doDelete() */
+    override val supportsDelete: Boolean get() = false
+
+    /** the delete of this datastore; only called while it is open, in a transaction, and if supportsDelete. Stage the deletions, apply them in onCommit(). */
+    protected open suspend fun doDelete(accessConfiguration: DatastoreConfiguration, input: Flow<DataItemIdentity>): Flow<DataItemIdentity> =
+        throw UnsupportedOperationException("Datastore '${identity.value}' does not support delete")
+
+    final override suspend fun delete(accessConfiguration: DatastoreConfiguration, input: Flow<DataItemIdentity>): Flow<DataItemIdentity> {
+        if (supportsDelete.not()) throw UnsupportedOperationException("Datastore '${identity.value}' does not support delete")
+        checkOpen()
+        checkInTransaction()
+        return doDelete(accessConfiguration.withSecretsResolved(secretSources), input).onStart { checkOpen(); checkInTransaction() }
     }
 
     final override suspend fun types(): TypesDomain =
