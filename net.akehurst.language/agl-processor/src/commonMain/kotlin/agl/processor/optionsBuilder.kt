@@ -24,6 +24,7 @@ import net.akehurst.language.api.processor.SyntaxAnalysisOptions
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.parser.api.ParseStreamListener
 import net.akehurst.language.parser.api.SentenceIdentityFunction
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.scanner.api.ScanOptions
@@ -65,6 +66,8 @@ class ParseOptionsBuilder(
     private var _reverseFindWordStartRegex = base.reverseFindWordStartRegex
     private var _reverseFindWordStartBySkipRules = base.reverseFindWordStartBySkipRules
     private var _expectedAtFromAllTokenStarts = base.expectedAtFromAllTokenStarts
+    private var _streamListener = base.streamListener
+    private var _streamLagWarningLimit = base.streamLagWarningLimit
 
     fun enabled(value: Boolean) {
         _enabled = value
@@ -102,6 +105,17 @@ class ParseOptionsBuilder(
         _expectedAtFromAllTokenStarts = value
     }
 
+    /**
+     * Stream the parse to [value] while parsing; no parse tree is kept (see [ParseOptions.streamListener]).
+     */
+    fun streamListener(value: ParseStreamListener?) {
+        _streamListener = value
+    }
+
+    fun streamLagWarningLimit(value: Int) {
+        _streamLagWarningLimit = value
+    }
+
     fun build(): ParseOptions {
         return ParseOptionsDefault(
             _enabled,
@@ -112,7 +126,9 @@ class ParseOptionsBuilder(
             _cacheSkip,
             _reverseFindWordStartRegex,
             _reverseFindWordStartBySkipRules,
-            _expectedAtFromAllTokenStarts
+            _expectedAtFromAllTokenStarts,
+            _streamListener,
+            _streamLagWarningLimit
         )
     }
 }

@@ -745,6 +745,8 @@ internal class RuntimeParserAgl(
                             2 > actGrp.size -> it.value.map { it.first }
                             else -> {
                                 val grafts = actGrp[ParseAction.GRAFT]!!
+                                // FIXME: this silently picks one parse (GRAFT over HEIGHT, then the left-most GRAFT target).
+                                //  It is an ambiguity that is not reported, e.g. by the streaming parse (ParseStreamer). Look into this later.
                                 resolveGrafts1(grafts)
                             }
                         }
@@ -1130,6 +1132,21 @@ internal class RuntimeParserAgl(
                 else -> Pair(skipData, false)
             }
         }
+    }
+
+    /**
+     * Used when streaming, to keep memory flat: forget cached skip results and scanned leaves before [position],
+     * the smallest next input position of any head. No new leaf can start or end before it, so they are not used again
+     * (and if they are, e.g. for error messages, they are just computed again).
+     */
+    internal fun dropCachesBefore(position: Int) {
+        this._skip_cache.keys.removeAll { it.first < position }
+        this._skip_failedAt_cache.keys.removeAll { it.first < position }
+        when (val sc = this.graph.scanner) {
+            is ScannerOnDemand -> sc.dropLeavesBefore(position)
+            is ScannerClassic -> sc.dropLeavesBefore(position)
+        }
+        this.skipParser?.dropCachesBefore(position)
     }
 
     private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeData? {

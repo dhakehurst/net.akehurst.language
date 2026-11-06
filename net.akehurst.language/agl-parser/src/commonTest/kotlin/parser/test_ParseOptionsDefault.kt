@@ -31,7 +31,15 @@ class test_ParseOptionsDefault {
             cacheSkip = false,
             reverseFindWordStartRegex = "[a-z]+",
             reverseFindWordStartBySkipRules = false,
-            expectedAtFromAllTokenStarts = true
+            expectedAtFromAllTokenStarts = true,
+            streamListener = object : net.akehurst.language.parser.api.ParseStreamListener {
+                override fun leaf(node: net.akehurst.language.sppt.api.SpptDataNode) {}
+                override fun skip(startPosition: Int, nextInputPosition: Int) {}
+                override fun branch(node: net.akehurst.language.sppt.api.SpptDataNode, numChildren: Int) {}
+                override fun finished(issues: net.akehurst.language.issues.api.IssueCollection<net.akehurst.language.issues.api.LanguageIssue>) {}
+                override fun failed(issues: net.akehurst.language.issues.api.IssueCollection<net.akehurst.language.issues.api.LanguageIssue>, committedUpTo: Int) {}
+            },
+            streamLagWarningLimit = 42
         )
         val actual = orig.clone()
         assertEquals(orig.enabled, actual.enabled)
@@ -43,5 +51,7 @@ class test_ParseOptionsDefault {
         assertEquals(orig.reverseFindWordStartRegex, actual.reverseFindWordStartRegex)
         assertEquals(orig.reverseFindWordStartBySkipRules, actual.reverseFindWordStartBySkipRules)
         assertEquals(orig.expectedAtFromAllTokenStarts, actual.expectedAtFromAllTokenStarts)
+        assertEquals(orig.streamListener, actual.streamListener)
+        assertEquals(orig.streamLagWarningLimit, actual.streamLagWarningLimit)
     }
 }

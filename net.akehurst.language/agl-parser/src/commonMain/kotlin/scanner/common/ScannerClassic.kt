@@ -89,6 +89,11 @@ class ScannerClassic(
 
     private val _leaves = mutableMapOf<Int, CompleteTreeDataNode>()
 
+    /** Used when streaming, to keep memory flat: forget scanned leaves before [position]. They are re-scanned if asked for again. */
+    internal fun dropLeavesBefore(position: Int) {
+        this._leaves.keys.removeAll { it < position }
+    }
+
     private fun scanAt(sentence: Sentence, position: Int): CompleteTreeDataNode {
         val matches = validTerminals.mapNotNull {
             val matchLength = ((it as RuntimeRule).rhs as RuntimeRuleRhsTerminal).matchable!!.matchedLength(sentence, position)
