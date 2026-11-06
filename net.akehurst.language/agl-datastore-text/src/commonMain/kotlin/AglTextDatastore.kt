@@ -91,7 +91,7 @@ data class AglTextProvenance(
     val datastoreIdentity: DatastoreIdentity
 ) : DataItemProvenance
 
-class AglTextDatastore(
+open class AglTextDatastore(
     identity: DatastoreIdentity,
     configuration: DatastoreConfiguration
 ) : DatastoreAbstract(identity, configuration) {
@@ -172,6 +172,12 @@ class AglTextDatastore(
         return input.map { formatUnit(accessConfiguration, it) }
     }
 
+    /**
+     * AglTextProvenance of this datastore, for every item read or written.
+     * 'source' is the ParsableUnit of the item, or null for an error item whose input is not a unit.
+     */
+    override fun provenanceFor(input: DataItem?, source: Any?): DataItemProvenance = AglTextProvenance(identity)
+
     // ---
 
     /**
@@ -180,8 +186,8 @@ class AglTextDatastore(
      * otherwise the output is a child of the input item.
      */
     private suspend fun unitItem(input: DataItem, unit: ParsableUnit, issues: IssueCollection<DataItemIssueLocation>): DataItem = when {
-        input.data.self === unit -> DataItemDefault(input.parent, input.identity, input.data, AglTextProvenance(identity), issues)
-        else -> DataItemDefault(input, DataItemIdentity("parsableUnit"), accessorMutator().toTypedObject(unit, StdLibDefault.AnyType), AglTextProvenance(identity), issues)
+        input.data.self === unit -> DataItemDefault(input.parent, input.identity, input.data, provenanceFor(input, unit), issues)
+        else -> DataItemDefault(input, DataItemIdentity("parsableUnit"), accessorMutator().toTypedObject(unit, StdLibDefault.AnyType), provenanceFor(input, unit), issues)
     }
 
     private fun issuesOf(vararg issue: IssueDefault<DataItemIssueLocation>) = net.akehurst.kotlinx.issues.ram.IssueHolder<DataItemIssueLocation>(issue.toList())
@@ -194,7 +200,7 @@ class AglTextDatastore(
     }
 
     private suspend fun notAUnitItem(item: DataItem): DataItem = DataItemDefault(
-        item, DataItemIdentity("parsableUnit"), accessorMutator().nothing(), AglTextProvenance(identity),
+        item, DataItemIdentity("parsableUnit"), accessorMutator().nothing(), provenanceFor(item, null),
         issuesOf(IssueDefault(IssueKind.ERROR, AglTextIssueLocation(null), "the read input to an AglTextDatastore must be a ParsableUnit or a String."))
     )
 
@@ -377,7 +383,7 @@ class AglTextDatastore(
         val am = accessorMutator()
         val unit = item.data.self as? ParsableUnit
             ?: return DataItemDefault(
-                item.parent, item.identity, item.data, AglTextProvenance(identity),
+                item.parent, item.identity, item.data, provenanceFor(item, null),
                 issuesOf(IssueDefault(IssueKind.ERROR, AglTextIssueLocation(null), "the write input to an AglTextDatastore must be a ParsableUnit."))
             )
         val root = unit.asm

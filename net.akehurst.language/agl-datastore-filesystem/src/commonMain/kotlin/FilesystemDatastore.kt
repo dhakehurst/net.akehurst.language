@@ -27,19 +27,19 @@ import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 
-/**
- * Provenance of a DataItem read from a FilesystemDatastore.
- */
 data class FilesystemIssueLocation(
     val path: String?
 ) : DataItemIssueLocation
 
+/**
+ * Provenance of a DataItem read from a FilesystemDatastore.
+ */
 data class FilesystemProvenance(
     val datastoreIdentity: DatastoreIdentity,
     val path: String
 ) : DataItemProvenance
 
-class FilesystemDatastore(
+open class FilesystemDatastore(
     identity: DatastoreIdentity,
     configuration: DatastoreConfiguration
 ) : DatastoreAbstract(identity, configuration) {
@@ -121,7 +121,7 @@ class FilesystemDatastore(
                     parent = null,
                     identity = DataItemIdentity(it.path),
                     data = am.toTypedObject(it, StdLibDefault.AnyType),
-                    provenance = FilesystemProvenance(identity, it.path)
+                    provenance = provenanceFor(null, it)
                 )
             }
             .asFlow()
@@ -140,13 +140,22 @@ class FilesystemDatastore(
             when (item.data.self) {
                 is FileHandle -> item
                 else -> DataItemDefault(
-                    item.parent, item.identity, item.data, item.provenance,
+                    item.parent, item.identity, item.data, provenanceFor(item, null),
                     net.akehurst.kotlinx.issues.ram.IssueHolder<DataItemIssueLocation>(
                         item.issues.all.toList() + IssueDefault(IssueKind.ERROR, FilesystemIssueLocation(null), "the write input to a FilesystemDatastore must be a FileHandle.")
                     )
                 )
             }
         }
+    }
+
+    /**
+     * FilesystemProvenance of the path of 'source' (a FileSystemObjectHandle), for an item read from the filesystem.
+     * For any other item (e.g. an error item of write), the input item's provenance, else a DatastoreProvenance.
+     */
+    override fun provenanceFor(input: DataItem?, source: Any?): DataItemProvenance = when (source) {
+        is FileSystemObjectHandle -> FilesystemProvenance(identity, source.path)
+        else -> input?.provenance ?: super.provenanceFor(input, source)
     }
 
     // --- new files ---

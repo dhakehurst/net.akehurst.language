@@ -7,7 +7,7 @@ import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.common.datastoreProviderSchema
 
-class AglTextProvider : DatastoreProvider {
+open class AglTextProvider : DatastoreProvider {
 
     companion object {
         val IDENTITY = DatastoreProviderIdentity("net.akehurst.datastore.text.AglTextProvider")
@@ -30,7 +30,7 @@ class AglTextProvider : DatastoreProvider {
 
     }
 
-    override val identity get() = IDENTITY
+    override val identity: DatastoreProviderIdentity get() = IDENTITY
 
     override val schema = datastoreProviderSchema {
         datastore {
@@ -63,6 +63,7 @@ class AglTextProvider : DatastoreProvider {
         }
     }
 
+    /** override to provide a custom datastore, e.g. a subclass that overrides provenanceFor */
     override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore  =
         AglTextDatastore(datastoreIdentity,configuration)
 

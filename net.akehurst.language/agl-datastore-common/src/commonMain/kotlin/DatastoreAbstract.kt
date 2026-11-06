@@ -6,6 +6,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.akehurst.datastore.api.DataItem
 import net.akehurst.datastore.api.DataItemIdentity
+import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
@@ -32,6 +33,8 @@ import net.akehurst.language.types.api.TypesDomain
  * It keeps the transaction state too: write fails unless a transaction is active.
  * Override onBeginTransaction(), onPrepare(), onCommit() and onRollback(); they do nothing by default,
  * which suits a datastore that does not change anything (e.g. one that only formats text).
+ *
+ * Each item a datastore outputs gets its provenance from provenanceFor(); override it to give a custom provenance.
  */
 abstract class DatastoreAbstract(
     override val identity: DatastoreIdentity,
@@ -189,6 +192,14 @@ abstract class DatastoreAbstract(
         return doDelete(accessConfiguration.withSecretsResolved(secretSources), input).onStart { checkOpen(); checkInTransaction() }
     }
 
+    /**
+     * the provenance of an item this datastore outputs (read or write).
+     * Override it to give a custom provenance. By default a DatastoreProvenance of this datastore's identity.
+     * @param input the item the output item was produced from, or null if it was read from the store itself (e.g. a file)
+     * @param source the object the output item was made from (e.g. a FileSystemObjectHandle, or a ParsableUnit), or null if none (e.g. an error item)
+     */
+    protected open fun provenanceFor(input: DataItem?, source: Any?): DataItemProvenance = DatastoreProvenance(identity)
+
     final override suspend fun types(): TypesDomain =
         _types ?: _mutex.withLock { _types ?: createTypes().also { _types = it } }
 
@@ -198,3 +209,8 @@ abstract class DatastoreAbstract(
         }
 
 }
+
+/** Provenance of a DataItem output by a datastore: the datastore's identity. The default of DatastoreAbstract.provenanceFor. */
+data class DatastoreProvenance(
+    val datastoreIdentity: DatastoreIdentity
+) : DataItemProvenance

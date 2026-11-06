@@ -7,7 +7,7 @@ import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.common.datastoreProviderSchema
 
-class FilesystemProvider : DatastoreProvider {
+open class FilesystemProvider : DatastoreProvider {
 
     companion object {
         val IDENTITY = DatastoreProviderIdentity("net.akehurst.datastore.filesystem.FilesystemProvider")
@@ -16,7 +16,7 @@ class FilesystemProvider : DatastoreProvider {
         const val ACCESS_GLOB = "access.glob"
     }
 
-    override val identity get() = IDENTITY
+    override val identity: DatastoreProviderIdentity get() = IDENTITY
 
     override val schema = datastoreProviderSchema {
         datastore {
@@ -33,6 +33,7 @@ class FilesystemProvider : DatastoreProvider {
         }
     }
 
+    /** override to provide a custom datastore, e.g. a subclass that overrides provenanceFor */
     override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore =
         FilesystemDatastore(datastoreIdentity, configuration)
 
