@@ -240,6 +240,14 @@ class test_CompositionEditorState {
     }
 
     @Test
+    fun providers_come_from_the_registry() {
+        val registry = DatastoreProviderRegistryDefault().also { it.register(fsProvider); it.register(txtProvider) }
+        val s = CompositionEditorState(registry)
+        assertEquals(listOf(FS, TXT), s.providers.map { it.identity })
+        assertEquals(txtProvider, s.providerOrNull(TXT))
+    }
+
+    @Test
     fun access_configuration() {
         val s = validState()
         val a = AccessEditorState(s)
