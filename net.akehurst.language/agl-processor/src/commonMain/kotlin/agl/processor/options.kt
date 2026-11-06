@@ -44,10 +44,12 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
 }
 
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
-    override var enabled: Boolean = true
+    override var enabled: Boolean = true,
+    override var streaming: Boolean = false
 ) : SyntaxAnalysisOptions<AsmType> {
     override fun clone() = SyntaxAnalysisOptionsDefault<AsmType>(
-        enabled = this.enabled
+        enabled = this.enabled,
+        streaming = this.streaming
     )
 }
 

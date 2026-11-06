@@ -21,6 +21,8 @@ import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalysisStream
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -33,11 +35,14 @@ import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.issues.ram.plus
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.ParseResult
+import net.akehurst.language.parser.api.ParseStreamListener
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.parser.api.Rule
@@ -48,9 +53,11 @@ import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
@@ -228,24 +235,112 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun process(sentence: String, options: ProcessOptions<AsmType, ContextType>?): ProcessResult<AsmType> {
         val opts = defaultOptions(options)
+        val sa = this.syntaxAnalyser
+        val issues = IssueHolder()
+        return when {
+            opts.syntaxAnalysis.enabled && opts.syntaxAnalysis.streaming -> when (sa) {
+                is SyntaxAnalyserFromAsmTransformAbstract<*, *> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    processStreaming(sentence, opts, sa as SyntaxAnalyserFromAsmTransformAbstract<AsmType, Any>, issues)
+                }
+
+                else -> {
+                    issues.warn(null, "Streaming syntax analysis needs a syntax analyser that uses asm transform rules, '${sa?.let { it::class.simpleName }}' does not, so the sentence was parsed to a tree")
+                    processTree(sentence, opts, issues)
+                }
+            }
+
+            else -> processTree(sentence, opts, issues)
+        }
+    }
+
+    private fun processTree(sentence: String, opts: ProcessOptions<AsmType, ContextType>, issues: IssueHolder): ProcessResult<AsmType> {
         val parseResult = this.parse(sentence, opts.parse)
         val sppt = parseResult.sppt
         return if (null == sppt || opts.syntaxAnalysis.enabled.not()) {
-            ProcessResultDefault(null, parseResult)
+            ProcessResultDefault(null, parseResult, processIssues = issues)
         } else {
             val synxResult: SyntaxAnalysisResult<AsmType> = this.syntaxAnalysis(sppt, opts)
-            val asm = synxResult.asm
-            if (null == asm || opts.semanticAnalysis.enabled.not() || null == this.semanticAnalyser) {
-                val issues = IssueHolder()
-                if (null == this.semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
-                if (null == synxResult.asm) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
-                if (opts.semanticAnalysis.enabled.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
-                ProcessResultDefault(synxResult.asm, parseResult, synxResult, processIssues = issues)
-            } else {
-                opts.semanticAnalysis.locationMap = synxResult.locationMap
-                val result = this.semanticAnalysis(asm, opts)
-                ProcessResultDefault(synxResult.asm, parseResult, synxResult, result)
-            }
+            processAfterSyntaxAnalysis(parseResult, synxResult, opts, issues)
+        }
+    }
+
+    /**
+     * The ASM is built while parsing, by a [SyntaxAnalysisStream] given to the parser as its stream listener.
+     * A stream listener already in the parse options also gets the parse events.
+     */
+    private fun processStreaming(
+        sentence: String,
+        opts: ProcessOptions<AsmType, ContextType>,
+        sa: SyntaxAnalyserFromAsmTransformAbstract<AsmType, Any>,
+        issues: IssueHolder
+    ): ProcessResult<AsmType> {
+        sa.clear<AsmType>()
+        val stream = SyntaxAnalysisStream(sa)
+        val parseOpts = opts.parse.clone()
+        val other = parseOpts.streamListener
+        parseOpts.streamListener = if (null == other) stream else ParseStreamListenerBoth(other, stream)
+        val parseResult = this.parse(sentence, parseOpts)
+        val synxResult = stream.result
+        return if (null == synxResult) {
+            issues.info(null, "There was no result from the streaming SyntaxAnalyser")
+            ProcessResultDefault(null, parseResult, processIssues = issues)
+        } else {
+            processAfterSyntaxAnalysis(parseResult, synxResult, opts, issues)
+        }
+    }
+
+    private fun processAfterSyntaxAnalysis(
+        parseResult: ParseResult,
+        synxResult: SyntaxAnalysisResult<AsmType>,
+        opts: ProcessOptions<AsmType, ContextType>,
+        issues: IssueHolder
+    ): ProcessResult<AsmType> {
+        val asm = synxResult.asm
+        return if (null == asm || opts.semanticAnalysis.enabled.not() || null == this.semanticAnalyser) {
+            if (null == this.semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
+            if (null == synxResult.asm) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
+            if (opts.semanticAnalysis.enabled.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
+            ProcessResultDefault(synxResult.asm, parseResult, synxResult, processIssues = issues)
+        } else {
+            opts.semanticAnalysis.locationMap = synxResult.locationMap
+            val result = this.semanticAnalysis(asm, opts)
+            ProcessResultDefault(synxResult.asm, parseResult, synxResult, result, issues)
+        }
+    }
+
+    /** sends every parse event to [first], then to [second] */
+    private class ParseStreamListenerBoth(val first: ParseStreamListener, val second: ParseStreamListener) : ParseStreamListener {
+        override fun start(sentence: Sentence) {
+            first.start(sentence); second.start(sentence)
+        }
+
+        override fun leaf(node: SpptDataNode) {
+            first.leaf(node); second.leaf(node)
+        }
+
+        override fun skip(startPosition: Int, nextInputPosition: Int) {
+            first.skip(startPosition, nextInputPosition); second.skip(startPosition, nextInputPosition)
+        }
+
+        override fun branch(node: SpptDataNode, numChildren: Int) {
+            first.branch(node, numChildren); second.branch(node, numChildren)
+        }
+
+        override fun beginEmbedded(node: SpptDataNode) {
+            first.beginEmbedded(node); second.beginEmbedded(node)
+        }
+
+        override fun endEmbedded(node: SpptDataNode) {
+            first.endEmbedded(node); second.endEmbedded(node)
+        }
+
+        override fun finished(issues: IssueCollection<LanguageIssue>) {
+            first.finished(issues); second.finished(issues)
+        }
+
+        override fun failed(issues: IssueCollection<LanguageIssue>, committedUpTo: Int) {
+            first.failed(issues, committedUpTo); second.failed(issues, committedUpTo)
         }
     }
 

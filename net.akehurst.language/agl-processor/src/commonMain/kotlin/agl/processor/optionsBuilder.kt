@@ -188,13 +188,21 @@ class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
 ) {
 
     private var _enabled = base.enabled
+    private var _streaming = base.streaming
 
     fun enabled(value: Boolean) {
         _enabled = value
     }
 
+    /**
+     * Build the ASM while parsing, no parse tree is kept (see [SyntaxAnalysisOptions.streaming]).
+     */
+    fun streaming(value: Boolean) {
+        _streaming = value
+    }
+
     fun build(): SyntaxAnalysisOptions<AsmType> {
-        return SyntaxAnalysisOptionsDefault<AsmType>(_enabled)
+        return SyntaxAnalysisOptionsDefault<AsmType>(_enabled, _streaming)
     }
 }
 

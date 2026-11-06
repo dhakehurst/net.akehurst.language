@@ -27,6 +27,16 @@ import net.akehurst.language.scanner.api.ScanOptions
 interface SyntaxAnalysisOptions<AsmType : Any> {
     var enabled: Boolean
 
+    /**
+     * true: `process` builds the ASM while parsing (no parse tree is kept), see `SyntaxAnalysisStream`.
+     * Only for a syntax analyser that uses asm transform rules (SyntaxAnalyserFromAsmTransformAbstract);
+     * for any other syntax analyser, `process` parses to a tree as usual and gives a warning.
+     * An ambiguity is an error when streaming, and the parse stops.
+     * The parse result has no tree (sppt is null).
+     * false (default): parse to a tree, then walk it.
+     */
+    var streaming: Boolean
+
     fun clone(): SyntaxAnalysisOptions<AsmType>
 }
 

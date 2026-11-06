@@ -20,7 +20,11 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.parser.api.ParseStreamListener
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
+import net.akehurst.language.sppt.api.SpptDataNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -90,5 +94,60 @@ class test_SyntaxAnalysisStream {
         val sr = stream.result
         assertNotNull(sr)
         assertNull(sr.asm)
+    }
+
+    @Test
+    fun process_streaming_same_as_tree() {
+        val sentence = "var a : t = [1, x, [2, 3]] ; var b : u = [] ; var c : v = q ;"
+        val streamOpts = processor.optionsDefault().also { it.syntaxAnalysis.streaming = true }
+        val ps = processor.process(sentence, streamOpts)
+        assertTrue(ps.allIssues.errors.isEmpty(), ps.allIssues.toString())
+        assertNull(ps.parse?.sppt)
+        assertNotNull(ps.semanticAnalysis)
+
+        val pt = processor.process(sentence)
+        assertNotNull(pt.parse?.sppt)
+        assertEquals(pt.asm!!.asString(), ps.asm!!.asString())
+        assertEquals(pt.asm!!.root, ps.asm!!.root)
+    }
+
+    @Test
+    fun process_streaming_from_options_builder() {
+        val sentence = "var a : t = 1 ;"
+        val opts = Agl.options(processor.optionsDefault()) { syntaxAnalysis { streaming(true) } }
+        assertTrue(opts.syntaxAnalysis.streaming)
+        val ps = processor.process(sentence, opts)
+        assertTrue(ps.allIssues.errors.isEmpty(), ps.allIssues.toString())
+        assertNull(ps.parse?.sppt)
+        assertEquals(processor.process(sentence).asm!!.asString(), ps.asm!!.asString())
+    }
+
+    @Test
+    fun process_streaming_parse_error_gives_no_asm() {
+        val opts = processor.optionsDefault().also { it.syntaxAnalysis.streaming = true }
+        val ps = processor.process("var a : t = 1 ; var", opts)
+        assertNull(ps.asm)
+        assertTrue(ps.allIssues.errors.isNotEmpty())
+    }
+
+    @Test
+    fun process_streaming_also_sends_to_listener_in_parse_options() {
+        var leaves = 0
+        var finished = false
+        val other = object : ParseStreamListener {
+            override fun leaf(node: SpptDataNode) { leaves++ }
+            override fun skip(startPosition: Int, nextInputPosition: Int) {}
+            override fun branch(node: SpptDataNode, numChildren: Int) {}
+            override fun finished(issues: IssueCollection<LanguageIssue>) { finished = true }
+            override fun failed(issues: IssueCollection<LanguageIssue>, committedUpTo: Int) {}
+        }
+        val opts = processor.optionsDefault().also {
+            it.syntaxAnalysis.streaming = true
+            it.parse.streamListener = other
+        }
+        val ps = processor.process("var a : t = 1 ;", opts)
+        assertNotNull(ps.asm, ps.allIssues.toString())
+        assertTrue(finished)
+        assertEquals(7, leaves)
     }
 }
