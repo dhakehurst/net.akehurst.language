@@ -300,4 +300,65 @@ class test_FilesystemDatastore {
 
         assertEquals(listOf("a.txt"), actual.map { it.identity.value.substringAfterLast('/') })
     }
+
+    private suspend fun readRelative(glob: String?): List<String> {
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val cfg = accessConfiguration(FilesystemProvider.IDENTITY) {
+            if (null != glob) argument(FilesystemProvider.ACCESS_GLOB, glob)
+        }
+        sut.open()
+        val rootPath = tempDir.absolutePathString().trimEnd('/') + "/"
+        return sut.read(cfg, emptyFlow()).toList().map { it.identity.value.removePrefix(rootPath) }
+    }
+
+    private fun createTree() {
+        tempDir.resolve("a.txt").toFile().createNewFile()
+        tempDir.resolve("sub").toFile().mkdir()
+        tempDir.resolve("sub/b.txt").toFile().createNewFile()
+    }
+
+    @Test
+    fun read_subfolders_default_glob() = runTest {
+        createTree()
+        assertEquals(setOf("a.txt", "sub", "sub/b.txt"), readRelative(null).toSet())
+    }
+
+    @Test
+    fun read_subfolders_glob_doublestar() = runTest {
+        createTree()
+        assertEquals(setOf("a.txt", "sub", "sub/b.txt"), readRelative("**").toSet())
+    }
+
+    @Test
+    fun read_subfolders_glob_doublestar_txt() = runTest {
+        createTree()
+        assertEquals(setOf("a.txt", "sub/b.txt"), readRelative("**/*.txt").toSet())
+    }
+
+    @Test
+    fun read_subfolders_glob_star_txt() = runTest {
+        createTree()
+        assertEquals(listOf("a.txt"), readRelative("*.txt"))
+    }
+
+    @Test
+    fun read_subfolders_glob_sub() = runTest {
+        createTree()
+        assertEquals(listOf("sub/b.txt"), readRelative("sub/**"))
+    }
+
+    @Test
+    fun read_subfolders_depth_first() = runTest {
+        createTree()
+        tempDir.resolve("sub/deeper").toFile().mkdir()
+        tempDir.resolve("sub/deeper/c.txt").toFile().createNewFile()
+        val actual = readRelative("**")
+        // each directory comes before its content, and its content comes before the next sibling of the directory
+        val i = actual.indexOf("sub")
+        assertEquals(listOf("sub/b.txt", "sub/deeper", "sub/deeper/c.txt").toSet(), actual.subList(i + 1, i + 4).toSet())
+        assertTrue(actual.indexOf("sub/deeper") < actual.indexOf("sub/deeper/c.txt"))
+    }
 }

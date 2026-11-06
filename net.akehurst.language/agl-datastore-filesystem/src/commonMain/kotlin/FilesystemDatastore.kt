@@ -114,7 +114,7 @@ open class FilesystemDatastore(
         val am = accessorMutator()
         val root = _parsedConfig.fsRoot()
         val rootPath = root.path.trimEnd('/') + "/"
-        return root.listContent()
+        return walk(root)
             .filter { glob.matches(it.path.removePrefix(rootPath)) }
             .map {
                 DataItemDefault(
@@ -126,6 +126,26 @@ open class FilesystemDatastore(
             }
             .asFlow()
     }
+
+    /**
+     * all files and directories under 'root' (not 'root' itself), depth first, each directory's children in listContent() order.
+     * A directory is not entered more than once (e.g. when a symlink loops back to an ancestor).
+     */
+    private suspend fun walk(root: DirectoryHandle): List<FileSystemObjectHandle> {
+        val result = mutableListOf<FileSystemObjectHandle>()
+        val visited = mutableSetOf(directoryKey(root))
+        suspend fun visit(dir: DirectoryHandle) {
+            for (entry in dir.listContent()) {
+                result.add(entry)
+                if (entry is DirectoryHandle && visited.add(directoryKey(entry))) visit(entry)
+            }
+        }
+        visit(root)
+        return result
+    }
+
+    /** identifies a directory, so that the walk does not enter it twice */
+    private fun directoryKey(dir: DirectoryHandle): String = dir.absolutePath
 
     /**
      * input: DataItems with FileHandle data, whose content has been set (staged) through 'content.asString'
