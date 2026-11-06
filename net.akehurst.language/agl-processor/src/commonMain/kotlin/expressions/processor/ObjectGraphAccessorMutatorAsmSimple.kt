@@ -333,7 +333,7 @@ class ExternalGetterAsmSimple(
         }
     }
 
-    override fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? = createStructure(qualifiedName, constructorArgs)
+    override suspend fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? = createStructure(qualifiedName, constructorArgs)
 
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? = getProperty(obj, propertyName) //TODO:
 
@@ -954,6 +954,9 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
 
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
         executeMethod(tobj, methodName, args) // no need for anything suspend specific
+
+    override suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunction(function, args, typeReferenceResolver) // no need for anything suspend specific
 
     override fun callFunction(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject {
         val decl = function

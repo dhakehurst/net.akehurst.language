@@ -179,7 +179,7 @@ interface ExternalGetter {
     fun getProperty(obj: Any, propertyName: String): Any?
     fun setProperty(obj: Any, propertyName: String, isReference: Boolean, value: Any?)
 
-    fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
+    suspend fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     suspend fun getPropertySuspend(obj: Any, propertyName: String): Any?
     suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?)
 
@@ -229,6 +229,7 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
     suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject
     suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject)
     suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
+    suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject
 
 }
 

@@ -551,7 +551,7 @@ class ExternalGetterByReflection(
     }
 
     /** may be overridden to create object from suspending source */
-    override fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? =
+    override suspend fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? =
         createStructure(qualifiedName, constructorArgs)
 
     /** may be overridden to get property from suspending source */
@@ -707,6 +707,11 @@ constructor(
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
         executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
             decl.executionSuspend?.invoke(obj, args)
+        }
+
+    override suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunctionInternal(function, args, typeReferenceResolver) { decl, args ->
+            decl.executionSuspend?.invoke(args) ?: decl.execution?.invoke(args)
         }
 
     // --- Internal ---

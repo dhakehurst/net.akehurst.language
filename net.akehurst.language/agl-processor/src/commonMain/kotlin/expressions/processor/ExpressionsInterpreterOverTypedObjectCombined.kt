@@ -110,7 +110,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         propertyAssignmentBlockInternal(evc, self, propertyAssignments, { c, x -> evaluateExpression(c, x) }) { o, n, v -> o.setProperty(n, v) }
 
     protected open fun evaluateFunctionCall(evc: EvaluationContext, expression: FunctionCall): TypedObject =
-        evaluateFunctionCallInternal(evc, expression) { c, x -> evaluateExpression(c, x) }
+        evaluateFunctionCallInternal(evc, expression, { c, x -> evaluateExpression(c, x) }) { f, a, r -> objectGraph.callFunction(f, a, r) }
 
     private fun evaluateRootExpression(evc: EvaluationContext, expression: RootExpression): TypedObject =
         evaluateRootExpressionInternal(evc, expression) { o, n -> o.getProperty(n) }
@@ -206,9 +206,8 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     suspend fun propertyAssignmentBlockSuspend(evc: EvaluationContext, self: TypedObject, propertyAssignments: List<VariableAssignmentStatement>) =
         propertyAssignmentBlockInternal(evc, self, propertyAssignments, { c, x -> evaluateExpressionSuspend(c, x) }) { o, n, v -> o.setPropertySuspend(n, v) }
 
-    //TODO: there is no callFunctionSuspend on ObjectGraphAccessorMutator, so the function itself is called non-suspending
     protected open suspend fun evaluateFunctionCallSuspend(evc: EvaluationContext, expression: FunctionCall): TypedObject =
-        evaluateFunctionCallInternal(evc, expression) { c, x -> evaluateExpressionSuspend(c, x) }
+        evaluateFunctionCallInternal(evc, expression, { c, x -> evaluateExpressionSuspend(c, x) }) { f, a, r -> objectGraph.callFunctionSuspend(f, a, r) }
 
     private suspend fun evaluateRootExpressionSuspend(evc: EvaluationContext, expression: RootExpression): TypedObject =
         evaluateRootExpressionInternal(evc, expression) { o, n -> o.getPropertySuspend(n) }
@@ -567,7 +566,8 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     private inline fun evaluateFunctionCallInternal(
         evc: EvaluationContext,
         expression: FunctionCall,
-        eval: (evc: EvaluationContext, expression: Expression) -> TypedObject
+        eval: (evc: EvaluationContext, expression: Expression) -> TypedObject,
+        callFunction: (function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance) -> TypedObject
     ): TypedObject {
         val argValues = expression.arguments.map {
             eval(evc, it)
@@ -576,7 +576,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         val funcDefinition = customFunctions?.findFirstFunctionNamed(funcName)
             ?: objectGraph.functionLib.findFirstFunctionNamed(funcName)
         val result = funcDefinition?.let {
-            objectGraph.callFunction(funcDefinition, argValues) { tr -> evaluateTypeReference(tr) }
+            callFunction(funcDefinition, argValues) { tr -> evaluateTypeReference(tr) }
         } ?: run {
             issueErrorReturnNothing(null, "No function named '${funcName}' was declared, using value \$nothing.")
             objectGraph.nothing()
