@@ -14,7 +14,7 @@ class test_DatastoreProviderRegistry {
 
     private fun provider(id: String) = object : DatastoreProvider {
         override val identity = DatastoreProviderIdentity(id)
-        override val schema = datastoreProviderSchema { }
+        override val schema = datastoreProviderSchema { datastore { }; access { } }
         override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore = error("not used")
     }
 
