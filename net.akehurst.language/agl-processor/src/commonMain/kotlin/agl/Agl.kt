@@ -45,7 +45,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.m2mTransform.processor.M2MTransformResult
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterSuspending
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterCombined
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
@@ -461,9 +461,9 @@ object Agl {
             it.asm!!
         }
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
-        val interpreter = M2mTransformInterpreterSuspending(m2m, accessorMutators, issueHolder)
+        val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder)
         val tgtTransform = m2m.allTransformRuleSet.first() //TODO: allow caller to choose
-        val transResult = interpreter.transform(tgtTransform, targetDomainReference, domains)
+        val transResult = interpreter.transformSuspend(tgtTransform, targetDomainReference, ruleArguments, domains)
         return transResult
     }
 }
