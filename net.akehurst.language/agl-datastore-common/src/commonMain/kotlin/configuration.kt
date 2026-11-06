@@ -34,7 +34,7 @@ import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.api.asQualifiedName
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectSuspending
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.datastore.api.DataItemIssueLocation
@@ -322,18 +322,18 @@ class DatastoreCompositionDefault(
      */
     private suspend fun adapt(connections: List<DatastoreConnection>, input: Flow<DataItem>, am: ObjectGraphAccessorMutator): Flow<DataItem> {
         val types = types()
-        val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(am)
+        val interpreter = ExpressionsInterpreterOverTypedObjectCombined(am)
         val adapters = connections.map { connection ->
             val targetType = connection.targetType.asPossiblyQualifiedName
             val (assocEnds, ctorEnds) = connection.end.partition { null != dataTypeOrNull(types, it.typeName) }
             val adapter: suspend (DataItem) -> DataItem = { item ->
                 val evc = EvaluationContext.ofSelf(item.data)
-                val ctorArgs = ctorEnds.associate { end -> Pair(end.name, interpreter.evaluateStr(evc, end.expression)) }
+                val ctorArgs = ctorEnds.associate { end -> Pair(end.name, interpreter.evaluateStrSuspend(evc, end.expression)) }
                 val data = am.createStructureValueSuspend(targetType, ctorArgs)
                 assocEnds.forEach { end ->
                     // link from the end object's side: its end name (the connection identity) is unique for each connection,
                     // whereas the target's end name (e.g. 'owner') can be the same in several connections (fan-out)
-                    val endObj = interpreter.evaluateStr(evc, end.expression)
+                    val endObj = interpreter.evaluateStrSuspend(evc, end.expression)
                     am.setProperty(endObj, connection.identity, data)
                 }
                 DataItemDefault(

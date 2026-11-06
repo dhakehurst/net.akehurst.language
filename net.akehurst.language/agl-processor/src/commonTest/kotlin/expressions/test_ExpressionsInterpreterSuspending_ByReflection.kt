@@ -60,8 +60,8 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = executor)
-            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(og)
+            val actual = interpreter.evaluateStrSuspend(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
             assertEquals(expected, og.untyped(actual))
         }
@@ -70,8 +70,8 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = executor)
-            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(og)
+            val actual = interpreter.evaluateStrSuspend(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, og.untyped(actual))
             assertEquals(expectedIssues.joinToString("\n"), interpreter.issues.all.joinToString("\n"))
         }
@@ -202,7 +202,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Index operation on non List value is not possible: strValue"
+                "Index operation on non List value is not possible: 'strValue'"
             )
         )
         test_fail(tm, self, "ns.TestObj", "prop1[0]", Unit, expectedIssues)

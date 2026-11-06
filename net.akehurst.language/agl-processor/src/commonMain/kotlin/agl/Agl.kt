@@ -32,7 +32,7 @@ import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectSuspending
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.format.asm.FormatDomainDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.formatter.api.AglFormatDomain
@@ -400,8 +400,8 @@ object Agl {
     }
 
     suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
-        val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(accessorMutator)
-        val result = interpreter.evaluateStr(evc, expression)
+        val interpreter = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
+        val result = interpreter.evaluateStrSuspend(evc, expression)
         return result
     }
 
