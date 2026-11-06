@@ -305,7 +305,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         return when {
             objectGraph.nothing() == elem -> objectGraph.nothing()
             else -> {
-                val elemType = typesDomain.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type()
+                val elemType = typesDomain.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type(elem.type.typeArguments)
                 when {
                     null == elemType -> {
                         issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of Map element '$elem'")
