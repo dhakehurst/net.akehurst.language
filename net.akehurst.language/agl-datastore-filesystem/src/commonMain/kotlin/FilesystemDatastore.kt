@@ -144,7 +144,13 @@ open class FilesystemDatastore(
         return result
     }
 
-    /** identifies a directory, so that the walk does not enter it twice */
+    /**
+     * identifies a directory, so that the walk does not enter it twice.
+     * TODO: symlink loops are not caught. absolutePath is not canonical (on JVM it is File.absolutePath),
+     *  and listContent() follows symlinks, so a link back to an ancestor gives a new path at each level
+     *  (a/link/link/...) and the walk does not end. Fixing it needs a canonical id on DirectoryHandle
+     *  in kotlinx-filesystem (e.g. the real path), used here as the key.
+     */
     private fun directoryKey(dir: DirectoryHandle): String = dir.absolutePath
 
     /**
