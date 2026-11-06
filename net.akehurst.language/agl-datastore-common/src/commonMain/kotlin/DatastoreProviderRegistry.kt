@@ -14,6 +14,8 @@ class DatastoreProviderRegistryDefault() : DatastoreProviderRegistry {
 
     private val _provider = mutableMapOf<DatastoreProviderIdentity, DatastoreProvider>()
 
+    override val providers: List<DatastoreProvider> get() = _provider.values.toList()
+
     override fun register(provider: DatastoreProvider) {
         _provider[provider.identity] = provider
     }

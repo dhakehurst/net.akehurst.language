@@ -62,6 +62,12 @@ data class SecretReference(
 }
 
 interface DatastoreProviderRegistry {
+    /**
+     * the registered providers, in the order they were registered.
+     * Registering a provider with an identity that is already registered replaces it, keeping its position.
+     */
+    val providers: List<DatastoreProvider>
+
     fun register(provider: DatastoreProvider)
     fun getOrNull(providerIdentity: DatastoreProviderIdentity): DatastoreProvider?
     fun provide(providerIdentity: DatastoreProviderIdentity, datastoreIdentity: DatastoreIdentity, datastoreConfiguration: DatastoreConfiguration): Datastore
