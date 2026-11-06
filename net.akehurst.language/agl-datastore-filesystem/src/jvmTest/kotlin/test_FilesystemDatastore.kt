@@ -310,7 +310,8 @@ class test_FilesystemDatastore {
             if (null != glob) argument(FilesystemProvider.ACCESS_GLOB, glob)
         }
         sut.open()
-        val rootPath = tempDir.absolutePathString().trimEnd('/') + "/"
+        // a handle's path is '/<root dir name>/<path relative to root>'
+        val rootPath = "/" + tempDir.fileName.toString() + "/"
         return sut.read(cfg, emptyFlow()).toList().map { it.identity.value.removePrefix(rootPath) }
     }
 
