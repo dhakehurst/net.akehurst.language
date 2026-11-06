@@ -161,7 +161,7 @@ class LeftCornerParser(
         val streamListener = options.streamListener
         val streamer = streamListener?.let { ParseStreamer(it, sentence, this._issues, options.streamLagWarningLimit) }
         if (null != streamer) {
-            rp.graph.onAmbiguity = { streamer.ambiguity(it) }
+            rp.graph.onAmbiguity = { existing, newChildren -> streamer.ambiguity(existing, newChildren) }
             streamer.start(rp.graph)
         }
         try {
@@ -177,7 +177,11 @@ class LeftCornerParser(
                 maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
                 totalWork += rp.graph.numberOfHeads
                 // once a goal is found, the remaining heads may still fail, so nothing more is sent until the end
-                if (null != streamer && rp.graph.goals.isEmpty()) streamer.seasonEnd(rp)
+                if (null != streamer) {
+                    if (streamer.stopped) break // an ambiguity was found, streaming stops with an error
+                    if (rp.graph.goals.isEmpty()) streamer.seasonEnd(rp)
+                    if (streamer.stopped) break
+                }
             }
         } catch (e: ParserWontStopException) {
             val length = if (e.position < sentence.text.length) 1 else 0
@@ -188,6 +192,11 @@ class LeftCornerParser(
         catch (e: ParserInterruptedException) {
             this._issues.error(sentence.locationFor(e.position, 0), IssueMessage.parserTerminated(e.reason))
             streamer?.fail()
+            return ParseResultDefault(null, this._issues)
+        }
+
+        if (true == streamer?.stopped) {
+            streamer.fail()
             return ParseResultDefault(null, this._issues)
         }
 

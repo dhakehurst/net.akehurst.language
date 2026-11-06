@@ -745,6 +745,8 @@ internal class RuntimeParserAgl(
                             2 > actGrp.size -> it.value.map { it.first }
                             else -> {
                                 val grafts = actGrp[ParseAction.GRAFT]!!
+                                // FIXME: this silently picks one parse (GRAFT over HEIGHT, then the left-most GRAFT target).
+                                //  It is an ambiguity that is not reported, e.g. by the streaming parse (ParseStreamer). Look into this later.
                                 resolveGrafts1(grafts)
                             }
                         }

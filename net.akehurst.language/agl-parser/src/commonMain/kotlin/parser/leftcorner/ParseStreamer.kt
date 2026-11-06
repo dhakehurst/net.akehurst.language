@@ -71,15 +71,31 @@ internal class ParseStreamer(
     // position up to which cached parser data was last dropped
     private var prunedUpTo = 0
 
+    private var graph: ParseGraph? = null
+
     fun start(graph: ParseGraph) {
+        this.graph = graph
         graph.treeData.recordCompleteChains = true
     }
 
     /**
      * Called by the parse graph when a second parse of the same text is found and the merge
-     * cannot pick one. Only one parse is sent, so this is reported as a warning. Each node is counted once.
+     * cannot pick one. Only one parse can be sent, so this is an error and streaming stops (see [stopped]).
+     * Each node is counted once.
+     * When the new parse has the same children as the existing one (e.g. the same empty node found again
+     * through hidden left recursion), it is the same tree, so not an ambiguity.
      */
-    fun ambiguity(existing: SpptDataNode) {
+    fun ambiguity(existing: SpptDataNode, newChildren: () -> List<SpptDataNode>) {
+        if (ambiguousNodes.contains(existing)) return // already counted
+        val existingAlternatives = graph?.treeData?.complete?.childrenFor(existing) ?: emptyList()
+        if (existingAlternatives.isNotEmpty()) {
+            val nc = newChildren()
+            if (existingAlternatives.any { it.second == nc }) return
+        }
+        ambiguity(existing)
+    }
+
+    private fun ambiguity(existing: SpptDataNode) {
         if (ambiguousNodes.add(existing).not()) return // already counted
         val a = ambiguities[existing.rule]
         if (null == a) {
@@ -89,7 +105,11 @@ internal class ParseStreamer(
         }
     }
 
+    /** true once an ambiguity was found: nothing more is sent, the parse should stop and call [fail] */
+    val stopped: Boolean get() = ambiguities.isNotEmpty()
+
     fun seasonEnd(rp: RuntimeParserAgl) {
+        if (stopped) return
         val graph = rp.graph
         val growing = graph.treeData
         if (initialSkipSent.not()) {
@@ -111,6 +131,7 @@ internal class ParseStreamer(
                 // can still be re-parsed by a head starting at the frontier
                 if (cell.head.nextInputPosition >= frontier) break
                 sendSubtree(growing, growing.complete, cell.head)
+                if (stopped) return
                 sentCells.add(cell)
             }
         }
@@ -148,26 +169,29 @@ internal class ParseStreamer(
             initialSkipSent = true
             treeData.initialSkip?.let { sendSkip(it) }
         }
-        sendSubtree(growing, treeData, treeData.userRoot)
-        raiseAmbiguityWarnings()
-        sentCells.clear()
-        listener.finished(issues)
+        if (stopped.not()) sendSubtree(growing, treeData, treeData.userRoot)
+        if (stopped) {
+            fail()
+        } else {
+            sentCells.clear()
+            listener.finished(issues)
+        }
     }
 
     fun fail() {
-        raiseAmbiguityWarnings()
+        raiseAmbiguityErrors()
         sentCells.clear()
         listener.failed(issues, sentUpTo)
     }
 
-    private fun raiseAmbiguityWarnings() {
+    private fun raiseAmbiguityErrors() {
         for ((rule, a) in ambiguities) {
             val loc = sentence.locationFor(a.firstPosition, 0)
-            val times = if (a.count == 1) "once" else "${a.count} times"
-            issues.warn(
+            val times = if (a.count == 1) "" else " (${a.count} places found before stopping)"
+            issues.error(
                 loc,
-                "Ambiguity: text matching rule '${rule.tag}' could be parsed in more than one way ($times, first at line ${loc.line} column ${loc.column}). " +
-                        "Only one of the parses was sent. A preference rule or a priority choice in the grammar would make this explicit.",
+                "Ambiguity: text matching rule '${rule.tag}' at line ${loc.line} column ${loc.column} can be parsed in more than one way$times. " +
+                        "Streaming stopped, because only one parse can be sent. A preference rule or a priority choice in the grammar would remove the ambiguity.",
                 rule.tag
             )
         }
@@ -324,6 +348,7 @@ internal class ParseStreamer(
                 else -> {
                     val alternatives = td.childrenFor(node)
                     if (alternatives.size > 1) ambiguity(node)
+                    if (stopped) return
                     val chain = item.growing?.completeChainOf(node)
                     item.growing?.removeCompleteChain(node)
                     // when some children were already sent, use the alternative they belong to

@@ -92,7 +92,7 @@ class test_ParseStream {
             val rec = Recorder(sentence)
             val streamed = parser(rrs).parse(sentence, ParseOptionsDefault(goalRuleName = goal, streamListener = rec))
             assertNull(streamed.sppt, "no tree is kept when streaming")
-            assertTrue(rec.finished)
+            assertTrue(rec.finished, "$goal '$sentence' ${streamed.issues}")
             assertEquals(postOrder(sentence, normal.sppt!!.treeData), rec.events)
         }
 
@@ -193,7 +193,7 @@ class test_ParseStream {
     }
 
     @Test
-    fun ambiguity_is_reported() {
+    fun ambiguity_is_an_error_and_stops() {
         // S = S S | 'a' with an ambiguous choice: 'aaa' has two trees
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
@@ -204,11 +204,48 @@ class test_ParseStream {
         val sentence = "aaa"
         val rec = Recorder(sentence)
         val r = parser(rrs).parse(sentence, ParseOptionsDefault(goalRuleName = "S", streamListener = rec))
-        assertTrue(rec.finished)
-        assertEquals(3, rec.events.count { it == "'a'" }, rec.events.toString())
-        assertEquals("S/2", rec.events.last())
-        val w = r.issues.warnings.filter { it.message.startsWith("Ambiguity: text matching rule 'S'") }
-        assertEquals(1, w.size, r.issues.toString())
+        assertNull(r.sppt)
+        assertEquals(false, rec.finished)
+        assertNotNull(rec.failedAt)
+        val e = r.issues.errors.filter { it.message.startsWith("Ambiguity: text matching rule 'S'") }
+        assertEquals(1, e.size, r.issues.toString())
+        assertTrue(e[0].message.contains("Streaming stopped"), e[0].message)
+    }
+
+    @Test
+    fun ambiguity_is_not_an_error_without_streaming() {
+        // same grammar, normal parse: unchanged behaviour, a tree and no error
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+                concatenation { ref("S"); ref("S") }
+                concatenation { literal("a") }
+            }
+        }
+        val r = parser(rrs).parse("aaa", ParseOptionsDefault(goalRuleName = "S"))
+        assertNotNull(r.sppt)
+        assertTrue(r.issues.errors.isEmpty(), r.issues.toString())
+    }
+
+    @Test
+    fun ambiguity_stops_before_the_end() {
+        // the ambiguity is in the second decl; later text is not parsed further
+        // S = decl* ; decl = E ';' ; E = E E | 'a' (ambiguous choice)
+        val rrs = runtimeRuleSet {
+            multi("S", 0, -1, "decl")
+            concatenation("decl") { ref("E"); literal(";") }
+            choice("E", RuntimeRuleChoiceKind.AMBIGUOUS) {
+                concatenation { ref("E"); ref("E") }
+                concatenation { literal("a") }
+            }
+        }
+        val sentence = "a;" + "aaa;" + "a;".repeat(50)
+        val rec = Recorder(sentence)
+        val r = parser(rrs).parse(sentence, ParseOptionsDefault(goalRuleName = "S", streamListener = rec))
+        assertEquals(false, rec.finished)
+        val failedAt = rec.failedAt
+        assertNotNull(failedAt)
+        assertTrue(failedAt < 10, "stopped at the ambiguity, committed up to $failedAt")
+        assertEquals(1, r.issues.errors.count { it.message.startsWith("Ambiguity: text matching rule 'E'") }, r.issues.toString())
     }
 
     @Test

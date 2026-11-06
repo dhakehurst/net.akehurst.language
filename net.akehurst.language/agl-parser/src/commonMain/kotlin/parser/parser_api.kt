@@ -288,8 +288,8 @@ interface ParseOptions {
  * Skip (e.g. whitespace) is not counted as a child; it is reported with [skip].
  *
  * A node is sent only once nothing later in the sentence can change it.
- * If the parser chose between more than one way to parse some text, a warning is raised in the parse issues
- * and the node the parser chose is sent.
+ * If some text can be parsed in more than one way (an ambiguity the grammar does not resolve),
+ * an error is raised in the parse issues and the parse stops: [failed] is called.
  */
 interface ParseStreamListener {
     /** a terminal */
@@ -305,7 +305,7 @@ interface ParseStreamListener {
     fun finished(issues: IssueCollection<LanguageIssue>)
 
     /**
-     * the parse failed; the nodes sent so far are correct but the sentence is not complete.
+     * the parse failed (a syntax error, or an ambiguity); the nodes sent so far are correct but the sentence is not complete.
      * [committedUpTo] is the sentence position up to which nodes were sent.
      */
     fun failed(issues: IssueCollection<LanguageIssue>, committedUpTo: Int)

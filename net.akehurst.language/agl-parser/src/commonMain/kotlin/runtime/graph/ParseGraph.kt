@@ -177,8 +177,9 @@ internal class ParseGraph(
     /**
      * When set (e.g. when streaming), called with the existing node when a new parse of the same text
      * is found and the merge cannot pick one (undecidable, or the choice is marked ambiguous).
+     * [newChildren] gives the children of the new parse.
      */
-    var onAmbiguity: ((existing: SpptDataNode) -> Unit)? = null
+    var onAmbiguity: ((existing: SpptDataNode, newChildren: () -> List<SpptDataNode>) -> Unit)? = null
 
     val numberOfHeads get() = this._gss.numberOfHeads
 
@@ -593,11 +594,11 @@ internal class ParseGraph(
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentFirstChild(existingComplete, parent, child, previous)
                     MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentFirstChild(existingComplete, parent, child, previous)
                     MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> {
-                        onAmbiguity?.invoke(existingComplete)
+                        onAmbiguity?.invoke(existingComplete) { listOf(child) }
                         keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     }
                     MergeChoice.UNDECIDABLE -> {
-                        onAmbiguity?.invoke(existingComplete)
+                        onAmbiguity?.invoke(existingComplete) { listOf(child) }
                         useExistingCompleteParentFirstChild(parent, child, previous)
                         //keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     }
@@ -657,11 +658,11 @@ internal class ParseGraph(
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentLastChild(previous, parent, child, prevPrev)
                     MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentLastChild(previous, parent, child, prevPrev)
                     MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> {
-                        onAmbiguity?.invoke(existingComplete)
+                        onAmbiguity?.invoke(existingComplete) { (this.treeData.growingChainOf(previous)?.toList() ?: emptyList()) + child }
                         keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
                     }
                     MergeChoice.UNDECIDABLE -> {
-                        onAmbiguity?.invoke(existingComplete)
+                        onAmbiguity?.invoke(existingComplete) { (this.treeData.growingChainOf(previous)?.toList() ?: emptyList()) + child }
                         useExistingCompleteParentLastChild(parent, child, prevPrev)
                         //keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
                     }
