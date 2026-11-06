@@ -13,7 +13,8 @@ import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
-import net.akehurst.datastore.api.use
+import net.akehurst.datastore.api.DatastoreCompositionExt.use
+import net.akehurst.datastore.api.DatastoreExt.use
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
