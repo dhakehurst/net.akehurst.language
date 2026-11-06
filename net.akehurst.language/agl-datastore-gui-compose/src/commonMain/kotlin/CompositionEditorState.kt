@@ -12,6 +12,8 @@ import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
+import net.akehurst.datastore.api.DatastoreProviderRegistry
+import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.DatastoreCompositionConfigurationDefault
 import net.akehurst.datastore.common.DatastoreConnectionDefault
 import net.akehurst.datastore.common.DatastoreConnectionEndDefault
@@ -65,16 +67,24 @@ class ConnectionDraft(
  * The state of a DatastoreCompositionEditor: the parts and connections being edited, and their issues.
  * The host application creates it, keeps it as long as it likes, and reads the result with [build].
  *
- * @param providers the providers that parts can be made from
+ * @param registry the providers that parts can be made from are those registered in it
  * @param secretSourceIds the identities of the secret sources a sensitive parameter can refer to
- * @param initial a composition configuration to edit; its providers must be in 'providers'
+ * @param initial a composition configuration to edit; its providers must be registered in 'registry'
  */
 class CompositionEditorState(
-    providers: List<DatastoreProvider>,
+    val registry: DatastoreProviderRegistry = DatastoreProviderRegistryDefault.GLOBAL,
     secretSourceIds: List<String> = emptyList(),
     initial: DatastoreCompositionConfiguration? = null,
 ) {
-    val providers: List<DatastoreProvider> = providers.toList()
+    /** uses a registry of just 'providers' */
+    constructor(
+        providers: List<DatastoreProvider>,
+        secretSourceIds: List<String> = emptyList(),
+        initial: DatastoreCompositionConfiguration? = null,
+    ) : this(DatastoreProviderRegistryDefault().also { r -> providers.forEach { r.register(it) } }, secretSourceIds, initial)
+
+    /** the providers registered in 'registry' */
+    val providers: List<DatastoreProvider> get() = registry.providers
     val secretSourceIds: List<String> = secretSourceIds.toList()
 
     /** the parts, in chain order */
@@ -98,7 +108,7 @@ class CompositionEditorState(
         initial?.let { load(it) }
     }
 
-    fun providerOrNull(identity: DatastoreProviderIdentity): DatastoreProvider? = providers.firstOrNull { it.identity == identity }
+    fun providerOrNull(identity: DatastoreProviderIdentity): DatastoreProvider? = registry.getOrNull(identity)
 
     fun partOrNull(id: String): PartDraft? = parts.firstOrNull { it.id == id }
 

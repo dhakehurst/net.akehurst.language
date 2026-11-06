@@ -9,7 +9,7 @@ saving and loading) through callbacks. It never creates, opens or reads datastor
 ```kotlin
 val state = remember {
     CompositionEditorState(
-        providers = listOf(FilesystemProvider(), AglTextProvider()),
+        registry = registry,                     // a DatastoreProviderRegistry; default DatastoreProviderRegistryDefault.GLOBAL
         secretSourceIds = listOf("keychain", "env"),
         initial = loadedConfiguration,           // optional, loading is done by the application
     )
@@ -47,4 +47,4 @@ Agreed with David on 2026-11-06 (design doc: https://claude.ai/artifact/FnMWtm8d
 | G10 | End expressions are plain text fields, parsed with AGL's expression processor. A code-editor field (highlighting, completion) is for later, through a custom parameter renderer. | done (code editor: todo) |
 | G11 | `EditorCustomisation`: parameter renderers, provider presentation, strings (labels), toolbar actions; the host's `MaterialTheme` is used. | done |
 | G12 | Saving and loading are done by the application, for now. | done |
-| G13 | The list of providers is passed in by the application, e.g. `registry.providers` from a `DatastoreProviderRegistry`. | done |
+| G13 | The providers come from a `DatastoreProviderRegistry` (`registry.providers`), by default `DatastoreProviderRegistryDefault.GLOBAL`. A second constructor takes a list of providers. | done |
