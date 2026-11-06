@@ -21,7 +21,7 @@ import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
-import net.akehurst.language.collections.mutableQueueOf
+import net.akehurst.kotlinx.collections.mutableQueueOf
 
 /**
  * RP.firstOf(ifAtEnd)

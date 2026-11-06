@@ -41,8 +41,16 @@ internal class ConverterToRuntimeRules(
     val runtimeRuleSet: RuntimeRuleSet by lazy {
         this.convertGrammar(grammar, "")
         val rules = this._runtimeRules.values.toList()
-        RuntimeRuleSet(_ruleSetNumber, grammar.qualifiedName.value, rules, _precRules)
+        RuntimeRuleSet(_ruleSetNumber, grammar.qualifiedName.value, rules, _precRules, skipRequiredBetweenTokens)
     }
+
+    /** grammar option '#skipRequiredBetweenTokens: false' makes skips always optional, default true */
+    private val skipRequiredBetweenTokens: Boolean
+        get() = when (val v = grammar.options.get<Any>(AglGrammar.OPTION_skipRequiredBetweenTokens)) {
+            null -> true
+            is Boolean -> v
+            else -> v.toString().toBooleanStrictOrNull() ?: true
+        }
 
     val originalRuleItemMap get() = _originalRuleItem
 

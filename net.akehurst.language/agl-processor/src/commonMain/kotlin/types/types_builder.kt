@@ -225,7 +225,8 @@ class AssociationBuilder(
             val isNullable: Boolean,
             val collectionTypeName: String?,
             val byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null,
-            val byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
+            val byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null,
+            val ownedByAssociation: Boolean = false
         )
     }
 
@@ -233,6 +234,8 @@ class AssociationBuilder(
     val REF = PropertyCharacteristic.REFERENCE
     val VAL = PropertyCharacteristic.READ_ONLY
     val VAR = PropertyCharacteristic.READ_WRITE
+    val STR = PropertyCharacteristic.STORED
+    val DER = PropertyCharacteristic.DERIVED
 
     private val _ends = mutableListOf<AssocEnd>()
 
@@ -242,9 +245,10 @@ class AssociationBuilder(
         endName: String,
         isNullable: Boolean = false,
         collectionTypeName: String? = null,
-        byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null
+        byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null,
+        ownedByAssociation: Boolean = false
     ) {
-        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluation))
+        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluation, ownedByAssociation = ownedByAssociation))
     }
 
     fun endSuspend(
@@ -253,9 +257,10 @@ class AssociationBuilder(
         endName: String,
         isNullable: Boolean = false,
         collectionTypeName: String? = null,
-        byEvaluation: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
+        byEvaluation: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null,
+        ownedByAssociation: Boolean = false
     ) {
-        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluationSuspend = byEvaluation))
+        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluationSuspend = byEvaluation, ownedByAssociation = ownedByAssociation))
     }
 
     fun build(): List<PropertyDeclaration> {
@@ -269,7 +274,7 @@ class AssociationBuilder(
             val collectionTypeName = thisEnd.collectionTypeName?.asPossiblyQualifiedName
             val characteristics = thisEnd.characteristics
             val navigable = true //TODO
-            val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable)
+            val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable, thisEnd.ownedByAssociation)
             ae.byEvaluation = thisEnd.byEvaluation
             ae.byEvaluationSuspend = thisEnd.byEvaluationSuspend
             assocEnds.add(ae)
@@ -291,10 +296,8 @@ abstract class StructuredTypeBuilder(
 
     val CMP = PropertyCharacteristic.COMPOSITE
     val REF = PropertyCharacteristic.REFERENCE
-
     val VAL = PropertyCharacteristic.READ_ONLY
     val VAR = PropertyCharacteristic.READ_WRITE
-
     val STR = PropertyCharacteristic.STORED
     val DER = PropertyCharacteristic.DERIVED
 
@@ -305,7 +308,9 @@ abstract class StructuredTypeBuilder(
         typeName: String,
         isNullable: Boolean = false,
         accessor: ((self: T) -> V)? = null,
-        mutator: ((self: T, value: V) -> Unit)? = null,
+        mutator: ((self: T, value: V?) -> Unit)? = null,
+        accessorSuspend: (suspend (self: T) -> V?)? = null,
+        mutatorSuspend: (suspend (self: T, value: V?) -> Unit)? = null,
         init: TypeArgumentBuilder.() -> Unit = {}
     ): PropertyDeclaration {
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
@@ -316,6 +321,8 @@ abstract class StructuredTypeBuilder(
         return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics).also {
             (it as PropertyDeclarationStored).accessor = accessor as ((self: Any) -> Any?)?
             (it as PropertyDeclarationStored).mutator = mutator as ((self: Any, value: Any?) -> Unit)?
+            (it as PropertyDeclarationStored).accessorSuspend = accessorSuspend as (suspend (self: Any) -> Any?)?
+            (it as PropertyDeclarationStored).mutatorSuspend = mutatorSuspend as (suspend (self: Any, value:Any?) -> Unit)?
         }
     }
 
@@ -325,7 +332,11 @@ abstract class StructuredTypeBuilder(
         typeName: String,
         isNullable: Boolean = false,
         init: TypeArgumentBuilder.() -> Unit = {}
-    ): PropertyDeclaration = propertyOfWithBinding<Any,Any>(characteristics, propertyName, typeName, isNullable, null,null,init)
+    ): PropertyDeclaration = propertyOfWithBinding<Any,Any>(
+        characteristics, propertyName, typeName, isNullable,
+        null,null,null,null,
+        init
+    )
 
     fun <T : Any, V> propertyPrimitive(
         propertyName: String,

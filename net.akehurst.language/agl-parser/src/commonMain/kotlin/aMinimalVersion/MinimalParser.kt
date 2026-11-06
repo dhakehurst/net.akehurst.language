@@ -23,8 +23,8 @@ import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.*
-import net.akehurst.language.collections.binaryHeap
-import net.akehurst.language.collections.mutableQueueOf
+import net.akehurst.kotlinx.collections.binaryHeap
+import net.akehurst.kotlinx.collections.mutableQueueOf
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.regex.agl.RegexEnginePlatform

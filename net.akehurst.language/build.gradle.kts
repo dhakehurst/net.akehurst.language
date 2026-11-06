@@ -20,5 +20,8 @@ plugins {
    alias(libs.plugins.buildconfig) apply false
    alias(libs.plugins.exportPublic) apply false
    alias(libs.plugins.vanniktech.maven.publish) apply false
+   alias(libs.plugins.kotlinx.serialization) apply false
+   alias(libs.plugins.compose.compiler) apply false
+   alias(libs.plugins.compose.multiplatform) apply false
 }
 project.layout.buildDirectory = File(rootProject.projectDir, ".gradle-build/${project.name}")

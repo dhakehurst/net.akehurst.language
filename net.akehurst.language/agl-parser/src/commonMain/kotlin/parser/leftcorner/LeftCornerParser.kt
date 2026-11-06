@@ -27,9 +27,11 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.*
+import net.akehurst.language.parsermessages.IssueMessage
 import net.akehurst.language.scanner.api.Matchable
 import net.akehurst.language.scanner.api.MatchableKind
 import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.scanner.common.ScanOptionsDefault
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
@@ -49,7 +51,10 @@ class ParseOptionsDefault(
     override var reportGrammarAmbiguities: Boolean = false,
     override var cacheSkip: Boolean = true,
     override var reverseFindWordStartRegex: String? = null,
-    override var reverseFindWordStartBySkipRules: Boolean = true
+    override var reverseFindWordStartBySkipRules: Boolean = true,
+    override var expectedAtFromAllTokenStarts: Boolean = false,
+    override var streamListener: ParseStreamListener? = null,
+    override var streamLagWarningLimit: Int = 10000
 ) : ParseOptions {
     override fun clone() = ParseOptionsDefault(
         enabled = enabled,
@@ -57,7 +62,12 @@ class ParseOptionsDefault(
         sentenceIdentity = sentenceIdentity,
         reportErrors = reportErrors,
         reportGrammarAmbiguities = reportGrammarAmbiguities,
-        cacheSkip = cacheSkip
+        cacheSkip = cacheSkip,
+        reverseFindWordStartRegex = reverseFindWordStartRegex,
+        reverseFindWordStartBySkipRules = reverseFindWordStartBySkipRules,
+        expectedAtFromAllTokenStarts = expectedAtFromAllTokenStarts,
+        streamListener = streamListener,
+        streamLagWarningLimit = streamLagWarningLimit
     )
 }
 
@@ -146,26 +156,63 @@ class LeftCornerParser(
             false,
             false
         )
-        val startSkipFailures = rp.start(0, possibleEndOfText, parseArgs)
         var seasons = 1
-        var maxNumHeads = rp.graph.numberOfHeads
-        var totalWork = maxNumHeads
+        var maxNumHeads = 0
+        val streamListener = options.streamListener
+        val streamer = streamListener?.let { ParseStreamer(it, sentence, this._issues, options.streamLagWarningLimit) }
+        if (null != streamer) {
+            rp.graph.onAmbiguity = { existing, newChildren -> streamer.ambiguity(existing, newChildren) }
+            streamer.start(rp.graph)
+        }
+        try {
+            val startSkipFailures = rp.start(0, possibleEndOfText, parseArgs)
+            if (null != streamer) streamer.start(rp.graph)
+            maxNumHeads = rp.graph.numberOfHeads
+            var totalWork = maxNumHeads
 
-        while (rp.graph.hasNextHead && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
-            if (Debug.OUTPUT_RUNTIME) println("season $seasons ===================================")
-            val steps = rp.grow3(possibleEndOfText, parseArgs)
-            seasons += steps
-            maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
-            totalWork += rp.graph.numberOfHeads
+            while (rp.graph.hasNextHead && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
+                if (Debug.OUTPUT_RUNTIME) println("season $seasons ===================================")
+                val steps = rp.grow3(possibleEndOfText, parseArgs)
+                seasons += steps
+                maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
+                totalWork += rp.graph.numberOfHeads
+                // once a goal is found, the remaining heads may still fail, so nothing more is sent until the end
+                if (null != streamer) {
+                    if (streamer.stopped) break // an ambiguity was found, streaming stops with an error
+                    if (rp.graph.goals.isEmpty()) streamer.seasonEnd(rp)
+                    if (streamer.stopped) break
+                }
+            }
+        } catch (e: ParserWontStopException) {
+            val length = if (e.position < sentence.text.length) 1 else 0
+            this._issues.error(sentence.locationFor(e.position, length), IssueMessage.PARSER_WONT_STOP)
+            streamer?.fail()
+            return ParseResultDefault(null, this._issues)
+        }
+        catch (e: ParserInterruptedException) {
+            this._issues.error(sentence.locationFor(e.position, 0), IssueMessage.parserTerminated(e.reason))
+            streamer?.fail()
+            return ParseResultDefault(null, this._issues)
+        }
+
+        if (true == streamer?.stopped) {
+            streamer.fail()
+            return ParseResultDefault(null, this._issues)
         }
 
         val match = rp.graph.treeData.complete
 
         return if (match.root != null) {
-            val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
-            ParseResultDefault(sppt, this._issues)
+            if (null != streamer) {
+                streamer.finish(rp.graph.treeData)
+                ParseResultDefault(null, this._issues)
+            } else {
+                val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
+                ParseResultDefault(sppt, this._issues)
+            }
         } else {
             createParseIssuesFromFailures(sentence, options, rp)
+            streamer?.fail()
 
             val sppt = null//TODO: provide best effort - SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
             ParseResultDefault(sppt, this._issues)
@@ -182,17 +229,24 @@ class LeftCornerParser(
             //             map[it.key] = l
             //         }
 
-            // find embedded failures
-            val map2 = map1.values.flatten().flatMap { v ->
-                when (v) {
-                    is FailedParseReasonEmbedded -> v.embededFailedParseReasons.map { it }
-                    else -> listOf(v)
+            // an embedded failure is reported at the position where the embedded parse stopped,
+            // but in the context of the outer (embedding) rule, i.e. using the spine of the embedding head
+            // (which also removes outer skip terminals that are not terminals of the embedded grammar)
+            // Triple(position, isSkipFailure, spine)
+            val failures: List<Triple<Int, Boolean, RuntimeSpineDefault>> = map1.values.flatten().flatMap { v ->
+                when {
+                    v is FailedParseReasonEmbedded && v.embededFailedParseReasons.isNotEmpty() -> v.embededFailedParseReasons
+                        .groupBy { Pair(it.failedAtPosition, it.skipFailure) }
+                        .map { (key, reasons) -> Triple(key.first, key.second, v.spineFor(reasons)) }
+
+                    else -> listOf(Triple(v.failedAtPosition, v.skipFailure, v.spine))
                 }
-            }.groupBy { it.failedAtPosition }
+            }
+            val map2 = failures.groupBy { it.first }
 
             if (map2.isNotEmpty()) {
                 val failedAtPosition = map2.keys.max()
-                val nextExpected = map2[failedAtPosition]?.filter { it.skipFailure.not() }?.map { it.spine } ?: emptyList()
+                val nextExpected = map2[failedAtPosition]?.filter { it.second.not() }?.map { it.third } ?: emptyList()
                 val loc = sentence.locationFor(failedAtPosition, 0)
                 addParseIssue(sentence, loc, nextExpected)
             }
@@ -304,11 +358,94 @@ class LeftCornerParser(
     }
 
     override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult {
+        return try {
+            expectedAtUninterrupted(sentenceText, position, options)
+        } catch (e: ParserInterruptedException) {
+            // terminated on request: nothing is expected
+            ExpectedAtResultDefault(position, emptySet())
+        }
+    }
+
+    private fun expectedAtUninterrupted(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult {
+        // the text between a word start and position (if any) could be either
+        //  1) an unfinished token - so expected terminals are those at the word start, that could start with the partial word
+        //  2) a complete token - so expected terminals are those after the partial word
+        // the result is the union of both, each spine records the position it was computed for
+        val wordStarts = findWordStartPositions(sentenceText, position, options)
+        val wordStartPosition = wordStarts.last()
+        val unfinished = wordStarts.flatMap { ws ->
+            val atWordStart = expectedSpinesAt(sentenceText, ws, options)
+            if (ws == position) {
+                atWordStart.map { RuntimeSpineAt(it, ws, it.expectedNextTerminals.filterIsInstance<RuntimeRule>().toSet()) }
+            } else {
+                val partial = sentenceText.substring(ws, position)
+                atWordStart.mapNotNull { sp ->
+                    val exp = sp.expectedNextTerminals.filterIsInstance<RuntimeRule>().filter { rr ->
+                        when {
+                            rr.isLiteral -> rr.unescapedTerminalValue.startsWith(partial)
+                            rr.isPattern -> true // pattern might match the partial word, keep it
+                            rr.isTerminal -> false // e.g. <EOT>, <EMPTY> cannot be the partial word
+                            else -> true
+                        }
+                    }.toSet()
+                    when {
+                        exp.isEmpty() -> null
+                        else -> RuntimeSpineAt(sp, ws, exp)
+                    }
+                }
+            }
+        }.toSet()
+        val complete = when {
+            wordStartPosition == position -> emptySet()
+            else -> expectedSpinesAt(sentenceText, position, options).map { RuntimeSpineAt(it, position, it.expectedNextTerminals.filterIsInstance<RuntimeRule>().toSet()) }.toSet()
+        }
+        return ExpectedAtResultDefault(wordStartPosition, unfinished + complete)
+    }
+
+    /**
+     * possible start positions (ascending) of a word that might be unfinished at 'position'.
+     * When finding the word start by skip rules, the text after the last skip match (or from 0 if there are no skip rules)
+     * is scanned into tokens, and the start of the last token (or of all tokens, see [ParseOptions.expectedAtFromAllTokenStarts]) is used.
+     * The last entry is the start of the last token.
+     */
+    private fun findWordStartPositions(sentenceText: String, position: Int, options: ParseOptions): List<Int> {
+        return when {
+            options.reverseFindWordStartBySkipRules -> {
+                val matchables = this.runtimeRuleSet.skipParserStateSet?.let {
+                    it.usedTerminalRules.mapNotNull { (it.rhs as RuntimeRuleRhsTerminal).matchable }
+                }
+                val afterSkip = when (matchables) {
+                    null -> 0
+                    else -> position - (findLastMatchOf2(sentenceText.substring(0, position), matchables) ?: position)
+                }
+                val tokenStarts = when {
+                    afterSkip >= position -> emptyList()
+                    else -> {
+                        scanner.reset()
+                        val sr = scanner.scan(SentenceDefault(sentenceText.substring(0, position), options.sentenceIdentity.invoke()), ScanOptionsDefault(startAtPosition = afterSkip))
+                        sr.allTokens.map { it.position }.filter { it in afterSkip until position }.distinct().sorted()
+                    }
+                }
+                when {
+                    tokenStarts.isEmpty() -> listOf(afterSkip)
+                    options.expectedAtFromAllTokenStarts -> tokenStarts
+                    else -> listOf(tokenStarts.last())
+                }
+            }
+
+            else -> listOf(position - findReverseStartPosition(sentenceText, position, options))
+        }
+    }
+
+    /**
+     * parse the sentence from 0 up to 'usedPosition' (ignoring the rest of the text)
+     * and return the spines of the parse that fail at that position, i.e. what is expected next.
+     * If the text up to 'usedPosition' is a complete sentence, a spine expecting <EOT> is also returned.
+     */
+    private fun expectedSpinesAt(sentenceText: String, usedPosition: Int, options: ParseOptions): Set<RuntimeSpine> {
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val cacheSkip = options.cacheSkip
-        val revWordStartPosition = findReverseStartPosition(sentenceText, position, options)
-        val wordStartPosition = position - revWordStartPosition
-        val usedText = sentenceText.substring(0, wordStartPosition) // parse from start (0) to position - ignore rest of text
+        val usedText = sentenceText.substring(0, usedPosition) // parse from start (0) to position - ignore rest of text
         scanner.reset()
         val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity.invoke()), goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
@@ -322,20 +459,13 @@ class LeftCornerParser(
             rp.grow3(possibleEndOfText, parseArgs) //TODO: maybe no need to build tree!
             seasons++
         }
-        /*
-        return rp.nextExpected.flatMap {
-            when(it) {
-                is RuntimeRule -> listOf(it)
-                is Set<*> -> it as Set<RuntimeRule>
-                is List<*> -> it as List<RuntimeRule>
-                is LookaheadSet -> it.fullContent
-                else -> error("Internl Error: Not handled - $it")
-            }
-        }.toSet()
-         */
-        //val nextExpected = this.findNextExpected(rp, matches, possibleEndOfText)
-        return if (rp.failedReasons.isEmpty()) {
-            ExpectedAtResultDefault(wordStartPosition, emptySet())
+        // if the text parsed is a complete sentence, then end-of-text is a valid next 'terminal'
+        val eotSpines: Set<RuntimeSpine> = when {
+            rp.graph.goals.isNotEmpty() && rp.graph.goalMatchedAll -> setOf(RuntimeSpineEndOfText(rp.stateSet.finishRulePosition, usedPosition))
+            else -> emptySet()
+        }
+        return eotSpines + if (rp.failedReasons.isEmpty()) {
+            emptySet()
         } else {
             // need to include the 'startSkipFailures',
             val map = rp.failedReasons //no need to clone it as it will not be modified after this point
@@ -344,20 +474,17 @@ class LeftCornerParser(
                 l.addAll(it.value)
                 map[it.key] = l
             }
-            //val nextExpected = this.findNextExpectedAfterError3(scanner.sentence, map, rp.stateSet.automatonKind, rp.stateSet, position)
-            //nextExpected.second
             val validFailReasons = map[map.keys.max()]?.flatMap {
                 when (it) {
-                    is FailedParseReasonEmbedded -> it.embededFailedParseReasons.filter { it.skipFailure.not() && it.failedAtPosition == wordStartPosition }
+                    is FailedParseReasonEmbedded -> it.embededFailedParseReasons.filter { it.skipFailure.not() && it.failedAtPosition == usedPosition }
                     else -> when {
-                        it.skipFailure.not() && it.failedAtPosition == wordStartPosition -> listOf(it)
+                        it.skipFailure.not() && it.failedAtPosition == usedPosition -> listOf(it)
                         else -> emptyList()
                     }
                 }
             } ?: emptyList()
             // parse might fail BEFORE the requested 'position' - so filter to get {} if it does
-            val rspines = validFailReasons.map { it.spine }
-            return ExpectedAtResultDefault(wordStartPosition, rspines.toSet())
+            validFailReasons.map { it.spine }.toSet()
         }
     }
 
@@ -414,31 +541,27 @@ class LeftCornerParser(
         }
     }
 
-    private fun findLastMatchOf2(text:String, matchables: List<Matchable>):Int ? {
-        val str = matchables.joinToString(separator = "|") {
-            when (it.kind) {
-                MatchableKind.EOT -> ""
-                else -> "(${it.expression.escapedForRegex})"
-            }
-        }
-        val regex = str.toRegex()
+    /**
+     * Finds the start of the word being typed at the end of [text]:
+     * the end of the last skip match before the end of [text].
+     * Returns how many characters before the end of [text] the word starts,
+     * or null if no skip text is found (i.e. the word starts at the beginning of [text]).
+     */
+    private fun findLastMatchOf2(text: String, matchables: List<Matchable>): Int? {
+        val exprs = matchables
+            .filter { it.kind != MatchableKind.EOT }
+            .map { "(${it.expression.escapedForRegex})" }
+        if (exprs.isEmpty()) return null
+        val regex = exprs.joinToString(separator = "|").toRegex()
         var pos = text.length - 1
-        var lastMatchLen:Int? = null
-        while(null==lastMatchLen && pos >=0 ){
+        while (pos >= 0) {
             val match = regex.matchAt(text, pos)
-            if(null==match) {
-                //try one character more
-            } else {
-                if( text.length-1 == match.range.last) {
-                    lastMatchLen = pos+match.value.length
-                } else {
-                    // matched something that finished in wrong place, thus nothing found
-                    lastMatchLen = null
-                    break
-                }
+            if (null != match && match.value.isNotEmpty()) {
+                val wordStart = pos + match.value.length
+                return text.length - wordStart
             }
-            pos-=1
+            pos -= 1
         }
-        return lastMatchLen?.let { text.length - it }
+        return null
     }
 }

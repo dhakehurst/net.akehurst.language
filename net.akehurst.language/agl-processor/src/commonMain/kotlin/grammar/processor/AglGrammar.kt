@@ -45,6 +45,7 @@ import net.akehurst.language.types.builder.typesDomain
 
 object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
+    const val OPTION_skipRequiredBetweenTokens = "skipRequiredBetweenTokens"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Grammar"
@@ -868,7 +869,7 @@ namespace net.akehurst.language.Grammar {
       else -> ': ${extends.join(',')} '
     }
     GrammarReference -> nameOrQName
-    GrammarOption -> '@$name $value'
+    GrammarOption -> '#$name: $value'
     GrammarRule -> '${isOverride?'override ':''}${isSkip?'skip ':''}${isLeaf?'leaf ':''}$name = $rhs ;'
     PreferenceRule -> ''
     ChoiceLongest -> when {

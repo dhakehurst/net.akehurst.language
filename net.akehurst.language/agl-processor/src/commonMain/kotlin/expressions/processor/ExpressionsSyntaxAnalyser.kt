@@ -25,7 +25,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asSimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.sentence.api.Sentence

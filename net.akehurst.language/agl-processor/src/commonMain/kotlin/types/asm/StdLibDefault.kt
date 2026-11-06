@@ -20,9 +20,9 @@ package net.akehurst.language.types.asm
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.FunctionParameter
@@ -316,7 +316,7 @@ object StdFunctionLib : FunctionLib {
         (declaration as MutableMap)["Set"] = FunctionDefinitionPrimitive(
             SimpleName("Set"),
             listOf(), //TODO
-            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            TypeReferenceDefault(StdLibDefault.Set.qualifiedName, emptyList(), false),
             null
         ).also {
             it.execution = { args -> args.toSet() }
@@ -324,10 +324,18 @@ object StdFunctionLib : FunctionLib {
         (declaration as MutableMap)["List"] = FunctionDefinitionPrimitive(
             SimpleName("List"),
             listOf(), //TODO
-            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            TypeReferenceDefault(StdLibDefault.List.qualifiedName, emptyList(), false),
             null
         ).also {
             it.execution = { args -> args }
+        }
+        (declaration as MutableMap)["Map"] = FunctionDefinitionPrimitive(
+            SimpleName("Map"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Map.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> args.associate { a -> a as Pair<*, *> } }
         }
     }
 
@@ -550,7 +558,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                     }
                 }
             }
-            collection(ListSeparated_typeName.value, listOf("E", "I", "S"), net.akehurst.language.collections.ListSeparated::class) {
+            collection(ListSeparated_typeName.value, listOf("E", "I", "S"), net.akehurst.kotlinx.collections.ListSeparated::class) {
                 supertype("List") { ref("E") }
                 propertyPrimitive<ListSeparated<*, *, *>, Any?>("elements", "List", false, "Elements in the ListSeparated.", accessor = { self -> (self as ListSeparated<*, *, *>).elements }) { typeArgument("E") }
                 propertyPrimitive<ListSeparated<*, *, *>, Any?>("items", "List", false, "Items in the ListSeparated.", accessor = { self -> (self as ListSeparated<*, *, *>).items }) { typeArgument("I") }

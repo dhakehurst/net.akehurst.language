@@ -270,10 +270,11 @@ class test_CompletionProviderSimple {
                 sentence = sentence,
                 position = 0,
                 expected = listOf(
-                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+                    // "That" is a pattern (double quotes)
                     CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
-                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "<That> is a sentence ."),
                     CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+                    CompletionItem(CompletionItemKind.PATTERN, "That", "<That>"),
                 )
             )
         )
@@ -309,7 +310,7 @@ class test_CompletionProviderSimple {
                 sentence = sentence,
                 position = 3,
                 expected = listOf(
-                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+                    // word completion: only literals that extend the typed word are offered
                     CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
                 )
             )

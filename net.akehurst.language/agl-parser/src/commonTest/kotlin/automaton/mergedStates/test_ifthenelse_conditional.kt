@@ -227,7 +227,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
 
             trans(WIDTH) { src(rG, oN, SR); tgt(_t8, oN, ER); lhg(EOT); ctx(rG, oN, SR) }
             trans(WIDTH) { src(rG, oN, SR); tgt(_t3, oN, ER); lhg(setOf(_t8,_t3)); ctx(rG, oN, SR) }
-            trans(HEIGHT) { src(_t8, oN, ER); tgt(expr, o0, ER); lhg(setOf(RT), setOf(RT)); lhg(setOf(_t6), setOf(_t6)); lhg(setOf(_t4), setOf(_t4));  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 1)); prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 1)); prevPair(RP(ifthen, oN, 3), RP(ifthen, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 1)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 3)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 3)); prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 3)); prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 5)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 5)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 5)) }
+            trans(HEIGHT) { src(_t8, oN, ER); tgt(expr, o0, ER); lhg(setOf(RT), setOf(RT)); lhg(setOf(_t6), setOf(_t6)); lhg(setOf(_t4), setOf(_t4));  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 1)); prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 1)); prevPair(RP(ifthen, oN, 3), RP(ifthen, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 1)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 3)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 3)); prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 3)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 5)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 5)) }
             trans(HEIGHT) { src(_t3, oN, ER); tgt(ifthen, oN, 1); lhg(setOf(_t8,_t3), setOf(RT,EOT,_t6));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)); prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)) }
             trans(HEIGHT) { src(_t3, oN, ER); tgt(ifthenelse, oN, 1); lhg(setOf(_t8,_t3), setOf(RT,EOT,_t6));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)); prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)) }
             trans(WIDTH) { src(ifthen, oN, 1); tgt(_t8, oN, ER); lhg(_t4); ctx(RP(rG, oN, SR),RP(ifthen, oN, 3),RP(ifthenelse, oN, 3)) }
@@ -238,7 +238,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, 2); lhg(_t4);  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 1)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 1)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthen, oN, ER); lhg(RT);  prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 3)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, 4); lhg(_t6);  prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 3)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 3)) }
-            trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, ER); lhg(RT);  prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 5)); prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 5)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 5)) }
+            trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, ER); lhg(RT);  prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 5)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 5)) }
             trans(WIDTH) { src(ifthen, oN, 2); tgt(_t4, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(rG, oN, SR),RP(ifthen, oN, 3),RP(ifthenelse, oN, 3)) }
             trans(WIDTH) { src(ifthenelse, oN, 2); tgt(_t4, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(rG, oN, SR),RP(ifthen, oN, 3),RP(ifthenelse, oN, 3)) }
             trans(GRAFT) { src(_t4, oN, ER); tgt(ifthen, oN, 3); lhg(setOf(_t8,_t3));  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 2)); prevPair(RP(ifthen, oN, 3), RP(ifthen, oN, 2)); prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 2)) }
@@ -247,17 +247,17 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
             trans(WIDTH) { src(ifthen, oN, 3); tgt(_t3, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(rG, oN, SR),RP(ifthen, oN, 3),RP(ifthenelse, oN, 3)) }
             trans(WIDTH) { src(ifthenelse, oN, 3); tgt(_t8, oN, ER); lhg(_t6); ctx(RP(rG, oN, SR),RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
             trans(WIDTH) { src(ifthenelse, oN, 3); tgt(_t3, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(rG, oN, SR),RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
-            trans(HEIGHT) { src(ifthen, oN, ER); tgt(conditional, o0, ER); lhg(setOf(RT), setOf(RT)); lhg(setOf(_t6), setOf(_t6));  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
-            trans(HEIGHT) { src(conditional, o0, ER); tgt(expr, o1, ER); lhg(setOf(_t6), setOf(_t6));  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)) }
+            trans(HEIGHT) { src(ifthen, oN, ER); tgt(conditional, o0, ER); lhg(setOf(RT), setOf(RT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
+            trans(HEIGHT) { src(conditional, o0, ER); tgt(expr, o1, ER); lhg(setOf(RT), setOf(RT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
             trans(GRAFT) { src(expr, o1, ER); tgt(ifthenelse, oN, 4); lhg(_t6);  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)) }
             trans(HEIGHT) { src(expr, o1, ER); tgt(S, oN, ER); lhg(setOf(RT), setOf(RT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
             trans(GRAFT) { src(expr, o1, ER); tgt(ifthen, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)) }
-            trans(WIDTH) { src(ifthenelse, oN, 4); tgt(_t6, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(rG, oN, SR),RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
-            trans(GRAFT) { src(_t6, oN, ER); tgt(ifthenelse, oN, 5); lhg(setOf(_t8,_t3));  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 4)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 4)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 4)) }
-            trans(WIDTH) { src(ifthenelse, oN, 5); tgt(_t8, oN, ER); lhg(RT); ctx(RP(rG, oN, SR),RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
-            trans(WIDTH) { src(ifthenelse, oN, 5); tgt(_t3, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(rG, oN, SR),RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
-            trans(HEIGHT) { src(ifthenelse, oN, ER); tgt(conditional, o1, ER); lhg(setOf(RT), setOf(RT)); lhg(setOf(_t6), setOf(_t6));  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)); prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)) }
-            trans(HEIGHT) { src(conditional, o1, ER); tgt(expr, o1, ER); lhg(setOf(RT), setOf(RT));  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)); prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)) }
+            trans(WIDTH) { src(ifthenelse, oN, 4); tgt(_t6, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
+            trans(GRAFT) { src(_t6, oN, ER); tgt(ifthenelse, oN, 5); lhg(setOf(_t8,_t3));  prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 4)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 4)) }
+            trans(WIDTH) { src(ifthenelse, oN, 5); tgt(_t8, oN, ER); lhg(RT); ctx(RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
+            trans(WIDTH) { src(ifthenelse, oN, 5); tgt(_t3, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
+            trans(HEIGHT) { src(ifthenelse, oN, ER); tgt(conditional, o1, ER); lhg(setOf(RT), setOf(RT)); lhg(setOf(_t6), setOf(_t6));  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)); prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)) }
+            trans(HEIGHT) { src(conditional, o1, ER); tgt(expr, o1, ER); lhg(setOf(RT), setOf(RT)); lhg(setOf(_t6), setOf(_t6));  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)); prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)) }
             trans(GOAL) { src(S, oN, ER); tgt(rG, oN, ER); lhg(EOT);  prevPair(RP(rG, oN, SR), RP(rG, oN, SR)) }
         }
 

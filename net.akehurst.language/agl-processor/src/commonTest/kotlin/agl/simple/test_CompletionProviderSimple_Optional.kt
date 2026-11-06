@@ -71,6 +71,18 @@ class test_CompletionProviderSimple_Optional {
                         )
                     )
                 }
+                sentencePass("") {
+                    options(Agl.options { completionProvider {
+                        depth(1)
+                        showOptionalItems(false)
+                    } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "<A> . <DE> <F> ."),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                        )
+                    )
+                }
             }
             testData("Optional 2") {
                 grammarStr(grammarStrConcat)
@@ -78,10 +90,10 @@ class test_CompletionProviderSimple_Optional {
                     options(Agl.options { completionProvider { depth(2) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . <B> . <C> . <E> . f ."),
                             CompletionItem(CompletionItemKind.SEGMENT, "S", "a . <B> . <C> . <D> . f ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . <E> . f ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . <B> . <C> . <E> . f ."),
                             CompletionItem(CompletionItemKind.SEGMENT, "S", "a . <D> . f ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . <E> . f ."),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
@@ -108,10 +120,10 @@ class test_CompletionProviderSimple_Optional {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . b . c . e . f ."),
                             CompletionItem(CompletionItemKind.SEGMENT, "S", "a . b . c . d . f ."),
-                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . e . f ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . b . c . e . f ."),
                             CompletionItem(CompletionItemKind.SEGMENT, "S", "a . d . f ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . e . f ."),
                             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
@@ -134,8 +146,8 @@ class test_CompletionProviderSimple_Optional {
                     } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "DEF", "e . f ."),
                             CompletionItem(CompletionItemKind.SEGMENT, "DEF", "d . f ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEF", "e . f ."),
                             CompletionItem(CompletionItemKind.LITERAL, "'e'", "e"),
                             CompletionItem(CompletionItemKind.PATTERN, "[dxyz]", "d"),
                         )

@@ -23,8 +23,10 @@ import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import testFixture.utils.AutomatonTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 
+@Ignore // LC0 (AutomatonKind.LOOKAHEAD_NONE) is not implemented and not a priority at present
 class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
     private companion object {

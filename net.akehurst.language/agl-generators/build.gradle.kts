@@ -15,7 +15,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agl-processor"))
-                implementation(project(":collections"))
+                implementation(libs.nak.kotlinx.collections)
                 implementation(project(":kotlinx-komposite"))
             }
         }

@@ -27,7 +27,8 @@ import kotlin.test.assertNull
 
 class test_ifThenElse_NoWS_Inverted : test_LeftCornerParserAbstract() {
 
-    // invert the dangling else
+    // invert the dangling else (by choice order)
+    // preference rules take priority over choice order, so the else still binds to the inner if
 
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
@@ -180,19 +181,19 @@ class test_ifThenElse_NoWS_Inverted : test_LeftCornerParserAbstract() {
         val sentence = "ifWthenifXthenYelseZ"
 
         val expected = """
-         S { expr { conditional { ifthenelse {
+         S { expr { conditional { ifthen {
                 'if'
                 expr { var { 'W' } }
                 'then'
-                expr { conditional { ifthen {
-                      'if'
-                      expr { var { 'X' } }
-                      'then'
-                      expr { var { 'Y' } }
-                    } } }
-                'else'
-                expr { var { 'Z' } }
-              } } } }
+                expr { conditional { ifthenelse {
+                    'if'
+                    expr { var { 'X' } }
+                    'then'
+                    expr { var { 'Y' } }
+                    'else'
+                    expr { var { 'Z' } }
+                } } }
+        } } } }
         """.trimIndent()
 
         super.test_pass(

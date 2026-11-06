@@ -27,8 +27,8 @@ import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.simple.AsmStructurePropertySimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
@@ -50,7 +50,7 @@ private class TypedObjectAny(
     override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
 
     override fun setProperty(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
-    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setProperty(this, name, value) //TODO: Suspend version
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setPropertySuspend(this, name, value)
 
     override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
     override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
@@ -154,7 +154,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             }
 
             is OrderedSet<*> -> toTypedCollection(obj.toList(), StdLibDefault.OrderedSet, ifNotFound) { it.toOrderedSet() }
-            is ListSeparated<*, *, *> -> toTypedCollection(obj.toSeparatedList(), StdLibDefault.ListSeparated, ifNotFound) { it.toOrderedSet() }
+            is ListSeparated<*, *, *> -> toTypedCollection(obj.toSeparatedList(), StdLibDefault.ListSeparated, ifNotFound) { it.toList() }
             is Array<*> -> toTypedCollection(obj.toList(), StdLibDefault.List, ifNotFound) { it.toList() }
             //TODO: special array types IntArray, LongArray, etc
             is List<*> -> toTypedCollection(obj, StdLibDefault.List, ifNotFound) { it.toList() }
@@ -224,6 +224,9 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return typedAs(obj, type)
     }
 
+    //TODO: the elements of the created List/Set (and Map keys/values) are the TypedObjects themselves, not plain values,
+    // so callers (e.g. constructor executions) get e.g. List<TypedObject> and must unwrap them.
+    // Unwrapping here changes how elements are read back everywhere (getFromListWithIndex etc.), so postponed.
     override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {
         return when (collectionType.qualifiedTypeName) {
             StdLibDefault.List.qualifiedName -> {

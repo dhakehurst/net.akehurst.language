@@ -93,8 +93,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
             override fun endBranch(nodeInfo: SpptDataNodeInfo) {
                 val opt = nodeInfo.alt.option
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
-                val children = stack.pop(numChildren)
-                val reverseChildren = children.reversed()
+                val reverseChildren = stack.pop(numChildren)
                 val branchName = nodeInfo.node.rule.tag
                 val handler = syntaxAnalyserStack.peek().findBranchHandler<Any>(branchName, false)
                 when {
@@ -117,7 +116,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
 
                     nodeInfo.node.rule.isList -> {
                         val chldn = when {
-                            nodeInfo.node.rule.isListOptional && 1 == children.size && EMPTY_LIST_VALUE == children[0] -> emptyList<Any>()
+                            nodeInfo.node.rule.isListOptional && 1 == reverseChildren.size && EMPTY_LIST_VALUE == reverseChildren[0] -> emptyList<Any>()
                             else -> reverseChildren
                         }
                         when (handler) {

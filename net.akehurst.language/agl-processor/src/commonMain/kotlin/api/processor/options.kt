@@ -27,6 +27,16 @@ import net.akehurst.language.scanner.api.ScanOptions
 interface SyntaxAnalysisOptions<AsmType : Any> {
     var enabled: Boolean
 
+    /**
+     * true: `process` builds the ASM while parsing (no parse tree is kept), see `SyntaxAnalysisStream`.
+     * Only for a syntax analyser that uses asm transform rules (SyntaxAnalyserFromAsmTransformAbstract);
+     * for any other syntax analyser, `process` parses to a tree as usual and gives a warning.
+     * An ambiguity is an error when streaming, and the parse stops.
+     * The parse result has no tree (sppt is null).
+     * false (default): parse to a tree, then walk it.
+     */
+    var streaming: Boolean
+
     fun clone(): SyntaxAnalysisOptions<AsmType>
 }
 
@@ -72,6 +82,11 @@ interface CompletionProviderOptions<ContextType : Any> {
      */
     var path: List<Pair<Int, Int>>
 
+    /**
+     * true (default): optional items, and lists with min 0, are expanded both with and without the item(s).
+     * false: they are left out, only the expansion without them is given.
+     * TODO: future enhancement, more flexibility in configuring the output (e.g. show them as a placeholder)
+     */
     var showOptionalItems: Boolean
 
     var provideValuesForPatternTerminals: Boolean

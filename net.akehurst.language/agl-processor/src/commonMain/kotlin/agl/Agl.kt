@@ -32,7 +32,7 @@ import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectSuspending
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.format.asm.FormatDomainDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.formatter.api.AglFormatDomain
@@ -45,7 +45,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.m2mTransform.processor.M2MTransformResult
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterSuspending
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterCombined
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
@@ -400,8 +400,8 @@ object Agl {
     }
 
     suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
-        val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(accessorMutator)
-        val result = interpreter.evaluateStr(evc, expression)
+        val interpreter = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
+        val result = interpreter.evaluateStrSuspend(evc, expression)
         return result
     }
 
@@ -461,9 +461,9 @@ object Agl {
             it.asm!!
         }
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
-        val interpreter = M2mTransformInterpreterSuspending(m2m, accessorMutators, issueHolder)
+        val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder)
         val tgtTransform = m2m.allTransformRuleSet.first() //TODO: allow caller to choose
-        val transResult = interpreter.transform(tgtTransform, targetDomainReference, domains)
+        val transResult = interpreter.transformSuspend(tgtTransform, targetDomainReference, ruleArguments, domains)
         return transResult
     }
 }

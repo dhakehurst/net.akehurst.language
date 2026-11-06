@@ -85,7 +85,13 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
     }
 
     override fun mergeNamespace(value: TypesNamespace) {
-        TODO("not implemented")
+        if (_namespace.value.containsKey(value.qualifiedName)) {
+            _namespace.value[value.qualifiedName]!!.merge(value)
+        } else {
+            (namespace as MutableList).add( value)
+            _namespace.reset()
+            value.options.parent = this.options //FIXME: could cause wrong parent if namespace in multiple Domains!
+        }
     }
 
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypesNamespace {
@@ -130,6 +136,36 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
     override fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypesNamespace>) {
         namespaces.forEach { this.addNamespace(it) }
         this.resolveImports()
+    }
+
+    override fun merge(other: Domain<TypesNamespace, TypeDefinition>): Domain<TypesNamespace, TypeDefinition> {
+        return this.merge(other)
+    }
+
+    override fun merge(other: TypesDomain): TypesDomain {
+        other.namespace.forEach {
+            mergeNamespace(it)
+        }
+        return this
+    }
+
+    override fun findAssociationOwnedPropertyOrNull(type: TypeInstance, propertyName: PropertyName): PropertyDeclarationResolved? =
+        findAssociationOwnedEndOrNull(type, propertyName)?.property
+
+    override fun findAssociationOwnedEndOrNull(type: TypeInstance, propertyName: PropertyName): AssociationOwnedEnd? {
+        val def = type.resolvedDefinition
+        val candidates = setOf(def) + def.allSuperTypes.map { it.resolvedDefinition }
+        for (ns in namespace) {
+            for (assoc in ns.association) {
+                val p = assoc.ownedProperty.firstOrNull { it.name == propertyName && candidates.contains(it.owner) }
+                if (null != p) {
+                    // the property for an end is named after that end
+                    val end = assoc.end.first { it.endName == propertyName }
+                    return AssociationOwnedEnd(assoc, end, p.resolved(emptyMap()))
+                }
+            }
+        }
+        return null
     }
 
     // --- DefinitionBlock ---
@@ -559,6 +595,13 @@ class UnnamedSupertypeTypeInstance(
     }
 }*/
 
+class TypesAssociationSimple(
+    override val namespace: TypesNamespace,
+    override val end: List<AssociationEnd>,
+    override val property: List<PropertyDeclaration>,
+    override val ownedProperty: List<PropertyDeclaration>
+) : TypesAssociation
+
 class TypesNamespaceSimple(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
@@ -769,8 +812,12 @@ abstract class TypesNamespaceAbstract(
         }
     }
 
+    private val _association = mutableListOf<TypesAssociation>()
+    override val association: List<TypesAssociation> get() = _association
+
     override fun findOrCreateAssociation(ends: List<AssociationEnd>): List<PropertyDeclaration> {
         val props = mutableListOf<PropertyDeclaration>()
+        val owned = mutableListOf<PropertyDeclaration>()
         for (i in ends.indices) {
             val thisEnd = ends[i]
             val thisEndType = if (null == thisEnd.collectionTypeName) {
@@ -786,7 +833,19 @@ abstract class TypesNamespaceAbstract(
                 } else {
                     val otherEnd = ends[j]
                     val otherEndDef = otherEnd.endType
-                    val pd = otherEndDef.appendPropertyStored(thisEnd.endName, thisEndType, thisEnd.characteristics)
+                    if (thisEnd.ownedByAssociation) {
+                        // navigation from an object is by a unique name (a subtype may redefine one)
+                        val clash = otherEndDef.findOwnedPropertyOrNull(thisEnd.endName)
+                            ?: (_association.flatMap { it.ownedProperty } + owned).firstOrNull { it.owner == otherEndDef && it.name == thisEnd.endName }
+                        check(null == clash) {
+                            "Association end '${thisEnd.endName.value}' clashes with an existing property or association end of the same name on '${otherEndDef.qualifiedName.value}'"
+                        }
+                    }
+                    val pd = when {
+                        thisEnd.ownedByAssociation -> PropertyDeclarationStored(otherEndDef, thisEnd.endName, thisEndType, thisEnd.characteristics + PropertyCharacteristic.STORED, -1)
+                            .also { owned.add(it) }
+                        else -> otherEndDef.appendPropertyStored(thisEnd.endName, thisEndType, thisEnd.characteristics)
+                    }
                     thisEnd.byEvaluation?.let { (pd as PropertyDeclarationAbstract).accessor = it.invoke(pd) }
                     thisEnd.byEvaluationSuspend?.let { (pd as PropertyDeclarationAbstract).accessorSuspend = it.invoke(pd) }
                     props.add(pd)
@@ -794,6 +853,7 @@ abstract class TypesNamespaceAbstract(
             }
         }
         props.forEach { p -> (p as PropertyDeclarationAbstract).setOpposite(props - p) }
+        _association.add(TypesAssociationSimple(this, ends, props, owned))
         return props
     }
 
@@ -823,9 +883,19 @@ abstract class TypesNamespaceAbstract(
             .sortedWith(compareBy<Map.Entry<SimpleName, TypeDefinition>> { it.value::class.simpleName }.thenBy { it.value.name.value })
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asStringInContext(this) }
         val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}" }
+        val assocs = this.association.filter { it.ownedProperty.isNotEmpty() }
+        val assocstr = if (assocs.isEmpty()) "" else assocs.joinToString(prefix = "\n  ", separator = "\n  ") { a ->
+            a.property.joinToString(prefix = "association {\n    ", separator = "\n    ", postfix = "\n  }") { p ->
+                val chrs = p.characteristics
+                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val owner = if (a.ownedProperty.contains(p)) "" else " // owned by type"
+                "$chrs ${p.owner.signature(this, 0)}.${p.name}: ${p.typeInstance.signature(this, 0)}$owner"
+            }
+        }
         val s = """namespace $qualifiedName
 $importstr
-$types
+$types$assocstr
 """.trimIndent()
         return s
     }
@@ -885,7 +955,7 @@ abstract class TypeDefinitionSimpleAbstract(
 
     override val method = mutableListOf<MethodDefinition>()
 
-    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.resolvedDefinition as DataType).allSuperTypes }
+    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { it.resolvedDefinition.allSuperTypes }
 
     override val allProperty: Map<PropertyName, PropertyDeclaration>
         get() = supertypes.flatMap {
@@ -957,14 +1027,22 @@ abstract class TypeDefinitionSimpleAbstract(
      * append a derived property, with the expression that derived it
      */
     override fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String): PropertyDeclarationDerived {
-        val propIndex = property.size
+        val propIndex = run {
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val prop = PropertyDeclarationDerived(this, name, typeInstance, description, expression, propIndex)
         this.addProperty(prop)
         return prop
     }
 
     override fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String): PropertyDeclarationPrimitive {
-        val propIndex = property.size
+        val propIndex = run {
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val prop = PropertyDeclarationPrimitive(this, name, typeInstance, description, propIndex)
         this.addProperty(prop)
         return prop
@@ -1243,7 +1321,11 @@ abstract class StructuredTypeSimpleAbstract : TypeDefinitionSimpleAbstract(), St
         accessor: ((self: Any) -> Any?)?,
         mutator: ((self: Any, value: Any?) -> Unit)?
     ): PropertyDeclaration {
-        val propIndex = if (index >= 0) index else property.size
+        val propIndex = if (index >= 0) index else {
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val pd = PropertyDeclarationStored(this, name, typeInstance, characteristics + PropertyCharacteristic.STORED, propIndex)
         pd.accessor = accessor
         pd.mutator = mutator
@@ -1658,6 +1740,7 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
     override var accessorSuspend: (suspend (self: Any) -> Any?)? = null
 
     override var mutator: ((self: Any, value: Any?) -> Any?)? = null
+    override var mutatorSuspend: (suspend (self: Any, value: Any?) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
         this,

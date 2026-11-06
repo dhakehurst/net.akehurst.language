@@ -49,6 +49,10 @@ class test_ifThenElse_Priority : test_LeftCornerParserAbstract() {
             concatenation("ifThen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
             concatenation("ifThenElse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
             pattern("var", "[a-zA-Z]+")
+            preferenceFor("expr") {
+                right(listOf("ifThen"), setOf("'then'"))
+                right(listOf("ifThenElse"), setOf("'then'","'else'"))
+            }
         }
     }
 
@@ -221,7 +225,7 @@ class test_ifThenElse_Priority : test_LeftCornerParserAbstract() {
                 conditional {
                   ifThen {
                     'if' WS:' '
-                      expr { var : 'a' WS:' ' }
+                      expr { var : 'x' WS:' ' }
                       'then' WS:' '
                       expr {
                         conditional {

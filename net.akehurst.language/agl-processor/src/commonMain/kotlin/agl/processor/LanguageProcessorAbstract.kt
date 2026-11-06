@@ -21,6 +21,8 @@ import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalysisStream
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -33,13 +35,17 @@ import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.issues.ram.plus
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.ParseResult
+import net.akehurst.language.parser.api.ParseStreamListener
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.api.CrossReferenceDomain
@@ -47,9 +53,11 @@ import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
@@ -227,24 +235,112 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun process(sentence: String, options: ProcessOptions<AsmType, ContextType>?): ProcessResult<AsmType> {
         val opts = defaultOptions(options)
+        val sa = this.syntaxAnalyser
+        val issues = IssueHolder()
+        return when {
+            opts.syntaxAnalysis.enabled && opts.syntaxAnalysis.streaming -> when (sa) {
+                is SyntaxAnalyserFromAsmTransformAbstract<*, *> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    processStreaming(sentence, opts, sa as SyntaxAnalyserFromAsmTransformAbstract<AsmType, Any>, issues)
+                }
+
+                else -> {
+                    issues.warn(null, "Streaming syntax analysis needs a syntax analyser that uses asm transform rules, '${sa?.let { it::class.simpleName }}' does not, so the sentence was parsed to a tree")
+                    processTree(sentence, opts, issues)
+                }
+            }
+
+            else -> processTree(sentence, opts, issues)
+        }
+    }
+
+    private fun processTree(sentence: String, opts: ProcessOptions<AsmType, ContextType>, issues: IssueHolder): ProcessResult<AsmType> {
         val parseResult = this.parse(sentence, opts.parse)
         val sppt = parseResult.sppt
         return if (null == sppt || opts.syntaxAnalysis.enabled.not()) {
-            ProcessResultDefault(null, parseResult)
+            ProcessResultDefault(null, parseResult, processIssues = issues)
         } else {
             val synxResult: SyntaxAnalysisResult<AsmType> = this.syntaxAnalysis(sppt, opts)
-            val asm = synxResult.asm
-            if (null == asm || opts.semanticAnalysis.enabled.not() || null == this.semanticAnalyser) {
-                val issues = IssueHolder()
-                if (null == this.semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
-                if (null == synxResult.asm) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
-                if (opts.semanticAnalysis.enabled.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
-                ProcessResultDefault(synxResult.asm, parseResult, synxResult, processIssues = issues)
-            } else {
-                opts.semanticAnalysis.locationMap = synxResult.locationMap
-                val result = this.semanticAnalysis(asm, opts)
-                ProcessResultDefault(synxResult.asm, parseResult, synxResult, result)
-            }
+            processAfterSyntaxAnalysis(parseResult, synxResult, opts, issues)
+        }
+    }
+
+    /**
+     * The ASM is built while parsing, by a [SyntaxAnalysisStream] given to the parser as its stream listener.
+     * A stream listener already in the parse options also gets the parse events.
+     */
+    private fun processStreaming(
+        sentence: String,
+        opts: ProcessOptions<AsmType, ContextType>,
+        sa: SyntaxAnalyserFromAsmTransformAbstract<AsmType, Any>,
+        issues: IssueHolder
+    ): ProcessResult<AsmType> {
+        sa.clear<AsmType>()
+        val stream = SyntaxAnalysisStream(sa)
+        val parseOpts = opts.parse.clone()
+        val other = parseOpts.streamListener
+        parseOpts.streamListener = if (null == other) stream else ParseStreamListenerBoth(other, stream)
+        val parseResult = this.parse(sentence, parseOpts)
+        val synxResult = stream.result
+        return if (null == synxResult) {
+            issues.info(null, "There was no result from the streaming SyntaxAnalyser")
+            ProcessResultDefault(null, parseResult, processIssues = issues)
+        } else {
+            processAfterSyntaxAnalysis(parseResult, synxResult, opts, issues)
+        }
+    }
+
+    private fun processAfterSyntaxAnalysis(
+        parseResult: ParseResult,
+        synxResult: SyntaxAnalysisResult<AsmType>,
+        opts: ProcessOptions<AsmType, ContextType>,
+        issues: IssueHolder
+    ): ProcessResult<AsmType> {
+        val asm = synxResult.asm
+        return if (null == asm || opts.semanticAnalysis.enabled.not() || null == this.semanticAnalyser) {
+            if (null == this.semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
+            if (null == synxResult.asm) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
+            if (opts.semanticAnalysis.enabled.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
+            ProcessResultDefault(synxResult.asm, parseResult, synxResult, processIssues = issues)
+        } else {
+            opts.semanticAnalysis.locationMap = synxResult.locationMap
+            val result = this.semanticAnalysis(asm, opts)
+            ProcessResultDefault(synxResult.asm, parseResult, synxResult, result, issues)
+        }
+    }
+
+    /** sends every parse event to [first], then to [second] */
+    private class ParseStreamListenerBoth(val first: ParseStreamListener, val second: ParseStreamListener) : ParseStreamListener {
+        override fun start(sentence: Sentence) {
+            first.start(sentence); second.start(sentence)
+        }
+
+        override fun leaf(node: SpptDataNode) {
+            first.leaf(node); second.leaf(node)
+        }
+
+        override fun skip(startPosition: Int, nextInputPosition: Int) {
+            first.skip(startPosition, nextInputPosition); second.skip(startPosition, nextInputPosition)
+        }
+
+        override fun branch(node: SpptDataNode, numChildren: Int) {
+            first.branch(node, numChildren); second.branch(node, numChildren)
+        }
+
+        override fun beginEmbedded(node: SpptDataNode) {
+            first.beginEmbedded(node); second.beginEmbedded(node)
+        }
+
+        override fun endEmbedded(node: SpptDataNode) {
+            first.endEmbedded(node); second.endEmbedded(node)
+        }
+
+        override fun finished(issues: IssueCollection<LanguageIssue>) {
+            first.finished(issues); second.finished(issues)
+        }
+
+        override fun failed(issues: IssueCollection<LanguageIssue>, committedUpTo: Int) {
+            first.failed(issues, committedUpTo); second.failed(issues, committedUpTo)
         }
     }
 
@@ -273,28 +369,58 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return frmtr.formatSelf(formatSetName, asm)
     }
 
+    /*
+     * The parser returns spines for two readings of the text between a word start and 'position':
+     *  - the word is unfinished: spines at the word start (usedPosition < position)
+     *  - the word is complete: spines at 'position'
+     * Both are offered: completions of the typed word (a literal that starts with it, but is not equal to it), from the word start,
+     * and what is expected next, at 'position'. Each item has its own offeredPosition.
+     * The result's offeredPosition is the word start if there are any completions of the typed word, otherwise 'position'.
+     */
     override fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
         val opts = defaultOptions(options)
-        val parserExpected = this.parser?.expectedTerminalsAt(sentence, position, opts.parse)
+        val parserExpectedAt = this.parser?.expectedAt(sentence, position, opts.parse)
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
-        val terminalItems = parserExpected.mapNotNull {
-            when {
-                it.isEndOfText -> null // FIXME: maybe indicate EOT ?
-                it.isEmptyTerminal -> null
-                it.isEmptyListTerminal -> null
-                else -> {
-                    val rr = it as RuntimeRule
-                    val terminalRuleItem = mapToGrammar(rr.ruleSetNumber, rr.number) as Terminal?
-                    terminalRuleItem?.let { CompletionProviderAbstract.provideForTangible(it, opts.completionProvider) }
-                    //when {
-                    //    it.isLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.unescapedTerminalValue, it.tag)
-                    //    it.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<${it.tag}>", "${it.tag}")
-                    //    else -> CompletionItem(CompletionItemKind.SEGMENT, it.tag, it.tag) //TODO
-                    //}
+        val byPosition = parserExpectedAt.spines.groupBy { it.usedPosition }
+        val wordCompletions = byPosition.keys.filter { it < position }.sorted().flatMap { wordStart ->
+            val prefix = sentence.substring(wordStart, position)
+            byPosition[wordStart]!!
+                .flatMap { it.expectedNextTerminals }
+                .filter { it.isLiteral && it.unescapedTerminalValue.startsWith(prefix) && it.unescapedTerminalValue != prefix }
+                .toSet()
+                .flatMap { completionItemsForTerminal(it, opts) }
+                .onEach { it.offeredPosition = wordStart }
+        }
+        val next = (byPosition[position] ?: emptyList())
+            .flatMap { it.expectedNextTerminals }
+            .filter { it.isTerminal }
+            .toSet()
+            .flatMap { completionItemsForTerminal(it, opts) }
+            .onEach { it.offeredPosition = position }
+        val offered = wordCompletions.firstOrNull()?.offeredPosition ?: position
+        return ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
+    }
+
+    private fun completionItemsForTerminal(rule: Rule, opts: ProcessOptions<AsmType, ContextType>): List<CompletionItem> = when {
+        rule.isEndOfText -> emptyList() // FIXME: maybe indicate EOT ?
+        rule.isEmptyTerminal -> emptyList()
+        rule.isEmptyListTerminal -> emptyList()
+        else -> {
+            val rr = rule as RuntimeRule
+            val ruleItem = mapToGrammar(rr.ruleSetNumber, rr.number)
+            when (ruleItem) {
+                null -> emptyList()
+                is Terminal -> CompletionProviderAbstract.provideForTangible(ruleItem, opts.completionProvider, targetGrammar)
+                // e.g. the rhs of a leaf rule, that is not a single terminal
+                else -> when {
+                    ruleItem.owningRule.isLeaf -> listOf(
+                        CompletionItem(CompletionItemKind.PATTERN, ruleItem.owningRule.compressedLeaf.unescapedValue.value, "<${ruleItem.owningRule.name.value}>").apply { detail = ruleItem }
+                    )
+
+                    else -> emptyList()
                 }
             }
-        }.flatten()
-        return ExpectedAtResultDefault(position, position, terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
+        }
     }
 
     override fun expectedItemsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
@@ -303,24 +429,30 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val opts = defaultOptions(options)
                 val parserExpected = this.parser?.expectedAt(sentence, position, opts.parse)
                     ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
-                val spines = parserExpected.spines.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
-                val items = completionProvider!!.provide(spines, opts.completionProvider)
-                if (parserExpected.usedPosition == position) {
-                    ExpectedAtResultDefault(position, parserExpected.usedPosition, items, IssueHolder(LanguageProcessorPhase.ALL))
-                } else {
-                    val prefix = sentence.substring(parserExpected.usedPosition, position)
-                    val filtered = items
+                // see comment on expectedTerminalsAt
+                // not the spine that only expects end-of-text (the text so far being a complete sentence)
+                val byPosition = parserExpected.spines
+                    .filterNot { sp -> sp.expectedNextTerminals.all { it.isEndOfText } }
+                    .groupBy { it.usedPosition }
+                val wordCompletions = byPosition.keys.filter { it < position }.sorted().flatMap { wordStart ->
+                    val prefix = sentence.substring(wordStart, position)
+                    val spines = byPosition[wordStart]!!.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
+                    completionProvider!!.provide(spines, opts.completionProvider)
                         .filter {
                             when (it.kind) {
-                                CompletionItemKind.LITERAL -> prefix!=it.text && it.text.startsWith(prefix) //do not include if terminal already complete
+                                CompletionItemKind.LITERAL -> prefix != it.text && it.text.startsWith(prefix) //do not include if terminal already complete
                                 CompletionItemKind.PATTERN -> false //TODO: try a match for patterns
                                 CompletionItemKind.SEGMENT -> false
                                 CompletionItemKind.REFERRED -> false //TODO: should be able to complete these!
                             }
                         }
-                    val used = if(filtered.isEmpty()) position else parserExpected.usedPosition
-                    ExpectedAtResultDefault(position, used, filtered, IssueHolder(LanguageProcessorPhase.ALL))
+                        .onEach { it.offeredPosition = wordStart }
                 }
+                val nextSpines = (byPosition[position] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
+                val next = completionProvider!!.provide(nextSpines, opts.completionProvider)
+                    .onEach { it.offeredPosition = position }
+                val offered = wordCompletions.firstOrNull()?.offeredPosition ?: position
+                ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
             }
 
             else -> expectedTerminalsAt(sentence, position, options)

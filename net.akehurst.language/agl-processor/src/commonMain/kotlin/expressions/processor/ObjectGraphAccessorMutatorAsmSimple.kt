@@ -27,9 +27,9 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.asm.TypeReferenceDefault
@@ -213,7 +213,7 @@ object StdFunctionLibForAsmSimple : FunctionLib {
         (declaration as MutableMap)["Set"] = FunctionDefinitionPrimitive(
             SimpleName("Set"),
             listOf(), //TODO
-            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            TypeReferenceDefault(StdLibDefault.Set.qualifiedName, emptyList(), false),
             null
         ).also {
             it.execution = { args -> args.toSet() }
@@ -221,10 +221,18 @@ object StdFunctionLibForAsmSimple : FunctionLib {
         (declaration as MutableMap)["List"] = FunctionDefinitionPrimitive(
             SimpleName("List"),
             listOf(), //TODO
-            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            TypeReferenceDefault(StdLibDefault.List.qualifiedName, emptyList(), false),
             null
         ).also {
             it.execution = { args -> args }
+        }
+        (declaration as MutableMap)["Map"] = FunctionDefinitionPrimitive(
+            SimpleName("Map"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Map.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> args.associate { a -> a as Pair<*, *> } }
         }
     }
 
@@ -248,7 +256,11 @@ class ExternalGetterAsmSimple(
                 val qn = obj.qualifiedTypeName
                 typesDomain.findByQualifiedNameOrNull(qn)
             }
-
+            obj is AsmReference -> {
+                obj.value?.qualifiedTypeName ?.let {
+                    typesDomain.findByQualifiedNameOrNull(it)
+                }
+            }
             else -> {
                 typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
             }
@@ -329,11 +341,16 @@ class ExternalGetterAsmSimple(
         }
     }
 
-    override fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? = createStructure(qualifiedName, constructorArgs)
+    override suspend fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? = createStructure(qualifiedName, constructorArgs)
 
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? = getProperty(obj, propertyName) //TODO:
 
     override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) = setProperty(obj, propertyName, isReference, value) //TODO:
+
+    private val _links = AssociationLinkStore()
+
+    override fun getLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any): Any? = _links.get(association, end, obj)
+    override fun setLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) = _links.set(association, end, obj, value)
 }
 
 private class TypedObjectAsmValue(
@@ -349,7 +366,7 @@ private class TypedObjectAsmValue(
     override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
 
     override fun setProperty(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
-    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setPropertySuspend(this, name, value)
 
     override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
     override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
@@ -945,6 +962,9 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
 
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
         executeMethod(tobj, methodName, args) // no need for anything suspend specific
+
+    override suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunction(function, args, typeReferenceResolver) // no need for anything suspend specific
 
     override fun callFunction(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject {
         val decl = function

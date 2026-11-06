@@ -163,6 +163,7 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
             val extended = chain?.append(nextChild) ?: ChildChain.of(nextChild)
             // O(n) materialisation, once, when promoting to `complete`.
             this.complete.setChildren(newParent, extended.toList(), isAlternative)
+            if (recordCompleteChains) this._completeChains[newParent] = extended
             //extended.toList().forEach { this.incrementParents(it) }
         } else {
             //must have already been completed!
@@ -195,6 +196,22 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
         this.complete.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
     }
 */
+    /**
+     * Set when streaming the parse: the chain of children of each node completed from a growing parent is kept
+     * (see [completeChainOf]) so that the streamer can tell which children it has already sent.
+     */
+    var recordCompleteChains = false
+
+    /** the chain of children of a growing parent, newest child first */
+    internal fun growingChainOf(parent: GN): ChildChain<CN>? = this._growingChildren[parent]
+
+    /** the chain of children a complete node was given from its growing parent, when [recordCompleteChains] is set */
+    internal fun completeChainOf(node: CN): ChildChain<CN>? = this._completeChains[node]
+
+    internal fun removeCompleteChain(node: CN) {
+        this._completeChains.remove(node)
+    }
+
     fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeData) {
         this.complete.setSkipDataAfter(leafNodeIndex, skipData)
     }
@@ -210,6 +227,7 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
     // --- Implementation ---
 
     private val _growingChildren = hashMapOf<GN, ChildChain<CN>?>()
+    private val _completeChains = hashMapOf<CN, ChildChain<CN>>()
     // private val _numberOfGrowingParents = hashMapOf<CN, Int>()
 
     // private fun hasParents(child: CN) = (this._numberOfGrowingParents[child] ?: 0) != 0

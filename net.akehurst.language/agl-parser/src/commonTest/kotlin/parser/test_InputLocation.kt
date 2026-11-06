@@ -211,13 +211,25 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        println(result.sppt!!.toStringAll)
-        assertEquals(InputLocation(0, 1, 1, 11, null), ss.locationForNode(result.sppt!!.treeData.userRoot))
-        assertEquals(InputLocation(0, 1, 1, 3, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[0]))
-        assertEquals(InputLocation(3, 4, 1, 1, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[1]))
-        assertEquals(InputLocation(4, 5, 1, 3, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[2]))
-        assertEquals(InputLocation(7, 8, 1, 1, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[3]))
-        assertEquals(InputLocation(8, 9, 1, 3, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[4]))
+        val td = result.sppt!!.treeData
+        val ur = td.userRoot
+        val children = ur.children(td)
+        assertEquals(3, children.size)
+        assertEquals(1, td.skipNodesAfter(children[0]).size)
+        assertEquals(1, td.skipNodesAfter(children[1]).size)
+        assertEquals(0, td.skipNodesAfter(children[2]).size)
+
+        assertEquals(InputLocation(0, 1, 1, 11, null), ss.locationForNode(ur))
+        // 'aaa'
+        assertEquals(InputLocation(0, 1, 1, 3, null), ss.locationForNode(children[0]))
+        // ' '
+        assertEquals(InputLocation(3, 4, 1, 1, null), ss.locationForNode(td.skipNodesAfter(children[0])[0]))
+        // 'bbb'
+        assertEquals(InputLocation(4, 5, 1, 3, null), ss.locationForNode(children[1]))
+        // ' '
+        assertEquals(InputLocation(7, 8, 1, 1, null), ss.locationForNode(td.skipNodesAfter(children[1])[0]))
+        // 'ccc'
+        assertEquals(InputLocation(8, 9, 1, 3, null), ss.locationForNode(children[2]))
 
     }
 
@@ -237,17 +249,25 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 11, null), ss.locationForNode(result.sppt!!.treeData.root!!))
-        assertEquals("aaa", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
-        assertEquals(InputLocation(0, 1, 1, 3, null), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
-        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
-        assertEquals(InputLocation(3, 4, 1, 1, null), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
-        assertEquals("bbb", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
-        assertEquals(InputLocation(4, 1, 2, 3, null), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
-        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
-        assertEquals(InputLocation(7, 4, 2, 1, null), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
-        assertEquals("ccc", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
-        assertEquals(InputLocation(8, 1, 3, 3, null), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        val td = result.sppt!!.treeData
+        val ur = td.userRoot
+        val children = ur.children(td)
+        assertEquals(3, children.size)
+
+        assertEquals(InputLocation(0, 1, 1, 11, null), ss.locationForNode(ur))
+        assertEquals("aaa", ss.matchedTextNoSkip(children[0]))
+        assertEquals(InputLocation(0, 1, 1, 3, null), ss.locationForNode(children[0]))
+        assertEquals(1, td.skipNodesAfter(children[0]).size)
+        assertEquals("\n", ss.matchedTextNoSkip(td.skipNodesAfter(children[0])[0]))
+        assertEquals(InputLocation(3, 4, 1, 1, null), ss.locationForNode(td.skipNodesAfter(children[0])[0]))
+        assertEquals("bbb", ss.matchedTextNoSkip(children[1]))
+        assertEquals(InputLocation(4, 1, 2, 3, null), ss.locationForNode(children[1]))
+        assertEquals(1, td.skipNodesAfter(children[1]).size)
+        assertEquals("\n", ss.matchedTextNoSkip(td.skipNodesAfter(children[1])[0]))
+        assertEquals(InputLocation(7, 4, 2, 1, null), ss.locationForNode(td.skipNodesAfter(children[1])[0]))
+        assertEquals("ccc", ss.matchedTextNoSkip(children[2]))
+        assertEquals(InputLocation(8, 1, 3, 3, null), ss.locationForNode(children[2]))
+        assertEquals(0, td.skipNodesAfter(children[2]).size)
 
     }
 

@@ -17,7 +17,9 @@
 package net.akehurst.language.regex.agl
 
 import kotlin.test.Test
+import kotlin.random.Random
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class test_RegexValueProvider {
 
@@ -121,7 +123,7 @@ class test_RegexValueProvider {
        test("a+",'X',"a")
        test("a+b",'X',"ab")
        test("a+b*c",'X',"ac")
-       test("a*b+c",'X',"abc") //TODO: currently gives 'abc' (not 'bc') because shortest path not found
+       test("a*b+c",'X',"bc")
     }
 
     @Test
@@ -132,5 +134,64 @@ class test_RegexValueProvider {
         test("a{5}",'X',"aaaaa")
         test("a{3,}b",'X',"aaab")
         test("a{2,5}b",'X',"aab")
+    }
+
+    @Test
+    fun dot() {
+        test(".", 'X', "X")
+        test("a.c", 'X', "aXc")
+    }
+
+    @Test
+    fun anchors_and_lookaround() {
+        test("^ab$", 'X', "ab")
+        test("\\bab\\b", 'X', "ab")
+        test("a(?=b)b", 'X', "ab")
+        test("(?!a)[ab]", 'X', "b")
+        test("[ab](?<=b)", 'X', "b")
+    }
+
+    @Test
+    fun lazy_and_counted() {
+        test("a*?b", 'X', "b")
+        test("(ab){2,3}", 'X', "abab")
+        test("(a|b){3}", 'X', "aaa")
+    }
+
+    @Test
+    fun escapes_and_classes() {
+        test("\\d{3}", 'X', "000")
+        test("\\w+", 'X', "a")
+        test("\\s", 'X', " ")
+        test("[\\]]", 'X', "]")
+        test("\\p{Lu}", 'X', "A")
+        test("[a-z&&[^a-c]]", 'X', "d")
+        test("(?i)A", 'X', "a")
+    }
+
+    @Test
+    fun provide_twice_gives_the_same() {
+        val p = RegexValueProvider("ab", 'X')
+        assertEquals("ab", p.provide())
+        assertEquals("ab", p.provide())
+    }
+
+    @Test
+    fun random_values_match_the_pattern() {
+        val patterns = listOf(
+            "a", "a|b|c", "[a-z]+", "[a-zA-Z_][a-zA-Z_0-9]*", "\"(\\\\\"|[^\"])*\"", "[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?",
+            "(ab|c)*d", "a{2,5}", "(a?)*b", "(|b)+c", "\\d{2,4}-\\w+", "[^a-z]+", ".+", "(?i)abc", "x(?=y)y+", "(?<=a)b|ab|c",
+            "//[^\\n]*", "/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "\\s*", "\\p{L}+\\P{L}", "[a-z&&[^aeiou]]{3}"
+        )
+        val random = Random(1)
+        for (pattern in patterns) {
+            val p = RegexValueProvider(pattern, 'X')
+            val m = regexMatcher(pattern) as RegexMatcherImpl
+            val values = (0 until 50).map { p.provideRandom(random, 10) }
+            values.forEach { v -> assertTrue(m.matchesEntirely(v), "pattern '$pattern' gave '$v'") }
+            if (pattern.contains('*') || pattern.contains('+') || pattern.contains('|')) {
+                assertTrue(values.distinct().size > 1, "pattern '$pattern' always gave '${values[0]}'")
+            }
+        }
     }
 }
