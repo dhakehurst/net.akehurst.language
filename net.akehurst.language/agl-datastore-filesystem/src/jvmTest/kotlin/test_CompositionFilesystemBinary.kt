@@ -50,7 +50,10 @@ class BinaryTestProvider : DatastoreProvider {
     }
 
     override val identity: DatastoreProviderIdentity get() = IDENTITY
-    override val schema = datastoreProviderSchema { }
+    override val schema = datastoreProviderSchema {
+        datastore { }
+        access { }
+    }
     override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore =
         BinaryTestDatastore(datastoreIdentity, configuration)
 }
