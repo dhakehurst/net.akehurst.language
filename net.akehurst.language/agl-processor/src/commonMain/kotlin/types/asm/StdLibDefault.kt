@@ -384,6 +384,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             primitive("Integer", kotlin.Long::class)
             primitive("Real", kotlin.Double::class)
             primitive("Timestamp", kotlin.time.Instant::class)
+            primitive("Binary", kotlin.ByteArray::class)
             primitive("Exception", kotlin.Throwable::class)
 
             data("Pair", kotlin.Pair::class) {
@@ -593,6 +594,11 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
      */
     val Real by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Real"))!!.type() }
     val Timestamp by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Timestamp"))!!.type() }
+
+    /**
+     * a sequence of bytes (ByteArray)
+     */
+    val Binary by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Binary"))!!.type() }
     val Exception by lazy { super.findOwnedPrimitiveTypeNamedOrNull(SimpleName("Exception"))!!.type() }
 
     val Pair by lazy { super.findOwnedDataTypeNamedOrNull(SimpleName("Pair"))!! }

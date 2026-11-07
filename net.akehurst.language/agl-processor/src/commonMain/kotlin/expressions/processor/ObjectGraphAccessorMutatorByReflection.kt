@@ -605,6 +605,7 @@ constructor(
             is Double -> StdLibDefault.Real
 
             is Instant -> StdLibDefault.Timestamp
+            is ByteArray -> StdLibDefault.Binary
             is Throwable -> StdLibDefault.Exception
             is Pair<*, *> -> {
                 val fstType = typeFor(obj.first, StdLibDefault.AnyType)

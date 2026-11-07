@@ -419,6 +419,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             is Double -> StdLibDefault.Real
 
             is Instant -> StdLibDefault.Timestamp
+            is ByteArray -> StdLibDefault.Binary
             is Throwable -> StdLibDefault.Exception
             is Pair<*, *> -> {
                 val fstType = typeFor(obj.first, StdLibDefault.AnyType)
@@ -471,6 +472,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             is Char -> typedAs(obj.toString(), StdLibDefault.String) //TODO: do we need an explicit Char type ?
             is String -> typedAs(obj, StdLibDefault.String)
             is Instant -> typedAs(obj, StdLibDefault.Timestamp)
+            is ByteArray -> typedAs(obj, StdLibDefault.Binary)
             is Throwable -> typedAs(obj, StdLibDefault.Exception)
             is Pair<*, *> -> {
                 val ifFstTypeNotFound = when {

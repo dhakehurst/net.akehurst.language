@@ -49,6 +49,7 @@ open class FilesystemDatastore(
         /**
          * The content of a file. Setting 'asString' stages the new content in the datastore's transaction;
          * the file is written on commit. Reading 'asString' gives the staged content, if any, else the file's content.
+         * Reading 'asBinary' gives the file's raw bytes, or, if content was staged through 'asString', that text encoded as UTF-8.
          */
         class FileContent(val file: FileHandle, internal val datastore: FilesystemDatastore) {
             override fun hashCode(): Int = file.hashCode()
@@ -95,6 +96,10 @@ open class FilesystemDatastore(
                         setOf(REF, VAR), "asString", "String",
                         accessorSuspend = { it.datastore.contentOf(it.file) },
                         mutatorSuspend = { it, value -> it.datastore.stageContent(it.file, value ?: "") }
+                    )
+                    propertyOfWithBinding<FileContent, ByteArray>(
+                        setOf(REF, VAL), "asBinary", "Binary",
+                        accessorSuspend = { it.datastore.bytesOf(it.file) }
                     )
                 }
             }
@@ -202,6 +207,7 @@ open class FilesystemDatastore(
         override val extension: String get() = if (name.contains('.')) name.substringAfterLast('.') else ""
         override suspend fun exists(): Boolean = false
         override suspend fun readContent(): String? = null
+        override suspend fun readBytes(): ByteArray? = null
         override suspend fun writeContent(content: String) = error("Set 'content.asString' of a new file; it is written on commit")
         override suspend fun openAsZipDirectory(): DirectoryHandle? = null
         override fun hashCode(): Int = path.hashCode()
@@ -243,6 +249,8 @@ open class FilesystemDatastore(
     private val _staged = mutableMapOf<String, Pair<FileHandle, String>>()
 
     internal suspend fun contentOf(file: FileHandle): String? = _staged[file.path]?.second ?: file.readContent()
+
+    internal suspend fun bytesOf(file: FileHandle): ByteArray? = _staged[file.path]?.second?.encodeToByteArray() ?: file.readBytes()
 
     internal fun stageContent(file: FileHandle, content: String) {
         checkInTransaction()

@@ -78,6 +78,7 @@ class test_FilesystemDatastore {
                 }
                 data("FileContent") {
                     propertyOf(setOf(REF, VAR), "asString", "String")
+                    propertyOf(setOf(REF, VAL), "asBinary", "Binary")
                 }
             }
         }
@@ -160,6 +161,44 @@ class test_FilesystemDatastore {
 
         sut.commit()
         assertEquals("new", file.readText())
+    }
+
+    /** bytes that are not valid UTF-8 (0xC3 starts a 2-byte sequence, 0x28 does not continue it; 0xFF never occurs in UTF-8) */
+    private val binaryBytes = byteArrayOf(0x00, 0xC3.toByte(), 0x28, 0xFF.toByte(), 0xFE.toByte(), 0x80.toByte(), 0x7F)
+
+    @Test
+    fun read_asBinary_gives_raw_bytes() = runTest {
+        tempDir.resolve("b.bin").toFile().writeBytes(binaryBytes)
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        sut.open()
+        val item = readFile(sut, "b.bin")
+
+        val actual = item.data.getPropertySuspend("content").getPropertySuspend("asBinary")
+        assertEquals(StdLibDefault.Binary, actual.type)
+        assertTrue(binaryBytes.contentEquals(actual.self as ByteArray))
+    }
+
+    @Test
+    fun read_asBinary_after_asString_staging_gives_utf8_of_staged_text() = runTest {
+        tempDir.resolve("w.txt").toFile().writeText("old")
+        val dscfg = datastoreConfiguration(FilesystemProvider.IDENTITY) {
+            argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
+        }
+        val sut = FilesystemProvider().provide(DatastoreIdentity("test"), dscfg)
+        val og = sut.accessorMutator()
+        sut.open()
+        val item = readFile(sut, "w.txt")
+
+        sut.beginTransaction()
+        val staged = "new \u00e9\u20ac" // non-ASCII, so the UTF-8 differs from e.g. Latin-1
+        item.data.getPropertySuspend("content").setPropertySuspend("asString", og.toTypedObject(staged, StdLibDefault.String))
+
+        val actual = item.data.getPropertySuspend("content").getPropertySuspend("asBinary").self as ByteArray
+        assertTrue(staged.toByteArray(Charsets.UTF_8).contentEquals(actual))
+        sut.rollback()
     }
 
     @Test

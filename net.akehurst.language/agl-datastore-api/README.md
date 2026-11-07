@@ -84,11 +84,13 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | F1 | Setting `FileHandle.content.asString` stages the new content in the datastore's active transaction (it fails outside a transaction). Reading it gives the staged content, if any. `commit()` writes the staged contents to the files, `rollback()` discards them. | done |
 | F2 | Write takes `FileHandle` items (whose content has been set) and returns them; any other item gets an error issue. | done |
 | F3 | A new file is created through the `FileHandle` constructor, `FileHandle(path)`, with a path relative to the filesystem root (no leading `/`, no `.` or `..` segments), e.g. from an m2m via the accessor-mutator's `createStructureValue`. It returns a pending handle; nothing is on disk until commit. Its content is set like any file's, and on commit the file and any missing directories are created (an existing file at that path is overwritten). Rollback leaves nothing. `prepare()` fails if a directory is in the way. The constructor does not add a `path` property to the types. | done |
+| F4 | `FileHandle.content.asBinary` (read-only, type `std.Binary`, a `ByteArray`) gives the file's raw bytes, so a connect can pass a binary file to the next datastore unchanged, e.g. `end("bytes", "Binary", "content.asBinary")`. If content was staged through `asString`, it gives that text encoded as UTF-8. | done |
 
 ### Types (agl-processor)
 
 | Id | Requirement | Status |
 |----|-------------|--------|
+| T0 | The std types have a primitive `std.Binary`, a sequence of bytes, implemented by `ByteArray`. A composition passes a `ByteArray` end value to the target's constructor unchanged. | done |
 | T1 | An association end has a flag `ownedByAssociation`. When false (the default, existing behaviour) the end's property is added to the type at the other end. When true the property is owned by the association and the type is not changed. | done |
 | T2 | Association-owned properties are found through the `TypesDomain` that contains the association, so they are navigable with an accessor-mutator for that domain. | done |
 | T3 | `ExternalGetterByReflection.typeFor` matches a Kotlin object to a type by its declared `implementation` class first, and only then by simple class name, because several datastores may define types with the same simple name. | done |

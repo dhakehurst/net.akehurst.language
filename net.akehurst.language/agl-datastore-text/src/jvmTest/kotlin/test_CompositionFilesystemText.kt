@@ -96,6 +96,7 @@ class test_CompositionFilesystemText {
                 }
                 data("FileContent") {
                     propertyOf(setOf(REF, VAR), "asString", "String")
+                    propertyOf(setOf(REF, VAL), "asBinary", "Binary")
                 }
             }
             namespace("test.Test") {

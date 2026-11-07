@@ -135,6 +135,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             is Char -> typedAs(obj.toString(), StdLibDefault.String) //TODO: do we need an explicit Char type ?
             is String -> typedAs(obj, StdLibDefault.String)
             is Instant -> typedAs(obj, StdLibDefault.Timestamp)
+            is ByteArray -> typedAs(obj, StdLibDefault.Binary)
             is Throwable -> typedAs(obj, StdLibDefault.Exception)
             is Pair<*, *> -> {
                 val ifFstTypeNotFound = when {
