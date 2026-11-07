@@ -209,6 +209,7 @@ open class FilesystemDatastore(
         override suspend fun readContent(): String? = null
         override suspend fun readBytes(): ByteArray? = null
         override suspend fun writeContent(content: String) = error("Set 'content.asString' of a new file; it is written on commit")
+        override suspend fun writeBytes(content: ByteArray) = error("Set 'content.asString' of a new file; it is written on commit")
         override suspend fun openAsZipDirectory(): DirectoryHandle? = null
         override fun hashCode(): Int = path.hashCode()
         override fun equals(other: Any?): Boolean = other is NewFileHandle && other.path == this.path && other.datastore === this.datastore
