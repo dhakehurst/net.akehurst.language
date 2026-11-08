@@ -22,6 +22,7 @@ import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreConnectionEnd
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DatastoreObjectTyping
 import net.akehurst.datastore.api.DatastoreProviderSchema
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
@@ -35,6 +36,7 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
+import net.akehurst.language.expressions.processor.ExternalGetterByReflection
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.datastore.api.DataItemIssueLocation
@@ -220,11 +222,20 @@ class DatastoreCompositionDefault(
     override suspend fun accessorMutator(): ObjectGraphAccessorMutator = _accessorMutator ?: newAccessorMutator().also { _accessorMutator = it }
 
     /** a new accessor-mutator over the composed types, with its own (empty) store of association links */
-    private suspend fun newAccessorMutator(): ObjectGraphAccessorMutator = ObjectGraphAccessorMutatorByReflection(
-        typesDomain = types(),
-        issues = issues,
-        locationMap = LocationMapDefault(),
-    )
+    private suspend fun newAccessorMutator(): ObjectGraphAccessorMutator {
+        val types = types()
+        return ObjectGraphAccessorMutatorByReflection(
+            typesDomain = types,
+            issues = issues,
+            locationMap = LocationMapDefault(),
+            // parts that decide the types of their objects (e.g. one class used by several types) are asked first
+            externalGetter = ExternalGetterWithObjectTyping(
+                types,
+                datastore.values.filterIsInstance<DatastoreObjectTyping>(),
+                ExternalGetterByReflection(types, issues)
+            ),
+        )
+    }
 
     /**
      * Merges the types of all parts, then adds a namespace for the composition,

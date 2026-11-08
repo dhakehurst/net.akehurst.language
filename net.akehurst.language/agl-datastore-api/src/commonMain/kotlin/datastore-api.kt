@@ -2,6 +2,7 @@ package net.akehurst.datastore.api
 
 import kotlinx.coroutines.flow.Flow
 import net.akehurst.kotlinx.issues.api.IssueCollection
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypeDefinition
@@ -299,6 +300,20 @@ interface Datastore : Transactional {
     suspend fun delete(accessConfiguration: DatastoreConfiguration, input: Flow<DataItemIdentity>): Flow<DataItemIdentity> =
         throw UnsupportedOperationException("Datastore '${identity.value}' does not support delete")
 
+}
+
+/**
+ * Implemented by a datastore whose objects' types cannot all be found from their class, e.g. because one
+ * implementation class is used by several types whose definitions come from a connected tool.
+ * The accessor-mutator of a composition (and the default one of DatastoreAbstract) asks it first,
+ * and finds the type by its class only if it returns null.
+ */
+interface DatastoreObjectTyping {
+    /**
+     * the qualified name of the type of 'obj', or null if this datastore does not decide it (then its class does).
+     * A name, not a TypeInstance, so that it is looked up in whichever types are in use: this datastore's own, or a composition's merged ones.
+     */
+    fun qualifiedTypeNameOf(obj: Any): QualifiedName?
 }
 
 object DatastoreExt{

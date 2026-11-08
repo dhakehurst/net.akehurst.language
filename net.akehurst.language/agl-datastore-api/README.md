@@ -68,6 +68,7 @@ Status: **done** = implemented on `2.4.0-inwork`; **todo** = agreed, not yet imp
 | C14 | An item to be written must be linked to its source object (a new object is linked by whoever creates it). An item that no connection links to a source is not written: it is emitted after the written items, with an error issue. An item with errors (e.g. it could not be formatted) is not assigned to its source; its issues are passed on with the source item. | done |
 | C15 | Composition `write` returns `Flow<DataItem>`, like `Datastore.write`: the items written by the first part, then the items that could not be written. | done (was `Unit`; changed so issues can be returned) |
 | C16 | A part's write returns the item data it was given (same `TypedObject`), so the links of the read stay navigable for the next step of the write. | done (text, filesystem) |
+| C17 | A datastore whose objects' types are not decided by their class (e.g. one class used by several types from a connected tool) implements `DatastoreObjectTyping.qualifiedTypeNameOf(obj)`. A composition's accessor-mutators (each read's, and `accessorMutator()`) ask the parts that implement it first, looking the name up in the composed types, and use the class only if no part decides; so objects reached from an item (e.g. `module.objects`) keep their datastore's types. `DatastoreAbstract`'s default accessor-mutator does the same for a datastore that implements it (`ExternalGetterWithObjectTyping`). | done |
 
 ### Text datastore
 

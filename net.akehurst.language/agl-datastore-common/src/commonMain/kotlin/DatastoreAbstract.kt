@@ -10,10 +10,12 @@ import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DatastoreObjectTyping
 import net.akehurst.datastore.api.TransactionState
 import net.akehurst.kotlinx.secure.storage.SecretSourceRegistry
 import net.akehurst.kotlinx.secure.storage.SecretSourceRegistryDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.expressions.processor.ExternalGetterByReflection
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -62,12 +64,22 @@ abstract class DatastoreAbstract(
     /** creates this datastore's types. Called once. Suspending, so that e.g. a schema can be fetched from a remote tool. */
     protected abstract suspend fun createTypes(): TypesDomain
 
-    /** creates this datastore's accessor-mutator over its types. Called once. */
-    protected open suspend fun createAccessorMutator(types: TypesDomain): ObjectGraphAccessorMutator = ObjectGraphAccessorMutatorByReflection(
-        typesDomain = types,
-        issues = accessorMutatorIssues,
-        locationMap = LocationMapDefault(),
-    )
+    /**
+     * creates this datastore's accessor-mutator over its types. Called once.
+     * If this datastore is a DatastoreObjectTyping, it is asked for the type of each object before its class is used.
+     */
+    protected open suspend fun createAccessorMutator(types: TypesDomain): ObjectGraphAccessorMutator {
+        val byReflection = ExternalGetterByReflection(types, accessorMutatorIssues)
+        return ObjectGraphAccessorMutatorByReflection(
+            typesDomain = types,
+            issues = accessorMutatorIssues,
+            locationMap = LocationMapDefault(),
+            externalGetter = when (this) {
+                is DatastoreObjectTyping -> ExternalGetterWithObjectTyping(types, listOf(this), byReflection)
+                else -> byReflection
+            },
+        )
+    }
 
     private var _isOpen = false
 
