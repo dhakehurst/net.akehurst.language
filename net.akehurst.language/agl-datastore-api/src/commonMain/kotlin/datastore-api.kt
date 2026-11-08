@@ -101,6 +101,12 @@ interface DsConfigParameterGroup : DsConfigParameterInfo {
     val name:String
     val parameterInfo: List<DsConfigParameterInfo>
 
+    /**
+     * true if the group holds parameters that most users need not change, e.g. a group named "Advanced".
+     * A GUI may show an advanced group folded. Inside a DsConfigParameterChoice each alternative can have its own advanced group.
+     */
+    val advanced: Boolean get() = false
+
     override fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition? =
         parameterInfo.firstNotNullOfOrNull { pi ->
             pi.getParameterOrNull(parameterIdentity)

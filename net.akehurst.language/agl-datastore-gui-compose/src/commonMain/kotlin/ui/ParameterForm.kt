@@ -1,5 +1,6 @@
 package net.akehurst.datastore.gui.compose.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +42,8 @@ import net.akehurst.datastore.gui.compose.ValueMode
 import net.akehurst.datastore.gui.compose.kind
 
 /**
- * A form generated from the parameter set of 'draft': a field for each parameter, a titled section for each group,
+ * A form generated from the parameter set of 'draft': a field for each parameter, a titled section for each group
+ * (folded by default if the group is advanced),
  * and radio buttons for the alternatives of each choice, followed by the chosen alternative's parameters.
  *
  * @param errors the error of each parameter, by parameter identity
@@ -78,8 +81,26 @@ private fun ParameterInfos(
 
             is DsConfigParameterGroup -> OutlinedCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(info.name, style = MaterialTheme.typography.titleSmall)
-                    ParameterInfos(draft, info.parameterInfo, "$path/", errors, secretSourceIds, customisation, enabled)
+                    if (info.advanced) {
+                        // folded by default; opened when one of its parameters is set or has an error. The user can fold it again.
+                        val mustBeOpen = draft.advancedGroupMustBeOpen(path, info, errors)
+                        var open by remember(draft, path) { mutableStateOf(mustBeOpen) }
+                        LaunchedEffect(mustBeOpen) { if (mustBeOpen) open = true }
+                        Row(
+                            Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = info.name) { open = !open },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(if (open) "\u25BE" else "\u25B8", style = MaterialTheme.typography.titleSmall)
+                            Spacer(Modifier.width(6.dp))
+                            Text(info.name, style = MaterialTheme.typography.titleSmall)
+                        }
+                        if (open) {
+                            ParameterInfos(draft, info.parameterInfo, "$path/", errors, secretSourceIds, customisation, enabled)
+                        }
+                    } else {
+                        Text(info.name, style = MaterialTheme.typography.titleSmall)
+                        ParameterInfos(draft, info.parameterInfo, "$path/", errors, secretSourceIds, customisation, enabled)
+                    }
                 }
             }
 

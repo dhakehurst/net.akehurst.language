@@ -158,6 +158,21 @@ class ConfigurationDraft(
         else -> DatastoreConfigurationDefault(providerIdentity, arguments, parameterSet)
     }
 
+    /**
+     * true if the advanced group at 'path' must be shown open: one of its active parameters is set
+     * (parameters have no default value, so a set parameter differs from its default), or has an error.
+     * A group that is not advanced is always open.
+     *
+     * @param path the indexes of the parameter infos that lead to the group, as for chosenAlternative
+     * @param errors the error of each parameter, by parameter identity
+     */
+    fun advancedGroupMustBeOpen(path: String, group: DsConfigParameterGroup, errors: Map<String, String> = parameterIssues): Boolean = when {
+        group.advanced.not() -> true
+        else -> activeDefinitions(group.parameterInfo, "$path/").any { def ->
+            def.identity in errors || true == parameter[def.identity]?.isSet
+        }
+    }
+
     /** fills the draft from an existing configuration */
     fun load(configuration: DatastoreConfiguration) {
         parameter.values.forEach { it.load(configuration.argument[it.definition.identity]) }

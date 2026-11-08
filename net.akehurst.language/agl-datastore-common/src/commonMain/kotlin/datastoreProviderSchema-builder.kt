@@ -50,13 +50,15 @@ class DsParameterSetBuilder(
 
     val _parameterInfo = mutableListOf<DsConfigParameterInfo>()
 
-    fun group(name:String, init: DsParameterSetBuilder.() -> Unit) {
+    /** a group of parameters; 'advanced' marks parameters that most users need not change (see DsConfigParameterGroup.advanced) */
+    fun group(name:String, advanced: Boolean = false, init: DsParameterSetBuilder.() -> Unit) {
         val b = DsParameterSetBuilder(_availableTypes)
         b.init()
         val ps = b.build()
         _parameterInfo.add(object : DsConfigParameterGroup {
             override val name = name
             override val parameterInfo = ps.parameterInfo
+            override val advanced = advanced
         })
     }
 
