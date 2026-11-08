@@ -31,6 +31,28 @@ import net.akehurst.language.util.cached
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
+/**
+ * the characteristics as written in the AglTypes language,
+ * CONSTRUCTOR is not written (it is given by a constructor parameter), nor is PRIMITIVE (only used in std)
+ */
+internal fun Set<PropertyCharacteristic>.asTypesString(): String = listOf(
+    PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE,
+    PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.READ_WRITE,
+    PropertyCharacteristic.STORED, PropertyCharacteristic.DERIVED, PropertyCharacteristic.IDENTITY
+).filter { this.contains(it) }.joinToString(separator = " ") { it.asString() }
+
+/** characteristics (if any) then 'name<sep>type' */
+internal fun asTypesString(characteristics: Set<PropertyCharacteristic>, nameAndType: String): String {
+    val chrs = characteristics.asTypesString()
+    return if (chrs.isBlank()) nameAndType else "$chrs $nameAndType"
+}
+
+/** a constructor parameter, with the characteristics of the property it sets (if any) */
+internal fun StructuredType.constructorParameterAsString(context: TypesNamespace, param: ParameterDeclaration, nameTypeSeparator: String): String {
+    val prop = this.findOwnedPropertyOrNull(PropertyName(param.name.value))?.takeIf { it.isConstructor }
+    return asTypesString(prop?.characteristics ?: emptySet(), "${param.name.value}$nameTypeSeparator${param.typeInstance.signature(context, 0)}")
+}
+
 class TypesDomainSimple(
     override val name: SimpleName,
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
@@ -252,7 +274,8 @@ abstract class TypeInstanceAbstract() : TypeInstance {
                 }
                 val name = when {
                     typeArguments.isEmpty() -> resolvedDefinitionOrNull?.signature(context, currentDepth + 1) ?: this.typeName.value
-                    else -> resolvedDefinition.name.value
+                    // printing must not fail if the definition can't be resolved (e.g. std not imported), use the name as given
+                    else -> resolvedDefinitionOrNull?.name?.value ?: this.typeName.value
                 }
                 return "${name}$args$n"
             }
@@ -883,14 +906,13 @@ abstract class TypesNamespaceAbstract(
             .sortedWith(compareBy<Map.Entry<SimpleName, TypeDefinition>> { it.value::class.simpleName }.thenBy { it.value.name.value })
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asStringInContext(this) }
         val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}" }
-        val assocs = this.association.filter { it.ownedProperty.isNotEmpty() }
-        val assocstr = if (assocs.isEmpty()) "" else assocs.joinToString(prefix = "\n  ", separator = "\n  ") { a ->
-            a.property.joinToString(prefix = "association {\n    ", separator = "\n    ", postfix = "\n  }") { p ->
-                val chrs = p.characteristics
-                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val owner = if (a.ownedProperty.contains(p)) "" else " // owned by type"
-                "$chrs ${p.owner.signature(this, 0)}.${p.name}: ${p.typeInstance.signature(this, 0)}$owner"
+        // the property for an end is on the type of the other end; only binary associations can be written (TODO: n-ary associations)
+        val assocstr = if (this.association.isEmpty()) "" else this.association.joinToString(prefix = "\n  ", separator = "\n  ") { a ->
+            a.end.joinToString(prefix = "association {\n    ", separator = "\n    ", postfix = "\n  }") { e ->
+                val owned = if (e.ownedByAssociation) "owned " else ""
+                val elementType = e.endType.signature(this, 0) + if (e.isNullable) "?" else ""
+                val endType = e.collectionTypeName?.let { "${it.value}<$elementType>" } ?: elementType
+                "end $owned${asTypesString(e.characteristics, "${e.endName.value}: $endType")}"
             }
         }
         val s = """namespace $qualifiedName
@@ -1231,7 +1253,10 @@ class EnumTypeSimple(
                     .also { clone -> super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract) }
             }
 
-    override fun asStringInContext(context: TypesNamespace): String = "enum ${signature(context)}"
+    override fun asStringInContext(context: TypesNamespace): String = when {
+        literals.isEmpty() -> "enum ${signature(context)}"
+        else -> "enum ${signature(context)} { ${literals.joinToString(separator = ", ")} }"
+    }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
     override fun equals(other: Any?): Boolean = when {
@@ -1461,21 +1486,9 @@ class ValueTypeSimple(
 
     override fun asStringInContext(context: TypesNamespace): String {
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
-        val cargs = this.property
-            .joinToString(separator = ", ") {
-                val psig = it.typeInstance.signature(context, 0)
-                val cmp_ref = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val val_var = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val chrs = when {
-                    cmp_ref.isBlank() -> val_var
-                    else -> "$cmp_ref $val_var"
-                }
-                "$chrs ${it.name}:$psig"
-            }
+        // a value type has one constructor with a single parameter
+        val cargs = this.constructors.firstOrNull()?.parameters?.joinToString(separator = ", ") { this.constructorParameterAsString(context, it, ":") }
+            ?: this.property.joinToString(separator = ", ") { asTypesString(it.characteristics, "${it.name}:${it.typeInstance.signature(context, 0)}") }
 
         val props = this.property
             .joinToString(separator = "\n    ") {
@@ -1545,21 +1558,10 @@ class InterfaceTypeSimple(
             "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
+        // properties for association ends are written in the association
         val props = this.property
-            .joinToString(separator = "\n    ") {
-                val psig = it.typeInstance.signature(context, 0)
-                val cmp_ref = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val val_var = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val chrs = when {
-                    cmp_ref.isBlank() -> val_var
-                    else -> "$cmp_ref $val_var"
-                }
-                "$chrs ${it.name}:$psig"
-            }
+            .filter { it.opposite.isEmpty() }
+            .joinToString(separator = "\n    ") { asTypesString(it.characteristics, "${it.name}:${it.typeInstance.signature(context, 0)}") }
         return "interface ${name}${targs}${sups} {\n    $props\n  }"
     }
 
@@ -1634,22 +1636,15 @@ class DataTypeSimple(
             "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
+        val cons = this.constructors.map { c ->
+            c.parameters.joinToString(prefix = "constructor(", separator = ", ", postfix = ")") { this.constructorParameterAsString(context, it, ": ") }
+        }
+        // constructor properties are written as constructor parameters, properties for association ends in the association
         val props = this.property
-            .joinToString(separator = "\n    ") {
-                val psig = it.typeInstance.signature(context, 0)
-                val cmp_ref = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val val_var = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val chrs = when {
-                    cmp_ref.isBlank() -> val_var
-                    else -> "$cmp_ref $val_var"
-                }
-                "$chrs ${it.name}: $psig"
-            }
-        return "data ${name}${targs}${sups} {\n    $props\n  }"
+            .filter { it.isConstructor.not() && it.opposite.isEmpty() }
+            .map { asTypesString(it.characteristics, "${it.name}: ${it.typeInstance.signature(context, 0)}") }
+        val body = (cons + props).joinToString(separator = "\n    ")
+        return "data ${name}${targs}${sups} {\n    $body\n  }"
     }
 
     override fun hashCode(): Int = qualifiedName.hashCode()

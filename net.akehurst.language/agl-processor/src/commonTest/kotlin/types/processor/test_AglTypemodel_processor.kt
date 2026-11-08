@@ -199,10 +199,10 @@ class test_AglTypemodel_processor {
             namespace("test", imports = emptyList()) {
                 primitive("Int")
                 data("Data") {
+                    // as the builder does, a constructor parameter with characteristics is also a (constructor) property
                     constructor_ {
-                        this.parameter(setOf(), "prop1", "Int")
+                        this.parameter(setOf(VAL), "prop1", "Int")
                     }
-                    propertyOf(setOf(VAL), "prop1", "Int")
                     propertyOf(setOf(VAL), "prop2", "Int")
                 }
             }

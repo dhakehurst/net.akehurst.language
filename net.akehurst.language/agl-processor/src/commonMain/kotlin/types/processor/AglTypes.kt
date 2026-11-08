@@ -51,6 +51,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
     override val grammarString = """
         namespace $NAMESPACE_NAME
           grammar $NAME : Base {
+            override namespace = 'namespace' possiblyQualifiedName option* import* definition* association* ;
             override definition
               = singletonDefinition
               | primitiveDefinition
@@ -79,13 +80,17 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
             alternatives = [typeReference / '|']+ ;
             typeParameterList = '<' [IDENTIFIER / ',']+ '>' ;
             supertypes = ':' [typeReference / ',']+ ;
-            constructor = 'constructor' '(' constructorParameter* ')' ;
-            constructorParameter = cmp_ref? val_var? IDENTIFIER ':' typeReference ;
-            property = cmp_ref? val_var IDENTIFIER ':' typeReference ;
+            constructor = 'constructor' '(' [constructorParameter / ',']* ')' ;
+            constructorParameter = characteristic* IDENTIFIER ':' typeReference ;
+            property = characteristic* IDENTIFIER ':' typeReference ;
             typeReference = possiblyQualifiedName typeArgumentList? '?'?;
             typeArgumentList = '<' [ typeReference / ',']+ '>' ;
+            characteristic = cmp_ref | val_var | 'str' | 'drv' | 'idn' ;
             cmp_ref = 'cmp' | 'ref' ;
             val_var = 'val' | 'var' ;
+            // only binary associations, n-ary associations are not yet possible
+            association = 'association' '{' associationEnd associationEnd '}' ;
+            associationEnd = 'end' 'owned'? characteristic* IDENTIFIER ':' typeReference ;
           }
       """.trimIndent()
 
@@ -171,6 +176,9 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
+                    concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
+                        lit("namespace"); ref("possiblyQualifiedName"); lst(0, -1) { ref("option") }; lst(0, -1) { ref("import") }; lst(0, -1) { ref("definition") }; lst(0, -1) { ref("association") }
+                    }
                     choice("definition", overrideKind = OverrideKind.REPLACE) {
                         ref("singletonDefinition")
                         ref("primitiveDefinition")
@@ -199,11 +207,18 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     separatedList("alternatives", 1, -1) { ref("typeReference"); lit("|") }
                     concatenation("typeParameterList") { lit("<"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit(">"); }
                     concatenation("supertypes") { lit(":"); spLst(1, -1) { ref("typeReference"); lit(",") } }
-                    concatenation("constructor") { lit("constructor"); lit("("); lst(0, -1) { ref("constructorParameter") }; lit(")") }
-                    concatenation("constructorParameter") { opt { ref("cmp_ref") }; opt { ref("val_var") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
-                    concatenation("property") { opt { ref("cmp_ref") }; ref("val_var"); ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("constructor") { lit("constructor"); lit("("); spLst(0, -1) { ref("constructorParameter"); lit(",") }; lit(")") }
+                    concatenation("constructorParameter") { lst(0, -1) { ref("characteristic") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("property") { lst(0, -1) { ref("characteristic") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
                     concatenation("typeReference") { ref("possiblyQualifiedName"); opt { ref("typeArgumentList") }; opt { lit("?") } }
                     concatenation("typeArgumentList") { lit("<"); spLst(1, -1) { ref("typeReference"); lit(",") }; lit(">") }
+                    choice("characteristic") {
+                        ref("cmp_ref")
+                        ref("val_var")
+                        lit("str")
+                        lit("drv")
+                        lit("idn")
+                    }
                     choice("cmp_ref") {
                         lit("cmp")
                         lit("ref")
@@ -212,6 +227,8 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         lit("val")
                         lit("var")
                     }
+                    concatenation("association") { lit("association"); lit("{"); ref("associationEnd"); ref("associationEnd"); lit("}") }
+                    concatenation("associationEnd") { lit("end"); opt { lit("owned") }; lst(0, -1) { ref("characteristic") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
                 }
             }
         }

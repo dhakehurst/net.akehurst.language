@@ -73,6 +73,9 @@ class test_FilesystemDatastore {
                 }
                 data("FileHandle") {
                     supertype("FileSystemObjectHandle")
+                    constructor_ {
+                        parameter(emptySet(), "path", "String")
+                    }
                     propertyOf(setOf(REF, VAL), "extension", "String")
                     propertyOf(setOf(REF, VAL), "content", "FileContent")
                 }
