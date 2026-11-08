@@ -85,9 +85,10 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
             property = characteristic* IDENTIFIER ':' typeReference ;
             typeReference = possiblyQualifiedName typeArgumentList? '?'?;
             typeArgumentList = '<' [ typeReference / ',']+ '>' ;
-            characteristic = cmp_ref | val_var | 'str' | 'drv' | 'idn' ;
+            characteristic = cmp_ref | val_var | str_drv | 'idn' ;
             cmp_ref = 'cmp' | 'ref' ;
             val_var = 'val' | 'var' ;
+            str_drv = 'str' | 'drv' ;
             // only binary associations, n-ary associations are not yet possible
             association = 'association' '{' associationEnd associationEnd '}' ;
             associationEnd = 'end' 'owned'? characteristic* IDENTIFIER ':' typeReference ;
@@ -215,8 +216,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     choice("characteristic") {
                         ref("cmp_ref")
                         ref("val_var")
-                        lit("str")
-                        lit("drv")
+                        ref("str_drv")
                         lit("idn")
                     }
                     choice("cmp_ref") {
@@ -226,6 +226,10 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     choice("val_var") {
                         lit("val")
                         lit("var")
+                    }
+                    choice("str_drv") {
+                        lit("str")
+                        lit("drv")
                     }
                     concatenation("association") { lit("association"); lit("{"); ref("associationEnd"); ref("associationEnd"); lit("}") }
                     concatenation("associationEnd") { lit("end"); opt { lit("owned") }; lst(0, -1) { ref("characteristic") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }

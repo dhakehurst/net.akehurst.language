@@ -84,6 +84,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         super.register(this::characteristic)
         super.register(this::cmp_ref)
         super.register(this::val_var)
+        super.register(this::str_drv)
         super.register(this::typeReference)
         super.register(this::typeArgumentList)
         super.register(this::association)
@@ -323,14 +324,20 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         }
     }
 
-    // characteristic = cmp_ref | val_var | 'str' | 'drv' | 'idn' ;
+    // characteristic = cmp_ref | val_var | str_drv | 'idn' ;
     private fun characteristic(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCharacteristic =
         when (val ch = children[0]) {
             is PropertyCharacteristic -> ch
-            "str" -> PropertyCharacteristic.STORED
-            "drv" -> PropertyCharacteristic.DERIVED
             "idn" -> PropertyCharacteristic.IDENTITY
             else -> error("Value not allowed '${ch}'")
+        }
+
+    // str_drv = 'str' | 'drv' ;
+    private fun str_drv(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCharacteristic =
+        when (children[0] as String) {
+            "str" -> PropertyCharacteristic.STORED
+            "drv" -> PropertyCharacteristic.DERIVED
+            else -> error("Value not allowed '${children[0]}'")
         }
 
     // cmp_ref = 'cmp' | 'ref' ;
