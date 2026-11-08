@@ -94,6 +94,12 @@ class test_CompositionEditorState {
                         parameter(setOf(REF, VAL), "bytes", "Any")
                     }
                 }
+                data("Report") {
+                    constructor_ {
+                        parameter(setOf(REF, VAL), "title", "String")
+                        parameter(setOf(REF, VAL), "bytes", "Binary")
+                    }
+                }
             }
         }
 
@@ -406,11 +412,106 @@ class test_CompositionEditorState {
     }
 
     @Test
-    fun prefill_ends_does_not_change_edited_ends() {
+    fun prefill_ends_does_not_change_ends_already_there() {
         val (s, c) = spWordState()
         c.addEnd("mine", "String", "name")
+        c.addEnd("bytes", "Binary", "content.asBytes")
+        assertTrue(s.prefillEnds(c))
+        // owner is added, 'bytes' is not added again, the user's ends are unchanged
+        assertEquals(listOf(Triple("owner", "", "\$self"), Triple("mine", "String", "name"), Triple("bytes", "Binary", "content.asBytes")), ends(c))
+        assertEquals(listOf(true, false, false), c.ends.map { it.prefilled })
         assertFalse(s.prefillEnds(c))
-        assertEquals(listOf(Triple("mine", "String", "name")), ends(c))
+    }
+
+    @Test
+    fun prefilled_ends_are_marked_and_editing_clears_the_mark() {
+        val (s, c) = spWordState(listOf("microsoft.sharepoint.SourceFile"))
+        s.prefillEnds(c)
+        assertEquals(listOf(true, true), c.ends.map { it.prefilled })
+        c.ends[1].expression = "content.asBytes"
+        assertFalse(c.ends[1].prefilled)
+        c.ends[0].typeName = "microsoft.sharepoint.Folder"
+        assertFalse(c.ends[0].prefilled)
+        val e = c.addEnd("x", "String", "", prefilled = true)
+        e.name = "y"
+        assertFalse(e.prefilled)
+        // setting the same value is not an edit
+        val f = c.addEnd("z", "String", "", prefilled = true)
+        f.name = "z"
+        assertTrue(f.prefilled)
+    }
+
+    @Test
+    fun target_type_change_replaces_prefilled_ends_and_keeps_owner() {
+        val (s, c) = spWordState(listOf("microsoft.sharepoint.SourceFile"))
+        c.targetType = ""
+        s.setTargetType(c, "microsoft.word.WordFile")
+        assertEquals(listOf(Triple("owner", "microsoft.sharepoint.SourceFile", "\$self"), Triple("bytes", "Any", "")), ends(c))
+        val owner = c.ends[0]
+        s.setTargetType(c, "microsoft.word.Report")
+        assertEquals(listOf(Triple("owner", "microsoft.sharepoint.SourceFile", "\$self"), Triple("title", "String", ""), Triple("bytes", "Binary", "")), ends(c))
+        assertTrue(owner === c.ends[0]) // owner kept, its type is unchanged
+    }
+
+    @Test
+    fun target_type_change_keeps_edited_ends_without_duplicate_names() {
+        val (s, c) = spWordState(listOf("microsoft.sharepoint.SourceFile"))
+        c.targetType = ""
+        s.setTargetType(c, "microsoft.word.Report")
+        c.ends.first { it.name == "bytes" }.expression = "content.asBytes"
+        s.setTargetType(c, "microsoft.word.WordFile")
+        // 'title' was still pre-filled, so removed; the edited 'bytes' is kept and not added again
+        assertEquals(listOf(Triple("owner", "microsoft.sharepoint.SourceFile", "\$self"), Triple("bytes", "Binary", "content.asBytes")), ends(c))
+        assertEquals(1, c.ends.count { it.name == "bytes" })
+    }
+
+    @Test
+    fun target_type_change_keeps_an_edited_owner() {
+        val (s, c) = spWordState()
+        c.targetType = ""
+        s.setTargetType(c, "microsoft.word.WordFile")
+        c.ends[0].typeName = "microsoft.sharepoint.Folder"
+        s.setTargetType(c, "microsoft.word.Report")
+        assertEquals(Triple("owner", "microsoft.sharepoint.Folder", "\$self"), ends(c)[0])
+        assertEquals(1, c.ends.count { it.name == "owner" })
+    }
+
+    @Test
+    fun target_type_change_replaces_a_prefilled_owner_whose_type_is_now_different() {
+        val (s, c) = spWordState()
+        c.targetType = ""
+        s.setTargetType(c, "microsoft.word.WordFile")
+        assertEquals("", c.ends[0].typeName) // ambiguous
+        s.setTypesStatus(c.source, TypesResult.Found(spTypes, listOf("microsoft.sharepoint.SourceFile")))
+        s.setTargetType(c, "microsoft.word.Report")
+        assertEquals(Triple("owner", "microsoft.sharepoint.SourceFile", "\$self"), ends(c)[0])
+        assertTrue(c.ends[0].prefilled)
+    }
+
+    @Test
+    fun end_that_is_not_a_constructor_parameter_is_a_warning() {
+        val (s, c) = spWordState(listOf("microsoft.sharepoint.SourceFile"))
+        s.prefillEnds(c)
+        c.ends[1].expression = "content.asBytes"
+        fun warnings() = s.issues.filter { it.severity == IssueSeverity.WARNING && (it.location as? IssueLocation.Connection)?.field == ConnectionField.END_NAME }
+        assertEquals(emptyList(), warnings())
+        val sheet = c.addEnd("sheet", "String", "name")
+        assertEquals(listOf("'sheet' is not a constructor parameter of 'microsoft.word.WordFile'"), warnings().map { it.message })
+        assertEquals(sheet, (warnings()[0].location as IssueLocation.Connection).end)
+        // an end whose type is a data type of the source is an association end, not a constructor argument
+        sheet.typeName = "microsoft.sharepoint.Folder"
+        assertEquals(emptyList(), warnings())
+    }
+
+    @Test
+    fun target_type_change_keeps_ends_while_types_are_not_available() {
+        val (s, c) = spWordState(listOf("microsoft.sharepoint.SourceFile"))
+        c.targetType = ""
+        s.setTargetType(c, "microsoft.word.WordFile")
+        s.setTypesStatus(c.target, TypesResult.NotAvailable("offline"))
+        s.setTargetType(c, "microsoft.word.Report")
+        assertEquals("microsoft.word.Report", c.targetType)
+        assertEquals(listOf(Triple("owner", "microsoft.sharepoint.SourceFile", "\$self"), Triple("bytes", "Any", "")), ends(c))
     }
 
     @Test

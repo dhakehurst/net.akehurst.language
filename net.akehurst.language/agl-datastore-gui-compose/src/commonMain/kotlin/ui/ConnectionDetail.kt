@@ -55,12 +55,12 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
         )
         SuggestionTextField(
             value = connection.targetType,
-            onValueChange = { connection.targetType = it },
+            onValueChange = { state.setTargetType(connection, it) },
             label = { Text(strings.targetType) },
             // the types that the target datastore reads are data types
             suggestions = dataTypeNames(targetTypes),
-            // choosing a target type fills in the ends, if there are none yet
-            onChoose = { connection.targetType = it; state.prefillEnds(connection) },
+            // a new target type replaces the pre-filled ends (see CompositionEditorState.setTargetType)
+            onChoose = { state.setTargetType(connection, it) },
             error = issueOf(ConnectionField.TARGET_TYPE)?.message,
             chooseLabel = strings.choose,
             modifier = Modifier.fillMaxWidth(),

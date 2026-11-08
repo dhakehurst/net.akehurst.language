@@ -35,11 +35,34 @@ class PartDraft(
     val providerIdentity: DatastoreProviderIdentity get() = provider.identity
 }
 
-/** One end of a connection being edited: `end(name, typeName, expression)`. */
-class EndDraft(name: String = "", typeName: String = "", expression: String = "") {
-    var name by mutableStateOf(name)
-    var typeName by mutableStateOf(typeName)
-    var expression by mutableStateOf(expression)
+/**
+ * One end of a connection being edited: `end(name, typeName, expression)`.
+ * @param prefilled true for an end made by pre-fill; changing its name, type or expression clears it
+ */
+class EndDraft(name: String = "", typeName: String = "", expression: String = "", prefilled: Boolean = false) {
+    private var _name by mutableStateOf(name)
+    private var _typeName by mutableStateOf(typeName)
+    private var _expression by mutableStateOf(expression)
+
+    /** true while the end is as pre-fill made it; such an end is replaced when the target type changes */
+    var prefilled by mutableStateOf(prefilled)
+        private set
+
+    var name: String
+        get() = _name
+        set(value) {
+            if (value != _name) { _name = value; prefilled = false }
+        }
+    var typeName: String
+        get() = _typeName
+        set(value) {
+            if (value != _typeName) { _typeName = value; prefilled = false }
+        }
+    var expression: String
+        get() = _expression
+        set(value) {
+            if (value != _expression) { _expression = value; prefilled = false }
+        }
 }
 
 /** A connection being edited, from the part 'source' to the next part 'target'. */
@@ -61,8 +84,8 @@ class ConnectionDraft(
     val identity: String
         get() = name.ifBlank { targetType.substringAfterLast('.').replaceFirstChar { it.lowercaseChar() } }
 
-    fun addEnd(name: String = "", typeName: String = "", expression: String = ""): EndDraft =
-        EndDraft(name, typeName, expression).also { ends.add(it) }
+    fun addEnd(name: String = "", typeName: String = "", expression: String = "", prefilled: Boolean = false): EndDraft =
+        EndDraft(name, typeName, expression, prefilled).also { ends.add(it) }
 
     fun removeEnd(end: EndDraft) {
         ends.remove(end)
@@ -250,21 +273,50 @@ class CompositionEditorState(
             ?: emptyList()
 
     /**
-     * fills the ends of 'connection' from the types, if it has no ends yet (ends the user has edited are never changed):
-     * an end `owner = $self` whose type is the data type of the source part's items, if there is exactly one,
-     * otherwise left empty to be chosen; then an end per constructor parameter of the target type, with an empty expression.
-     * Returns true if the ends were filled.
+     * sets the target type of 'connection'. When it changes and the target part's types are known,
+     * the ends still marked pre-filled (except `owner`) are removed and the ends are pre-filled again for the new type ([prefillEnds]).
+     * While the target part's types are not known, the ends are kept as they are.
+     */
+    fun setTargetType(connection: ConnectionDraft, targetType: String) {
+        if (targetType == connection.targetType) return
+        connection.targetType = targetType
+        if (null == typesOrNull(connection.target)) return
+        connection.ends.removeAll { it.prefilled && it.name != OWNER_END }
+        prefillEnds(connection)
+    }
+
+    /**
+     * pre-fills the ends of 'connection' from the types; the ends made are marked [EndDraft.prefilled]. Ends that are kept are never changed.
+     * - an end `owner = $self` whose type is the data type of the source part's items, if there is exactly one, otherwise left empty to be chosen.
+     *   It is not added if there is already an end named `owner`; a still pre-filled `owner` whose type differs from the one now found is replaced.
+     * - an end per constructor parameter of the target type, with an empty expression, unless an end with that name is already there.
+     * Returns true if an end was added or replaced.
      */
     fun prefillEnds(connection: ConnectionDraft): Boolean {
-        if (connection.ends.isNotEmpty()) return false
         val target = typesOrNull(connection.target)?.let { findType(it, connection.targetType) } as? DataType ?: return false
+        var changed = false
         val itemTypes = (typesStatus(connection.source) as? TypesResult.Found)?.itemTypes ?: emptyList()
         val ownerCandidates = itemTypes.ifEmpty { dataTypesOf(connection.source).map { it.qualifiedName.value } }.distinct()
-        connection.addEnd(OWNER_END, ownerCandidates.singleOrNull() ?: "", SELF)
-        target.constructors.firstOrNull()?.parameters?.forEach { p ->
-            if (p.name.value != OWNER_END) connection.addEnd(p.name.value, typeNameOf(p.typeInstance), "")
+        val ownerType = ownerCandidates.singleOrNull() ?: ""
+        val owner = connection.ends.firstOrNull { it.name == OWNER_END }
+        when {
+            null == owner -> {
+                connection.ends.add(0, EndDraft(OWNER_END, ownerType, SELF, prefilled = true))
+                changed = true
+            }
+            // the source's types may not be known; then a pre-filled owner is kept
+            owner.prefilled && owner.typeName != ownerType && null != typesOrNull(connection.source) -> {
+                connection.ends[connection.ends.indexOf(owner)] = EndDraft(OWNER_END, ownerType, SELF, prefilled = true)
+                changed = true
+            }
         }
-        return true
+        target.constructors.firstOrNull()?.parameters?.forEach { p ->
+            if (connection.ends.none { it.name == p.name.value }) {
+                connection.addEnd(p.name.value, typeNameOf(p.typeInstance), "", prefilled = true)
+                changed = true
+            }
+        }
+        return changed
     }
 
     /**

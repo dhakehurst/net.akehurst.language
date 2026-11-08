@@ -85,6 +85,19 @@ internal class CompositionValidator(private val state: CompositionEditorState) {
             }
         }
 
+        // ends that are not DataTypes are constructor arguments of the target type (agl-datastore-api README C6)
+        val targetDataType = targetTypes?.let { find(it, c.targetType) } as? DataType
+        val ctor = targetDataType?.constructors?.firstOrNull()
+        if (null != targetDataType && null != ctor) {
+            val paramNames = ctor.parameters.map { it.name.value }.toSet()
+            c.ends.filter { it != selfEnd && it.name.isNotBlank() && it.name !in paramNames }.forEach { e ->
+                val endType = sourceTypes?.let { find(it, e.typeName) } ?: find(targetTypes, e.typeName)
+                if (endType !is DataType) {
+                    warn(ConnectionField.END_NAME, "'${e.name}' is not a constructor parameter of '${targetDataType.qualifiedName.value}'", e)
+                }
+            }
+        }
+
         // can the connection be used for write? (README C13)
         when {
             c.ends.isEmpty() -> Unit
