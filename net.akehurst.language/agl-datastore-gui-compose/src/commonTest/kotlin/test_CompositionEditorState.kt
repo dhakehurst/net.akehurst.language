@@ -10,6 +10,9 @@ import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.DatastoreCompositionBuilder
 import net.akehurst.datastore.common.datastoreProviderSchema
 import net.akehurst.language.types.builder.typesDomain
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.startCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -67,6 +70,38 @@ class test_CompositionEditorState {
                     propertyOf(setOf(REF, VAL), "text", "String")
                 }
             }
+        }
+
+        val spTypes = typesDomain("sp", true) {
+            namespace("microsoft.sharepoint") {
+                data("SourceFile") {
+                    propertyOf(setOf(REF, VAL), "name", "String")
+                    propertyOf(setOf(CMP, VAL), "content", "FileContent")
+                }
+                data("FileContent") {
+                    propertyOf(setOf(REF, VAL), "asBytes", "Binary")
+                    propertyOf(setOf(REF, VAL), "asText", "String")
+                }
+                data("Folder") {
+                    propertyOf(setOf(REF, VAL), "name", "String")
+                }
+            }
+        }
+        val wordTypes = typesDomain("word", true) {
+            namespace("microsoft.word") {
+                data("WordFile") {
+                    constructor_ {
+                        parameter(setOf(REF, VAL), "bytes", "Any")
+                    }
+                }
+            }
+        }
+
+        /** runs a suspend function that does not suspend */
+        fun <T> runNow(block: suspend () -> T): T {
+            var result: Result<T>? = null
+            block.startCoroutine(Continuation(EmptyCoroutineContext) { result = it })
+            return result!!.getOrThrow()
         }
     }
 
@@ -158,12 +193,38 @@ class test_CompositionEditorState {
     }
 
     @Test
-    fun connection_must_join_neighbours() {
+    fun moving_a_part_removes_connections_that_no_longer_join_neighbours() {
         val s = validState()
-        s.movePart(0, 1)
-        assertTrue(s.issues.any { it.severity == IssueSeverity.ERROR && it.location is IssueLocation.Connection })
-        s.movePart(1, 0)
+        val c = s.connections[0]
+        val move = assertNotNull(s.movePart(0, 1))
+        assertEquals(listOf("txt", "fs"), s.parts.map { it.id })
+        assertEquals(listOf(c), move.removedConnections.map { it.second })
+        assertEquals(0, s.connections.size)
+        assertFalse(s.issues.any { it.location is IssueLocation.Connection })
+    }
+
+    @Test
+    fun undo_a_move_restores_order_and_connections() {
+        val s = validState()
+        val c = s.connections[0]
+        val move = assertNotNull(s.movePart(0, 1))
+        s.undoMove(move)
+        assertEquals(listOf("fs", "txt"), s.parts.map { it.id })
+        assertEquals(listOf(c), s.connections.toList())
         assertFalse(s.hasErrors)
+    }
+
+    @Test
+    fun moving_keeps_connections_that_still_join_neighbours() {
+        val s = validState()
+        val fs2 = s.addPart(FS, "fs2")
+        // fs -> txt stays neighbouring when fs2 moves before fs
+        val move = assertNotNull(s.movePart(2, 0))
+        assertEquals(listOf("fs2", "fs", "txt"), s.parts.map { it.id })
+        assertEquals(0, move.removedConnections.size)
+        assertEquals(1, s.connections.size)
+        assertTrue(fs2 in s.parts)
+        assertNull(s.movePart(1, 1))
     }
 
     @Test
@@ -245,6 +306,147 @@ class test_CompositionEditorState {
         val s = CompositionEditorState(registry)
         assertEquals(listOf(FS, TXT), s.providers.map { it.identity })
         assertEquals(txtProvider, s.providerOrNull(TXT))
+    }
+
+    @Test
+    fun types_status_is_loading_until_requested() {
+        val s = validState()
+        assertEquals(TypesStatus.Loading, s.typesStatus(s.parts[0]))
+        assertNull(s.typesOrNull(s.parts[0]))
+    }
+
+    @Test
+    fun types_found() {
+        val s = validState()
+        val fs = s.parts[0]
+        var asked: DatastoreConfiguration? = null
+        runNow { s.requestTypes(fs) { _, _, cfg -> asked = cfg; TypesResult.Found(fsTypes, listOf("fs.FileHandle")) } }
+        assertEquals("/data", asked?.getAsString("root"))
+        assertEquals(TypesResult.Found(fsTypes, listOf("fs.FileHandle")), s.typesStatus(fs))
+        assertEquals(fsTypes, s.typesOrNull(fs))
+        assertEquals(1, s.typesCount(fsTypes))
+    }
+
+    @Test
+    fun types_not_available_with_a_reason() {
+        val s = validState()
+        val fs = s.parts[0]
+        runNow { s.requestTypes(fs) { _, _, _ -> TypesResult.NotAvailable("not connected") } }
+        assertEquals(TypesResult.NotAvailable("not connected"), s.typesStatus(fs))
+        assertNull(s.typesOrNull(fs))
+    }
+
+    @Test
+    fun types_callback_that_throws_is_not_available_with_its_message() {
+        val s = validState()
+        val fs = s.parts[0]
+        runNow { s.requestTypes(fs) { _, _, _ -> error("server down") } }
+        assertEquals(TypesResult.NotAvailable("server down"), s.typesStatus(fs))
+    }
+
+    @Test
+    fun types_not_available_without_callback_or_with_configuration_errors() {
+        val s = validState()
+        val fs = s.parts[0]
+        runNow { s.requestTypes(fs, null) }
+        assertEquals(TypesResult.NotAvailable("no typesFor callback"), s.typesStatus(fs))
+        fs.datastore.parameter["root"]!!.text = ""
+        var called = false
+        runNow { s.requestTypes(fs) { _, _, _ -> called = true; TypesResult.Found(fsTypes) } }
+        assertFalse(called)
+        assertEquals(TypesResult.NotAvailable("the configuration has errors"), s.typesStatus(fs))
+    }
+
+    @Test
+    fun types_retry_changes_the_request_key() {
+        val s = validState()
+        val fs = s.parts[0]
+        val k = s.typesRequestKey(fs)
+        s.retryTypes(fs)
+        assertTrue(k != s.typesRequestKey(fs))
+        assertEquals(0, s.typesRequestKey(s.parts[1]))
+    }
+
+    /** sp -> word, with types, and a connection with no ends */
+    private fun spWordState(spItemTypes: List<String> = emptyList()): Pair<CompositionEditorState, ConnectionDraft> {
+        val s = newState()
+        val sp = s.addPart(FS, "sp")
+        val word = s.addPart(TXT, "word")
+        s.setTypesStatus(sp, TypesResult.Found(spTypes, spItemTypes))
+        s.setTypes(word, wordTypes)
+        return Pair(s, s.addConnection(sp, word, "microsoft.word.WordFile"))
+    }
+
+    private fun ends(c: ConnectionDraft) = c.ends.map { Triple(it.name, it.typeName, it.expression) }
+
+    @Test
+    fun prefill_ends_with_exactly_one_item_type() {
+        val (s, c) = spWordState(listOf("microsoft.sharepoint.SourceFile"))
+        assertTrue(s.prefillEnds(c))
+        assertEquals(listOf(Triple("owner", "microsoft.sharepoint.SourceFile", "\$self"), Triple("bytes", "Any", "")), ends(c))
+    }
+
+    @Test
+    fun prefill_ends_with_one_data_type_of_the_source() {
+        val s = validState()
+        val c = s.addConnection(s.parts[0], s.parts[1], "txt.ParsableUnit")
+        s.connections.remove(s.connections[0])
+        s.setTypes(s.parts[0], fsTypes)
+        s.setTypes(s.parts[1], txtTypes)
+        assertTrue(s.prefillEnds(c))
+        // ParsableUnit of the test types has no constructor
+        assertEquals(listOf(Triple("owner", "fs.FileHandle", "\$self")), ends(c))
+    }
+
+    @Test
+    fun prefill_ends_leaves_the_owner_type_when_ambiguous() {
+        val (s, c) = spWordState()
+        assertTrue(s.prefillEnds(c))
+        assertEquals(listOf(Triple("owner", "", "\$self"), Triple("bytes", "Any", "")), ends(c))
+    }
+
+    @Test
+    fun prefill_ends_does_not_change_edited_ends() {
+        val (s, c) = spWordState()
+        c.addEnd("mine", "String", "name")
+        assertFalse(s.prefillEnds(c))
+        assertEquals(listOf(Triple("mine", "String", "name")), ends(c))
+    }
+
+    @Test
+    fun prefill_ends_needs_a_known_target_data_type() {
+        val (s, c) = spWordState()
+        c.targetType = "microsoft.word.Unknown"
+        assertFalse(s.prefillEnds(c))
+        assertEquals(0, c.ends.size)
+    }
+
+    @Test
+    fun expression_suggestions_follow_properties_one_segment_at_a_time() {
+        val (s, c) = spWordState(listOf("microsoft.sharepoint.SourceFile"))
+        s.prefillEnds(c)
+        val bytes = c.ends[1]
+        assertEquals(listOf("content", "name"), s.expressionSuggestions(c, bytes)) // Any: all conform, so by name
+        bytes.expression = "content."
+        assertEquals(listOf("content.asBytes", "content.asText"), s.expressionSuggestions(c, bytes))
+        bytes.expression = "content.asT"
+        assertEquals(listOf("content.asText"), s.expressionSuggestions(c, bytes))
+        bytes.expression = "\$self.content.asB"
+        assertEquals(listOf("\$self.content.asBytes"), s.expressionSuggestions(c, bytes))
+        bytes.expression = "nothing.here"
+        assertEquals(emptyList(), s.expressionSuggestions(c, bytes))
+        // none for the $self end
+        assertEquals(emptyList(), s.expressionSuggestions(c, c.ends[0]))
+    }
+
+    @Test
+    fun expression_suggestions_rank_conforming_paths_first() {
+        val (s, c) = spWordState(listOf("microsoft.sharepoint.SourceFile"))
+        s.prefillEnds(c)
+        val e = c.addEnd("text", "String", "content.")
+        assertEquals(listOf("content.asText", "content.asBytes"), s.expressionSuggestions(c, e))
+        e.expression = ""
+        assertEquals(listOf("name", "content"), s.expressionSuggestions(c, e))
     }
 
     @Test

@@ -17,10 +17,12 @@ val state = remember {
 val callbacks = EditorCallbacks(
     testConnection = { partId, provider, cfg -> /* e.g. provide and open the datastore */ TestResult.Success() },
     testAccess = { partId, provider, cfg, access -> /* e.g. read with 'access' */ TestResult.Success() },
-    typesFor = { partId, provider, cfg -> registry.provide(provider, partId, cfg).types() },
+    // an exception thrown is shown as 'not available' with its message
+    typesFor = { partId, provider, cfg -> TypesResult.Found(registry.provide(provider, partId, cfg).types()) },
 )
 DatastoreCompositionEditor(state, callbacks = callbacks, customisation = EditorCustomisation(
-    toolbarActions = { Button(onClick = { save(state.build()) }, enabled = !state.hasErrors) { Text("Save") } }
+    toolbarActions = { Button(onClick = { save(state.build()) }, enabled = !state.hasErrors) { Text("Save") } },
+    partActions = { part -> TextButton(onClick = { showTypes(part) }) { Text("Show types") } },
 ))
 
 val access = remember(state) { AccessEditorState(state) }
@@ -42,9 +44,15 @@ Agreed with David on 2026-11-06 (design doc: https://claude.ai/artifact/FnMWtm8d
 | G5 | A parameter's description is behind a help icon ('?' in the primary colour), shown as a tooltip on hover, or on click/tap. | done |
 | G6 | A sensitive parameter is given as a masked value or as `secret(source, key)`; the source ids are passed in by the application. | done |
 | G7 | 'Test connection' (per part) and 'Test access' (per part's access) call lambdas supplied by the application. With no lambda, or while the configuration has errors, the button is disabled. There is no default test. | done |
-| G8 | The types of a part come from the application's `typesFor` lambda; with them the target type and end type fields offer the types, and target types and expressions are checked. Without them the fields are plain text. | done |
+| G8 | The types of a part come from the application's `typesFor` lambda (see G14); with them the target type and end type fields offer the types, and target types and expressions are checked. Without them the fields are plain text. | done |
 | G9 | Issues are recomputed on every edit and shown next to their field and in an issue list; schema checks are those of the configuration builders. Connections that cannot be used for write (README C13) give a warning. | done |
 | G10 | End expressions are plain text fields, parsed with AGL's expression processor. A code-editor field (highlighting, completion) is for later, through a custom parameter renderer. | done (code editor: todo) |
 | G11 | `EditorCustomisation`: parameter renderers, provider presentation, strings (labels), toolbar actions; the host's `MaterialTheme` is used. | done |
 | G12 | Saving and loading are done by the application, for now. | done |
 | G13 | The providers come from a `DatastoreProviderRegistry` (`registry.providers`), by default `DatastoreProviderRegistryDefault.GLOBAL`. A second constructor takes a list of providers. | done |
+| G14 | `typesFor` returns a `TypesResult`: `Found(types, itemTypes)` or `NotAvailable(reason)`; an exception becomes `NotAvailable(message)`. The state keeps a `TypesStatus` per part (loading, found, not available), shown in the part's detail as "Types: loading", "Types: N types" (N = type definitions not in the std namespace) or "Types: not available: reason", with a Retry button. The types are asked for again whenever the part's configuration changes. | done |
+| G15 | `EditorCustomisation.partActions` and `connectionActions`: the host's buttons, shown in the header of a part's and a connection's detail (e.g. "Show types"). | done |
+| G16 | Choosing a target type from the suggestions fills the ends of a connection that has none: `owner = $self`, typed by the source part's item type (`itemTypes`, else its data types, not counting the std and composition namespaces) if there is exactly one, otherwise left to be chosen; then an end per parameter of the target type's first constructor, with an empty expression. Ends the user has already given are never changed. | done |
+| G17 | An end's expression field suggests the property paths of the `$self` end's type, one segment at a time (e.g. `content`, then `content.asBytes`), those whose type conforms to the end's type first. Free typing still works; parsing and type checks are as before. | done |
+| G18 | Moving a part removes the connections that no longer join neighbouring parts; the chain shows "N connection(s) removed" with Undo, which restores the order and the connections. | done |
+| G19 | The chain shows each connection's ends in one small line, e.g. `owner = $self, bytes = bytes`. | done |

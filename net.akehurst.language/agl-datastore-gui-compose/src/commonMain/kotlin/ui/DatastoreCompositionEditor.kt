@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProvider
@@ -41,6 +42,9 @@ import net.akehurst.datastore.gui.compose.EditorIssue
 import net.akehurst.datastore.gui.compose.IssueLocation
 import net.akehurst.datastore.gui.compose.IssueSeverity
 import net.akehurst.datastore.gui.compose.PartDraft
+import net.akehurst.datastore.gui.compose.PartMove
+import net.akehurst.datastore.gui.compose.TypesResult
+import net.akehurst.datastore.gui.compose.TypesStatus
 
 /** What is shown in the detail pane. */
 internal sealed interface Selection {
@@ -72,12 +76,11 @@ fun DatastoreCompositionEditor(
         }
     }
 
-    // ask the host for the types of each part whose configuration is valid
+    // ask the host for the types of each part, again whenever its configuration changes or on retry
     state.parts.forEach { part ->
         val cfg = state.partConfiguration(part)
-        LaunchedEffect(part, part.id, cfg?.argument, callbacks.typesFor) {
-            val typesFor = callbacks.typesFor
-            state.setTypes(part, if (null == cfg || null == typesFor) null else runCatching { typesFor(DatastoreIdentity(part.id), part.providerIdentity, cfg) }.getOrNull())
+        LaunchedEffect(part, part.id, cfg?.argument, callbacks.typesFor, state.typesRequestKey(part)) {
+            state.requestTypes(part, callbacks.typesFor)
         }
     }
 
@@ -134,8 +137,18 @@ private fun Detail(state: CompositionEditorState, selection: Selection?, callbac
 private fun ChainList(state: CompositionEditorState, selection: Selection?, select: (Selection) -> Unit, customisation: EditorCustomisation) {
     val strings = customisation.strings
     val issues = state.issues
+    // the last move that removed connections, so it can be undone
+    var lastMove by remember(state) { mutableStateOf<PartMove?>(null) }
+    val move: (Int, Int) -> Unit = { from, to -> lastMove = state.movePart(from, to)?.takeIf { it.removedConnections.isNotEmpty() } }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(strings.chain, style = MaterialTheme.typography.titleSmall)
+        lastMove?.let { m ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${m.removedConnections.size} ${strings.connectionsRemoved}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                TextButton(onClick = { state.undoMove(m); lastMove = null }) { Text(strings.undo) }
+                TextButton(onClick = { lastMove = null }) { Text("✕") }
+            }
+        }
         state.parts.forEachIndexed { index, part ->
             val hasError = issues.any { it.severity == IssueSeverity.ERROR && it.location.partOrNull() == part }
             val presentation = customisation.providerPresentation(part.providerIdentity)
@@ -151,9 +164,9 @@ private fun ChainList(state: CompositionEditorState, selection: Selection?, sele
                         Text(presentation.displayName, style = MaterialTheme.typography.bodySmall)
                     }
                 }
-                TextButton(onClick = { state.movePart(index, index - 1) }, enabled = index > 0) { Text("↑") }
-                TextButton(onClick = { state.movePart(index, index + 1) }, enabled = index < state.parts.size - 1) { Text("↓") }
-                TextButton(onClick = { state.removePart(part) }) { Text("✕") }
+                TextButton(onClick = { move(index, index - 1) }, enabled = index > 0) { Text("↑") }
+                TextButton(onClick = { move(index, index + 1) }, enabled = index < state.parts.size - 1) { Text("↓") }
+                TextButton(onClick = { lastMove = null; state.removePart(part) }) { Text("✕") }
             }
             // connections from this part (to the next part, or wrongly to another part)
             state.connectionsFrom(part).forEach { c ->
@@ -164,7 +177,18 @@ private fun ChainList(state: CompositionEditorState, selection: Selection?, sele
                     onClick = { select(Selection.Connection(c)) },
                     indent = true,
                 ) {
-                    Text("↓ ${c.identity.ifBlank { "?" }} : ${c.targetType.ifBlank { "?" }}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                    Column(Modifier.weight(1f)) {
+                        Text("↓ ${c.identity.ifBlank { "?" }} : ${c.targetType.ifBlank { "?" }}", style = MaterialTheme.typography.bodySmall)
+                        if (c.ends.isNotEmpty()) {
+                            Text(
+                                c.ends.joinToString(", ") { "${it.name.ifBlank { "?" }} = ${it.expression}" },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
                     TextButton(onClick = { state.removeConnection(c) }) { Text("✕") }
                 }
             }
@@ -255,6 +279,8 @@ private fun PartDetail(state: CompositionEditorState, part: PartDraft, callbacks
             Text("${strings.provider}: ${presentation.displayName}", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.width(4.dp))
             HelpIcon(presentation.description, strings.help)
+            Spacer(Modifier.weight(1f))
+            customisation.partActions(this, part)
         }
         val idIssue = issues.firstOrNull { (it.location as? IssueLocation.PartId)?.part == part }
         TextFieldWithError(
@@ -276,8 +302,31 @@ private fun PartDetail(state: CompositionEditorState, part: PartDraft, callbacks
             strings = strings,
             resetKey = cfg?.argument,
         )
+        TypesLine(state, part, customisation)
         val partIssues = issues.filter { (it.location as? IssueLocation.Part)?.let { l -> l.part == part && null == l.parameterIdentity } == true }
         partIssues.forEach { IssueText(it) }
+    }
+}
+
+/** "Types: loading", "Types: N types" or "Types: not available: reason", with a retry button. */
+@Composable
+private fun TypesLine(state: CompositionEditorState, part: PartDraft, customisation: EditorCustomisation) {
+    val strings = customisation.strings
+    val status = state.typesStatus(part)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        val text = when (status) {
+            TypesStatus.Loading -> "${strings.types}: ${strings.typesLoading}"
+            is TypesResult.Found -> "${strings.types}: ${state.typesCount(status.types)} ${strings.typesCount}"
+            is TypesResult.NotAvailable -> "${strings.types}: ${strings.typesNotAvailable}: ${status.reason}"
+        }
+        Text(
+            text,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (status is TypesResult.NotAvailable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        Spacer(Modifier.width(4.dp))
+        TextButton(onClick = { state.retryTypes(part) }, enabled = status != TypesStatus.Loading) { Text(strings.retry) }
     }
 }
 

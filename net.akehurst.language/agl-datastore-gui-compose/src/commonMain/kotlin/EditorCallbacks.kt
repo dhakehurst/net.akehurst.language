@@ -14,6 +14,23 @@ sealed interface TestResult {
     data class Failure(val message: String, val cause: Throwable? = null) : TestResult
 }
 
+/** The types of a part, as given by the host's typesFor callback. */
+sealed interface TypesResult : TypesStatus {
+    /**
+     * @param itemTypes the qualified names of the data types the part's items are read as, if the host knows them;
+     * used to pre-fill the type of a connection's `owner` end
+     */
+    data class Found(val types: TypesDomain, val itemTypes: List<String> = emptyList()) : TypesResult
+
+    /** the types are not known, because of 'reason' */
+    data class NotAvailable(val reason: String) : TypesResult
+}
+
+/** The state of the types of a part in the editor: being requested, or a [TypesResult]. */
+sealed interface TypesStatus {
+    data object Loading : TypesStatus
+}
+
 /**
  * The behaviour the host application gives the editor. The editor is UI only: it never creates, opens or
  * reads datastores itself. A button whose callback is null is shown disabled.
@@ -23,8 +40,12 @@ class EditorCallbacks(
     val testConnection: (suspend (partId: DatastoreIdentity, provider: DatastoreProviderIdentity, datastore: DatastoreConfiguration) -> TestResult)? = null,
     /** tests a part's access configuration, e.g. by reading with it */
     val testAccess: (suspend (partId: DatastoreIdentity, provider: DatastoreProviderIdentity, datastore: DatastoreConfiguration, access: DatastoreConfiguration) -> TestResult)? = null,
-    /** the types of a part with that datastore configuration, for the connection editor's type lists and checks; null if not known */
-    val typesFor: (suspend (partId: DatastoreIdentity, provider: DatastoreProviderIdentity, datastore: DatastoreConfiguration) -> TypesDomain?)? = null,
+    /**
+     * the types of a part with that datastore configuration, for the connection editor's type lists and checks.
+     * It is called again whenever the configuration changes (types can depend on it, e.g. the database connected to).
+     * An exception thrown is shown as [TypesResult.NotAvailable] with its message.
+     */
+    val typesFor: (suspend (partId: DatastoreIdentity, provider: DatastoreProviderIdentity, datastore: DatastoreConfiguration) -> TypesResult)? = null,
 )
 
 /** How a provider is shown in the editor. */
@@ -94,6 +115,15 @@ data class EditorStrings(
     val help: String = "Help",
     val choose: String = "Choose",
     val nothingSelected: String = "Select a part or a connection",
+    val types: String = "Types",
+    val typesLoading: String = "loading",
+    /** after the number of types, e.g. "Types: 12 types" */
+    val typesCount: String = "types",
+    val typesNotAvailable: String = "not available",
+    val retry: String = "Retry",
+    /** after the number of connections, e.g. "2 connection(s) removed" */
+    val connectionsRemoved: String = "connection(s) removed",
+    val undo: String = "Undo",
 )
 
 /** Changes how the editor looks, without changing this module. */
@@ -104,6 +134,10 @@ class EditorCustomisation(
     val strings: EditorStrings = EditorStrings(),
     /** the host's own buttons (e.g. save, load, run), shown in the editor's toolbar */
     val toolbarActions: @Composable RowScope.() -> Unit = {},
+    /** the host's own buttons for a part (e.g. show its types), shown in the header of the part's detail */
+    val partActions: @Composable RowScope.(PartDraft) -> Unit = {},
+    /** the host's own buttons for a connection, shown in the header of the connection's detail */
+    val connectionActions: @Composable RowScope.(ConnectionDraft) -> Unit = {},
 ) {
     companion object {
         val Default = EditorCustomisation()

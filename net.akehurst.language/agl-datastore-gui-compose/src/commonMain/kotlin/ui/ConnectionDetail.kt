@@ -42,7 +42,10 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
     val sourceTypes = state.typesOrNull(connection.source)
     val targetTypes = state.typesOrNull(connection.target)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("${strings.connection}: ${connection.source.id} → ${connection.target.id}", style = MaterialTheme.typography.titleSmall)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("${strings.connection}: ${connection.source.id} → ${connection.target.id}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            customisation.connectionActions(this, connection)
+        }
         TextFieldWithError(
             value = connection.name,
             onValueChange = { connection.name = it },
@@ -56,6 +59,8 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
             label = { Text(strings.targetType) },
             // the types that the target datastore reads are data types
             suggestions = dataTypeNames(targetTypes),
+            // choosing a target type fills in the ends, if there are none yet
+            onChoose = { connection.targetType = it; state.prefillEnds(connection) },
             error = issueOf(ConnectionField.TARGET_TYPE)?.message,
             chooseLabel = strings.choose,
             modifier = Modifier.fillMaxWidth(),
@@ -84,10 +89,11 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
                         )
                         TextButton(onClick = { connection.removeEnd(end) }) { Text("✕") }
                     }
-                    TextFieldWithError(
+                    CompletionTextField(
                         value = end.expression,
                         onValueChange = { end.expression = it },
                         label = { Text(strings.endExpression) },
+                        suggestions = state.expressionSuggestions(connection, end),
                         error = issueOf(ConnectionField.END_EXPRESSION, end)?.message,
                         modifier = Modifier.fillMaxWidth(),
                     )

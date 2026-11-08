@@ -20,6 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.window.PopupProperties
 
 /** A label followed by a help icon for 'help'. */
 @Composable
@@ -73,6 +76,8 @@ internal fun SuggestionTextField(
     chooseLabel: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    /** called when a suggestion is chosen from the menu; by default 'onValueChange' */
+    onChoose: ((String) -> Unit)? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
     TextFieldWithError(
@@ -88,7 +93,7 @@ internal fun SuggestionTextField(
                     TextButton(onClick = { expanded = true }, enabled = enabled) { Text("▾") }
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         suggestions.forEach { s ->
-                            DropdownMenuItem(text = { Text(s) }, onClick = { onValueChange(s); expanded = false })
+                            DropdownMenuItem(text = { Text(s) }, onClick = { (onChoose ?: onValueChange)(s); expanded = false })
                         }
                     }
                 }
@@ -96,6 +101,44 @@ internal fun SuggestionTextField(
         },
     )
 }
+
+/**
+ * A text field that, while it has the focus, shows 'suggestions' in a menu below it; choosing one sets the value.
+ * Free typing still works: the menu does not take the focus.
+ */
+@Composable
+internal fun CompletionTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: @Composable () -> Unit,
+    suggestions: List<String>,
+    error: String?,
+    modifier: Modifier = Modifier,
+) {
+    var focused by remember { mutableStateOf(false) }
+    var dismissed by remember { mutableStateOf(false) }
+    val shown = suggestions.filter { it != value }.take(MAX_COMPLETIONS)
+    Box(modifier) {
+        TextFieldWithError(
+            value = value,
+            onValueChange = { dismissed = false; onValueChange(it) },
+            label = label,
+            error = error,
+            modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
+        )
+        DropdownMenu(
+            expanded = focused && !dismissed && shown.isNotEmpty(),
+            onDismissRequest = { dismissed = true },
+            properties = PopupProperties(focusable = false),
+        ) {
+            shown.forEach { s ->
+                DropdownMenuItem(text = { Text(s) }, onClick = { onValueChange(s) })
+            }
+        }
+    }
+}
+
+private const val MAX_COMPLETIONS = 20
 
 /** A button showing the current choice, which opens a menu of 'options'. */
 @Composable

@@ -17,7 +17,13 @@ import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import net.akehurst.datastore.common.DatastoreCompositionConfigurationDefault
 import net.akehurst.datastore.common.DatastoreConnectionDefault
 import net.akehurst.datastore.common.DatastoreConnectionEndDefault
+import net.akehurst.language.base.api.asPossiblyQualifiedName
+import net.akehurst.language.types.api.DataType
+import net.akehurst.language.types.api.TypeDefinition
+import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import kotlin.coroutines.cancellation.CancellationException
 
 /** One part (datastore) of the composition being edited. */
 class PartDraft(
@@ -64,6 +70,16 @@ class ConnectionDraft(
 }
 
 /**
+ * A move of a part, as done by [CompositionEditorState.movePart].
+ * @param removedConnections the connections that no longer joined neighbouring parts, with their index in the connections list
+ */
+class PartMove(
+    val from: Int,
+    val to: Int,
+    val removedConnections: List<Pair<Int, ConnectionDraft>>,
+)
+
+/**
  * The state of a DatastoreCompositionEditor: the parts and connections being edited, and their issues.
  * The host application creates it, keeps it as long as it likes, and reads the result with [build].
  *
@@ -92,7 +108,10 @@ class CompositionEditorState(
 
     val connections = mutableStateListOf<ConnectionDraft>()
 
-    private val _types = mutableStateMapOf<PartDraft, TypesDomain>()
+    private val _types = mutableStateMapOf<PartDraft, TypesStatus>()
+
+    /** bumped by [retryTypes], so the editor asks for the types again */
+    private val _typesRequest = mutableStateMapOf<PartDraft, Int>()
 
     /** issues found when loading 'initial' (e.g. a provider that is not available) */
     private val _loadIssues = mutableStateListOf<EditorIssue>()
@@ -106,6 +125,12 @@ class CompositionEditorState(
 
     init {
         initial?.let { load(it) }
+    }
+
+    private companion object {
+        const val SELF = "\$self"
+        const val OWNER_END = "owner"
+        const val COMPOSITION_NAMESPACE = "composition"
     }
 
     fun providerOrNull(identity: DatastoreProviderIdentity): DatastoreProvider? = registry.getOrNull(identity)
@@ -122,14 +147,31 @@ class CompositionEditorState(
     fun removePart(part: PartDraft) {
         connections.removeAll { it.source == part || it.target == part }
         _types.remove(part)
+        _typesRequest.remove(part)
         parts.remove(part)
     }
 
-    /** moves a part in the chain; connections that no longer join neighbouring parts are reported as errors */
-    fun movePart(from: Int, to: Int) {
-        if (from == to || from !in parts.indices || to !in parts.indices) return
+    /**
+     * moves a part in the chain, and removes the connections that then no longer join neighbouring parts.
+     * Returns the move (with the removed connections) for [undoMove], or null if nothing was moved.
+     */
+    fun movePart(from: Int, to: Int): PartMove? {
+        if (from == to || from !in parts.indices || to !in parts.indices) return null
         val p = parts.removeAt(from)
         parts.add(to, p)
+        val removed = connections.withIndex().filter { (_, c) -> nextPart(c.source) != c.target }.map { Pair(it.index, it.value) }
+        removed.asReversed().forEach { (i, _) -> connections.removeAt(i) }
+        return PartMove(from, to, removed)
+    }
+
+    /** undoes 'move': restores the order of the parts and the removed connections */
+    fun undoMove(move: PartMove) {
+        if (move.to !in parts.indices || move.from !in parts.indices) return
+        val p = parts.removeAt(move.to)
+        parts.add(move.from, p)
+        move.removedConnections.forEach { (i, c) ->
+            if (c.source in parts && c.target in parts) connections.add(i.coerceAtMost(connections.size), c)
+        }
     }
 
     /** the part after 'part' in the chain, if any */
@@ -147,12 +189,136 @@ class CompositionEditorState(
     /** the part's datastore configuration, or null while it has errors */
     fun partConfiguration(part: PartDraft): DatastoreConfiguration? = part.datastore.build()
 
-    /** sets the types of a part (from the host's typesFor callback), or clears them with null */
+    /** sets the types of a part, or clears them with null */
     fun setTypes(part: PartDraft, types: TypesDomain?) {
-        if (null == types) _types.remove(part) else _types[part] = types
+        if (null == types) _types.remove(part) else _types[part] = TypesResult.Found(types)
     }
 
-    fun typesOrNull(part: PartDraft): TypesDomain? = _types[part]
+    fun setTypesStatus(part: PartDraft, status: TypesStatus) {
+        _types[part] = status
+    }
+
+    /** the state of the types of 'part'; [TypesStatus.Loading] until they have been asked for */
+    fun typesStatus(part: PartDraft): TypesStatus = _types[part] ?: TypesStatus.Loading
+
+    fun typesOrNull(part: PartDraft): TypesDomain? = (_types[part] as? TypesResult.Found)?.types
+
+    /** changes each time [retryTypes] is called for 'part' */
+    fun typesRequestKey(part: PartDraft): Int = _typesRequest[part] ?: 0
+
+    /** asks for the types of 'part' again */
+    fun retryTypes(part: PartDraft) {
+        _typesRequest[part] = typesRequestKey(part) + 1
+    }
+
+    /**
+     * asks 'typesFor' for the types of 'part' and sets its types status: loading, then the result.
+     * Without a callback, or while the configuration has errors, the types are not available.
+     */
+    suspend fun requestTypes(
+        part: PartDraft,
+        typesFor: (suspend (partId: DatastoreIdentity, provider: DatastoreProviderIdentity, datastore: DatastoreConfiguration) -> TypesResult)?,
+    ) {
+        val cfg = partConfiguration(part)
+        val result = when {
+            null == typesFor -> TypesResult.NotAvailable("no typesFor callback")
+            null == cfg -> TypesResult.NotAvailable("the configuration has errors")
+            else -> {
+                setTypesStatus(part, TypesStatus.Loading)
+                try {
+                    typesFor(DatastoreIdentity(part.id), part.providerIdentity, cfg)
+                } catch (ex: CancellationException) {
+                    throw ex
+                } catch (ex: Throwable) {
+                    TypesResult.NotAvailable(ex.message ?: ex::class.simpleName ?: "error")
+                }
+            }
+        }
+        // the part may have been removed while waiting
+        if (part in parts) setTypesStatus(part, result)
+    }
+
+    /** the number of type definitions of 'types', not counting those of the std namespace */
+    fun typesCount(types: TypesDomain): Int = types.namespace.filter { it.qualifiedName != StdLibDefault.qualifiedName }.sumOf { it.ownedTypes.size }
+
+    /** the data types of 'part': those of its types, except the std and composition namespaces */
+    fun dataTypesOf(part: PartDraft): List<DataType> =
+        typesOrNull(part)?.namespace
+            ?.filter { it.qualifiedName.value != StdLibDefault.qualifiedName.value && it.qualifiedName.value != COMPOSITION_NAMESPACE }
+            ?.flatMap { it.dataType }
+            ?.sortedBy { it.qualifiedName.value }
+            ?: emptyList()
+
+    /**
+     * fills the ends of 'connection' from the types, if it has no ends yet (ends the user has edited are never changed):
+     * an end `owner = $self` whose type is the data type of the source part's items, if there is exactly one,
+     * otherwise left empty to be chosen; then an end per constructor parameter of the target type, with an empty expression.
+     * Returns true if the ends were filled.
+     */
+    fun prefillEnds(connection: ConnectionDraft): Boolean {
+        if (connection.ends.isNotEmpty()) return false
+        val target = typesOrNull(connection.target)?.let { findType(it, connection.targetType) } as? DataType ?: return false
+        val itemTypes = (typesStatus(connection.source) as? TypesResult.Found)?.itemTypes ?: emptyList()
+        val ownerCandidates = itemTypes.ifEmpty { dataTypesOf(connection.source).map { it.qualifiedName.value } }.distinct()
+        connection.addEnd(OWNER_END, ownerCandidates.singleOrNull() ?: "", SELF)
+        target.constructors.firstOrNull()?.parameters?.forEach { p ->
+            if (p.name.value != OWNER_END) connection.addEnd(p.name.value, typeNameOf(p.typeInstance), "")
+        }
+        return true
+    }
+
+    /**
+     * suggestions for the expression of 'end': the property paths of the type of the connection's `$self` end,
+     * one segment at a time (the part before the last '.' of what is typed is followed, then that type's properties),
+     * those that start with what is typed. Paths whose type conforms to the end's type come first.
+     */
+    fun expressionSuggestions(connection: ConnectionDraft, end: EndDraft): List<String> {
+        val sourceTypes = typesOrNull(connection.source) ?: return emptyList()
+        val selfEnd = connection.ends.firstOrNull { it.expression.trim() == SELF }
+        if (null == selfEnd || selfEnd == end) return emptyList()
+        val selfType = findType(sourceTypes, selfEnd.typeName) ?: return emptyList()
+        val typed = end.expression.trim()
+        val selfPrefix = if (typed.startsWith("$SELF.")) "$SELF." else ""
+        val path = typed.removePrefix(selfPrefix)
+        val lastDot = path.lastIndexOf('.')
+        val head = if (lastDot < 0) "" else path.substring(0, lastDot)
+        val last = path.substring(lastDot + 1)
+        var t: TypeInstance = selfType.type()
+        if (head.isNotEmpty()) {
+            for (seg in head.split('.')) {
+                t = t.allResolvedProperty.entries.firstOrNull { it.key.value == seg }?.value?.typeInstance ?: return emptyList()
+            }
+        }
+        val endType = findType(sourceTypes, end.typeName) ?: typesOrNull(connection.target)?.let { findType(it, end.typeName) }
+        fun conforms(ti: TypeInstance): Boolean {
+            val n = end.typeName.trim()
+            if (n == "Any" || n == "std.Any") return true
+            val d = ti.resolvedDefinitionOrNull ?: return false
+            return when (endType) {
+                null -> n.isNotEmpty() && (d.qualifiedName.value == n || d.name.value == n)
+                else -> d.conformsTo(endType)
+            }
+        }
+        val prefix = selfPrefix + (if (head.isEmpty()) "" else "$head.")
+        return t.allResolvedProperty.values
+            .filter { it.name.value.startsWith(last) }
+            .map { Pair(prefix + it.name.value, conforms(it.typeInstance)) }
+            .sortedWith(compareBy<Pair<String, Boolean>> { !it.second }.thenBy { it.first })
+            .map { it.first }
+    }
+
+    private fun findType(types: TypesDomain, typeName: String): TypeDefinition? =
+        if (typeName.isBlank()) null else try {
+            types.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName.trim().asPossiblyQualifiedName)
+        } catch (_: Exception) {
+            null
+        }
+
+    /** the name of a type as given in an end: simple for std types (e.g. String), otherwise qualified */
+    private fun typeNameOf(ti: TypeInstance): String {
+        val d = try { ti.resolvedDefinitionOrNull } catch (_: Exception) { null } ?: return ti.typeName.value
+        return if (d.namespace.qualifiedName == StdLibDefault.qualifiedName) d.name.value else d.qualifiedName.value
+    }
 
     /** the composition configuration, or null while there are errors */
     fun build(): DatastoreCompositionConfiguration? {
@@ -177,6 +343,7 @@ class CompositionEditorState(
         connections.clear()
         parts.clear()
         _types.clear()
+        _typesRequest.clear()
         _loadIssues.clear()
         configuration.part.forEach { (key, cfg) ->
             val (providerId, dsId) = key
