@@ -81,7 +81,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         super.register(this::constructor)
         super.register(this::constructorParameter)
         super.register(this::property)
-        super.register(this::characteristic)
+        super.register(this::characteristics)
         super.register(this::cmp_ref)
         super.register(this::val_var)
         super.register(this::str_drv)
@@ -291,9 +291,9 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     private fun constructor(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(TypeDefinition) -> ParameterDeclaration> =
         (children[2] as List<Any>).toSeparatedList<Any, (TypeDefinition) -> ParameterDeclaration, String>().items
 
-    // constructorParameter = characteristic* IDENTIFIER ':' typeReference ;
+    // constructorParameter = characteristics IDENTIFIER ':' typeReference ;
     private fun constructorParameter(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (TypeDefinition) -> ParameterDeclaration {
-        val characteristics = (children[0] as List<PropertyCharacteristic>).toSet()
+        val characteristics = children[0] as Set<PropertyCharacteristic>
         val name = TmParameterName(children[1] as String)
         val typeRef = children[3] as TypeRefInfo
 
@@ -308,9 +308,9 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         }
     }
 
-    // property = characteristic* IDENTIFIER ':' typeReference ; //TODO: grammarIndex !
+    // property = characteristics IDENTIFIER ':' typeReference ; //TODO: grammarIndex !
     private fun property(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (StructuredType) -> PropertyDeclaration {
-        val characteristics = (children[0] as List<PropertyCharacteristic>).toSet()
+        val characteristics = children[0] as Set<PropertyCharacteristic>
         val name = PropertyName(children[1] as String)
         val typeRef = children[3] as TypeRefInfo
 
@@ -324,13 +324,14 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         }
     }
 
-    // characteristic = cmp_ref | val_var | str_drv | 'idn' ;
-    private fun characteristic(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCharacteristic =
-        when (val ch = children[0]) {
-            is PropertyCharacteristic -> ch
-            "idn" -> PropertyCharacteristic.IDENTITY
-            else -> error("Value not allowed '${ch}'")
-        }
+    // characteristics = cmp_ref? val_var? str_drv? 'idn'? ;  (a fixed order, so e.g. stored and derived can't both be given)
+    private fun characteristics(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Set<PropertyCharacteristic> {
+        val cmpRef = children[0] as PropertyCharacteristic?
+        val valVar = children[1] as PropertyCharacteristic?
+        val strDrv = children[2] as PropertyCharacteristic?
+        val idn = (children[3] as String?)?.let { PropertyCharacteristic.IDENTITY }
+        return listOfNotNull(cmpRef, valVar, strDrv, idn).toSet()
+    }
 
     // str_drv = 'str' | 'drv' ;
     private fun str_drv(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCharacteristic =
@@ -383,10 +384,10 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         return AssociationInfo(ends, locationForNode(sentence, nodeInfo.node))
     }
 
-    // associationEnd = 'end' 'owned'? characteristic* IDENTIFIER ':' typeReference ;
+    // associationEnd = 'end' 'owned'? characteristics IDENTIFIER ':' typeReference ;
     private fun associationEnd(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssociationEndInfo {
         val owned = null != children[1]
-        val characteristics = (children[2] as List<PropertyCharacteristic>).toSet()
+        val characteristics = children[2] as Set<PropertyCharacteristic>
         val name = children[3] as String
         val typeRef = children[5] as TypeRefInfo
         return AssociationEndInfo(owned, characteristics, name, typeRef)

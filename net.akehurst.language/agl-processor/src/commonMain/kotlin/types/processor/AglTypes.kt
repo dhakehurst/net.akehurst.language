@@ -81,17 +81,17 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
             typeParameterList = '<' [IDENTIFIER / ',']+ '>' ;
             supertypes = ':' [typeReference / ',']+ ;
             constructor = 'constructor' '(' [constructorParameter / ',']* ')' ;
-            constructorParameter = characteristic* IDENTIFIER ':' typeReference ;
-            property = characteristic* IDENTIFIER ':' typeReference ;
+            constructorParameter = characteristics IDENTIFIER ':' typeReference ;
+            property = characteristics IDENTIFIER ':' typeReference ;
             typeReference = possiblyQualifiedName typeArgumentList? '?'?;
             typeArgumentList = '<' [ typeReference / ',']+ '>' ;
-            characteristic = cmp_ref | val_var | str_drv | 'idn' ;
+            characteristics = cmp_ref? val_var? str_drv? 'idn'? ;
             cmp_ref = 'cmp' | 'ref' ;
             val_var = 'val' | 'var' ;
             str_drv = 'str' | 'drv' ;
             // only binary associations, n-ary associations are not yet possible
             association = 'association' '{' associationEnd associationEnd '}' ;
-            associationEnd = 'end' 'owned'? characteristic* IDENTIFIER ':' typeReference ;
+            associationEnd = 'end' 'owned'? characteristics IDENTIFIER ':' typeReference ;
           }
       """.trimIndent()
 
@@ -209,16 +209,11 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     concatenation("typeParameterList") { lit("<"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit(">"); }
                     concatenation("supertypes") { lit(":"); spLst(1, -1) { ref("typeReference"); lit(",") } }
                     concatenation("constructor") { lit("constructor"); lit("("); spLst(0, -1) { ref("constructorParameter"); lit(",") }; lit(")") }
-                    concatenation("constructorParameter") { lst(0, -1) { ref("characteristic") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
-                    concatenation("property") { lst(0, -1) { ref("characteristic") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("constructorParameter") { ref("characteristics"); ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("property") { ref("characteristics"); ref("IDENTIFIER"); lit(":"); ref("typeReference") }
                     concatenation("typeReference") { ref("possiblyQualifiedName"); opt { ref("typeArgumentList") }; opt { lit("?") } }
                     concatenation("typeArgumentList") { lit("<"); spLst(1, -1) { ref("typeReference"); lit(",") }; lit(">") }
-                    choice("characteristic") {
-                        ref("cmp_ref")
-                        ref("val_var")
-                        ref("str_drv")
-                        lit("idn")
-                    }
+                    concatenation("characteristics") { opt { ref("cmp_ref") }; opt { ref("val_var") }; opt { ref("str_drv") }; opt { lit("idn") } }
                     choice("cmp_ref") {
                         lit("cmp")
                         lit("ref")
@@ -232,7 +227,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         lit("drv")
                     }
                     concatenation("association") { lit("association"); lit("{"); ref("associationEnd"); ref("associationEnd"); lit("}") }
-                    concatenation("associationEnd") { lit("end"); opt { lit("owned") }; lst(0, -1) { ref("characteristic") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("associationEnd") { lit("end"); opt { lit("owned") }; ref("characteristics"); ref("IDENTIFIER"); lit(":"); ref("typeReference") }
                 }
             }
         }

@@ -153,6 +153,17 @@ class test_TypesAsStringRoundTrip {
     }
 
     @Test
+    fun property_cannot_be_stored_and_derived() {
+        val res = Agl.registry.agl.types.processor!!.process("""
+            namespace test
+              data A {
+                val str drv size: Integer
+              }
+        """.trimIndent())
+        assertTrue(res.allIssues.errors.isNotEmpty(), res.allIssues.toString())
+    }
+
+    @Test
     fun data_collection_type_not_resolvable() {
         // std not imported, printing must not fail
         val types = typesDomain("Test", true) {
