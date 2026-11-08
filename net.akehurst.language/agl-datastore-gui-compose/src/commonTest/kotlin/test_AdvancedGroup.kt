@@ -5,6 +5,7 @@ import net.akehurst.datastore.api.DsConfigParameterChoice
 import net.akehurst.datastore.api.DsConfigParameterGroup
 import net.akehurst.datastore.common.datastoreProviderSchema
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -22,6 +23,9 @@ class test_AdvancedGroup {
                 group("Advanced", advanced = true) {
                     parameter("timeout", "Timeout", true) { type("Integer") }
                     parameter("strict", "Strict", true) { type("Boolean") }
+                    parameter("retries", "Retries", false) { type("Integer"); default(3L) }
+                    parameter("ratio", "Ratio", true) { type("Real"); default(0.5) }
+                    parameter("verbose", "Verbose", true) { type("Boolean"); default(false) }
                 }
                 choice {
                     alternative("plain") {
@@ -92,5 +96,35 @@ class test_AdvancedGroup {
         // the required parameter of the chosen alternative's advanced group has an error ("Required")
         draft.choose("3", "styled")
         assertTrue(draft.advancedGroupMustBeOpen("3/1/0", styledAdvanced))
+    }
+
+    @Test
+    fun advanced_group_stays_folded_when_a_parameter_is_set_to_its_default() {
+        val draft = ConfigurationDraft(ID, schema.datastore)
+        // 'retries' is required but has a default, so it is not an error
+        assertFalse("retries" in draft.parameterIssues)
+        assertFalse(draft.advancedGroupMustBeOpen("2", advanced))
+
+        draft.parameter["retries"]!!.text = "3"
+        draft.parameter["ratio"]!!.text = "0.50"
+        draft.parameter["verbose"]!!.boolean = false
+        assertFalse(draft.advancedGroupMustBeOpen("2", advanced))
+
+        draft.parameter["verbose"]!!.boolean = true
+        assertTrue(draft.advancedGroupMustBeOpen("2", advanced))
+        draft.parameter["verbose"]!!.boolean = null
+
+        draft.parameter["retries"]!!.text = "4"
+        assertTrue(draft.advancedGroupMustBeOpen("2", advanced))
+    }
+
+    @Test
+    fun the_default_is_not_written_into_the_configuration() {
+        val draft = ConfigurationDraft(ID, schema.datastore)
+        draft.parameter["file"]!!.text = "a.docx"
+        draft.choose("3", "plain")
+        val cfg = draft.build()!!
+        assertFalse(cfg.argument.containsKey("retries"))
+        assertEquals(3, cfg.getAsInt("retries"))
     }
 }

@@ -49,6 +49,7 @@ internal fun TextFieldWithError(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: (@Composable () -> Unit)? = null,
+    placeholder: String? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -62,6 +63,7 @@ internal fun TextFieldWithError(
         visualTransformation = visualTransformation,
         keyboardOptions = keyboardOptions,
         trailingIcon = trailingIcon,
+        placeholder = placeholder?.let { { Text(it) } },
     )
 }
 

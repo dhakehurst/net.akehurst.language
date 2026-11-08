@@ -59,7 +59,7 @@ class DatastoreConfigurationBuilder(
 
     /**
      * Checks the arguments against the provider's schema, then builds the configuration.
-     * Errors: a required (non-optional) parameter is missing, a value has the wrong type,
+     * Errors: a required (non-optional) parameter without a default value is missing, a value has the wrong type,
      * or no alternative of a choice has all its required parameters.
      */
     fun build(): DatastoreConfiguration {
@@ -86,6 +86,9 @@ class DatastoreConfigurationDefault(
     override fun isSensitive(parameterIdentity: String): Boolean =
         parameterSet.getParameterOrNull(parameterIdentity)?.sensitive ?: false
 
+    override fun defaultValueOf(parameterIdentity: String): Any? =
+        parameterSet.getParameterOrNull(parameterIdentity)?.defaultValue
+
     override fun toString(): String =
         "DatastoreConfiguration(${providerIdentity.value}, ${argument.entries.joinToString(prefix = "{", postfix = "}") { (k, v) -> "$k=${if (isSensitive(k)) MASK else v}" }})"
 }
@@ -103,7 +106,7 @@ object DatastoreConfigurationValidator {
         is DsConfigParameterDefinition -> {
             val value = argument[info.identity]
             when {
-                null == value -> if (info.optional) emptyList() else listOf("Required parameter '${info.identity}' (${info.name}) is missing")
+                null == value -> if (info.optional || null != info.defaultValue) emptyList() else listOf("Required parameter '${info.identity}' (${info.name}) is missing")
                 // a secret is read, and its type checked, when the datastore is opened
                 value is SecretReference -> if (info.sensitive) emptyList() else listOf("Parameter '${info.identity}' (${info.name}) is not sensitive, so it cannot be given a secret reference")
                 conformsTo(value, info.type).not() -> listOf("Parameter '${info.identity}' (${info.name}) must be a '${info.type.qualifiedName.value}', got a '${value::class.simpleName}'")
@@ -125,7 +128,8 @@ object DatastoreConfigurationValidator {
         }
     }
 
-    private fun conformsTo(value: Any, type: TypeDefinition): Boolean = when (type.qualifiedName) {
+    /** true if 'value' is a value of 'type' (String, Boolean, Integer, Real, or the type's implementation class) */
+    fun conformsTo(value: Any, type: TypeDefinition): Boolean = when (type.qualifiedName) {
         StdLibDefault.String.qualifiedTypeName -> value is String
         StdLibDefault.Boolean.qualifiedTypeName -> value is Boolean
         StdLibDefault.Integer.qualifiedTypeName -> value is Int || value is Long || value is Short || value is Byte

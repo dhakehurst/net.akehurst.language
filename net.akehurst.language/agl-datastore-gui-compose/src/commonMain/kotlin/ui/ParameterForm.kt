@@ -185,8 +185,9 @@ private fun ValueField(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 label()
                 Spacer(Modifier.width(12.dp))
-                Switch(checked = parameter.boolean ?: false, onCheckedChange = { parameter.boolean = it }, enabled = enabled)
-                if (def.optional) {
+                Switch(checked = parameter.boolean ?: (parameter.defaultValue as? Boolean) ?: false, onCheckedChange = { parameter.boolean = it }, enabled = enabled)
+                // with a default, 'not set' means the default is used (the switch shows it)
+                if (def.optional || null != parameter.defaultValue) {
                     Spacer(Modifier.width(8.dp))
                     if (null == parameter.boolean) {
                         Text(strings.notSet, style = MaterialTheme.typography.bodySmall)
@@ -215,6 +216,8 @@ private fun ValueField(
                 trailingIcon = if (def.sensitive) {
                     { TextButton(onClick = { shown = !shown }) { Text(if (shown) strings.hide else strings.show) } }
                 } else null,
+                // the default is used when the field is left empty
+                placeholder = if (def.sensitive) null else parameter.defaultValue?.toString(),
             )
         }
     }

@@ -34,6 +34,7 @@ suspend fun DatastoreConfiguration.withSecretsResolved(registry: SecretSourceReg
                 override val providerIdentity = original.providerIdentity
                 override val argument = resolved
                 override fun isSensitive(parameterIdentity: String) = original.isSensitive(parameterIdentity)
+                override fun defaultValueOf(parameterIdentity: String) = original.defaultValueOf(parameterIdentity)
                 override fun toString(): String = original.toString()
             }
         }

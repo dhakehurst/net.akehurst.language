@@ -54,6 +54,20 @@ class ParameterDraft(val definition: DsConfigParameterDefinition) {
             else -> text.isNotEmpty()
         }
 
+    /** the parameter's default value from the schema, null if it has none; used by the configuration when the parameter is not set */
+    val defaultValue: Any? get() = definition.defaultValue
+
+    /**
+     * true if the parameter is set to something other than its default value
+     * (a value that cannot be converted differs; a parameter without a default differs whenever it is set)
+     */
+    val differsFromDefault: Boolean
+        get() = when {
+            isSet.not() -> false
+            null == defaultValue -> true
+            else -> argument().getOrNull()?.let { sameValue(it, defaultValue!!).not() } ?: true
+        }
+
     /** the argument value, or an error message if what was typed cannot be converted; null value when not set */
     fun argument(): Result<Any?> = when {
         isSet.not() -> Result.success(null)
@@ -96,6 +110,16 @@ class ParameterDraft(val definition: DsConfigParameterDefinition) {
         private val INTEGER_PREFIX = Regex("-?[0-9]*")
         private val REAL_PREFIX = Regex("-?[0-9]*(\\.[0-9]*)?([eE][-+]?[0-9]*)?")
 
+        /** equal values, where numbers are compared by value (e.g. Int 30 and Long 30) */
+        fun sameValue(a: Any, b: Any): Boolean = when {
+            a is Number && b is Number -> when {
+                a is Double || a is Float || b is Double || b is Float -> a.toDouble() == b.toDouble()
+                else -> a.toLong() == b.toLong()
+            }
+
+            else -> a == b
+        }
+
         /** true if 'text' may be typed into a field of this kind (it may be an unfinished number) */
         fun accepts(kind: ParameterKind, text: String): Boolean = when (kind) {
             ParameterKind.INTEGER -> INTEGER_PREFIX.matches(text)
@@ -137,7 +161,7 @@ class ConfigurationDraft(
     val parameterIssues: Map<String, String>
         get() = activeParameters.mapNotNull { pd ->
             val msg = when {
-                pd.isSet.not() -> if (pd.definition.optional) null else "Required"
+                pd.isSet.not() -> if (pd.definition.optional || null != pd.defaultValue) null else "Required"
                 else -> pd.argument().exceptionOrNull()?.message
             }
             msg?.let { Pair(pd.definition.identity, it) }
@@ -160,7 +184,7 @@ class ConfigurationDraft(
 
     /**
      * true if the advanced group at 'path' must be shown open: one of its active parameters is set
-     * (parameters have no default value, so a set parameter differs from its default), or has an error.
+     * to something other than its default value (ParameterDraft.differsFromDefault), or has an error.
      * A group that is not advanced is always open.
      *
      * @param path the indexes of the parameter infos that lead to the group, as for chosenAlternative
@@ -169,7 +193,7 @@ class ConfigurationDraft(
     fun advancedGroupMustBeOpen(path: String, group: DsConfigParameterGroup, errors: Map<String, String> = parameterIssues): Boolean = when {
         group.advanced.not() -> true
         else -> activeDefinitions(group.parameterInfo, "$path/").any { def ->
-            def.identity in errors || true == parameter[def.identity]?.isSet
+            def.identity in errors || true == parameter[def.identity]?.differsFromDefault
         }
     }
 

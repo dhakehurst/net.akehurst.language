@@ -107,6 +107,7 @@ class DsParameterBuilder(
 ) {
     var _description: String = ""
     var _sensitive: Boolean = false
+    var _defaultValue: Any? = null
     lateinit var _type: TypeDefinition
 
     fun description(value: String) {
@@ -118,18 +119,31 @@ class DsParameterBuilder(
         _sensitive = value
     }
 
+    /** the default value of the parameter, of its type (String, Long, Double or Boolean for the std types) */
+    fun default(value: Any) {
+        _defaultValue = value
+    }
+
     fun type(typeName: String) {
         _type = _availableTypes.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName.asPossiblyQualifiedName)
             ?: error("Type $typeName not found in available types")
     }
 
-    fun build() = object : DsConfigParameterDefinition {
-        override val identity = _identity
-        override val name = _name
-        override val optional = _optional
-        override val description = _description
-        override val type = _type
-        override val sensitive = _sensitive
+    fun build(): DsConfigParameterDefinition {
+        _defaultValue?.let { dv ->
+            check(DatastoreConfigurationValidator.conformsTo(dv, _type)) {
+                "Default value of parameter '$_identity' ($_name) must be a '${_type.qualifiedName.value}', got a '${dv::class.simpleName}'"
+            }
+        }
+        return object : DsConfigParameterDefinition {
+            override val identity = _identity
+            override val name = _name
+            override val optional = _optional
+            override val description = _description
+            override val type = _type
+            override val sensitive = _sensitive
+            override val defaultValue = _defaultValue
+        }
     }
 
 }

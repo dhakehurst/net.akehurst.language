@@ -90,6 +90,13 @@ interface DsConfigParameterDefinition : DsConfigParameterInfo{
      */
     val sensitive: Boolean get() = false
 
+    /**
+     * the default value of the parameter, null if it has none.
+     * A DatastoreConfiguration gives it (valueOf, getAs...) when no argument is given for the parameter,
+     * and a required parameter with a default may be left out.
+     */
+    val defaultValue: Any? get() = null
+
     override fun getParameterOrNull(parameterIdentity: String): DsConfigParameterDefinition? = when (parameterIdentity) {
         identity -> this
         else -> null
@@ -151,20 +158,26 @@ interface DatastoreConfiguration {
     /** true if the parameter is declared sensitive in the provider's schema; its value must not be logged or shown */
     fun isSensitive(parameterIdentity: String): Boolean = false
 
-    fun getAsString(parameterIdentity:String): String = argument[parameterIdentity] as String
-    fun getAsStringOrNull(parameterIdentity:String): String? = argument[parameterIdentity] as String?
+    /** the default value of the parameter, from the provider's schema; null if it has none */
+    fun defaultValueOf(parameterIdentity: String): Any? = null
 
-    fun getAsInt(parameterIdentity: String): Int = (argument[parameterIdentity] as Number).toInt()
-    fun getAsIntOrNull(parameterIdentity: String): Int? = (argument[parameterIdentity] as Number?)?.toInt()
+    /** the argument given for the parameter, or else its default value; null if neither */
+    fun valueOf(parameterIdentity: String): Any? = argument[parameterIdentity] ?: defaultValueOf(parameterIdentity)
 
-    fun getAsLong(parameterIdentity: String): Long = (argument[parameterIdentity] as Number).toLong()
-    fun getAsLongOrNull(parameterIdentity: String): Long? = (argument[parameterIdentity] as Number?)?.toLong()
+    fun getAsString(parameterIdentity:String): String = valueOf(parameterIdentity) as String
+    fun getAsStringOrNull(parameterIdentity:String): String? = valueOf(parameterIdentity) as String?
 
-    fun getAsDouble(parameterIdentity: String): Double = (argument[parameterIdentity] as Number).toDouble()
-    fun getAsDoubleOrNull(parameterIdentity: String): Double? = (argument[parameterIdentity] as Number?)?.toDouble()
+    fun getAsInt(parameterIdentity: String): Int = (valueOf(parameterIdentity) as Number).toInt()
+    fun getAsIntOrNull(parameterIdentity: String): Int? = (valueOf(parameterIdentity) as Number?)?.toInt()
 
-    fun getAsBoolean(parameterIdentity: String): Boolean = argument[parameterIdentity] as Boolean
-    fun getAsBooleanOrNull(parameterIdentity: String): Boolean? = argument[parameterIdentity] as Boolean?
+    fun getAsLong(parameterIdentity: String): Long = (valueOf(parameterIdentity) as Number).toLong()
+    fun getAsLongOrNull(parameterIdentity: String): Long? = (valueOf(parameterIdentity) as Number?)?.toLong()
+
+    fun getAsDouble(parameterIdentity: String): Double = (valueOf(parameterIdentity) as Number).toDouble()
+    fun getAsDoubleOrNull(parameterIdentity: String): Double? = (valueOf(parameterIdentity) as Number?)?.toDouble()
+
+    fun getAsBoolean(parameterIdentity: String): Boolean = valueOf(parameterIdentity) as Boolean
+    fun getAsBooleanOrNull(parameterIdentity: String): Boolean? = valueOf(parameterIdentity) as Boolean?
 
 }
 
