@@ -46,6 +46,11 @@ class EditorCallbacks(
      * An exception thrown is shown as [TypesResult.NotAvailable] with its message.
      */
     val typesFor: (suspend (partId: DatastoreIdentity, provider: DatastoreProviderIdentity, datastore: DatastoreConfiguration) -> TypesResult)? = null,
+    /**
+     * reads the first 'limit' items through the chain of 'composition', from its first part up to and including the part 'upTo',
+     * e.g. by opening the composition and reading with 'access'. An exception thrown is shown as [PreviewResult.Failure].
+     */
+    val preview: PreviewCallback? = null,
 )
 
 /** How a provider is shown in the editor. */
@@ -124,6 +129,12 @@ data class EditorStrings(
     /** after the number of connections, e.g. "2 connection(s) removed" */
     val connectionsRemoved: String = "connection(s) removed",
     val undo: String = "Undo",
+    val preview: String = "Preview",
+    val previewing: String = "Reading…",
+    val previewFailed: String = "Preview failed",
+    /** after the number of items, e.g. "3 item(s)" */
+    val items: String = "item(s)",
+    val more: String = "more…",
 )
 
 /** Changes how the editor looks, without changing this module. */
@@ -138,6 +149,8 @@ class EditorCustomisation(
     val partActions: @Composable RowScope.(PartDraft) -> Unit = {},
     /** the host's own buttons for a connection, shown in the header of the connection's detail */
     val connectionActions: @Composable RowScope.(ConnectionDraft) -> Unit = {},
+    /** the most items a preview asks for */
+    val previewLimit: Int = 10,
 ) {
     companion object {
         val Default = EditorCustomisation()

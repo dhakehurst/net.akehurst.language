@@ -19,6 +19,8 @@ val callbacks = EditorCallbacks(
     testAccess = { partId, provider, cfg, access -> /* e.g. read with 'access' */ TestResult.Success() },
     // an exception thrown is shown as 'not available' with its message
     typesFor = { partId, provider, cfg -> TypesResult.Found(registry.provide(provider, partId, cfg).types()) },
+    // read the first 'limit' items through the chain up to part 'upTo'
+    preview = { composition, access, upTo, limit -> PreviewResult.Items(readUpTo(composition, access, upTo, limit)) },
 )
 DatastoreCompositionEditor(state, callbacks = callbacks, customisation = EditorCustomisation(
     toolbarActions = { Button(onClick = { save(state.build()) }, enabled = !state.hasErrors) { Text("Save") } },
@@ -58,3 +60,4 @@ Agreed with David on 2026-11-06 (design doc: https://claude.ai/artifact/FnMWtm8d
 | G19 | The chain shows each connection's ends in one small line, e.g. `owner = $self, bytes = bytes`. | done |
 | G20 | A group declared `advanced` (`group("Advanced", advanced = true) { ... }`, also inside an alternative of a choice) is a section folded by default, with an expand/collapse arrow. It opens when one of its active parameters is set to something other than its default value, or has an error (`ConfigurationDraft.advancedGroupMustBeOpen`); the user can fold it again. | done |
 | G21 | A parameter's default value (agl-datastore-api P2f) is shown as the placeholder of an empty field (not for sensitive parameters), and a Boolean switch shows it while not set. A parameter with a default is not required. The default is not written into the configuration; it is used when the field is left empty. | done |
+| G20 | Preview: each part in the access editor has a 'Preview' button that reads through the chain from the first part up to that part, with the host's `preview` callback (composition and access configurations, `upTo`, `limit` = `EditorCustomisation.previewLimit`, default 10), returning `PreviewResult.Items(items, more)` or `Failure`; an exception becomes `Failure`. Disabled (not hidden) with no callback, or while the composition or access configuration has errors. Each item shows its qualified identity (joined with '/'), its issues, and a property tree that is read one level at a time when opened (text for primitives and null, a count for collections, the message for a property that cannot be read). A result is dropped when a configuration changes. | done |

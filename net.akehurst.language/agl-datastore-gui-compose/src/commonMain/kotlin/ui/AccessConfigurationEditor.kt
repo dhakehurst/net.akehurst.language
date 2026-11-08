@@ -55,6 +55,7 @@ fun AccessConfigurationEditor(
                         strings = strings,
                         resetKey = Pair(datastore?.argument, access?.argument),
                     )
+                    PreviewPanel(state, part, callbacks, customisation)
                     partIssues.filter { (it.location as IssueLocation.Access).parameterIdentity == null }.forEach { IssueText(it) }
                 }
             }
