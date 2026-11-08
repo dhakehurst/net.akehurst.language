@@ -315,8 +315,11 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
 
        return { owner: StructuredType ->
             val typeInstance = typeRef.toTypeInstance(owner)
-            owner.appendPropertyStored(name, typeInstance, characteristics)
-                .also { setLocationFor(it, nodeInfo, sentence) }
+            when {
+                // as the types builder does (derivedPropertyOf), the expression is not part of the text
+                characteristics.contains(PropertyCharacteristic.DERIVED) -> owner.appendPropertyDerived(name, typeInstance, "", "")
+                else -> owner.appendPropertyStored(name, typeInstance, characteristics)
+            }.also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
 

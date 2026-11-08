@@ -18,7 +18,10 @@
 package net.akehurst.language.types.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.types.api.PropertyCharacteristic
+import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.api.StructuredType
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
@@ -126,8 +129,27 @@ class test_TypesAsStringRoundTrip {
                 }
             }
         }
+        // the types builder has no derived properties for data types
+        (types.findFirstDefinitionByPossiblyQualifiedNameOrNull("test.Node".asPossiblyQualifiedName) as StructuredType).let { node ->
+            node.appendPropertyDerived(PropertyName("size"), node.namespace.createTypeInstance(node.qualifiedName, "Integer".asPossiblyQualifiedName), "", "")
+        }
         val actual = assertRoundTrip(types)
+        assertTrue(actual.contains("val drv size: Integer"), actual)
         assertTrue(actual.contains("constructor(val str idn id: String, val str tags: List<String>, val str props: Map<String, String>, hint: String)"), actual)
+    }
+
+    @Test
+    fun derived_property_is_parsed_as_derived() {
+        val res = Agl.registry.agl.types.processor!!.process("""
+            namespace test
+              data A {
+                val drv size: Integer
+              }
+        """.trimIndent())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val a = assertNotNull(res.asm).findFirstDefinitionByPossiblyQualifiedNameOrNull("test.A".asPossiblyQualifiedName) as StructuredType
+        val p = assertNotNull(a.findOwnedPropertyOrNull(PropertyName("size")))
+        assertEquals(setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.DERIVED), p.characteristics)
     }
 
     @Test
