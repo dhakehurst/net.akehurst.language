@@ -276,14 +276,15 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         is EmptyRule -> listOf(textFor(item, options))
                         is Terminal -> listOf(textFor(item, options))
                         is Embedded -> listOf(textFor(item, options)) //TODO: could expand this !
-                        is NonTerminal -> when (curDepth) {
+                        // a depth given for the rule (options.ruleDepth) is used instead of the current depth
+                        is NonTerminal -> when (val ruleDepth = options.ruleDepth[item.ruleReference.value] ?: curDepth) {
                             0 -> listOf(textFor(item, options))
                             else -> {
                                 val refRule = referencedRuleFor(item, targetGrammar)
                                 when {
                                     refRule.isLeaf -> listOf(textFor(item, options))
                                     else -> {
-                                        expandItem(curDepth - 1, refRule.rhs, options, targetGrammar).map { Expansion(it.ruleItem, it.name ?: item.ruleReference.value, it.list) }
+                                        expandItem(ruleDepth - 1, refRule.rhs, options, targetGrammar).map { Expansion(it.ruleItem, it.name ?: item.ruleReference.value, it.list) }
                                     }
                                 }
                             }

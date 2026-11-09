@@ -157,9 +157,13 @@ object Agl {
         styleStr: StyleString? = null,
         formatterStr: FormatString? = null,
         configurationBase: LanguageProcessorConfiguration<Asm, SentenceContext> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContext>? = options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(registry)) } }
+        grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContext>? = options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(registry)) } },
+        completionStr: CompletionString? = null
     ): LanguageProcessorResult<Asm, SentenceContext> {
         val config = Agl.configuration(configurationBase) {
+            if (null != completionStr) {
+                completionString(completionStr)
+            }
             if (null != typeStr) {
                 typesResolver { p: LanguageProcessor<Asm, SentenceContext> ->
                     TypesDomainSimple.fromString(
@@ -202,7 +206,8 @@ object Agl {
         styleStr: String? = null,
         formatterStr: String? = null,
         configurationBase: LanguageProcessorConfiguration<Asm, SentenceContext> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContext>? = options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(registry)) } }
+        grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContext>? = options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(registry)) } },
+        completionStr: String? = null
     ) = processorFromStringSimple(
         GrammarString(grammarDefinitionStr),
         typesStr?.let { TypesString(it) },
@@ -211,7 +216,8 @@ object Agl {
         styleStr?.let { StyleString(it) },
         formatterStr?.let { FormatString(it) },
         configurationBase,
-        grammarAglOptions
+        grammarAglOptions,
+        completionStr?.let { CompletionString(it) }
     )
 
     /**

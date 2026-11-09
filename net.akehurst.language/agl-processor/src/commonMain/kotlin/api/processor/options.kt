@@ -91,6 +91,12 @@ interface CompletionProviderOptions<ContextType : Any> {
 
     var provideValuesForPatternTerminals: Boolean
 
+    /**
+     * depth for named rules (rule name -> depth), used instead of the current depth when the rule is expanded.
+     * Set by a completion definition (AGL completion language, 'depth' action).
+     */
+    var ruleDepth: Map<String, Int>
+
     val other: Map<String, Any>
 
     fun clone(): CompletionProviderOptions<ContextType>

@@ -67,6 +67,9 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
     val styleString: StyleString?
     val formatString:FormatString?
 
+    /** customises the completion items, applied on top of the default completion provider (a custom [completionProviderResolver] replaces both) */
+    val completionString: CompletionString? get() = null
+
     val scannerResolver: ScannerResolver<AsmType, ContextType>?
     val parserResolver: ParserResolver<AsmType,  ContextType>?
     val typesResolver: TypesResolver<AsmType,  ContextType>?

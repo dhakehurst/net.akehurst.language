@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.completion.processor.completionProviderWithDefinitions
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.CompletionProviderSimple
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
@@ -52,6 +53,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
     override val crossReferenceString: CrossReferenceString? = null,
     override val styleString: StyleString? = null,
     override val formatString: FormatString? = null,
+    override val completionString: CompletionString? = null,
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
@@ -79,6 +81,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override val crossReferenceString: CrossReferenceString? = null,
     override val styleString: StyleString? = null,
     override val formatString: FormatString? = null,
+    override val completionString: CompletionString? = null,
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
@@ -117,7 +120,10 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
     },
-    override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = null,
+    // no default provider, but the completion definitions (completionString) are applied to the default items, if there are any
+    override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = { p ->
+        completionProviderWithDefinitions(p, null)
+    },
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class LanguageProcessorConfigurationSimple(
@@ -130,6 +136,7 @@ internal class LanguageProcessorConfigurationSimple(
     override val crossReferenceString: CrossReferenceString? = null,
     override val styleString: StyleString? = null,
     override val formatString: FormatString? = null,
+    override val completionString: CompletionString? = null,
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
@@ -178,7 +185,9 @@ internal class LanguageProcessorConfigurationSimple(
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
     },
     override var completionProviderResolver: CompletionProviderResolver<Asm, SentenceContext>? = { p ->
-        ProcessResultDefault(
+        // the completion definitions (completionString), if any, are applied to the items of the simple provider
+        completionProviderWithDefinitions(
+            p,
             CompletionProviderSimple(p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typesDomain, p.crossReferenceDomain),
         )
     }

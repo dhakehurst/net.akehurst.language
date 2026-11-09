@@ -65,7 +65,8 @@ class TestDataProcessor(
     val typeStr: String?,
     val transformStr: String?,
     val referenceStr: String?,
-    val sentences: List<TestDataProcessorSentence>
+    val sentences: List<TestDataProcessorSentence>,
+    val completionStr: String? = null
 ) {
 }
 
@@ -123,6 +124,7 @@ class TestDataBuilder(
     private var _typeStr: String? = null
     private var _transformStr: String? = null
     private var _referenceStr: String? = null
+    private var _completionStr: String? = null
     private var _options: ProcessOptions<Asm, SentenceContext> = ProcessOptionsDefault()
     private val _sentences = mutableListOf<TestDataProcessorSentence>()
 
@@ -142,6 +144,10 @@ class TestDataBuilder(
         _referenceStr = value
     }
 
+    fun completionStr(value: String) {
+        _completionStr = value
+    }
+
     fun processOptions(value: ProcessOptions<Asm, SentenceContext>) {
         _options = value
     }
@@ -159,7 +165,8 @@ class TestDataBuilder(
         _typeStr,
         _transformStr,
         _referenceStr,
-        _sentences
+        _sentences,
+        _completionStr
     )
 }
 

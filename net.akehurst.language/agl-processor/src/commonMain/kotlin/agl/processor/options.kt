@@ -83,7 +83,8 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
     override var path: List<Pair<Int, Int>> = emptyList(),
     override var showOptionalItems: Boolean = true,
     override var provideValuesForPatternTerminals: Boolean = false,
-    override val other: Map<String, Any> = mutableMapOf()
+    override val other: Map<String, Any> = mutableMapOf(),
+    override var ruleDepth: Map<String, Int> = emptyMap()
 ) : CompletionProviderOptions<ContextType> {
     override fun clone() = CompletionProviderOptionsDefault<ContextType>(
         sentenceContext = this.sentenceContext,
@@ -91,7 +92,8 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
         path = this.path,
         showOptionalItems = this.showOptionalItems,
         provideValuesForPatternTerminals = this.provideValuesForPatternTerminals,
-        other = other
+        other = other,
+        ruleDepth = this.ruleDepth
     )
 }
 

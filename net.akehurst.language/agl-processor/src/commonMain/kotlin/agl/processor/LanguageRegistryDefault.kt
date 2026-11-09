@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.completion.api.AglCompletionDomain
+import net.akehurst.language.completion.processor.AglCompletion
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
@@ -146,6 +148,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val m2mTransformLanguageIdentity: LanguageIdentity get() = M2mTransform.identity
         override val styleLanguageIdentity: LanguageIdentity get() = AglStyle.identity
         override val formatLanguageIdentity: LanguageIdentity get() = AglFormat.identity
+        override val completionLanguageIdentity: LanguageIdentity get() = AglCompletion.identity
 
         override val base: LanguageDefinition<Any, SentenceContext> by lazy {
             this@LanguageRegistryDefault.registerFromLanguageObject(AglBase)
@@ -193,6 +196,12 @@ class LanguageRegistryDefault : LanguageRegistry {
             base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglStyle)
         }
+
+        override val completion: LanguageDefinition<AglCompletionDomain, SentenceContext> by lazy {
+            base //ensure base is instantiated
+            expressions //ensure expressions is instantiated
+            this@LanguageRegistryDefault.registerFromLanguageObject(AglCompletion)
+        }
     }
 
     override fun initialise() {
@@ -205,6 +214,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         agl.m2mTransform
         agl.format
         agl.style
+        agl.completion
     }
 
     fun <AsmType : Any, ContextType : Any> registerFromDefinition(definition: LanguageDefinition<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> {

@@ -43,6 +43,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _crossReferenceString: CrossReferenceString? = base.crossReferenceString
     private var _styleString: StyleString? = base.styleString
     private var _formatString: FormatString? = base.formatString
+    private var _completionString: CompletionString? = base.completionString
 
     private var _regexEngineKind: RegexEngineKind = base.regexEngineKind
     private var _scannerKind: ScannerKind = base.scannerKind
@@ -91,6 +92,10 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
 
     fun formatString(value: FormatString?) {
         _formatString = value
+    }
+
+    fun completionString(value: CompletionString?) {
+        _completionString = value
     }
 
     fun scanner(scannerKind: ScannerKind, regexEngineKind: RegexEngineKind) {
@@ -169,6 +174,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             crossReferenceString = _crossReferenceString,
             styleString = _styleString,
             formatString = _formatString,
+            completionString = _completionString,
 
             regexEngineKind = _regexEngineKind,
             scannerKind = _scannerKind,
