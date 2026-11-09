@@ -23,6 +23,7 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.kotlinx.collections.toSeparatedList
@@ -35,11 +36,29 @@ import net.akehurst.language.types.asm.*
 internal data class TypeRefInfo(
     val name: PossiblyQualifiedName,
     val args: List<TypeRefInfo>,
-    val isNullable: Boolean
+    val isNullable: Boolean,
+    /** the name of this, when it is a named type argument (of a tuple type) */
+    val argName: String? = null,
+    /** true if a type argument list is given, even if it is empty ('<>') */
+    val hasTypeArgumentList: Boolean = args.isNotEmpty()
 ) {
-    fun toTypeInstance(contextType: TypeDefinition): TypeInstance {
-        val targs = args.map { it.toTypeInstance(contextType).asTypeArgument }
-        return contextType.namespace.createTypeInstance(contextType.qualifiedName, name, targs, isNullable)
+    /** a reference to std TupleType with a type argument list ('TupleType<>' or 'TupleType<a:A, ...>'), all of its type arguments are named */
+    val isTupleType: Boolean
+        get() = hasTypeArgumentList
+            && name.simpleName == StdLibDefault.TupleType.name
+            && (name is SimpleName || name == StdLibDefault.TupleType.qualifiedName)
+            && args.all { null != it.argName }
+
+    fun toTypeInstance(contextType: TypeDefinition): TypeInstance = when {
+        isTupleType -> {
+            val targs = args.map { TypeArgumentNamedSimple(PropertyName(it.argName!!), it.toTypeInstance(contextType)) }
+            contextType.namespace.createTupleTypeInstance(targs, isNullable)
+        }
+
+        else -> {
+            val targs = args.map { it.toTypeInstance(contextType).asTypeArgument }
+            contextType.namespace.createTypeInstance(contextType.qualifiedName, name, targs, isNullable)
+        }
     }
 }
 
@@ -87,6 +106,10 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         super.register(this::str_drv)
         super.register(this::typeReference)
         super.register(this::typeArgumentList)
+        super.register(this::typeArgument)
+        super.register(this::typeArgumentName)
+        super.register(this::name)
+        super.register(this::possiblyQualifiedName)
         super.register(this::association)
         super.register(this::associationEnd)
     }
@@ -371,16 +394,40 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     // typeReference = possiblyQualifiedName typeArgumentList? '?'?;
     private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeRefInfo {
         val pqn = children[0] as PossiblyQualifiedName
-        val typeArgumentList = children[1] as List<TypeRefInfo>? ?: emptyList()
+        val typeArgumentList = children[1] as List<TypeRefInfo>?
         val isNullable = (children[2] as String?) != null
-        val tr = TypeRefInfo(pqn, typeArgumentList, isNullable)//.also { locationMap[it] = nodeInfo.node.locationIn(sentence) }
+        val tr = TypeRefInfo(pqn, typeArgumentList ?: emptyList(), isNullable, hasTypeArgumentList = null != typeArgumentList)//.also { locationMap[it] = nodeInfo.node.locationIn(sentence) }
         return tr
     }
 
-    //typeArgumentList = '<' [ typeReference / ',']+ '>' ;
+    //typeArgumentList = '<' [ typeArgument / ',']* '>' ;
     private fun typeArgumentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<TypeRefInfo> {
         val list = (children[1] as List<Any>).toSeparatedList<Any, TypeRefInfo, String>().items
         return list
+    }
+
+    // typeArgument = typeArgumentName? typeReference ;
+    private fun typeArgument(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeRefInfo {
+        val argName = children[0] as String?
+        val typeRef = children[1] as TypeRefInfo
+        return typeRef.copy(argName = argName)
+    }
+
+    // typeArgumentName = name ':' ;
+    private fun typeArgumentName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        children[0] as String
+
+    // override possiblyQualifiedName = [name / '.']+ ;
+    private fun possiblyQualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        (children as List<String>).joinToString(separator = "").asPossiblyQualifiedName
+
+    // name = IDENTIFIER | QUOTED_NAME ;
+    private fun name(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
+        val text = children[0] as String
+        return when {
+            text.length >= 2 && text.startsWith('`') && text.endsWith('`') -> text.substring(1, text.length - 1)
+            else -> text
+        }
     }
 
     private fun createTypeInstance(ns: TypesNamespace, contextType: TypeDefinition, tInfo:TypeRefInfo) : TypeInstance {

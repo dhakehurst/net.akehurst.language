@@ -64,6 +64,55 @@ class test_TypesAsStringRoundTrip {
     }
 
     @Test
+    fun names_that_are_not_identifiers_or_are_keywords() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    constructor_ {
+                        parameter(setOf(VAL), "\$value", "String")
+                    }
+                    propertyOf(setOf(VAR, CMP, STR), "\$group", "String")
+                    propertyOf(setOf(VAR, CMP, STR), "str", "String")
+                    propertyOf(setOf(VAR, CMP, STR), "end", "String")
+                }
+                data("B")
+                association {
+                    end("A", setOf(REF, VAR), "owned", ownedByAssociation = true)
+                    end("B", setOf(REF, VAR), "\$b", isNullable = true, ownedByAssociation = true)
+                }
+            }
+        }
+        val actual = assertRoundTrip(types)
+        assertTrue(actual.contains("constructor(val str `\$value`: String)"), actual)
+        assertTrue(actual.contains("cmp var str `\$group`: String"), actual)
+        assertTrue(actual.contains("cmp var str str: String"), actual)
+        assertTrue(actual.contains("cmp var str end: String"), actual)
+        assertTrue(actual.contains("end owned ref var owned: A"), actual)
+    }
+
+    @Test
+    fun types_generated_from_a_grammar() {
+        // these have names with '$' and tuple types (with named type arguments, possibly none)
+        val grammarStr = """
+            namespace test
+            grammar Test {
+              skip leaf WS = "\\s+" ;
+              unit = decl* ;
+              decl = 'var' ID (':' type)? ('=' expr)? ';' ;
+              type = ID | ID '<' [type / ',']+ '>' ;
+              expr = ID | NUM | expr '+' expr | '(' expr ')' | expr? '!' ;
+              leaf ID = "[a-z]+" ;
+              leaf NUM = "[0-9]+" ;
+            }
+        """.trimIndent()
+        val res = Agl.processorFromStringSimple(net.akehurst.language.api.processor.GrammarString(grammarStr))
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        val actual = assertRoundTrip(assertNotNull(res.processor).typesDomain)
+        assertTrue(actual.contains("`\$group`: TupleType<>?"), actual)
+        assertTrue(actual.contains("TupleType<expr:Expr, expr2:Expr>"), actual)
+    }
+
+    @Test
     fun association_both_ends_owned_by_association() {
         // as agl-datastore-common's composition createTypes creates them
         val types = typesDomain("Test", true) {
