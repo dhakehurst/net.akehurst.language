@@ -48,9 +48,24 @@ internal fun asTypesString(characteristics: Set<PropertyCharacteristic>, nameAnd
 }
 
 /** a constructor parameter, with the characteristics of the property it sets (if any) */
-internal fun StructuredType.constructorParameterAsString(context: TypesNamespace, param: ParameterDeclaration, nameTypeSeparator: String, withProperty: Boolean = true): String {
-    val prop = if (withProperty) this.findOwnedPropertyOrNull(PropertyName(param.name.value))?.takeIf { it.isConstructor } else null
-    return asTypesString(prop?.characteristics ?: emptySet(), "${param.name.value}$nameTypeSeparator${param.typeInstance.signature(context, 0)}")
+internal fun constructorParameterAsString(context: TypesNamespace, param: ParameterDeclaration, nameTypeSeparator: String): String =
+    asTypesString(param.property?.characteristics ?: emptySet(), "${param.name.value}$nameTypeSeparator${param.typeInstance.signature(context, 0)}")
+
+/**
+ * A constructor parameter with characteristics sets a property; several constructors may set the same property.
+ * Returns null if there is no property of that name yet, or the existing property if it is a constructor property
+ * with the same type and characteristics, else a message saying why it conflicts.
+ */
+internal fun StructuredType.existingConstructorPropertyOrConflict(name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>): Pair<PropertyDeclaration?, String?> {
+    val existing = this.findOwnedPropertyOrNull(name)
+    val expectedChrs = characteristics + PropertyCharacteristic.CONSTRUCTOR + PropertyCharacteristic.STORED
+    return when {
+        null == existing -> Pair(null, null)
+        existing.isConstructor.not() -> Pair(null, "Constructor parameter '${name.value}' of '${this.qualifiedName.value}': a property of that name exists that is not set by a constructor")
+        existing.typeInstance != typeInstance -> Pair(null, "Constructor parameter '${name.value}' of '${this.qualifiedName.value}': type '${typeInstance}' differs from the type '${existing.typeInstance}' of the existing constructor property")
+        existing.characteristics != expectedChrs -> Pair(null, "Constructor parameter '${name.value}' of '${this.qualifiedName.value}': characteristics ${expectedChrs.map { it.asString() }} differ from those of the existing constructor property ${existing.characteristics.map { it.asString() }}")
+        else -> Pair(existing, null)
+    }
 }
 
 class TypesDomainSimple(
@@ -1487,7 +1502,7 @@ class ValueTypeSimple(
     override fun asStringInContext(context: TypesNamespace): String {
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
         // a value type has one constructor with a single parameter
-        val cargs = this.constructors.firstOrNull()?.parameters?.joinToString(separator = ", ") { this.constructorParameterAsString(context, it, ":") }
+        val cargs = this.constructors.firstOrNull()?.parameters?.joinToString(separator = ", ") { constructorParameterAsString(context, it, ":") }
             ?: this.property.joinToString(separator = ", ") { asTypesString(it.characteristics, "${it.name}:${it.typeInstance.signature(context, 0)}") }
 
         val props = this.property
@@ -1636,17 +1651,14 @@ class DataTypeSimple(
             "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
-        // a property is written (by its characteristics) only with the first parameter that sets it,
-        // a parameter of a later constructor that sets the same property is written without, so that parsing does not add the property twice
-        val propertyWritten = mutableSetOf<String>()
+        // a parameter that sets a property is written with the property's characteristics
         val cons = this.constructors.map { c ->
-            c.parameters.joinToString(prefix = "constructor(", separator = ", ", postfix = ")") {
-                this.constructorParameterAsString(context, it, ": ", propertyWritten.add(it.name.value))
-            }
+            c.parameters.joinToString(prefix = "constructor(", separator = ", ", postfix = ")") { constructorParameterAsString(context, it, ": ") }
         }
-        // constructor properties are written as constructor parameters, properties for association ends in the association
+        // properties set by constructor parameters are written with the parameters, properties for association ends in the association
+        val setByConstructor = this.constructors.flatMap { it.parameters }.mapNotNull { it.property }.toSet()
         val props = this.property
-            .filter { it.isConstructor.not() && it.opposite.isEmpty() }
+            .filter { setByConstructor.contains(it).not() && it.opposite.isEmpty() }
             .map { asTypesString(it.characteristics, "${it.name}: ${it.typeInstance.signature(context, 0)}") }
         val body = (cons + props).joinToString(separator = "\n    ")
         return "data ${name}${targs}${sups} {\n    $body\n  }"
@@ -1962,14 +1974,16 @@ class MethodDefinitionResolvedSimple(
 class ParameterDefinitionSimple(
     override val name: TmParameterName,
     override val typeInstance: TypeInstance,
-    override val defaultValue: String?
+    override val defaultValue: String?,
+    override val property: PropertyDeclaration? = null
 ) : ParameterDeclaration {
 
     override fun findInOrCloneTo(other: TypesDomain): ParameterDeclaration =
         ParameterDefinitionSimple(
             this.name,
             this.typeInstance.findInOrCloneTo(other),
-            this.defaultValue
+            this.defaultValue,
+            this.property?.findInOrCloneTo(other)
         )
 
     override fun hashCode(): Int = listOf(name).hashCode()

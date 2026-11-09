@@ -862,18 +862,25 @@ class ConstructorBuilder(
         val targs = tab.build()
         //val ty = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, nullable)
         val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, targs, nullable)
-        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ti, null))
-        if (characteristic.isNotEmpty()) {
-            when (_type) {
-                is DataType, is ValueType -> _type.appendPropertyStored(
-                    PropertyName(name),
-                    ti,
-                    characteristic + PropertyCharacteristic.CONSTRUCTOR,
-                    accessor = accessor as ((Any)->Any?)?,
-                    mutator = mutator as ((Any, Any?)->Unit)?
-                )
+        val prop = when {
+            characteristic.isEmpty() -> null
+            else -> when (_type) {
+                is DataType, is ValueType -> {
+                    // several constructors may set the same property
+                    val (existing, conflict) = _type.existingConstructorPropertyOrConflict(PropertyName(name), ti, characteristic)
+                    if (null != conflict) error(conflict)
+                    existing ?: _type.appendPropertyStored(
+                        PropertyName(name),
+                        ti,
+                        characteristic + PropertyCharacteristic.CONSTRUCTOR,
+                        accessor = accessor as ((Any)->Any?)?,
+                        mutator = mutator as ((Any, Any?)->Unit)?
+                    )
+                }
+                else -> null
             }
         }
+        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ti, null, prop))
     }
     fun parameter(
         characteristic: Set<PropertyCharacteristic>, name: String, typeName: String, nullable: Boolean = false,

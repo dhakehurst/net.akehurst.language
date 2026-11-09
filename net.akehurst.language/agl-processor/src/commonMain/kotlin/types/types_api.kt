@@ -604,5 +604,8 @@ interface ParameterDeclaration {
     val typeInstance: TypeInstance
     val defaultValue: String?
 
+    /** the property that this (constructor) parameter sets, if any; several constructors may set the same property */
+    val property: PropertyDeclaration?
+
     fun findInOrCloneTo(other: TypesDomain): ParameterDeclaration
 }

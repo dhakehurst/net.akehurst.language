@@ -48,6 +48,22 @@ class test_TypesAsStringRoundTrip {
     }
 
     @Test
+    fun builtin_language_types() {
+        // AglRegex.typesDomain is not implemented yet
+        listOf(
+            net.akehurst.language.base.processor.AglBase.typesDomain,
+            net.akehurst.language.grammar.processor.AglGrammar.typesDomain,
+            AglTypes.typesDomain,
+            net.akehurst.language.expressions.processor.AglExpressions.typesDomain,
+            net.akehurst.language.asmTransform.processor.AsmTransform.typesDomain,
+            net.akehurst.language.reference.processor.AglCrossReference.typesDomain,
+            net.akehurst.language.style.processor.AglStyle.typesDomain,
+            net.akehurst.language.format.processor.AglFormat.typesDomain,
+            net.akehurst.language.m2mTransform.processor.M2mTransform.typesDomain,
+        ).forEach { assertRoundTrip(it) }
+    }
+
+    @Test
     fun association_both_ends_owned_by_association() {
         // as agl-datastore-common's composition createTypes creates them
         val types = typesDomain("Test", true) {
@@ -176,11 +192,42 @@ class test_TypesAsStringRoundTrip {
                         parameter(setOf(), "label", "String")
                         parameter(setOf(VAL), "size", "Integer")
                     }
+                    constructor_ {
+                        parameter(setOf(REF, VAL), "label", "String")
+                        parameter(setOf(VAL), "size", "Integer")
+                    }
                 }
             }
         }
+        val node = types.findFirstDefinitionByPossiblyQualifiedNameOrNull("test.Node".asPossiblyQualifiedName) as StructuredType
+        assertEquals(listOf("label", "size"), node.property.map { it.name.value })
         val actual = assertRoundTrip(types)
-        assertTrue(actual.contains("constructor(ref val str label: String)\n    constructor(label: String, val str size: Integer)"), actual)
+        assertTrue(actual.contains("constructor(ref val str label: String)\n    constructor(label: String, val str size: Integer)\n    constructor(ref val str label: String, val str size: Integer)"), actual)
+    }
+
+    @Test
+    fun data_constructor_parameter_conflicts_with_existing_property() {
+        val res = Agl.registry.agl.types.processor!!.process("""
+            namespace test
+              data A {
+                constructor(val a: String)
+                constructor(var a: String)
+              }
+        """.trimIndent())
+        assertTrue(res.allIssues.errors.isNotEmpty(), res.allIssues.toString())
+    }
+
+    @Test
+    fun constructor_property_not_set_by_a_parameter_is_written_as_a_property() {
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    propertyOf(setOf(VAL, CON), "a", "String")
+                }
+            }
+        }
+        val actual = types.asString()
+        assertTrue(actual.contains("val str a: String"), actual)
     }
 
     @Test

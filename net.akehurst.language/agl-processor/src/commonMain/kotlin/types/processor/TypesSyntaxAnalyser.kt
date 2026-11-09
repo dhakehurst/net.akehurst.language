@@ -299,11 +299,22 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
 
         return { owner: TypeDefinition ->
             val tp = typeRef.toTypeInstance(owner)
-            if (characteristics.isNotEmpty() && owner is StructuredType) {
-                // as the types builder does: a parameter with characteristics is also a property, set by the constructor
-                owner.appendPropertyStored(PropertyName(name.value), tp, characteristics + PropertyCharacteristic.CONSTRUCTOR)
+            // as the types builder does: a parameter with characteristics sets a property, several constructors may set the same property
+            val prop = when {
+                characteristics.isNotEmpty() && owner is StructuredType -> {
+                    val pn = PropertyName(name.value)
+                    val (existing, conflict) = owner.existingConstructorPropertyOrConflict(pn, tp, characteristics)
+                    when {
+                        null != conflict -> {
+                            issues.error(locationForNode(sentence, nodeInfo.node), conflict)
+                            null
+                        }
+                        else -> existing ?: owner.appendPropertyStored(pn, tp, characteristics + PropertyCharacteristic.CONSTRUCTOR)
+                    }
+                }
+                else -> null
             }
-            ParameterDefinitionSimple(name, tp, null) //TODO: default value
+            ParameterDefinitionSimple(name, tp, null, prop) //TODO: default value
                 .also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
