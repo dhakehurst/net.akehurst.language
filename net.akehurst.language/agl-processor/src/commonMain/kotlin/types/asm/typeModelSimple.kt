@@ -592,12 +592,13 @@ class TupleTypeInstanceSimple(
         )
     }
 
-    override fun hashCode(): Int = listOf(resolvedDefinition, typeArguments, isNullable).hashCode()
+    // a tuple type equals another if they have the same (name, type) type arguments, in any order
+    private val typeArgumentSet get() = typeArguments.map { Pair(it.name, it.type) }.toSet()
+    override fun hashCode(): Int = listOf(resolvedDefinition, typeArgumentSet, isNullable).hashCode()
     override fun equals(other: Any?): Boolean = when {
-        other !is TypeInstanceSimple -> false
-        this.resolvedDefinition != other.resolvedDefinition -> false
+        other !is TupleTypeInstanceSimple -> false
         this.isNullable != other.isNullable -> false
-        this.typeArguments != other.typeArguments -> false
+        this.typeArgumentSet != other.typeArgumentSet -> false
         else -> true
     }
 
