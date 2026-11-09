@@ -17,6 +17,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
@@ -42,6 +43,7 @@ typealias SyntaxAnalyserResolver<AsmType,  ContextType> = (LanguageProcessor<Asm
 typealias SemanticAnalyserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
 typealias FormatResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglFormatDomain>
 typealias StyleResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglStyleDomain>
+typealias CompletionResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglCompletionDomain>
 typealias CompletionProviderResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CompletionProvider<AsmType, ContextType>>
 
 /**
@@ -68,7 +70,7 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
     val formatString:FormatString?
 
     /** customises the completion items, applied on top of the default completion provider (a custom [completionProviderResolver] replaces both) */
-    val completionString: CompletionString? get() = null
+    val completionString: CompletionString?
 
     val scannerResolver: ScannerResolver<AsmType, ContextType>?
     val parserResolver: ParserResolver<AsmType,  ContextType>?
@@ -81,6 +83,7 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
 
     val styleResolver: StyleResolver<AsmType,  ContextType>?
     val formatResolver: FormatResolver<AsmType,  ContextType>?
+    val completionResolver: CompletionResolver<AsmType,  ContextType>?
     val completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>?
 }
 

@@ -16,6 +16,8 @@
 
 package net.akehurst.language.format.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
@@ -117,6 +119,11 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
           // TODO
     """.trimIndent()
 
@@ -237,6 +244,11 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
     override val formatDomain by lazy {
         formatDomain(AglStyle.NAME) {
 //            TODO("not implemented")
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

@@ -20,34 +20,27 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.completion.api.*
-import net.akehurst.language.completion.asm.AglCompletionDomainDefault
 import net.akehurst.language.grammar.api.ListOfItems
 import net.akehurst.language.grammar.api.NonTerminal
 import net.akehurst.language.grammar.api.OptionalItem
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.Terminal
-import net.akehurst.language.grammar.processor.contextFromGrammar
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 
 /**
  * the provider for a language processor: [inner] (null for the default items), with the completion definitions
- * of the processor's configuration (completionString) applied to its items, when there are any.
+ * of the processor (its completionDomain, from the configuration's completionString) applied to its items, when there are any.
+ * (Issues found in the completion definitions are recorded by the processor when it resolves its completionDomain.)
  */
 fun <AsmType : Any, ContextType : Any> completionProviderWithDefinitions(
     p: LanguageProcessor<AsmType, ContextType>,
     inner: CompletionProvider<AsmType, ContextType>?
 ): ProcessResult<CompletionProvider<AsmType, ContextType>> {
-    val completionStr = p.configuration.completionString
-    return when {
-        null == completionStr || completionStr.value.isBlank() -> ProcessResultDefault(inner)
-        else -> {
-            val res = AglCompletionDomainDefault.fromString(p.grammarDomain?.let { contextFromGrammar(it) }, completionStr)
-            val issues = IssueHolder(LanguageProcessorPhase.ALL).also { it.addAllFrom(res.allIssues) }
-            val provider = res.asm?.let { CompletionProviderFromDomain(it, inner) } ?: inner
-            ProcessResultDefault(provider, processIssues = issues)
-        }
+    val domain = p.completionDomain
+    val provider = when {
+        null == domain || domain.allCompletionRules.isEmpty() -> inner
+        else -> CompletionProviderFromDomain(domain, inner)
     }
+    return ProcessResultDefault(provider)
 }
 
 /**

@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.completion.asm.AglCompletionDomainDefault
 import net.akehurst.language.completion.processor.completionProviderWithDefinitions
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.CompletionProviderSimple
@@ -67,6 +68,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
 
     override var formatResolver: FormatResolver<AsmType, ContextType>? = null,
     override var styleResolver: StyleResolver<AsmType, ContextType>? = null,
+    override var completionResolver: CompletionResolver<AsmType, ContextType>? = null,
     override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = null
 
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
@@ -119,6 +121,9 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
+    },
+    override var completionResolver: CompletionResolver<AsmType, ContextType>? = { p ->
+        AglCompletionDomainDefault.fromString(p.grammarDomain?.let { contextFromGrammar(it) }, p.configuration.completionString ?: CompletionString(""))
     },
     // no default provider, but the completion definitions (completionString) are applied to the default items, if there are any
     override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = { p ->
@@ -183,6 +188,9 @@ internal class LanguageProcessorConfigurationSimple(
     },
     override var styleResolver: StyleResolver<Asm, SentenceContext>? = { p ->
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
+    },
+    override var completionResolver: CompletionResolver<Asm, SentenceContext>? = { p ->
+        AglCompletionDomainDefault.fromString(p.grammarDomain?.let { contextFromGrammar(it) }, p.configuration.completionString ?: CompletionString(""))
     },
     override var completionProviderResolver: CompletionProviderResolver<Asm, SentenceContext>? = { p ->
         // the completion definitions (completionString), if any, are applied to the items of the simple provider

@@ -106,6 +106,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
 
     //override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
     override val styleStrObservers = mutableListOf<(oldValue: StyleString?, newValue: StyleString?) -> Unit>()
+    override val completionStrObservers = mutableListOf<(oldValue: CompletionString?, newValue: CompletionString?) -> Unit>()
     //override val styleObservers = mutableListOf<(oldValue: AglStyleModel?, newValue: AglStyleModel?) -> Unit>()
 
     override fun toString(): String = identity.value

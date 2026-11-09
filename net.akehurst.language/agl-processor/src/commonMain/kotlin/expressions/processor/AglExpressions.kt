@@ -17,6 +17,8 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -219,6 +221,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
         namespace ${NAMESPACE_NAME}
         
     """.trimIndent() // TODO
+
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
 
     override val grammarDomain by lazy {
         grammarDomain(NAME) {
@@ -724,6 +731,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
 //            TODO("not implemented")
             }
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

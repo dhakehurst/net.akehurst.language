@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl
 
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
@@ -81,6 +82,7 @@ object Agl {
             crossReferenceString = CrossReferenceString(languageObject.crossReferenceString),
             styleString = StyleString(languageObject.styleString),
             formatString = FormatString(languageObject.formatString),
+            completionString = CompletionString(languageObject.completionString),
             typesResolver = { p -> ProcessResultDefault<TypesDomain>(languageObject.typesDomain) },
             transformResolver = { p -> ProcessResultDefault<AsmTransformDomain>(languageObject.asmTransformDomain) },
             crossReferenceResolver = { p -> ProcessResultDefault<CrossReferenceDomain>(languageObject.crossReferenceDomain) },
@@ -88,6 +90,7 @@ object Agl {
             semanticAnalyserResolver = { p -> ProcessResultDefault<SemanticAnalyser<AsmType, ContextType>>(languageObject.semanticAnalyser) },
             formatResolver = { p -> ProcessResultDefault<AglFormatDomain>(languageObject.formatDomain) },
             styleResolver = { p -> ProcessResultDefault<AglStyleDomain>(languageObject.styleDomain) },
+            completionResolver = { p -> ProcessResultDefault<AglCompletionDomain>(languageObject.completionDomain) },
             completionProviderResolver = { p -> ProcessResultDefault<CompletionProvider<AsmType, ContextType>>(languageObject.completionProvider) },
         )
 
@@ -286,6 +289,7 @@ object Agl {
         referenceStr: CrossReferenceString? = null,
         styleStr: StyleString? = null,
         formatterStr: FormatString? = null,
+        completionStr: CompletionString? = null,
         configurationBase: LanguageProcessorConfiguration<AsmType, ContextType> = configurationBase(),
         grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContext>? = options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(registry)) } }
     ): LanguageDefinition<AsmType, ContextType> {
@@ -296,6 +300,7 @@ object Agl {
             crossReferenceString(referenceStr)
             styleString(styleStr)
             formatString(formatterStr)
+            completionString(completionStr)
         }
         return LanguageDefinitionDefault(
             identity = identity,
@@ -325,6 +330,7 @@ object Agl {
         referenceStr: CrossReferenceString? = null,
         styleStr: StyleString? = null,
         formatterStr: FormatString? = null,
+        completionStr: CompletionString? = null,
         configurationBase: LanguageProcessorConfiguration<Asm, SentenceContext> = configurationSimple(),
         grammarAglOptions: ProcessOptions<GrammarDomain, SentenceContext>? = options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(registry)) } }
     ): LanguageDefinition<Asm, SentenceContext> {
@@ -335,6 +341,7 @@ object Agl {
             crossReferenceString(referenceStr)
             styleString(styleStr)
             formatString(formatterStr)
+            completionString(completionStr)
         }
         return LanguageDefinitionDefault(
             identity = identity,

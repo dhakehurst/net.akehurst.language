@@ -16,6 +16,8 @@
 
 package net.akehurst.language.reference.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -122,6 +124,11 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}.reference.api
+          // TODO
+    """.trimIndent()
+
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
           // TODO
     """.trimIndent()
 
@@ -364,6 +371,11 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
     override val formatDomain by lazy {
         formatDomain(NAME) {
 //            TODO("not implemented")
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

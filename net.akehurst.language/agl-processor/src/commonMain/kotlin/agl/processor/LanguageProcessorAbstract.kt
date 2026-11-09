@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -141,6 +142,12 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val formatDomain: AglFormatDomain? by lazy {
         val res = configuration.formatResolver?.invoke(this)
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
+        res?.asm
+    }
+
+    override val completionDomain: AglCompletionDomain? by lazy {
+        val res = configuration.completionResolver?.invoke(this)
         res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
     }

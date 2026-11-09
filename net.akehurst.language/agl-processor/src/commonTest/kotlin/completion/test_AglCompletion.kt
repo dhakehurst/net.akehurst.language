@@ -24,6 +24,7 @@ import net.akehurst.language.api.processor.CompletionString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.completion.api.*
 import net.akehurst.language.completion.asm.AglCompletionDomainDefault
+import net.akehurst.language.completion.builder.completionDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -234,5 +235,33 @@ $rules
     fun context_does_not_match() {
         val actual = items(completion("in B ID -> decorate { description := 'name of the B' }"), "start a ")
         assertEquals("[a-z]+", actual.single().description)
+    }
+
+    @Test
+    fun builder_same_as_parsed() {
+        val built = completionDomain("Test") {
+            namespace("test") {
+                completion("Test") {
+                    add("item") { item(text = "a <ID>", label = "an A", description = "the A") }
+                    replace("item", context = "S") { item(text = "b", kind = CompletionItemKind.LITERAL) }
+                    hide("ID")
+                    decorate("B", label = "bee")
+                    depth("item", 2)
+                }
+            }
+        }
+        val parsed = parse(
+            completion(
+                """
+                item -> add [ CompletionItem() { label := 'an A' text := 'a <ID>' description := 'the A' } ]
+                in S item -> replace [ CompletionItem() { kind := 'LITERAL' text := 'b' } ]
+                ID -> hide
+                B -> decorate { label := 'bee' }
+                item -> depth 2
+                """.trimIndent()
+            )
+        )
+        assertTrue(parsed.allIssues.errors.isEmpty(), parsed.allIssues.toString())
+        assertEquals(parsed.asm!!.allCompletionRules.map { it.toString() }, built.allCompletionRules.map { it.toString() })
     }
 }

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
@@ -100,6 +101,9 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     val crossReferenceDomain: CrossReferenceDomain
 
     val formatDomain: AglFormatDomain?
+
+    /** the completion definitions (AGL completion language) applied by the completion provider, if any */
+    val completionDomain: AglCompletionDomain?
 
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
 

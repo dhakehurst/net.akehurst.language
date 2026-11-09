@@ -220,6 +220,9 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val styleString: StyleString?
     val styleDomain: AglStyleDomain?
 
+    /** customises the completion items (AGL completion language) */
+    val completionString: CompletionString?
+
     val issues: IssueCollection<LanguageIssue>
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
@@ -234,6 +237,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
     //val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
     val styleStrObservers: MutableList<(StyleString?, StyleString?) -> Unit>
+    val completionStrObservers: MutableList<(CompletionString?, CompletionString?) -> Unit>
     //val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
     fun update(
@@ -243,5 +247,6 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
         crossReferenceString: CrossReferenceString? = null,
         styleString: StyleString? = null,
         formatString: FormatString? = null,
+        completionString: CompletionString? = null,
     )
 }

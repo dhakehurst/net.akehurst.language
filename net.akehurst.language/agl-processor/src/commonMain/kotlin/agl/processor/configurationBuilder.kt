@@ -60,6 +60,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = base.semanticAnalyserResolver
     private var _formatModelResolver: FormatResolver<AsmType, ContextType>? = base.formatResolver
     private var _styleResolver: StyleResolver<AsmType, ContextType>? = base.styleResolver
+    private var _completionResolver: CompletionResolver<AsmType, ContextType>? = base.completionResolver
     private var _completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = base.completionProviderResolver
 
     fun targetGrammarName(value: String?) {
@@ -160,6 +161,10 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         _styleResolver = func
     }
 
+    fun completionResolver(func: CompletionResolver<AsmType, ContextType>?) {
+        _completionResolver = func
+    }
+
     fun completionProvider(value: CompletionProviderResolver<AsmType, ContextType>?) {
         _completionProviderResolver = value
     }
@@ -188,6 +193,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             semanticAnalyserResolver = _semanticAnalyserResolver,
             formatResolver = _formatModelResolver,
             styleResolver = _styleResolver,
+            completionResolver = _completionResolver,
             completionProviderResolver = _completionProviderResolver
         )
     }
