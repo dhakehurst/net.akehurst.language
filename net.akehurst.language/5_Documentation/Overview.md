@@ -77,6 +77,7 @@ For detailed explanations, see [Core Concepts](./CONCEPTS.md).
 - **[API Reference](./API_REFERENCE.md)** - Detailed API documentation
 - **[Examples](./EXAMPLES.md)** - Real-world example use cases
 - **[Troubleshooting](./TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Comparison](./COMPARISON.md)** - How AGL compares to other parser frameworks
 
 ## Project Information
 
