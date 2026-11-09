@@ -48,8 +48,8 @@ internal fun asTypesString(characteristics: Set<PropertyCharacteristic>, nameAnd
 }
 
 /** a constructor parameter, with the characteristics of the property it sets (if any) */
-internal fun StructuredType.constructorParameterAsString(context: TypesNamespace, param: ParameterDeclaration, nameTypeSeparator: String): String {
-    val prop = this.findOwnedPropertyOrNull(PropertyName(param.name.value))?.takeIf { it.isConstructor }
+internal fun StructuredType.constructorParameterAsString(context: TypesNamespace, param: ParameterDeclaration, nameTypeSeparator: String, withProperty: Boolean = true): String {
+    val prop = if (withProperty) this.findOwnedPropertyOrNull(PropertyName(param.name.value))?.takeIf { it.isConstructor } else null
     return asTypesString(prop?.characteristics ?: emptySet(), "${param.name.value}$nameTypeSeparator${param.typeInstance.signature(context, 0)}")
 }
 
@@ -1636,8 +1636,13 @@ class DataTypeSimple(
             "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
+        // a property is written (by its characteristics) only with the first parameter that sets it,
+        // a parameter of a later constructor that sets the same property is written without, so that parsing does not add the property twice
+        val propertyWritten = mutableSetOf<String>()
         val cons = this.constructors.map { c ->
-            c.parameters.joinToString(prefix = "constructor(", separator = ", ", postfix = ")") { this.constructorParameterAsString(context, it, ": ") }
+            c.parameters.joinToString(prefix = "constructor(", separator = ", ", postfix = ")") {
+                this.constructorParameterAsString(context, it, ": ", propertyWritten.add(it.name.value))
+            }
         }
         // constructor properties are written as constructor parameters, properties for association ends in the association
         val props = this.property

@@ -164,6 +164,26 @@ class test_TypesAsStringRoundTrip {
     }
 
     @Test
+    fun data_constructor_parameter_that_is_a_property_in_two_constructors() {
+        // the property 'label' is set by both constructors, it must be written once, else parsing adds it twice
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("Node") {
+                    constructor_ {
+                        parameter(setOf(REF, VAL), "label", "String")
+                    }
+                    constructor_ {
+                        parameter(setOf(), "label", "String")
+                        parameter(setOf(VAL), "size", "Integer")
+                    }
+                }
+            }
+        }
+        val actual = assertRoundTrip(types)
+        assertTrue(actual.contains("constructor(ref val str label: String)\n    constructor(label: String, val str size: Integer)"), actual)
+    }
+
+    @Test
     fun data_collection_type_not_resolvable() {
         // std not imported, printing must not fail
         val types = typesDomain("Test", true) {
