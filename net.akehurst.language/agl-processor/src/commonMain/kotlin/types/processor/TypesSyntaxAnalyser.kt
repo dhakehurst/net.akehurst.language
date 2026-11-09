@@ -461,7 +461,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
                 1 -> Pair(e.typeRef.args[0], e.typeRef.name)
                 else -> Pair(e.typeRef, null)
             }
-            val endType = findTypeOrNull(domain, ns, elementRef.name) as? DataType
+            val endType = domain.findTypeDefinitionOrNull(ns, elementRef.name) as? DataType
             if (null == endType) {
                 issues.error(info.location, "Association end '${e.name}': type '${elementRef.name.value}' is not found or is not a data type")
                 return
@@ -471,9 +471,4 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         ns.findOrCreateAssociation(ends)
     }
 
-    private fun findTypeOrNull(domain: TypesDomain, ns: TypesNamespace, name: PossiblyQualifiedName): TypeDefinition? = when (name) {
-        is QualifiedName -> domain.findNamespaceOrNull(name.front)?.findOwnedTypeNamed(name.last)
-        is SimpleName -> ns.findOwnedTypeNamed(name)
-            ?: ns.import.firstNotNullOfOrNull { domain.findNamespaceOrNull(it.asQualifiedName)?.findOwnedTypeNamed(name) }
-    }
 }

@@ -32,6 +32,31 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 /**
+ * Find the type named 'name', as written in namespace 'context', by looking in this domain.
+ * A qualified name is found without needing an import (its namespace must be in this domain).
+ * A simple name is looked for in 'context' and then in the namespaces 'context' imports.
+ * Unlike TypesNamespace.findTypeNamed this does not need resolveImports to be called,
+ * and namespaces do not need to know the domain, so they can be moved to, or shared between, domains.
+ */
+fun TypesDomain.findTypeDefinitionOrNull(context: TypesNamespace, name: PossiblyQualifiedName): TypeDefinition? = when (name) {
+    is QualifiedName -> findNamespaceOrNull(name.front)?.findOwnedTypeNamed(name.last)
+    is SimpleName -> context.findOwnedTypeNamed(name)
+        ?: context.import.firstNotNullOfOrNull { findNamespaceOrNull(it.asQualifiedName)?.findOwnedTypeNamed(name) }
+}
+
+/**
+ * The definition of 'typeInstance', resolved through this domain (see findTypeDefinitionOrNull above).
+ * Use this instead of TypeInstance.resolvedDefinitionOrNull when a domain is available,
+ * e.g. for a qualified name whose namespace is not imported.
+ */
+fun TypesDomain.resolveTypeDefinitionOrNull(typeInstance: TypeInstance): TypeDefinition? =
+    typeInstance.resolvedDefinitionOrNull
+        ?: when (typeInstance) {
+            is TypeInstanceSimple -> findTypeDefinitionOrNull(typeInstance.namespace, typeInstance.qualifiedOrImportedTypeName)
+            else -> null
+        }
+
+/**
  * the characteristics as written in the AglTypes language,
  * CONSTRUCTOR is not written (it is given by a constructor parameter), nor is PRIMITIVE (only used in std)
  */

@@ -23,10 +23,14 @@ import net.akehurst.language.types.api.PropertyCharacteristic
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.api.StructuredType
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.asm.resolveTypeDefinitionOrNull
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
@@ -342,5 +346,34 @@ class test_TypesAsStringRoundTrip {
         val actual = assertRoundTrip(types)
         assertTrue(actual.contains("interface A : Holder<List<String>>"), actual)
         assertTrue(actual.contains("value V : Holder<List<String>>"), actual)
+    }
+
+    @Test
+    fun qualified_type_reference_to_namespace_that_is_not_imported_resolves_through_the_domain() {
+        val text = """
+            namespace other
+              data B { }
+            namespace test
+              data A {
+                val b: other.B
+                val c: C
+              }
+              data C { }
+        """.trimIndent()
+        val res = Agl.registry.agl.types.processor!!.process(text)
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val domain = assertNotNull(res.asm)
+        val a = domain.findByQualifiedNameOrNull(net.akehurst.language.base.api.QualifiedName("test.A")) as StructuredType
+        val b = domain.findByQualifiedNameOrNull(net.akehurst.language.base.api.QualifiedName("other.B"))
+        val c = domain.findByQualifiedNameOrNull(net.akehurst.language.base.api.QualifiedName("test.C"))
+        val bType: TypeInstance = a.findOwnedPropertyOrNull(PropertyName("b"))!!.typeInstance
+        val cType: TypeInstance = a.findOwnedPropertyOrNull(PropertyName("c"))!!.typeInstance
+
+        // the namespace does not know the domain, so cannot resolve 'other.B' (it is not imported)
+        assertNull(bType.resolvedDefinitionOrNull)
+        // through the domain it resolves
+        assertSame(b, domain.resolveTypeDefinitionOrNull(bType))
+        assertSame(c, domain.resolveTypeDefinitionOrNull(cType))
+        assertRoundTrip(domain)
     }
 }
