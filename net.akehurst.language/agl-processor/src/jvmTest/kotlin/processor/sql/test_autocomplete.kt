@@ -37,12 +37,12 @@ class test_autocomplete {
                     context(contextAsmSimple())
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "terminatedStatement", "<statement> ;"),
-                            CompletionItem(CompletionItemKind.PATTERN, "SELECT", "<SELECT>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "UPDATE", "<UPDATE>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "terminatedStatement", "<terminatedStatement>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "CREATE", "<CREATE>"),
                             CompletionItem(CompletionItemKind.PATTERN, "DELETE", "<DELETE>"),
                             CompletionItem(CompletionItemKind.PATTERN, "INSERT", "<INSERT>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "CREATE", "<CREATE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "SELECT", "<SELECT>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "UPDATE", "<UPDATE>"),
                         )
                     )
                 }
@@ -50,7 +50,8 @@ class test_autocomplete {
                     context(contextAsmSimple())
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "columns", "<columns>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'*'", "*"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
@@ -66,6 +67,7 @@ class test_autocomplete {
                     })
                     expectedCompletionItems(
                         listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "tableRef", "<tableRef>"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
@@ -73,12 +75,13 @@ class test_autocomplete {
                 sentencePass("SELECT ") {
                     context(contextAsmSimple {
                         forSentence(null) {
-                            item("col1", "net.akehurst.language.sql.Column", null, "")
+                            item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", null, "")
                         }
                     })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "columns", "<columns>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'*'", "*"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
@@ -97,6 +100,7 @@ class test_autocomplete {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.REFERRED, "TableDefinition", "table1"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "tableRef", "<tableRef>"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
@@ -104,18 +108,20 @@ class test_autocomplete {
                 sentencePass("SELECT ") {
                     context(contextAsmSimple {
                         forSentence(null) {
-                            item("col1", "net.akehurst.language.sql.Column", null, "")
+                            item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", null, "")
                         }
                     })
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.REFERRED, "ColumnDefinition", "col1"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "columns", "<columns>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'*'", "*"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
-                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
                         )
                     )
                 }
             }
+            //TODO(David): fails until the completion DSL (autocomplete.agl) exists and is loaded here
             testData("With Reference & Autocomplete file") {
                 grammarStr(grammarStr)
                 referenceStr(referenceStr)

@@ -114,7 +114,7 @@ class test_AglGrammar_expectedItemsAt {
 
         val expected = listOf<CompletionItem>(
             CompletionItem(CompletionItemKind.SEGMENT, "possiblyQualifiedName", "<possiblyQualifiedName>"),
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "<IDENTIFIER>")
+            CompletionItem(CompletionItemKind.PATTERN, "IDENTIFIER", "<IDENTIFIER>")
         )
 
         assertEquals(0, result.offset)
@@ -162,7 +162,7 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "<IDENTIFIER>")
+            CompletionItem(CompletionItemKind.PATTERN, "IDENTIFIER", "<IDENTIFIER>")
         )
 
         assertEquals(0, result.offset)

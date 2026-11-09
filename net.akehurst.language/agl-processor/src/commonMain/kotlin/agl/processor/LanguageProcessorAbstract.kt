@@ -414,7 +414,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 // e.g. the rhs of a leaf rule, that is not a single terminal
                 else -> when {
                     ruleItem.owningRule.isLeaf -> listOf(
-                        CompletionItem(CompletionItemKind.PATTERN, ruleItem.owningRule.compressedLeaf.unescapedValue.value, "<${ruleItem.owningRule.name.value}>").apply { detail = ruleItem }
+                        CompletionItem(CompletionItemKind.PATTERN, ruleItem.owningRule.name.value, "<${ruleItem.owningRule.name.value}>").apply {
+                            detail = ruleItem
+                            description = ruleItem.owningRule.compressedLeaf.unescapedValue.value
+                        }
                     )
 
                     else -> emptyList()

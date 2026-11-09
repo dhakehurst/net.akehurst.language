@@ -117,14 +117,14 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class") {
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
                 sentencePass("class ") {
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>")
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>")
                         )
                     )
                 }
@@ -147,7 +147,7 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -156,7 +156,7 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -178,7 +178,7 @@ class test_CompletionProviderDefault_datatypes {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<typeReference>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -186,7 +186,7 @@ class test_CompletionProviderDefault_datatypes {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<typeReference>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -197,7 +197,7 @@ class test_CompletionProviderDefault_datatypes {
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "<typeArguments>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'<'", "<"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -208,7 +208,7 @@ class test_CompletionProviderDefault_datatypes {
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "<typeArguments>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'<'", "<"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -216,7 +216,7 @@ class test_CompletionProviderDefault_datatypes {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArgumentList", "<typeArgumentList>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -235,7 +235,7 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -243,7 +243,7 @@ class test_CompletionProviderDefault_datatypes {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<typeReference>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -262,7 +262,7 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -271,7 +271,7 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -310,7 +310,7 @@ class test_CompletionProviderDefault_datatypes {
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -318,7 +318,7 @@ class test_CompletionProviderDefault_datatypes {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> < <typeArgumentList> >"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -331,7 +331,7 @@ class test_CompletionProviderDefault_datatypes {
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeReference> , <typeReference> >"),
                             CompletionItem(CompletionItemKind.LITERAL, "'<'", "<"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -343,7 +343,7 @@ class test_CompletionProviderDefault_datatypes {
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArgumentList", "<TYPE> , <TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArgumentList", "<TYPE> , <TYPE>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -364,7 +364,7 @@ class test_CompletionProviderDefault_datatypes {
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -372,7 +372,7 @@ class test_CompletionProviderDefault_datatypes {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> < <typeArgumentList> >"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -393,7 +393,7 @@ class test_CompletionProviderDefault_datatypes {
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -403,7 +403,7 @@ class test_CompletionProviderDefault_datatypes {
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                         )
                     )
                 }
@@ -431,7 +431,7 @@ class test_CompletionProviderDefault_datatypes {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -445,7 +445,7 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             CompletionItem(CompletionItemKind.REFERRED, "Primitive", "ExternalType"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }
@@ -455,7 +455,7 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"), //TODO(David): q22, needs the context from the sentence itself
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
                     )
                 }

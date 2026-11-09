@@ -29,6 +29,10 @@ enum class CompletionItemKind {
     REFERRED,
 }
 
+/**
+ * @param label name shown to the user, e.g. the rule name (for a PATTERN the leaf rule name, its regex is in [description])
+ * @param text the text inserted into the sentence
+ */
 data class CompletionItem(
     val kind: CompletionItemKind,
     val label: String,
@@ -36,7 +40,9 @@ data class CompletionItem(
 ) {
     /** index of the expansion this item comes from (see CompletionProviderOptions.path), null if not from an expansion */
     var id: Int? = null
+    /** more information for the user, e.g. shown on hover or pre-selection in an editor. For a PATTERN it is the pattern (regex) */
     var description: String = ""
+    /** the grammar item this completion comes from, if any (for use by code, not shown to the user) */
     var detail: RuleItem? = null
 
     /**

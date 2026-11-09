@@ -382,8 +382,9 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                 is NonTerminal -> { //must be a reference to leaf
                     val name = tangibleItem.ruleReference.value
                     val refRule = referencedRuleFor(tangibleItem, targetGrammar)
-                    val label = refRule.compressedLeaf.unescapedValue.value
-                    listOf(CompletionItem(CompletionItemKind.PATTERN, label, "<$name>").apply { detail=tangibleItem })
+                    // label is the rule name, the description holds the pattern (regex)
+                    val pattern = refRule.compressedLeaf.unescapedValue.value
+                    listOf(CompletionItem(CompletionItemKind.PATTERN, name, "<$name>").apply { detail = tangibleItem; description = pattern })
                 }
 
                 is Terminal -> {
@@ -391,18 +392,19 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         tangibleItem.owningRule.isLeaf -> tangibleItem.owningRule.name.value
                         else -> tangibleItem.escapedValue.value
                     }
+                    // a pattern: label is the rule name, the description holds the pattern (regex)
                     when {
                         tangibleItem.isPattern -> when {
                             options.provideValuesForPatternTerminals -> try {
                                 val p = RegexValueProvider(tangibleItem.unescapedValue.value, 'X') //TODO: pass in the 'any value'
                                 val txt = p.provide()
-                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, txt).apply { detail=tangibleItem })
+                                listOf(CompletionItem(CompletionItemKind.PATTERN, name, txt).apply { detail = tangibleItem; description = tangibleItem.unescapedValue.value })
                             } catch (t: Throwable) {
                                 t.printStackTrace() // should not happen, but bugs in AGL regex could cause it
-                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, "<$name>").apply { detail=tangibleItem })
+                                listOf(CompletionItem(CompletionItemKind.PATTERN, name, "<$name>").apply { detail = tangibleItem; description = tangibleItem.unescapedValue.value })
                             }
 
-                            else -> listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, "<$name>").apply { detail=tangibleItem })
+                            else -> listOf(CompletionItem(CompletionItemKind.PATTERN, name, "<$name>").apply { detail = tangibleItem; description = tangibleItem.unescapedValue.value })
                         }
 
                         else -> listOf(CompletionItem(CompletionItemKind.LITERAL, "'$name'", tangibleItem.unescapedValue.value).apply { detail=tangibleItem })

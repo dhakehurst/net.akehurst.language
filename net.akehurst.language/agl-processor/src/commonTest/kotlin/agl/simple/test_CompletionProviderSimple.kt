@@ -122,7 +122,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "[a-z]", "<PAT>")
+            CompletionItem(CompletionItemKind.PATTERN, "PAT", "<PAT>")
         )
         test(
             TestData(
@@ -185,7 +185,7 @@ class test_CompletionProviderSimple {
 
         val expected = listOf(
             CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<NAME>")
+            CompletionItem(CompletionItemKind.PATTERN, "NAME", "<NAME>")
         )
 
         test(
@@ -238,7 +238,7 @@ class test_CompletionProviderSimple {
         val expected = listOf(
             CompletionItem(CompletionItemKind.REFERRED, "TypeDef", "int"),
             CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<REF>"),
+            CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
         )
 
         test(
