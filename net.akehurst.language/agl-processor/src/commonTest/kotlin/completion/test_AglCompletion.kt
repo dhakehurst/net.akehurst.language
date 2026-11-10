@@ -264,4 +264,24 @@ $rules
         assertTrue(parsed.allIssues.errors.isEmpty(), parsed.allIssues.toString())
         assertEquals(parsed.asm!!.allCompletionRules.map { it.toString() }, built.allCompletionRules.map { it.toString() })
     }
+
+    @Test
+    fun unknown_rule_names() {
+        val res = Agl.processorFromStringSimple(
+            GrammarString(GRAMMAR),
+            completionStr = CompletionString(completion("in X item -> hide\nY -> hide\nin S ID -> hide"))
+        )
+        val proc = res.processor!!
+        proc.completionDomain
+        val messages = proc.allIssues.errors.map { it.message }
+        assertEquals(
+            listOf(
+                "Grammar Rule 'X' not found for completion rule",
+                "Grammar Rule 'Y' not found for completion rule",
+            ),
+            messages,
+            proc.allIssues.toString()
+        )
+        assertTrue(proc.allIssues.errors.all { null != it.location }, proc.allIssues.toString())
+    }
 }

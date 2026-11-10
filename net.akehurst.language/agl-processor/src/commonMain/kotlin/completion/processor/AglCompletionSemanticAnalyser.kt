@@ -23,11 +23,22 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.completion.api.AglCompletionDomain
+import net.akehurst.language.completion.api.CompletionRule
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
+/**
+ * Checks that the rule names used in the completion rules (the expected item and the context) are grammar rules,
+ * when the sentence context holds the grammar of the language.
+ */
 class AglCompletionSemanticAnalyser : SemanticAnalyser<AglCompletionDomain, SentenceContext> {
+
+    companion object {
+        // as in AglStyleSemanticAnalyser
+        private val grammarRuleQualifiedName = QualifiedName("net.akehurst.language.grammar.api.GrammarRule")
+    }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: LocationMap? = null
@@ -43,7 +54,19 @@ class AglCompletionSemanticAnalyser : SemanticAnalyser<AglCompletionDomain, Sent
         options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: LocationMapDefault()
-        //TODO: check the rule names (forItem, context) exist in the grammar of the language, when the context holds it
+        val sentenceContext = options.sentenceContext
+        if (null != sentenceContext) {
+            asm.allCompletionRules.forEach { rule ->
+                checkRuleName(sentenceContext, rule, rule.forItem)
+                rule.context?.let { checkRuleName(sentenceContext, rule, it) }
+            }
+        }
         return SemanticAnalysisResultDefault(emptyList(), _issues)
+    }
+
+    private fun checkRuleName(sentenceContext: SentenceContext, rule: CompletionRule, name: String) {
+        if (sentenceContext.findItemsNamedConformingTo(name) { it == grammarRuleQualifiedName }.isEmpty()) {
+            _issues.error(_locationMap?.get(rule), "Grammar Rule '$name' not found for completion rule")
+        }
     }
 }
