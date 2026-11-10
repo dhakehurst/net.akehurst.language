@@ -3,12 +3,12 @@
 > **Keep this page up to date.** When a feature named here changes (parser algorithm, ambiguity handling,
 > error recovery, incremental parsing, platforms, IDE/LSP support, performance), update this page in the same commit.
 >
-> Last reviewed: 2026-11-09, against branch `2.4.0-inwork` at `efec9fbd`.
+> Last reviewed: 2026-11-10, against branch `2.4.0-inwork` at `0affccec`.
 
 AGL sits between the parser generators (ANTLR, tree-sitter) and the full language workbenches
 (Xtext, Langium, Spoofax, JetBrains MPS). It combines a general parser (like the GLR/GLL tools),
 grammars interpreted at runtime, and Kotlin Multiplatform, so it also runs in the browser.
-Where it is behind is raw speed, tooling (IDE/LSP), error recovery and community size.
+Where it is behind is raw speed, error recovery and community size.
 
 ## Strengths
 
@@ -37,8 +37,10 @@ Where it is behind is raw speed, tooling (IDE/LSP), error recovery and community
 2. **No incremental parsing.** Tree-sitter's main strength, and important for editors.
 3. **No error recovery.** A failed parse reports the expected items, not a partial tree.
    ANTLR, tree-sitter and Langium recover and continue.
-4. **No LSP server or IDE generation.** Editor integration lives in a separate repository
-   (`net.akehurst.language.editor`). Xtext, Langium, Spoofax and MPS generate an editor.
+4. **Editor is a separate package.** There is an AGL editor, in a separate repository
+   ([net.akehurst.language.editor](https://github.com/dhakehurst/net.akehurst.language.editor)).
+   Xtext, Langium, Spoofax and MPS ship editor generation as part of the framework.
+   (This page does not yet compare the editor's features with theirs.)
 5. **Maturity and documentation.** A one-person project with a small community. Known open issues include
    parse trees that are not always what one expects and a number of failing parser tests.
 6. **Kotlin/Native not enabled.** `Overview.md` lists Native, but `macosArm64()` is commented out in
@@ -51,7 +53,7 @@ Where it is behind is raw speed, tooling (IDE/LSP), error recovery and community
 |---|---|
 | ANTLR | AGL is more expressive and interpreted; ANTLR is faster, more mature and recovers from errors. |
 | tree-sitter | AGL has a semantic pipeline and runtime grammars; tree-sitter is incremental and faster. |
-| Xtext / Langium | AGL is lighter, multiplatform and has a general parser; they generate an IDE/LSP. |
+| Xtext / Langium | AGL is lighter, multiplatform and has a general parser; they generate an IDE/LSP as part of the framework (AGL's editor is a separate repository). |
 | Spoofax / SDF | Same ideas on ambiguity and composition; AGL is a plain embeddable library, not a workbench. |
 | JetBrains MPS | Projectional rather than textual; a different category. |
 | GLR/GLL tools (e.g. Iguana) | Similar parsing power; AGL adds the processing pipeline and multiplatform. |
