@@ -3,6 +3,7 @@ package net.akehurst.datastore.common
 import net.akehurst.datastore.api.AccessCompositionConfiguration
 import net.akehurst.datastore.api.DatastoreComposition
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
+import net.akehurst.datastore.api.DatastoreCompositionIdentity
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreConnectionEnd
@@ -11,11 +12,24 @@ import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
 
 
+/**
+ * Builds a composition.
+ * 'identity' identifies the composition among those of its owner and must be valid (see DatastoreCompositionIdentity.isValid);
+ * 'name' and 'description' can be set in 'init':
+ * ```
+ * datastoreComposition("doors-reqs") {
+ *     name = "DOORS requirements"
+ *     description = "..."
+ *     datastore(...)
+ * }
+ * ```
+ */
 fun datastoreComposition(
+    identity: String,
     registry: DatastoreProviderRegistry = DatastoreProviderRegistryDefault.GLOBAL,
     init: DatastoreCompositionBuilder.() -> Unit
 ): DatastoreComposition {
-    val b = DatastoreCompositionBuilder(registry)
+    val b = DatastoreCompositionBuilder(identity, registry)
     b.init()
     return b.build().also {
         it.create(registry)
@@ -27,8 +41,20 @@ annotation class DatastoreCompositionDslMarker
 
 @DatastoreCompositionDslMarker
 class DatastoreCompositionBuilder(
-    private val _registry: DatastoreProviderRegistry
+    identity: String,
+    private val _registry: DatastoreProviderRegistry = DatastoreProviderRegistryDefault.GLOBAL,
 ) {
+    init {
+        require(DatastoreCompositionIdentity.isValid(identity)) { "Composition identity '$identity' is not valid: ${DatastoreCompositionIdentity.RULE}" }
+    }
+
+    private val _identity = DatastoreCompositionIdentity(identity)
+
+    /** a readable name; blank means none */
+    var name: String = ""
+
+    /** what the composition is for */
+    var description: String = ""
 
     private val _cfg = mutableMapOf<Pair<DatastoreProviderIdentity, DatastoreIdentity>, DatastoreConfiguration>()
 
@@ -59,7 +85,7 @@ class DatastoreCompositionBuilder(
         _connection.add(conn)
     }
 
-    fun build(): DatastoreComposition = DatastoreCompositionDefault(DatastoreCompositionConfigurationDefault(_cfg, _connection))
+    fun build(): DatastoreComposition = DatastoreCompositionDefault(DatastoreCompositionConfigurationDefault(_identity, _cfg, _connection, name, description))
 }
 
 @DatastoreCompositionDslMarker

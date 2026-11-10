@@ -36,7 +36,10 @@ internal fun LabelWithHelp(label: String, help: String, helpDescription: String)
     }
 }
 
-/** An outlined text field showing 'error' below it. */
+/**
+ * An outlined text field showing 'error' below it.
+ * With 'readOnly' the text cannot be changed, but keeps its normal colour and can still be selected and scrolled.
+ */
 @Composable
 internal fun TextFieldWithError(
     value: String,
@@ -45,6 +48,7 @@ internal fun TextFieldWithError(
     error: String?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     singleLine: Boolean = true,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -57,6 +61,7 @@ internal fun TextFieldWithError(
         label = label,
         modifier = modifier,
         enabled = enabled,
+        readOnly = readOnly,
         singleLine = singleLine,
         isError = null != error,
         supportingText = error?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
@@ -67,7 +72,7 @@ internal fun TextFieldWithError(
     )
 }
 
-/** A text field that can also be filled by choosing one of 'suggestions' from a menu. */
+/** A text field that can also be filled by choosing one of 'suggestions' from a menu (not shown when 'readOnly'). */
 @Composable
 internal fun SuggestionTextField(
     value: String,
@@ -78,6 +83,7 @@ internal fun SuggestionTextField(
     chooseLabel: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     /** called when a suggestion is chosen from the menu; by default 'onValueChange' */
     onChoose: ((String) -> Unit)? = null,
 ) {
@@ -89,7 +95,8 @@ internal fun SuggestionTextField(
         error = error,
         modifier = modifier,
         enabled = enabled,
-        trailingIcon = if (suggestions.isEmpty()) null else {
+        readOnly = readOnly,
+        trailingIcon = if (suggestions.isEmpty() || readOnly) null else {
             {
                 Box {
                     TextButton(onClick = { expanded = true }, enabled = enabled) { Text("▾") }
@@ -106,7 +113,7 @@ internal fun SuggestionTextField(
 
 /**
  * A text field that, while it has the focus, shows 'suggestions' in a menu below it; choosing one sets the value.
- * Free typing still works: the menu does not take the focus.
+ * Free typing still works: the menu does not take the focus. With 'readOnly' there is no menu.
  */
 @Composable
 internal fun CompletionTextField(
@@ -116,6 +123,7 @@ internal fun CompletionTextField(
     suggestions: List<String>,
     error: String?,
     modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
 ) {
     var focused by remember { mutableStateOf(false) }
     var dismissed by remember { mutableStateOf(false) }
@@ -127,9 +135,10 @@ internal fun CompletionTextField(
             label = label,
             error = error,
             modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
+            readOnly = readOnly,
         )
         DropdownMenu(
-            expanded = focused && !dismissed && shown.isNotEmpty(),
+            expanded = !readOnly && focused && !dismissed && shown.isNotEmpty(),
             onDismissRequest = { dismissed = true },
             properties = PopupProperties(focusable = false),
         ) {

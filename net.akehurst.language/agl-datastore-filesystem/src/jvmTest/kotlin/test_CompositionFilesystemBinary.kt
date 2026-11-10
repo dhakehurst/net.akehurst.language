@@ -73,7 +73,7 @@ class test_CompositionFilesystemBinary {
 
     private suspend fun readThroughConnect(bytesEndType: String): List<DataItem> {
         tempDir.resolve("b.bin").toFile().writeBytes(binaryBytes)
-        val composition = datastoreComposition {
+        val composition = datastoreComposition("fs-binary") {
             datastore("fs", FilesystemProvider.IDENTITY) {
                 argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
             }

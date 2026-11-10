@@ -31,9 +31,9 @@ private fun dataTypeNames(types: TypesDomain?): List<String> =
 private fun typeNames(types: TypesDomain?): List<String> =
     types?.namespace?.flatMap { ns -> ns.ownedTypes.map { it.qualifiedName.value } }?.distinct()?.sorted() ?: emptyList()
 
-/** Edits one connection: its name, target type and ends. */
+/** Edits one connection: its name, target type and ends; with 'readOnly' only shows them. */
 @Composable
-internal fun ConnectionDetail(state: CompositionEditorState, connection: ConnectionDraft, customisation: EditorCustomisation) {
+internal fun ConnectionDetail(state: CompositionEditorState, connection: ConnectionDraft, customisation: EditorCustomisation, readOnly: Boolean = false) {
     val strings = customisation.strings
     val issues = state.issues.filter { (it.location as? IssueLocation.Connection)?.connection == connection }
     fun issueOf(field: ConnectionField, end: EndDraft? = null): EditorIssue? =
@@ -52,6 +52,7 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
             label = { Text(strings.connectionName) },
             error = issueOf(ConnectionField.NAME)?.message,
             modifier = Modifier.fillMaxWidth(),
+            readOnly = readOnly,
         )
         SuggestionTextField(
             value = connection.targetType,
@@ -64,6 +65,7 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
             error = issueOf(ConnectionField.TARGET_TYPE)?.message,
             chooseLabel = strings.choose,
             modifier = Modifier.fillMaxWidth(),
+            readOnly = readOnly,
         )
         Text(strings.ends, style = MaterialTheme.typography.titleSmall)
         val endTypeSuggestions = (typeNames(sourceTypes) + listOf("String", "Integer", "Real", "Boolean")).distinct()
@@ -77,6 +79,7 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
                             label = { Text(strings.endName) },
                             error = issueOf(ConnectionField.END_NAME, end)?.message,
                             modifier = Modifier.weight(1f),
+                            readOnly = readOnly,
                         )
                         SuggestionTextField(
                             value = end.typeName,
@@ -86,8 +89,11 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
                             error = issueOf(ConnectionField.END_TYPE_NAME, end)?.message,
                             chooseLabel = strings.choose,
                             modifier = Modifier.weight(1f),
+                            readOnly = readOnly,
                         )
-                        TextButton(onClick = { connection.removeEnd(end) }) { Text("✕") }
+                        if (!readOnly) {
+                            TextButton(onClick = { connection.removeEnd(end) }) { Text("✕") }
+                        }
                     }
                     CompletionTextField(
                         value = end.expression,
@@ -96,11 +102,14 @@ internal fun ConnectionDetail(state: CompositionEditorState, connection: Connect
                         suggestions = state.expressionSuggestions(connection, end),
                         error = issueOf(ConnectionField.END_EXPRESSION, end)?.message,
                         modifier = Modifier.fillMaxWidth(),
+                        readOnly = readOnly,
                     )
                 }
             }
         }
-        OutlinedButton(onClick = { connection.addEnd() }) { Text("+ ${strings.addEnd}") }
+        if (!readOnly) {
+            OutlinedButton(onClick = { connection.addEnd() }) { Text("+ ${strings.addEnd}") }
+        }
         // issues not shown next to a field
         issues.filter { (it.location as IssueLocation.Connection).field == null }.forEach { IssueText(it) }
         // a field can have more than one issue, the others are shown here

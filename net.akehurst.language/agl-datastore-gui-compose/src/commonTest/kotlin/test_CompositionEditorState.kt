@@ -111,7 +111,7 @@ class test_CompositionEditorState {
         }
     }
 
-    private fun newState() = CompositionEditorState(listOf(fsProvider, txtProvider), listOf("keychain"))
+    private fun newState() = CompositionEditorState(listOf(fsProvider, txtProvider), listOf("keychain"), suggestedIdentity = "c1")
 
     /** fs -> txt, with valid configurations and one connection */
     private fun validState(): CompositionEditorState {
@@ -274,7 +274,7 @@ class test_CompositionEditorState {
     @Test
     fun load_an_existing_composition() {
         val registry = DatastoreProviderRegistryDefault().also { it.register(fsProvider); it.register(txtProvider) }
-        val composition = DatastoreCompositionBuilder(registry).apply {
+        val composition = DatastoreCompositionBuilder("c1", registry).apply {
             datastore("fs", FS) {
                 argument("root", "/data")
                 argument("token", secret("keychain", "k"))
@@ -298,7 +298,7 @@ class test_CompositionEditorState {
     @Test
     fun provider_that_is_not_available_is_reported_when_loading() {
         val registry = DatastoreProviderRegistryDefault().also { it.register(fsProvider); it.register(txtProvider) }
-        val composition = DatastoreCompositionBuilder(registry).apply {
+        val composition = DatastoreCompositionBuilder("c1", registry).apply {
             datastore("txt", TXT) { argument("grammar", "g") }
         }.build()
         val s = CompositionEditorState(listOf(fsProvider), initial = composition.configuration)

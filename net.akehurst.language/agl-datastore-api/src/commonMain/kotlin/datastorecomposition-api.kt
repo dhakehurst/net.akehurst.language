@@ -45,7 +45,37 @@ interface DatastoreConnection {
     val end: List<DatastoreConnectionEnd>
 }
 
+/**
+ * Identifies a composition configuration among the compositions of one owner (e.g. an EDITH project).
+ * A valid identity is non-blank, starts with a letter (a-z, A-Z), and has only letters, digits (0-9), '-' and '_',
+ * so that it can be used in file names and query text. See [isValid].
+ */
+@JvmInline
+value class DatastoreCompositionIdentity(val value: String) {
+    companion object {
+        /** says what a valid identity is, for messages */
+        const val RULE = "it must start with a letter and have only letters (a-z, A-Z), digits, '-' and '_'"
+
+        private val VALID = Regex("[A-Za-z][A-Za-z0-9_-]*")
+
+        /** true if 'value' is a valid composition identity; the one rule used by builders, decoders and editors */
+        fun isValid(value: String): Boolean = VALID.matches(value)
+    }
+
+    /** true if this identity is valid, see [Companion.isValid] */
+    val isValid: Boolean get() = Companion.isValid(value)
+}
+
 interface DatastoreCompositionConfiguration {
+    /** chosen when the composition is created, then never changed; unique among the compositions of one owner (e.g. an EDITH project) */
+    val identity: DatastoreCompositionIdentity
+
+    /** a readable name; may be changed; blank means none (show the identity instead) */
+    val name: String
+
+    /** free text saying what the composition is for; may be changed */
+    val description: String
+
     val part: Map<Pair<DatastoreProviderIdentity,DatastoreIdentity>, DatastoreConfiguration>
     val connection: List<DatastoreConnection>
 }

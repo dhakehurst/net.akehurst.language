@@ -68,6 +68,8 @@ class ParameterFieldContext(
     /** the error for this parameter, if any */
     val error: String?,
     val strings: EditorStrings,
+    /** the editor is read-only: the renderer must not let the value be changed (show it with its normal look) */
+    val readOnly: Boolean = false,
 )
 
 /**

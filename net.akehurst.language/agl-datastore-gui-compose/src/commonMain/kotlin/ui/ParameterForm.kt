@@ -47,6 +47,7 @@ import net.akehurst.datastore.gui.compose.kind
  * and radio buttons for the alternatives of each choice, followed by the chosen alternative's parameters.
  *
  * @param errors the error of each parameter, by parameter identity
+ * @param readOnly the values cannot be changed (fields keep their normal look); groups can still be folded
  */
 @Composable
 fun ParameterForm(
@@ -56,9 +57,10 @@ fun ParameterForm(
     customisation: EditorCustomisation = EditorCustomisation.Default,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ParameterInfos(draft, draft.parameterSet.parameterInfo, "", errors, secretSourceIds, customisation, enabled)
+        ParameterInfos(draft, draft.parameterSet.parameterInfo, "", errors, secretSourceIds, customisation, enabled, readOnly)
     }
 }
 
@@ -71,12 +73,13 @@ private fun ParameterInfos(
     secretSourceIds: List<String>,
     customisation: EditorCustomisation,
     enabled: Boolean,
+    readOnly: Boolean,
 ) {
     infos.forEachIndexed { i, info ->
         val path = prefix + i
         when (info) {
             is DsConfigParameterDefinition -> draft.parameter[info.identity]?.let { pd ->
-                ParameterField(draft, pd, errors[info.identity], secretSourceIds, customisation, enabled)
+                ParameterField(draft, pd, errors[info.identity], secretSourceIds, customisation, enabled, readOnly)
             }
 
             is DsConfigParameterGroup -> OutlinedCard(Modifier.fillMaxWidth()) {
@@ -95,11 +98,11 @@ private fun ParameterInfos(
                             Text(info.name, style = MaterialTheme.typography.titleSmall)
                         }
                         if (open) {
-                            ParameterInfos(draft, info.parameterInfo, "$path/", errors, secretSourceIds, customisation, enabled)
+                            ParameterInfos(draft, info.parameterInfo, "$path/", errors, secretSourceIds, customisation, enabled, readOnly)
                         }
                     } else {
                         Text(info.name, style = MaterialTheme.typography.titleSmall)
-                        ParameterInfos(draft, info.parameterInfo, "$path/", errors, secretSourceIds, customisation, enabled)
+                        ParameterInfos(draft, info.parameterInfo, "$path/", errors, secretSourceIds, customisation, enabled, readOnly)
                     }
                 }
             }
@@ -110,7 +113,7 @@ private fun ParameterInfos(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         info.alternative.keys.forEach { alt ->
                             Row(
-                                Modifier.selectable(selected = alt == chosen, enabled = enabled, role = Role.RadioButton) { draft.choose(path, alt) }.padding(end = 12.dp),
+                                Modifier.selectable(selected = alt == chosen, enabled = enabled && !readOnly, role = Role.RadioButton) { draft.choose(path, alt) }.padding(end = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 RadioButton(selected = alt == chosen, onClick = null, enabled = enabled)
@@ -120,7 +123,7 @@ private fun ParameterInfos(
                         }
                     }
                     val ai = info.alternative.keys.indexOf(chosen)
-                    ParameterInfos(draft, info.alternative[chosen]!!.parameterInfo, "$path/$ai/", errors, secretSourceIds, customisation, enabled)
+                    ParameterInfos(draft, info.alternative[chosen]!!.parameterInfo, "$path/$ai/", errors, secretSourceIds, customisation, enabled, readOnly)
                 }
             }
         }
@@ -136,6 +139,7 @@ fun ParameterField(
     secretSourceIds: List<String>,
     customisation: EditorCustomisation = EditorCustomisation.Default,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
 ) {
     val def = parameter.definition
     val strings = customisation.strings
@@ -146,22 +150,22 @@ fun ParameterField(
     Column(Modifier.fillMaxWidth()) {
         if (def.sensitive) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                ModeOption(strings.value, parameter.mode == ValueMode.VALUE, enabled) { parameter.mode = ValueMode.VALUE }
-                ModeOption(strings.secretReference, parameter.mode == ValueMode.SECRET_REFERENCE, enabled) { parameter.mode = ValueMode.SECRET_REFERENCE }
+                ModeOption(strings.value, parameter.mode == ValueMode.VALUE, enabled, readOnly) { parameter.mode = ValueMode.VALUE }
+                ModeOption(strings.secretReference, parameter.mode == ValueMode.SECRET_REFERENCE, enabled, readOnly) { parameter.mode = ValueMode.SECRET_REFERENCE }
             }
         }
         when {
-            def.sensitive && parameter.mode == ValueMode.SECRET_REFERENCE -> SecretReferenceFields(parameter, error, secretSourceIds, customisation, enabled, label)
-            null != custom -> custom(ParameterFieldContext(draft.providerIdentity, def, parameter, error, strings))
-            else -> ValueField(def, parameter, error, customisation, enabled, label)
+            def.sensitive && parameter.mode == ValueMode.SECRET_REFERENCE -> SecretReferenceFields(parameter, error, secretSourceIds, customisation, enabled, readOnly, label)
+            null != custom -> custom(ParameterFieldContext(draft.providerIdentity, def, parameter, error, strings, readOnly))
+            else -> ValueField(def, parameter, error, customisation, enabled, readOnly, label)
         }
     }
 }
 
 @Composable
-private fun ModeOption(text: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
+private fun ModeOption(text: String, selected: Boolean, enabled: Boolean, readOnly: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick).padding(end = 12.dp),
+        Modifier.selectable(selected = selected, enabled = enabled && !readOnly, role = Role.RadioButton, onClick = onClick).padding(end = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(selected = selected, onClick = null, enabled = enabled)
@@ -177,6 +181,7 @@ private fun ValueField(
     error: String?,
     customisation: EditorCustomisation,
     enabled: Boolean,
+    readOnly: Boolean,
     label: @Composable () -> Unit,
 ) {
     val strings = customisation.strings
@@ -185,13 +190,13 @@ private fun ValueField(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 label()
                 Spacer(Modifier.width(12.dp))
-                Switch(checked = parameter.boolean ?: (parameter.defaultValue as? Boolean) ?: false, onCheckedChange = { parameter.boolean = it }, enabled = enabled)
+                Switch(checked = parameter.boolean ?: (parameter.defaultValue as? Boolean) ?: false, onCheckedChange = if (readOnly) null else ({ parameter.boolean = it }), enabled = enabled)
                 // with a default, 'not set' means the default is used (the switch shows it)
                 if (def.optional || null != parameter.defaultValue) {
                     Spacer(Modifier.width(8.dp))
                     if (null == parameter.boolean) {
                         Text(strings.notSet, style = MaterialTheme.typography.bodySmall)
-                    } else {
+                    } else if (!readOnly) {
                         TextButton(onClick = { parameter.boolean = null }, enabled = enabled) { Text(strings.clear) }
                     }
                 }
@@ -208,6 +213,7 @@ private fun ValueField(
                 error = error,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = enabled,
+                readOnly = readOnly,
                 visualTransformation = if (def.sensitive && !shown) PasswordVisualTransformation() else VisualTransformation.None,
                 keyboardOptions = when (kind) {
                     ParameterKind.INTEGER, ParameterKind.REAL -> KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -230,6 +236,7 @@ private fun SecretReferenceFields(
     secretSourceIds: List<String>,
     customisation: EditorCustomisation,
     enabled: Boolean,
+    readOnly: Boolean,
     label: @Composable () -> Unit,
 ) {
     val strings = customisation.strings
@@ -245,6 +252,7 @@ private fun SecretReferenceFields(
                 chooseLabel = strings.choose,
                 modifier = Modifier.weight(1f),
                 enabled = enabled,
+                readOnly = readOnly,
             )
             TextFieldWithError(
                 value = parameter.secretKey,
@@ -253,6 +261,7 @@ private fun SecretReferenceFields(
                 error = null,
                 modifier = Modifier.weight(1f),
                 enabled = enabled,
+                readOnly = readOnly,
             )
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }

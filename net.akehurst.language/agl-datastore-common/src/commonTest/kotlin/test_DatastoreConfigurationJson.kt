@@ -2,6 +2,7 @@ package net.akehurst.datastore.common
 
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
+import net.akehurst.datastore.api.DatastoreCompositionIdentity
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreProvider
@@ -9,6 +10,7 @@ import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.SecretReference
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -64,7 +66,9 @@ class test_DatastoreConfigurationJson {
         }
 
         fun composition(password: Any = SecretReference("env", "PW")): DatastoreCompositionConfiguration =
-            DatastoreCompositionBuilder(registry).apply {
+            DatastoreCompositionBuilder("doors-reqs", registry).apply {
+                name = "DOORS requirements"
+                description = "Requirements read from DOORS"
                 datastore("src", SRC) {
                     argument("url", "http://example.com")
                     argument("port", 8080)
@@ -88,6 +92,9 @@ class test_DatastoreConfigurationJson {
         val text = DatastoreConfigurationJson.encode(cfg)
         val actual = DatastoreConfigurationJson.decode(text, registry)
 
+        assertEquals(DatastoreCompositionIdentity("doors-reqs"), actual.identity)
+        assertEquals("DOORS requirements", actual.name)
+        assertEquals("Requirements read from DOORS", actual.description)
         assertEquals(listOf("src", "txt"), actual.part.keys.map { it.second.value })
         assertEquals(listOf(SRC, TGT), actual.part.keys.map { it.first })
         val src = actual.part.values.first()
@@ -118,7 +125,7 @@ class test_DatastoreConfigurationJson {
     fun numbers_use_the_schema_type() {
         // a Real written without a fraction, and an Integer, both read as JSON numbers
         val text = """
-            { "composition": { "part": [
+            { "composition": { "id": "c1", "part": [
                 { "provider": "test.Source", "id": "src", "configuration": { "url": "u", "port": 1, "timeout": 3 } }
             ] } }
         """.trimIndent()
@@ -130,7 +137,7 @@ class test_DatastoreConfigurationJson {
     @Test
     fun integer_with_fraction_fails() {
         val text = """
-            { "composition": { "part": [
+            { "composition": { "id": "c1", "part": [
                 { "provider": "test.Source", "id": "src", "configuration": { "url": "u", "port": 1.5 } }
             ] } }
         """.trimIndent()
@@ -157,7 +164,7 @@ class test_DatastoreConfigurationJson {
     @Test
     fun parameter_not_in_schema_fails() {
         val text = """
-            { "composition": { "part": [
+            { "composition": { "id": "c1", "part": [
                 { "provider": "test.Source", "id": "src", "configuration": { "url": "u", "colour": "red" } }
             ] } }
         """.trimIndent()
@@ -200,6 +207,62 @@ class test_DatastoreConfigurationJson {
     @Test
     fun decodeAccess_without_access_section_fails() {
         val text = DatastoreConfigurationJson.encode(composition())
+        assertFailsWith<IllegalStateException> { DatastoreConfigurationJson.decodeAccess(text, registry) }
+    }
+
+    @Test
+    fun id_name_and_description_are_written_first() {
+        val text = DatastoreConfigurationJson.encode(composition())
+        val keys = Regex("\"(id|name|description|part|connection)\"\\s*:").findAll(text.substringAfter("\"composition\"")).map { it.groupValues[1] }.toList()
+        assertEquals(listOf("id", "name", "description", "part"), keys.take(4), text)
+        assertTrue(text.contains("\"id\": \"doors-reqs\""), text)
+        assertTrue(text.contains("\"name\": \"DOORS requirements\""), text)
+    }
+
+    @Test
+    fun name_and_description_default_to_empty() {
+        val text = """
+            { "composition": { "id": "c1", "part": [
+                { "provider": "test.Target", "id": "txt", "configuration": { "language": "json" } }
+            ] } }
+        """.trimIndent()
+        val cfg = DatastoreConfigurationJson.decode(text, registry)
+        assertEquals(DatastoreCompositionIdentity("c1"), cfg.identity)
+        assertEquals("", cfg.name)
+        assertEquals("", cfg.description)
+        // they are written, even when empty
+        val again = DatastoreConfigurationJson.encode(cfg)
+        assertTrue(again.contains("\"name\": \"\""), again)
+        assertTrue(again.contains("\"description\": \"\""), again)
+    }
+
+    @Test
+    fun missing_id_fails() {
+        val text = """
+            { "composition": { "part": [
+                { "provider": "test.Target", "id": "txt", "configuration": { "language": "json" } }
+            ] } }
+        """.trimIndent()
+        val e = assertFails { DatastoreConfigurationJson.decode(text, registry) }
+        assertTrue(e.message!!.contains("'id'"), e.message)
+    }
+
+    @Test
+    fun invalid_id_fails() {
+        listOf("", " ", "1abc", "-abc", "a b", "a.b", "a/b", "ä").forEach { id ->
+            val text = """
+                { "composition": { "id": "$id", "part": [
+                    { "provider": "test.Target", "id": "txt", "configuration": { "language": "json" } }
+                ] } }
+            """.trimIndent()
+            val e = assertFailsWith<IllegalStateException>(id) { DatastoreConfigurationJson.decode(text, registry) }
+            assertTrue(e.message!!.contains("Composition id '$id' is not valid"), e.message)
+        }
+    }
+
+    @Test
+    fun invalid_id_is_refused_by_decodeAccess() {
+        val text = DatastoreConfigurationJson.encode(composition()).replace("\"doors-reqs\"", "\"9x\"")
         assertFailsWith<IllegalStateException> { DatastoreConfigurationJson.decodeAccess(text, registry) }
     }
 }

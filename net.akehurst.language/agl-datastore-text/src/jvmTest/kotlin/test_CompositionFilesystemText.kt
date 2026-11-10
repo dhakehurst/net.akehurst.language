@@ -70,7 +70,7 @@ class test_CompositionFilesystemText {
 
     @Test
     fun types()= runTest {
-        val composition = datastoreComposition {
+        val composition = datastoreComposition("fs-text") {
             datastore("fs", FilesystemProvider.IDENTITY) {
                 argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
             }
@@ -117,7 +117,7 @@ class test_CompositionFilesystemText {
             it.writeText("Hello World!")
         }
 
-        val composition = datastoreComposition {
+        val composition = datastoreComposition("fs-text") {
             datastore("fs", FilesystemProvider.IDENTITY) {
                 argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
             }
@@ -181,7 +181,7 @@ class test_CompositionFilesystemText {
             it.writeText("Hello World!")
         }
 
-        val composition = datastoreComposition {
+        val composition = datastoreComposition("fs-text") {
             datastore("fs", FilesystemProvider.IDENTITY) {
                 argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
             }
@@ -224,7 +224,7 @@ class test_CompositionFilesystemText {
 
     @Test
     fun compose_fan_out_with_same_end_name_fails() = runTest {
-        val composition = datastoreComposition {
+        val composition = datastoreComposition("fs-text") {
             datastore("fs", FilesystemProvider.IDENTITY) {
                 argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
             }
@@ -252,7 +252,7 @@ class test_CompositionFilesystemText {
             it.createNewFile()
             it.writeText("Hello World!")
         }
-        val composition = datastoreComposition {
+        val composition = datastoreComposition("fs-text") {
             datastore("fs", FilesystemProvider.IDENTITY) {
                 argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
             }
@@ -283,7 +283,7 @@ class test_CompositionFilesystemText {
         assertEquals(unit1.parent!!.data.self, unit1.data.getPropertySuspend("owner").self)
     }
 
-    private fun writeComposition() = datastoreComposition {
+    private fun writeComposition() = datastoreComposition("fs-text") {
         datastore("fs", FilesystemProvider.IDENTITY) {
             argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
         }
@@ -384,7 +384,7 @@ class test_CompositionFilesystemText {
 
     @Test
     fun write_with_end_expression_not_assignable_fails() = runTest {
-        val composition = datastoreComposition {
+        val composition = datastoreComposition("fs-text") {
             datastore("fs", FilesystemProvider.IDENTITY) {
                 argument(FilesystemProvider.CONFIG_FS_ROOT, tempDir.absolutePathString())
             }

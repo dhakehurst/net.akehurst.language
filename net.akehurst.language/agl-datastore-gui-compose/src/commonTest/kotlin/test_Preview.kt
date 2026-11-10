@@ -66,7 +66,7 @@ class test_Preview {
 
     /** a -> b, both valid, with access configurations */
     private fun states(): Pair<CompositionEditorState, AccessEditorState> {
-        val s = CompositionEditorState(listOf(provider))
+        val s = CompositionEditorState(listOf(provider), suggestedIdentity = "c1")
         val a = s.addPart(P, "a"); a.datastore.parameter["root"]!!.text = "/a"
         val b = s.addPart(P, "b"); b.datastore.parameter["root"]!!.text = "/b"
         val acc = AccessEditorState(s)

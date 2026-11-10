@@ -1,5 +1,6 @@
 package net.akehurst.datastore.gui.compose
 
+import net.akehurst.datastore.api.DatastoreCompositionIdentity
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.Expression
@@ -23,9 +24,20 @@ internal class CompositionValidator(private val state: CompositionEditorState) {
 
     fun validate(): List<EditorIssue> {
         val issues = mutableListOf<EditorIssue>()
+        validateIdentity(issues)
         validateParts(issues)
         state.connections.forEach { validateConnection(it, issues) }
         return issues
+    }
+
+    private fun validateIdentity(issues: MutableList<EditorIssue>) {
+        val id = state.identity
+        when {
+            id.isBlank() -> issues.add(EditorIssue(IssueSeverity.ERROR, IssueLocation.CompositionIdentity, "Give the composition an identity"))
+            !DatastoreCompositionIdentity.isValid(id) -> issues.add(
+                EditorIssue(IssueSeverity.ERROR, IssueLocation.CompositionIdentity, "Identity '$id' is not valid: ${DatastoreCompositionIdentity.RULE}")
+            )
+        }
     }
 
     private fun validateParts(issues: MutableList<EditorIssue>) {

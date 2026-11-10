@@ -1,6 +1,8 @@
 package net.akehurst.datastore.common
 
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -9,6 +11,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.modules.SerializersModule
 import net.akehurst.datastore.api.AccessCompositionConfiguration
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
+import net.akehurst.datastore.api.DatastoreCompositionIdentity
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreIdentity
@@ -24,9 +27,11 @@ import net.akehurst.language.types.asm.StdLibDefault
  *
  * One document holds a composition and, optionally, the access configuration of each of its parts:
  * ```
- * { "composition": { "part": [ {provider, id, configuration}, ... ], "connection": [ ... ] },
+ * { "composition": { "id": "doors-reqs", "name": "DOORS requirements", "description": "...",
+ *                    "part": [ {provider, id, configuration}, ... ], "connection": [ ... ] },
  *   "access": [ {id, configuration}, ... ] }
  * ```
+ * The composition's `id` is required and must be valid (DatastoreCompositionIdentity.isValid); `name` and `description` default to "".
  * Parts are saved in chain order. The provider schemas are not saved; on decode each configuration is
  * re-attached to its provider's schema from the registry, and validated against it.
  *
@@ -104,6 +109,9 @@ object DatastoreConfigurationJson {
     // --- encode ---
 
     private fun toDto(cfg: DatastoreCompositionConfiguration) = CompositionDto(
+        id = cfg.identity.value,
+        name = cfg.name,
+        description = cfg.description,
         part = cfg.part.map { (key, dsCfg) ->
             val (providerId, dsId) = key
             check(dsCfg.providerIdentity == providerId) {
@@ -134,6 +142,7 @@ object DatastoreConfigurationJson {
     // --- decode ---
 
     private fun fromDto(dto: CompositionDto, registry: DatastoreProviderRegistry): DatastoreCompositionConfiguration {
+        check(DatastoreCompositionIdentity.isValid(dto.id)) { "Composition id '${dto.id}' is not valid: ${DatastoreCompositionIdentity.RULE}" }
         // LinkedHashMap keeps the chain order
         val part = linkedMapOf<Pair<DatastoreProviderIdentity, DatastoreIdentity>, DatastoreConfiguration>()
         dto.part.forEach { p ->
@@ -153,7 +162,7 @@ object DatastoreConfigurationJson {
                 name = c.name
             )
         }
-        return DatastoreCompositionConfigurationDefault(part, connection)
+        return DatastoreCompositionConfigurationDefault(DatastoreCompositionIdentity(dto.id), part, connection, dto.name, dto.description)
     }
 
     private fun fromDto(
@@ -196,8 +205,13 @@ internal data class DocumentDto(
     val access: List<AccessPartDto>? = null
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 internal data class CompositionDto(
+    val id: String,
+    // always written, so a saved document shows that they can be given
+    @EncodeDefault val name: String = "",
+    @EncodeDefault val description: String = "",
     val part: List<PartDto>,
     val connection: List<ConnectionDto> = emptyList()
 )

@@ -21,6 +21,8 @@ import net.akehurst.datastore.gui.compose.IssueLocation
 /**
  * Edits the access configuration of each part of a composition, with a 'Test access' button per part.
  * The result is read from 'state' (state.build()).
+ *
+ * @param readOnly the values cannot be changed (fields keep their normal look); 'Test access', preview and folding groups still work
  */
 @Composable
 fun AccessConfigurationEditor(
@@ -28,6 +30,7 @@ fun AccessConfigurationEditor(
     modifier: Modifier = Modifier,
     callbacks: EditorCallbacks = EditorCallbacks(),
     customisation: EditorCustomisation = EditorCustomisation.Default,
+    readOnly: Boolean = false,
 ) {
     val strings = customisation.strings
     val composition = state.composition
@@ -43,7 +46,7 @@ fun AccessConfigurationEditor(
                     val partIssues = issues.filter { (it.location as? IssueLocation.Access)?.part == part }
                     val errors = partIssues.mapNotNull { i -> (i.location as IssueLocation.Access).parameterIdentity?.let { Pair(it, i.message) } }.toMap()
                     if (draft.parameter.isNotEmpty()) {
-                        ParameterForm(draft, errors, composition.secretSourceIds, customisation)
+                        ParameterForm(draft, errors, composition.secretSourceIds, customisation, readOnly = readOnly)
                     }
                     val datastore = composition.partConfiguration(part)
                     val access = state.accessConfiguration(part)

@@ -58,6 +58,11 @@ private val TWO_PANE_MIN_WIDTH = 600.dp
 /**
  * Edits a datastore composition: its parts, their datastore configurations, and the connections between them.
  * The result is read from 'state' (state.build()). The editor is UI only; 'callbacks' supply its behaviour.
+ * The composition's identity, name and description are not shown: the host shows them (CompositionEditorState.identity, name, description).
+ *
+ * @param readOnly nothing can be changed: the buttons that change the composition are hidden and the fields cannot be edited
+ * (they keep their normal look). Selecting parts and connections, folding groups, 'Test connection',
+ * retrying types and the host's partActions / connectionActions still work.
  */
 @Composable
 fun DatastoreCompositionEditor(
@@ -65,6 +70,7 @@ fun DatastoreCompositionEditor(
     modifier: Modifier = Modifier,
     callbacks: EditorCallbacks = EditorCallbacks(),
     customisation: EditorCustomisation = EditorCustomisation.Default,
+    readOnly: Boolean = false,
 ) {
     val strings = customisation.strings
     var selection by remember(state) { mutableStateOf<Selection?>(null) }
@@ -95,18 +101,18 @@ fun DatastoreCompositionEditor(
             if (maxWidth >= TWO_PANE_MIN_WIDTH) {
                 Row(Modifier.fillMaxSize()) {
                     Column(Modifier.width(280.dp).fillMaxHeight().verticalScroll(rememberScrollState()).padding(8.dp)) {
-                        ChainList(state, current, select, customisation)
+                        ChainList(state, current, select, customisation, readOnly)
                     }
                     VerticalDivider()
                     Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(12.dp)) {
-                        Detail(state, current, callbacks, customisation)
+                        Detail(state, current, callbacks, customisation, readOnly)
                     }
                 }
             } else {
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(8.dp)) {
-                    ChainList(state, current, select, customisation)
+                    ChainList(state, current, select, customisation, readOnly)
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                    Detail(state, current, callbacks, customisation)
+                    Detail(state, current, callbacks, customisation, readOnly)
                 }
             }
         }
@@ -117,24 +123,24 @@ fun DatastoreCompositionEditor(
                 is IssueLocation.PartId -> selection = Selection.Part(loc.part)
                 is IssueLocation.Connection -> selection = Selection.Connection(loc.connection)
                 is IssueLocation.Access -> selection = Selection.Part(loc.part)
-                IssueLocation.Composition -> Unit
+                IssueLocation.Composition, IssueLocation.CompositionIdentity -> Unit
             }
         }
     }
 }
 
 @Composable
-private fun Detail(state: CompositionEditorState, selection: Selection?, callbacks: EditorCallbacks, customisation: EditorCustomisation) {
+private fun Detail(state: CompositionEditorState, selection: Selection?, callbacks: EditorCallbacks, customisation: EditorCustomisation, readOnly: Boolean) {
     when (selection) {
         null -> Text(customisation.strings.nothingSelected, style = MaterialTheme.typography.bodyMedium)
-        is Selection.Part -> PartDetail(state, selection.part, callbacks, customisation)
-        is Selection.Connection -> ConnectionDetail(state, selection.connection, customisation)
+        is Selection.Part -> PartDetail(state, selection.part, callbacks, customisation, readOnly)
+        is Selection.Connection -> ConnectionDetail(state, selection.connection, customisation, readOnly)
     }
 }
 
-/** The parts in chain order, with the connections between neighbouring parts, and a way to add a part. */
+/** The parts in chain order, with the connections between neighbouring parts, and (unless 'readOnly') a way to add a part. */
 @Composable
-private fun ChainList(state: CompositionEditorState, selection: Selection?, select: (Selection) -> Unit, customisation: EditorCustomisation) {
+private fun ChainList(state: CompositionEditorState, selection: Selection?, select: (Selection) -> Unit, customisation: EditorCustomisation, readOnly: Boolean) {
     val strings = customisation.strings
     val issues = state.issues
     // the last move that removed connections, so it can be undone
@@ -164,9 +170,11 @@ private fun ChainList(state: CompositionEditorState, selection: Selection?, sele
                         Text(presentation.displayName, style = MaterialTheme.typography.bodySmall)
                     }
                 }
-                TextButton(onClick = { move(index, index - 1) }, enabled = index > 0) { Text("↑") }
-                TextButton(onClick = { move(index, index + 1) }, enabled = index < state.parts.size - 1) { Text("↓") }
-                TextButton(onClick = { lastMove = null; state.removePart(part) }) { Text("✕") }
+                if (!readOnly) {
+                    TextButton(onClick = { move(index, index - 1) }, enabled = index > 0) { Text("↑") }
+                    TextButton(onClick = { move(index, index + 1) }, enabled = index < state.parts.size - 1) { Text("↓") }
+                    TextButton(onClick = { lastMove = null; state.removePart(part) }) { Text("✕") }
+                }
             }
             // connections from this part (to the next part, or wrongly to another part)
             state.connectionsFrom(part).forEach { c ->
@@ -189,16 +197,18 @@ private fun ChainList(state: CompositionEditorState, selection: Selection?, sele
                             )
                         }
                     }
-                    TextButton(onClick = { state.removeConnection(c) }) { Text("✕") }
+                    if (!readOnly) {
+                        TextButton(onClick = { state.removeConnection(c) }) { Text("✕") }
+                    }
                 }
             }
-            state.nextPart(part)?.let { next ->
+            if (!readOnly) state.nextPart(part)?.let { next ->
                 TextButton(onClick = { select(Selection.Connection(state.addConnection(part, next))) }, modifier = Modifier.padding(start = 16.dp)) {
                     Text("+ ${strings.addConnection}", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
-        AddPart(state, customisation) { select(Selection.Part(it)) }
+        if (!readOnly) AddPart(state, customisation) { select(Selection.Part(it)) }
     }
 }
 
@@ -270,7 +280,7 @@ private fun AddPart(state: CompositionEditorState, customisation: EditorCustomis
 }
 
 @Composable
-private fun PartDetail(state: CompositionEditorState, part: PartDraft, callbacks: EditorCallbacks, customisation: EditorCustomisation) {
+private fun PartDetail(state: CompositionEditorState, part: PartDraft, callbacks: EditorCallbacks, customisation: EditorCustomisation, readOnly: Boolean) {
     val strings = customisation.strings
     val issues = state.issues
     val presentation = customisation.providerPresentation(part.providerIdentity)
@@ -289,10 +299,11 @@ private fun PartDetail(state: CompositionEditorState, part: PartDraft, callbacks
             label = { Text(strings.partId) },
             error = idIssue?.message,
             modifier = Modifier.fillMaxWidth(),
+            readOnly = readOnly,
         )
         Text(strings.datastoreConfiguration, style = MaterialTheme.typography.titleSmall)
         val errors = issues.mapNotNull { i -> (i.location as? IssueLocation.Part)?.takeIf { it.part == part }?.parameterIdentity?.let { Pair(it, i.message) } }.toMap()
-        ParameterForm(part.datastore, errors, state.secretSourceIds, customisation)
+        ParameterForm(part.datastore, errors, state.secretSourceIds, customisation, readOnly = readOnly)
         val cfg = state.partConfiguration(part)
         val testConnection = callbacks.testConnection
         TestButton(
@@ -361,6 +372,7 @@ internal fun IssueList(issues: List<EditorIssue>, customisation: EditorCustomisa
 
 private fun where(location: IssueLocation): String = when (location) {
     IssueLocation.Composition -> "composition"
+    IssueLocation.CompositionIdentity -> "identity"
     is IssueLocation.Part -> listOfNotNull(location.part.id.ifBlank { "?" }, location.parameterIdentity).joinToString(".")
     is IssueLocation.PartId -> location.part.id.ifBlank { "?" }
     is IssueLocation.Connection -> "${location.connection.source.id} → ${location.connection.target.id} (${location.connection.identity.ifBlank { "?" }})"

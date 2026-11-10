@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
+import net.akehurst.datastore.api.DatastoreCompositionIdentity
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreIdentity
@@ -109,18 +110,47 @@ class PartMove(
  * @param registry the providers that parts can be made from are those registered in it
  * @param secretSourceIds the identities of the secret sources a sensitive parameter can refer to
  * @param initial a composition configuration to edit; its providers must be registered in 'registry'
+ * @param suggestedIdentity the starting identity of a new composition (no 'initial'), e.g. suggested by the host; ignored with 'initial'
  */
 class CompositionEditorState(
     val registry: DatastoreProviderRegistry = DatastoreProviderRegistryDefault.GLOBAL,
     secretSourceIds: List<String> = emptyList(),
     initial: DatastoreCompositionConfiguration? = null,
+    suggestedIdentity: String = "",
 ) {
     /** uses a registry of just 'providers' */
     constructor(
         providers: List<DatastoreProvider>,
         secretSourceIds: List<String> = emptyList(),
         initial: DatastoreCompositionConfiguration? = null,
-    ) : this(DatastoreProviderRegistryDefault().also { r -> providers.forEach { r.register(it) } }, secretSourceIds, initial)
+        suggestedIdentity: String = "",
+    ) : this(DatastoreProviderRegistryDefault().also { r -> providers.forEach { r.register(it) } }, secretSourceIds, initial, suggestedIdentity)
+
+    private var _identity by mutableStateOf(suggestedIdentity)
+
+    /**
+     * true only for a new composition (no 'initial', nothing loaded): its identity is chosen once, when it is created.
+     * The identity of a loaded composition is read-only.
+     */
+    var identityEditable: Boolean by mutableStateOf(true)
+        private set
+
+    /**
+     * the identity of the composition (see DatastoreCompositionIdentity.isValid); it can be set only while [identityEditable].
+     * Uniqueness among the owner's compositions is checked by the host.
+     */
+    var identity: String
+        get() = _identity
+        set(value) {
+            check(identityEditable) { "The identity of a loaded composition cannot be changed" }
+            _identity = value
+        }
+
+    /** a readable name; blank means none */
+    var name: String by mutableStateOf("")
+
+    /** what the composition is for */
+    var description: String by mutableStateOf("")
 
     /** the providers registered in 'registry' */
     val providers: List<DatastoreProvider> get() = registry.providers
@@ -387,11 +417,15 @@ class CompositionEditorState(
                 name = c.name.ifBlank { null }
             )
         }
-        return DatastoreCompositionConfigurationDefault(part, conns)
+        return DatastoreCompositionConfigurationDefault(DatastoreCompositionIdentity(identity), part, conns, name, description)
     }
 
-    /** replaces what is being edited with 'configuration' */
+    /** replaces what is being edited with 'configuration'; its identity is then read-only ([identityEditable] is false) */
     fun load(configuration: DatastoreCompositionConfiguration) {
+        _identity = configuration.identity.value
+        identityEditable = false
+        name = configuration.name
+        description = configuration.description
         connections.clear()
         parts.clear()
         _types.clear()

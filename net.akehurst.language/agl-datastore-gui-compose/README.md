@@ -12,8 +12,12 @@ val state = remember {
         registry = registry,                     // a DatastoreProviderRegistry; default DatastoreProviderRegistryDefault.GLOBAL
         secretSourceIds = listOf("keychain", "env"),
         initial = loadedConfiguration,           // optional, loading is done by the application
+        suggestedIdentity = "doors-reqs",        // for a new composition (no 'initial')
     )
 }
+// the host shows the identity, name and description fields itself, e.g.
+// OutlinedTextField(state.identity, { state.identity = it }, readOnly = !state.identityEditable)
+// OutlinedTextField(state.name, { state.name = it }); OutlinedTextField(state.description, { state.description = it })
 val callbacks = EditorCallbacks(
     testConnection = { partId, provider, cfg -> /* e.g. provide and open the datastore */ TestResult.Success() },
     testAccess = { partId, provider, cfg, access -> /* e.g. read with 'access' */ TestResult.Success() },
@@ -29,6 +33,10 @@ DatastoreCompositionEditor(state, callbacks = callbacks, customisation = EditorC
 
 val access = remember(state) { AccessEditorState(state) }
 AccessConfigurationEditor(access, callbacks = callbacks)
+
+// for someone who may only look: nothing can be changed, tests, preview and selection still work
+DatastoreCompositionEditor(state, callbacks = callbacks, readOnly = true)
+AccessConfigurationEditor(access, callbacks = callbacks, readOnly = true)
 ```
 
 `state.build()` and `access.build()` return the configurations, or null while there are errors (`state.issues`).
@@ -61,3 +69,5 @@ Agreed with David on 2026-11-06 (design doc: https://claude.ai/artifact/FnMWtm8d
 | G20 | A group declared `advanced` (`group("Advanced", advanced = true) { ... }`, also inside an alternative of a choice) is a section folded by default, with an expand/collapse arrow. It opens when one of its active parameters is set to something other than its default value, or has an error (`ConfigurationDraft.advancedGroupMustBeOpen`); the user can fold it again. | done |
 | G21 | A parameter's default value (agl-datastore-api P2f) is shown as the placeholder of an empty field (not for sensitive parameters), and a Boolean switch shows it while not set. A parameter with a default is not required. The default is not written into the configuration; it is used when the field is left empty. | done |
 | G20 | Preview: each part in the access editor has a 'Preview' button that reads through the chain from the first part up to that part, with the host's `preview` callback (composition and access configurations, `upTo`, `limit` = `EditorCustomisation.previewLimit`, default 10), returning `PreviewResult.Items(items, more)` or `Failure`; an exception becomes `Failure`. Disabled (not hidden) with no callback, or while the composition or access configuration has errors. Each item shows its qualified identity (joined with '/'), its issues, and a property tree that is read one level at a time when opened (text for primitives and null, a count for collections, the message for a property that cannot be read). A result is dropped when a configuration changes. | done |
+| G22 | `CompositionEditorState` holds the composition's `identity`, `name` and `description` (agl-datastore-api C18) as state, loaded from `initial` (or `load`) and returned by `build()`. `identityEditable` is true only for a new composition (no `initial`, nothing loaded); then the identity starts as the constructor's `suggestedIdentity` (default ""), e.g. suggested by the host. The identity of a loaded composition is read-only (setting it fails). A blank or invalid identity (`DatastoreCompositionIdentity.isValid`) is an error issue at `IssueLocation.CompositionIdentity`, so `hasErrors` is true and `build()` (and the access editor's `build()`) gives null. Uniqueness among compositions is checked by the host. The editor does not show these fields: the host (e.g. EDITH) draws them. | done |
+| G23 | `readOnly` (default false) on `DatastoreCompositionEditor` and `AccessConfigurationEditor`, for people who may look but not change: the buttons that change the state are hidden (add, remove and move part, add and remove connection and end), and fields, secret pickers, choices and switches cannot be changed. Text fields keep their normal text colour (Material `readOnly`, not disabled) and can still be selected. Selecting parts and connections, folding groups, scrolling, 'Test connection', 'Test access', preview, Retry of types and the host's `partActions` / `connectionActions` still work. A custom parameter renderer is told through `ParameterFieldContext.readOnly`. `ParameterForm` has `readOnly` too. | done |

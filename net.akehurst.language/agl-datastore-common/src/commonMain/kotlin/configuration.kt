@@ -18,6 +18,7 @@ import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreComposition
 import net.akehurst.datastore.api.DatastoreCompositionConfiguration
+import net.akehurst.datastore.api.DatastoreCompositionIdentity
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreConnectionEnd
@@ -498,10 +499,14 @@ data class DataItemDefault(
 ) : DataItem
 
 class DatastoreCompositionConfigurationDefault(
+    override val identity: DatastoreCompositionIdentity,
     override val part: Map<Pair<DatastoreProviderIdentity, DatastoreIdentity>, DatastoreConfiguration>,
-    override val connection: List<DatastoreConnection> = emptyList()
+    override val connection: List<DatastoreConnection> = emptyList(),
+    override val name: String = "",
+    override val description: String = "",
 ) : DatastoreCompositionConfiguration {
 
+    override fun toString(): String = "DatastoreCompositionConfiguration(${identity.value}${if (name.isBlank()) "" else " '$name'"})"
 }
 
 class AccessCompositionConfigurationDefault(

@@ -7,6 +7,9 @@ sealed interface IssueLocation {
     /** the composition as a whole */
     data object Composition : IssueLocation
 
+    /** the identity of the composition (the host shows its field, with the name and description) */
+    data object CompositionIdentity : IssueLocation
+
     /** a part, or one of its parameters when 'parameterIdentity' is given */
     data class Part(val part: PartDraft, val parameterIdentity: String? = null) : IssueLocation
 

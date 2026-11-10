@@ -22,5 +22,12 @@ kotlin {
                 api(libs.compose.material3)
             }
         }
+        // UI tests run on the JVM (desktop), with the current OS's Skiko runtime
+        jvmTest {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.compose.ui.test)
+            }
+        }
     }
 }
