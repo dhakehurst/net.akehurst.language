@@ -11,6 +11,10 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.click
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,9 @@ import net.akehurst.datastore.gui.compose.ui.DatastoreCompositionEditor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+
+/** clicks near the start of a chain row, away from its buttons */
+private fun SemanticsNodeInteraction.clickStart() = performTouchInput { click(centerLeft + Offset(20f, 0f)) }
 
 @OptIn(ExperimentalTestApi::class)
 class test_ReadOnlyEditors {
@@ -89,7 +96,7 @@ class test_ReadOnlyEditors {
         setContent { MaterialTheme { DatastoreCompositionEditor(s, Modifier.size(1000.dp, 900.dp)) } }
         onNodeWithText("+ Add part").assertExists()
         onNodeWithText("+ Add connection").assertExists()
-        onNodeWithText("1. fs").performClick()
+        onNodeWithText("1. fs").clickStart()
         // the part id, root and password fields can be edited
         assertTrue(onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty())
     }
@@ -111,7 +118,7 @@ class test_ReadOnlyEditors {
         onAllNodesWithText("✕").assertCountEquals(0)
 
         // a part can be selected; its fields show their values but cannot be edited
-        onNodeWithText("1. fs").performClick()
+        onNodeWithText("1. fs").clickStart()
         onNodeWithText("/data").assertExists()
         onAllNodes(hasSetTextAction()).assertCountEquals(0)
 
@@ -129,10 +136,10 @@ class test_ReadOnlyEditors {
         onNodeWithText("Show types").performClick()
         assertEquals(1, partAction)
         onNodeWithText("Test connection").assertIsEnabled().performClick()
-        waitUntil(5000) { tested }
+        waitUntil(timeoutMillis = 5000) { tested }
 
         // a connection can be selected; its fields cannot be edited and ends cannot be added or removed
-        onNodeWithText("↓ parsableUnit : txt.ParsableUnit").performClick()
+        onNodeWithText("↓ parsableUnit : txt.ParsableUnit", substring = true).clickStart()
         onNodeWithText("txt.ParsableUnit").assertExists()
         onNodeWithText("+ Add end").assertDoesNotExist()
         onAllNodesWithText("✕").assertCountEquals(0)
@@ -160,9 +167,9 @@ class test_ReadOnlyEditors {
         onNodeWithText("*.txt").assertExists()
         onAllNodes(hasSetTextAction()).assertCountEquals(0)
         onAllNodesWithText("Test access")[0].assertIsEnabled().performClick()
-        waitUntil(5000) { tested }
+        waitUntil(timeoutMillis = 5000) { tested }
         onAllNodesWithText("Preview")[0].assertIsEnabled().performClick()
-        waitUntil(5000) { previewed }
+        waitUntil(timeoutMillis = 5000) { previewed }
         assertEquals("*.txt", acc.draftFor(s.parts[0]).parameter["glob"]!!.text)
     }
 

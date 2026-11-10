@@ -109,6 +109,9 @@ class test_DatastoreObjectTyping {
 
         fun composition(): DatastoreCompositionDefault {
             val comp = DatastoreCompositionDefault(object : DatastoreCompositionConfiguration {
+                override val identity = net.akehurst.datastore.api.DatastoreCompositionIdentity("test")
+                override val name = ""
+                override val description = ""
                 override val part = linkedMapOf(
                     Pair(PROVIDER_A, DatastoreIdentity("a")) to datastoreConfiguration(PROVIDER_A, registry) {},
                     Pair(PROVIDER_B, DatastoreIdentity("b")) to datastoreConfiguration(PROVIDER_B, registry) {},

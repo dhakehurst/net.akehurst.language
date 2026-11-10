@@ -67,6 +67,9 @@ class test_DatastoreLifecycle {
         fun composition(registry: DatastoreProviderRegistryDefault, vararg ids: String): DatastoreCompositionDefault {
             val cfg = config(registry)
             val comp = DatastoreCompositionDefault(object : DatastoreCompositionConfiguration {
+                override val identity = net.akehurst.datastore.api.DatastoreCompositionIdentity("test")
+                override val name = ""
+                override val description = ""
                 override val part = ids.associate { Pair(PROVIDER, DatastoreIdentity(it)) to cfg }
                 override val connection = emptyList<DatastoreConnection>()
             })
