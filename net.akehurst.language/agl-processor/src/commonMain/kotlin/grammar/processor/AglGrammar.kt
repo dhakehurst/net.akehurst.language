@@ -109,7 +109,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
         """.trimIndent()
 
     override val typesString: String by lazy {
-        typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString() +
+        typesDomain.findNamespaceOrNull(QualifiedName("net.akehurst.language.regex.api"))!!.asString() +
+                "\n" +
+                typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString() +
                 "\n" +
                 typesDomain.findNamespaceOrNull(QualifiedName(TYPES_ASM_NS_QN))!!.asString()
     }
@@ -345,6 +347,31 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
     override val typesDomain: TypesDomain by lazy {
         //TODO: GrammarTypeNamespace?
         typesDomain("Grammar", true, AglBase.typesDomain.namespace) {
+            // escaped/unescaped values from agl-regex, used by Terminal (and Matchable)
+            namespace("net.akehurst.language.regex.api", listOf("std")) {
+                interface_("EscapedValue") {}
+                interface_("UnescapedValue") {}
+                data("EscapedPattern") {
+                    supertype("EscapedValue")
+                    constructor_ { parameter(setOf(), "value", "String", false) }
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+                data("UnescapedPattern") {
+                    supertype("UnescapedValue")
+                    constructor_ { parameter(setOf(), "value", "String", false) }
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+                data("EscapedLiteral") {
+                    supertype("EscapedValue")
+                    constructor_ { parameter(setOf(), "value", "String", false) }
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+                data("UnescapedLiteral") {
+                    supertype("UnescapedValue")
+                    constructor_ { parameter(setOf(), "value", "String", false) }
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+            }
             grammarTypeNamespace(TYPES_API_NS_QN, listOf("std", "net.akehurst.language.base.api")) {
                 enum("SeparatedListKind", listOf("Flat", "Left", "Right"))
                 enum("OverrideKind", listOf("REPLACE", "APPEND_ALTERNATIVE", "SUBSTITUTION"))
@@ -471,17 +498,17 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
                     }
                 }
             }
-            namespace(TYPES_ASM_NS_QN, listOf(TYPES_API_NS_QN, "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
+            namespace(TYPES_ASM_NS_QN, listOf(TYPES_API_NS_QN, "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm", "net.akehurst.language.regex.api")) {
                 data("TerminalDefault") {
                     supertype("TangibleItemAbstract")
                     supertype("Terminal")
                     constructor_ {
-                        parameter(setOf(), "value", "String")
+                        parameter(setOf(), "escapedValue", "EscapedValue")
                         parameter(setOf(), "isPattern", "Boolean")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "escapedValue", "EscapedValue", false)
                     propertyOf(setOf(VAL, REF, STR), "id", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "isPattern", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 data("TangibleItemAbstract") {
                     supertype("SimpleItemAbstract")

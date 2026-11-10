@@ -1942,7 +1942,7 @@ abstract class MethodDefinitionAbstract() : MethodDefinition {
     )
 }
 
-internal class MethodDefinitionPrimitiveSimple(
+class MethodDefinitionPrimitiveSimple(
     override val owner: TypeDefinition,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,

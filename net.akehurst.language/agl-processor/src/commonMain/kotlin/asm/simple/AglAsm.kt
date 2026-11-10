@@ -11,7 +11,6 @@ interface Asm {
   cmp root
 }
 interface AsmStructure {
-  cmp semanticPath
   cmp property
 }
 interface AsmStructureProperty {
@@ -110,7 +109,6 @@ interface AsmListSeparated {
                         typeArgument("AsmStructureProperty")
                     }
                     //propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
-                    propertyOf(setOf(VAR, CMP, STR), "semanticPath", "AsmPath", false)
                 }
                 data("AsmStructurePropertySimple") {
                     supertype("AsmStructureProperty")
