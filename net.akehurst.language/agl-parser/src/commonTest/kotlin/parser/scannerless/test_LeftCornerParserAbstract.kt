@@ -72,6 +72,7 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
         println(r.issues)
         assertTrue(r.issues.isNotEmpty(), "Expected parse to fail")
         assertEquals(expected, r.issues.all)
+        assertSameAsPreBuilt(rrs, sentence, options, scannerKind, r)
     }
 
     fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton: Boolean, vararg expectedTrees: String): SharedPackedParseTree? {
@@ -142,6 +143,7 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
 //        assertEqualsWarning(expectedNumGSSHeads, result.sppt!!.maxNumHeads, "Too many heads on GSS")
         assertEquals(expectedNumGSSHeads, result.sppt!!.maxNumHeads, "Too many heads on GSS")
         assertTrue(parser.runtimeDataIsEmpty, "Runtime data not empty")
+        assertSameAsPreBuilt(rrs, sentence, options, scannerKind, result)
         return result.sppt
     }
 
@@ -159,7 +161,39 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
         if (build) parser.buildFor(options.goalRuleName!!)
         val r = parser.parse(sentence, options)
         println(r.issues)
+        assertSameAsPreBuilt(rrs, sentence, options, scannerKind, r)
         return r
+    }
+
+    /**
+     * Parse the sentence again with a fully pre-built automaton (buildFor) on a clone of the rule set
+     * and check that the tree and the errors are the same as from the automaton built on demand.
+     * Skipped when this test class already pre-builds, when there is no goal rule,
+     * or when the rule set has embedded rule sets (a clone shares them, so building would change them for other tests).
+     */
+    protected fun assertSameAsPreBuilt(rrs: RuleSet, sentence: String, options: ParseOptions, scannerKind: ScannerKind, onDemand: ParseResult) {
+        val goal = options.goalRuleName
+        val runtimeRuleSet = rrs as RuntimeRuleSet
+        when {
+            build -> return
+            null == goal -> return
+            runtimeRuleSet.runtimeRules.any { it.isEmbedded } -> return
+        }
+        val preRrs = runtimeRuleSet.clone()
+        val scanner = when (scannerKind) {
+            ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, preRrs.terminals + preRrs.embeddedTerminals)
+            ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, preRrs.terminals + preRrs.embeddedTerminals)
+        }
+        val parser = LeftCornerParser(scanner, preRrs)
+        parser.buildFor(goal!!)
+        val preBuilt = parser.parse(sentence, options)
+        assertEquals(
+            onDemand.sppt?.toStringAllWithIndent("  ", true)?.trim(),
+            preBuilt.sppt?.toStringAllWithIndent("  ", true)?.trim(),
+            "Pre-built automaton gives a different tree than the automaton built on demand"
+        )
+        // only errors: grammar ambiguity warnings depend on the lookahead, which is expected to differ (pre-built does not need RT)
+        assertEquals(onDemand.issues.errors.toSet(), preBuilt.issues.errors.toSet(), "Pre-built automaton gives different errors than the automaton built on demand")
     }
 
     protected fun parseError(location: InputLocation, sentence: String, tryingFor:Set<String>, expected: Set<String>):LanguageIssue {
