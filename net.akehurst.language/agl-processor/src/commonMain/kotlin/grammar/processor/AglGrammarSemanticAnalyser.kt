@@ -30,6 +30,7 @@ import net.akehurst.language.automaton.leftcorner.ParserStateSet
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.asm.GrammarRuleAbstract
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
@@ -107,6 +108,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 this.checkRuleUsage(grammar)
                 this.checkForDuplicates(grammar)
                 this.checkPreferenceRules(grammar)
+                this.checkLeafChoices(grammar)
                 if (this@AglGrammarSemanticAnalyser._issues.errors.isEmpty() && _analyseAmbiguities) {
                     this.checkForAmbiguities(grammar, automatonKind)
                 }
@@ -125,6 +127,27 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
             this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
         } else {
             ref.resolveAs(g)
+        }
+    }
+
+    /**
+     * A leaf is matched with one regex, and a regex takes the first alternative of a choice that matches.
+     * The alternatives of a longest choice ('|') are put longest first when they all have a fixed length,
+     * otherwise their order is kept and the longest match is not guaranteed, so warn.
+     */
+    private fun checkLeafChoices(grammar: Grammar) {
+        grammar.grammarRule.forEach { rule ->
+            val rhs = rule.rhs
+            if (rule.isLeaf && rhs is ChoiceLongest && rhs.alternative.size > 1) {
+                val lengths = rhs.alternative.map { GrammarRuleAbstract.leafLength(it) }
+                if (lengths.any { it.isFixed.not() }) {
+                    issueWarn(
+                        rule,
+                        "Leaf rule '${rule.name}' is a choice with an alternative that can match a varying number of characters, the first alternative that matches is taken, not the longest.",
+                        null
+                    )
+                }
+            }
         }
     }
 

@@ -18,6 +18,7 @@ package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.regex.agl.regexMatcher
 import net.akehurst.language.regex.api.EscapedValue
 import net.akehurst.language.regex.api.UnescapedPattern
 import net.akehurst.language.regex.api.UnescapedValue
@@ -55,6 +56,84 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
 
         }
 
+        /**
+         * The fewest and most characters a leaf rule item can match. [max] is -1 when there is no maximum, or it is not known.
+         */
+        data class LeafLength(val min: Int, val max: Int) {
+            val isFixed: Boolean get() = -1 != max && min == max
+
+            companion object {
+                val UNKNOWN = LeafLength(0, -1)
+            }
+        }
+
+        fun leafLength(item: RuleItem): LeafLength = leafLength(item, emptySet())
+
+        private fun leafLength(item: RuleItem, visiting: Set<GrammarRule>): LeafLength {
+            fun plus(a: Int, b: Int) = if (-1 == a || -1 == b) -1 else a + b
+            return when (item) {
+                is Terminal -> when {
+                    item.isPattern -> {
+                        val m = runCatching { regexMatcher(item.unescapedValue.value) }.getOrNull()
+                        when {
+                            null == m || -1 == m.minLength -> LeafLength.UNKNOWN
+                            else -> LeafLength(m.minLength, m.maxLength)
+                        }
+                    }
+
+                    else -> LeafLength(item.unescapedValue.value.length, item.unescapedValue.value.length)
+                }
+
+                is Concatenation -> item.items.map { leafLength(it, visiting) }.fold(LeafLength(0, 0)) { acc, it -> LeafLength(acc.min + it.min, plus(acc.max, it.max)) }
+
+                is Choice -> {
+                    val ls = item.alternative.map { leafLength(it, visiting) }
+                    LeafLength(ls.minOf { it.min }, if (ls.any { -1 == it.max }) -1 else ls.maxOf { it.max })
+                }
+
+                is OptionalItem -> LeafLength(0, leafLength(item.item, visiting).max)
+
+                is SimpleList -> {
+                    val l = leafLength(item.item, visiting)
+                    val max = when {
+                        0 == l.max -> 0
+                        -1 == item.max || -1 == l.max -> -1
+                        else -> item.max * l.max
+                    }
+                    LeafLength(item.min * l.min, max)
+                }
+
+                is Group -> leafLength(item.groupedContent, visiting)
+
+                is NonTerminal -> {
+                    val rule = runCatching { item.referencedRule(item.owningRule.grammar) }.getOrNull()
+                    when {
+                        null == rule || visiting.contains(rule) -> LeafLength.UNKNOWN
+                        else -> leafLength(rule.rhs, visiting + rule)
+                    }
+                }
+
+                else -> LeafLength.UNKNOWN
+            }
+        }
+
+        /**
+         * The alternatives of a longest choice ('|') in the order to put them in a regex.
+         * A regex takes the first alternative that matches, so when every alternative has a fixed length
+         * they are put longest first (stable, so equal lengths keep their order) and the longest one that matches is taken.
+         * Otherwise, and for other kinds of choice, the order as written is kept.
+         */
+        fun leafChoiceRegexOrder(item: Choice): List<RuleItem> = when {
+            item !is ChoiceLongest -> item.alternative
+            else -> {
+                val lengths = item.alternative.map { leafLength(it) }
+                when {
+                    lengths.all { it.isFixed } -> item.alternative.zip(lengths).sortedByDescending { it.second.max }.map { it.first }
+                    else -> item.alternative
+                }
+            }
+        }
+
         private fun toRegEx(value: String): String {
             return Regex.escape(value)
         }
@@ -86,7 +165,7 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
                 is Choice -> when (item.alternative.size) {
                     1 -> this.compressRuleItem(compressedName, item.alternative[0])
                     else -> {
-                        val ct = item.alternative.mapIndexed { idx, it -> this.compressRuleItem("$compressedName$idx", it) }
+                        val ct = leafChoiceRegexOrder(item).mapIndexed { idx, it -> this.compressRuleItem("$compressedName$idx", it) }
                         val pattern = ct.joinToString(separator = "|") { "(${it.unescapedValue.value})" }
                         CompressedLeafRule(compressedName, UnescapedPattern(pattern), true)
                     }

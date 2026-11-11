@@ -29,6 +29,9 @@ internal class RegexMatcherImpl(
     val nfa: List<State>
 ) : RegexMatcher {
 
+    override val minLength: Int by lazy { nfaMinLength(this.start) }
+    override val maxLength: Int by lazy { nfaMaxLength(this.start) }
+
     internal companion object {
         val MATCH_STATE = State(-1, false)
         val ERROR_STATE = State(-2, false)

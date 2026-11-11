@@ -305,30 +305,7 @@ internal class RegexMatcherBuilder(val pattern: String) {
     }
 
     /** the maximum number of characters matched from 'start' to the goal, -1 if there is no maximum (a loop) */
-    private fun maxLength(start: State): Int {
-        val done = mutableMapOf<State, Int>()
-        val onPath = mutableSetOf<State>()
-        fun longest(s: State?): Int {
-            if (null == s || s.isGoal) return 0
-            done[s]?.let { return it }
-            if (onPath.contains(s)) return -1
-            onPath.add(s)
-            var max = 0
-            for (t in s.outgoing) {
-                val l = longest(t.to)
-                if (-1 == l) {
-                    max = -1
-                    break
-                }
-                val step = if (t.kind == TransitionKind.MATCHER) 1 else 0
-                max = maxOf(max, l + step)
-            }
-            onPath.remove(s)
-            done[s] = max
-            return max
-        }
-        return longest(start)
-    }
+    private fun maxLength(start: State): Int = nfaMaxLength(start)
 
     fun startGroup() {
     }

@@ -204,3 +204,54 @@ internal class Transition(val kind: TransitionKind, val matcher: CharacterMatche
     //fun match(text: CharSequence, pos: Int): Boolean = value.matches(text, pos)
     override fun toString(): String = "-$matcher->(${to?.number})"
 }
+
+/** the maximum number of characters matched from 'start' to the goal, -1 if there is no maximum (a loop) */
+internal fun nfaMaxLength(start: State): Int {
+    val done = mutableMapOf<State, Int>()
+    val onPath = mutableSetOf<State>()
+    fun longest(s: State?): Int {
+        if (null == s || s.isGoal) return 0
+        done[s]?.let { return it }
+        if (onPath.contains(s)) return -1
+        onPath.add(s)
+        var max = 0
+        for (t in s.outgoing) {
+            val l = longest(t.to)
+            if (-1 == l) {
+                max = -1
+                break
+            }
+            val step = if (t.kind == TransitionKind.MATCHER) 1 else 0
+            max = maxOf(max, l + step)
+        }
+        onPath.remove(s)
+        done[s] = max
+        return max
+    }
+    return longest(start)
+}
+
+/** the minimum number of characters matched from 'start' to the goal, -1 if the goal cannot be reached */
+internal fun nfaMinLength(start: State): Int {
+    // shortest path where a MATCHER transition costs 1 and any other costs 0 (0-1 breadth first search)
+    val dist = mutableMapOf<State, Int>()
+    val deque = ArrayDeque<State>()
+    dist[start] = 0
+    deque.addFirst(start)
+    while (deque.isNotEmpty()) {
+        val s = deque.removeFirst()
+        val d = dist[s]!!
+        if (s.isGoal) return d
+        for (t in s.outgoing) {
+            val to = t.to ?: RegexMatcherImpl.MATCH_STATE // as in nfaMaxLength, no target is the goal
+            val step = if (t.kind == TransitionKind.MATCHER) 1 else 0
+            val nd = d + step
+            val old = dist[to]
+            if (null == old || nd < old) {
+                dist[to] = nd
+                if (0 == step) deque.addFirst(to) else deque.addLast(to)
+            }
+        }
+    }
+    return -1
+}
