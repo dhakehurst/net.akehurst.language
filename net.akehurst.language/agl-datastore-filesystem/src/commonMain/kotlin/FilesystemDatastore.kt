@@ -18,6 +18,8 @@ import net.akehurst.kotlinx.filesystem.UserFileSystemDefault
 import net.akehurst.kotlinx.filesystem.api.DirectoryHandle
 import net.akehurst.kotlinx.filesystem.api.FileHandle
 import net.akehurst.kotlinx.filesystem.api.FileSystemObjectHandle
+import net.akehurst.kotlinx.filesystem.api.ZipErrorReason
+import net.akehurst.kotlinx.filesystem.api.ZipException
 import net.akehurst.kotlinx.text.toRegexFromGlob
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
@@ -210,7 +212,8 @@ open class FilesystemDatastore(
         override suspend fun readBytes(): ByteArray? = null
         override suspend fun writeContent(content: String) = error("Set 'content.asString' of a new file; it is written on commit")
         override suspend fun writeBytes(content: ByteArray) = error("Set 'content.asString' of a new file; it is written on commit")
-        override suspend fun openAsZipDirectory(): DirectoryHandle? = null
+        override suspend fun openAsZipDirectory(): DirectoryHandle =
+            throw ZipException(ZipErrorReason.NOT_A_ZIP, "'$relativePath' is a new file; it does not exist until commit")
         override fun hashCode(): Int = path.hashCode()
         override fun equals(other: Any?): Boolean = other is NewFileHandle && other.path == this.path && other.datastore === this.datastore
         override fun toString(): String = "NewFileHandle($relativePath)"
