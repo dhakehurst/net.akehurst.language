@@ -28,7 +28,10 @@ import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.treedata.CompleteTreeDataNode
 
 /**
- * Classical scanner that does the scanning up-front and fixes the token list.
+ * Classical scanner: one token per position, chosen from all terminals (skip terminals included).
+ * Tokens are scanned lazily, when the parser asks for a position, and cached,
+ * which gives the same tokens as scanning the whole sentence up-front.
+ * The skip parser shares this scanner, so it sees the same token at a position as the main parser.
  * When there are multiple options to match,
  * Longest match takes priority.
  * For matches of the same length, literal values take priority over patterns (i.e. Keywords will take priority over identifiers).
@@ -65,6 +68,12 @@ class ScannerClassic(
     }
 
     override fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): CompleteTreeDataNode? {
+        // cached leaves belong to one sentence; reset() is not used to clear them
+        // because the skip parser shares this scanner and resets it at every skip parse
+        if (sentence !== _leavesSentence) {
+            _leaves.clear()
+            _leavesSentence = sentence
+        }
         val l = _leaves[position]
         val res = when {
             terminalRule.isEmptyTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY, position, position, position, RulePosition.OPTION_NONE,emptyList())
@@ -88,6 +97,7 @@ class ScannerClassic(
     }
 
     private val _leaves = mutableMapOf<Int, CompleteTreeDataNode>()
+    private var _leavesSentence: Sentence? = null
 
     /** Used when streaming, to keep memory flat: forget scanned leaves before [position]. They are re-scanned if asked for again. */
     internal fun dropLeavesBefore(position: Int) {
