@@ -286,7 +286,7 @@ class ExternalGetterAsmSimple(
         }
 
         crossReferenceDomain?.let {
-            val id = SemanticAnalyserSimple.identifyingValueInFor(_interpreter, crossReferenceDomain, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last, obj)
+            val id = SemanticAnalyserSimple.identifyingValueInFor(_interpreter, crossReferenceDomain, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME, obj)
             when (id) {
                 is String -> obj.setSemanticQualifiedPath(listOf(id)) //TODO: list of string returned from identifyingValueInFor
             }

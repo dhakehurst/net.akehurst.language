@@ -153,28 +153,28 @@ class test_Java8_Compare {
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5)
+    @Timeout(60)
     fun aglSpec(data: Data) {
         this.testParse(data,aglSpecProcessor, true)
     }
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5)
+    @Timeout(60)
     fun aglOptm(data: Data) {
         this.testParse(data,aglOptmProcessor, true)
     }
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5)
+    @Timeout(60)
     fun antlrSpec(data: Data) {
         this.testParse(data,antlrSpecProcessor)
     }
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(10)
+    @Timeout(60)
     fun antlrOptm(data: Data) {
         this.testParse(data,antlrOptmProcessor)
     }

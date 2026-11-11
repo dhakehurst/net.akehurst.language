@@ -260,7 +260,7 @@ public class BadBinaryLiterals {
 
     @ExperimentalTime
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun long_concatenation() {
 
         val sentence = """

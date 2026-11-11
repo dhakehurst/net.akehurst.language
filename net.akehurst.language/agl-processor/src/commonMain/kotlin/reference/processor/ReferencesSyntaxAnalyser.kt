@@ -118,9 +118,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun scopes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ScopeDefinitionDefault> =
         children as List<ScopeDefinitionDefault>
 
-    // scope = 'scope' simpleTypeName '{' identifiables '}
+    // scope = 'scope' possiblyQualifiedTypeReference '{' identifiables '}
     private fun scope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeDefinitionDefault {
-        val simpleTypeName = children[1] as SimpleName
+        val simpleTypeName = children[1] as PossiblyQualifiedName
         val identifiables = children[3] as List<IdentifiableDefault>
         val scope = ScopeDefinitionDefault(simpleTypeName)
         scope.identifiables.addAll(identifiables)
@@ -132,9 +132,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<IdentifiableDefault> =
         (children as List<IdentifiableDefault>?) ?: emptyList()
 
-    // identifiable = 'identify' simpleTypeName 'by' expression
+    // identifiable = 'identify' possiblyQualifiedTypeReference 'by' expression
     private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IdentifiableDefault {
-        val simpleTypeName = children[1] as SimpleName
+        val simpleTypeName = children[1] as PossiblyQualifiedName
         val expression = children[3] as Expression
         val identifiable = IdentifiableDefault(simpleTypeName, expression)
         locationMap.add(ParsePath(), PropertyValue(identifiable, "simpleTypeName"), locationMap[simpleTypeName]!!)
@@ -156,9 +156,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault> =
         children as List<ReferenceDefinitionDefault>
 
-    // referenceDefinition = 'in' simpleTypeName '{' referenceExpressionList '}'
+    // referenceDefinition = 'in' possiblyQualifiedTypeReference '{' referenceExpressionList '}'
     private fun referenceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceDefinitionDefault {
-        val inTypeName = children[1] as SimpleName
+        val inTypeName = children[1] as PossiblyQualifiedName
         val referenceExpressionList = children[3] as List<ReferenceExpressionAbstract>
         val def = ReferenceDefinitionDefault(inTypeName, referenceExpressionList)
 //        locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!

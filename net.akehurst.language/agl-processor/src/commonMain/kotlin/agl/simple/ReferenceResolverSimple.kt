@@ -64,7 +64,7 @@ class ReferenceResolverSimple(
     val crossReferenceDomain: CrossReferenceDomain,
     val sentenceContext: SentenceContext,
     val sentenceIdentity: Any?,
-    val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    val identifyingValueInFor: (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
     val resolveFunction: ResolveScopedItem?,
     private val _locationMap: LocationMap,
     private val _accessor: ObjectGraphAccessorMutator
@@ -107,7 +107,7 @@ class ReferenceResolverSimple(
 
     override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         val parentScope = scopeStack.peek()
-        val inTypeName = parentScope.forTypeName.last
+        val inTypeName = parentScope.forTypeName
         val refInParent = identifyingValueInFor.invoke(inTypeName, value)
         val elScope = when (refInParent) {
             null -> parentScope
@@ -129,10 +129,19 @@ class ReferenceResolverSimple(
         scopeStack.push(elScope)
         scopeForElement[value] = elScope
 
-        val references = crossReferenceDomain.referencesFor(value.typeName)
+        val references = crossReferenceDomain.referencesFor(typesDomain, value.qualifiedTypeName)
         val type = typesDomain.findByQualifiedNameOrNull(value.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-        for (refExpr in references) {
-            handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value, type)
+        for (match in references) {
+            when {
+                match.isAmbiguous -> raiseError(
+                    value,
+                    "Ambiguous references for type '${value.qualifiedTypeName.value}', candidates: ${match.candidates.joinToString(separator = ", ") { "'${it.asString().trim()}'" }}"
+                )
+
+                else -> match.singleOrNull?.let { refExpr ->
+                    handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value, type)
+                }
+            }
         }
     }
 
@@ -171,7 +180,7 @@ class ReferenceResolverSimple(
                     is AsmNothing -> error("Cannot get scope for result of '${exprContext.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
                     is AsmStructure -> {
                         val fromElId =
-                            identifyingValueInFor.invoke(exprContext.scope.forTypeName.last, fromEl) as String? ?: error("'${fromEl}' not identifiable, therefore cannot determine it's scope")
+                            identifyingValueInFor.invoke(exprContext.scope.forTypeName, fromEl) as String? ?: error("'${fromEl}' not identifiable, therefore cannot determine it's scope")
                         val elScope = exprContext.scope.getChildScopeOrNull(fromElId) ?: error("Scope for '${fromElId}' not found")
                         elScope
                         //scopeForElement[fromEl]!!
@@ -184,7 +193,7 @@ class ReferenceResolverSimple(
                             null
                         } else {
                             val fromElId =
-                                identifyingValueInFor.invoke(exprContext.scope.forTypeName.last, v) as String? ?: error("'${fromEl.reference}' not identifiable, therefore cannot determine it's scope")
+                                identifyingValueInFor.invoke(exprContext.scope.forTypeName, v) as String? ?: error("'${fromEl.reference}' not identifiable, therefore cannot determine it's scope")
                             val elScope = exprContext.scope.getChildScopeOrNull(fromElId) ?: error("Scope for '${fromElId}' not found")
                             elScope
                             //scopeForElement[v] ?: error("Scope for '${v}' not found !")
@@ -246,7 +255,7 @@ class ReferenceResolverSimple(
             targets.isEmpty() -> {
                 /*
                 val selfId = when (self) {
-                    is AsmStructure -> identifyingValueInFor.invoke(scope.forTypeName.last, self)
+                    is AsmStructure -> identifyingValueInFor.invoke(scope.forTypeName, self)
                     else -> self.toString()
                 }
                  */
