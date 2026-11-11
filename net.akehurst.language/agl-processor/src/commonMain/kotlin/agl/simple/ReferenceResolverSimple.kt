@@ -39,6 +39,10 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.ReferenceExpression
+import net.akehurst.language.reference.api.ReferenceExpressionProperty
+import net.akehurst.language.reference.api.ScopeImport
+import net.akehurst.language.reference.api.ScopeImportKind
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
 import net.akehurst.language.scope.api.ItemInScope
@@ -129,16 +133,35 @@ class ReferenceResolverSimple(
         scopeStack.push(elScope)
         scopeForElement[value] = elScope
 
+        resolveReferencesOf(value, elScope)
+    }
+
+    // elements whose references have been handled, or are being handled (to stop cycles)
+    private val _referencesHandled = mutableSetOf<AsmStructure>()
+
+    /**
+     * handle the reference expressions for 'value', at most once per element.
+     * Called by the tree walk, and on demand when a lookup needs a reference of an element (e.g. the target of an import) before the walk reaches it.
+     */
+    private fun resolveReferencesOf(value: AsmStructure, elScope: Scope) {
+        if (_referencesHandled.contains(value)) return
+        _referencesHandled.add(value)
         val references = crossReferenceDomain.referencesFor(typesDomain, value.qualifiedTypeName)
         val type = typesDomain.findByQualifiedNameOrNull(value.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         for (match in references) {
             when {
+                match.isAmbiguous && isConditionalChoice(match.candidates) -> {
+                    match.candidates.firstOrNull { conditionHolds(it, value) }?.let { refExpr ->
+                        handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value, type)
+                    }
+                }
+
                 match.isAmbiguous -> raiseError(
                     value,
                     "Ambiguous references for type '${value.qualifiedTypeName.value}', candidates: ${match.candidates.joinToString(separator = ", ") { "'${it.asString().trim()}'" }}"
                 )
 
-                else -> match.singleOrNull?.let { refExpr ->
+                else -> match.singleOrNull?.takeIf { conditionHolds(it, value) }?.let { refExpr ->
                     handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value, type)
                 }
             }
@@ -168,8 +191,14 @@ class ReferenceResolverSimple(
         // 'property' navigation 'refers-to' typeReferences from? ;
         //check referred to item exists
         // resolve reference & convert property value to reference
-        val scope = when (refExpr.fromNavigation) {
-            null -> scopeStack.peek()
+        val fromNav = refExpr.fromNavigation
+        val fromScopes = when {
+            null != fromNav && fromNav.start is RootExpression && (fromNav.start as RootExpression).name in SCOPE_ROOTS -> scopesFor(fromNav, exprContext.scope)
+            else -> null
+        }
+        val scope = when {
+            null != fromScopes -> exprContext.scope
+            null == refExpr.fromNavigation -> exprContext.scope
             else -> {
                 //scope for result of navigation
                 val elType = typesDomain.findByQualifiedNameOrNull(exprContext.element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
@@ -217,22 +246,22 @@ class ReferenceResolverSimple(
             when {
                 referringValue is String -> {
                     val qname = referringValue.split(".")
-                    handleCreateReference(scope, self, elType, refExpr, qname)
+                    handleCreateReference(scope, fromScopes, self, elType, refExpr, qname)
                 }
 
                 referringValue is List<*> && referringValue.isNotEmpty() && referringValue.all { it is String } -> {
                     val qname = referringValue.map { it as String }
-                    handleCreateReference(scope, self, elType, refExpr, qname)
+                    handleCreateReference(scope, fromScopes, self, elType, refExpr, qname)
                 }
                 // Deprecated
                 referringValue is AsmPrimitive -> {
                     val qname = (referringValue.value as String).split(".")
-                    handleCreateReference(scope, self, elType, refExpr, qname)
+                    handleCreateReference(scope, fromScopes, self, elType, refExpr, qname)
                 }
                 // Deprecated
                 referringValue is AsmList && referringValue.elements.isNotEmpty() && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
                     val qname = referringValue.elements.map { (it as AsmPrimitive).value as String }
-                    handleCreateReference(scope, self, elType, refExpr, qname)
+                    handleCreateReference(scope, fromScopes, self, elType, refExpr, qname)
                 }
 
                 else -> raiseError(self, "Referring value '${elType.typeName.value}.${refExpr.referringPropertyNavigation}=$referringValue' on element $self is not a String or List<String>")
@@ -242,15 +271,23 @@ class ReferenceResolverSimple(
         }
     }
 
-    private fun handleCreateReference(scope: Scope, self: Any, type: TypeInstance, refExpr: ReferenceExpressionPropertyDefault, qName: List<String>) {
+    private fun handleCreateReference(scope: Scope, fromScopes: List<Scope>?, self: Any, type: TypeInstance, refExpr: ReferenceExpressionPropertyDefault, qName: List<String>) {
         val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
-        val targets = referredToTypes.flatMap { td ->
-            // Use context (not scope) because the reference could have been created from a different sentence
-            findItemsByQualifiedNameFrom(scope.scopePath, qName) {
-                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDefinition
-                itemType.conformsTo(td)
-            }
+        val conforms = { typeName: QualifiedName ->
+            val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDefinition
+            referredToTypes.any { td -> itemType.conformsTo(td) }
         }
+        val found = when (fromScopes) {
+            // Use context (not scope) because the reference could have been created from a different sentence
+            null -> sentenceContext.scopeForSentence.values.flatMap { rootScope -> resolveQualifiedName(chainFrom(rootScope, scope.scopePath), qName) }
+            // 'from $scope...' : try each start scope in turn, the first that gives a result is used
+            else -> fromScopes.firstNotNullOfOrNull { st -> resolveQualifiedName(chainFrom(st.rootScope, st.scopePath), qName).ifEmpty { null } } ?: emptyList()
+        }
+        val targets = found
+            .flatMap { aliasTargets(it, mutableListOf()) }
+            .distinctBy { Pair(it.typeName, it.item) }
+            .filter { conforms.invoke(it.typeName) }
+            .map { ItemInScope(it.name, it.typeName, null, it.item!!) }
         when {
             targets.isEmpty() -> {
                 /*
@@ -309,73 +346,312 @@ class ReferenceResolverSimple(
         }
     }
 
+    // ---- name lookup ----
+
+    private companion object {
+        const val SCOPE_THIS = "\$scope"
+        const val SCOPE_ROOT = "\$root"
+        val SCOPE_ROOTS = setOf(SCOPE_THIS, SCOPE_ROOT)
+        const val PUBLIC = "public"
+        const val PROTECTED = "protected"
+        const val PRIVATE = "private"
+        const val MAX_ALIAS_DEPTH = 100
+    }
+
+    /** an item found by name; 'item' is null for a child scope that has no item of the same name */
+    private data class Found(val name: String, val typeName: QualifiedName, val item: Any?, val owner: Scope)
+
+    /** from where a scope is looked into, decides which visibilities are visible */
+    private enum class Access { INSIDE, SUBTYPE, OUTSIDE }
+
+    private fun isVisible(visibility: String, access: Access) = when (access) {
+        Access.INSIDE -> true
+        Access.SUBTYPE -> visibility != PRIVATE
+        Access.OUTSIDE -> visibility == PUBLIC
+    }
+
+    /** the scopes from 'rootScope' along 'scopePath', as far as they exist, innermost last */
+    private fun chainFrom(rootScope: Scope, scopePath: List<String>): List<Scope> {
+        val chain = mutableListOf(rootScope)
+        for (seg in scopePath) {
+            chain.add(chain.last().getChildScopeOrNull(seg) ?: break)
+        }
+        return chain
+    }
+
     /**
-     * Resolves [qName] relative to the scope at [scopePath], in the scope tree of every sentence in the context.
-     * The first part of the name is looked up in the scope at [scopePath], then in each enclosing scope out to the root.
-     * The nearest scope that has an item (of any type), or a child scope, with that name is used, even if no item there conforms.
-     * The remaining parts are then looked up only inside the found scope, without looking in enclosing scopes.
+     * KerML style name resolution (8.2.3.5):
+     * the first part of the name is looked up in the innermost scope of 'chain', then outwards. The nearest scope with that name is used.
+     * Looking up a name in one scope finds owned items first, then inherited items, then imported items.
+     * The remaining parts are looked up only inside the scope found for the previous part, and only items visible from outside are found.
      */
-    private fun findItemsByQualifiedNameFrom(scopePath: List<String>, qName: List<String>, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope> =
-        when {
-            qName.isEmpty() -> emptyList()
-            else -> sentenceContext.scopeForSentence.values.flatMap { rootScope ->
-                // scopes on the path, from the root to the scope at scopePath (as far as it exists in this sentence)
-                val path = mutableListOf<Scope>(rootScope)
-                for (seg in scopePath) {
-                    path.add(path.last().getChildScopeOrNull(seg) ?: break)
-                }
-                val first = qName.first()
-                val found = path.lastOrNull { s -> s.items[first]?.isNotEmpty() == true || (qName.size > 1 && s.childScopes.containsKey(first)) }
-                when (found) {
+    private fun resolveQualifiedName(chain: List<Scope>, qName: List<String>): List<Found> {
+        if (qName.isEmpty()) return emptyList()
+        val first = qName.first()
+        var found = emptyList<Found>()
+        for (s in chain.asReversed()) {
+            found = localResolve(s, first, Access.INSIDE, mutableListOf())
+            if (found.isEmpty() && qName.size > 1) {
+                // a child scope with that name, without an item
+                s.getChildScopeOrNull(first)?.let { found = listOf(Found(first, it.forTypeName, null, s)) }
+            }
+            if (found.isNotEmpty()) break
+        }
+        for (seg in qName.drop(1)) {
+            found = found.flatMap { f ->
+                val ns = f.owner.getChildScopeOrNull(f.name)
+                when (ns) {
                     null -> emptyList()
-                    else -> {
-                        var s: Scope? = found
-                        for (seg in qName.dropLast(1)) {
-                            s = s?.getChildScopeOrNull(seg)
-                        }
-                        val last = qName.last()
-                        s?.items?.get(last)
-                            ?.filter { (typeName, _) -> conformsToFunc.invoke(typeName) }
-                            ?.map { (typeName, p) -> ItemInScope(last, typeName, p.first, p.second) }
-                            ?: emptyList()
+                    else -> localResolve(ns, seg, Access.OUTSIDE, mutableListOf()).ifEmpty {
+                        ns.getChildScopeOrNull(seg)?.let { listOf(Found(seg, it.forTypeName, null, ns)) } ?: emptyList()
                     }
                 }
             }
         }
+        return found.filter { null != it.item }
+    }
+
+    /** items named 'name' in scope 's': owned, else inherited, else imported */
+    private fun localResolve(s: Scope, name: String, access: Access, visited: MutableList<Scope>): List<Found> {
+        if (visited.any { it === s }) return emptyList()
+        visited.add(s)
+        val owned = s.items[name]?.map { (typeName, p) -> Found(name, typeName, p.second, s) }?.filter { isVisible(visibilityOf(it), access) } ?: emptyList()
+        if (owned.isNotEmpty()) return owned
+        val ownerEl = ownerElementOf(s) ?: return emptyList()
+        val scopeImports = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName)
+        if (scopeImports.isEmpty()) return emptyList()
+        val inheritAccess = if (access == Access.OUTSIDE) Access.OUTSIDE else Access.SUBTYPE
+        val inherited = scopeImports.filter { it.kind == ScopeImportKind.INHERIT }.flatMap { si ->
+            importElementsOf(si, ownerEl).flatMap { src -> targetsOf(si, src, s) }.flatMap { t -> scopeOfElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
+        }.distinct()
+        if (inherited.isNotEmpty()) return inherited
+        val imported = scopeImports.filter { it.kind != ScopeImportKind.INHERIT }.flatMap { si ->
+            importElementsOf(si, ownerEl).flatMap { impEl ->
+                when {
+                    access == Access.OUTSIDE && normaliseVisibility(evaluate(si.visibility, impEl)) != PUBLIC -> emptyList()
+                    else -> {
+                        val recursive = evaluate(si.recursive, impEl) == true
+                        targetsOf(si, impEl, s).flatMap { t ->
+                            val direct = when (si.kind) {
+                                ScopeImportKind.IMPORT_ELEMENT -> foundForElement(t).filter { it.name == name }
+                                else -> scopeOfElement(t)?.let { localResolve(it, name, Access.OUTSIDE, visited) } ?: emptyList()
+                            }
+                            val nested = when {
+                                recursive -> scopeOfElement(t)?.let { ts ->
+                                    descendantScopes(ts).flatMap { localResolve(it, name, Access.OUTSIDE, visited) }
+                                        .let { if (si.kind == ScopeImportKind.IMPORT_ELEMENT) localResolve(ts, name, Access.OUTSIDE, visited) + it else it }
+                                } ?: emptyList()
+
+                                else -> emptyList()
+                            }
+                            direct + nested
+                        }
+                    }
+                }
+            }
+        }
+        return imported.distinct()
+    }
+
+    private fun descendantScopes(s: Scope): List<Scope> = s.childScopes.values.flatMap { listOf(it) + descendantScopes(it) }
+
+    /** the scopes for 'from \$scope...' or 'from \$root...' */
+    private fun scopesFor(nav: NavigationExpression, current: Scope): List<Scope> {
+        var scopes = when ((nav.start as RootExpression).name) {
+            SCOPE_ROOT -> listOf(current.rootScope)
+            else -> listOf(current)
+        }
+        for (part in nav.parts) {
+            val pn = (part as? PropertyCall)?.propertyName
+            scopes = when (pn) {
+                "owner" -> scopes.mapNotNull { ownerScopeOf(it) }
+                "inherited" -> scopes.flatMap { inheritedScopesOf(it) }
+                else -> {
+                    _issues.error(null, "In 'from ${nav.asString()}', '$pn' is not a property of a scope, expected 'owner' or 'inherited'")
+                    emptyList()
+                }
+            }
+        }
+        return scopes
+    }
+
+    private fun ownerScopeOf(s: Scope): Scope? = when {
+        s.scopePath.isEmpty() -> null
+        else -> chainFrom(s.rootScope, s.scopePath.dropLast(1)).let { ch -> if (ch.size == s.scopePath.size) ch.last() else null }
+    }
+
+    private fun inheritedScopesOf(s: Scope): List<Scope> {
+        val ownerEl = ownerElementOf(s) ?: return emptyList()
+        return crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName)
+            .filter { it.kind == ScopeImportKind.INHERIT }
+            .flatMap { si -> importElementsOf(si, ownerEl).flatMap { src -> targetsOf(si, src, s) }.mapNotNull { scopeOfElement(it) } }
+    }
+
+    private fun elementOf(item: Any?): AsmStructure? = item?.let { sentenceContext.resolveScopedItem.invoke(it) as? AsmStructure }
+
+    /** the element that created scope 's', i.e. the item in the owning scope with the scope's name and type */
+    private fun ownerElementOf(s: Scope): AsmStructure? {
+        val owner = ownerScopeOf(s) ?: return null
+        val name = s.scopePath.last()
+        val items = owner.items[name] ?: return null
+        return (items[s.forTypeName]?.second?.let { elementOf(it) }) ?: items.values.firstNotNullOfOrNull { elementOf(it.second) }
+    }
+
+    /** the scope created by element 'el', found via its semantic path */
+    private fun scopeOfElement(el: AsmStructure): Scope? {
+        val path = el.semanticQualifiedPath ?: return null
+        if (path.isEmpty()) return null
+        return sentenceContext.scopeForSentence.values.firstNotNullOfOrNull { root ->
+            val ch = chainFrom(root, path)
+            when {
+                ch.size != path.size + 1 -> null
+                ownerElementOf(ch.last()) === el -> ch.last()
+                else -> null
+            }
+        }
+    }
+
+    /** where element 'el' is an item in a scope */
+    private fun foundForElement(el: AsmStructure): List<Found> {
+        val path = el.semanticQualifiedPath ?: return emptyList()
+        if (path.isEmpty()) return emptyList()
+        val name = path.last()
+        return sentenceContext.scopeForSentence.values.flatMap { root ->
+            val ch = chainFrom(root, path.dropLast(1))
+            when {
+                ch.size != path.size -> emptyList()
+                else -> ch.last().items[name]?.filter { (_, p) -> elementOf(p.second) === el }?.map { (typeName, p) -> Found(name, typeName, p.second, ch.last()) } ?: emptyList()
+            }
+        }
+    }
+
+    private fun visibilityOf(f: Found): String {
+        val el = elementOf(f.item) ?: return PUBLIC
+        val id = crossReferenceDomain.identifyingExpressionFor(typesDomain, f.owner.forTypeName, el.qualifiedTypeName).singleOrNull ?: return PUBLIC
+        return normaliseVisibility(evaluate(id.visibility, el))
+    }
+
+    private fun normaliseVisibility(v: Any?): String = when (v) {
+        PROTECTED, PRIVATE -> v as String
+        else -> PUBLIC
+    }
+
+    /** if the found item is an alias, the items for what it is an alias for (transitively), else the item itself */
+    private fun aliasTargets(f: Found, seen: MutableList<AsmStructure>): List<Found> {
+        val el = elementOf(f.item) ?: return listOf(f)
+        val aliasFor = crossReferenceDomain.identifyingExpressionFor(typesDomain, f.owner.forTypeName, el.qualifiedTypeName).singleOrNull?.aliasFor ?: return listOf(f)
+        if (seen.any { it === el } || seen.size > MAX_ALIAS_DEPTH) return emptyList()
+        seen.add(el)
+        resolveReferencesOf(el, f.owner)
+        return referredElements(evaluate(aliasFor, el)).flatMap { t -> foundForElement(t).flatMap { aliasTargets(it, seen) } }
+    }
+
+    /** the elements of the scope owner, selected by an import/inherit declaration */
+    private fun importElementsOf(si: ScopeImport, ownerEl: AsmStructure): List<AsmStructure> {
+        val ofType = si.ofType?.let { typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
+        return structuresIn(evaluate(si.elements, ownerEl)).filter { el ->
+            when (ofType) {
+                null -> true
+                else -> typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)?.conformsTo(ofType) ?: false
+            }
+        }
+    }
+
+    /** the elements referred to by the 'target' (a reference property) of an import/inherit declaration, evaluated on 'sourceEl', which is in scope 's' */
+    private fun targetsOf(si: ScopeImport, sourceEl: AsmStructure, s: Scope): List<AsmStructure> {
+        resolveReferencesOf(sourceEl, s)
+        return referredElements(evaluate(si.target, sourceEl))
+    }
+
+    private fun referredElements(v: Any?): List<AsmStructure> = when (v) {
+        null -> emptyList()
+        is AsmReference -> listOfNotNull(v.value)
+        is AsmStructure -> listOf(v)
+        is TypedObject -> referredElements(v.self)
+        is List<*> -> v.flatMap { referredElements(it) }
+        is AsmList -> v.elements.flatMap { referredElements(it) }
+        else -> emptyList()
+    }
+
+    private fun structuresIn(v: Any?): List<AsmStructure> = when (v) {
+        null -> emptyList()
+        is AsmStructure -> listOf(v)
+        is TypedObject -> structuresIn(v.self)
+        is List<*> -> v.flatMap { structuresIn(it) }
+        is AsmList -> v.elements.flatMap { structuresIn(it) }
+        else -> emptyList()
+    }
+
+    private fun evaluate(expr: Expression?, self: AsmStructure): Any? = when (expr) {
+        null -> null
+        else -> {
+            val elType = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+            val v = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, elType)), expr).self
+            when (v) {
+                is AsmPrimitive -> v.value
+                else -> v
+            }
+        }
+    }
+
+    /** several 'property' lines for the same property, where all but the last have a 'when' condition */
+    private fun isConditionalChoice(candidates: List<ReferenceExpression>): Boolean =
+        candidates.all { it is ReferenceExpressionProperty }
+                && candidates.map { (it as ReferenceExpressionProperty).referringPropertyNavigation.asString() }.distinct().size == 1
+                && candidates.dropLast(1).all { null != (it as ReferenceExpressionProperty).condition }
+
+    private fun conditionHolds(refExpr: ReferenceExpression, self: Any): Boolean {
+        val cond = (refExpr as? ReferenceExpressionProperty)?.condition ?: return true
+        return when (self) {
+            is AsmStructure -> evaluate(cond, self) == true
+            else -> false
+        }
+    }
+
+    /** for each property, the first of its 'property' lines whose condition holds; other reference expressions unchanged */
+    private fun applicable(list: List<ReferenceExpression>, self: Any): List<ReferenceExpression> {
+        val done = mutableSetOf<String>()
+        return list.filter { re ->
+            when (re) {
+                is ReferenceExpressionProperty -> {
+                    val key = re.referringPropertyNavigation.asString()
+                    when {
+                        done.contains(key) -> false
+                        conditionHolds(re, self) -> {
+                            done.add(key); true
+                        }
+
+                        else -> false
+                    }
+                }
+
+                else -> true
+            }
+        }
+    }
 
     private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, sentenceContext: ReferenceExpressionContext, self: Any, type: TypeInstance) {
          val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, type)), refExpr.expression)
         val elType = coll.type.typeArguments.getOrNull(0)?.type ?: StdLibDefault.AnyType
-        for (re in refExpr.referenceExpressionList) {
-            val obj = coll.untyped
-            when (obj) {
-                is Unit -> Unit // do nothing
-                is List<*> ->  {
-                    for (el in obj) {
-                        when {
-                            null==el || el is Unit -> Unit
-                            null == refExpr.ofType -> handleReferenceExpression(re, sentenceContext, el, elType)
-                            el.conformsToType(elType, refExpr.ofType) -> handleReferenceExpression(re, sentenceContext, el, elType)
-
-                            el is AsmNothing -> Unit //do nothing
-                            else -> Unit // el is filtered out by the 'ofType'
-                        }
-                    }
+        val obj = coll.untyped
+        val elements = when (obj) {
+            is Unit -> emptyList()
+            is List<*> -> obj.filter { null != it && it !is Unit && it !is AsmNothing }
+            //Deprecated
+            is AsmNothing -> emptyList()
+            is AsmList -> obj.elements.filter { it !is AsmNothing }
+            else -> error("result of navigation should be a List<AsmElementSimple>, got '${coll::class.simpleName}'")
+        }
+        for (el in elements) {
+            el!!
+            val selected = when {
+                null == refExpr.ofType -> true
+                else -> el.conformsToType(elType, refExpr.ofType) // else el is filtered out by the 'ofType'
+            }
+            if (selected) {
+                for (re in applicable(refExpr.referenceExpressionList, el)) {
+                    handleReferenceExpression(re, sentenceContext, el, elType)
                 }
-                //Deprecated
-                is AsmNothing -> Unit //do nothing
-                is AsmList -> {
-                    for (el in obj.elements) {
-                        when {
-                            el is AsmNothing -> Unit //do nothing
-                            null == refExpr.ofType -> handleReferenceExpression(re, sentenceContext, el, elType)
-                            el.conformsToType(elType, refExpr.ofType) -> handleReferenceExpression(re, sentenceContext, el, elType)
-                            else -> Unit // el is filtered out by the 'ofType'
-                        }
-                    }
-                }
-
-                else -> error("result of navigation should be a List<AsmElementSimple>, got '${coll::class.simpleName}'")
             }
         }
     }

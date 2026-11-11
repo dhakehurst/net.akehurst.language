@@ -118,6 +118,9 @@ class CrossReferenceDomainDefault(
     override fun referencesFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<CrossReferenceMatch<ReferenceExpression>> =
         lookupFor(typesDomain).referencesFor(typeQualifiedName)
 
+    override fun scopeImportsFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<ScopeImport> =
+        lookupFor(typesDomain).scopeImportsFor(typeQualifiedName)
+
     private var _lookup: CrossReferenceLookup? = null
 
     /**
@@ -208,16 +211,20 @@ data class ScopeDefinitionDefault(
     override val scopeForTypeName: PossiblyQualifiedName
 ) : ScopeDefinition {
     override val identifiables = mutableListOf<Identifiable>()
+    override val scopeImports = mutableListOf<ScopeImport>()
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("scope ${scopeForTypeName.value} {")
-        if (this.identifiables.isEmpty()) {
+        if (this.identifiables.isEmpty() && this.scopeImports.isEmpty()) {
             sb.append(" }")
         } else {
             sb.append("\n")
             for (id in this.identifiables) {
                 sb.append(id.asString(indent.inc))
+            }
+            for (si in this.scopeImports) {
+                sb.append(si.asString(indent.inc))
             }
             sb.append("\n$indent}")
         }
@@ -227,10 +234,39 @@ data class ScopeDefinitionDefault(
 
 data class IdentifiableDefault(
     override val typeName: PossiblyQualifiedName,
-    override val identifiedBy: Expression
+    override val identifiedBy: Expression,
+    override val visibility: Expression? = null,
+    override val aliasFor: NavigationExpression? = null
 ) : Identifiable {
     override fun asString(indent: Indent, imports: List<Import>): String {
-        return "${indent}identify ${typeName.value} by ${identifiedBy.asString(indent, emptyList())}"
+        val vis = visibility?.let { " visibility ${it.asString(indent, emptyList())}" } ?: ""
+        val alias = aliasFor?.let { " alias-for ${it.asString(indent, emptyList())}" } ?: ""
+        return "${indent}identify ${typeName.value} by ${identifiedBy.asString(indent, emptyList())}$vis$alias"
+    }
+}
+
+data class ScopeImportDefault(
+    override val kind: ScopeImportKind,
+    override val elements: Expression,
+    override val ofType: PossiblyQualifiedName?,
+    override val target: NavigationExpression,
+    override val recursive: Expression? = null,
+    override val visibility: Expression? = null
+) : ScopeImport {
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val kw = when (kind) {
+            ScopeImportKind.IMPORT_MEMBERS -> "import"
+            ScopeImportKind.IMPORT_ELEMENT -> "import"
+            ScopeImportKind.INHERIT -> "inherit"
+        }
+        val what = when (kind) {
+            ScopeImportKind.IMPORT_ELEMENT -> "element"
+            else -> "members-of"
+        }
+        val ot = ofType?.let { " of-type ${it.value}" } ?: ""
+        val rec = recursive?.let { " recursive ${it.asString(indent, emptyList())}" } ?: ""
+        val vis = visibility?.let { " visibility ${it.asString(indent, emptyList())}" } ?: ""
+        return "${indent}$kw forall ${elements.asString(indent, emptyList())}$ot $what ${target.asString(indent, emptyList())}$rec$vis"
     }
 }
 
@@ -258,7 +294,8 @@ abstract class ReferenceExpressionAbstract : ReferenceExpression
 data class ReferenceExpressionPropertyDefault(
     override val referringPropertyNavigation: NavigationExpression,
     override val refersToTypeName: List<PossiblyQualifiedName>,
-    override val fromNavigation: NavigationExpression?
+    override val fromNavigation: NavigationExpression?,
+    override val condition: Expression? = null
 ) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
@@ -267,9 +304,13 @@ data class ReferenceExpressionPropertyDefault(
         val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
         val fr = when (fromNavigation) {
             null -> ""
-            else -> " " + fromNavigation.asString(indent, emptyList())
+            else -> " from " + fromNavigation.asString(indent, emptyList())
         }
-        sb.append("${indent}property $rp refers-to $rt$fr")
+        val cn = when (condition) {
+            null -> ""
+            else -> " when " + condition.asString(indent, emptyList())
+        }
+        sb.append("${indent}property $rp refers-to $rt$fr$cn")
         return sb.toString()
     }
 

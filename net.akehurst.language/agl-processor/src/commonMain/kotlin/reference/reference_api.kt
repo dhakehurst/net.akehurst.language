@@ -56,6 +56,11 @@ interface CrossReferenceDomain : Domain<CrossReferenceNamespace, DeclarationsFor
      * One item per property (or collection), with more than one candidate if ambiguous.
      */
     fun referencesFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<CrossReferenceMatch<ReferenceExpression>>
+
+    /**
+     * the 'import' and 'inherit' declarations of the scope created by an element of the type, found by type conformance
+     */
+    fun scopeImportsFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<ScopeImport>
 }
 
 /**
@@ -125,11 +130,57 @@ interface ReferenceDefinition  : Formatable {
 interface ScopeDefinition : Formatable {
     val scopeForTypeName: PossiblyQualifiedName
     val identifiables: List<Identifiable>
+
+    /**
+     * other scopes whose items are also visible in this scope ('import' and 'inherit')
+     */
+    val scopeImports: List<ScopeImport> get() = emptyList()
 }
 
 interface Identifiable  : Formatable {
     val typeName: PossiblyQualifiedName
     val identifiedBy: Expression
+
+    /**
+     * evaluated on the identified element, gives 'public', 'protected' or 'private', anything else is 'public'
+     */
+    val visibility: Expression? get() = null
+
+    /**
+     * if not null, the identified element is an alias,
+     * a reference to it resolves to the element that this navigation (a reference property of the alias) refers to
+     */
+    val aliasFor: NavigationExpression? get() = null
+}
+
+enum class ScopeImportKind {
+    /** 'import ... members-of' : the items in the scope of the referred element are visible */
+    IMPORT_MEMBERS,
+
+    /** 'import ... element' : the referred element itself is visible, by its own name */
+    IMPORT_ELEMENT,
+
+    /** 'inherit ... members-of' : the items in the scope of the referred element are visible, also from outside (via qualified names) */
+    INHERIT
+}
+
+/**
+ * 'import' 'forall' elements ofType? ('members-of' | 'element') target recursive? visibility?
+ * 'inherit' 'forall' elements ofType? 'members-of' target
+ *
+ * 'elements' is evaluated on the element that owns the scope, 'target' (a reference property) and the other expressions on each of the resulting elements
+ */
+interface ScopeImport : Formatable {
+    val kind: ScopeImportKind
+    val elements: Expression
+    val ofType: PossiblyQualifiedName?
+    val target: NavigationExpression
+
+    /** if it evaluates to true, the items of nested scopes are also visible */
+    val recursive: Expression?
+
+    /** gives 'public' or 'private' (anything else is 'public'); a 'public' import is also visible from outside */
+    val visibility: Expression?
 }
 
 interface ReferenceExpression  : Formatable {
@@ -148,6 +199,12 @@ interface ReferenceExpressionProperty : ReferenceExpression {
     val refersToTypeName: List<PossiblyQualifiedName>
 
     val fromNavigation: NavigationExpression?
+
+    /**
+     * if not null, this reference expression applies only when the condition (evaluated on the referring element) is true.
+     * Of several reference expressions for the same property, the first that applies is used.
+     */
+    val condition: Expression? get() = null
 }
 
 interface ReferenceExpressionCollection : ReferenceExpression {
