@@ -1,0 +1,1107 @@
+/**
+ * Copyright (C) 2026 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * SysML v2 textual grammar tailored for AGL.
+ *
+ * Based on the textual BNF of the SysML v2 Release 2026-09.1 (SysML v2.1 Beta 2, KerML v1.1 Beta 2),
+ * with the same corrections as the 'standard' grammar (see ../standard/grammar.agl, marked '// AGL:').
+ * It accepts the same language as the 'standard' grammar, but:
+ *  - it is modular: one grammar per group of specification clauses, using grammar inheritance.
+ *    Choices that need rules of later grammars are extended in the last grammar (SysMLv2_1).
+ *  - expressions are written for AGL, with a preference rule for the operator precedence (KerML Table 6),
+ *    so a parse gives one tree with the correct grouping.
+ *  - rules that only wrap one other rule (e.g. 'OwnedXMember = X') and empty rules are removed,
+ *    which gives a smaller syntax tree and asm.
+ *  - lists such as 'X ( ',' X )*' are AGL separated lists '[X / ',']+'.
+ */
+namespace net.akehurst.language.sysML
+
+// Lexical structure and names, KerML 8.2.2, SysML 8.2.2.1.2
+grammar Base {
+
+    skip leaf WHITE_SPACE = "\s+" ;
+    // a SINGLE_LINE_NOTE must not start with '//*', that is a MULTILINE_NOTE
+    skip leaf SINGLE_LINE_NOTE = "//([^*\r\n][^\r\n]*)?" ;
+    skip leaf MULTILINE_NOTE = "//[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
+    leaf REGULAR_COMMENT = "/[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
+
+    NAME = BASIC_NAME | UNRESTRICTED_NAME ;
+    leaf BASIC_NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+    leaf UNRESTRICTED_NAME = "'([^'\\\r\n]|\\['\"bftn\\])*'" ;
+
+    // a short name, e.g. '<e1>' in 'part <e1> engine'
+    ShortName = '<' NAME '>' ;
+
+    leaf DECIMAL_VALUE = "[0-9]+" ;
+    leaf EXPONENTIAL_VALUE = "[0-9]+[eE][+-]?[0-9]+" ;
+    leaf STRING_VALUE = "\"([^\"\\\r\n]|\\['\"bftn\\])*\"" ;
+
+    DEFINED_BY  = ':'   | 'defined' 'by' ;
+    SPECIALIZES = ':>'  | 'specializes' ;
+    SUBSETS     = ':>'  | 'subsets' ;
+    REFERENCES  = '::>' | 'references' ;
+    CROSSES     = '=>'  | 'crosses' ;
+    REDEFINES   = ':>>' | 'redefines' ;
+
+    QualifiedName = ( '$' '::' )? [NAME / '::']+ ;
+    QualifiedNameList = [QualifiedName / ',']+ ;
+    FeatureChain = [QualifiedName / '.']2+ ;
+    // a QualifiedName or a FeatureChain
+    FeatureReference = [QualifiedName / '.']+ ;
+}
+
+// KerML 8.2.5.8 Expressions
+// Operator precedence (KerML Table 6) is given by the preference rule, lowest precedence first.
+grammar Expressions : Base {
+
+    OwnedExpression
+        = ConditionalExpression
+        | NullCoalescingExpression
+        | ImpliesExpression
+        | OrExpression
+        | XorExpression
+        | AndExpression
+        | EqualityExpression
+        | ClassificationExpression
+        | MetaclassificationExpression
+        | RelationalExpression
+        | RangeExpression
+        | AdditiveExpression
+        | MultiplicativeExpression
+        | ExponentiationExpression
+        | UnaryOperatorExpression
+        | ExtentExpression
+        | PrimaryExpression
+    ;
+
+    preference OwnedExpression {
+        ConditionalExpression on 'else' right
+        NullCoalescingExpression on '??' left
+        ImpliesExpression on 'implies' left
+        OrExpression on OR_OPERATOR left
+        XorExpression on 'xor' left
+        AndExpression on AND_OPERATOR left
+        EqualityExpression on EQUALITY_OPERATOR left
+        ClassificationExpression on CLASSIFICATION_OPERATOR left
+        RelationalExpression on RELATIONAL_OPERATOR left
+        RangeExpression on '..' left
+        AdditiveExpression on ADDITIVE_OPERATOR left
+        MultiplicativeExpression on MULTIPLICATIVE_OPERATOR left
+        ExponentiationExpression on EXPONENTIATION_OPERATOR right
+    }
+
+    ConditionalExpression = 'if' OwnedExpression '?' OwnedExpression 'else' OwnedExpression ;
+    NullCoalescingExpression = OwnedExpression '??' OwnedExpression ;
+    ImpliesExpression = OwnedExpression 'implies' OwnedExpression ;
+    OrExpression = OwnedExpression OR_OPERATOR OwnedExpression ;
+    XorExpression = OwnedExpression 'xor' OwnedExpression ;
+    AndExpression = OwnedExpression AND_OPERATOR OwnedExpression ;
+    EqualityExpression = OwnedExpression EQUALITY_OPERATOR OwnedExpression ;
+    RelationalExpression = OwnedExpression RELATIONAL_OPERATOR OwnedExpression ;
+    RangeExpression = OwnedExpression '..' OwnedExpression ;
+    AdditiveExpression = OwnedExpression ADDITIVE_OPERATOR OwnedExpression ;
+    MultiplicativeExpression = OwnedExpression MULTIPLICATIVE_OPERATOR OwnedExpression ;
+    ExponentiationExpression = OwnedExpression EXPONENTIATION_OPERATOR OwnedExpression ;
+    // unary operators have a higher precedence than all binary operators
+    UnaryOperatorExpression = UNARY_OPERATOR UnaryOperand ;
+    UnaryOperand = UnaryOperatorExpression | ExtentExpression | PrimaryExpression ;
+
+    // AGL: in a leaf the longer literal must be first
+    leaf OR_OPERATOR = '|' | 'or' ;
+    leaf AND_OPERATOR = '&' | 'and' ;
+    leaf EQUALITY_OPERATOR = '===' | '!==' | '==' | '!=' ;
+    leaf CLASSIFICATION_OPERATOR = 'istype' | 'hastype' | '@' | 'as' ;
+    leaf RELATIONAL_OPERATOR = '<=' | '>=' | '<' | '>' ;
+    leaf ADDITIVE_OPERATOR = '+' | '-' ;
+    leaf MULTIPLICATIVE_OPERATOR = '*' | '/' | '%' ;
+    leaf EXPONENTIATION_OPERATOR = '**' | '^' ;
+    leaf UNARY_OPERATOR = '+' | '-' | '~' | 'not' ;
+
+    // the operand is optional, e.g. 'istype T' tests the context
+    ClassificationExpression = OwnedExpression? CLASSIFICATION_OPERATOR QualifiedName ;
+    MetaclassificationExpression = QualifiedName ( '@@' | 'meta' ) QualifiedName ;
+    ExtentExpression = 'all' QualifiedName ;
+
+    // KerML 8.2.5.8.2 Primary Expressions
+    PrimaryExpression = FeatureChainExpression | NonFeatureChainPrimaryExpression ;
+    NonFeatureChainPrimaryExpression
+        = BracketExpression
+        | IndexExpression
+        | SequenceExpression
+        | SelectExpression
+        | CollectExpression
+        | FunctionOperationExpression
+        | BaseExpression
+    ;
+    BracketExpression = PrimaryExpression '[' SequenceExpressionList ']' ;
+    IndexExpression = PrimaryExpression '#' '(' SequenceExpressionList ')' ;
+    SequenceExpression = '(' SequenceExpressionList ')' ;
+    SequenceExpressionList = [OwnedExpression / ',']+ ','? ;
+    FeatureChainExpression = NonFeatureChainPrimaryExpression '.' FeatureReference ;
+    CollectExpression = PrimaryExpression '.' BodyExpression ;
+    SelectExpression = PrimaryExpression '.?' BodyExpression ;
+    FunctionOperationExpression = PrimaryExpression '->' FeatureReference ( BodyExpression | FunctionReference | ArgumentList ) ;
+    FunctionReference = QualifiedName ;
+
+    // KerML 8.2.5.8.3 Base Expressions
+    BaseExpression
+        = NullExpression
+        | LiteralExpression
+        | FeatureReferenceExpression
+        | MetadataAccessExpression
+        | InvocationExpression
+        | ConstructorExpression
+        | BodyExpression
+    ;
+    NullExpression = 'null' | '(' ')' ;
+    FeatureReferenceExpression = QualifiedName ;
+    MetadataAccessExpression = QualifiedName '.' 'metadata' ;
+    InvocationExpression = FeatureReference ArgumentList ;
+    ConstructorExpression = 'new' FeatureReference ArgumentList ;
+    ArgumentList = '(' ( PositionalArgumentList | NamedArgumentList )? ')' ;
+    PositionalArgumentList = [OwnedExpression / ',']+ ;
+    NamedArgumentList = [NamedArgument / ',']+ ;
+    NamedArgument = QualifiedName '=' OwnedExpression ;
+    BodyExpression = ExpressionBody ;
+    // replaced in SysML by a calculation body
+    ExpressionBody = '{' OwnedExpression '}' ;
+
+    // KerML 8.2.5.8.4 Literal Expressions
+    LiteralExpression
+        = LiteralBoolean
+        | LiteralString
+        | LiteralInteger
+        | LiteralReal
+        | LiteralInfinity
+    ;
+    LiteralBoolean = 'true' | 'false' ;
+    LiteralString = STRING_VALUE ;
+    LiteralInteger = DECIMAL_VALUE ;
+    LiteralReal
+        = DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE )
+        | EXPONENTIAL_VALUE
+    ;
+    LiteralInfinity = '*' ;
+}
+
+grammar Annotations : Base {
+
+    // SysML 8.2.2.2 Elements and Relationships Textual Notation
+    Identification = ShortName? NAME? ;
+    RelationshipBody
+        = ';'
+        | '{' AnnotatingElement* '}'
+    ;
+
+    // SysML 8.2.2.3 Dependencies Textual Notation
+    Dependency = PrefixMetadataAnnotation* 'dependency' DependencyDeclaration RelationshipBody ;
+    DependencyDeclaration = ( Identification 'from' )? [QualifiedName / ',']+ 'to' [QualifiedName / ',']+ ;
+
+    // SysML 8.2.2.4.1 Annotations
+    Annotation = QualifiedName ;
+    AnnotatingMember = MemberPrefix AnnotatingElement ;
+    // extended in SysMLv2_1
+    AnnotatingElement
+        = Comment
+        | Documentation
+        | TextualRepresentation
+    ;
+
+    // SysML 8.2.2.4.2 Comments and Documentation
+    Comment = ( 'comment' Identification ( 'about' [Annotation / ',']+ )? )? ( 'locale' STRING_VALUE )? REGULAR_COMMENT ;
+    Documentation = 'doc' Identification ( 'locale' STRING_VALUE )? REGULAR_COMMENT ;
+
+    // SysML 8.2.2.4.3 Textual Representation
+    TextualRepresentation = ( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT ;
+
+    // SysML 8.2.2.5.1 Packages
+    MemberPrefix = VisibilityIndicator? ;
+    VisibilityIndicator
+        = 'public'
+        | 'private'
+        | 'protected'
+    ;
+
+    // SysML 8.2.2.27 Metadata Textual Notation
+    PrefixMetadataAnnotation = '#' FeatureReference ;
+    PrefixMetadataMember = '#' FeatureReference ;
+}
+
+grammar Packages : Annotations, Expressions {
+
+    // SysML 8.2.2.5.1 Packages
+    RootNamespace = PackageBodyElement* ;
+    Package = PrefixMetadataMember* PackageDeclaration PackageBody ;
+    LibraryPackage = 'standard'? 'library' PrefixMetadataMember* PackageDeclaration PackageBody ;
+    PackageDeclaration = 'package' Identification ;
+    PackageBody
+        = ';'
+        | '{' PackageBodyElement* '}'
+    ;
+    // extended in SysMLv2_1
+    PackageBodyElement
+        = ElementFilterMember
+        | AliasMember
+        | Import
+    ;
+    ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';' ;
+    AliasMember = MemberPrefix 'alias' Identification 'for' QualifiedName RelationshipBody ;
+    Import = VisibilityIndicator? 'import' 'all'? ImportDeclaration RelationshipBody ;
+    ImportDeclaration
+        = MembershipImport
+        | NamespaceImport
+    ;
+    MembershipImport = QualifiedName ( '::' '**' )? ;
+    NamespaceImport
+        = QualifiedName '::' '*' ( '::' '**' )?
+        | FilterPackage
+    ;
+    FilterPackage = ImportDeclaration FilterPackageMember+ ;
+    FilterPackageMember = '[' OwnedExpression ']' ;
+
+    // SysML 8.2.2.5.2 Package Elements
+    // extended in SysMLv2_1
+    DefinitionElement
+        = Package
+        | LibraryPackage
+        | AnnotatingElement
+        | Dependency
+    ;
+}
+
+grammar DefinitionAndUsage : Packages {
+
+    // SysML 8.2.2.6.1 Definitions
+    BasicDefinitionPrefix
+        = 'abstract'
+        | 'variation'
+    ;
+    DefinitionPrefix = BasicDefinitionPrefix? PrefixMetadataMember* ;
+    Definition = DefinitionDeclaration DefinitionBody ;
+    DefinitionDeclaration = Identification SubclassificationPart? ;
+    DefinitionBody
+        = ';'
+        | '{' DefinitionBodyItem* '}'
+    ;
+    // extended in SysMLv2_1
+    DefinitionBodyItem
+        = DefinitionMember
+        | VariantUsageMember
+        | NonOccurrenceUsageMember
+        | AliasMember
+        | Import
+    ;
+    DefinitionMember = MemberPrefix DefinitionElement ;
+    VariantUsageMember = MemberPrefix 'variant' VariantUsageElement ;
+    NonOccurrenceUsageMember = MemberPrefix NonOccurrenceUsageElement ;
+
+    // SysML 8.2.2.6.2 Usages
+    FeatureDirection
+        = 'in'
+        | 'out'
+        | 'inout'
+    ;
+    RefPrefix = FeatureDirection? 'derived'? ( 'abstract' | 'variation' )? 'constant'? ;
+    BasicUsagePrefix = RefPrefix 'ref'? ;
+    EndUsagePrefix = 'end' OwnedCrossFeature? ;
+    OwnedCrossFeature = BasicUsagePrefix UsageDeclaration ;
+    UnextendedUsagePrefix
+        = EndUsagePrefix
+        | BasicUsagePrefix
+    ;
+    UsagePrefix = UnextendedUsagePrefix PrefixMetadataMember* ;
+    Usage = UsageDeclaration UsageCompletion ;
+    UsageDeclaration = Identification FeatureSpecializationPart? ;
+    UsageCompletion = FeatureValue? DefinitionBody ;
+    FeatureValue = ( '=' | ':=' | 'default' ( '=' | ':=' )? ) OwnedExpression ;
+
+    // SysML 8.2.2.6.3 Reference Usages
+    DefaultReferenceUsage = 'end'? RefPrefix Usage ;
+    ReferenceUsage = ( EndUsagePrefix | RefPrefix ) 'ref' Usage ;
+    VariantReference = OwnedReferenceSubsetting FeatureSpecialization* DefinitionBody ;
+
+    // SysML 8.2.2.6.4 Body Elements
+    // extended in SysMLv2_1
+    NonOccurrenceUsageElement
+        = DefaultReferenceUsage
+        | ReferenceUsage
+    ;
+    // extended in SysMLv2_1
+    VariantUsageElement
+        = VariantReference
+        | ReferenceUsage
+    ;
+
+    // SysML 8.2.2.6.5 Specialization
+    SubclassificationPart = SPECIALIZES [QualifiedName / ',']+ ;
+    FeatureSpecializationPart
+        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
+        | MultiplicityPart FeatureSpecialization*
+    ;
+    FeatureSpecialization
+        = Typings
+        | Subsettings
+        | References
+        | Crosses
+        | Redefinitions
+    ;
+    Typings = TypedBy ( ',' FeatureTyping )* ;
+    TypedBy = DEFINED_BY FeatureTyping ;
+    FeatureTyping
+        = OwnedFeatureTyping
+        | ConjugatedPortTyping
+    ;
+    OwnedFeatureTyping
+        = QualifiedName
+        | FeatureChain
+    ;
+    Subsettings = Subsets ( ',' OwnedSubsetting )* ;
+    Subsets = SUBSETS OwnedSubsetting ;
+    OwnedSubsetting
+        = QualifiedName
+        | FeatureChain
+    ;
+    References = REFERENCES OwnedReferenceSubsetting ;
+    OwnedReferenceSubsetting
+        = QualifiedName
+        | FeatureChain
+    ;
+    Crosses = CROSSES OwnedCrossSubsetting ;
+    OwnedCrossSubsetting
+        = QualifiedName
+        | FeatureChain
+    ;
+    Redefinitions = Redefines ( ',' OwnedRedefinition )* ;
+    Redefines = REDEFINES OwnedRedefinition ;
+    OwnedRedefinition
+        = QualifiedName
+        | FeatureChain
+    ;
+
+    // SysML 8.2.2.6.6 Multiplicity
+    MultiplicityPart
+        = MultiplicityRange
+        | MultiplicityRange? ( 'ordered' 'nonunique'? | 'nonunique' 'ordered'? )
+    ;
+    MultiplicityRange = '[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']' ;
+    MultiplicityExpressionMember = ( LiteralExpression | FeatureReferenceExpression ) ;
+
+    // SysML 8.2.2.12 Ports Textual Notation
+    ConjugatedPortTyping = '~' QualifiedName ;
+}
+
+grammar Attributes : DefinitionAndUsage {
+
+    // SysML 8.2.2.7 Attributes Textual Notation
+    AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition ;
+    AttributeUsage = UsagePrefix 'attribute' Usage ;
+
+    // SysML 8.2.2.8 Enumerations Textual Notation
+    EnumerationDefinition = PrefixMetadataMember* 'enum' 'def' DefinitionDeclaration EnumerationBody ;
+    EnumerationBody
+        = ';'
+        | '{' ( AnnotatingMember | EnumerationUsageMember )* '}'
+    ;
+    EnumerationUsageMember = MemberPrefix EnumeratedValue ;
+    EnumeratedValue = PrefixMetadataMember* 'enum'? Usage ;
+    EnumerationUsage = UsagePrefix 'enum' Usage ;
+}
+
+grammar Occurrences : DefinitionAndUsage {
+
+    // SysML 8.2.2.9.1 Occurrence Definitions
+    OccurrenceDefinitionPrefix = BasicDefinitionPrefix? 'individual'? PrefixMetadataMember* ;
+    OccurrenceDefinition = OccurrenceDefinitionPrefix 'occurrence' 'def' Definition ;
+    IndividualDefinition = BasicDefinitionPrefix? 'individual' PrefixMetadataMember* 'def' Definition ;
+
+    // SysML 8.2.2.9.2 Occurrence Usages
+    OccurrenceUsagePrefix = ( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? ) PrefixMetadataMember* ;
+    OccurrenceUsage = OccurrenceUsagePrefix 'occurrence' Usage ;
+    IndividualUsage = BasicUsagePrefix 'individual' PrefixMetadataMember* Usage ;
+    PortionUsage = BasicUsagePrefix 'individual'? PortionKind PrefixMetadataMember* Usage ;
+    PortionKind
+        = 'snapshot'
+        | 'timeslice'
+    ;
+    EventOccurrenceUsage =
+        OccurrenceUsagePrefix 'event' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'occurrence' UsageDeclaration? ) UsageCompletion
+    ;
+
+    // SysML 8.2.2.9.3 Occurrence Successions
+    SourceSuccessionMember = 'then' SourceEnd ;
+    SourceEnd = MultiplicityRange? ;
+
+    // SysML 8.2.2.10 Items Textual Notation
+    ItemDefinition = OccurrenceDefinitionPrefix 'item' 'def' Definition ;
+    ItemUsage = OccurrenceUsagePrefix 'item' Usage ;
+
+    // SysML 8.2.2.11 Parts Textual Notation
+    PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition ;
+    PartUsage = OccurrenceUsagePrefix 'part' Usage ;
+
+    // SysML 8.2.2.13.1 Connection Definition and Usage
+    ConnectorEnd = MultiplicityRange? ( NAME REFERENCES )? OwnedReferenceSubsetting ;
+
+    // SysML 8.2.2.16 Flows Textual Notation
+    PayloadFeature
+        = Identification? PayloadFeatureSpecializationPart FeatureValue?
+        | OwnedFeatureTyping MultiplicityRange?
+        | MultiplicityRange OwnedFeatureTyping
+    ;
+    PayloadFeatureSpecializationPart
+        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
+        | MultiplicityPart FeatureSpecialization+
+    ;
+}
+
+grammar Ports : Occurrences {
+
+    // SysML 8.2.2.12 Ports Textual Notation
+    PortDefinition = DefinitionPrefix 'port' 'def' Definition ;
+    PortUsage = OccurrenceUsagePrefix 'port' Usage ;
+}
+
+grammar Connections : Ports {
+
+    // SysML 8.2.2.13.1 Connection Definition and Usage
+    ConnectionDefinition = OccurrenceDefinitionPrefix 'connection' 'def' Definition ;
+    ConnectionUsage =
+        OccurrenceUsagePrefix ( 'connection' UsageDeclaration FeatureValue? ( 'connect' ConnectorPart )? | 'connect' ConnectorPart ) DefinitionBody
+    ;
+    ConnectorPart
+        = BinaryConnectorPart
+        | NaryConnectorPart
+    ;
+    BinaryConnectorPart = ConnectorEnd 'to' ConnectorEnd ;
+    NaryConnectorPart = '(' ConnectorEnd ',' [ConnectorEnd / ',']+ ')' ;
+
+    // SysML 8.2.2.13.2 Binding Connectors
+    BindingConnectorAsUsage = UsagePrefix ( 'binding' UsageDeclaration )? 'bind' ConnectorEnd '=' ConnectorEnd DefinitionBody ;
+
+    // SysML 8.2.2.13.3 Successions
+    SuccessionAsUsage = UsagePrefix ( 'succession' UsageDeclaration )? 'first' ConnectorEnd 'then' ConnectorEnd DefinitionBody ;
+
+    // SysML 8.2.2.14.1 Interface Definitions
+    InterfaceDefinition = OccurrenceDefinitionPrefix 'interface' 'def' DefinitionDeclaration InterfaceBody ;
+    InterfaceBody
+        = ';'
+        | '{' InterfaceBodyItem* '}'
+    ;
+    // extended in SysMLv2_1
+    InterfaceBodyItem
+        = DefinitionMember
+        | VariantUsageMember
+        | InterfaceNonOccurrenceUsageMember
+        | AliasMember
+        | Import
+    ;
+    InterfaceNonOccurrenceUsageMember = MemberPrefix InterfaceNonOccurrenceUsageElement ;
+    // extended in SysMLv2_1
+    InterfaceNonOccurrenceUsageElement
+        = ReferenceUsage
+        | BindingConnectorAsUsage
+        | SuccessionAsUsage
+    ;
+    DefaultInterfaceEnd = 'end' Usage ;
+
+    // SysML 8.2.2.14.2 Interface Usages
+    InterfaceUsage = OccurrenceUsagePrefix 'interface' InterfaceUsageDeclaration InterfaceBody ;
+    InterfaceUsageDeclaration
+        = UsageDeclaration FeatureValue? ( 'connect' InterfacePart )?
+        | InterfacePart
+    ;
+    InterfacePart
+        = BinaryInterfacePart
+        | NaryInterfacePart
+    ;
+    BinaryInterfacePart = InterfaceEnd 'to' InterfaceEnd ;
+    NaryInterfacePart = '(' InterfaceEnd ',' [InterfaceEnd / ',']+ ')' ;
+    InterfaceEnd = MultiplicityRange? ( NAME REFERENCES )? OwnedReferenceSubsetting ;
+
+    // SysML 8.2.2.15 Allocations Textual Notation
+    AllocationDefinition = OccurrenceDefinitionPrefix 'allocation' 'def' Definition ;
+    AllocationUsage = OccurrenceUsagePrefix AllocationUsageDeclaration DefinitionBody ;
+    AllocationUsageDeclaration
+        = 'allocation' UsageDeclaration ( 'allocate' ConnectorPart )?
+        | 'allocate' ConnectorPart
+    ;
+
+    // SysML 8.2.2.16 Flows Textual Notation
+    FlowDefinition = OccurrenceDefinitionPrefix 'flow' 'def' Definition ;
+    Message = OccurrenceUsagePrefix 'message' MessageDeclaration DefinitionBody ;
+    MessageDeclaration
+        = UsageDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' OwnedReferenceSubsetting 'to' OwnedReferenceSubsetting )?
+        | OwnedReferenceSubsetting 'to' OwnedReferenceSubsetting
+    ;
+    FlowUsage = OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody ;
+    SuccessionFlowUsage = OccurrenceUsagePrefix 'succession' 'flow' FlowDeclaration DefinitionBody ;
+    FlowDeclaration
+        = UsageDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' FlowEnd 'to' FlowEnd )?
+        | FlowEnd 'to' FlowEnd
+    ;
+    FlowEnd = FlowEndSubsetting? QualifiedName ;
+    FlowEndSubsetting
+        = QualifiedName '.'
+        | FeatureChainPrefix
+    ;
+    FeatureChainPrefix = ( QualifiedName '.' )+ QualifiedName '.' ;
+}
+
+grammar Actions : Occurrences {
+
+    // SysML 8.2.2.17.1 Action Definitions
+    ActionDefinition = OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration ActionBody ;
+    ActionBody
+        = ';'
+        | '{' ActionBodyItem* '}'
+    ;
+    // extended in SysMLv2_1
+    ActionBodyItem
+        = NonBehaviorBodyItem
+        | InitialNodeMember ActionTargetSuccessionMember*
+        | GuardedSuccessionMember
+    ;
+    // extended in SysMLv2_1
+    NonBehaviorBodyItem
+        = Import
+        | AliasMember
+        | DefinitionMember
+        | VariantUsageMember
+        | NonOccurrenceUsageMember
+    ;
+    InitialNodeMember = MemberPrefix 'first' QualifiedName RelationshipBody ;
+    ActionNodeMember = MemberPrefix ActionNode ;
+    ActionTargetSuccessionMember = MemberPrefix ActionTargetSuccession ;
+    GuardedSuccessionMember = MemberPrefix GuardedSuccession ;
+
+    // SysML 8.2.2.17.2 Action Usages
+    ActionUsage = OccurrenceUsagePrefix 'action' ActionUsageDeclaration ActionBody ;
+    ActionUsageDeclaration = UsageDeclaration FeatureValue? ;
+    PerformActionUsage = OccurrenceUsagePrefix 'perform' PerformActionUsageDeclaration ActionBody ;
+    PerformActionUsageDeclaration = ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'action' UsageDeclaration ) FeatureValue? ;
+    ActionNode
+        = ControlNode
+        | SendNode
+        | AcceptNode
+        | AssignmentNode
+        | TerminateNode
+        | IfNode
+        | WhileLoopNode
+        | ForLoopNode
+    ;
+    ActionNodeUsageDeclaration = 'action' UsageDeclaration? ;
+    ActionNodePrefix = OccurrenceUsagePrefix ActionNodeUsageDeclaration? ;
+
+    // SysML 8.2.2.17.3 Control Nodes
+    ControlNode
+        = MergeNode
+        | DecisionNode
+        | JoinNode
+        | ForkNode
+    ;
+    ControlNodePrefix = RefPrefix 'individual'? PortionKind? PrefixMetadataMember* ;
+    MergeNode = ControlNodePrefix 'merge' UsageDeclaration ActionBody ;
+    DecisionNode = ControlNodePrefix 'decide' UsageDeclaration ActionBody ;
+    JoinNode = ControlNodePrefix 'join' UsageDeclaration ActionBody ;
+    ForkNode = ControlNodePrefix 'fork' UsageDeclaration ActionBody ;
+
+    // SysML 8.2.2.17.4 Send and Accept Action Usages
+    AcceptNode = OccurrenceUsagePrefix AcceptNodeDeclaration ActionBody ;
+    AcceptNodeDeclaration = ActionNodeUsageDeclaration? 'accept' AcceptParameterPart ;
+    AcceptParameterPart = PayloadParameter ( 'via' OwnedExpression )? ;
+    PayloadParameter
+        = PayloadFeature
+        | Identification PayloadFeatureSpecializationPart? TriggerExpression
+    ;
+    TriggerExpression
+        = ( 'at' | 'after' ) OwnedExpression
+        | 'when' OwnedExpression
+    ;
+    SendNode =
+        OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send' ( OwnedExpression SenderReceiverPart? | SenderReceiverPart )? ActionBody
+    ;
+    SendNodeDeclaration = ActionNodeUsageDeclaration? 'send' OwnedExpression SenderReceiverPart? ;
+    SenderReceiverPart
+        = 'via' OwnedExpression ( 'to' OwnedExpression )?
+        | 'to' OwnedExpression
+    ;
+
+    // SysML 8.2.2.17.5 Assignment Action Usages
+    AssignmentNode = OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody ;
+    AssignmentNodeDeclaration = ActionNodeUsageDeclaration? 'assign' AssignmentTargetParameter FeatureReference ':=' OwnedExpression ;
+    AssignmentTargetParameter = ( NonFeatureChainPrimaryExpression '.' )? ;
+
+    // SysML 8.2.2.17.6 Terminate Action Usages
+    TerminateNode = OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'terminate' OwnedExpression? ActionBody ;
+
+    // SysML 8.2.2.17.7 Structured Control Action Usages
+    IfNode = ActionNodePrefix 'if' OwnedExpression ActionBodyParameter ( 'else' ( ActionBodyParameter | IfNode ) )? ;
+    ActionBodyParameter = ( 'action' UsageDeclaration? )? '{' ActionBodyItem* '}' ;
+    WhileLoopNode = ActionNodePrefix ( 'while' OwnedExpression | 'loop' ) ActionBodyParameter ( 'until' OwnedExpression ';' )? ;
+    ForLoopNode = ActionNodePrefix 'for' UsageDeclaration 'in' OwnedExpression ActionBodyParameter ;
+
+    // SysML 8.2.2.17.8 Action Successions
+    ActionTargetSuccession = ( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession ) DefinitionBody ;
+    TargetSuccession = SourceEnd 'then' ConnectorEnd ;
+    GuardedTargetSuccession = GuardExpressionMember 'then' ConnectorEnd ;
+    DefaultTargetSuccession = 'else' ConnectorEnd ;
+    GuardedSuccession =
+        ( 'succession' UsageDeclaration )? 'first' FeatureReference GuardExpressionMember 'then' ConnectorEnd DefinitionBody
+    ;
+
+    // SysML 8.2.2.18.3 Transition Usages
+    GuardExpressionMember = 'if' OwnedExpression ;
+}
+
+grammar States : Actions {
+
+    // SysML 8.2.2.18.1 State Definitions
+    StateDefinition = OccurrenceDefinitionPrefix 'state' 'def' DefinitionDeclaration StateDefBody ;
+    StateDefBody
+        = ';'
+        | 'parallel'? '{' StateBodyItem* '}'
+    ;
+    // extended in SysMLv2_1
+    StateBodyItem
+        = NonBehaviorBodyItem
+        | TransitionUsageMember
+        | EntryActionMember EntryTransitionMember*
+        | DoActionMember
+        | ExitActionMember
+    ;
+    EntryActionMember = MemberPrefix 'entry' StateActionUsage ;
+    DoActionMember = MemberPrefix 'do' StateActionUsage ;
+    ExitActionMember = MemberPrefix 'exit' StateActionUsage ;
+    EntryTransitionMember = MemberPrefix ( GuardedTargetSuccession | 'then' ConnectorEnd ) ';' ;
+    StateActionUsage
+        = ';'
+        | StatePerformActionUsage
+        | StateAcceptActionUsage
+        | StateSendActionUsage
+        | StateAssignmentActionUsage
+    ;
+    StatePerformActionUsage = PerformActionUsageDeclaration ActionBody ;
+    StateAcceptActionUsage = AcceptNodeDeclaration ActionBody ;
+    StateSendActionUsage = SendNodeDeclaration ActionBody ;
+    StateAssignmentActionUsage = AssignmentNodeDeclaration ActionBody ;
+    TransitionUsageMember = MemberPrefix TransitionUsage ;
+    TargetTransitionUsageMember = MemberPrefix TargetTransitionUsage ;
+
+    // SysML 8.2.2.18.2 State Usages
+    StateUsage = OccurrenceUsagePrefix 'state' ActionUsageDeclaration StateUsageBody ;
+    StateUsageBody
+        = ';'
+        | 'parallel'? '{' StateBodyItem* '}'
+    ;
+    ExhibitStateUsage =
+        OccurrenceUsagePrefix 'exhibit' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'state' UsageDeclaration ) FeatureValue? StateUsageBody
+    ;
+
+    // SysML 8.2.2.18.3 Transition Usages
+    TransitionUsage =
+        'transition' ( UsageDeclaration 'first' )? FeatureReference TriggerActionMember? GuardExpressionMember? EffectBehaviorMember? 'then' ConnectorEnd ActionBody
+    ;
+    TargetTransitionUsage =
+        ( 'transition' TriggerActionMember? GuardExpressionMember? EffectBehaviorMember? | TriggerActionMember GuardExpressionMember? EffectBehaviorMember? | GuardExpressionMember EffectBehaviorMember? )? 'then' ConnectorEnd ActionBody
+    ;
+    TriggerActionMember = 'accept' AcceptParameterPart ;
+    EffectBehaviorMember = 'do' EffectBehaviorUsage ;
+    EffectBehaviorUsage =
+        ( TransitionPerformActionUsage | TransitionAcceptActionUsage | TransitionSendActionUsage | TransitionAssignmentActionUsage )?
+    ;
+    TransitionPerformActionUsage = PerformActionUsageDeclaration ( '{' ActionBodyItem* '}' )? ;
+    TransitionAcceptActionUsage = AcceptNodeDeclaration ( '{' ActionBodyItem* '}' )? ;
+    TransitionSendActionUsage = SendNodeDeclaration ( '{' ActionBodyItem* '}' )? ;
+    TransitionAssignmentActionUsage = AssignmentNodeDeclaration ( '{' ActionBodyItem* '}' )? ;
+}
+
+grammar Calculations : Actions {
+
+    // SysML 8.2.2.19 Calculations Textual Notation
+    ResultExpressionMember = MemberPrefix? OwnedExpression ;
+
+    // SysML 8.2.2.20 Constraints Textual Notation
+    ConstraintUsageDeclaration = UsageDeclaration FeatureValue? ;
+}
+
+grammar Requirements : Calculations {
+
+    // SysML 8.2.2.21.1 Requirement Definitions
+    RequirementDefinition = OccurrenceDefinitionPrefix 'requirement' 'def' DefinitionDeclaration RequirementBody ;
+    RequirementBody
+        = ';'
+        | '{' RequirementBodyItem* '}'
+    ;
+    // extended in SysMLv2_1
+    RequirementBodyItem
+        = DefinitionBodyItem
+        | SubjectMember
+        | FramedConcernMember
+        | ActorMember
+        | StakeholderMember
+    ;
+    SubjectMember = MemberPrefix SubjectUsage ;
+    SubjectUsage = 'subject' PrefixMetadataMember* Usage ;
+    RequirementKind
+        = 'assume'
+        | 'require'
+    ;
+    FramedConcernMember = MemberPrefix? 'frame' FramedConcernUsage ;
+    FramedConcernUsage
+        = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody
+        | ( PrefixMetadataMember* 'concern' | PrefixMetadataMember+ ) ConstraintUsageDeclaration RequirementBody
+    ;
+    ActorMember = MemberPrefix ActorUsage ;
+    ActorUsage = 'actor' PrefixMetadataMember* Usage ;
+    StakeholderMember = MemberPrefix StakeholderUsage ;
+    StakeholderUsage = 'stakeholder' PrefixMetadataMember* Usage ;
+
+    // SysML 8.2.2.21.2 Requirement Usages
+    RequirementUsage = OccurrenceUsagePrefix 'requirement' ConstraintUsageDeclaration RequirementBody ;
+    SatisfyRequirementUsage =
+        OccurrenceUsagePrefix 'assert'? 'not'? 'satisfy' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'requirement' UsageDeclaration ) FeatureValue? ( 'by' FeatureReference )? RequirementBody
+    ;
+
+    // SysML 8.2.2.21.3 Concerns
+    ConcernDefinition = OccurrenceDefinitionPrefix 'concern' 'def' DefinitionDeclaration RequirementBody ;
+    ConcernUsage = OccurrenceUsagePrefix 'concern' ConstraintUsageDeclaration RequirementBody ;
+}
+
+grammar Cases : Requirements {
+
+    // SysML 8.2.2.22 Cases Textual Notation
+    CaseDefinition = OccurrenceDefinitionPrefix 'case' 'def' DefinitionDeclaration CaseBody ;
+    CaseUsage = OccurrenceUsagePrefix 'case' ConstraintUsageDeclaration CaseBody ;
+    CaseBody
+        = ';'
+        | '{' CaseBodyItem* ResultExpressionMember? '}'
+    ;
+    // extended in SysMLv2_1
+    CaseBodyItem
+        = SubjectMember
+        | ActorMember
+        | ObjectiveMember
+    ;
+    ObjectiveMember = MemberPrefix 'objective' ObjectiveRequirementUsage ;
+    ObjectiveRequirementUsage = PrefixMetadataMember* ConstraintUsageDeclaration RequirementBody ;
+
+    // SysML 8.2.2.23 Analysis Cases Textual Notation
+    AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def' DefinitionDeclaration CaseBody ;
+    AnalysisCaseUsage = OccurrenceUsagePrefix 'analysis' ConstraintUsageDeclaration CaseBody ;
+
+    // SysML 8.2.2.24 Verification Cases Textual Notation
+    VerificationCaseDefinition = OccurrenceDefinitionPrefix 'verification' 'def' DefinitionDeclaration CaseBody ;
+    VerificationCaseUsage = OccurrenceUsagePrefix 'verification' ConstraintUsageDeclaration CaseBody ;
+    RequirementVerificationMember = MemberPrefix 'verify' RequirementVerificationUsage ;
+    RequirementVerificationUsage
+        = OwnedReferenceSubsetting FeatureSpecialization* RequirementBody
+        | ( PrefixMetadataMember* 'requirement' | PrefixMetadataMember+ ) ConstraintUsageDeclaration RequirementBody
+    ;
+
+    // SysML 8.2.2.25 Use Cases Textual Notation
+    UseCaseDefinition = OccurrenceDefinitionPrefix 'use' 'case' 'def' DefinitionDeclaration CaseBody ;
+    UseCaseUsage = OccurrenceUsagePrefix 'use' 'case' ConstraintUsageDeclaration CaseBody ;
+    IncludeUseCaseUsage =
+        OccurrenceUsagePrefix 'include' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'use' 'case' UsageDeclaration ) FeatureValue? CaseBody
+    ;
+}
+
+grammar Views : Requirements {
+
+    // SysML 8.2.2.26.1 View Definitions
+    ViewDefinition = OccurrenceDefinitionPrefix 'view' 'def' DefinitionDeclaration ViewDefinitionBody ;
+    ViewDefinitionBody
+        = ';'
+        | '{' ViewDefinitionBodyItem* '}'
+    ;
+    ViewDefinitionBodyItem
+        = DefinitionBodyItem
+        | ElementFilterMember
+        | ViewRenderingMember
+    ;
+    ViewRenderingMember = MemberPrefix 'render' ViewRenderingUsage ;
+    ViewRenderingUsage
+        = OwnedReferenceSubsetting FeatureSpecializationPart? DefinitionBody
+        | ( PrefixMetadataMember* 'rendering' | PrefixMetadataMember+ ) Usage
+    ;
+
+    // SysML 8.2.2.26.2 View Usages
+    ViewUsage = OccurrenceUsagePrefix 'view' UsageDeclaration? FeatureValue? ViewBody ;
+    ViewBody
+        = ';'
+        | '{' ViewBodyItem* '}'
+    ;
+    ViewBodyItem
+        = DefinitionBodyItem
+        | ElementFilterMember
+        | ViewRenderingMember
+        | Expose
+    ;
+    Expose = 'expose' ( MembershipImport | NamespaceImport ) RelationshipBody ;
+
+    // SysML 8.2.2.26.3 Viewpoints
+    ViewpointDefinition = OccurrenceDefinitionPrefix 'viewpoint' 'def' DefinitionDeclaration RequirementBody ;
+    ViewpointUsage = OccurrenceUsagePrefix 'viewpoint' ConstraintUsageDeclaration RequirementBody ;
+
+    // SysML 8.2.2.26.4 Renderings
+    RenderingDefinition = OccurrenceDefinitionPrefix 'rendering' 'def' Definition ;
+    RenderingUsage = OccurrenceUsagePrefix 'rendering' Usage ;
+}
+
+grammar Metadata : DefinitionAndUsage {
+
+    // SysML 8.2.2.27 Metadata Textual Notation
+    MetadataDefinition = 'abstract'? PrefixMetadataMember* 'metadata' 'def' Definition ;
+    MetadataUsage =
+        PrefixMetadataMember* ( '@' | 'metadata' ) MetadataUsageDeclaration ( 'about' [Annotation / ',']+ )? MetadataBody
+    ;
+    MetadataUsageDeclaration = ( Identification ( ':' | 'typed' 'by' ) )? OwnedFeatureTyping ;
+    MetadataBody
+        = ';'
+        | '{' ( DefinitionMember | MetadataBodyUsage | AliasMember | Import )* '}'
+    ;
+    MetadataBodyUsage = 'ref'? ( ':>>' | 'redefines' )? OwnedRedefinition FeatureSpecializationPart? FeatureValue? MetadataBody ;
+    ExtendedDefinition = BasicDefinitionPrefix? PrefixMetadataMember+ 'def' Definition ;
+    ExtendedUsage = UnextendedUsagePrefix PrefixMetadataMember+ Usage ;
+}
+
+grammar SysMLv2_1 : Attributes, Connections, States, Cases, Views, Metadata {
+
+    #defaultGoalRule: RootNamespace
+
+    // rules that need rules from several of the grammars above
+    PackageMember = MemberPrefix ( DefinitionElement | UsageElement ) ;
+    UsageElement
+        = NonOccurrenceUsageElement
+        | OccurrenceUsageElement
+    ;
+    OccurrenceUsageMember = MemberPrefix OccurrenceUsageElement ;
+    StructureUsageMember = MemberPrefix StructureUsageElement ;
+    BehaviorUsageMember = MemberPrefix BehaviorUsageElement ;
+    OccurrenceUsageElement
+        = StructureUsageElement
+        | BehaviorUsageElement
+    ;
+    StructureUsageElement
+        = OccurrenceUsage
+        | IndividualUsage
+        | PortionUsage
+        | EventOccurrenceUsage
+        | ItemUsage
+        | PartUsage
+        | ViewUsage
+        | RenderingUsage
+        | PortUsage
+        | ConnectionUsage
+        | InterfaceUsage
+        | AllocationUsage
+        | Message
+        | FlowUsage
+        | SuccessionFlowUsage
+    ;
+    BehaviorUsageElement
+        = ActionUsage
+        | CalculationUsage
+        | StateUsage
+        | ConstraintUsage
+        | RequirementUsage
+        | ConcernUsage
+        | CaseUsage
+        | AnalysisCaseUsage
+        | VerificationCaseUsage
+        | UseCaseUsage
+        | ViewpointUsage
+        | PerformActionUsage
+        | ExhibitStateUsage
+        | IncludeUseCaseUsage
+        | AssertConstraintUsage
+        | SatisfyRequirementUsage
+    ;
+    InterfaceOccurrenceUsageMember = MemberPrefix InterfaceOccurrenceUsageElement ;
+    InterfaceOccurrenceUsageElement
+        = DefaultInterfaceEnd
+        | StructureUsageElement
+        | BehaviorUsageElement
+    ;
+    ActionBehaviorMember
+        = BehaviorUsageMember
+        | ActionNodeMember
+    ;
+    CalculationDefinition = OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration CalculationBody ;
+    CalculationUsage = OccurrenceUsagePrefix 'calc' ActionUsageDeclaration CalculationBody ;
+    CalculationBody
+        = ';'
+        | '{' CalculationBodyPart '}'
+    ;
+    CalculationBodyPart = CalculationBodyItem* ResultExpressionMember? ;
+    CalculationBodyItem
+        = ActionBodyItem
+        | ReturnParameterMember
+    ;
+    ReturnParameterMember = MemberPrefix? 'return' UsageElement ;
+    ConstraintDefinition = OccurrenceDefinitionPrefix 'constraint' 'def' DefinitionDeclaration CalculationBody ;
+    ConstraintUsage = OccurrenceUsagePrefix 'constraint' ConstraintUsageDeclaration CalculationBody ;
+    AssertConstraintUsage =
+        OccurrenceUsagePrefix 'assert' 'not'? ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'constraint' ConstraintUsageDeclaration ) CalculationBody
+    ;
+    RequirementConstraintMember = MemberPrefix? RequirementKind RequirementConstraintUsage ;
+    RequirementConstraintUsage
+        = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody
+        | ( PrefixMetadataMember* 'constraint' | PrefixMetadataMember+ ) ConstraintUsageDeclaration CalculationBody
+    ;
+
+    // choices extended with the rules from the grammars above
+    override AnnotatingElement
+        = Comment
+        | Documentation
+        | TextualRepresentation
+        | MetadataUsage
+    ;
+    override PackageBodyElement
+        = PackageMember
+        | ElementFilterMember
+        | AliasMember
+        | Import
+    ;
+    override DefinitionElement
+        = Package
+        | LibraryPackage
+        | AnnotatingElement
+        | Dependency
+        | AttributeDefinition
+        | EnumerationDefinition
+        | OccurrenceDefinition
+        | IndividualDefinition
+        | ItemDefinition
+        | PartDefinition
+        | ConnectionDefinition
+        | FlowDefinition
+        | InterfaceDefinition
+        | AllocationDefinition
+        | PortDefinition
+        | ActionDefinition
+        | CalculationDefinition
+        | StateDefinition
+        | ConstraintDefinition
+        | RequirementDefinition
+        | ConcernDefinition
+        | CaseDefinition
+        | AnalysisCaseDefinition
+        | VerificationCaseDefinition
+        | UseCaseDefinition
+        | ViewDefinition
+        | ViewpointDefinition
+        | RenderingDefinition
+        | MetadataDefinition
+        | ExtendedDefinition
+    ;
+    override DefinitionBodyItem
+        = DefinitionMember
+        | VariantUsageMember
+        | NonOccurrenceUsageMember
+        | SourceSuccessionMember? OccurrenceUsageMember
+        | AliasMember
+        | Import
+    ;
+    override NonOccurrenceUsageElement
+        = DefaultReferenceUsage
+        | ReferenceUsage
+        | AttributeUsage
+        | EnumerationUsage
+        | BindingConnectorAsUsage
+        | SuccessionAsUsage
+        | ExtendedUsage
+    ;
+    override VariantUsageElement
+        = VariantReference
+        | ReferenceUsage
+        | AttributeUsage
+        | BindingConnectorAsUsage
+        | SuccessionAsUsage
+        | OccurrenceUsage
+        | IndividualUsage
+        | PortionUsage
+        | EventOccurrenceUsage
+        | ItemUsage
+        | PartUsage
+        | ViewUsage
+        | RenderingUsage
+        | PortUsage
+        | ConnectionUsage
+        | InterfaceUsage
+        | AllocationUsage
+        | Message
+        | FlowUsage
+        | SuccessionFlowUsage
+        | BehaviorUsageElement
+    ;
+    override InterfaceBodyItem
+        = DefinitionMember
+        | VariantUsageMember
+        | InterfaceNonOccurrenceUsageMember
+        | SourceSuccessionMember? InterfaceOccurrenceUsageMember
+        | AliasMember
+        | Import
+    ;
+    override InterfaceNonOccurrenceUsageElement
+        = ReferenceUsage
+        | AttributeUsage
+        | EnumerationUsage
+        | BindingConnectorAsUsage
+        | SuccessionAsUsage
+    ;
+    override ActionBodyItem
+        = NonBehaviorBodyItem
+        | InitialNodeMember ActionTargetSuccessionMember*
+        | SourceSuccessionMember? ActionBehaviorMember ActionTargetSuccessionMember*
+        | GuardedSuccessionMember
+    ;
+    override NonBehaviorBodyItem
+        = Import
+        | AliasMember
+        | DefinitionMember
+        | VariantUsageMember
+        | NonOccurrenceUsageMember
+        | SourceSuccessionMember? StructureUsageMember
+    ;
+    override StateBodyItem
+        = NonBehaviorBodyItem
+        | SourceSuccessionMember? BehaviorUsageMember TargetTransitionUsageMember*
+        | TransitionUsageMember
+        | EntryActionMember EntryTransitionMember*
+        | DoActionMember
+        | ExitActionMember
+    ;
+    override RequirementBodyItem
+        = DefinitionBodyItem
+        | SubjectMember
+        | RequirementConstraintMember
+        | FramedConcernMember
+        | RequirementVerificationMember
+        | ActorMember
+        | StakeholderMember
+    ;
+    override CaseBodyItem
+        = CalculationBodyItem
+        | SubjectMember
+        | ActorMember
+        | ObjectiveMember
+    ;
+
+    // SysML replaces the KerML expression body by a calculation body
+    override ExpressionBody = '{' CalculationBodyPart '}' ;
+}
