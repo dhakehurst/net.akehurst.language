@@ -2,7 +2,7 @@
 
 A read only datastore that gives the entries of zip archives (`.zip`, ReqIF `.reqifz`, Cameo `.mdzip`, ...)
 as datastore items, so a composition can go source → zip → parser and parsers never unzip anything.
-Package `net.akehurst.datastore.generic.zip`, `ZipProvider` / `ZipDatastore`. Common code: JVM, JS and wasmJs.
+Package `net.akehurst.datastore.generic.zip`, `ZipProvider` / `ZipDatastore`. Common code: JVM, JS and wasmJs. Built on kotlinx-filesystem `ZipFileSystem`.
 
 ## Use in a composition
 
@@ -33,12 +33,13 @@ datastoreComposition("fs-zip-text") {
 | Z6 | Content is inflated only when `asBinary` / `asString` is read, every time it is read (nothing is cached). The archive bytes are in memory. | done |
 | Z7 | Zips are detected by content (`PK\3\4`, or `PK\5\6` for an empty archive), not extension. Not a zip, truncated or corrupt: an error item. | done |
 | Z8 | Limits (datastore config, advanced group "Limits"): `config.max-entries` (100 000), `config.max-entry-size` (1 GiB), `config.max-total-size` (4 GiB, sum of declared sizes of one archive), `config.max-compression-ratio` (200, for entries over 1 MiB). Over the archive limits: an error item; over the entry limits: an error issue on the entry, whose content then reads as null. An entry must inflate to exactly its declared size and match its CRC-32, else its content reads as null and an error issue is added to its item. | done |
-| Z9 | Entry names are plain strings; nothing is extracted. Names with `..`, an absolute path or a drive letter get a warning issue. | done |
+| Z9 | Nothing is extracted. kotlinx-filesystem reduces entry names to plain segments (`..`, `.`, a leading `/` and drive letters are dropped), so the entry path never points outside the archive. | done |
 | Z10 | Encrypted entries and compression methods other than stored/deflated: an error issue on the entry. | done |
-| Z11 | ZIP64 (end records and extra field); names in UTF-8 (flag bit 11, or the Info-ZIP Unicode Path extra field) or CP437; extended timestamp extra field, else the MS-DOS time taken as UTC. Split archives are refused. | done |
-| Z12 | Nested archives (access, advanced): `access.recurse-nested` (off) and `access.max-nesting-depth` (3). A nested archive is found by content; its entries' parent is the nested archive's entry item (which is output only if it matches the globs). Limits apply to each archive. | done |
+| Z11 | ZIP64, UTF-8 / CP437 names, extended timestamps (else MS-DOS time as UTC; `lastModified` may be null), CRC-32 checks: all by kotlinx-filesystem `ZipFileSystem`. Split archives are refused. | done |
+| Z12 | Nested archives (access, advanced): `access.recurse-nested` (off) and `access.max-nesting-depth` (3). A nested archive is found by content, so with recursion on every entry within the limits is read once; its entries' parent is the nested archive's entry item (which is output only if it matches the globs). Limits apply to each archive. | done |
 | Z13 | Write is not supported: each item gets an error issue. Delete is not supported. | done |
 
-Reading is done by a small zip reader in this module (`ZipFormat`), with korlibs Deflate for inflating
-(`java.util.zip.Inflater` on the JVM). korlibs `ZipVfs` / kotlinx-filesystem `openAsZipDirectory` were not used
-because they cannot open bytes, do not report errors, do not give sizes, CRC or encryption, and have no ZIP64 or CP437.
+Archives are opened with `ZipFileSystem.open(bytes, name, ZipOptions(maxEntrySize))` from kotlinx-filesystem; entries come from walking
+its `DirectoryHandle`, with `FileHandle.metadata()` for size, compressed size, CRC-32 and time, and `FileHandleZip.isEncrypted` /
+`compressionMethod` to report unreadable entries before their content is read. A `ZipException` while reading content becomes an
+error issue of the entry's item.

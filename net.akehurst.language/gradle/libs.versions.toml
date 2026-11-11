@@ -20,7 +20,6 @@ kotlinx-serialization = "1.11.0"
 [libraries]
 korlibs-korio = { module = "org.korge:korlibs-io", version.ref = "korlibs" }
 korlibs-compression = { module = "org.korge:korlibs-compression", version.ref = "korlibs" }
-korlibs-io-stream = { module = "org.korge:korlibs-io-stream", version.ref = "korlibs" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
 nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections", version.ref = "nak-kotlinx" }
 nak-kotlinx-utils = { module = "net.akehurst.kotlinx:kotlinx-utils", version.ref = "nak-kotlinx" }

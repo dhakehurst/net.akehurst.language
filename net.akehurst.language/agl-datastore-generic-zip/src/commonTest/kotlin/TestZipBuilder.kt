@@ -112,3 +112,35 @@ class TestZipBuilder {
 }
 
 fun zip(init: TestZipBuilder.() -> Unit): ByteArray = TestZipBuilder().apply(init).build()
+
+/** CRC-32 (ISO-HDLC, as zip uses) */
+object Crc32 {
+    private val table = LongArray(256) { n ->
+        var c = n.toLong()
+        repeat(8) { c = if ((c and 1L) != 0L) 0xEDB88320L xor (c ushr 1) else c ushr 1 }
+        c
+    }
+
+    fun of(bytes: ByteArray, start: Int, length: Int): Long {
+        var c = 0xFFFFFFFFL
+        for (i in start until start + length) {
+            c = table[((c xor bytes[i].toLong()) and 0xFF).toInt()] xor (c ushr 8)
+        }
+        return c xor 0xFFFFFFFFL
+    }
+}
+
+/** IBM code page 437, the default encoding of zip entry names */
+object Cp437 {
+    private const val HIGH =
+        "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00A0"
+
+    /** the CP437 bytes of 'text'. Characters that CP437 does not have become '?' */
+    fun encode(text: String): ByteArray = ByteArray(text.length) { i ->
+        val c = text[i]
+        when {
+            c.code < 0x80 -> c.code.toByte()
+            else -> HIGH.indexOf(c).let { if (it < 0) '?'.code.toByte() else (it + 0x80).toByte() }
+        }
+    }
+}

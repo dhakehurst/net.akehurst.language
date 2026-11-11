@@ -9,9 +9,15 @@ kotlin {
             dependencies {
                 api(project(":agl-datastore-common"))
                 implementation(libs.nak.kotlinx.utils)
-                // inflate (raw deflate) on every platform; java.util.zip.Inflater underneath on the JVM
+                // zip archives are read by kotlinx-filesystem's ZipFileSystem
+                implementation(libs.nak.kotlinx.filesystem)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                // only to write deflated test archives
                 implementation(libs.korlibs.compression)
-                implementation(libs.korlibs.io.stream)
             }
         }
 

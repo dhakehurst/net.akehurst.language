@@ -12,6 +12,15 @@ import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.common.DataItemDefault
 import net.akehurst.datastore.common.DatastoreAbstract
+import net.akehurst.kotlinx.filesystem.DirectoryHandleZip
+import net.akehurst.kotlinx.filesystem.FileHandleZip
+import net.akehurst.kotlinx.filesystem.ZipFileSystem
+import net.akehurst.kotlinx.filesystem.ZipOptions
+import net.akehurst.kotlinx.filesystem.api.DirectoryHandle
+import net.akehurst.kotlinx.filesystem.api.FileHandle
+import net.akehurst.kotlinx.filesystem.api.FileMetadata
+import net.akehurst.kotlinx.filesystem.api.FileSystemObjectHandle
+import net.akehurst.kotlinx.filesystem.api.ZipException
 import net.akehurst.kotlinx.issues.api.IssueKind
 import net.akehurst.kotlinx.issues.ram.IssueDefault
 import net.akehurst.kotlinx.issues.ram.IssueHolder
@@ -36,7 +45,7 @@ data class ZipProvenance(
     val entryPath: String
 ) : DataItemProvenance
 
-/** a zip archive, held in memory. Its central directory is read when its entries are first asked for. */
+/** a zip archive, held in memory. It is opened (its central directory read) when its entries are read. */
 class ZipArchive(val bytes: ByteArray) {
     override fun toString(): String = "ZipArchive(${bytes.size} bytes)"
 }
@@ -49,32 +58,33 @@ class ZipArchive(val bytes: ByteArray) {
 class ZipEntry internal constructor(
     /** the archive this entry is in */
     val archive: ZipArchive,
-    internal val record: ZipEntryRecord,
+    /** the full '/'-separated path inside the archive, without a leading '/'; a directory's path ends with '/' */
+    val path: String,
+    /** the kotlinx-filesystem handle of the entry: a FileHandle, or a DirectoryHandle for a directory */
+    val handle: FileSystemObjectHandle,
+    private val metadata: FileMetadata,
     /** the issues of the item that holds this entry; an error reading the content is added to them */
     internal val issues: IssueHolder<DataItemIssueLocation>,
     /** the entry can be read (not encrypted, a supported compression, within the limits) */
     internal val readable: Boolean,
 ) {
-    /** the full '/'-separated path inside the archive */
-    val path: String get() = record.path
-
     /** the last segment of the path */
-    val name: String get() = record.path.trimEnd('/').substringAfterLast('/')
+    val name: String get() = handle.name
 
     /** the part of the name after its last '.', or "" */
     val extension: String get() = if (name.contains('.')) name.substringAfterLast('.') else ""
 
-    val isDirectory: Boolean get() = record.isDirectory
+    val isDirectory: Boolean get() = handle is DirectoryHandle
 
     /** uncompressed size in bytes, as declared by the archive */
-    val size: Long get() = record.size
-    val compressedSize: Long get() = record.compressedSize
+    val size: Long get() = metadata.size ?: 0L
+    val compressedSize: Long get() = metadata.compressedSize ?: 0L
 
-    /** from the extended timestamp field if there is one (UTC), else the MS-DOS time of the entry, taken as UTC */
-    val lastModified: Instant get() = record.lastModified
+    /** from the extended timestamp field if there is one (UTC), else the MS-DOS time of the entry, taken as UTC; null if neither */
+    val lastModified: Instant? get() = metadata.lastModified
 
     /** CRC-32 of the uncompressed content, as declared by the archive (unsigned). Changes when the content changes. */
-    val crc32: Long get() = record.crc32
+    val crc32: Long get() = metadata.crc32 ?: 0L
 
     val content: ZipEntryContent get() = ZipEntryContent(this)
 
@@ -82,12 +92,12 @@ class ZipEntry internal constructor(
      * the uncompressed content, inflated on each call (not kept, so that big entries are not all held in memory).
      * null if it cannot be read; the reason is then an error issue of the entry's item.
      */
-    suspend fun readBytes(): ByteArray? = when {
-        isDirectory -> null
-        readable.not() -> null
-        else -> try {
-            ZipFormat.content(archive.bytes, record)
-        } catch (e: ZipFormatException) {
+    suspend fun readBytes(): ByteArray? {
+        val file = handle as? FileHandle ?: return null
+        if (readable.not()) return null
+        return try {
+            file.readBytes()
+        } catch (e: ZipException) {
             issues.error(ZipIssueLocation(path), e.message ?: "'$path' cannot be read")
             null
         }
@@ -111,10 +121,11 @@ class ZipEntryContent(val entry: ZipEntry) {
  * item per matching entry. Each entry item's parent is the archive item, and its identity is the entry path,
  * so its qualifiedIdentity is the archive item's followed by the entry path.
  *
+ * Archives are read by kotlinx-filesystem's ZipFileSystem. It reduces entry names to plain segments
+ * ('..', '.', a leading '/' and drive letters are dropped), so nothing can point outside the archive,
+ * and nothing is ever extracted to disk.
  * The archive bytes are in memory; entries are inflated only when their content is read.
- * Input that is not a zip, an archive over the limits, and entries that cannot be read give error issues;
- * entry names that would escape a folder if extracted ('..', absolute, drive letters) give warning issues.
- * Nothing is ever extracted to disk.
+ * Input that is not a zip, an archive over the limits, and entries that cannot be read give error issues.
  */
 open class ZipDatastore(
     identity: DatastoreIdentity,
@@ -150,7 +161,7 @@ open class ZipDatastore(
                     propertyOfWithBinding<ZipEntry, Boolean>(setOf(REF, VAL), "isDirectory", "Boolean", accessor = { it.isDirectory })
                     propertyOfWithBinding<ZipEntry, Long>(setOf(REF, VAL), "size", "Integer", accessor = { it.size })
                     propertyOfWithBinding<ZipEntry, Long>(setOf(REF, VAL), "compressedSize", "Integer", accessor = { it.compressedSize })
-                    propertyOfWithBinding<ZipEntry, Instant>(setOf(REF, VAL), "lastModified", "Timestamp", accessor = { it.lastModified })
+                    propertyOfWithBinding<ZipEntry, Instant?>(setOf(REF, VAL), "lastModified", "Timestamp", isNullable = true, accessor = { it.lastModified })
                     propertyOfWithBinding<ZipEntry, Long>(setOf(REF, VAL), "crc32", "Integer", accessor = { it.crc32 })
                     propertyOfWithBinding<ZipEntry, ZipArchive>(setOf(REF, VAL), "archive", "ZipArchive", accessor = { it.archive })
                     propertyOfWithBinding<ZipEntry, ZipEntryContent>(setOf(REF, VAL), "content", "ZipEntryContent", accessor = { it.content })
@@ -203,54 +214,86 @@ open class ZipDatastore(
 
     private suspend fun FlowCollector<DataItem>.emitEntries(archiveItem: DataItem, archive: ZipArchive, options: ReadOptions, depth: Long) {
         val bytes = archive.bytes
-        if (ZipFormat.looksLikeZip(bytes).not()) {
+        if (looksLikeZip(bytes).not()) {
             emit(archiveErrorItem(archiveItem, "The input is not a zip archive (it does not start with 'PK\\u0003\\u0004', or 'PK\\u0005\\u0006' for an empty archive)."))
             return
         }
-        val records = try {
-            val count = ZipFormat.declaredEntryCount(bytes)
-            if (count > options.maxEntries) {
-                emit(archiveErrorItem(archiveItem, "The archive has $count entries, more than the limit of ${options.maxEntries}; it is not read."))
-                return
-            }
-            ZipFormat.readCentralDirectory(bytes)
-        } catch (e: ZipFormatException) {
+        val entries = try {
+            val root = ZipFileSystem.open(bytes, archiveItem.identity.value, ZipOptions(maxEntrySize = options.maxEntrySize))
+            walk(root)
+        } catch (e: ZipException) {
             emit(archiveErrorItem(archiveItem, e.message ?: "The archive cannot be read."))
             return
         }
-        val total = records.sumOf { it.size }
+        if (entries.size > options.maxEntries) {
+            emit(archiveErrorItem(archiveItem, "The archive has ${entries.size} entries, more than the limit of ${options.maxEntries}; it is not read."))
+            return
+        }
+        val withMetadata = entries.map { (path, handle) -> Triple(path, handle, metadataOf(handle)) }
+        val total = withMetadata.sumOf { it.third.size ?: 0L }
         if (total > options.maxTotalSize || total < 0) {
             emit(archiveErrorItem(archiveItem, "The entries of the archive are $total bytes uncompressed, more than the limit of ${options.maxTotalSize}; it is not read."))
             return
         }
         val am = accessorMutator()
-        for (record in records) {
-            val included = (record.isDirectory.not() || options.includeDirectories) && matches(record.path, options)
-            val nested = options.recurseNested && depth < options.maxNestingDepth && record.isDirectory.not()
+        for ((path, handle, metadata) in withMetadata) {
+            val isDirectory = handle is DirectoryHandle
+            val included = (isDirectory.not() || options.includeDirectories) && matches(path, options)
+            val nested = options.recurseNested && depth < options.maxNestingDepth && isDirectory.not()
             if (included.not() && nested.not()) continue
 
             val issues = IssueHolder<DataItemIssueLocation>()
-            val readable = checkEntry(record, options, issues)
-            val entry = ZipEntry(archive, record, issues, readable)
+            val readable = checkEntry(path, handle, metadata, options, issues)
+            val entry = ZipEntry(archive, path, handle, metadata, issues, readable)
             val entryItem = DataItemDefault(
                 parent = archiveItem,
-                identity = DataItemIdentity(record.path),
+                identity = DataItemIdentity(path),
                 data = am.toTypedObject(entry, StdLibDefault.AnyType),
                 provenance = provenanceFor(archiveItem, entry),
                 issues = issues
             )
             if (included) emit(entryItem)
-            if (nested && readable && isNestedZip(entry)) {
+            if (nested && readable) {
+                // a nested archive is found by its content, so the entry is read (within the limits)
                 val nestedBytes = entry.readBytes()
-                if (null != nestedBytes) {
-                    emitEntries(entryItem, ZipArchive(nestedBytes), options, depth + 1)
-                } else if (included.not()) {
-                    // the reason is in the entry's issues, so show the entry
-                    emit(entryItem)
+                when {
+                    null == nestedBytes -> if (included.not()) emit(entryItem) // the reason is in the entry's issues
+                    looksLikeZip(nestedBytes) -> emitEntries(entryItem, ZipArchive(nestedBytes), options, depth + 1)
+                    else -> Unit
                 }
             }
         }
     }
+
+    /** all entries under 'dir', depth first in archive order, with paths relative to the archive root (a directory's path ends with '/') */
+    private suspend fun walk(dir: DirectoryHandle): List<Pair<String, FileSystemObjectHandle>> {
+        val result = mutableListOf<Pair<String, FileSystemObjectHandle>>()
+        suspend fun visit(d: DirectoryHandle, prefix: String) {
+            for (h in d.listContent()) {
+                when (h) {
+                    is DirectoryHandle -> {
+                        result.add(Pair(prefix + h.name + "/", h))
+                        visit(h, prefix + h.name + "/")
+                    }
+
+                    else -> result.add(Pair(prefix + h.name, h))
+                }
+            }
+        }
+        visit(dir, "")
+        return result
+    }
+
+    private suspend fun metadataOf(handle: FileSystemObjectHandle): FileMetadata = when (handle) {
+        is FileHandle -> handle.metadata()
+        is DirectoryHandleZip -> FileMetadata(size = 0L, lastModified = handle.lastModified)
+        else -> FileMetadata.UNKNOWN
+    }
+
+    /** true if the bytes start like a zip archive: a local file header (PK\3\4), or the end record of an empty archive (PK\5\6) */
+    private fun looksLikeZip(bytes: ByteArray): Boolean =
+        bytes.size >= 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4B.toByte() &&
+            ((bytes[2] == 0x03.toByte() && bytes[3] == 0x04.toByte()) || (bytes[2] == 0x05.toByte() && bytes[3] == 0x06.toByte()))
 
     /** the entry path matches the glob and not the exclude glob. A directory's path is matched without its trailing '/'. */
     private fun matches(path: String, options: ReadOptions): Boolean {
@@ -259,50 +302,32 @@ open class ZipDatastore(
     }
 
     /** adds the entry's issues; false if its content cannot be read */
-    private fun checkEntry(record: ZipEntryRecord, options: ReadOptions, issues: IssueHolder<DataItemIssueLocation>): Boolean {
-        val loc = ZipIssueLocation(record.path)
-        unsafePathReason(record.path)?.let { issues.warn(loc, "The entry name '${record.path}' $it; it would not be safe to extract it as named.") }
-        if (record.isDirectory) return false
+    private fun checkEntry(path: String, handle: FileSystemObjectHandle, metadata: FileMetadata, options: ReadOptions, issues: IssueHolder<DataItemIssueLocation>): Boolean {
+        if (handle !is FileHandle) return false
+        val loc = ZipIssueLocation(path)
+        val size = metadata.size ?: 0L
+        val compressedSize = metadata.compressedSize ?: 0L
         var readable = true
-        if (record.isEncrypted) {
-            issues.error(loc, "'${record.path}' is encrypted, which is not supported.")
+        if (handle is FileHandleZip && handle.isEncrypted) {
+            issues.error(loc, "'$path' is encrypted, which is not supported.")
             readable = false
         }
-        if (record.isCompressionSupported.not()) {
-            issues.error(loc, "'${record.path}' uses compression method ${record.compressionMethod}, which is not supported (only stored and deflated).")
+        if (handle is FileHandleZip && handle.compressionMethod != 0 && handle.compressionMethod != 8) {
+            issues.error(loc, "'$path' uses compression method ${handle.compressionMethod}, which is not supported (only stored and deflated).")
             readable = false
         }
-        if (record.size > options.maxEntrySize || record.size < 0) {
-            issues.error(loc, "'${record.path}' is ${record.size} bytes uncompressed, more than the limit of ${options.maxEntrySize}; its content is not read.")
+        if (size > options.maxEntrySize || size < 0) {
+            issues.error(loc, "'$path' is $size bytes uncompressed, more than the limit of ${options.maxEntrySize}; its content is not read.")
             readable = false
         }
-        if (record.size > ZipProvider.COMPRESSION_RATIO_MIN_SIZE) {
-            val ratio = if (record.compressedSize <= 0) Long.MAX_VALUE else record.size / record.compressedSize
+        if (size > ZipProvider.COMPRESSION_RATIO_MIN_SIZE) {
+            val ratio = if (compressedSize <= 0) Long.MAX_VALUE else size / compressedSize
             if (ratio > options.maxCompressionRatio) {
-                issues.error(loc, "'${record.path}' has a compression ratio of $ratio, more than the limit of ${options.maxCompressionRatio}; its content is not read.")
+                issues.error(loc, "'$path' has a compression ratio of $ratio, more than the limit of ${options.maxCompressionRatio}; its content is not read.")
                 readable = false
             }
         }
         return readable
-    }
-
-    /** why the path would escape the folder it is extracted to, or null if it would not */
-    private fun unsafePathReason(path: String): String? {
-        val segments = path.split('/', '\\')
-        return when {
-            path.startsWith("/") || path.startsWith("\\") -> "is an absolute path"
-            path.length >= 2 && path[1] == ':' && path[0].isLetter() -> "starts with a drive letter"
-            segments.any { it == ".." } -> "contains '..'"
-            else -> null
-        }
-    }
-
-    /** the entry is itself a zip archive, found from the first bytes of its content */
-    private suspend fun isNestedZip(entry: ZipEntry): Boolean = try {
-        val prefix = ZipFormat.contentPrefix(entry.archive.bytes, entry.record, 4)
-        ZipFormat.looksLikeZipStart(prefix, prefix.size)
-    } catch (e: ZipFormatException) {
-        false
     }
 
     private suspend fun archiveErrorItem(input: DataItem, message: String): DataItem = DataItemDefault(
