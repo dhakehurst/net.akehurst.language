@@ -3,7 +3,7 @@
 > **Keep this page up to date.** When a feature named here changes (parser algorithm, ambiguity handling,
 > error recovery, incremental parsing, platforms, IDE/LSP support, performance), update this page in the same commit.
 >
-> Last reviewed: 2026-11-10, against branch `2.4.0-inwork` at `0affccec`.
+> Last reviewed: 2026-11-11, against branch `2.4.0-inwork` at `40b8fb37` plus the reference DSL scoping change.
 
 AGL sits between the parser generators (ANTLR, tree-sitter) and the full language workbenches
 (Xtext, Langium, Spoofax, JetBrains MPS). It combines a general parser (like the GLR/GLL tools),
@@ -27,6 +27,8 @@ Where it is behind is raw speed, error recovery and community size.
 6. **The whole pipeline in one library.** Grammar, typed ASM derived from the grammar (or a custom mapping),
    cross-references and scopes, semantic analysis, style, completion, formatting (M2T), M2M transforms and
    expressions, each as a small DSL. Langium and Xtext are the closest, but they are tied to their IDE/LSP setup.
+   Name resolution (enclosing scopes, imports, inherited members, visibility, aliases) is declared in the reference DSL;
+   in Xtext and Langium the same needs scope-provider code.
 7. **Completion from the grammar with no extra work.** Tree-sitter has none; ANTLR needs a library such as antlr4-c3.
 
 ## Weaknesses

@@ -53,17 +53,26 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 declarations = rootIdentifiables scopes references? ;
                 rootIdentifiables = identifiable* ;
                 scopes = scope* ;
-                scope = 'scope' possiblyQualifiedTypeReference '{' identifiables '}' ;
+                scope = 'scope' possiblyQualifiedTypeReference '{' identifiables scopeImports '}' ;
                 identifiables = identifiable* ;
-                identifiable = 'identify' possiblyQualifiedTypeReference 'by' expression ;
+                identifiable = 'identify' possiblyQualifiedTypeReference 'by' expression visibility? aliasFor? ;
+                visibility = 'visibility' expression ;
+                aliasFor = 'alias-for' rootOrNavigation ;
+                scopeImports = scopeImport* ;
+                scopeImport = importDefinition | inheritDefinition ;
+                importDefinition = 'import' 'forall' rootOrNavigation ofType? importKind rootOrNavigation recursive? visibility? ;
+                importKind = 'members-of' | 'element' ;
+                recursive = 'recursive' expression ;
+                inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation ;
             
                 references = 'references' '{' referenceDefinitions '}' ;
                 referenceDefinitions = referenceDefinition* ;
                 referenceDefinition = 'in' possiblyQualifiedTypeReference '{' referenceExpressionList '}' ;
                 referenceExpressionList = referenceExpression* ;
                 referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
-                propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
-                from = 'from' navigationExpression ;
+                propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? condition? ;
+                condition = 'when' expression ;
+                from = 'from' rootOrNavigation ;
                 collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
                 ofType = 'of-type' possiblyQualifiedTypeReference ;
                 
@@ -148,11 +157,29 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     list("rootIdentifiables", 0, -1) { ref("identifiable") }
                     list("scopes", 0, -1) { ref("scope") }
                     concatenation("scope") {
-                        lit("scope"); ref("possiblyQualifiedTypeReference"); lit("{"); ref("identifiables"); lit("}")
+                        lit("scope"); ref("possiblyQualifiedTypeReference"); lit("{"); ref("identifiables"); ref("scopeImports"); lit("}")
                     }
                     list("identifiables", 0, -1) { ref("identifiable") }
                     concatenation("identifiable") {
-                        lit("identify"); ref("possiblyQualifiedTypeReference"); lit("by"); ref("expression")
+                        lit("identify"); ref("possiblyQualifiedTypeReference"); lit("by"); ref("expression"); opt { ref("visibility") }; opt { ref("aliasFor") }
+                    }
+                    concatenation("visibility") { lit("visibility"); ref("expression") }
+                    concatenation("aliasFor") { lit("alias-for"); ref("rootOrNavigation") }
+                    list("scopeImports", 0, -1) { ref("scopeImport") }
+                    choice("scopeImport") {
+                        ref("importDefinition")
+                        ref("inheritDefinition")
+                    }
+                    concatenation("importDefinition") {
+                        lit("import"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; ref("importKind"); ref("rootOrNavigation"); opt { ref("recursive") }; opt { ref("visibility") }
+                    }
+                    choice("importKind") {
+                        lit("members-of")
+                        lit("element")
+                    }
+                    concatenation("recursive") { lit("recursive"); ref("expression") }
+                    concatenation("inheritDefinition") {
+                        lit("inherit"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("members-of"); ref("rootOrNavigation")
                     }
                     concatenation("references") {
                         lit("references"); lit("{"); ref("referenceDefinitions"); lit("}")
@@ -167,9 +194,10 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         ref("collectionReferenceExpression")
                     }
                     concatenation("propertyReferenceExpression") {
-                        lit("property"); ref("rootOrNavigation"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }
+                        lit("property"); ref("rootOrNavigation"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }; opt { ref("condition") }
                     }
-                    concatenation("from") { lit("from"); ref("navigationExpression") }
+                    concatenation("condition") { lit("when"); ref("expression") }
+                    concatenation("from") { lit("from"); ref("rootOrNavigation") }
                     concatenation("collectionReferenceExpression") {
                         lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("{"); ref("referenceExpressionList"); lit("}")
                     }

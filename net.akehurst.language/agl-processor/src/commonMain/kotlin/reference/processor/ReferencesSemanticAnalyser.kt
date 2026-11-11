@@ -87,6 +87,7 @@ class ReferencesSemanticAnalyser(
                         _grammarNamespace = ns as GrammarTypesNamespace
                         it.scopeDefinition.values.forEach {
                             checkScopeDefinition(it as ScopeDefinitionDefault, importedNamespaces)
+                            checkScopeImports(it, importedNamespaces)
                         }
                         it.references.forEach { ref ->
                             checkReferenceDefinition(asm, ref as ReferenceDefinitionDefault, importedNamespaces)
@@ -145,6 +146,16 @@ class ReferencesSemanticAnalyser(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun checkScopeImports(scopeDef: ScopeDefinitionDefault, importedNamespaces: List<TypesNamespace>) {
+        scopeDef.scopeImports.forEach { si ->
+            si.ofType?.let {
+                if (null == findReferredToType(it, importedNamespaces)) {
+                    raiseError(si, "In scope for type '${scopeDef.scopeForTypeName}', the of-type '$it' is not found")
                 }
             }
         }
