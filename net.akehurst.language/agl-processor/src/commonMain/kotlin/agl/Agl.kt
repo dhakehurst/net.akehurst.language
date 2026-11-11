@@ -195,7 +195,13 @@ object Agl {
             }
         }
         val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)
-        return proc
+        // The cross-reference domain is created lazily (types may be added to the processor before it is used),
+        // so only check that the references string parses, and report its parse issues here.
+        val refParseIssues = referenceStr?.let { registry.agl.crossReference.processor?.parse(it.value)?.issues?.toList() } ?: emptyList()
+        return when {
+            refParseIssues.isEmpty() -> proc
+            else -> LanguageProcessorResult(proc.processor, IssueHolder(LanguageProcessorPhase.ALL).also { it.addAllFrom(proc.issues); it.addAll(refParseIssues) })
+        }
     }
 
     /**
