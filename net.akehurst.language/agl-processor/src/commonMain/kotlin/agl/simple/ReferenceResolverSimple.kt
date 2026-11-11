@@ -41,7 +41,9 @@ import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
+import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
@@ -199,32 +201,29 @@ class ReferenceResolverSimple(
             if (referringValue is AsmReference) {
                 referringValue = referringValue.reference
             }
+            if (referringValue is List<*>) {
+                // elements of a List<String> property arrive wrapped as TypedObject
+                referringValue = referringValue.map { if (it is TypedObject) it.self else it }
+            }
             when {
                 referringValue is String -> {
-                    val pqn = referringValue.asPossiblyQualifiedName
-                    val qname = when(pqn) {
-                        is QualifiedName -> pqn.parts.map { it.value }
-                        is SimpleName -> scope.scopePath + pqn.value
-                    }
-                    handleCreateReference(scope,self, elType,refExpr,qname)
+                    val qname = referringValue.split(".")
+                    handleCreateReference(scope, self, elType, refExpr, qname)
                 }
-                referringValue is List<*> && referringValue.all { it is String } -> {
+
+                referringValue is List<*> && referringValue.isNotEmpty() && referringValue.all { it is String } -> {
                     val qname = referringValue.map { it as String }
-                    handleCreateReference(scope,self,elType,refExpr, qname)
+                    handleCreateReference(scope, self, elType, refExpr, qname)
                 }
                 // Deprecated
                 referringValue is AsmPrimitive -> {
-                    val pqn = (referringValue.value as String).asPossiblyQualifiedName
-                    val qname = when(pqn) {
-                        is QualifiedName -> pqn.parts.map { it.value }
-                        is SimpleName -> scope.scopePath + pqn.value
-                    }
-                    handleCreateReference(scope,self, elType,refExpr,qname)
+                    val qname = (referringValue.value as String).split(".")
+                    handleCreateReference(scope, self, elType, refExpr, qname)
                 }
                 // Deprecated
-                referringValue is AsmList && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
+                referringValue is AsmList && referringValue.elements.isNotEmpty() && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
                     val qname = referringValue.elements.map { (it as AsmPrimitive).value as String }
-                    handleCreateReference(scope,self,elType,refExpr, qname)
+                    handleCreateReference(scope, self, elType, refExpr, qname)
                 }
 
                 else -> raiseError(self, "Referring value '${elType.typeName.value}.${refExpr.referringPropertyNavigation}=$referringValue' on element $self is not a String or List<String>")
@@ -238,7 +237,7 @@ class ReferenceResolverSimple(
         val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
         val targets = referredToTypes.flatMap { td ->
             // Use context (not scope) because the reference could have been created from a different sentence
-            sentenceContext.findItemsByQualifiedNameConformingTo(qName) {
+            findItemsByQualifiedNameFrom(scope.scopePath, qName) {
                 val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDefinition
                 itemType.conformsTo(td)
             }
@@ -300,6 +299,40 @@ class ReferenceResolverSimple(
             }
         }
     }
+
+    /**
+     * Resolves [qName] relative to the scope at [scopePath], in the scope tree of every sentence in the context.
+     * The first part of the name is looked up in the scope at [scopePath], then in each enclosing scope out to the root.
+     * The nearest scope that has an item (of any type), or a child scope, with that name is used, even if no item there conforms.
+     * The remaining parts are then looked up only inside the found scope, without looking in enclosing scopes.
+     */
+    private fun findItemsByQualifiedNameFrom(scopePath: List<String>, qName: List<String>, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope> =
+        when {
+            qName.isEmpty() -> emptyList()
+            else -> sentenceContext.scopeForSentence.values.flatMap { rootScope ->
+                // scopes on the path, from the root to the scope at scopePath (as far as it exists in this sentence)
+                val path = mutableListOf<Scope>(rootScope)
+                for (seg in scopePath) {
+                    path.add(path.last().getChildScopeOrNull(seg) ?: break)
+                }
+                val first = qName.first()
+                val found = path.lastOrNull { s -> s.items[first]?.isNotEmpty() == true || (qName.size > 1 && s.childScopes.containsKey(first)) }
+                when (found) {
+                    null -> emptyList()
+                    else -> {
+                        var s: Scope? = found
+                        for (seg in qName.dropLast(1)) {
+                            s = s?.getChildScopeOrNull(seg)
+                        }
+                        val last = qName.last()
+                        s?.items?.get(last)
+                            ?.filter { (typeName, _) -> conformsToFunc.invoke(typeName) }
+                            ?.map { (typeName, p) -> ItemInScope(last, typeName, p.first, p.second) }
+                            ?: emptyList()
+                    }
+                }
+            }
+        }
 
     private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, sentenceContext: ReferenceExpressionContext, self: Any, type: TypeInstance) {
          val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, type)), refExpr.expression)
