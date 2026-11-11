@@ -82,6 +82,19 @@ class test_ScannerClassic {
     }
 
     @Test
+    fun parse__two_sentences_with_one_parser() {
+        // leaves scanned for the first sentence must not be used for the second
+        val sut = LeftCornerParser(ScannerClassic(RegexEnginePlatform, rrs.terminals), rrs)
+        val res1 = sut.parse("class   A;", ParseOptionsDefault(goalRuleName = "S"))
+        assertNotNull(res1.sppt, res1.issues.toString())
+        assertTrue(res1.issues.errors.isEmpty(), res1.issues.toString())
+        val res2 = sut.parse("class B;", ParseOptionsDefault(goalRuleName = "S"))
+        assertNotNull(res2.sppt, res2.issues.toString())
+        assertTrue(res2.issues.errors.isEmpty(), res2.issues.toString())
+        assertEquals("class B;", res2.sppt!!.asSentence)
+    }
+
+    @Test
     fun scan__resultsByLine() {
         val sut = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
         val res = sut.scan(SentenceDefault("class A;\nclass B;\nclass C;", null), ScanOptionsDefault(resultsByLine = true))
