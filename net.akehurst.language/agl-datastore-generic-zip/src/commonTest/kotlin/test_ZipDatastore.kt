@@ -50,8 +50,10 @@ class test_ZipDatastore {
         sut.read(acc, flowOf(archiveItem(sut, ZipArchive(bytes)))).toList()
 
     private suspend fun DataItem.prop(name: String): Any? = data.getPropertySuspend(name).self
-    private suspend fun DataItem.contentAsString(): String? = data.getPropertySuspend("content").getPropertySuspend("asString").self as String?
-    private suspend fun DataItem.contentAsBinary(): ByteArray? = data.getPropertySuspend("content").getPropertySuspend("asBinary").self as ByteArray?
+    // a null content is 'nothing'
+    private suspend fun DataItem.content(name: String): Any? = data.getPropertySuspend("content").getPropertySuspend(name).let { if (it.isNothing) null else it.self }
+    private suspend fun DataItem.contentAsString(): String? = content("asString") as String?
+    private suspend fun DataItem.contentAsBinary(): ByteArray? = content("asBinary") as ByteArray?
 
     private val plainZip = zip {
         file("readme.txt", "Hello")
@@ -97,7 +99,7 @@ class test_ZipDatastore {
         val actual = read(sut, bytes)
 
         assertEquals(Crc32.of("Hello".encodeToByteArray(), 0, 5), actual[0].prop("crc32"))
-        assertEquals(0x3610a686L, actual[0].prop("crc32")) // CRC-32 of "Hello"
+        assertEquals(0xF7D18982L, actual[0].prop("crc32")) // CRC-32 of "Hello"
         assertEquals(Instant.parse("2024-05-17T10:30:20Z"), actual[0].prop("lastModified"))
         assertEquals(Instant.fromEpochSeconds(1_700_000_000), actual[1].prop("lastModified"))
         assertTrue((actual[0].prop("compressedSize") as Long) > 0)
