@@ -53,13 +53,13 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 declarations = rootIdentifiables scopes references? ;
                 rootIdentifiables = identifiable* ;
                 scopes = scope* ;
-                scope = 'scope' simpleTypeName '{' identifiables '}' ;
+                scope = 'scope' possiblyQualifiedTypeReference '{' identifiables '}' ;
                 identifiables = identifiable* ;
-                identifiable = 'identify' simpleTypeName 'by' expression ;
+                identifiable = 'identify' possiblyQualifiedTypeReference 'by' expression ;
             
                 references = 'references' '{' referenceDefinitions '}' ;
                 referenceDefinitions = referenceDefinition* ;
-                referenceDefinition = 'in' simpleTypeName '{' referenceExpressionList '}' ;
+                referenceDefinition = 'in' possiblyQualifiedTypeReference '{' referenceExpressionList '}' ;
                 referenceExpressionList = referenceExpression* ;
                 referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
                 propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
@@ -148,18 +148,18 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     list("rootIdentifiables", 0, -1) { ref("identifiable") }
                     list("scopes", 0, -1) { ref("scope") }
                     concatenation("scope") {
-                        lit("scope"); ref("simpleTypeName"); lit("{"); ref("identifiables"); lit("}")
+                        lit("scope"); ref("possiblyQualifiedTypeReference"); lit("{"); ref("identifiables"); lit("}")
                     }
                     list("identifiables", 0, -1) { ref("identifiable") }
                     concatenation("identifiable") {
-                        lit("identify"); ref("simpleTypeName"); lit("by"); ref("expression")
+                        lit("identify"); ref("possiblyQualifiedTypeReference"); lit("by"); ref("expression")
                     }
                     concatenation("references") {
                         lit("references"); lit("{"); ref("referenceDefinitions"); lit("}")
                     }
                     list("referenceDefinitions", 0, -1) { ref("referenceDefinition") }
                     concatenation("referenceDefinition") {
-                        lit("in"); ref("simpleTypeName"); lit("{"); ref("referenceExpressionList"); lit("}")
+                        lit("in"); ref("possiblyQualifiedTypeReference"); lit("{"); ref("referenceExpressionList"); lit("}")
                     }
                     list("referenceExpressionList", 0, -1) { ref("referenceExpression") }
                     choice("referenceExpression") {
@@ -226,7 +226,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("ReferenceDefinition")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "scopeDefinition", "Map", false){
-                        typeArgument("SimpleName")
+                        typeArgument("PossiblyQualifiedName")
                         typeArgument("ScopeDefinition")
                     }
                 }
@@ -241,12 +241,12 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 data("ScopeDefinitionDefault") {
                     supertype("ScopeDefinition")
                     constructor_ {
-                        parameter(setOf(), "scopeForTypeName", "SimpleName")
+                        parameter(setOf(), "scopeForTypeName", "PossiblyQualifiedName")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "identifiables", "List", false){
                         typeArgument("Identifiable")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "scopeForTypeName", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "scopeForTypeName", "PossiblyQualifiedName", false)
                 }
                 data("ReferenceExpressionPropertyDefault") {
                     supertype("ReferenceExpressionAbstract")
@@ -283,10 +283,10 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 data("ReferenceDefinitionDefault") {
                     supertype("ReferenceDefinition")
                     constructor_ {
-                        parameter(setOf(), "inTypeName", "SimpleName")
+                        parameter(setOf(), "inTypeName", "PossiblyQualifiedName")
                         parameter(setOf(), "referenceExpressionList", "List")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "inTypeName", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "inTypeName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpression")
                     }
@@ -294,11 +294,11 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 data("IdentifiableDefault") {
                     supertype("Identifiable")
                     constructor_ {
-                        parameter(setOf(), "typeName", "SimpleName")
+                        parameter(setOf(), "typeName", "PossiblyQualifiedName")
                         parameter(setOf(), "identifiedBy", "Expression")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "identifiedBy", "Expression", false)
-                    propertyOf(setOf(VAL, CMP, STR), "typeName", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "typeName", "PossiblyQualifiedName", false)
                 }
                 data("DeclarationsForNamespaceDefault") {
                     supertype("DeclarationsForNamespace")
@@ -314,7 +314,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("ReferenceDefinition")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "scopeDefinition", "Map", false){
-                        typeArgument("SimpleName")
+                        typeArgument("PossiblyQualifiedName")
                         typeArgument("ScopeDefinition")
                     }
                 }
