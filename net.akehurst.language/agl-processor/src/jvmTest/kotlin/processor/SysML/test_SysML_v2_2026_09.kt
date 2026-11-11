@@ -111,34 +111,6 @@ abstract class test_SysML_v2_2026_09(
     }
 }
 
-class test_SysML_v2_2026_09_standard : test_SysML_v2_2026_09(
-    "standard",
-    // TODO(David): these fail because of the parser bug with left recursion through a chain of unit rules
-    // (e.g. 'B = A O A ; A = A1 ; A1 = E', input 'a+b+c'). Remove them from the list when it is fixed.
-    setOf(
-            "examples/Analysis Examples/Dynamics.sysml",
-            "examples/Analysis Examples/Turbojet Stage Analysis.sysml",
-            "examples/Analysis Examples/Vehicle Analysis Demo.sysml",
-            "examples/Geometry Examples/CarWithShapeAndCSG.sysml",
-            "examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml",
-            "examples/Individuals Examples/AnalysisIndividualExample.sysml",
-            "examples/Mass Roll-up Example/MassConstraintExample.sysml",
-            "examples/Metadata Examples/IssueMetadataExample.sysml",
-            "examples/Simple Tests/ConstraintTest.sysml",
-            "examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml",
-            "examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml",
-            "examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml",
-            "examples/v1 Spec Examples/D.4.7.8 Dynamics/HSUVDynamics.sysml",
-            "training/31. Constraints/Derivation Constraints.sysml",
-            "training/31. Constraints/Time Constraints.sysml",
-            "training/33. Analysis/Analysis Case Definition Example.sysml",
-            "validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml",
-            "validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml",
-            "validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml",
-            "validation/15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml",
-            "validation/15-Properties-Values-Expressions/15_19-Materials with Properties.sysml",
-            "validation/15-Properties-Values-Expressions/15_19a-Materials with Properties.sysml",
-    )
-)
+class test_SysML_v2_2026_09_standard : test_SysML_v2_2026_09("standard", emptySet())
 
 class test_SysML_v2_2026_09_agl : test_SysML_v2_2026_09("agl", emptySet())
