@@ -883,6 +883,8 @@ grammar Metadata : DefinitionAndUsage {
 grammar SysMLv2_1 : Attributes, Connections, States, Cases, Views, Metadata {
 
     #defaultGoalRule: RootNamespace
+    // SysML reserves its keywords (KerML 8.2.2.6), the Classic scanner does that
+    #scanner: Classic
 
     // rules that need rules from several of the grammars above
     PackageMember = MemberPrefix ( DefinitionElement | UsageElement ) ;

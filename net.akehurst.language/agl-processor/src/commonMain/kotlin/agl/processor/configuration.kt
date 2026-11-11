@@ -38,6 +38,10 @@ import net.akehurst.language.regex.agl.RegexEngineAgl
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.regex.api.RegexEngineKind
 import net.akehurst.language.scanner.api.ScannerKind
+import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.style.asm.AglStyleDomainDefault
@@ -88,17 +92,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
 
-    override val scannerResolver: ScannerResolver<AsmType, ContextType>? = {
-        val regexEngine = when (regexEngineKind) {
-            RegexEngineKind.PLATFORM -> RegexEnginePlatform
-            RegexEngineKind.AGL -> RegexEngineAgl
-        }
-        val scanner = when (scannerKind) {
-            ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
-            ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
-        }
-        ProcessResultDefault(scanner)
-    },
+    override val scannerResolver: ScannerResolver<AsmType, ContextType>? = { defaultScannerFor(it, scannerKind, regexEngineKind) },
     override val parserResolver: ParserResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) })
     },
@@ -145,17 +139,7 @@ internal class LanguageProcessorConfigurationSimple(
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
-    override val scannerResolver: ScannerResolver<Asm, SentenceContext>? = {
-        val regexEngine = when (regexEngineKind) {
-            RegexEngineKind.PLATFORM -> RegexEnginePlatform
-            RegexEngineKind.AGL -> RegexEngineAgl
-        }
-        val scanner = when (scannerKind) {
-            ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
-            ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
-        }
-        ProcessResultDefault(scanner)
-    },
+    override val scannerResolver: ScannerResolver<Asm, SentenceContext>? = { defaultScannerFor(it, scannerKind, regexEngineKind) },
     override val parserResolver: ParserResolver<Asm, SentenceContext>? = { p ->
         ProcessResultDefault(
             p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) },
@@ -200,3 +184,31 @@ internal class LanguageProcessorConfigurationSimple(
         )
     }
 ) : LanguageProcessorConfiguration<Asm, SentenceContext>
+
+/**
+ * Creates the scanner for the target grammar of [processor].
+ * The grammar options '#scanner' and '#regexEngine' take priority over [scannerKind] and [regexEngineKind].
+ * (An explicit 'scanner(...)' in a configuration replaces this resolver, so it takes priority over the grammar options.)
+ */
+internal fun defaultScannerFor(processor: LanguageProcessor<*, *>, scannerKind: ScannerKind, regexEngineKind: RegexEngineKind): ProcessResult<Scanner> {
+    val issues = IssueHolder(LanguageProcessorPhase.ALL)
+    val options = processor.targetGrammar?.options
+    val sk = options?.get<Any>(AglGrammar.OPTION_scanner)?.let { v ->
+        ScannerKind.entries.firstOrNull { it.name == v.toString() }
+            ?: null.also { issues.warn(null, "Grammar option '${AglGrammar.OPTION_scanner}' has value '$v', using '${scannerKind.name}'") }
+    } ?: scannerKind
+    val rek = options?.get<Any>(AglGrammar.OPTION_regexEngine)?.let { v ->
+        RegexEngineKind.entries.firstOrNull { it.name == v.toString() }
+            ?: null.also { issues.warn(null, "Grammar option '${AglGrammar.OPTION_regexEngine}' has value '$v', using '${regexEngineKind.name}'") }
+    } ?: regexEngineKind
+    val regexEngine = when (rek) {
+        RegexEngineKind.PLATFORM -> RegexEnginePlatform
+        RegexEngineKind.AGL -> RegexEngineAgl
+    }
+    val terminals = processor.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList()
+    val scanner = when (sk) {
+        ScannerKind.Classic -> ScannerClassic(regexEngine, terminals)
+        ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, terminals)
+    }
+    return ProcessResultDefault(scanner, processIssues = issues)
+}

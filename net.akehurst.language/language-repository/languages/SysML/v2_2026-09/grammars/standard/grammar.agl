@@ -284,6 +284,8 @@ grammar KerML {
 grammar SysMLv2_1 : KerML {
 
     #defaultGoalRule: RootNamespace
+    // SysML reserves its keywords (KerML 8.2.2.6), the Classic scanner does that
+    #scanner: Classic
 
     // Part 2 - Systems Modeling Language (SysML)
 

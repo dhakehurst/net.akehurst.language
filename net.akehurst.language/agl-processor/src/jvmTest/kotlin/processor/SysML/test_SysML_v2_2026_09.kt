@@ -37,7 +37,8 @@ abstract class test_SysML_v2_2026_09(
     grammarName: String,
     /** relative paths (from 'valid') of example files that are known not to parse */
     private val knownFailing: Set<String>,
-    private val scannerKind: ScannerKind = ScannerKind.OnDemand
+    /** null: the scanner given by the grammar option '#scanner' (Classic) */
+    private val scannerKind: ScannerKind? = null
 ) {
 
     private val languageDir = File("../language-repository/languages/SysML/v2_2026-09")
@@ -49,7 +50,10 @@ abstract class test_SysML_v2_2026_09(
         val res = Agl.processorFromStringSimple(
             GrammarString(grammarStr),
             styleStr = StyleString(styleStr),
-            configurationBase = Agl.configuration(Agl.configurationSimple()) { scanner(scannerKind, RegexEngineKind.PLATFORM) }
+            configurationBase = when (scannerKind) {
+                null -> Agl.configurationSimple()
+                else -> Agl.configuration(Agl.configurationSimple()) { scanner(scannerKind, RegexEngineKind.PLATFORM) }
+            }
         )
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         res.processor!!
@@ -63,7 +67,7 @@ abstract class test_SysML_v2_2026_09(
     private fun parses(text: String): Boolean = processor.parse(text).let { it.issues.errors.isEmpty() && null != it.sppt }
     private fun parses(file: File): Boolean = parses(file.readText())
 
-    /** sentences that only fail when keywords are reserved, i.e. with the Classic scanner */
+    /** sentences that fail only when keywords are reserved, i.e. with the Classic scanner */
     protected fun assertKeywordsReserved() {
         val keywordAsName = listOf(
             "package P {\n    import ;\n}\n",
@@ -90,6 +94,7 @@ abstract class test_SysML_v2_2026_09(
     @Test
     fun processor_with_style() {
         assertTrue(processor.typesDomain.allDefinitions.isNotEmpty())
+        assertEquals(scannerKind ?: ScannerKind.Classic, processor.scanner!!.kind)
     }
 
     @Test
@@ -131,17 +136,19 @@ abstract class test_SysML_v2_2026_09(
     }
 }
 
-class test_SysML_v2_2026_09_standard : test_SysML_v2_2026_09("standard", emptySet())
-
-class test_SysML_v2_2026_09_agl : test_SysML_v2_2026_09("agl", emptySet())
-
-// SysML reserves its keywords (KerML 8.2.2.6); the Classic scanner does that, a literal beats a name of the same length
-class test_SysML_v2_2026_09_standard_Classic : test_SysML_v2_2026_09("standard", emptySet(), ScannerKind.Classic) {
+// the grammars set '#scanner: Classic', because SysML reserves its keywords (KerML 8.2.2.6):
+// with the Classic scanner a literal beats a name of the same length
+class test_SysML_v2_2026_09_standard : test_SysML_v2_2026_09("standard", emptySet()) {
     @Test
     fun keywords_reserved() = assertKeywordsReserved()
 }
 
-class test_SysML_v2_2026_09_agl_Classic : test_SysML_v2_2026_09("agl", emptySet(), ScannerKind.Classic) {
+class test_SysML_v2_2026_09_agl : test_SysML_v2_2026_09("agl", emptySet()) {
     @Test
     fun keywords_reserved() = assertKeywordsReserved()
 }
+
+// the grammars also work with the OnDemand scanner, but then keywords can be used as names
+class test_SysML_v2_2026_09_standard_OnDemand : test_SysML_v2_2026_09("standard", emptySet(), ScannerKind.OnDemand)
+
+class test_SysML_v2_2026_09_agl_OnDemand : test_SysML_v2_2026_09("agl", emptySet(), ScannerKind.OnDemand)

@@ -48,6 +48,10 @@ import net.akehurst.language.types.builder.typesDomain
 object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
     const val OPTION_skipRequiredBetweenTokens = "skipRequiredBetweenTokens"
+    /** grammar option '#scanner: Classic' (or OnDemand), a [net.akehurst.language.scanner.api.ScannerKind] name */
+    const val OPTION_scanner = "scanner"
+    /** grammar option '#regexEngine: AGL' (or PLATFORM), a [net.akehurst.language.regex.api.RegexEngineKind] name */
+    const val OPTION_regexEngine = "regexEngine"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Grammar"
