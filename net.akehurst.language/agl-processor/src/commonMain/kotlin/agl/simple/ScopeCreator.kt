@@ -22,6 +22,7 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -40,7 +41,7 @@ class ScopeCreator(
     val sentenceIdentity: Any?,
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
-    val identifyingValueInFor:  (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    val identifyingValueInFor:  (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
     val locationMap: LocationMap,
     val issues: IssueHolder
 ) : AsmTreeWalker {
@@ -79,8 +80,8 @@ class ScopeCreator(
     override  fun afterList(owningProperty: AsmStructureProperty?, value: Collection<*>) {}
 
     private  fun createScope(parentScope: Scope, el: AsmStructure): Scope {
-        return if (crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)) {
-            val inTypeName = parentScope.forTypeName.last
+        return if (crossReferenceDomain.isScopeDefinedFor(typesDomain, el.qualifiedTypeName)) {
+            val inTypeName = parentScope.forTypeName
             val refInParent = identifyingValueInFor.invoke(inTypeName, el)
             when {
                 // Nothing
@@ -98,9 +99,9 @@ class ScopeCreator(
                 // List<String>
                 refInParent is List<*> && refInParent.isNotEmpty() && refInParent.all { it is String } -> {
                     //TODO("Think this needs fixing!")
-                    val exp = crossReferenceDomain.identifyingExpressionFor(inTypeName, el.qualifiedTypeName)
-                    val scopeDefined = crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)
-                    val idExprDefinedInScope = crossReferenceDomain.identifyingExpressionFor(el.qualifiedTypeName.last, el.qualifiedTypeName)
+                    val exp = SemanticAnalyserSimple.identifyingExpressionFor(typesDomain, crossReferenceDomain, inTypeName, el.qualifiedTypeName)
+                    val scopeDefined = crossReferenceDomain.isScopeDefinedFor(typesDomain, el.qualifiedTypeName)
+                    val idExprDefinedInScope = SemanticAnalyserSimple.identifyingExpressionFor(typesDomain, crossReferenceDomain, el.qualifiedTypeName, el.qualifiedTypeName)
                     when {
                         // and scope defined with the same expression
                         scopeDefined && exp == idExprDefinedInScope -> {
@@ -132,7 +133,7 @@ class ScopeCreator(
     }
 
     private  fun addToScope(scope: Scope, el: AsmStructure) {
-        val inTypeName = scope.forTypeName.last
+        val inTypeName = scope.forTypeName
         val scopeLocalReference = identifyingValueInFor.invoke(inTypeName, el)
         when {
             null == scopeLocalReference -> {
@@ -149,9 +150,9 @@ class ScopeCreator(
             // List<String>
             scopeLocalReference is List<*> && scopeLocalReference.isNotEmpty() && scopeLocalReference.all { it is String } -> {
                 //TODO("Think this needs fixing!")
-                val exp = crossReferenceDomain.identifyingExpressionFor(inTypeName, el.qualifiedTypeName)
-                val scopeDefined = crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)
-                val idExprDefinedInScope = crossReferenceDomain.identifyingExpressionFor(el.typeName, el.qualifiedTypeName)
+                val exp = SemanticAnalyserSimple.identifyingExpressionFor(typesDomain, crossReferenceDomain, inTypeName, el.qualifiedTypeName)
+                val scopeDefined = crossReferenceDomain.isScopeDefinedFor(typesDomain, el.qualifiedTypeName)
+                val idExprDefinedInScope = SemanticAnalyserSimple.identifyingExpressionFor(typesDomain, crossReferenceDomain, el.qualifiedTypeName, el.qualifiedTypeName)
                 when {
                     scopeDefined.not() -> {
                         issues.error(

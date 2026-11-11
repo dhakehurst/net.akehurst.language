@@ -26,6 +26,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
@@ -47,9 +48,11 @@ class ReferencesSemanticAnalyser(
     private var _locationMap: LocationMap? = null
     private var _grammarNamespace: GrammarTypesNamespace? = null
     private var _typeResolver: ExpressionTypeResolver? = null
+    private var _typesDomain: TypesDomain? = null
 
     override fun clear() {
         _grammarNamespace = null
+        _typesDomain = null
         _locationMap = null
         _issues.clear()
         _resolvedReferences.clear()
@@ -66,6 +69,7 @@ class ReferencesSemanticAnalyser(
 
         if (typesDomainItem!=null && typesDomainItem.isNotEmpty() && typesDomainItem.first().item is TypesDomain) {
             val typesDomain = typesDomainItem.first().item as TypesDomain //TODO: maybe not the first ?
+            _typesDomain = typesDomain
             asm.declarationsForNamespace.values.forEach {
                 val importedNamespaces = it.importedNamespaces.mapNotNull { impNs ->
                     val ns = typesDomain.findNamespaceOrNull(impNs.asQualifiedName)
@@ -82,7 +86,7 @@ class ReferencesSemanticAnalyser(
                         _typeResolver = ExpressionTypeResolver(typesDomain, ns, _issues)
                         _grammarNamespace = ns as GrammarTypesNamespace
                         it.scopeDefinition.values.forEach {
-                            checkScopeDefinition(it as ScopeDefinitionDefault)
+                            checkScopeDefinition(it as ScopeDefinitionDefault, importedNamespaces)
                         }
                         it.references.forEach { ref ->
                             checkReferenceDefinition(asm, ref as ReferenceDefinitionDefault, importedNamespaces)
@@ -107,12 +111,12 @@ class ReferencesSemanticAnalyser(
         _issues.error(loc, message)
     }
 
-    private fun checkScopeDefinition(scopeDef: ScopeDefinitionDefault) {
+    private fun checkScopeDefinition(scopeDef: ScopeDefinitionDefault, importedNamespaces: List<TypesNamespace>) {
         val msgStart = if (CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last == scopeDef.scopeForTypeName) {
             //do nothing
             "In root scope"
         } else {
-            val scopedType = _grammarNamespace?.findTypeNamed(scopeDef.scopeForTypeName)
+            val scopedType = findReferredToType(scopeDef.scopeForTypeName, importedNamespaces)
             if (null == scopedType) {
                 //if (context.rootScope.isMissing(scope.scopeFor, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
                 raiseError(ReferencesSyntaxAnalyser.PropertyValue(scopeDef, "typeReference"), "Scope type '${scopeDef.scopeForTypeName}' not found")
@@ -123,7 +127,7 @@ class ReferencesSemanticAnalyser(
         }
 
         scopeDef.identifiables.forEach { identifiable ->
-            val identifiedType = _grammarNamespace?.findTypeNamed(identifiable.typeName)
+            val identifiedType = findReferredToType(identifiable.typeName, importedNamespaces)
             //val typeScope = context.rootScope.childScopes[identifiable.typeName]
             val identifiedBy = identifiable.identifiedBy
             when {
@@ -147,7 +151,7 @@ class ReferencesSemanticAnalyser(
     }
 
     private fun checkReferenceDefinition(crossReferenceDomain: CrossReferenceDomain, ref: ReferenceDefinitionDefault, importedNamespaces: List<TypesNamespace>) {
-        val contextType = _grammarNamespace?.findOwnedTypeNamed(ref.inTypeName)
+        val contextType = findReferredToType(ref.inTypeName, importedNamespaces)
         when {
             (null == contextType) -> {
                 raiseError(
@@ -254,8 +258,11 @@ class ReferencesSemanticAnalyser(
     }
 
     private fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypesNamespace>): TypeDefinition? {
-        return _grammarNamespace?.findTypeNamed(name)
-            ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name as SimpleName) }
+        return when (name) {
+            is QualifiedName -> _typesDomain?.findByQualifiedNameOrNull(name) ?: _grammarNamespace?.findTypeNamed(name)
+            is SimpleName -> _grammarNamespace?.findTypeNamed(name)
+                ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name) }
+        }
     }
 
 }

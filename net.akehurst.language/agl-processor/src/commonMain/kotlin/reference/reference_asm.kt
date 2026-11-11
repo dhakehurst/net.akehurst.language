@@ -29,6 +29,7 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.reference.api.*
+import net.akehurst.language.types.api.TypesDomain
 
 class CrossReferenceDomainDefault(
     override val name: SimpleName,
@@ -108,6 +109,30 @@ class CrossReferenceDomainDefault(
         }
     }
 
+    override fun isScopeDefinedFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): Boolean =
+        lookupFor(typesDomain).isScopeDefinedFor(typeQualifiedName)
+
+    override fun identifyingExpressionFor(typesDomain: TypesDomain, scopeForTypeQualifiedName: QualifiedName, typeQualifiedName: QualifiedName): CrossReferenceMatch<Identifiable> =
+        lookupFor(typesDomain).identifyingExpressionFor(scopeForTypeQualifiedName, typeQualifiedName)
+
+    override fun referencesFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<CrossReferenceMatch<ReferenceExpression>> =
+        lookupFor(typesDomain).referencesFor(typeQualifiedName)
+
+    private var _lookup: CrossReferenceLookup? = null
+
+    /**
+     * The lookup is cached for the last used TypesDomain.
+     * The declarations must not change after the first lookup.
+     */
+    fun lookupFor(typesDomain: TypesDomain): CrossReferenceLookup {
+        val lu = _lookup
+        return if (null != lu && lu.typesDomain === typesDomain) {
+            lu
+        } else {
+            CrossReferenceLookup(this, typesDomain).also { _lookup = it }
+        }
+    }
+
     override fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: String): List<QualifiedName> =
         _referenceForProperty[Pair(typeQualifiedName, propertyName)] ?: emptyList()
 
@@ -136,7 +161,7 @@ data class DeclarationsForNamespaceDefault(
 
     override val importedNamespaces: List<Import> get() = namespace.import
 
-    override val scopeDefinition = mutableMapOf<SimpleName, ScopeDefinition>()
+    override val scopeDefinition = mutableMapOf<PossiblyQualifiedName, ScopeDefinition>()
     override val references = mutableListOf<ReferenceDefinition>()
 
     init {
@@ -147,12 +172,12 @@ data class DeclarationsForNamespaceDefault(
     override val isEmpty: Boolean get() = scopeDefinition.isEmpty() && references.isEmpty()
 
     override fun isScopeDefinedFor(typeName: SimpleName): Boolean {
-        return scopeDefinition.containsKey(typeName)
+        return scopeDefinition.keys.any { it.simpleName == typeName }
     }
 
     override fun referencesFor(typeName: SimpleName): List<ReferenceExpression> {
         return references.filter {
-            it.inTypeName == typeName
+            it.inTypeName.simpleName == typeName
         }.flatMap {
             it.referenceExpressionList
         }
@@ -164,8 +189,8 @@ data class DeclarationsForNamespaceDefault(
     }
 
     override fun identifyingExpressionFor(scopeForTypeName: SimpleName, typeName: SimpleName): Expression? {
-        val scope = scopeDefinition[scopeForTypeName]
-        val identifiable = scope?.identifiables?.firstOrNull { it.typeName == typeName }
+        val scope = scopeDefinition.entries.firstOrNull { it.key.simpleName == scopeForTypeName }?.value
+        val identifiable = scope?.identifiables?.firstOrNull { it.typeName.simpleName == typeName }
         return identifiable?.identifiedBy
     }
 
@@ -180,7 +205,7 @@ data class DeclarationsForNamespaceDefault(
 }
 
 data class ScopeDefinitionDefault(
-    override val scopeForTypeName: SimpleName
+    override val scopeForTypeName: PossiblyQualifiedName
 ) : ScopeDefinition {
     override val identifiables = mutableListOf<Identifiable>()
 
@@ -201,7 +226,7 @@ data class ScopeDefinitionDefault(
 }
 
 data class IdentifiableDefault(
-    override val typeName: SimpleName,
+    override val typeName: PossiblyQualifiedName,
     override val identifiedBy: Expression
 ) : Identifiable {
     override fun asString(indent: Indent, imports: List<Import>): String {
@@ -213,7 +238,7 @@ data class ReferenceDefinitionDefault(
     /**
      * name of the asm type in which the property is a reference
      */
-    override val inTypeName: SimpleName,
+    override val inTypeName: PossiblyQualifiedName,
 
     override val referenceExpressionList: List<ReferenceExpression>
 ) : ReferenceDefinition {

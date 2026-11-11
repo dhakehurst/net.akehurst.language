@@ -85,7 +85,7 @@ class AsmSimpleBuilder(
     private val _interpreter = ExpressionsInterpreterOverTypedObject(_objectGraph)
     private val _asm = AsmSimple(_objectGraph)
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple>()
-    private val _identifyingValueInFor: (SimpleName, AsmStructure) -> Any? = { inTypeName: SimpleName, item: AsmStructure ->
+    private val _identifyingValueInFor: (QualifiedName, AsmStructure) -> Any? = { inTypeName: QualifiedName, item: AsmStructure ->
         SemanticAnalyserSimple.identifyingValueInFor(_interpreter, _crossReferenceDomain, inTypeName, item)
     }
 
@@ -165,7 +165,7 @@ class AsmElementSimpleBuilder(
     private val _context: SentenceContext?,
     private val _scopeMap: MutableMap<AsmPath, ScopeSimple>,
     private val _asm: AsmSimple,
-    private val _identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    private val _identifyingValueInFor: (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
     _asmPath: AsmPath,
     _typeName: String,
     _isRoot: Boolean,
@@ -196,8 +196,8 @@ class AsmElementSimpleBuilder(
     }
     private val _elementScope by lazy {
         _parentScope?.let {
-            if (null != _context && _crossReferenceDomain.isScopeDefinedFor(_element.typeName)) {
-                val refInParent = _identifyingValueInFor(_parentScope.forTypeName.last, _element) as String?
+            if (null != _context && _crossReferenceDomain.isScopeDefinedFor(_typesDomain, _element.qualifiedTypeName)) {
+                val refInParent = _identifyingValueInFor(_parentScope.forTypeName, _element) as String?
                     ?: _element.typeName.value
                 val newScope = _parentScope.createOrGetChildScope(refInParent, _element.qualifiedTypeName)
                 _scopeMap[_asmPath] = newScope
@@ -305,7 +305,7 @@ class ListAsmElementSimpleBuilder(
     private val _asm: AsmSimple,
     private val _asmPath: AsmPath,
     private val _parentScope: ScopeSimple?,
-    private val _identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    private val _identifyingValueInFor: (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
 ) {
 
     private val _list = mutableListOf<AsmValue>()
