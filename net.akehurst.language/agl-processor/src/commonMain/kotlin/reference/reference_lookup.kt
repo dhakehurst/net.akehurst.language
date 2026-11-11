@@ -43,7 +43,7 @@ class CrossReferenceLookup(
     val typesDomain: TypesDomain
 ) {
 
-    private class ResolvedScope(val type: TypeDefinition, val identifiables: List<ResolvedIdentifiable>)
+    private class ResolvedScope(val type: TypeDefinition, val identifiables: List<ResolvedIdentifiable>, val definition: ScopeDefinition)
     private class ResolvedIdentifiable(val type: TypeDefinition, val identifiable: Identifiable)
     private class ResolvedReferenceDefinition(val type: TypeDefinition, val definition: ReferenceDefinition)
     private data class Candidate<T>(val key: List<Int>, val item: T)
@@ -55,6 +55,7 @@ class CrossReferenceLookup(
     private val _distanceCache = mutableMapOf<Pair<TypeDefinition, TypeDefinition>, Int?>()
     private val _isScopeCache = mutableMapOf<QualifiedName, Boolean>()
     private val _identifyCache = mutableMapOf<Pair<QualifiedName, QualifiedName>, CrossReferenceMatch<Identifiable>>()
+    private val _scopeImportsCache = mutableMapOf<QualifiedName, List<ScopeImport>>()
     private val _referencesCache = mutableMapOf<QualifiedName, List<CrossReferenceMatch<ReferenceExpression>>>()
 
     init {
@@ -68,7 +69,7 @@ class CrossReferenceLookup(
                 if (CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last == scopeTypeName) {
                     _everywhere.addAll(ids)
                 } else {
-                    resolveTypeOrNull(typesNamespace, imported, scopeTypeName)?.let { _scopes.add(ResolvedScope(it, ids)) }
+                    resolveTypeOrNull(typesNamespace, imported, scopeTypeName)?.let { _scopes.add(ResolvedScope(it, ids, scopeDef)) }
                 }
             }
             for (ref in decl.references) {
@@ -114,6 +115,20 @@ class CrossReferenceLookup(
                 }
             }
         }
+
+    /**
+     * the 'import' and 'inherit' declarations of the nearest scope definitions for the type (see class comment)
+     */
+    fun scopeImportsFor(typeQualifiedName: QualifiedName): List<ScopeImport> = _scopeImportsCache.getOrPut(typeQualifiedName) {
+        val type = typesDomain.findByQualifiedNameOrNull(typeQualifiedName)
+        when (type) {
+            null -> emptyList()
+            else -> {
+                val candidates = _scopes.mapNotNull { sc -> distance(type, sc.type)?.let { Candidate(listOf(it), sc.definition) } }
+                nearest(candidates).flatMap { it.scopeImports }
+            }
+        }
+    }
 
     fun referencesFor(typeQualifiedName: QualifiedName): List<CrossReferenceMatch<ReferenceExpression>> = _referencesCache.getOrPut(typeQualifiedName) {
         val type = typesDomain.findByQualifiedNameOrNull(typeQualifiedName)

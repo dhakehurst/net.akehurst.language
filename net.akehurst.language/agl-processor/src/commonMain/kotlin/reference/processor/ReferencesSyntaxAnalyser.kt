@@ -32,6 +32,7 @@ import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.CrossReferenceNamespace
+import net.akehurst.language.reference.api.ScopeImportKind
 import net.akehurst.language.reference.asm.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.ParsePath
@@ -48,6 +49,14 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::scope)
         super.register(this::identifiables)
         super.register(this::identifiable)
+        super.register(this::visibility)
+        super.register(this::aliasFor)
+        super.register(this::scopeImports)
+        super.register(this::scopeImport)
+        super.register(this::importDefinition)
+        super.register(this::importKind)
+        super.register(this::recursive)
+        super.register(this::inheritDefinition)
         super.register(this::referencesOpt)
         super.register(this::references)
         super.register(this::referenceDefinitions)
@@ -56,6 +65,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::referenceExpression)
         super.register(this::propertyReferenceExpression)
         super.register(this::from)
+        super.register(this::condition)
         super.register(this::collectionReferenceExpression)
         super.register(this::rootOrNavigation)
         super.register(this::ofType)
@@ -118,12 +128,14 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun scopes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ScopeDefinitionDefault> =
         children as List<ScopeDefinitionDefault>
 
-    // scope = 'scope' possiblyQualifiedTypeReference '{' identifiables '}
+    // scope = 'scope' possiblyQualifiedTypeReference '{' identifiables scopeImports '}'
     private fun scope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeDefinitionDefault {
         val simpleTypeName = children[1] as PossiblyQualifiedName
         val identifiables = children[3] as List<IdentifiableDefault>
+        val scopeImports = (children[4] as List<ScopeImportDefault>?) ?: emptyList()
         val scope = ScopeDefinitionDefault(simpleTypeName)
         scope.identifiables.addAll(identifiables)
+        scope.scopeImports.addAll(scopeImports)
         locationMap.add(ParsePath(), PropertyValue(scope, "typeReference"), locationMap[simpleTypeName]!!)
         return scope
     }
@@ -132,16 +144,73 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<IdentifiableDefault> =
         (children as List<IdentifiableDefault>?) ?: emptyList()
 
-    // identifiable = 'identify' possiblyQualifiedTypeReference 'by' expression
+    // identifiable = 'identify' possiblyQualifiedTypeReference 'by' expression visibility? aliasFor? ;
     private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IdentifiableDefault {
         val simpleTypeName = children[1] as PossiblyQualifiedName
         val expression = children[3] as Expression
-        val identifiable = IdentifiableDefault(simpleTypeName, expression)
+        val visibility = children[4] as Expression?
+        val aliasFor = children[5] as NavigationExpression?
+        val identifiable = IdentifiableDefault(simpleTypeName, expression, visibility, aliasFor)
         locationMap.add(ParsePath(), PropertyValue(identifiable, "simpleTypeName"), locationMap[simpleTypeName]!!)
         locationMap.add(ParsePath(), PropertyValue(identifiable, "expression"), locationMap[expression]!!)
 //        locationMap[PropertyValue(identifiable, "simpleTypeName")] = locationMap[simpleTypeName]!!
 //        locationMap[PropertyValue(identifiable, "expression")] = locationMap[expression]!!
         return identifiable
+    }
+
+    // visibility = 'visibility' expression ;
+    private fun visibility(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+        children[1] as Expression
+
+    // aliasFor = 'alias-for' rootOrNavigation ;
+    private fun aliasFor(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpression =
+        asNavigation(children[1] as Expression)
+
+    // scopeImports = scopeImport* ;
+    private fun scopeImports(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ScopeImportDefault> =
+        children as List<ScopeImportDefault>
+
+    // scopeImport = importDefinition | inheritDefinition ;
+    private fun scopeImport(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault =
+        children[0] as ScopeImportDefault
+
+    // importDefinition = 'import' 'forall' rootOrNavigation ofType? importKind rootOrNavigation recursive? visibility? ;
+    private fun importDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
+        val elements = children[2] as Expression
+        val ofType = children[3] as PossiblyQualifiedName?
+        val kind = children[4] as ScopeImportKind
+        val target = asNavigation(children[5] as Expression)
+        val recursive = children[6] as Expression?
+        val visibility = children[7] as Expression?
+        return ScopeImportDefault(kind, elements, ofType, target, recursive, visibility)
+    }
+
+    // importKind = 'members-of' | 'element' ;
+    private fun importKind(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportKind =
+        when (children[0] as String) {
+            "element" -> ScopeImportKind.IMPORT_ELEMENT
+            else -> ScopeImportKind.IMPORT_MEMBERS
+        }
+
+    // recursive = 'recursive' expression ;
+    private fun recursive(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+        children[1] as Expression
+
+    // inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation ;
+    private fun inheritDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
+        val elements = children[2] as Expression
+        val ofType = children[3] as PossiblyQualifiedName?
+        val target = asNavigation(children[5] as Expression)
+        return ScopeImportDefault(ScopeImportKind.INHERIT, elements, ofType, target, null, null)
+    }
+
+    private fun asNavigation(expr: Expression): NavigationExpression = when (expr) {
+        is NavigationExpression -> expr
+        is RootExpression -> NavigationExpressionDefault(RootExpressionDefault(expr.name), emptyList())
+        else -> {
+            issues.error(locationMap[expr], "Expected a navigation, got '${expr.asString()}'", null)
+            NavigationExpressionDefault(RootExpressionDefault.ERROR, emptyList())
+        }
     }
 
     // referencesOpt = references?
@@ -183,6 +252,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val expr = children[1] as Expression
         val typeReferences = children[3] as List<PossiblyQualifiedName>
         val from = children[4] as NavigationExpression?
+        val condition = children[5] as Expression?
 
         val navigation = when (expr) {
             is NavigationExpression -> expr
@@ -192,7 +262,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
                 NavigationExpressionDefault(RootExpressionDefault.ERROR, emptyList())
             }
         }
-        return ReferenceExpressionPropertyDefault(navigation, typeReferences, from).also {
+        return ReferenceExpressionPropertyDefault(navigation, typeReferences, from, condition).also {
             typeReferences.forEachIndexed { i, n ->
 //                locationMap[PropertyValue(it, "typeReferences[$i]")] = locationMap[n]!!
                 locationMap.add(ParsePath(), PropertyValue(it, "typeReferences[$i]"), locationMap[n]!!)
@@ -200,9 +270,13 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         }
     }
 
-    // from = 'from' navigation
+    // condition = 'when' expression ;
+    private fun condition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+        children[1] as Expression
+
+    // from = 'from' rootOrNavigation
     private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpression =
-        children[1] as NavigationExpression
+        asNavigation(children[1] as Expression)
 
     // collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionCollectionDefault {
