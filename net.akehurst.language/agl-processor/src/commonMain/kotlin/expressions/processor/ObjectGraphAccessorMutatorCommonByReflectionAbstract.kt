@@ -220,7 +220,8 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         val tArgs = typeArgs.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k), v) }
         val type = StdLibDefault.TupleType.type(tArgs)
         val obj = AsmStructureSimple(type.qualifiedTypeName)
-        val asmPv = args.entries.mapIndexed { i,(k,v) -> AsmStructurePropertySimple(PropertyValueName(k),i,v) }
+        // store plain values (as setProperty does), so that walkers over the ASM (scopes, references) see the tuple's content
+        val asmPv = args.entries.mapIndexed { i,(k,v) -> AsmStructurePropertySimple(PropertyValueName(k),i, untypedAny(v)) }
         obj.addAllProperty(asmPv)
         return typedAs(obj, type)
     }
