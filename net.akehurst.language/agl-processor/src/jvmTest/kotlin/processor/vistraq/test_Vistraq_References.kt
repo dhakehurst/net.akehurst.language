@@ -168,12 +168,12 @@ class test_Vistraq_References {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(62, 5, 4, 21, null),
-                "Reference 'CD.C' not resolved, to type(s) [NodeType] in scope '/CD'", null
+                "Reference 'C' not resolved, to type(s) [NodeType] in scope '/CD'", null
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(62, 5, 4, 21, null),
-                "Reference 'CD.D' not resolved, to type(s) [NodeType] in scope '/CD'", null
+                "Reference 'D' not resolved, to type(s) [NodeType] in scope '/CD'", null
             )
         )
 
