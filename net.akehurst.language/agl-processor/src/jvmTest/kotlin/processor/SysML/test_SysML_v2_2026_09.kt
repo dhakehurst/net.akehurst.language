@@ -22,6 +22,8 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.StyleString
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.regex.api.RegexEngineKind
+import net.akehurst.language.scanner.api.ScannerKind
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,7 +36,8 @@ import kotlin.test.assertTrue
 abstract class test_SysML_v2_2026_09(
     grammarName: String,
     /** relative paths (from 'valid') of example files that are known not to parse */
-    private val knownFailing: Set<String>
+    private val knownFailing: Set<String>,
+    private val scannerKind: ScannerKind = ScannerKind.OnDemand
 ) {
 
     private val languageDir = File("../language-repository/languages/SysML/v2_2026-09")
@@ -43,7 +46,11 @@ abstract class test_SysML_v2_2026_09(
     private val styleStr by lazy { File(grammarDir, "style.agl").readText() }
 
     private val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
-        val res = Agl.processorFromStringSimple(GrammarString(grammarStr), styleStr = StyleString(styleStr))
+        val res = Agl.processorFromStringSimple(
+            GrammarString(grammarStr),
+            styleStr = StyleString(styleStr),
+            configurationBase = Agl.configuration(Agl.configurationSimple()) { scanner(scannerKind, RegexEngineKind.PLATFORM) }
+        )
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         res.processor!!
     }
@@ -53,7 +60,20 @@ abstract class test_SysML_v2_2026_09(
         .sortedBy { it.path }
         .toList()
 
-    private fun parses(file: File): Boolean = processor.parse(file.readText()).let { it.issues.errors.isEmpty() && null != it.sppt }
+    private fun parses(text: String): Boolean = processor.parse(text).let { it.issues.errors.isEmpty() && null != it.sppt }
+    private fun parses(file: File): Boolean = parses(file.readText())
+
+    /** sentences that only fail when keywords are reserved, i.e. with the Classic scanner */
+    protected fun assertKeywordsReserved() {
+        val keywordAsName = listOf(
+            "package P {\n    import ;\n}\n",
+            "package P {\n    part null;\n}\n",
+            "package P {\n    part def part;\n}\n",
+        )
+        assertEquals(emptyList(), keywordAsName.filter { parses(it) }, "keywords used as names that parse")
+        // an unrestricted name may be a keyword
+        assertTrue(parses("package P {\n    part 'part';\n    part def 'import';\n}\n"))
+    }
 
     @Test
     fun parse_grammar() {
@@ -114,3 +134,14 @@ abstract class test_SysML_v2_2026_09(
 class test_SysML_v2_2026_09_standard : test_SysML_v2_2026_09("standard", emptySet())
 
 class test_SysML_v2_2026_09_agl : test_SysML_v2_2026_09("agl", emptySet())
+
+// SysML reserves its keywords (KerML 8.2.2.6); the Classic scanner does that, a literal beats a name of the same length
+class test_SysML_v2_2026_09_standard_Classic : test_SysML_v2_2026_09("standard", emptySet(), ScannerKind.Classic) {
+    @Test
+    fun keywords_reserved() = assertKeywordsReserved()
+}
+
+class test_SysML_v2_2026_09_agl_Classic : test_SysML_v2_2026_09("agl", emptySet(), ScannerKind.Classic) {
+    @Test
+    fun keywords_reserved() = assertKeywordsReserved()
+}

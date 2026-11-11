@@ -92,16 +92,16 @@ grammar Expressions : Base {
         ConditionalExpression on 'else' right
         NullCoalescingExpression on '??' left
         ImpliesExpression on 'implies' left
-        OrExpression on OR_OPERATOR left
+        OrExpression on '|', 'or' left
         XorExpression on 'xor' left
-        AndExpression on AND_OPERATOR left
-        EqualityExpression on EQUALITY_OPERATOR left
-        ClassificationExpression on CLASSIFICATION_OPERATOR left
-        RelationalExpression on RELATIONAL_OPERATOR left
+        AndExpression on '&', 'and' left
+        EqualityExpression on '===', '!==', '==', '!=' left
+        ClassificationExpression on 'istype', 'hastype', '@', 'as' left
+        RelationalExpression on '<=', '>=', '<', '>' left
         RangeExpression on '..' left
-        AdditiveExpression on ADDITIVE_OPERATOR left
-        MultiplicativeExpression on MULTIPLICATIVE_OPERATOR left
-        ExponentiationExpression on EXPONENTIATION_OPERATOR right
+        AdditiveExpression on '+', '-' left
+        MultiplicativeExpression on '*', '/', '%' left
+        ExponentiationExpression on '**', '^' right
     }
 
     ConditionalExpression = 'if' OwnedExpression '?' OwnedExpression 'else' OwnedExpression ;
@@ -120,16 +120,17 @@ grammar Expressions : Base {
     UnaryOperatorExpression = UNARY_OPERATOR UnaryOperand ;
     UnaryOperand = UnaryOperatorExpression | ExtentExpression | PrimaryExpression ;
 
-    // AGL: in a leaf the longer literal must be first
-    leaf OR_OPERATOR = '|' | 'or' ;
-    leaf AND_OPERATOR = '&' | 'and' ;
-    leaf EQUALITY_OPERATOR = '===' | '!==' | '==' | '!=' ;
-    leaf CLASSIFICATION_OPERATOR = 'istype' | 'hastype' | '@' | 'as' ;
-    leaf RELATIONAL_OPERATOR = '<=' | '>=' | '<' | '>' ;
-    leaf ADDITIVE_OPERATOR = '+' | '-' ;
-    leaf MULTIPLICATIVE_OPERATOR = '*' | '/' | '%' ;
-    leaf EXPONENTIATION_OPERATOR = '**' | '^' ;
-    leaf UNARY_OPERATOR = '+' | '-' | '~' | 'not' ;
+    // not leaf rules, so that each operator is a literal (keyword), which the Classic scanner needs:
+    // e.g. '-' is both an ADDITIVE_OPERATOR and a UNARY_OPERATOR
+    OR_OPERATOR = '|' | 'or' ;
+    AND_OPERATOR = '&' | 'and' ;
+    EQUALITY_OPERATOR = '===' | '!==' | '==' | '!=' ;
+    CLASSIFICATION_OPERATOR = 'istype' | 'hastype' | '@' | 'as' ;
+    RELATIONAL_OPERATOR = '<=' | '>=' | '<' | '>' ;
+    ADDITIVE_OPERATOR = '+' | '-' ;
+    MULTIPLICATIVE_OPERATOR = '*' | '/' | '%' ;
+    EXPONENTIATION_OPERATOR = '**' | '^' ;
+    UNARY_OPERATOR = '+' | '-' | '~' | 'not' ;
 
     // the operand is optional, e.g. 'istype T' tests the context
     ClassificationExpression = OwnedExpression? CLASSIFICATION_OPERATOR QualifiedName ;
