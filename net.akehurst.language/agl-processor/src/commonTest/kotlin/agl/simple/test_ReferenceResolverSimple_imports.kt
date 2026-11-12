@@ -102,6 +102,14 @@ class test_ReferenceResolverSimple_imports {
     }
 
     @Test
+    fun reference_dsl_asString_parses_again() {
+        val asString = processor.crossReferenceDomain.asString()
+        val again = Agl.processorFromStringSimple(grammarDefinitionStr = grammarStr, referenceStr = CrossReferenceString(asString))
+        assertTrue(again.issues.errors.isEmpty(), "$asString\n${again.issues}")
+        assertEquals(asString, again.processor!!.crossReferenceDomain.asString())
+    }
+
+    @Test
     fun reference_dsl_parses_and_prints() {
         val asString = processor.crossReferenceDomain.asString()
         assertTrue(asString.contains("import forall element of-type AllImport members-of qname"), asString)
