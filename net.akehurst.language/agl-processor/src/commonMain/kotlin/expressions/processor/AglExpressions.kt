@@ -207,7 +207,6 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
     override val crossReferenceString = """
         namespace ${NAMESPACE_NAME}
-            scope §root { }
     """.trimIndent() //TODO
 
     override val styleString: String = """

@@ -110,7 +110,6 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
 
     override val crossReferenceString = """
         namespace $NAMESPACE_NAME
-            scope §root { }
     """.trimIndent() //TODO:
 
     override val styleString: String = """
