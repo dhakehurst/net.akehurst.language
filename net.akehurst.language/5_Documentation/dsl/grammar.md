@@ -109,6 +109,7 @@ grammar Doc {
 |---|---|
 | `override item = 'b' ;` | replace the inherited rule |
 | `override item +=\| 'b' ;` | add an alternative to the inherited rule |
+| `override item == Y.item ;` | the rule is inherited via two bases (a diamond): use the one from base `Y` |
 
 The default goal rule is the first rule written in the target grammar, so after an override it is often
 necessary to set it with `#defaultGoalRule`:
