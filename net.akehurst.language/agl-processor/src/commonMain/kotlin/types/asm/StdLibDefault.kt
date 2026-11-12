@@ -365,6 +365,7 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             special(LambdaType_typeName.value)
 
             primitive("String", kotlin.String::class) {
+                derivedPropertyOf("length", "Integer", false, accessor = { self -> (self as String).length.toLong() })
                 methodPrimitive("toBoolean", "Boolean", true) {
                     execution { self, args -> (self as String).toBooleanStrictOrNull() }
                 }

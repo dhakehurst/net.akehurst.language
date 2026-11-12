@@ -199,10 +199,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // infix = expression INFIX_OPERATOR expression ;
     // infix = [expression / INFIX_OPERATOR]2+ ;
+    // the result is nested by operator precedence, see InfixExpressionDefault.withPrecedence
     private fun infixExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): InfixExpression {
         val expressions = children.filterIsInstance<Expression>()
         val operators = children.filterIsInstance<String>()
-        return InfixExpressionDefault(expressions, operators)
+        // at least one operator, so the result is always an InfixExpression
+        return InfixExpressionDefault.withPrecedence(expressions, operators) as InfixExpression
     }
 
     // functionCall = IDENTIFIER '(' argumentList ')' ;

@@ -121,6 +121,17 @@ interface DatastoreComposition : Transactional {
      * Returns the items written by the first part, plus the items that could not be written, with their issues.
      */
     suspend fun write(configuration: AccessCompositionConfiguration, input: Flow<DataItem>): Flow<DataItem>
+
+    /** testConnection of every part, in chain order; a result per part. Never throws. */
+    suspend fun testConnection(): Map<DatastoreIdentity, DatastoreTestResult>
+
+    /**
+     * Runs at most 'limit' items of the source part through the whole chain, as read() does, and gives a result per part:
+     * whether it read or processed its input, and how many items it gave.
+     * A part whose input fails is reported with the reason, and the parts after it are reported as not tested.
+     * Never throws; it never reads more than 'limit' source items.
+     */
+    suspend fun testAccess(configuration: AccessCompositionConfiguration, limit: Int = 1): Map<DatastoreIdentity, DatastoreTestResult>
 }
 
 object DatastoreCompositionExt {

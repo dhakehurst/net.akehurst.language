@@ -24,6 +24,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.expressions.processor.objectInstance
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesDomainSimpleAbstract
@@ -33,6 +34,7 @@ import kotlin.reflect.KClass
 class DatatypeRegistry : TypesDomainSimpleAbstract() {
 
     companion object {
+        const val LOOKUP_DEFINITION_OF_SINGLETON_NAMESPACE = "DefinitionOfSingletonNamespace"
         val KOTLIN_STD_STRING = """
             namespace kotlin {
                 primitive Boolean
@@ -155,6 +157,61 @@ class DatatypeRegistry : TypesDomainSimpleAbstract() {
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
 
     private val _primitiveMappers = mutableMapOf<KClass<*>, PrimitiveMapper<*, *>>()
+    private val _lookupMappers = mutableMapOf<String, LookupMapper>()
+
+    /**
+     * An object for which lookup.toKey gives a key is not walked (written) by value,
+     * it is written as (lookup.name, key) and found again, when read, by lookup.fromKey(key).
+     * e.g. so that a definition owned by a singleton is found in that singleton rather than constructed again.
+     */
+    fun registerLookup(lookup: LookupMapper) {
+        this._lookupMappers[lookup.name] = lookup
+    }
+
+    /** the (lookup name, key) for the value, if a registered lookup gives a key for it */
+    fun lookupKeyFor(value: Any): Pair<String, String>? {
+        for (lu in _lookupMappers.values) {
+            val key = lu.toKey(value)
+            if (null != key) return Pair(lu.name, key)
+        }
+        return null
+    }
+
+    fun lookupValueFor(lookupName: String, key: String): Any {
+        val lu = _lookupMappers[lookupName] ?: throw KompositeException("No lookup registered with name '$lookupName'")
+        return lu.fromKey(key) ?: throw KompositeException("Lookup '$lookupName' found nothing for key '$key'")
+    }
+
+    /**
+     * Type definitions owned by a namespace that is a registered singleton (e.g. StdLibDefault)
+     * are written by name, and looked up in that singleton when read.
+     */
+    fun registerLookupForDefinitionsOfSingletonNamespaces() {
+        registerLookup(LookupMapper(
+            name = LOOKUP_DEFINITION_OF_SINGLETON_NAMESPACE,
+            toKey = { value ->
+                when (value) {
+                    is TypeDefinition -> {
+                        val ns = value.namespace
+                        val st = this.findTypeDeclarationByKClass(ns::class)
+                        when (st) {
+                            is SingletonType -> "${st.qualifiedName.value}#${value.name.value}"
+                            else -> null
+                        }
+                    }
+
+                    else -> null
+                }
+            },
+            fromKey = { key ->
+                val stName = QualifiedName(key.substringBefore("#"))
+                val defName = SimpleName(key.substringAfter("#"))
+                val st = this.findByQualifiedNameOrNull(stName) as? SingletonType ?: throw KompositeException("Cannot find SingletonType '${stName.value}'")
+                val ns = st.objectInstance() as? TypesNamespace ?: throw KompositeException("Singleton '${stName.value}' is not a TypesNamespace")
+                ns.findOwnedDefinitionOrNull(defName)
+            }
+        ))
+    }
 
     fun registerPrimitiveMapper(mapper: PrimitiveMapper<*, *>) {
         this._primitiveMappers[mapper.primitiveKlass] = mapper

@@ -1,6 +1,7 @@
 package net.akehurst.datastore.api
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import net.akehurst.kotlinx.issues.api.IssueCollection
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -249,6 +250,17 @@ class PartialCommitException(
     cause
 )
 
+/** The result of testing a datastore or one part of a composition. 'message' and 'warnings' never contain a secret or item content. */
+data class DatastoreTestResult(
+    val success: Boolean,
+    /** short, for a user, e.g. "Connected as alice" or "Login failed: 401" */
+    val message: String,
+    /** the number of items read or counted; null if not known */
+    val itemCount: Int? = null,
+    /** problems that do not make the test fail, e.g. "2 of the 5 configured attribute columns were not found" */
+    val warnings: List<String> = emptyList(),
+)
+
 interface Datastore : Transactional {
     val identity:DatastoreIdentity
 
@@ -299,6 +311,20 @@ interface Datastore : Transactional {
      */
     suspend fun delete(accessConfiguration: DatastoreConfiguration, input: Flow<DataItemIdentity>): Flow<DataItemIdentity> =
         throw UnsupportedOperationException("Datastore '${identity.value}' does not support delete")
+
+    /**
+     * Opens the datastore if it is not open, checks that the source can be reached and logged in to, and closes it again if it opened it.
+     * Never throws: a failure is a result with success = false and the reason.
+     */
+    suspend fun testConnection(): DatastoreTestResult
+
+    /**
+     * Checks that 'access' works: reads at most 'limit' items with it, or counts the matching items if the source can do that cheaply
+     * (e.g. DOORS counts a module's objects without reading them).
+     * Opens and closes the datastore as testConnection does. It must stay cheap: never read everything.
+     * Never throws. A read that works but finds no items succeeds with itemCount = 0 and a warning.
+     */
+    suspend fun testAccess(access: DatastoreConfiguration, input: Flow<DataItem> = emptyFlow(), limit: Int = 1): DatastoreTestResult
 
 }
 

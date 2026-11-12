@@ -1,6 +1,11 @@
 package net.akehurst.datastore.common
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.fold
@@ -27,6 +32,7 @@ import net.akehurst.datastore.api.DatastoreObjectTyping
 import net.akehurst.datastore.api.DatastoreProviderSchema
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
+import net.akehurst.datastore.api.DatastoreTestResult
 import net.akehurst.datastore.api.PartialCommitException
 import net.akehurst.datastore.api.TransactionState
 import net.akehurst.datastore.api.DsConfigParameterDefinition
@@ -391,6 +397,150 @@ class DatastoreCompositionDefault(
 
     private fun checkInTransaction() {
         check(_transactionState == TransactionState.ACTIVE) { "Composition has no active transaction; write inside a transaction" }
+    }
+
+    /** testConnection of every part, in chain order. Each part opens and closes itself unless it is open (as it is while the composition is open). */
+    override suspend fun testConnection(): Map<DatastoreIdentity, DatastoreTestResult> {
+        val results = linkedMapOf<DatastoreIdentity, DatastoreTestResult>()
+        for (ds in datastore.values) {
+            results[ds.identity] = try {
+                ds.testConnection()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (t: Throwable) {
+                // a Datastore should never throw from testConnection, but one that does is reported as failed
+                DatastoreTestResult(success = false, message = testFailureMessage(t))
+            }
+        }
+        return results
+    }
+
+    /**
+     * Builds the chain as read() does, but takes at most 'limit' items from the source part, counts the items each part gives,
+     * and catches a failure at the part where it happens (in the part's read, or in adapting its input through the connections).
+     * The parts after a failed part are reported as not tested.
+     * Unless the composition is open, the parts are opened here in chain order and closed again in reverse order afterwards.
+     * A part that fails to open is reported failed; the parts before it are still tested.
+     */
+    override suspend fun testAccess(configuration: AccessCompositionConfiguration, limit: Int): Map<DatastoreIdentity, DatastoreTestResult> {
+        val parts = datastore.values.toList()
+        val results = linkedMapOf<DatastoreIdentity, DatastoreTestResult>()
+        if (limit < 1) {
+            parts.forEach { results[it.identity] = DatastoreTestResult(false, "The limit must be at least 1, it is $limit") }
+            return results
+        }
+        val counts = IntArray(parts.size)
+        val withErrors = IntArray(parts.size)
+        var failedAt = -1
+        var failure: Throwable? = null
+        // the earliest part that failed wins: the parts after it are not tested
+        fun fail(i: Int, t: Throwable) {
+            if (failedAt < 0 || i < failedAt) {
+                failedAt = i; failure = t
+            }
+        }
+
+        val opened = mutableListOf<Datastore>()
+        val closeFailures = mutableMapOf<DatastoreIdentity, Throwable>()
+        // the number of parts whose read was built into the chain
+        var built = 0
+        try {
+            if (_isOpen.not()) {
+                for ((i, ds) in parts.withIndex()) {
+                    if (ds.isOpen) continue
+                    try {
+                        ds.open()
+                        opened.add(ds)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (t: Throwable) {
+                        fail(i, t)
+                        break
+                    }
+                }
+            }
+            if (0 != failedAt) {
+                try {
+                    val am = newAccessorMutator()
+                    var flow = emptyFlow<DataItem>()
+                    for ((i, ds) in parts.withIndex()) {
+                        // the parts before one that failed (e.g. to open) are still tested
+                        if (failedAt in 0..i) break
+                        val dsCfg = configuration.part[ds.identity]
+                        if (null == dsCfg) {
+                            fail(i, IllegalStateException("No access configuration for datastore '${ds.identity.value}'"))
+                            break
+                        }
+                        val conns = when (i) {
+                            0 -> emptyList()
+                            else -> this.configuration.connection.filter { it.source == parts[i - 1].identity && it.target == ds.identity }
+                        }
+                        val input = if (conns.isNotEmpty()) adapt(conns, flow, am) else flow
+                        val output = try {
+                            ds.read(dsCfg, input)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (t: Throwable) {
+                            fail(i, t)
+                            break
+                        }
+                        val limited = if (0 == i) output.take(limit) else output
+                        // catch is upstream only: it gets failures of this part (and of adapting its input),
+                        // the failures of earlier parts were caught by their own catch
+                        flow = limited
+                            .onEach { item ->
+                                counts[i]++
+                                if (item.issues.errors.isNotEmpty()) withErrors[i]++
+                            }
+                            .catch { t ->
+                                if (t is CancellationException) throw t
+                                fail(i, t)
+                            }
+                        built++
+                    }
+                    if (built > 0) flow.collect()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (t: Throwable) {
+                    // e.g. the composed types could not be created
+                    fail(0, t)
+                }
+            }
+        } finally {
+            for (ds in opened.reversed()) {
+                try {
+                    ds.close()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (t: Throwable) {
+                    closeFailures[ds.identity] = t
+                }
+            }
+        }
+
+        for ((i, ds) in parts.withIndex()) {
+            results[ds.identity] = when {
+                failedAt in 0 until i -> DatastoreTestResult(false, "Not tested: an earlier part failed")
+                failedAt == i -> DatastoreTestResult(false, testFailureMessage(failure!!), itemCount = if (i < built) counts[i] else null)
+                else -> {
+                    val n = counts[i]
+                    val warnings = buildList {
+                        when {
+                            0 == n && 0 == i -> add("No items were found")
+                            0 == n -> add("No items: the part before gave none")
+                        }
+                        if (withErrors[i] > 0) add("${withErrors[i]} of the $n item(s) have errors")
+                    }
+                    val msg = if (0 == i) "Read $n item(s)" else "Gave $n item(s)"
+                    DatastoreTestResult(true, msg, itemCount = n, warnings = warnings)
+                }
+            }
+        }
+        closeFailures.forEach { (id, t) ->
+            val r = results[id]
+            if (null != r && r.success) results[id] = r.copy(success = false, message = "Close failed: ${testFailureMessage(t)}")
+        }
+        return results
     }
 
     /**
