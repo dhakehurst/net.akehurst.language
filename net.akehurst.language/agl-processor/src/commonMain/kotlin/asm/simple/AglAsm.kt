@@ -102,6 +102,8 @@ interface AsmListSeparated {
                     supertype("AsmStructure")
                     constructor_ {
                         parameter(setOf(VAL, CMP), "qualifiedTypeName", "QualifiedName")
+                        // identity is not serialised, so a deserialised structure gets a generated identity when first used
+                        parameter(setOf(), "identity", "Any", true)
                     }
                     propertyOf(setOf(VAR, REF, STR), "parsePath", "String", false)
                     propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
