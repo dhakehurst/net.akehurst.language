@@ -60,6 +60,11 @@ typealias MapEndFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, data: Ma
 
 typealias ObjectBeginFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, obj: Any, datatype: DataType) -> WalkInfo<P, A>
 typealias ObjectEndFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, obj: Any, datatype: DataType) -> WalkInfo<P, A>
+/**
+ * called (instead of walking the object again) when an object, already walked earlier in this walk,
+ * is met again in a composite position. firstPath is the path at which it was first walked.
+ */
+typealias ObjectRepeatFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, obj: Any, datatype: DataType, firstPath: List<String>) -> WalkInfo<P, A>
 typealias PropertyBeginFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, property: PropertyDeclaration) -> WalkInfo<P, A>
 typealias PropertyEndFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, property: PropertyDeclaration) -> WalkInfo<P, A>
 
@@ -91,8 +96,18 @@ class KompositeWalker<P : Any?, A : Any?>(
     val valueType: ValueTypeFunc<P, A>,
     val enum: EnumFunc<P, A>,
     val nullValue: NullFunc<P, A>,
-    val special: SpecialFunc<P, A>
+    val special: SpecialFunc<P, A>,
+    /** if null, an object met more than once is walked each time */
+    val objectRepeat: ObjectRepeatFunc<P, A>? = null
 ) {
+
+    /** identity (not equals) key, so that distinct but equal objects are not treated as the same object */
+    private class IdentityKey(val obj: Any) {
+        override fun hashCode(): Int = obj.hashCode()
+        override fun equals(other: Any?): Boolean = other is IdentityKey && other.obj === this.obj
+    }
+
+    private val walkedObjectPath = mutableMapOf<IdentityKey, List<String>>()
 
     class Configuration(
         var ELEMENTS: String = "\$elements",
@@ -130,6 +145,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         private var _enum: EnumFunc<P, A> = { _, info, _, _ -> info }
         private var _nullValue: NullFunc<P, A> = { _, info, _ -> info }
         private var _special: SpecialFunc<P, A> = { _, info, _, _ -> info }
+        private var _objectRepeat: ObjectRepeatFunc<P, A>? = null
 
         fun configure(configuration: Configuration.() -> Unit) {
             this._configuration.apply(configuration)
@@ -161,6 +177,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         fun enum(func: EnumFunc<P, A>) = run { this._enum = func }
         fun nullValue(func: NullFunc<P, A>) = run { this._nullValue = func }
         fun special(func: SpecialFunc<P, A>) = run { this._special = func }
+        fun objectRepeat(func: ObjectRepeatFunc<P, A>) = run { this._objectRepeat = func }
 
         fun build(registry: DatatypeRegistry): KompositeWalker<P, A> {
             return KompositeWalker(
@@ -170,13 +187,15 @@ class KompositeWalker<P : Any?, A : Any?>(
                 _propertyBegin, _propertyEnd,
                 _mapBegin, _mapEntryKeyBegin, _mapEntryKeyEnd, _mapEntryValueBegin, _mapEntryValueEnd, _mapSeparate, _mapEnd,
                 _collBegin, _collElementBegin, _collElementEnd, _collSeparate, _collEnd,
-                _reference, _singleton, _primitive, _valueType, _enum, _nullValue, _special
+                _reference, _singleton, _primitive, _valueType, _enum, _nullValue, _special,
+                _objectRepeat
             )
         }
     }
 
     fun walk(info: WalkInfo<P, A>, data: Any?, targetType: TypeInstance? = null): WalkInfo<P, A> {
         val path = emptyList<String>()
+        walkedObjectPath.clear()
         return walkValue(null, path, info, data, targetType)
     }
 
@@ -300,6 +319,16 @@ class KompositeWalker<P : Any?, A : Any?>(
         val rdt = runtimeTypeFor(data, targetType)
         val dt = rdt as DataType
         val dtRes = dt.type(targetType.typeArguments)
+
+        if (null != objectRepeat) {
+            val key = IdentityKey(data)
+            val firstPath = walkedObjectPath[key]
+            if (null != firstPath) {
+                return objectRepeat.invoke(path, info, data, dt, firstPath)
+            } else {
+                walkedObjectPath[key] = path
+            }
+        }
 
         val infoob = this.objectBegin(path, info, data, dt)
         var acc = infoob.acc
