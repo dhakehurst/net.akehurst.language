@@ -1,0 +1,61 @@
+# Style
+
+A style definition gives colours and fonts to parts of a sentence, for syntax highlighting in an editor.
+AGL parses and checks the styles; the [AGL editor](https://github.com/dhakehurst/net.akehurst.language.editor) applies them.
+The examples are tested in `agl-processor/src/commonTest/kotlin/documentation/test_Doc_Style.kt`.
+
+## Example
+
+For the [Shapes language](../GETTING_STARTED.md#the-example-language):
+
+```agl
+namespace example
+styles Shapes {
+    $nostyle {
+        foreground: black;
+    }
+    'circle', 'square', 'connect' {
+        foreground: blue;
+        font-weight: bold;
+    }
+    NAME, NUMBER {
+        foreground: darkred;
+    }
+    COMMENT {
+        foreground: gray;
+        font-style: italic;
+    }
+}
+```
+
+```kotlin
+val definition = Agl.languageDefinitionFromStringSimple(
+    LanguageIdentity("example.Shapes"),
+    GrammarString(grammar),
+    styleStr = StyleString(style)
+)
+definition.styleDomain   // the parsed styles
+```
+
+## Syntax
+
+A rule is `selectors { name: value; ... }`. Several selectors are separated by `,`.
+
+| Selector | Matches |
+|---|---|
+| `'if'` | that literal |
+| `"[0-9]+"` | that pattern, as written in the grammar |
+| `NAME` | the rule `NAME` |
+| `$nostyle` | everything that no other rule styles (the default style) |
+| `$keyword` | every word-like literal, the same as `$$ "'[a-zA-Z_][a-zA-Z0-9_-]*'"` |
+
+A meta rule `$$ "regex" { ... }` styles every terminal whose text **as written in the grammar** matches the regex,
+quotes included: `$$ "'[^a-zA-Z]+'"` styles all punctuation literals such as `'{'` and `','`.
+A meta rule that matches no terminal gives a warning.
+
+When several rules match a token, they combine like CSS: start from `$nostyle`, then apply each matching rule
+in the order written; a later rule overrides only the declarations it sets.
+So `$keyword { font-weight: bold; }` then `'circle' { foreground: red; }` makes `circle` bold and red.
+
+The declarations are CSS-like `name: value;` pairs; the editor decides which names it supports.
+`styles B : A { }` extends style set `A`.

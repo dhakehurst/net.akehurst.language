@@ -25,6 +25,7 @@ import net.akehurst.language.scanner.api.ScanOptions
  * Options to configure the syntax analysis of a Shared Packed Parse Tree (SPPT)
  */
 interface SyntaxAnalysisOptions<AsmType : Any> {
+    /** false: `process` stops after parsing */
     var enabled: Boolean
 
     /**
@@ -44,9 +45,13 @@ interface SyntaxAnalysisOptions<AsmType : Any> {
  * Options to configure the semantic analysis of an Abstract Syntax Model (ASM)
  */
 interface SemanticAnalysisOptions<ContextType : Any> {
+    /** false: `process` stops after syntax analysis */
     var enabled: Boolean
+    /** the location in the sentence of each ASM object, set by syntax analysis */
     var locationMap: LocationMap
+    /** the context the sentence is analysed in (e.g. `contextAsmSimple()`); if null, references are not built, checked or resolved */
     var sentenceContext: ContextType?
+    /** build the scopes defined by the references DSL */
     var buildScope: Boolean
 
     /**
@@ -62,13 +67,19 @@ interface SemanticAnalysisOptions<ContextType : Any> {
      */
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?
 
+    /** report references that cannot be resolved */
     var checkReferences: Boolean
+    /** set resolved references in the ASM */
     var resolveReferences: Boolean
+    /** options for a specific semantic analyser */
     val other: Map<String, Any>
 
     fun clone(): SemanticAnalysisOptions<ContextType>
 }
 
+/**
+ * Options for `expectedItemsAt` (code completion)
+ */
 interface CompletionProviderOptions<ContextType : Any> {
     var sentenceContext: ContextType?
 
@@ -102,17 +113,22 @@ interface CompletionProviderOptions<ContextType : Any> {
     fun clone(): CompletionProviderOptions<ContextType>
 }
 
+/**
+ * Options for formatting an ASM as text
+ */
 interface FormatOptions<SelfType : Any> {
     /** locationMap for the FormatString */
     var locationMap: LocationMap?
 
+    /** named values available in format expressions */
     val environment: Map<String, SelfType>
 
     fun clone(): FormatOptions<SelfType>
 }
 
 /**
- * Options to configure the processing of a sentence
+ * Options to configure the processing of a sentence, one group per phase.
+ * Build them with `Agl.options { parse { ... } syntaxAnalysis { ... } semanticAnalysis { ... } completionProvider { ... } }`
  */
 interface ProcessOptions<AsmType : Any, ContextType : Any> {
     val scan: ScanOptions
