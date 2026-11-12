@@ -404,6 +404,8 @@ open class ExpressionsInterpreterOverTypedObject(
             else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
         }
 
+        "<", "<=", ">", ">=" -> evaluateComparisonOperator(objectGraph, lhs, op, rhs)
+
         // arithmetic
         "/" -> when {
             lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
@@ -555,7 +557,7 @@ open class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValue { it ->
-            val newEvc = evc.child(mapOf("it" to it))
+            val newEvc = evc.child(mapOf(lambdaParameterName(expression) to it))
             evaluateExpression(newEvc, expression.expression)
         }
         return lambda
@@ -698,6 +700,41 @@ open class ExpressionsInterpreterOverTypedObject(
         propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
             self.setProperty(it.variable.name, value)
+        }
+    }
+}
+/**
+ * The parameter name a lambda binds its argument to: the declared parameter, or 'it' if there is none.
+ */
+internal fun lambdaParameterName(expression: LambdaExpression): String =
+    expression.variables.firstOrNull() ?: "it"
+
+/**
+ * The comparison operators '<', '<=', '>', '>=' on Integer and Real values (an Integer is compared with a Real as a Real).
+ */
+internal fun evaluateComparisonOperator(objectGraph: ObjectGraphAccessorMutatorCommon, lhs: TypedObject, op: String, rhs: TypedObject): TypedObject {
+    val isNumber = { o: TypedObject -> o.type.conformsTo(StdLibDefault.Integer) || o.type.conformsTo(StdLibDefault.Real) }
+    return when {
+        isNumber(lhs) && isNumber(rhs) -> {
+            val lhsv = objectGraph.untyped(lhs)
+            val rhsv = objectGraph.untyped(rhs)
+            val cmp = when {
+                lhsv is Long && rhsv is Long -> lhsv.compareTo(rhsv)
+                else -> (lhsv as Number).toDouble().compareTo((rhsv as Number).toDouble())
+            }
+            val res = when (op) {
+                "<" -> cmp < 0
+                "<=" -> cmp <= 0
+                ">" -> cmp > 0
+                ">=" -> cmp >= 0
+                else -> error("Not a comparison operator '$op'")
+            }
+            objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, res)
+        }
+
+        else -> {
+            objectGraph.issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+            objectGraph.nothing()
         }
     }
 }

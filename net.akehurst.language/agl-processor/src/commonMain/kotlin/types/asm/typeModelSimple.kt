@@ -126,7 +126,15 @@ class TypesDomainSimple(
                     proc.process(
                         sentence = typesString.value,
                         options = Agl.options { semanticAnalysis { sentenceContext(sentenceContext) } }
-                    )
+                    ).also { res ->
+                        // as for an empty types string, the std namespace is part of the domain, so that 'import std' can be resolved
+                        res.asm?.let { td ->
+                            if (null == td.findNamespaceOrNull(StdLibDefault.qualifiedName)) {
+                                td.addNamespace(StdLibDefault)
+                                td.resolveImports()
+                            }
+                        }
+                    }
                 }
             }
         }

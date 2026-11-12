@@ -314,7 +314,8 @@ class ExternalGetterAsmSimple(
                     else -> v?.raw
                 }
             }
-            else -> TODO()
+            // not an ASM object, the caller gives a warning and uses $nothing
+            else -> null
         }
     }
 
