@@ -105,9 +105,10 @@ class test_Doc_AsmTransform {
     }
 
     @Test
-    fun existing_type_without_options() {
-        // asm-transform.md: "Options" (a rule that uses an existing type needs no option)
+    fun existing_type_without_create_missing_types() {
+        // asm-transform.md: "Options" (a rule that uses an existing type needs no '#create-missing-types')
         val transform = """
+            #override-default-transform
             namespace example
             asm-transform Shapes {
                 connection: Connection() {
