@@ -117,7 +117,6 @@ sealed class ChoiceAbstract(
 }
 
 class ChoiceLongestDefault(override val alternative: List<RuleItem>) : ChoiceAbstract(alternative), ChoiceLongest {}
-class ChoicePriorityDefault(override val alternative: List<RuleItem>) : ChoiceAbstract(alternative), ChoicePriority {}
 class ChoiceAmbiguousDefault(override val alternative: List<RuleItem>) : ChoiceAbstract(alternative), ChoiceAmbiguous {}
 
 sealed class ConcatenationItemAbstract : RuleItemAbstract(), ConcatenationItem {}

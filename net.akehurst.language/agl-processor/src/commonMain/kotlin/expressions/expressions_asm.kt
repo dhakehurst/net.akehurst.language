@@ -417,6 +417,7 @@ class InfixExpressionDefault(
         /**
          * Precedence of the infix operators, higher binds tighter (as in Kotlin).
          * All operators are left-associative.
+         * TODO: make the precedence table configurable
          */
         val OPERATOR_PRECEDENCE = mapOf(
             "*" to 7, "/" to 7, "%" to 7,

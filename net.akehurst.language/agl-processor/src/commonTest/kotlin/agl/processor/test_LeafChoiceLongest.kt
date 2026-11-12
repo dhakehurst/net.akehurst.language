@@ -99,19 +99,20 @@ class test_LeafChoiceLongest {
     }
 
     @Test
-    fun priority_choice_keeps_order() {
-        val (proc, warnings) = processor(
-            """
-            namespace t
-            grammar T {
-                S = OP '=' ? ;
-                leaf OP = '<' < '<=' ;
-            }
-            """.trimIndent()
+    fun priority_choice_is_a_syntax_error() {
+        // '<' (priority choice) was removed from the grammar language
+        val res = Agl.processorFromStringSimple(
+            GrammarString(
+                """
+                namespace t
+                grammar T {
+                    S = OP '=' ? ;
+                    leaf OP = '<' < '<=' ;
+                }
+                """.trimIndent()
+            )
         )
-        // the first alternative '<' is taken, so the '=' is a separate token
-        parses(proc, "<=", "<")
-        assertEquals(emptyList(), leafWarnings(warnings))
+        assertTrue(res.issues.errors.isNotEmpty(), res.issues.toString())
     }
 
     @Test

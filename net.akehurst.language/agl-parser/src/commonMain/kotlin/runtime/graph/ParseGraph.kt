@@ -439,14 +439,6 @@ internal class ParseGraph(
                         }
                     }
 
-                    RuntimeRuleChoiceKind.PRIORITY_LONGEST -> mergeDecisionOnPriority(existingParent, newParent, emptyList()) {rl ->
-                        mergeDecisionOnLength(existingParent, newParent, rl) {rl2 ->
-                            mergeDecisionOnDynamicPriority(existingParent, newParent, rl2) { rl3 ->
-                                MergeDecision(rl3, MergeChoice.UNDECIDABLE, "${newParent.dynamicPriority} == ${existingParent.dynamicPriority}")
-                            }
-                        }
-                    }
-
                     RuntimeRuleChoiceKind.AMBIGUOUS -> MergeDecision(listOf( MergeReason.CHOICE_RULE_AMBIGUOUS),MergeChoice.KEEP_BOTH_AS_ALTERNATIVES,"")
                 }
             }
