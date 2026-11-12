@@ -104,6 +104,24 @@ class test_Doc_M2mTransform {
     }
 
     @Test
+    fun nested_template_does_not_match_missing_property() {
+        // m2m-transform.md: "A first transform" - no value means no match (D20, as QVT Relations)
+        val input = (shapesProcessor.process("circle c r 5  circle e").asm!!.root.first() as AsmStructure).let {
+            @Suppress("UNCHECKED_CAST")
+            (it.getProperty(PropertyValueName("item")) as List<Any>).map { ogS.toTypedObject(it, StdLibDefault.AnyType) }
+        }
+        val actual = transform(
+            """
+            top mapping CircleToDisc {
+              domain s c:Circle { name == n  radius == Radius { number == r } }
+              domain d disc:Disc := Disc() { label := n  size := r }
+            }
+            """, input = input
+        )
+        assertEquals(listOf(disc("c", "5")), actual)
+    }
+
+    @Test
     fun relation_both_directions() {
         // m2m-transform.md: "Mapping and relation"
         val rules = """
