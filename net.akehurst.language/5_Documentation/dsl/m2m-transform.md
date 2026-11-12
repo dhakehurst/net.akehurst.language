@@ -32,7 +32,8 @@ transform ShapesToDrawing(s:Shapes, d:Drawing) {
 * A `top` rule is applied to every input object. Other rules run only when another rule calls them (see [Calling rules](#calling-rules)).
 * `domain s c:Circle { ... }` is a template. It matches an object of type `Circle`, and calls it `c`.
 * `name == n` matches the property `name`. If `n` is not yet bound, it is bound to the value of `name`; otherwise the value must equal `n`.
-* `radius == Radius { ... }` matches a nested object. `prop == 'text'` matches a literal value.
+* `radius == Radius { ... }` matches a nested object; if `radius` has no value, the template does not match. `prop == 'text'` matches a literal value.
+* Variables are bound separately for each match.
 * `domain d disc:Disc := Disc() { label := n }` (a *mapping* only) creates the target object and sets its properties with `:=`.
 * Any expression works on the right, e.g. `domain d l:String := 'circle ' + n`.
 
