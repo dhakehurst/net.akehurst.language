@@ -153,6 +153,9 @@ class CrossReferenceNamespaceDefault(
 ) : NamespaceAbstract<DeclarationsForNamespace>(options, import), CrossReferenceNamespace {
 
     override val declarationsForNamespace get() = this.definition.first()
+
+    // no trailing indent when there are no declarations
+    override fun asString(indent: Indent, imports: List<Import>): String = super.asString(indent, imports).trimEnd()
 }
 
 data class DeclarationsForNamespaceDefault(
