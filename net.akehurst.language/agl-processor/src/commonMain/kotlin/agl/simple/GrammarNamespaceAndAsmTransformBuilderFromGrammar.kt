@@ -89,7 +89,7 @@ internal class GrammarDomain2TransformDomain(
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     val transDomain = AsmTransformDomainDefault(
-        name = SimpleName("FromGrammar" + grammarDomain.allDefinitions.last().name.value),
+        name = grammarDomain.allDefinitions.last().name,
         namespace = emptyList()
     ).also {
         it.typesDomain = typesDomain

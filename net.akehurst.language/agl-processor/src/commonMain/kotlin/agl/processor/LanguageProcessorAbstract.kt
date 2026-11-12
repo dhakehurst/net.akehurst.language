@@ -126,7 +126,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         val res = configuration.crossReferenceResolver?.invoke(this)
         res?.let { this.allIssues.addAllFrom(res.allIssues) }
-        res?.asm ?: CrossReferenceDomainDefault(SimpleName("FromGrammar" + grammarDomain.name.value))
+        res?.asm ?: CrossReferenceDomainDefault(this.targetGrammar?.name ?: grammarDomain.name)
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
