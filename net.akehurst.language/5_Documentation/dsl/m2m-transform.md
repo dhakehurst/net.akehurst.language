@@ -117,6 +117,8 @@ top mapping CircleToLabel {
 
 Result: the discs `c` and `d`, and `'disc c'`, `'disc d'`.
 
+If `R` has not been applied yet for those values, it is applied first, so the order of the `top` rules does not matter.
+
 ## table
 
 A `table` is a rule given as a list of values, one column per domain. Call it from `where`:
@@ -158,6 +160,8 @@ mapping CircleToDisc(prefix:String) {
 ```
 
 Result: one `Drawing` with the discs `disc-c` and `disc-d`. Items that are not a `Circle` are skipped.
+
+A rule is applied at most once for the same variable binding, so a `top` rule that is also called from `where` or `when` gives no duplicate targets.
 
 ## Abstract rules
 

@@ -230,6 +230,47 @@ class test_Doc_M2mTransform {
     }
 
     @Test
+    fun when_rule_applied_first_order_does_not_matter() {
+        // m2m-transform.md: "when" - a rule in when is applied first if needed
+        val actual = transform(
+            """
+            top mapping CircleToLabel {
+              domain s c:Circle { name == n }
+              domain d l:String := 'disc ' + x.label
+              when { related CircleDisc { s := c  d := x } }
+            }
+            top relation CircleDisc {
+              domain s c:Circle { name == n }
+              domain d disc:Disc { label == n }
+            }
+            """
+        )
+        assertEquals(setOf(disc("c"), disc("d"), "'disc c'", "'disc d'"), actual.toSet())
+        assertEquals(4, actual.size)
+    }
+
+    @Test
+    fun rule_applied_once_per_binding() {
+        // m2m-transform.md: "Calling rules" - a top rule also called from where gives no duplicates
+        val actual = transform(
+            """
+            top mapping UnitToDrawing {
+              domain s u:Unit { item == items }
+              domain d dr:Drawing := Drawing() { discs := ds }
+              where { map all CircleToDisc { s := items  d := ds } }
+            }
+            top mapping CircleToDisc {
+              domain s c:Circle { name == n }
+              domain d disc:Disc := Disc() { label := n }
+            }
+            """,
+            input = listOf(ogS.toTypedObject(unit, StdLibDefault.AnyType)) + items
+        )
+        assertEquals(3, actual.size, actual.joinToString("\n"))   // the Drawing and the 2 discs, each once
+        assertEquals(2, actual.count { it == disc("c") || it == disc("d") })
+    }
+
+    @Test
     fun table() {
         // m2m-transform.md: "table"
         val actual = transform(
