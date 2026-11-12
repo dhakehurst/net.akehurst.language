@@ -130,19 +130,18 @@ class ReferencesSemanticAnalyser(
         scopeDef.identifiables.forEach { identifiable ->
             val identifiedType = findReferredToType(identifiable.typeName, importedNamespaces)
             //val typeScope = context.rootScope.childScopes[identifiable.typeName]
-            val identifiedBy = identifiable.identifiedBy
             when {
                 null == identifiedType -> {
                     raiseError(ReferencesSyntaxAnalyser.PropertyValue(identifiable, "simpleTypeName"), "Type to identify '${identifiable.typeName}' not found")
                 }
 
-                else -> {
+                else -> identifiable.identifiedByAlternatives.forEach { identifiedBy ->
                     val identifyingProperty = _typeResolver!!.typeFor(identifiedBy, identifiedType.type())
                     when (identifyingProperty) {
                         StdLibDefault.NothingType -> {
                             raiseError(
                                 ReferencesSyntaxAnalyser.PropertyValue(identifiable, "expression"),
-                                "$msgStart, '${identifiable.identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
+                                "$msgStart, '${identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
                             )
                         }
                     }

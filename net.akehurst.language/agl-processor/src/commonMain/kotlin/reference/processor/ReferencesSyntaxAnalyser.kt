@@ -49,6 +49,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::scope)
         super.register(this::identifiables)
         super.register(this::identifiable)
+        super.register(this::identifyingExpressions)
         super.register(this::visibility)
         super.register(this::aliasFor)
         super.register(this::scopeImports)
@@ -140,17 +141,22 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         return scope
     }
 
+    // identifyingExpressions = [expression / '|']+ ;
+    private fun identifyingExpressions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> =
+        (children as List<Any?>).toSeparatedList<Any?, Expression, String>().items
+
     // identifiables = identifiable*
     private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<IdentifiableDefault> =
         (children as List<IdentifiableDefault>?) ?: emptyList()
 
-    // identifiable = 'identify' possiblyQualifiedTypeReference 'by' expression visibility? aliasFor? ;
+    // identifiable = 'identify' possiblyQualifiedTypeReference 'by' identifyingExpressions visibility? aliasFor? ;
     private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IdentifiableDefault {
         val simpleTypeName = children[1] as PossiblyQualifiedName
-        val expression = children[3] as Expression
+        val alternatives = children[3] as List<Expression>
+        val expression = alternatives.first()
         val visibility = children[4] as Expression?
         val aliasFor = children[5] as NavigationExpression?
-        val identifiable = IdentifiableDefault(simpleTypeName, expression, visibility, aliasFor)
+        val identifiable = IdentifiableDefault(simpleTypeName, expression, visibility, aliasFor, alternatives)
         locationMap.add(ParsePath(), PropertyValue(identifiable, "simpleTypeName"), locationMap[simpleTypeName]!!)
         locationMap.add(ParsePath(), PropertyValue(identifiable, "expression"), locationMap[expression]!!)
 //        locationMap[PropertyValue(identifiable, "simpleTypeName")] = locationMap[simpleTypeName]!!
