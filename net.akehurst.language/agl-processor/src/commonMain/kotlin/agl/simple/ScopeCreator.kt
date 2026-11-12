@@ -43,7 +43,9 @@ class ScopeCreator(
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
     val identifyingValueInFor:  (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
     val locationMap: LocationMap,
-    val issues: IssueHolder
+    val issues: IssueHolder,
+    /** further names of an element ('identify T by a | b': the values of b ...), it is added to the scope under each of them too */
+    val otherIdentifyingValuesInFor: (inTypeName: QualifiedName, item: AsmStructure) -> List<Any> = { _, _ -> emptyList() }
 ) : AsmTreeWalker {
 
     val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
@@ -145,6 +147,7 @@ class ScopeCreator(
             scopeLocalReference is String -> {
                 val ref = scopeLocalReference
                 addToScopeAs(scope, el, ref)
+                otherIdentifyingValuesInFor.invoke(inTypeName, el).filterIsInstance<String>().forEach { addToScopeAs(scope, el, it, isFurtherName = true) }
             }
 
             // List<String>
@@ -195,7 +198,8 @@ class ScopeCreator(
         }
     }
 
-    private fun addToScopeAs(scope: Scope, el: AsmStructure, referableName: String) {
+    /** isFurtherName: 'referableName' is not the first name of 'el' ('identify T by a | b'), so it does not give the element's semantic path */
+    private fun addToScopeAs(scope: Scope, el: AsmStructure, referableName: String, isFurtherName: Boolean = false) {
         val scopeItem = context.createScopedItem.invoke(scope.scopePath + referableName, el, this.locationMap[el])
         val existingItems = context.findItemsNamedConformingTo(referableName) { itemTypeName ->
             val itemType = typesDomain.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")
@@ -207,7 +211,7 @@ class ScopeCreator(
             notSameLocation.isEmpty() -> {
                 scope.addToScope(referableName, el.qualifiedTypeName, this.locationMap[el]?.sentenceIdentity, scopeItem, replaceIfItemAlreadyExistsInScope)
                 // can also set the semantic identity of the AsmStructure
-                el.setSemanticQualifiedPath(scope.scopePath+referableName)
+                if (isFurtherName.not()) el.setSemanticQualifiedPath(scope.scopePath+referableName)
             }
                 //existingItems.all { it.item != scopeItem } -> scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
             else -> {

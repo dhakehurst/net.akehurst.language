@@ -81,8 +81,40 @@ class SemanticAnalyserSimple(
             self: AsmStructure,
             onAmbiguous: ((message: String) -> Unit)? = null
         ): Any? {
-            val exp = identifyingExpressionFor(interpreter.typesDomain, crossReferenceDomain, inScopeForTypeQualifiedName, self.qualifiedTypeName, onAmbiguous)
-            return identifyingValueOf(interpreter, exp, self)
+            return identifyingValuesInFor(interpreter, crossReferenceDomain, inScopeForTypeQualifiedName, self, onAmbiguous).firstOrNull()
+        }
+
+        /**
+         * the identifying expressions ('identify T by a | b') for an element of type 'typeQualifiedName' in the scope created by an element of type 'scopeForTypeQualifiedName',
+         * empty if none or ambiguous
+         */
+        fun identifyingAlternativesFor(
+            typesDomain: TypesDomain,
+            crossReferenceDomain: CrossReferenceDomain,
+            scopeForTypeQualifiedName: QualifiedName,
+            typeQualifiedName: QualifiedName,
+            onAmbiguous: ((message: String) -> Unit)? = null
+        ): List<Expression> {
+            val exp = identifyingExpressionFor(typesDomain, crossReferenceDomain, scopeForTypeQualifiedName, typeQualifiedName, onAmbiguous)
+            return when (exp) {
+                null -> emptyList()
+                else -> crossReferenceDomain.identifyingExpressionFor(typesDomain, scopeForTypeQualifiedName, typeQualifiedName).singleOrNull?.identifiedByAlternatives ?: listOf(exp)
+            }
+        }
+
+        /**
+         * the values of all identifying expressions ('identify T by a | b') of 'self' that have one, in order, without repeats.
+         * The first is the element's name, the others are further names for it.
+         */
+        fun identifyingValuesInFor(
+            interpreter: ExpressionsInterpreterOverTypedObject,
+            crossReferenceDomain: CrossReferenceDomain,
+            inScopeForTypeQualifiedName: QualifiedName,
+            self: AsmStructure,
+            onAmbiguous: ((message: String) -> Unit)? = null
+        ): List<Any> {
+            val exps = identifyingAlternativesFor(interpreter.typesDomain, crossReferenceDomain, inScopeForTypeQualifiedName, self.qualifiedTypeName, onAmbiguous)
+            return exps.mapNotNull { identifyingValueOf(interpreter, it, self) }.distinct()
         }
 
         private fun identifyingValueOf(interpreter: ExpressionsInterpreterOverTypedObject, exp: Expression?, self: AsmStructure): Any? = when (exp) {
@@ -211,7 +243,8 @@ class SemanticAnalyserSimple(
                     options.replaceIfItemAlreadyExistsInScope,
                     options.ifItemAlreadyExistsInScopeIssueKind,
                     { scopeType: QualifiedName, el: AsmStructure -> identifyingValueInFor(scopeType, el) },
-                    _locationMap, _issues
+                    _locationMap, _issues,
+                    { scopeType: QualifiedName, el: AsmStructure -> identifyingValuesInFor(_interpreter, crossReferenceDomain, scopeType, el).drop(1) }
                 )
                 asm.traverseDepthFirst(scopeCreator)
             }

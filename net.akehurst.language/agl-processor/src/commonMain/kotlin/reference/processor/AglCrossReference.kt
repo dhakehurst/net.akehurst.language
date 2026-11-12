@@ -55,7 +55,8 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 scopes = scope* ;
                 scope = 'scope' possiblyQualifiedTypeReference '{' identifiables scopeImports '}' ;
                 identifiables = identifiable* ;
-                identifiable = 'identify' possiblyQualifiedTypeReference 'by' expression visibility? aliasFor? ;
+                identifiable = 'identify' possiblyQualifiedTypeReference 'by' identifyingExpressions visibility? aliasFor? ;
+                identifyingExpressions = [expression / '|']+ ;
                 visibility = 'visibility' expression ;
                 aliasFor = 'alias-for' rootOrNavigation ;
                 scopeImports = scopeImport* ;
@@ -161,8 +162,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     list("identifiables", 0, -1) { ref("identifiable") }
                     concatenation("identifiable") {
-                        lit("identify"); ref("possiblyQualifiedTypeReference"); lit("by"); ref("expression"); opt { ref("visibility") }; opt { ref("aliasFor") }
+                        lit("identify"); ref("possiblyQualifiedTypeReference"); lit("by"); ref("identifyingExpressions"); opt { ref("visibility") }; opt { ref("aliasFor") }
                     }
+                    separatedList("identifyingExpressions", 1, -1) { ref("expression"); lit("|") }
                     concatenation("visibility") { lit("visibility"); ref("expression") }
                     concatenation("aliasFor") { lit("alias-for"); ref("rootOrNavigation") }
                     list("scopeImports", 0, -1) { ref("scopeImport") }
@@ -328,9 +330,13 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         parameter(setOf(), "identifiedBy", "Expression")
                         parameter(setOf(), "visibility", "Expression")
                         parameter(setOf(), "aliasFor", "NavigationExpression")
+                        parameter(setOf(), "identifiedByAlternatives", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "aliasFor", "NavigationExpression", true)
                     propertyOf(setOf(VAL, CMP, STR), "identifiedBy", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "identifiedByAlternatives", "List", false){
+                        typeArgument("Expression")
+                    }
                     propertyOf(setOf(VAL, CMP, STR), "typeName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
                 }
