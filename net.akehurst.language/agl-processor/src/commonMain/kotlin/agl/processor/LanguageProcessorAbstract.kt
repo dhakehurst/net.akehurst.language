@@ -105,7 +105,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val res = configuration.typesResolver?.invoke(this)
         res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm?.let { td -> GrammarTypesNamespaceSimple.withGrammarNamespaces(td, this.grammarDomain.allDefinitions.map { it.qualifiedName }) }
-            ?: typesDomain("FromGrammar" + this.grammarDomain.name.value, true) {}
+            ?: typesDomain((this.targetGrammar?.name ?: this.grammarDomain.name).value, true) {}
     }
 
     override val typesDomain: TypesDomain get() = this.transformDomain.typesDomain ?: error("Should not happen")
