@@ -126,7 +126,10 @@ interface AsmListSeparated {
                 }
                 data("AsmSimple") {
                     supertype("Asm")
-                    constructor_ {}
+                    constructor_ {
+                        // the objectGraph is not serialised (it is not a property here), so it is null when deserialised
+                        parameter(setOf(), "objectGraph", "Any", true)
+                    }
                     propertyOf(setOf(VAR, REF, STR), "elementIndex", "Map", false){
                         typeArgument("AsmPath")
                         typeArgument("AsmStructure")
