@@ -133,7 +133,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     // the body of the lambda is captured by createLambdaValue, so it cannot share an inline body
     private fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValue { it ->
-            val newEvc = evc.child(mapOf("it" to it))
+            val newEvc = evc.child(mapOf(lambdaParameterName(expression) to it))
             evaluateExpression(newEvc, expression.expression)
         }
         return lambda
@@ -230,7 +230,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     // the body of the lambda is captured by createLambdaValueSuspend, so it cannot share an inline body
     private suspend fun evaluateLambdaSuspend(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValueSuspend { it ->
-            val newEvc = evc.child(mapOf("it" to it))
+            val newEvc = evc.child(mapOf(lambdaParameterName(expression) to it))
             evaluateExpressionSuspend(newEvc, expression.expression)
         }
         return lambda
@@ -411,6 +411,8 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
 
             else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
         }
+
+        "<", "<=", ">", ">=" -> evaluateComparisonOperator(objectGraph, lhs, op, rhs)
 
         // arithmetic
         "/" -> when {

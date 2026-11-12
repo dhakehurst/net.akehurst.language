@@ -163,8 +163,8 @@ class ExpressionTypeResolver(
     }
 
     private fun typeOfInfixOperator(lhs: TypeInstance, op: String, rhs: TypeInstance): TypeInstance = when (op) {
-        "==" -> StdLibDefault.Boolean
-        "+" -> lhs
+        "==", "!=", "<", "<=", ">", ">=", "and", "or", "xor" -> StdLibDefault.Boolean
+        "+", "-", "*", "/", "%" -> lhs
         else -> error("Unsupported Operator '$op'")
     }
 
