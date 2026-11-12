@@ -37,22 +37,28 @@ class ResolveScopedItemDefault : ResolveScopedItem {
     override fun invoke(itemInScope: Any): Any? = itemInScope as Any?
 }
 
+/**
+ * the sentence identity used for the scope of a sentence that has no identity.
+ * Top level (not nested) so that it can be found by reflection when a context is deserialised.
+ */
+object NULL_SENTENCE_IDENTIFIER {
+    override fun toString() = "NULL_SENTENCE_IDENTIFIER"
+}
+
 class SentenceContextAny(
     override val createScopedItem: CreateScopedItem = CreateScopedItemDefault(),
-    override val resolveScopedItem: ResolveScopedItem = ResolveScopedItemDefault()
+    override val resolveScopedItem: ResolveScopedItem = ResolveScopedItemDefault(),
+    /**
+     * sentenceIdentity -> root scope of that sentence.
+     * A constructor parameter so that a deserialised context gets its scopes back.
+     */
+    override val scopeForSentence: MutableMap<Any, ScopeSimple> = mutableMapOf()
 ) : SentenceContext {
-
-    companion object {
-        object NULL_SENTENCE_IDENTIFIER {
-            override fun toString() = "NULL_SENTENCE_IDENTIFIER"
-        }
-    }
 
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
     //var rootScope = ScopeSimple<ItemInScopeType>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
-    override val scopeForSentence = mutableMapOf<Any, ScopeSimple>()
 
     val isEmpty: Boolean get() = scopeForSentence.all { (k, v) -> v.isEmpty }
 

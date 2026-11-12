@@ -283,7 +283,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         parameter(setOf(), "referringPropertyNavigation", "NavigationExpression")
                         parameter(setOf(), "refersToTypeName", "List")
                         parameter(setOf(), "fromNavigation", "NavigationExpression")
+                        parameter(setOf(), "condition", "Expression")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
                     propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", false)
                     propertyOf(setOf(VAL, CMP, STR), "referringPropertyNavigation", "NavigationExpression", false)
                     propertyOf(setOf(VAR, REF, STR), "refersToTypeName", "List", false){
@@ -324,9 +326,13 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     constructor_ {
                         parameter(setOf(), "typeName", "PossiblyQualifiedName")
                         parameter(setOf(), "identifiedBy", "Expression")
+                        parameter(setOf(), "visibility", "Expression")
+                        parameter(setOf(), "aliasFor", "NavigationExpression")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "aliasFor", "NavigationExpression", true)
                     propertyOf(setOf(VAL, CMP, STR), "identifiedBy", "Expression", false)
                     propertyOf(setOf(VAL, CMP, STR), "typeName", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
                 }
                 data("DeclarationsForNamespaceDefault") {
                     supertype("DeclarationsForNamespace")
