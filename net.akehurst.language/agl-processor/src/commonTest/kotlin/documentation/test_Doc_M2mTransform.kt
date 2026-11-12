@@ -193,6 +193,44 @@ class test_Doc_M2mTransform {
     }
 
     @Test
+    fun when_related() {
+        // m2m-transform.md: "when" - related (D23)
+        val actual = transform(
+            """
+            top relation CircleDisc {
+              domain s c:Circle { name == n }
+              domain d disc:Disc { label == n }
+            }
+            top mapping CircleToLabel {
+              domain s c:Circle { name == n }
+              domain d l:String := 'disc ' + x.label
+              when { related CircleDisc { s := c  d := x } }
+            }
+            """
+        )
+        assertEquals(setOf(disc("c"), disc("d"), "'disc c'", "'disc d'"), actual.toSet())
+    }
+
+    @Test
+    fun when_mapped() {
+        // m2m-transform.md: "when" - mapped (D23), fails until implemented
+        val actual = transform(
+            """
+            top mapping CircleToDisc {
+              domain s c:Circle { name == n }
+              domain d disc:Disc := Disc() { label := n }
+            }
+            top mapping CircleToLabel {
+              domain s c:Circle { name == n }
+              domain d l:String := 'disc ' + x.label
+              when { mapped CircleToDisc { s := c  d := x } }
+            }
+            """
+        )
+        assertEquals(setOf(disc("c"), disc("d"), "'disc c'", "'disc d'"), actual.toSet())
+    }
+
+    @Test
     fun table() {
         // m2m-transform.md: "table"
         val actual = transform(
