@@ -208,6 +208,13 @@ interface ReferenceExpressionProperty : ReferenceExpression {
     val fromNavigation: NavigationExpression?
 
     /**
+     * 'from \$previous.p else <navigation>': for the first element of a 'forall' (it has no previous element),
+     * the reference is looked up in the members of the target of the reference reached by <navigation> from the element of the 'in'
+     * (e.g. the base of an expression chain 'f.h'). When <navigation> does not reach a reference, the normal lookup is used.
+     */
+    val fromElseNavigation: NavigationExpression? get() = null
+
+    /**
      * if not null, this reference expression applies only when the condition (evaluated on the referring element) is true.
      * Of several reference expressions for the same property, the first that applies is used.
      */

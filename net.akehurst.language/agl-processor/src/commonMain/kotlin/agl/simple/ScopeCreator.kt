@@ -51,6 +51,11 @@ class ScopeCreator(
     val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
 
     override  fun beforeRoot(root: Any) {
+        // the root element owns the root scope of the sentence (it is not an item in any scope), so that a 'scope' block for its type applies (e.g. imports at file level)
+        if (root is AsmStructure) {
+            val rootScope = currentScope.peek()
+            rootScope.ownerItem = context.createScopedItem.invoke(rootScope.scopePath, root, this.locationMap[root])
+        }
     }
 
     override  fun afterRoot(root: Any) {
