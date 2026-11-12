@@ -99,6 +99,10 @@ class test_Expressions_docsBugs {
         "num >= 3" to true,
         "1 < 2.5" to true,
         "1 < 2 and 3 < 4" to true,
+        "'abc' < 'abd'" to true,
+        "'b' <= 'a'" to false,
+        "aList[1].prop1 > aList[0].prop1" to true,
+        "'abc' >= 'abc'" to true,
         // ternary with a comparison condition
         "num > 2 ? 'many' : 'few'" to "many",
         "(num > 5) ? 'many' : 'few'" to "few",
