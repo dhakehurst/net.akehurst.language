@@ -470,16 +470,20 @@ class RuntimeRuleSet(
             val cr = RuntimeRule(cloneNumber, rr.number, rr.name, rr.isSkip, rr.isPseudo)
             Pair(rr.tag, cr)
         }
+        // rules shared by all rule sets (e.g. <EMPTY>) are not in runtimeRules, they are used as they are
+        val shared = listOf(EMPTY, EMPTY_LIST, END_OF_TEXT, USE_RUNTIME_LOOKAHEAD, ANY_LOOKAHEAD, UNDEFINED_RULE).associateBy { it.tag }
+        val ruleMap = shared + clonedRules
         this.runtimeRules.forEach {
             val cr = clonedRules[it.tag] ?: error("Internal Error: cannot find cloned rule with tag '${it.tag}' ")
-            cr.setRhs(it.rhs.clone(clonedRules))
+            cr.setRhs(it.rhs.clone(ruleMap))
         }
         val rules = clonedRules.values.toList()
+        fun cloned(rr: RuntimeRule) = ruleMap[rr.tag] ?: error("Internal Error: cannot find cloned rule with tag '${rr.tag}' ")
         val clonedPrecedenceRules = this.precedenceRules.map {
-            val clonedCtx = clonedRules[it.contextRule.tag]!!
+            val clonedCtx = cloned(it.contextRule as RuntimeRule)
             val clonedPrecRules = (it as RuntimePreferenceRule).options.map { pr ->
-                val cTgt = pr.spine.map { clonedRules[it.tag]!! }
-                val cOp = pr.operators.map { clonedRules[it.tag]!! }.toSet()
+                val cTgt = pr.spine.map { cloned(it) }
+                val cOp = pr.operators.map { cloned(it) }.toSet()
                 RuntimePreferenceRule.RuntimePreferenceOption(pr.precedence, cTgt, pr.option, cOp, pr.associativity)
             }
             RuntimePreferenceRule(clonedCtx, clonedPrecRules)

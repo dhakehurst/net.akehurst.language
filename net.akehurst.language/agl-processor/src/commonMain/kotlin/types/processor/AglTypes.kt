@@ -130,10 +130,10 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
             interface PropertyDeclaration {
                 cmp typeInstance
             }
-            interface ConstructorDeclaration {
+            interface ConstructorDefinition {
                 cmp parameters
             }
-            interface MethodDeclaration {
+            interface MethodDefinition {
                 cmp parameters
             }
             interface ParameterDeclaration {
@@ -285,7 +285,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                 interface_("ValueType") {
                     supertype("StructuredType")
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
-                        typeArgument("ConstructorDeclaration")
+                        typeArgument("ConstructorDefinition")
                     }
                 }
                 interface_("UnionType") {
@@ -347,16 +347,16 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
 
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
-                interface_("MethodDeclarationResolved") {
-                    supertype("MethodDeclaration")
+                interface_("MethodDefinitionResolved") {
+                    supertype("MethodDefinition")
                 }
-                interface_("MethodDeclarationPrimitive") {
-                    supertype("MethodDeclaration")
+                interface_("MethodDefinitionPrimitive") {
+                    supertype("MethodDefinition")
                 }
-                interface_("MethodDeclarationDerived") {
-                    supertype("MethodDeclaration")
+                interface_("MethodDefinitionDerived") {
+                    supertype("MethodDefinition")
                 }
-                interface_("MethodDeclaration") {
+                interface_("MethodDefinition") {
 
                     propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
@@ -371,10 +371,10 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                 interface_("DataType") {
                     supertype("StructuredType")
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
-                        typeArgument("ConstructorDeclaration")
+                        typeArgument("ConstructorDefinition")
                     }
                 }
-                interface_("ConstructorDeclaration") {
+                interface_("ConstructorDefinition") {
 
                     propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
@@ -395,7 +395,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         parameter(setOf(), "name", "SimpleName")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
-                        typeArgument("ConstructorDeclaration")
+                        typeArgument("ConstructorDefinition")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
@@ -430,7 +430,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     }
                     propertyOf(setOf(VAL, REF, STR), "context", "TypeDefinition", false)
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STR), "resolvedDeclarationOrNull", "TypeDefinition", false)
+                    propertyOf(setOf(VAL, REF, STR), "resolvedDefinitionOrNull", "TypeDefinition", false)
                     propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
                         typeArgument("TypeArgument")
                     }
@@ -509,7 +509,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         typeArgument("String")
                     }
                     propertyOf(setOf(VAR, REF, STR), "method", "List", false) {
-                        typeArgument("MethodDeclaration")
+                        typeArgument("MethodDefinition")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                     propertyOf(setOf(VAR, CMP, STR), "propertyByIndex", "Map", false) {
@@ -565,7 +565,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     }
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
-                    propertyOf(setOf(VAL, REF, STR), "resolvedDeclaration", "TypeDefinition", false)
+                    propertyOf(setOf(VAL, REF, STR), "resolvedDefinition", "TypeDefinition", false)
                     propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
                         typeArgument("TypeArgumentNamed")
                     }
@@ -689,16 +689,18 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         parameter(setOf(), "name", "ParameterName")
                         parameter(setOf(), "typeInstance", "TypeInstance")
                         parameter(setOf(), "defaultValue", "String")
+                        parameter(setOf(), "property", "PropertyDeclaration")
                     }
                     propertyOf(setOf(VAL, REF, STR), "defaultValue", "String", false)
                     propertyOf(setOf(VAL, CMP, STR), "name", "ParameterName", false)
+                    propertyOf(setOf(VAL, REF, STR), "property", "PropertyDeclaration", true)
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
-                data("MethodDeclarationResolvedSimple") {
-                    supertype("MethodDeclarationAbstract")
-                    supertype("MethodDeclarationResolved")
+                data("MethodDefinitionResolvedSimple") {
+                    supertype("MethodDefinitionAbstract")
+                    supertype("MethodDefinitionResolved")
                     constructor_ {
-                        parameter(setOf(), "original", "MethodDeclaration")
+                        parameter(setOf(), "original", "MethodDefinition")
                         parameter(setOf(), "owner", "TypeDefinition")
                         parameter(setOf(), "name", "MethodName")
                         parameter(setOf(), "parameters", "List")
@@ -707,16 +709,34 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     }
                     propertyOf(setOf(VAL, REF, STR), "description", "String", false)
                     propertyOf(setOf(VAL, CMP, STR), "name", "MethodName", false)
-                    propertyOf(setOf(VAL, REF, STR), "original", "MethodDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STR), "original", "MethodDefinition", false)
                     propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
                     propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
                     }
                     propertyOf(setOf(VAL, REF, STR), "returnType", "TypeInstance", false)
                 }
-                data("MethodDeclarationDerivedSimple") {
-                    supertype("MethodDeclarationAbstract")
-                    supertype("MethodDeclarationDerived")
+                data("MethodDefinitionPrimitiveSimple") {
+                    supertype("MethodDefinitionAbstract")
+                    supertype("MethodDefinitionPrimitive")
+                    constructor_ {
+                        parameter(setOf(), "owner", "TypeDefinition")
+                        parameter(setOf(), "name", "MethodName")
+                        parameter(setOf(), "parameters", "List")
+                        parameter(setOf(), "returnType", "TypeInstance")
+                        parameter(setOf(), "description", "String")
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "description", "String", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "MethodName", false)
+                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
+                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
+                        typeArgument("ParameterDeclaration")
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "returnType", "TypeInstance", false)
+                }
+                data("MethodDefinitionDerivedSimple") {
+                    supertype("MethodDefinitionAbstract")
+                    supertype("MethodDefinitionDerived")
                     constructor_ {
                         parameter(setOf(), "owner", "TypeDefinition")
                         parameter(setOf(), "name", "MethodName")
@@ -734,8 +754,8 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     }
                     propertyOf(setOf(VAL, REF, STR), "returnType", "TypeInstance", false)
                 }
-                data("MethodDeclarationAbstract") {
-                    supertype("MethodDeclaration")
+                data("MethodDefinitionAbstract") {
+                    supertype("MethodDefinition")
                     constructor_ {}
                 }
                 data("InterfaceTypeSimple") {
@@ -773,7 +793,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         parameter(setOf(), "name", "SimpleName")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
-                        typeArgument("ConstructorDeclaration")
+                        typeArgument("ConstructorDefinition")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
@@ -781,8 +801,8 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         typeArgument("TypeInstance")
                     }
                 }
-                data("ConstructorDeclarationSimple") {
-                    supertype("ConstructorDeclaration")
+                data("ConstructorDefinitionSimple") {
+                    supertype("ConstructorDefinition")
                     constructor_ {
                         parameter(setOf(), "owner", "TypeDefinition")
                         parameter(setOf(), "parameters", "List")
