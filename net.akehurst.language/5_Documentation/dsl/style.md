@@ -47,6 +47,11 @@ A rule is `selectors { name: value; ... }`. Several selectors are separated by `
 | `"[0-9]+"` | that pattern, as written in the grammar |
 | `NAME` | the rule `NAME` |
 | `$nostyle` | everything that no other rule styles (the default style) |
+| `$keyword` | every word-like literal, the same as `$$ "'[a-zA-Z_][a-zA-Z0-9_-]*'"` |
+
+A meta rule `$$ "regex" { ... }` styles every terminal whose text **as written in the grammar** matches the regex,
+quotes included: `$$ "'[^a-zA-Z]+'"` styles all punctuation literals such as `'{'` and `','`.
+A meta rule that matches no terminal gives a warning.
 
 The declarations are CSS-like `name: value;` pairs; the editor decides which names it supports.
 `styles B : A { }` extends style set `A`.

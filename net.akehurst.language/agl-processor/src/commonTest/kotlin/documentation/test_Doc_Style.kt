@@ -64,4 +64,29 @@ class test_Doc_Style {
         assertEquals(listOf(listOf("\$nostyle"), listOf("'circle'", "'square'", "'connect'"), listOf("NAME", "NUMBER"), listOf("COMMENT")), rules.map { r -> r.selector.map { it.value } })
         assertEquals("bold", rules[1].declaration["font-weight"]?.value)
     }
+
+    @Test
+    fun keyword_and_meta_rule() {
+        // style.md: "Syntax" ($keyword and $$ meta rule)
+        val style = $$"""
+            namespace example
+            styles Shapes {
+                $keyword {
+                    font-weight: bold;
+                }
+                $$ "'[^a-zA-Z]+'" {
+                    foreground: gray;
+                }
+            }
+        """.trimIndent()
+        val definition = Agl.languageDefinitionFromStringSimple(
+            LanguageIdentity("example.Shapes2"),
+            GrammarString(SHAPES_GRAMMAR),
+            styleStr = StyleString(style)
+        )
+        val styleSet = definition.styleDomain!!.allDefinitions.single()
+        assertTrue(definition.issues.errors.isEmpty(), definition.issues.toString())
+        assertEquals(listOf("\$keyword"), styleSet.tagRules.single().selector.map { it.value })
+        assertEquals(1, styleSet.metaRules.size)
+    }
 }
