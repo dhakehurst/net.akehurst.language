@@ -1,0 +1,2 @@
+package P {
+    classifier A;
