@@ -53,5 +53,9 @@ A meta rule `$$ "regex" { ... }` styles every terminal whose text **as written i
 quotes included: `$$ "'[^a-zA-Z]+'"` styles all punctuation literals such as `'{'` and `','`.
 A meta rule that matches no terminal gives a warning.
 
+When several rules match a token, they combine like CSS: start from `$nostyle`, then apply each matching rule
+in the order written; a later rule overrides only the declarations it sets.
+So `$keyword { font-weight: bold; }` then `'circle' { foreground: red; }` makes `circle` bold and red.
+
 The declarations are CSS-like `name: value;` pairs; the editor decides which names it supports.
 `styles B : A { }` extends style set `A`.
