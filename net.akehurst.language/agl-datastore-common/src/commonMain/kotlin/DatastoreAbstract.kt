@@ -1,7 +1,10 @@
 package net.akehurst.datastore.common
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.akehurst.datastore.api.DataItem
@@ -11,6 +14,7 @@ import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreObjectTyping
+import net.akehurst.datastore.api.DatastoreTestResult
 import net.akehurst.datastore.api.TransactionState
 import net.akehurst.kotlinx.secure.storage.SecretSourceRegistry
 import net.akehurst.kotlinx.secure.storage.SecretSourceRegistryDefault
@@ -37,6 +41,10 @@ import net.akehurst.language.types.api.TypesDomain
  * which suits a datastore that does not change anything (e.g. one that only formats text).
  *
  * Each item a datastore outputs gets its provenance from provenanceFor(); override it to give a custom provenance.
+ *
+ * testConnection() and testAccess() have defaults: testConnection opens and closes the datastore, testAccess reads at most
+ * 'limit' items. A provider overrides them where it knows a better cheap test (e.g. counting items without reading them),
+ * and can use whileOpenForTest() to open and close as the defaults do.
  */
 abstract class DatastoreAbstract(
     override val identity: DatastoreIdentity,
@@ -205,6 +213,43 @@ abstract class DatastoreAbstract(
     }
 
     /**
+     * Runs 'block' with the datastore open: opens it if it is not open, and closes it again afterwards if it opened it.
+     * Never throws (except for cancellation): a failure of open, 'block' or close is a result with success = false and the
+     * failure's message. For testConnection() and testAccess().
+     */
+    protected suspend fun whileOpenForTest(block: suspend () -> DatastoreTestResult): DatastoreTestResult {
+        val openedHere = _isOpen.not()
+        return try {
+            if (openedHere) open()
+            val result = try {
+                block()
+            } finally {
+                if (openedHere) close()
+            }
+            result
+        } catch (e: CancellationException) {
+            throw e
+        } catch (t: Throwable) {
+            DatastoreTestResult(success = false, message = testFailureMessage(t))
+        }
+    }
+
+    /** opens (if not open) and closes again; "Connected", or the failure's message */
+    override suspend fun testConnection(): DatastoreTestResult = whileOpenForTest {
+        DatastoreTestResult(success = true, message = "Connected")
+    }
+
+    /** reads at most 'limit' items: read(access, input).take(limit); itemCount = the number read, with a warning if none */
+    override suspend fun testAccess(access: DatastoreConfiguration, input: Flow<DataItem>, limit: Int): DatastoreTestResult = whileOpenForTest {
+        require(limit >= 1) { "The limit must be at least 1, it is $limit" }
+        val n = read(access, input).take(limit).count()
+        when (n) {
+            0 -> DatastoreTestResult(success = true, message = "Access works, but no items were found", itemCount = 0, warnings = listOf("No items were found"))
+            else -> DatastoreTestResult(success = true, message = "Read $n item(s)", itemCount = n)
+        }
+    }
+
+    /**
      * the provenance of an item this datastore outputs (read or write).
      * Override it to give a custom provenance. By default a DatastoreProvenance of this datastore's identity.
      * @param input the item the output item was produced from, or null if it was read from the store itself (e.g. a file)
@@ -226,3 +271,6 @@ abstract class DatastoreAbstract(
 data class DatastoreProvenance(
     val datastoreIdentity: DatastoreIdentity
 ) : DataItemProvenance
+
+/** the message of a failed test: the failure's message, or else its class name */
+fun testFailureMessage(t: Throwable): String = t.message?.takeIf { it.isNotBlank() } ?: t::class.simpleName ?: "Failed"
