@@ -146,12 +146,11 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     fun scan(sentence: String, options: ScanOptions?=null): ScanResult
 
     /**
-     * Parse the sentence using the grammar for this language and output a SharedPackedParseTree.
-     * Parsing is performed without scanning up front, tokens are scanned for on-demand during the parse process.
+     * Parse the sentence using the grammar for this language and output a SharedPackedParseTree (result.sppt).
+     * With the default OnDemand scanner, tokens are scanned for during the parse.
      *
-     * @param goalRuleName - if null the first non skip rule defined in the grammar is used
      * @param sentence the sentence to parse
-     * @param automatonKind default LOOKAHEAD_1
+     * @param options e.g. `Agl.parseOptions { goalRuleName("rule") }`; if no goal is given the default goal rule is used
      */
     fun parse(sentence: String, options: ParseOptions? = null): ParseResult//Pair<SharedPackedParseTree?, List<LanguageIssue>>
 
@@ -161,12 +160,14 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     fun syntaxAnalysis(sppt: SharedPackedParseTree, options: ProcessOptions<AsmType, ContextType>? = null): SyntaxAnalysisResult<AsmType>
 
     /**
-     *
+     * Analyse the ASM, e.g. resolve and check references. Needs a sentence context in the options, e.g.
+     * `Agl.options { semanticAnalysis { sentenceContext(contextAsmSimple()) } }`
      */
      fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): SemanticAnalysisResult
 
     /**
-     * Process the sentence, performing all phases where possible.
+     * Process the sentence, performing all phases where possible: parse, syntax analysis (result.asm), semantic analysis.
+     * result.allIssues holds the issues from all phases.
      */
     fun process(
         sentence: String,
@@ -176,10 +177,13 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     //fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
 
     /**
-     *
+     * Process the sentence, then format its ASM as text using the format definition of this language.
      */
      fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
 
+    /**
+     * Format the ASM as text using the format set named like the target grammar's qualified name.
+     */
      fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
 
     /**

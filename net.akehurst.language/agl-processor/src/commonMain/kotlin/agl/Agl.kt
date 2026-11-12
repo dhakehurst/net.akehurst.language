@@ -60,17 +60,27 @@ import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesDomainSimple
 
+/**
+ * The entry point to AGL: create language processors, options and configurations,
+ * and evaluate expressions, formats and model transforms.
+ * See 5_Documentation/GETTING_STARTED.md.
+ */
 object Agl {
 
+    /** the version of this AGL library */
     val version: String = BuildConfig.version
     val buildStamp: String = BuildConfig.buildStamp
 
+    /** the registry of known languages, including the AGL DSLs themselves (`registry.agl.grammar`, `registry.agl.style`, ...) */
     val registry: LanguageRegistry = LanguageRegistryDefault()
 
+    /** a configuration with nothing set */
     fun <AsmType : Any, ContextType : Any> configurationEmpty(): LanguageProcessorConfiguration<AsmType, ContextType> = LanguageProcessorConfigurationEmpty()
 
+    /** a configuration that generates the types and asm-transform from the grammar; no syntax or semantic analyser is set */
     fun <AsmType : Any, ContextType : Any> configurationBase(): LanguageProcessorConfiguration<AsmType, ContextType> = LanguageProcessorConfigurationBase()
 
+    /** a configuration that takes every part from the given [languageObject] */
     fun <AsmType : Any, ContextType : Any> configurationFromLanguageObject(languageObject: LanguageObject<AsmType, ContextType>): LanguageProcessorConfiguration<AsmType, ContextType> =
         //TODO: would a LanguageProcessorConfigurationFromLanguageObject be faster here, delaying instantiation until later!
         LanguageProcessorConfigurationBase(
@@ -94,6 +104,7 @@ object Agl {
             completionProviderResolver = { p -> ProcessResultDefault<CompletionProvider<AsmType, ContextType>>(languageObject.completionProvider) },
         )
 
+    /** like [configurationBase], plus the default syntax analyser (builds an [Asm]) and the default semantic analyser */
     fun configurationSimple(): LanguageProcessorConfiguration<Asm, SentenceContext> = LanguageProcessorConfigurationSimple()
 
     /**
@@ -132,6 +143,7 @@ object Agl {
         return b.build()
     }
 
+    /** create a processor for an already parsed grammar */
     fun <AsmType : Any, ContextType : Any> processorFromGrammar(
         grammarDomain: GrammarDomain,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
@@ -141,16 +153,24 @@ object Agl {
     }
 
     /**
-     * Create a LanguageProcessor from a grammar definition string,
-     * using default configuration of:
+     * Create a LanguageProcessor that builds an [Asm], from a grammar and, optionally, the other AGL DSLs.
+     * Defaults:
      * - targetGrammar = last grammar defined in grammarDefinitionStr
-     * - defaultGoalRuleName = first non skip goal in targetGrammar
-     * - syntaxAnalyser = SyntaxAnalyserSimple(TypesDomainFromGrammar)
-     * - semanticAnalyser = SemanticAnalyserSimple
-     * - formatter = null (TODO)
+     * - defaultGoalRuleName = first non skip rule in targetGrammar (or the grammar option '#defaultGoalRule')
+     * - types and asm-transform generated from the grammar, unless given
+     * - syntaxAnalyser = SyntaxAnalyserSimple, semanticAnalyser = SemanticAnalyserSimple
+     *
+     * The result holds the processor (null if no grammar could be created) and the issues found in the definitions.
      *
      * @param grammarDefinitionStr a string defining the grammar, may contain multiple grammars
-     * @param aglOptions options to the AGL grammar processor for parsing the grammarDefinitionStr
+     * @param typeStr types DSL
+     * @param transformStr asm-transform DSL
+     * @param referenceStr references (cross-reference) DSL
+     * @param styleStr style DSL
+     * @param formatterStr format DSL
+     * @param configurationBase the configuration to start from
+     * @param grammarAglOptions options to the AGL grammar processor for parsing the grammarDefinitionStr
+     * @param completionStr completion DSL
      */
     fun processorFromStringSimple(
         grammarDefinitionStr: GrammarString,
@@ -261,12 +281,14 @@ object Agl {
         }
     }
 
+    /** create a processor whose parts all come from the given [languageObject] */
     fun <AsmType : Any, ContextType : Any> processorFromLanguageObject(
         languageObject: LanguageObjectAbstract<AsmType, ContextType>
     ): LanguageProcessor<AsmType, ContextType> {
         return LanguageProcessorFromLanguageObject(languageObject)
     }
 
+    /** same as `proc.process(sentence, aglOptions)` */
     fun <AsmType : Any, ContextType : Any> fromString(
         proc: LanguageProcessor<AsmType, ContextType>,
         aglOptions: ProcessOptions<AsmType, ContextType>,
@@ -275,6 +297,7 @@ object Agl {
         return proc.process(sentence, aglOptions)
     }
 
+    /** parse a grammar definition string into a [GrammarDomain] */
     fun <AsmType : Any, ContextType : Any> grammarFromString(
         sentence: String?,
         aglOptions: ProcessOptions<GrammarDomain, SentenceContext>? = Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } }
@@ -287,6 +310,10 @@ object Agl {
         }
     }
 
+    /**
+     * Create a modifiable [LanguageDefinition] from the AGL DSL strings.
+     * Its processor is created when first used, and recreated when a string is changed with [LanguageDefinition.update].
+     */
     fun <AsmType : Any, ContextType : Any> languageDefinitionFromString(
         identity: LanguageIdentity,
         grammarDefinitionStr: GrammarString? = null,
@@ -317,16 +344,11 @@ object Agl {
     }
 
     /**
-     * Create a LanguageProcessor from a grammar definition string,
-     * using default configuration of:
-     * - targetGrammar = last grammar defined in grammarDefinitionStr
-     * - defaultGoalRuleName = first non skip goal in targetGrammar
-     * - syntaxAnalyser = SyntaxAnalyserSimple(TypesDomainFromGrammar)
-     * - semanticAnalyser = SemanticAnalyserSimple
-     * - formatter = null (TODO)
+     * Like [languageDefinitionFromString], using [configurationSimple], so its processor builds an [Asm].
+     * The [LanguageDefinition.styleDomain] holds the parsed styles.
      *
      * @param grammarDefinitionStr a string defining the grammar, may contain multiple grammars
-     * @param aglOptions options to the AGL grammar processor for parsing the grammarDefinitionStr
+     * @param grammarAglOptions options to the AGL grammar processor for parsing the grammarDefinitionStr
      */
     fun languageDefinitionFromStringSimple(
         identity: LanguageIdentity,
@@ -357,10 +379,12 @@ object Agl {
         )
     }
 
+    /** parse a format DSL string, for objects of the given types */
     fun formatDomain(template: FormatString, typesDomain: TypesDomain): ProcessResult<AglFormatDomain> {
         return FormatDomainDefault.fromString(contextFromTypesDomain(typesDomain), template)
     }
 
+    /** format [self] as text with the last format set in [formatDomain] */
     fun <SelfType : Any> format(
         formatDomain: AglFormatDomain,
         objectGraph: ObjectGraphAccessorMutator,
@@ -378,6 +402,7 @@ object Agl {
         return result
     }
 
+    /** parse [template] (format DSL) and format [self] with it */
     fun <SelfType : Any> formatWithTemplate(
         template: FormatString,
         typesDomain: TypesDomain,
@@ -394,36 +419,53 @@ object Agl {
         return result
     }
 
+    /** format a Kotlin object [self] (accessed by reflection) with [template] (format DSL) */
     fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<Any> = FormatOptionsDefault()): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
         val objectGraph = ObjectGraphAccessorMutatorByReflection(typesDomain, issueHolder, options.locationMap ?: LocationMapDefault())
         return formatWithTemplate(template, typesDomain, objectGraph, self, options)
     }
 
+    /**
+     * Evaluate an expression (AGL expressions DSL) with [self] as `${'$'}self`.
+     * [accessorMutator] gives access to the objects, e.g. `objectGraphSimpleAsm(...)` for an Asm.
+     */
     fun executeExpression(accessorMutator:ObjectGraphAccessorMutator, self:Any?, expression:String): TypedObject {
         val typedSelf = accessorMutator.toTypedObject(self, StdLibDefault.AnyType)
         val evc = EvaluationContext.ofSelf(typedSelf)
         return executeExpressionWithEvaluationContext(accessorMutator, evc, expression)
     }
 
+    /** like [executeExpression], with a full [EvaluationContext] (self and named values) */
     fun executeExpressionWithEvaluationContext(accessorMutator:ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
         val interpreter = ExpressionsInterpreterOverTypedObject(accessorMutator)
         val result = interpreter.evaluateStr(evc, expression)
         return result
     }
 
+    /** like [executeExpression], where the object graph has suspending accessors */
     suspend fun executeExpressionSuspend(accessorMutator: ObjectGraphAccessorMutator, self:Any?, expression:String): TypedObject {
         val typedSelf = accessorMutator.toTypedObject(self, StdLibDefault.AnyType)
         val evc = EvaluationContext.ofSelf(typedSelf)
         return executeExpressionWithEvaluationContextSuspend(accessorMutator, evc, expression)
     }
 
+    /** like [executeExpressionWithEvaluationContext], where the object graph has suspending accessors */
     suspend fun executeExpressionWithEvaluationContextSuspend(accessorMutator: ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
         val interpreter = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
         val result = interpreter.evaluateStrSuspend(evc, expression)
         return result
     }
 
+    /**
+     * Run a model-to-model transform (m2m-transform DSL). The first transform in [m2m] is used.
+     *
+     * @param typeDomains the types of each domain parameter of the transform
+     * @param accessorMutators how to access the objects of each types domain, keyed by the types domain name
+     * @param domains the input objects of each source domain
+     * @param ruleArguments values for rule parameters
+     * @param targetDomainReference the domain to create
+     */
     fun transform(
         m2m: M2mTransformString,
         typeDomains: Map<DomainReference, TypesDomain>,
@@ -455,6 +497,7 @@ object Agl {
         return transResult
     }
 
+    /** like [transform], where the object graphs have suspending accessors */
     suspend fun transformSuspend(
         m2m: M2mTransformString,
         typeDomains: Map<DomainReference, TypesDomain>,

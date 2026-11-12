@@ -230,7 +230,7 @@ class test_Converter {
         fun choicePriorityLiteralRule() {
             // S = 'a' < 'b' < 'c' ;
             val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-            gb.rule("S").choicePriority(
+            gb.rule("S").choiceLongest(
                 gb.concatenation(gb.terminalLiteral("a")),
                 gb.concatenation(gb.terminalLiteral("b")),
                 gb.concatenation(gb.terminalLiteral("c"))
@@ -242,7 +242,7 @@ class test_Converter {
             val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
             val expected = runtimeRuleSet {
-                choicePriority("S") {
+                choiceLongest("S") {
                     literal("a")
                     literal("b")
                     literal("c")
@@ -262,7 +262,7 @@ class test_Converter {
             gb.rule("a").concatenation(gb.terminalLiteral("a"))
             gb.rule("b").concatenation(gb.terminalLiteral("b"))
             gb.rule("c").concatenation(gb.terminalLiteral("c"))
-            gb.rule("S").choicePriority(
+            gb.rule("S").choiceLongest(
                 gb.concatenation(gb.nonTerminal("a")),
                 gb.concatenation(gb.nonTerminal("b")),
                 gb.concatenation(gb.nonTerminal("c"))
@@ -272,7 +272,7 @@ class test_Converter {
             val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
             val expected = runtimeRuleSet {
-                choicePriority("S") {
+                choiceLongest("S") {
                     ref("a")
                     ref("b")
                     ref("c")

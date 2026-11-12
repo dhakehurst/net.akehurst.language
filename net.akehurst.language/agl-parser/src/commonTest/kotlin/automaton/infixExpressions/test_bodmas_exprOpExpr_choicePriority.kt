@@ -40,7 +40,7 @@ class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() {
     // must be fresh per test or automaton is not correct for different parses (due to caching)
     private val rrs = ruleSet("Test") {
         concatenation("S") { ref("E") }
-        choicePriority("E") {
+        choiceLongest("E") {
             ref("'v'")
             ref("EA")
             ref("EB")

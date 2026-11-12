@@ -29,7 +29,6 @@ enum class RuntimeRuleChoiceKind {
     NONE,
     AMBIGUOUS,
     LONGEST_PRIORITY,
-    PRIORITY_LONGEST //TODO: deprecate this
 }
 
 sealed class RuntimeRuleRhs(

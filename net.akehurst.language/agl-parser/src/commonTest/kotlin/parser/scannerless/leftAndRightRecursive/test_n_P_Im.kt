@@ -30,7 +30,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
                 ref("P")
                 ref("I")
