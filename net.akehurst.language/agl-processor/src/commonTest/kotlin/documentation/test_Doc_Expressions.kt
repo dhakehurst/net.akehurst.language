@@ -74,6 +74,7 @@ class test_Doc_Expressions {
         assertEquals(2L, eval("item.filter({ i -> i is Shape }).size"))
         assertEquals("many", eval("item.size > 2 ? 'many' : 'few'"))
         assertEquals(true, eval("item.size > 2 and true"))
+        assertEquals(3L, eval("'abc'.length"))
         assertEquals(emptyList(), issues.all.toList())
     }
 }

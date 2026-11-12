@@ -25,6 +25,7 @@ On the ASM of the [Shapes sentence](../GETTING_STARTED.md#the-example-language),
 | `item.filter({ i -> i is Shape }).size` | `2` |
 | `item.size > 2 ? 'many' : 'few'` | `'many'` |
 | `item.size > 2 and true` | `true` |
+| `'abc'.length` | `3` |
 
 An expression can be evaluated directly from Kotlin:
 
@@ -44,7 +45,7 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 | `name`, `$self` | a property of the current object, the current object |
 | `a.b`, `a.m(x)`, `a[i]` | property, method call, index |
 | `list.size`, `.isEmpty`, `.first`, `.last`, `.get(i)`, `.map(f)`, `.filter(f)` | list properties and methods |
-| `+ - * / %`, `== != < <= > >=`, `and or xor` | infix operators; arithmetic binds tighter than comparison, comparison tighter than `and or xor` |
+| `+ - * / %`, `== != < <= > >=`, `and or xor` | infix operators, Kotlin precedence (tightest first): `* / %`, `+ -`, `< <= > >=`, `== !=`, `and`, `xor`, `or` |
 | `c ? a : b` | `a` if `c` is true, else `b` |
 | `when { c1 -> e1 ... else -> e }` | first true condition wins |
 | `{ x -> expr }` | lambda, e.g. for `map` and `filter` |
