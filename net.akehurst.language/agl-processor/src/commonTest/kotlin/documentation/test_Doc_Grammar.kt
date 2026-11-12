@@ -237,6 +237,28 @@ class test_Doc_Grammar {
     }
 
     @Test
+    fun override_substitution() {
+        // grammar.md: "Extending a grammar" - '==' picks the rule of one base when inherited via two paths
+        val grammar = """
+            namespace example
+            grammar Base {
+                skip leaf WS = "\s+" ;
+                S = item+ ;
+                item = 'a' ;
+            }
+            grammar X : Base { override item = 'x' ; }
+            grammar Y : Base { override item = 'y' ; }
+            grammar Both : X, Y {
+                #defaultGoalRule: S
+                override item == Y.item ;
+            }
+        """
+        val p = processor(grammar)
+        assertTrue(p.parse("y y").issues.errors.isEmpty(), p.parse("y y").issues.toString())
+        assertTrue(p.parse("x").issues.errors.isNotEmpty())
+    }
+
+    @Test
     fun goal_rule() {
         // grammar.md: "Options"
         val grammar = """
