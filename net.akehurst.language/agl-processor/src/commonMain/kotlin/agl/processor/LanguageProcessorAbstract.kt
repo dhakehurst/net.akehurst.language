@@ -36,6 +36,7 @@ import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -103,7 +104,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val baseTypesDomain: TypesDomain by lazy {
         val res = configuration.typesResolver?.invoke(this)
         res?.let { this.allIssues.addAllFrom(res.allIssues) }
-        res?.asm
+        res?.asm?.let { td -> GrammarTypesNamespaceSimple.withGrammarNamespaces(td, this.grammarDomain.allDefinitions.map { it.qualifiedName }) }
             ?: typesDomain("FromGrammar" + this.grammarDomain.name.value, true) {}
     }
 

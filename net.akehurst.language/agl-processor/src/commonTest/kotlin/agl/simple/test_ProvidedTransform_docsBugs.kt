@@ -137,4 +137,61 @@ class test_ProvidedTransform_docsBugs {
         """.trimIndent()
         assertEquals(expected, processed.asm!!.asString().trim())
     }
+
+    @Test
+    fun no_options__missing_rules_are_error_issues() {
+        // without '#override-default-transform' the transform has only the rules written
+        val transform = """
+            namespace example
+            asm-transform Shapes {
+                connection: Connection() {
+                    name := child[1]
+                    name2 := child[3]
+                }
+            }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(GRAMMAR), transformStr = AsmTransformString(transform))
+        val proc = result.processor!!
+        proc.transformDomain // build it
+        assertEquals(
+            listOf("unit", "item", "circle", "radius").map { "No transformation rule for grammar rule '$it' in 'example.Shapes', write one or use '#override-default-transform'" },
+            proc.allIssues.errors.map { it.message }
+        )
+    }
+
+    @Test
+    fun types_string_in_grammar_namespace__used_by_default_transform() {
+        val types = """
+            namespace example.Shapes
+              data Circle { name: String  colour: String? }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(GRAMMAR), typeStr = TypesString(types))
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        val proc = result.processor!!
+        val processed = proc.process(SENTENCE)
+        assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
+        assertTrue(processed.allIssues.errors.isEmpty(), processed.allIssues.toString())
+        val circle = proc.typesDomain.findByQualifiedNameOrNull(net.akehurst.language.base.api.QualifiedName("example.Shapes.Circle"))!!
+        // declared properties kept, missing ones generated
+        listOf("name", "colour", "radius").forEach { pn ->
+            assertTrue(null != circle.findOwnedPropertyOrNull(net.akehurst.language.types.api.PropertyName(pn)), "property '$pn' missing in\n" + proc.typesDomain.asString())
+        }
+        val expected = """
+            :Unit {
+              item = [
+                :Circle {
+                  name = 'c'
+                  radius = :Radius {
+                    number = '5'
+                  }
+                }
+                :Connection {
+                  name = 'c'
+                  name2 = 'c'
+                }
+              ]
+            }
+        """.trimIndent()
+        assertEquals(expected, processed.asm!!.asString().trim())
+    }
 }

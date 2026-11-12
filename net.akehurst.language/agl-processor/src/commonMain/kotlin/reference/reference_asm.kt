@@ -236,12 +236,14 @@ data class IdentifiableDefault(
     override val typeName: PossiblyQualifiedName,
     override val identifiedBy: Expression,
     override val visibility: Expression? = null,
-    override val aliasFor: NavigationExpression? = null
+    override val aliasFor: NavigationExpression? = null,
+    override val identifiedByAlternatives: List<Expression> = listOf(identifiedBy)
 ) : Identifiable {
     override fun asString(indent: Indent, imports: List<Import>): String {
         val vis = visibility?.let { " visibility ${it.asString(indent, emptyList())}" } ?: ""
         val alias = aliasFor?.let { " alias-for ${it.asString(indent, emptyList())}" } ?: ""
-        return "${indent}identify ${typeName.value} by ${identifiedBy.asString(indent, emptyList())}$vis$alias"
+        val by = identifiedByAlternatives.joinToString(separator = " | ") { it.asString(indent, emptyList()) }
+        return "${indent}identify ${typeName.value} by $by$vis$alias"
     }
 }
 

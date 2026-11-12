@@ -111,6 +111,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
             for (trns in asm.namespace) {
                 for (trs in trns.definition) {
                     overrideDefaultRuleSet(trs)
+                    checkEveryRuleHasATransformRule(trs)
                     convertRulesThatSimplyRedefineDefaultType(trs)
                     createMissingTypes(trs)
 
@@ -130,6 +131,34 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
             _typesDomain.resolveImports()
         }
         return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
+    }
+
+    /**
+     * Without '#override-default-transform' the transform has only the rules written,
+     * so every (non leaf, non skip) rule of the grammar needs a transformation rule.
+     */
+    private fun checkEveryRuleHasATransformRule(trs: AsmTransformRuleSet) {
+        when {
+            trs.options.overrideDefault -> Unit
+            else -> {
+                val grammar = _grammarDomain.findDefinitionByQualifiedNameOrNull(trs.qualifiedName)
+                when (grammar) {
+                    null -> Unit // no grammar for this rule set, nothing to check
+                    else -> {
+                        val extendedRules = trs.extends.mapNotNull { _asm.resolveReference(it) }.flatMap { it.rules.keys }.toSet()
+                        val missing = grammar.resolvedGrammarRule
+                            .filter { it.isLeaf.not() && it.isSkip.not() }
+                            .filter { trs.rules.containsKey(it.name).not() && extendedRules.contains(it.name).not() }
+                        missing.forEach { gr ->
+                            _issues.error(
+                                null,
+                                "No transformation rule for grammar rule '${gr.name.value}' in '${trs.qualifiedName.value}', write one or use '#${OPTION_OVERRIDE_DEFAULT}'"
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

@@ -434,7 +434,8 @@ class ReferenceResolverSimple(
         var found = start
         for (seg in rest) {
             found = found.flatMap { f ->
-                val ns = f.owner.getChildScopeOrNull(f.name)
+                // an item found by a further name ('identify T by a | b') has its scope under its first name
+                val ns = f.owner.getChildScopeOrNull(f.name) ?: elementOf(f.item)?.let { scopeOfElement(it) }
                 when (ns) {
                     null -> emptyList()
                     else -> localResolve(ns, seg, Access.OUTSIDE, mutableListOf()).ifEmpty {

@@ -142,6 +142,13 @@ interface Identifiable  : Formatable {
     val identifiedBy: Expression
 
     /**
+     * 'identify T by a | b': the identifying expressions, in order (identifiedBy is the first).
+     * The first that has a value for an element is its name (for its scope and path),
+     * the values of the others are further names by which the element is found in the same scope.
+     */
+    val identifiedByAlternatives: List<Expression> get() = listOf(identifiedBy)
+
+    /**
      * evaluated on the identified element, gives 'public', 'protected' or 'private', anything else is 'public'
      */
     val visibility: Expression? get() = null
