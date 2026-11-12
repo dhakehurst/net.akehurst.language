@@ -186,7 +186,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         ref("STYLE_ID"); lit(":"); ref("styleValue"); lit(";")
                     }
                     choice("styleValue") {
-                        ref("STYLE_ID")
+                        ref("STYLE_VALUE")
                         ref("STRING")
                     }
                     concatenation("STYLE_ID", isLeaf = true) { pat("[-a-zA-Z_][-a-zA-Z_0-9]*") }

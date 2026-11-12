@@ -285,4 +285,28 @@ class test_AglStyleLanguage {
         val actual_0_0 = result.asm!!.allDefinitions[0].rules[0] as AglStyleMetaRule
     }
 
+    @Test
+    fun hexColourValues() {
+
+        val text = """
+            namespace test
+            styles Test {
+                ID {
+                    foreground: #82AAFF;
+                    background: '#102030';
+                    font-weight: bold;
+                }
+            }
+        """.trimIndent()
+
+        val result = process(text)
+
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
+        assertNotNull(result.asm)
+        val actual_0_0 = result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+        assertEquals("#82AAFF", actual_0_0.declaration["foreground"]?.value)
+        assertEquals("#102030", actual_0_0.declaration["background"]?.value)
+        assertEquals("bold", actual_0_0.declaration["font-weight"]?.value)
+    }
+
 }
