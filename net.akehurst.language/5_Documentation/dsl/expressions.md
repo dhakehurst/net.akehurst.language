@@ -21,6 +21,10 @@ On the ASM of the [Shapes sentence](../GETTING_STARTED.md#the-example-language),
 | `{ x := 2 x * 3 }` | `6` |
 | `item.first.name`, `item.last.target` | `'c'`, `'s'` |
 | `item.get(1).name` | `'s'` |
+| `item[1].point.map({ p -> p.number })` | `['1', '3']` |
+| `item.filter({ i -> i is Shape }).size` | `2` |
+| `item.size > 2 ? 'many' : 'few'` | `'many'` |
+| `item.size > 2 and true` | `true` |
 
 An expression can be evaluated directly from Kotlin:
 
@@ -39,9 +43,11 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 | `'text'`, `12`, `1.5`, `true` | literals |
 | `name`, `$self` | a property of the current object, the current object |
 | `a.b`, `a.m(x)`, `a[i]` | property, method call, index |
-| `list.size`, `.isEmpty`, `.first`, `.last`, `.get(i)` | list properties and methods |
-| `+ - * / %`, `== != < <= > >=`, `and or xor` | infix operators |
+| `list.size`, `.isEmpty`, `.first`, `.last`, `.get(i)`, `.map(f)`, `.filter(f)` | list properties and methods |
+| `+ - * / %`, `== != < <= > >=`, `and or xor` | infix operators; arithmetic binds tighter than comparison, comparison tighter than `and or xor` |
+| `c ? a : b` | `a` if `c` is true, else `b` |
 | `when { c1 -> e1 ... else -> e }` | first true condition wins |
+| `{ x -> expr }` | lambda, e.g. for `map` and `filter` |
 | `with(e) expr` | evaluate `expr` with `e` as the current object |
 | `e as T`, `e is T` | cast, type test |
 | `T() { p := e ... }` | create an object of type `T` and set its properties |

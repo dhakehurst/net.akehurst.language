@@ -59,4 +59,21 @@ class test_Doc_Expressions {
         assertEquals("s", eval("item.get(1).name"))
         assertEquals(emptyList(), issues.all.toList())
     }
+
+    @Test
+    fun lambda_condition_precedence() {
+        // expressions.md: "Example" (rows for lambdas, '? :' and 'and')
+        val asm = shapesProcessor.process(SHAPES_SENTENCE).asm!!
+        val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+        val objectGraph = objectGraphSimpleAsm(shapesProcessor.typesDomain, null, issues, LocationMapDefault())
+        val unit = asm.root[0]
+
+        fun eval(expression: String) = Agl.executeExpression(objectGraph, unit, expression).untyped
+
+        assertEquals(listOf("1", "3"), eval("item[1].point.map({ p -> p.number })"))
+        assertEquals(2L, eval("item.filter({ i -> i is Shape }).size"))
+        assertEquals("many", eval("item.size > 2 ? 'many' : 'few'"))
+        assertEquals(true, eval("item.size > 2 and true"))
+        assertEquals(emptyList(), issues.all.toList())
+    }
 }
