@@ -37,6 +37,9 @@ class test_Doc_Style {
         val style = $$"""
             namespace example
             styles Shapes {
+                $nostyle {
+                    foreground: black;
+                }
                 'circle', 'square', 'connect' {
                     foreground: blue;
                     font-weight: bold;
@@ -58,7 +61,7 @@ class test_Doc_Style {
         val styleDomain = definition.styleDomain!!
         assertTrue(definition.issues.errors.isEmpty(), definition.issues.toString())
         val rules = styleDomain.allDefinitions.single().tagRules
-        assertEquals(listOf(listOf("'circle'", "'square'", "'connect'"), listOf("NAME", "NUMBER"), listOf("COMMENT")), rules.map { r -> r.selector.map { it.value } })
-        assertEquals("bold", rules[0].declaration["font-weight"]?.value)
+        assertEquals(listOf(listOf("\$nostyle"), listOf("'circle'", "'square'", "'connect'"), listOf("NAME", "NUMBER"), listOf("COMMENT")), rules.map { r -> r.selector.map { it.value } })
+        assertEquals("bold", rules[1].declaration["font-weight"]?.value)
     }
 }

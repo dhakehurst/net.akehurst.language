@@ -11,6 +11,9 @@ For the [Shapes language](../GETTING_STARTED.md#the-example-language):
 ```agl
 namespace example
 styles Shapes {
+    $nostyle {
+        foreground: black;
+    }
     'circle', 'square', 'connect' {
         foreground: blue;
         font-weight: bold;
@@ -43,6 +46,7 @@ A rule is `selectors { name: value; ... }`. Several selectors are separated by `
 | `'if'` | that literal |
 | `"[0-9]+"` | that pattern, as written in the grammar |
 | `NAME` | the rule `NAME` |
+| `$nostyle` | everything that no other rule styles (the default style) |
 
 The declarations are CSS-like `name: value;` pairs; the editor decides which names it supports.
 `styles B : A { }` extends style set `A`.
