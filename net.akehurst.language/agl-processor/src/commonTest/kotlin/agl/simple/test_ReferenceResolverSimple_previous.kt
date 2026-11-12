@@ -88,6 +88,14 @@ class test_ReferenceResolverSimple_previous {
     }
 
     @Test
+    fun reference_dsl_asString_parses_again() {
+        val asString = processor.crossReferenceDomain.asString()
+        val again = Agl.processorFromStringSimple(grammarDefinitionStr = grammarStr, referenceStr = CrossReferenceString(asString))
+        assertTrue(again.issues.errors.isEmpty(), "$asString\n${again.issues}")
+        assertEquals(asString, again.processor!!.crossReferenceDomain.asString())
+    }
+
+    @Test
     fun chain_of_one__normal_lookup() {
         val targets = test("def P use p1 : P use x :> p1")
         assertEquals(listOf("P", "p1"), targets)

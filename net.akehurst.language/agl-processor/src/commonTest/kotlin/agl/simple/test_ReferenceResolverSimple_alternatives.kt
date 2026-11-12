@@ -75,6 +75,14 @@ class test_ReferenceResolverSimple_alternatives {
     }
 
     @Test
+    fun reference_dsl_asString_parses_again() {
+        val asString = processor.crossReferenceDomain.asString()
+        val again = Agl.processorFromStringSimple(grammarDefinitionStr = grammarStr, referenceStr = CrossReferenceString(asString))
+        assertTrue(again.issues.errors.isEmpty(), "$asString\n${again.issues}")
+        assertEquals(asString, again.processor!!.crossReferenceDomain.asString())
+    }
+
+    @Test
     fun reference_dsl_prints_alternatives() {
         val asString = processor.crossReferenceDomain.asString()
         assertTrue(asString.contains("identify Def by identification.id | identification.shortName.id"), asString)

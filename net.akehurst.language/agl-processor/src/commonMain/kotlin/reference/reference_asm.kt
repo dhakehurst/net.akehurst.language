@@ -197,13 +197,24 @@ data class DeclarationsForNamespaceDefault(
         return identifiable?.identifiedBy
     }
 
+    /**
+     * in the syntax of the references language, so that the result can be parsed again.
+     * The first line has no indent, because the owning namespace adds it.
+     */
     override fun asString(indent: Indent, imports: List<Import>): String {
-        val sb = StringBuilder()
-        val scps = scopeDefinition.values.joinToString(separator = "\n") {
-            "$indent${it.asString(indent)}"
+        val lines = mutableListOf<String>()
+        // identifiables of the root scope are written at the top level
+        scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.let { root ->
+            root.identifiables.forEach { lines.add(it.asString(indent)) }
         }
-        sb.append(scps)
-        return sb.toString()
+        scopeDefinition.values
+            .filter { it.scopeForTypeName != CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last }
+            .forEach { lines.add(it.asString(indent)) }
+        if (references.isNotEmpty()) {
+            val refs = references.joinToString(separator = "\n") { it.asString(indent.inc) }
+            lines.add("${indent}references {\n$refs\n${indent}}")
+        }
+        return lines.joinToString(separator = "\n").removePrefix(indent.value)
     }
 }
 
@@ -215,17 +226,13 @@ data class ScopeDefinitionDefault(
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
-        sb.append("scope ${scopeForTypeName.value} {")
+        sb.append("${indent}scope ${scopeForTypeName.value} {")
         if (this.identifiables.isEmpty() && this.scopeImports.isEmpty()) {
             sb.append(" }")
         } else {
+            val lines = this.identifiables.map { it.asString(indent.inc) } + this.scopeImports.map { it.asString(indent.inc) }
             sb.append("\n")
-            for (id in this.identifiables) {
-                sb.append(id.asString(indent.inc))
-            }
-            for (si in this.scopeImports) {
-                sb.append(si.asString(indent.inc))
-            }
+            sb.append(lines.joinToString(separator = "\n"))
             sb.append("\n$indent}")
         }
         return sb.toString()
@@ -283,9 +290,14 @@ data class ReferenceDefinitionDefault(
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
-        sb.append("in ${inTypeName.value} {\n")
-        for (re in referenceExpressionList) {
-            sb.append(re.asString(indent.inc))
+        sb.append("${indent}in ${inTypeName.value} {")
+        when {
+            referenceExpressionList.isEmpty() -> sb.append(" }")
+            else -> {
+                sb.append("\n")
+                sb.append(referenceExpressionList.joinToString(separator = "\n") { it.asString(indent.inc) })
+                sb.append("\n${indent}}")
+            }
         }
         return sb.toString()
     }
@@ -337,15 +349,14 @@ data class ReferenceExpressionCollectionDefault(
         val ex = expression.asString(indent, emptyList())
         val ot = when (ofType) {
             null -> ""
-            else -> " of-type" + ofType.value
+            else -> " of-type " + ofType.value
         }
-        sb.append("${indent}forall $ex$ot refers-to {\n")
+        sb.append("${indent}forall $ex$ot {")
         when {
             referenceExpressionList.isEmpty() -> sb.append(" }")
             else -> {
-                for(re in referenceExpressionList) {
-                    sb.append(re.asString(indent.inc))
-                }
+                sb.append("\n")
+                sb.append(referenceExpressionList.joinToString(separator = "\n") { it.asString(indent.inc) })
                 sb.append("\n${indent}}")
             }
         }
