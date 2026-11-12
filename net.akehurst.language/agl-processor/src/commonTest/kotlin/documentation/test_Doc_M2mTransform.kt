@@ -66,9 +66,8 @@ class test_Doc_M2mTransform {
             (unit.getProperty(PropertyValueName("item")) as List<Any>).map { ogS.toTypedObject(it, StdLibDefault.AnyType) }
         }
 
-        //TODO: D21 - the doc uses the names 'Shapes' and 'Drawing', remove this once the types domains have those names
         fun header(rules: String) =
-            "namespace example\ntransform ShapesToDrawing(s:${shapes.name.value}, d:${drawing.name.value}) {\n$rules\n}"
+            "namespace example\ntransform ShapesToDrawing(s:Shapes, d:Drawing) {\n$rules\n}"
 
         fun transform(rules: String, input: List<TypedObject> = items, source: String = "s", target: String = "d"): List<String> {
             val result = Agl.transform(
