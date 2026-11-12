@@ -10,6 +10,20 @@ A processor generates its types from the grammar, see
 [What the default ASM looks like](../GETTING_STARTED.md#what-the-default-asm-looks-like).
 `processor.typesDomain` gives them; `processor.typesDomain.asString()` prints them in this DSL.
 
+## Giving a processor your own types
+
+Pass a types string as `typeStr`. A namespace named after the grammar's qualified name (`example.Shapes`)
+is used by the default transform: the properties you declare are kept, the missing ones are generated.
+
+```kotlin
+val types = """
+    namespace example.Shapes
+      data Circle { name: String  colour: String? }
+"""
+val processor = Agl.processorFromStringSimple(GrammarString(grammar), typeStr = TypesString(types)).processor!!
+// Circle has the properties name, colour and (generated) radius
+```
+
 ## Example
 
 ```agl

@@ -70,7 +70,7 @@ Options go before `namespace` (for the whole file) or at the start of an `asm-tr
 
 | Option | Meaning |
 |---|---|
-| `#override-default-transform` | start from the transform generated from the grammar: your rules replace those rules, all other rules stay as generated. Without it, the transform has only your rules. |
+| `#override-default-transform` | start from the transform generated from the grammar: your rules replace those rules, all other rules stay as generated. Without it, the transform has only your rules, so every non-leaf, non-skip grammar rule needs one (a missing one is an error). |
 | `#create-missing-types` | create the types (and their properties) that your rules name. Without it, every type must already exist (generated, or from [types](types.md)). |
 
 `asm-transform B : A { }` extends transform `A`. `import-types ns` makes the types of namespace `ns` available.

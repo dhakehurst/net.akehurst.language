@@ -85,4 +85,21 @@ class test_Doc_Types {
         )
         assertEquals("Circle", circle?.name?.value)
     }
+
+    @Test
+    fun own_types_for_processor() {
+        // types.md: "Giving a processor your own types"
+        val types = """
+            namespace example.Shapes
+              data Circle { name: String  colour: String? }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(
+            net.akehurst.language.api.processor.GrammarString(test_Doc_GettingStarted.SHAPES_GRAMMAR),
+            typeStr = net.akehurst.language.api.processor.TypesString(types)
+        )
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        val processor = result.processor!!
+        val circle = processor.typesDomain.findByQualifiedNameOrNull(net.akehurst.language.base.api.QualifiedName("example.Shapes.Circle"))!!
+        assertEquals(setOf("name", "colour", "radius"), circle.property.map { it.name.value }.toSet())
+    }
 }
