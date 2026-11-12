@@ -4,11 +4,23 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg?gav=true)](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor)
 ![npm](https://img.shields.io/npm/v/net.akehurst.language-agl-processor)
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Generic badge](https://img.shields.io/badge/Kotlin-1.9.10-green)](https://kotlinlang.org/)
+[![Generic badge](https://img.shields.io/badge/Kotlin-2.4.0-green)](https://kotlinlang.org/)
 
 # AGL: A Grammar Language (or maybe Akehurst Grammar Language!)
 
 Generic Language (DSL) support for kotlin multiplatform (parser, syntax-analyser, formatter, processor, etc)
+
+Write a grammar, and AGL gives you, at runtime with no generate step, a parser, an abstract syntax model (ASM),
+reference resolution, formatting, styling and code completion for your language.
+Every part can be customised with a small DSL.
+
+# Documentation
+
+ - [Getting started](net.akehurst.language/5_Documentation/GETTING_STARTED.md): create a processor, parse, process, read errors
+ - [Overview](net.akehurst.language/5_Documentation/Overview.md): how a sentence is processed, and one page per AGL DSL
+   (grammar, types, asm-transform, references, style, format, completion, expressions, m2m-transform)
+ - [Comparison](net.akehurst.language/5_Documentation/COMPARISON.md) with other parser frameworks
+ - The examples in the documentation are tested in `net.akehurst.language/agl-processor/src/commonTest/kotlin/documentation`
 
 There are many parser technologies, frameworks, generators, libraries
 that already exist. When I first started this one in about 2007 there was none that
@@ -24,7 +36,6 @@ My Requirements:
  - No need to worry about keyword/identifier clashes
  - Interpreted at runtime, i.e. no generate parser step.
  - Supports families of languages, i.e. grammar composition/extension
- - 
  
 # Other
  - [Editor Integration and Demo](https://github.com/dhakehurst/net.akehurst.language.editor)
@@ -32,7 +43,7 @@ My Requirements:
 # Articles
 
  - [Creating a custom Domain Specific Language for text input validation](https://medium.com/javascript-in-plain-english/agl-your-dsl-in-the-web-c9f54595691b)
- - [Documentation](https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79)
+ - [A Kotlin multi-platform parser](https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79)
 
 # TODO
 
