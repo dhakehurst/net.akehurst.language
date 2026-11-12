@@ -123,18 +123,24 @@ class TypesDomainSimple(
                 typesString.value.isBlank() -> ProcessResultDefault(typesDomain(name.value, true) { })
                 else -> {
                     val proc = Agl.registry.agl.types.processor ?: error("Types language not found!")
-                    proc.process(
+                    val res = proc.process(
                         sentence = typesString.value,
                         options = Agl.options { semanticAnalysis { sentenceContext(sentenceContext) } }
-                    ).also { res ->
-                        // as for an empty types string, the std namespace is part of the domain, so that 'import std' can be resolved
-                        res.asm?.let { td ->
-                            if (null == td.findNamespaceOrNull(StdLibDefault.qualifiedName)) {
-                                td.addNamespace(StdLibDefault)
-                                td.resolveImports()
-                            }
+                    )
+                    // the parsed domain has a fixed name, the result gets the given name
+                    val named = res.asm?.let { td ->
+                        when (td.name) {
+                            name -> td
+                            else -> TypesDomainSimple(name, td.options).also { nd -> td.namespace.forEach { nd.addNamespace(it) } }
                         }
                     }
+                    // as for an empty types string, the std namespace is part of the domain, so that 'import std' can be resolved
+                    named?.let { td ->
+                        val noStd = null == td.findNamespaceOrNull(StdLibDefault.qualifiedName)
+                        if (noStd) td.addNamespace(StdLibDefault)
+                        if (noStd || td !== res.asm) td.resolveImports()
+                    }
+                    ProcessResultDefault(named, res.parse, res.syntaxAnalysis, res.semanticAnalysis, res.processIssues)
                 }
             }
         }

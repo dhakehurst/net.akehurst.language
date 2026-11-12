@@ -190,7 +190,7 @@ object Agl {
             if (null != typeStr) {
                 typesResolver { p: LanguageProcessor<Asm, SentenceContext> ->
                     TypesDomainSimple.fromString(
-                        SimpleName("FromGrammar" + p.grammarDomain!!.name.value),
+                        (p.targetGrammar?.name ?: p.grammarDomain!!.name),
                         contextFromGrammar(p.grammarDomain!!),
                         typeStr
                     )

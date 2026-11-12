@@ -97,7 +97,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         ProcessResultDefault(p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) })
     },
     override var typesResolver: TypesResolver<AsmType, ContextType>? = { p ->
-        TypesDomainSimple.fromString(SimpleName("FromGrammar" + p.grammarDomain!!.name.value), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
+        TypesDomainSimple.fromString((p.targetGrammar?.name ?: p.grammarDomain!!.name), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>? = null,
     override var transformResolver: TransformResolver<AsmType, ContextType>? = { p ->
@@ -146,7 +146,7 @@ internal class LanguageProcessorConfigurationSimple(
         )
     },
     override var typesResolver: TypesResolver<Asm, SentenceContext>? = { p ->
-        TypesDomainSimple.fromString(SimpleName("FromGrammar" + p.grammarDomain!!.name.value), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
+        TypesDomainSimple.fromString((p.targetGrammar?.name ?: p.grammarDomain!!.name), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactorySimple>? = { AsmFactorySimple() },
     override val transformResolver: TransformResolver<Asm, SentenceContext>? = { p ->
