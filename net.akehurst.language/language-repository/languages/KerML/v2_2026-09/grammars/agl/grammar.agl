@@ -1,0 +1,711 @@
+/**
+ * Copyright (C) 2026 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * KerML textual grammar tailored for AGL.
+ *
+ * Based on the textual BNF of the SysML v2 Release 2026-09.1 (KerML v1.1 Beta 2),
+ * with the same corrections as the 'standard' grammar (see ../standard/grammar.agl, marked '// AGL:').
+ * It accepts the same language as the 'standard' grammar, but:
+ *  - it is modular: one grammar per group of specification clauses, using grammar inheritance.
+ *    Choices that need rules of later grammars are extended in the last grammar (KerMLv1_1).
+ *  - expressions are written for AGL, with a preference rule for the operator precedence (KerML Table 6),
+ *    so a parse gives one tree with the correct grouping.
+ *  - rules that only wrap one other rule (e.g. 'OwnedXMember = X') and empty rules are removed,
+ *    which gives a smaller syntax tree and asm.
+ *  - lists such as 'X ( ',' X )*' are AGL separated lists '[X / ',']+'.
+ */
+namespace net.akehurst.language.kerML
+
+// Lexical structure and names, KerML 8.2.2
+grammar Base {
+
+    skip leaf WHITE_SPACE = "\s+" ;
+    // a SINGLE_LINE_NOTE must not start with '//*', that is a MULTILINE_NOTE
+    skip leaf SINGLE_LINE_NOTE = "//([^*\r\n][^\r\n]*)?" ;
+    skip leaf MULTILINE_NOTE = "//[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
+    leaf REGULAR_COMMENT = "/[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
+
+    NAME = BASIC_NAME | UNRESTRICTED_NAME ;
+    leaf BASIC_NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+    leaf UNRESTRICTED_NAME = "'([^'\\\r\n]|\\['\"bftn\\])*'" ;
+
+    // a short name, e.g. '<e1>' in 'feature <e1> engine'
+    ShortName = '<' NAME '>' ;
+    // parts of an import, 'import all A::*::**'
+    ImportAll = 'all' ;
+    ImportRecursive = '::' '**' ;
+
+    leaf DECIMAL_VALUE = "[0-9]+" ;
+    leaf EXPONENTIAL_VALUE = "[0-9]+[eE][+-]?[0-9]+" ;
+    leaf STRING_VALUE = "\"([^\"\\\r\n]|\\['\"bftn\\])*\"" ;
+
+    TYPED_BY    = ':'   | 'typed' 'by' ;
+    SPECIALIZES = ':>'  | 'specializes' ;
+    SUBSETS     = ':>'  | 'subsets' ;
+    REFERENCES  = '::>' | 'references' ;
+    CROSSES     = '=>'  | 'crosses' ;
+    REDEFINES   = ':>>' | 'redefines' ;
+    CONJUGATES  = '~'   | 'conjugates' ;
+
+    QualifiedName = ( '$' '::' )? [NAME / '::']+ ;
+    // the name in an import or alias, a type of its own so that its reference is defined there (where the import needs it)
+    ImportedName = ( '$' '::' )? [NAME / '::']+ ;
+    QualifiedNameList = [QualifiedName / ',']+ ;
+    FeatureChain = [QualifiedName / '.']2+ ;
+    // a QualifiedName or a FeatureChain
+    FeatureReference = [QualifiedName / '.']+ ;
+}
+
+// KerML 8.2.5.8 Expressions
+// Operator precedence (KerML Table 6) is given by the preference rule, lowest precedence first.
+grammar Expressions : Base {
+
+    OwnedExpression
+        = ConditionalExpression
+        | NullCoalescingExpression
+        | ImpliesExpression
+        | OrExpression
+        | XorExpression
+        | AndExpression
+        | EqualityExpression
+        | ClassificationExpression
+        | MetaclassificationExpression
+        | RelationalExpression
+        | RangeExpression
+        | AdditiveExpression
+        | MultiplicativeExpression
+        | ExponentiationExpression
+        | UnaryOperatorExpression
+        | ExtentExpression
+        | PrimaryExpression
+    ;
+
+    preference OwnedExpression {
+        ConditionalExpression on 'else' right
+        NullCoalescingExpression on '??' left
+        ImpliesExpression on 'implies' left
+        OrExpression on '|', 'or' left
+        XorExpression on 'xor' left
+        AndExpression on '&', 'and' left
+        EqualityExpression on '===', '!==', '==', '!=' left
+        ClassificationExpression on 'istype', 'hastype', '@', 'as' left
+        RelationalExpression on '<=', '>=', '<', '>' left
+        RangeExpression on '..' left
+        AdditiveExpression on '+', '-' left
+        MultiplicativeExpression on '*', '/', '%' left
+        ExponentiationExpression on '**', '^' right
+    }
+
+    ConditionalExpression = 'if' OwnedExpression '?' OwnedExpression 'else' OwnedExpression ;
+    NullCoalescingExpression = OwnedExpression '??' OwnedExpression ;
+    ImpliesExpression = OwnedExpression 'implies' OwnedExpression ;
+    OrExpression = OwnedExpression OR_OPERATOR OwnedExpression ;
+    XorExpression = OwnedExpression 'xor' OwnedExpression ;
+    AndExpression = OwnedExpression AND_OPERATOR OwnedExpression ;
+    EqualityExpression = OwnedExpression EQUALITY_OPERATOR OwnedExpression ;
+    RelationalExpression = OwnedExpression RELATIONAL_OPERATOR OwnedExpression ;
+    RangeExpression = OwnedExpression '..' OwnedExpression ;
+    AdditiveExpression = OwnedExpression ADDITIVE_OPERATOR OwnedExpression ;
+    MultiplicativeExpression = OwnedExpression MULTIPLICATIVE_OPERATOR OwnedExpression ;
+    ExponentiationExpression = OwnedExpression EXPONENTIATION_OPERATOR OwnedExpression ;
+    // unary operators have a higher precedence than all binary operators
+    UnaryOperatorExpression = UNARY_OPERATOR UnaryOperand ;
+    UnaryOperand = UnaryOperatorExpression | ExtentExpression | PrimaryExpression ;
+
+    // not leaf rules, so that each operator is a literal (keyword), which the Classic scanner needs:
+    // e.g. '-' is both an ADDITIVE_OPERATOR and a UNARY_OPERATOR
+    OR_OPERATOR = '|' | 'or' ;
+    AND_OPERATOR = '&' | 'and' ;
+    EQUALITY_OPERATOR = '===' | '!==' | '==' | '!=' ;
+    CLASSIFICATION_OPERATOR = 'istype' | 'hastype' | '@' | 'as' ;
+    RELATIONAL_OPERATOR = '<=' | '>=' | '<' | '>' ;
+    ADDITIVE_OPERATOR = '+' | '-' ;
+    MULTIPLICATIVE_OPERATOR = '*' | '/' | '%' ;
+    EXPONENTIATION_OPERATOR = '**' | '^' ;
+    UNARY_OPERATOR = '+' | '-' | '~' | 'not' ;
+
+    // the operand is optional, e.g. 'istype T' tests the context
+    ClassificationExpression = OwnedExpression? CLASSIFICATION_OPERATOR QualifiedName ;
+    MetaclassificationExpression = QualifiedName ( '@@' | 'meta' ) QualifiedName ;
+    ExtentExpression = 'all' QualifiedName ;
+
+    // KerML 8.2.5.8.2 Primary Expressions
+    PrimaryExpression = FeatureChainExpression | NonFeatureChainPrimaryExpression ;
+    NonFeatureChainPrimaryExpression
+        = BracketExpression
+        | IndexExpression
+        | SequenceExpression
+        | SelectExpression
+        | CollectExpression
+        | FunctionOperationExpression
+        | BaseExpression
+    ;
+    BracketExpression = PrimaryExpression '[' SequenceExpressionList ']' ;
+    IndexExpression = PrimaryExpression '#' '(' SequenceExpressionList ')' ;
+    SequenceExpression = '(' SequenceExpressionList ')' ;
+    SequenceExpressionList = [OwnedExpression / ',']+ ','? ;
+    FeatureChainExpression = NonFeatureChainPrimaryExpression '.' FeatureReference ;
+    CollectExpression = PrimaryExpression '.' BodyExpression ;
+    SelectExpression = PrimaryExpression '.?' BodyExpression ;
+    FunctionOperationExpression = PrimaryExpression '->' FeatureReference ( BodyExpression | FunctionReference | ArgumentList ) ;
+    FunctionReference = QualifiedName ;
+
+    // KerML 8.2.5.8.3 Base Expressions
+    BaseExpression
+        = NullExpression
+        | LiteralExpression
+        | FeatureReferenceExpression
+        | MetadataAccessExpression
+        | InvocationExpression
+        | ConstructorExpression
+        | BodyExpression
+    ;
+    NullExpression = 'null' | '(' ')' ;
+    FeatureReferenceExpression = QualifiedName ;
+    MetadataAccessExpression = QualifiedName '.' 'metadata' ;
+    InvocationExpression = FeatureReference ArgumentList ;
+    ConstructorExpression = 'new' FeatureReference ArgumentList ;
+    ArgumentList = '(' ( PositionalArgumentList | NamedArgumentList )? ')' ;
+    PositionalArgumentList = [OwnedExpression / ',']+ ;
+    NamedArgumentList = [NamedArgument / ',']+ ;
+    NamedArgument = QualifiedName '=' OwnedExpression ;
+    BodyExpression = ExpressionBody ;
+    // replaced in SysML by a calculation body
+    ExpressionBody = '{' OwnedExpression '}' ;
+
+    // KerML 8.2.5.8.4 Literal Expressions
+    LiteralExpression
+        = LiteralBoolean
+        | LiteralString
+        | LiteralInteger
+        | LiteralReal
+        | LiteralInfinity
+    ;
+    LiteralBoolean = 'true' | 'false' ;
+    LiteralString = STRING_VALUE ;
+    LiteralInteger = DECIMAL_VALUE ;
+    LiteralReal
+        = DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE )
+        | EXPONENTIAL_VALUE
+    ;
+    LiteralInfinity = '*' ;
+}
+
+grammar Annotations : Base {
+
+    // KerML 8.2.3.1 Elements and Relationships Concrete Syntax
+    Identification = ShortName? NAME? ;
+    RelationshipBody
+        = ';'
+        | '{' RelationshipOwnedElement* '}'
+    ;
+    // extended in KerMLv1_1
+    RelationshipOwnedElement = AnnotatingElement ;
+
+    // KerML 8.2.3.2 Dependencies Concrete Syntax
+    Dependency =
+        PrefixMetadataAnnotation* 'dependency' ( Identification? 'from' )? [QualifiedName / ',']+ 'to' [QualifiedName / ',']+ RelationshipBody
+    ;
+
+    // KerML 8.2.3.3.1 Annotations
+    Annotation = QualifiedName ;
+    // extended in KerMLv1_1
+    AnnotatingElement
+        = Comment
+        | Documentation
+        | TextualRepresentation
+    ;
+
+    // KerML 8.2.3.3.2 Comments and Documentation
+    Comment = ( 'comment' Identification ( 'about' [Annotation / ',']+ )? )? ( 'locale' STRING_VALUE )? REGULAR_COMMENT ;
+    Documentation = 'doc' Identification ( 'locale' STRING_VALUE )? REGULAR_COMMENT ;
+
+    // KerML 8.2.3.3.3 Textual Representation
+    TextualRepresentation = ( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT ;
+
+    // KerML 8.2.5.12 Metadata Concrete Syntax
+    PrefixMetadataAnnotation = '#' FeatureReference ;
+    PrefixMetadataMember = '#' FeatureReference ;
+}
+
+grammar Namespaces : Annotations, Expressions {
+
+    // KerML 8.2.3.1 Elements and Relationships Concrete Syntax
+    // extended in KerMLv1_1
+    OwnedRelatedElement = NonFeatureElement ;
+
+    // KerML 8.2.3.4.1 Namespaces
+    RootNamespace = NamespaceBodyElement* ;
+    Namespace = PrefixMetadataMember* NamespaceDeclaration NamespaceBody ;
+    NamespaceDeclaration = 'namespace' Identification ;
+    NamespaceBody
+        = ';'
+        | '{' NamespaceBodyElement* '}'
+    ;
+    NamespaceBodyElement
+        = NamespaceMember
+        | AliasMember
+        | Import
+    ;
+    MemberPrefix = VisibilityIndicator? ;
+    VisibilityIndicator
+        = 'public'
+        | 'private'
+        | 'protected'
+    ;
+    // extended in KerMLv1_1
+    NamespaceMember = NonFeatureMember ;
+    NonFeatureMember = MemberPrefix MemberElement ;
+    AliasMember = MemberPrefix 'alias' Identification 'for' ImportedName RelationshipBody ;
+
+    // KerML 8.2.3.4.2 Imports
+    Import
+        = ImportOfMembership
+        | ImportOfNamespace
+    ;
+    ImportOfMembership = VisibilityIndicator 'import' ImportAll? ImportedName ImportRecursive? FilterPackageMember* RelationshipBody ;
+    ImportOfNamespace =
+        VisibilityIndicator 'import' ImportAll? ImportedName '::' '*' ImportRecursive? FilterPackageMember* RelationshipBody
+    ;
+    ImportDeclaration
+        = MembershipImport
+        | NamespaceImport
+    ;
+    MembershipImport = QualifiedName ImportRecursive? ;
+    NamespaceImport
+        = QualifiedName '::' '*' ImportRecursive?
+        | FilterPackage
+    ;
+    FilterPackage = ImportDeclaration FilterPackageMember+ ;
+    FilterPackageMember = '[' OwnedExpression ']' ;
+
+    // KerML 8.2.3.4.3 Namespace Elements
+    MemberElement
+        = AnnotatingElement
+        | NonFeatureElement
+    ;
+    // extended in KerMLv1_1
+    NonFeatureElement
+        = Dependency
+        | Namespace
+    ;
+}
+
+grammar FeatureValues : Namespaces {
+
+    // KerML 8.2.5.10 Feature Values Concrete Syntax
+    FeatureValue = ( '=' | ':=' | 'default' ( '=' | ':=' )? ) OwnedExpression ;
+
+    // KerML 8.2.5.11 Multiplicities Concrete Syntax
+    MultiplicityBounds = '[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']' ;
+    MultiplicityExpressionMember = ( LiteralExpression | FeatureReferenceExpression ) ;
+}
+
+grammar Types : FeatureValues {
+
+    // KerML 8.2.4.1.1 Types
+    Type = TypePrefix 'type' TypeDeclaration TypeBody ;
+    TypePrefix = 'abstract'? PrefixMetadataMember* ;
+    TypeDeclaration = 'all'? Identification MultiplicityBounds? ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart* ;
+    SpecializationPart = SPECIALIZES [GeneralType / ',']+ ;
+    ConjugationPart = CONJUGATES OwnedConjugation ;
+    TypeRelationshipPart
+        = DisjoiningPart
+        | UnioningPart
+        | IntersectingPart
+        | DifferencingPart
+    ;
+    DisjoiningPart = 'disjoint' 'from' [OwnedDisjoining / ',']+ ;
+    UnioningPart = 'unions' [Unioning / ',']+ ;
+    IntersectingPart = 'intersects' [Intersecting / ',']+ ;
+    DifferencingPart = 'differences' [Differencing / ',']+ ;
+    TypeBody
+        = ';'
+        | '{' TypeBodyElement* '}'
+    ;
+    // extended in KerMLv1_1
+    TypeBodyElement
+        = NonFeatureMember
+        | AliasMember
+        | Import
+    ;
+
+    // KerML 8.2.4.1.2 Specialization
+    Specialization = ( 'specialization' Identification )? 'subtype' SpecificType SPECIALIZES GeneralType RelationshipBody ;
+    SpecificType
+        = QualifiedName
+        | FeatureChain
+    ;
+    GeneralType
+        = QualifiedName
+        | FeatureChain
+    ;
+
+    // KerML 8.2.4.1.3 Conjugation
+    Conjugation =
+        ( 'conjugation' Identification )? 'conjugate' ( QualifiedName | FeatureChain ) CONJUGATES ( QualifiedName | FeatureChain ) RelationshipBody
+    ;
+    OwnedConjugation
+        = QualifiedName
+        | FeatureChain
+    ;
+
+    // KerML 8.2.4.1.4 Disjoining
+    Disjoining =
+        ( 'disjoining' Identification )? 'disjoint' ( QualifiedName | FeatureChain ) 'from' ( QualifiedName | FeatureChain ) RelationshipBody
+    ;
+    OwnedDisjoining
+        = QualifiedName
+        | FeatureChain
+    ;
+
+    // KerML 8.2.4.1.5 Unioning, Intersecting and Differencing
+    Unioning
+        = QualifiedName
+        | FeatureChain
+    ;
+    Intersecting
+        = QualifiedName
+        | FeatureChain
+    ;
+    Differencing
+        = QualifiedName
+        | FeatureChain
+    ;
+
+    // KerML 8.2.5.11 Multiplicities Concrete Syntax
+    // extended in KerMLv1_1
+    Multiplicity = MultiplicityRange ;
+    MultiplicityRange = 'multiplicity' Identification MultiplicityBounds TypeBody ;
+}
+
+grammar Classifiers : Types {
+
+    // KerML 8.2.4.2.1 Classifiers
+    Classifier = TypePrefix 'classifier' ClassifierDeclaration TypeBody ;
+    ClassifierDeclaration = 'all'? Identification MultiplicityBounds? ( SuperclassingPart | ConjugationPart )? TypeRelationshipPart* ;
+    SuperclassingPart = SPECIALIZES [QualifiedName / ',']+ ;
+
+    // KerML 8.2.4.2.2 Subclassification
+    Subclassification = ( 'specialization' Identification )? 'subclassifier' QualifiedName SPECIALIZES QualifiedName RelationshipBody ;
+}
+
+grammar Features : Classifiers {
+
+    // KerML 8.2.3.4.1 Namespaces
+    NamespaceFeatureMember = MemberPrefix FeatureElement ;
+
+    // KerML 8.2.3.4.3 Namespace Elements
+    // extended in KerMLv1_1
+    FeatureElement = Feature ;
+
+    // KerML 8.2.4.1.6 Feature Membership
+    FeatureMember
+        = TypeFeatureMember
+        | OwnedFeatureMember
+    ;
+    TypeFeatureMember = MemberPrefix 'member' FeatureElement ;
+    OwnedFeatureMember = MemberPrefix FeatureElement ;
+
+    // KerML 8.2.4.3.1 Features
+    Feature =
+        ( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration? | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration ) FeatureValue? TypeBody
+    ;
+    EndFeaturePrefix = 'const'? 'end' ;
+    BasicFeaturePrefix = FeatureDirection? 'derived'? 'abstract'? ( 'composite' | 'portion' )? ( 'var' | 'const' )? ;
+    FeaturePrefix = ( EndFeaturePrefix OwnedCrossFeature? | BasicFeaturePrefix ) PrefixMetadataMember* ;
+    OwnedCrossFeature = BasicFeaturePrefix FeatureDeclaration ;
+    FeatureDirection
+        = 'in'
+        | 'out'
+        | 'inout'
+    ;
+    FeatureDeclaration =
+        'all'? ( FeatureIdentification ( FeatureSpecializationPart | ConjugationPart )? | FeatureSpecializationPart | ConjugationPart ) FeatureRelationshipPart*
+    ;
+    FeatureIdentification
+        = '<' NAME '>' NAME?
+        | NAME
+    ;
+    FeatureRelationshipPart
+        = TypeRelationshipPart
+        | ChainingPart
+        | InvertingPart
+        | TypeFeaturingPart
+    ;
+    ChainingPart = 'chains' ( QualifiedName | FeatureChain ) ;
+    InvertingPart = 'inverse' 'of' OwnedFeatureInverting ;
+    TypeFeaturingPart = 'featured' 'by' [QualifiedName / ',']+ ;
+    FeatureSpecializationPart
+        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
+        | MultiplicityPart FeatureSpecialization*
+    ;
+    MultiplicityPart
+        = MultiplicityBounds
+        | MultiplicityBounds? ( 'ordered' 'nonunique'? | 'nonunique' 'ordered'? )
+    ;
+    FeatureSpecialization
+        = Typings
+        | Subsettings
+        | References
+        | Crosses
+        | Redefinitions
+    ;
+    Typings = TypedBy ( ',' GeneralType )* ;
+    TypedBy = TYPED_BY GeneralType ;
+    Subsettings = Subsets ( ',' GeneralType )* ;
+    Subsets = SUBSETS GeneralType ;
+    References = REFERENCES GeneralType ;
+    Crosses = CROSSES GeneralType ;
+    Redefinitions = Redefines ( ',' GeneralType )* ;
+    Redefines = REDEFINES GeneralType ;
+
+    // KerML 8.2.4.3.2 Feature Typing
+    FeatureTyping = ( 'specialization' Identification )? 'typing' QualifiedName TYPED_BY GeneralType RelationshipBody ;
+
+    // KerML 8.2.4.3.3 Subsetting
+    Subsetting = ( 'specialization' Identification )? 'subset' SpecificType SUBSETS GeneralType RelationshipBody ;
+
+    // KerML 8.2.4.3.4 Redefinition
+    Redefinition = ( 'specialization' Identification )? 'redefinition' SpecificType REDEFINES GeneralType RelationshipBody ;
+
+    // KerML 8.2.4.3.6 Feature Inverting
+    FeatureInverting =
+        ( 'inverting' Identification? )? 'inverse' ( QualifiedName | FeatureChain ) 'of' ( QualifiedName | FeatureChain ) RelationshipBody
+    ;
+    OwnedFeatureInverting
+        = QualifiedName
+        | FeatureChain
+    ;
+
+    // KerML 8.2.4.3.7 Type Featuring
+    TypeFeaturing = 'featuring' ( Identification 'of' )? QualifiedName 'by' QualifiedName RelationshipBody ;
+
+    // KerML 8.2.5.11 Multiplicities Concrete Syntax
+    MultiplicitySubset = 'multiplicity' Identification Subsets TypeBody ;
+}
+
+grammar Classes : Features {
+
+    // KerML 8.2.5.1 Data Types Concrete Syntax
+    DataType = TypePrefix 'datatype' ClassifierDeclaration TypeBody ;
+
+    // KerML 8.2.5.2 Classes Concrete Syntax
+    Class = TypePrefix 'class' ClassifierDeclaration TypeBody ;
+
+    // KerML 8.2.5.3 Structures Concrete Syntax
+    Structure = TypePrefix 'struct' ClassifierDeclaration TypeBody ;
+
+    // KerML 8.2.5.4 Associations Concrete Syntax
+    Association = TypePrefix 'assoc' ClassifierDeclaration TypeBody ;
+    AssociationStructure = TypePrefix 'assoc' 'struct' ClassifierDeclaration TypeBody ;
+}
+
+grammar Connectors : Classes {
+
+    // KerML 8.2.5.5.1 Connectors
+    Connector = FeaturePrefix 'connector' ( FeatureDeclaration? FeatureValue? | ConnectorDeclaration ) TypeBody ;
+    ConnectorDeclaration
+        = BinaryConnectorDeclaration
+        | NaryConnectorDeclaration
+    ;
+    BinaryConnectorDeclaration = ( FeatureDeclaration? 'from' | 'all' 'from'? )? ConnectorEnd 'to' ConnectorEnd ;
+    NaryConnectorDeclaration = FeatureDeclaration? '(' ConnectorEnd ',' [ConnectorEnd / ',']+ ')' ;
+    ConnectorEnd = MultiplicityBounds? ( NAME REFERENCES )? GeneralType ;
+
+    // KerML 8.2.5.5.2 Binding Connectors
+    BindingConnector = FeaturePrefix 'binding' BindingConnectorDeclaration TypeBody ;
+    BindingConnectorDeclaration
+        = FeatureDeclaration ( 'of' ConnectorEnd '=' ConnectorEnd )?
+        | 'all'? ( 'of'? ConnectorEnd '=' ConnectorEnd )?
+    ;
+
+    // KerML 8.2.5.5.3 Successions
+    Succession = FeaturePrefix 'succession' SuccessionDeclaration TypeBody ;
+    SuccessionDeclaration
+        = FeatureDeclaration ( 'first' ConnectorEnd 'then' ConnectorEnd )?
+        | 'all'? ( 'first'? ConnectorEnd 'then' ConnectorEnd )?
+    ;
+}
+
+grammar Behaviors : Classes {
+
+    // KerML 8.2.5.6.1 Behaviors
+    Behavior = TypePrefix 'behavior' ClassifierDeclaration TypeBody ;
+
+    // KerML 8.2.5.6.2 Steps
+    Step = FeaturePrefix 'step' FeatureDeclaration FeatureValue? TypeBody ;
+
+    // KerML 8.2.5.7.1 Functions
+    Function = TypePrefix 'function' ClassifierDeclaration FunctionBody ;
+    FunctionBody
+        = ';'
+        | '{' FunctionBodyPart '}'
+    ;
+    FunctionBodyPart = ( TypeBodyElement | ReturnFeatureMember )* ResultExpressionMember? ;
+    ReturnFeatureMember = MemberPrefix 'return' FeatureElement ;
+    ResultExpressionMember = MemberPrefix OwnedExpression ;
+
+    // KerML 8.2.5.7.2 Expressions
+    Expression = FeaturePrefix 'expr' FeatureDeclaration FeatureValue? FunctionBody ;
+
+    // KerML 8.2.5.7.3 Predicates
+    Predicate = TypePrefix 'predicate' ClassifierDeclaration FunctionBody ;
+
+    // KerML 8.2.5.7.4 Boolean Expressions and Invariants
+    BooleanExpression = FeaturePrefix 'bool' FeatureDeclaration FeatureValue? FunctionBody ;
+    Invariant = FeaturePrefix 'inv' ( 'true' | 'false' )? FeatureDeclaration? FeatureValue? FunctionBody ;
+}
+
+grammar Interactions : Behaviors, Connectors {
+
+    // KerML 8.2.5.9.1 Interactions
+    Interaction = TypePrefix 'interaction' ClassifierDeclaration TypeBody ;
+
+    // KerML 8.2.5.9.2 Flows
+    Flow = FeaturePrefix 'flow' FlowDeclaration TypeBody ;
+    SuccessionFlow = FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody ;
+    FlowDeclaration
+        = FeatureDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' FlowEnd 'to' FlowEnd )?
+        | 'all'? FlowEnd 'to' FlowEnd
+    ;
+    PayloadFeature
+        = Identification PayloadFeatureSpecializationPart FeatureValue?
+        | Identification FeatureValue
+        | GeneralType MultiplicityBounds?
+        | MultiplicityBounds GeneralType
+    ;
+    PayloadFeatureSpecializationPart
+        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
+        | MultiplicityPart FeatureSpecialization+
+    ;
+    FlowEnd = ( GeneralType '.' )? QualifiedName ;
+}
+
+grammar Metadata : Classes {
+
+    // KerML 8.2.5.12 Metadata Concrete Syntax
+    Metaclass = TypePrefix 'metaclass' ClassifierDeclaration TypeBody ;
+    MetadataFeature =
+        PrefixMetadataMember* ( '@' | 'metadata' ) MetadataFeatureDeclaration ( 'about' [Annotation / ',']+ )? MetadataBody
+    ;
+    MetadataFeatureDeclaration = ( Identification ( ':' | 'typed' 'by' ) )? GeneralType ;
+    MetadataBody
+        = ';'
+        | '{' MetadataBodyElement* '}'
+    ;
+    MetadataBodyElement
+        = NonFeatureMember
+        | MetadataBodyFeature
+        | AliasMember
+        | Import
+    ;
+    MetadataBodyFeature = 'feature'? ( ':>>' | 'redefines' )? GeneralType FeatureSpecializationPart? FeatureValue? MetadataBody ;
+}
+
+grammar Packages : Namespaces {
+
+    // KerML 8.2.5.13 Packages Concrete Syntax
+    Package = PrefixMetadataMember* PackageDeclaration PackageBody ;
+    LibraryPackage = 'standard'? 'library' PrefixMetadataMember* PackageDeclaration PackageBody ;
+    PackageDeclaration = 'package' Identification ;
+    PackageBody
+        = ';'
+        | '{' ( NamespaceBodyElement | ElementFilterMember )* '}'
+    ;
+    ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';' ;
+}
+
+grammar KerMLv1_1 : Interactions, Metadata, Packages {
+
+    #defaultGoalRule: RootNamespace
+    // KerML reserves its keywords (8.2.2.6), the Classic scanner does that
+    #scanner: Classic
+
+    // choices extended with the rules from the grammars above
+    override RelationshipOwnedElement
+        = OwnedRelatedElement
+        | AnnotatingElement
+    ;
+    override OwnedRelatedElement
+        = NonFeatureElement
+        | FeatureElement
+    ;
+    override AnnotatingElement
+        = Comment
+        | Documentation
+        | TextualRepresentation
+        | MetadataFeature
+    ;
+    override NamespaceMember
+        = NonFeatureMember
+        | NamespaceFeatureMember
+    ;
+    override NonFeatureElement
+        = Dependency
+        | Namespace
+        | Type
+        | Classifier
+        | DataType
+        | Class
+        | Structure
+        | Metaclass
+        | Association
+        | AssociationStructure
+        | Interaction
+        | Behavior
+        | Function
+        | Predicate
+        | Multiplicity
+        | Package
+        | LibraryPackage
+        | Specialization
+        | Conjugation
+        | Subclassification
+        | Disjoining
+        | FeatureInverting
+        | FeatureTyping
+        | Subsetting
+        | Redefinition
+        | TypeFeaturing
+    ;
+    override FeatureElement
+        = Feature
+        | Step
+        | Expression
+        | BooleanExpression
+        | Invariant
+        | Connector
+        | BindingConnector
+        | Succession
+        | Flow
+        | SuccessionFlow
+    ;
+    override TypeBodyElement
+        = NonFeatureMember
+        | FeatureMember
+        | AliasMember
+        | Import
+    ;
+    override Multiplicity
+        = MultiplicitySubset
+        | MultiplicityRange
+    ;
+
+    // the expression body of KerML is a function body (8.2.5.8.3)
+    override ExpressionBody = '{' FunctionBodyPart '}' ;
+}
