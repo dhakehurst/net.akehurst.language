@@ -42,6 +42,8 @@ typealias ValueTypeFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, data:
 typealias SingletonFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, data: Any, type: SingletonType) -> WalkInfo<P, A>
 /** a special value, e.g. kotlin.Unit, which is the agl value nothing (type std.Nothing) */
 typealias SpecialFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, data: Any, type: SpecialType) -> WalkInfo<P, A>
+/** an object written by the key of a registered lookup (see DatatypeRegistry.registerLookup), rather than by value or reference */
+typealias LookupFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, data: Any, lookupName: String, key: String) -> WalkInfo<P, A>
 typealias ReferenceFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, data: Any, property: PropertyDeclaration) -> WalkInfo<P, A>
 
 typealias CollBeginFunc<P, A> = (path: List<String>, info: WalkInfo<P, A>, data: Collection<*>, type: CollectionType, elementType: TypeInstance) -> WalkInfo<P, A>
@@ -98,7 +100,9 @@ class KompositeWalker<P : Any?, A : Any?>(
     val nullValue: NullFunc<P, A>,
     val special: SpecialFunc<P, A>,
     /** if null, an object met more than once is walked each time */
-    val objectRepeat: ObjectRepeatFunc<P, A>? = null
+    val objectRepeat: ObjectRepeatFunc<P, A>? = null,
+    /** if null, registered lookups are not used */
+    val lookup: LookupFunc<P, A>? = null
 ) {
 
     /** identity (not equals) key, so that distinct but equal objects are not treated as the same object */
@@ -146,6 +150,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         private var _nullValue: NullFunc<P, A> = { _, info, _ -> info }
         private var _special: SpecialFunc<P, A> = { _, info, _, _ -> info }
         private var _objectRepeat: ObjectRepeatFunc<P, A>? = null
+        private var _lookup: LookupFunc<P, A>? = null
 
         fun configure(configuration: Configuration.() -> Unit) {
             this._configuration.apply(configuration)
@@ -178,6 +183,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         fun nullValue(func: NullFunc<P, A>) = run { this._nullValue = func }
         fun special(func: SpecialFunc<P, A>) = run { this._special = func }
         fun objectRepeat(func: ObjectRepeatFunc<P, A>) = run { this._objectRepeat = func }
+        fun lookup(func: LookupFunc<P, A>) = run { this._lookup = func }
 
         fun build(registry: DatatypeRegistry): KompositeWalker<P, A> {
             return KompositeWalker(
@@ -188,7 +194,7 @@ class KompositeWalker<P : Any?, A : Any?>(
                 _mapBegin, _mapEntryKeyBegin, _mapEntryKeyEnd, _mapEntryValueBegin, _mapEntryValueEnd, _mapSeparate, _mapEnd,
                 _collBegin, _collElementBegin, _collElementEnd, _collSeparate, _collEnd,
                 _reference, _singleton, _primitive, _valueType, _enum, _nullValue, _special,
-                _objectRepeat
+                _objectRepeat, _lookup
             )
         }
     }
@@ -319,6 +325,11 @@ class KompositeWalker<P : Any?, A : Any?>(
         val rdt = runtimeTypeFor(data, targetType)
         val dt = rdt as DataType
         val dtRes = dt.type(targetType.typeArguments)
+
+        if (null != lookup) {
+            val lk = registry.lookupKeyFor(data)
+            if (null != lk) return lookup.invoke(path, info, data, lk.first, lk.second)
+        }
 
         if (null != objectRepeat) {
             val key = IdentityKey(data)
@@ -472,6 +483,10 @@ class KompositeWalker<P : Any?, A : Any?>(
             null == propValue -> walkNull(path, info, propValType)
             registry.isSpecial(propValue) -> walkValueWithType(owningProperty, path, info, propValue, propValType)
             registry.isCollection(propValue) -> walkCollection(owningProperty, path, info, propValue, propValType)
+            null != lookup && null != registry.lookupKeyFor(propValue) -> {
+                val lk = registry.lookupKeyFor(propValue)!!
+                lookup.invoke(path, info, propValue, lk.first, lk.second)
+            }
             else -> this.reference(path, info, propValue, owningProperty)
         }
     }
