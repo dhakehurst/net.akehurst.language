@@ -200,6 +200,8 @@ class ReferenceResolverSimple(
         // for the first element (no previous) the normal lookup is used
         val chain = when {
             isFromPrevious && null != exprContext.previous -> ChainLookup(previousTargetOf(exprContext.previous, fromNav!!))
+            // 'from \$previous... else <nav>' : the first element is looked up in the target of the reference reached by <nav>
+            isFromPrevious && null != refExpr.fromElseNavigation -> elseChainOf(exprContext, refExpr.fromElseNavigation!!)
             else -> null
         }
         val fromScopes = when {
@@ -302,9 +304,9 @@ class ReferenceResolverSimple(
                 else -> resolveMembersOf(chainScope, qName)
             }
             // Use context (not scope) because the reference could have been created from a different sentence
-            null == fromScopes -> sentenceContext.scopeForSentence.values.flatMap { rootScope -> resolveQualifiedName(chainFrom(rootScope, scope.scopePath), qName) }
+            null == fromScopes -> sentenceContext.scopeForSentence.values.flatMap { rootScope -> resolveQualifiedName(chainFrom(rootScope, scope.scopePath), qName, scope.rootScope) }
             // 'from $scope...' : try each start scope in turn, the first that gives a result is used
-            else -> fromScopes.firstNotNullOfOrNull { st -> resolveQualifiedName(chainFrom(st.rootScope, st.scopePath), qName).ifEmpty { null } } ?: emptyList()
+            else -> fromScopes.firstNotNullOfOrNull { st -> resolveQualifiedName(chainFrom(st.rootScope, st.scopePath), qName, st.rootScope).ifEmpty { null } } ?: emptyList()
         }
         val targets = found
             .flatMap { aliasTargets(it, mutableListOf()) }
@@ -412,13 +414,17 @@ class ReferenceResolverSimple(
      * the first part of the name is looked up in the innermost scope of 'chain', then outwards. The nearest scope with that name is used.
      * Looking up a name in one scope finds owned items first, then inherited items, then imported items.
      * The remaining parts are looked up only inside the scope found for the previous part, and only items visible from outside are found.
+     * The root scope of another sentence than 'homeRoot' gives only its owned items: its imports (at file level) are only for its own sentence.
      */
-    private fun resolveQualifiedName(chain: List<Scope>, qName: List<String>): List<Found> {
+    private fun resolveQualifiedName(chain: List<Scope>, qName: List<String>, homeRoot: Scope?): List<Found> {
         if (qName.isEmpty()) return emptyList()
         val first = qName.first()
         var found = emptyList<Found>()
         for (s in chain.asReversed()) {
-            found = localResolve(s, first, Access.INSIDE, mutableListOf())
+            found = when {
+                s.scopePath.isEmpty() && s !== homeRoot -> ownedItems(s, first, Access.INSIDE)
+                else -> localResolve(s, first, Access.INSIDE, mutableListOf())
+            }
             if (found.isEmpty() && qName.size > 1) {
                 // a child scope with that name, without an item
                 s.getChildScopeOrNull(first)?.let { found = listOf(Found(first, it.forTypeName, null, s)) }
@@ -451,11 +457,15 @@ class ReferenceResolverSimple(
         return found
     }
 
+    /** items named 'name' owned by scope 's', that are visible with 'access' */
+    private fun ownedItems(s: Scope, name: String, access: Access): List<Found> =
+        s.items[name]?.map { (typeName, p) -> Found(name, typeName, p.second, s) }?.filter { isVisible(visibilityOf(it), access) } ?: emptyList()
+
     /** items named 'name' in scope 's': owned, else inherited, else imported */
     private fun localResolve(s: Scope, name: String, access: Access, visited: MutableList<Scope>): List<Found> {
         if (visited.any { it === s }) return emptyList()
         visited.add(s)
-        val owned = s.items[name]?.map { (typeName, p) -> Found(name, typeName, p.second, s) }?.filter { isVisible(visibilityOf(it), access) } ?: emptyList()
+        val owned = ownedItems(s, name, access)
         if (owned.isNotEmpty()) return owned
         val ownerEl = ownerElementOf(s) ?: return emptyList()
         val scopeImports = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName)
@@ -516,6 +526,33 @@ class ReferenceResolverSimple(
         return _targetOf[el]?.get(last) ?: referredElements(evaluate(RootExpressionDefault(last), el)).singleOrNull()
     }
 
+    /**
+     * for 'from \$previous... else <nav>' and the first element of a 'forall': the target of the reference reached by 'nav' from the element of the 'in'.
+     * The reference is resolved on demand. null (the normal lookup is used) when 'nav' does not reach a reference
+     */
+    private fun elseChainOf(exprContext: ReferenceExpressionContext, nav: NavigationExpression): ChainLookup? {
+        val start = (nav.start as? RootExpression)?.name ?: return null
+        val props = listOf(start) + nav.parts.map { (it as? PropertyCall)?.propertyName ?: return null }
+        var el: AsmStructure = structuresIn(exprContext.element).singleOrNull() ?: return null
+        for (pn in props.dropLast(1)) {
+            el = structuresIn(evaluate(RootExpressionDefault(pn), el)).singleOrNull() ?: return null
+            // the reference may be defined on any element along the navigation (e.g. 'in Ref { property qname.id ... }')
+            resolveReferencesOf(el, scopeForElement[el] ?: exprContext.scope)
+        }
+        val last = props.last()
+        val value = evaluate(RootExpressionDefault(last), el)
+        return when {
+            isReference(value) -> ChainLookup(_targetOf[el]?.get(last) ?: referredElements(value).singleOrNull())
+            else -> null
+        }
+    }
+
+    private fun isReference(v: Any?): Boolean = when (v) {
+        is AsmReference -> true
+        is TypedObject -> isReference(v.self)
+        else -> false
+    }
+
     /** items for 'qName' among the members of scope 's' (owned, then inherited, then imported) as seen from outside of 's' */
     private fun resolveMembersOf(s: Scope, qName: List<String>): List<Found> {
         if (qName.isEmpty()) return emptyList()
@@ -562,6 +599,8 @@ class ReferenceResolverSimple(
 
     /** the element that created scope 's', i.e. the item in the owning scope with the scope's name and type */
     private fun ownerElementOf(s: Scope): AsmStructure? {
+        // the root scope of a sentence: its root element
+        if (s.scopePath.isEmpty()) return elementOf(s.ownerItem)
         val owner = ownerScopeOf(s) ?: return null
         val name = s.scopePath.last()
         val items = owner.items[name] ?: return null

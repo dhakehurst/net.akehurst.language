@@ -312,7 +312,8 @@ data class ReferenceExpressionPropertyDefault(
     override val referringPropertyNavigation: NavigationExpression,
     override val refersToTypeName: List<PossiblyQualifiedName>,
     override val fromNavigation: NavigationExpression?,
-    override val condition: Expression? = null
+    override val condition: Expression? = null,
+    override val fromElseNavigation: NavigationExpression? = null
 ) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
@@ -321,7 +322,7 @@ data class ReferenceExpressionPropertyDefault(
         val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
         val fr = when (fromNavigation) {
             null -> ""
-            else -> " from " + fromNavigation.asString(indent, emptyList())
+            else -> " from " + fromNavigation.asString(indent, emptyList()) + (fromElseNavigation?.let { " else " + it.asString(indent, emptyList()) } ?: "")
         }
         val cn = when (condition) {
             null -> ""

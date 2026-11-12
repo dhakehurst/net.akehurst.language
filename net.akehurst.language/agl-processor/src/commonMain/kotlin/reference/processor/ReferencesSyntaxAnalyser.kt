@@ -66,6 +66,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::referenceExpression)
         super.register(this::propertyReferenceExpression)
         super.register(this::from)
+        super.register(this::fromElse)
         super.register(this::condition)
         super.register(this::collectionReferenceExpression)
         super.register(this::rootOrNavigation)
@@ -257,7 +258,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionPropertyDefault {
         val expr = children[1] as Expression
         val typeReferences = children[3] as List<PossiblyQualifiedName>
-        val from = children[4] as NavigationExpression?
+        val from = children[4] as Pair<NavigationExpression, NavigationExpression?>?
         val condition = children[5] as Expression?
 
         val navigation = when (expr) {
@@ -268,7 +269,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
                 NavigationExpressionDefault(RootExpressionDefault.ERROR, emptyList())
             }
         }
-        return ReferenceExpressionPropertyDefault(navigation, typeReferences, from, condition).also {
+        return ReferenceExpressionPropertyDefault(navigation, typeReferences, from?.first, condition, from?.second).also {
             typeReferences.forEachIndexed { i, n ->
 //                locationMap[PropertyValue(it, "typeReferences[$i]")] = locationMap[n]!!
                 locationMap.add(ParsePath(), PropertyValue(it, "typeReferences[$i]"), locationMap[n]!!)
@@ -280,8 +281,12 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun condition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[1] as Expression
 
-    // from = 'from' rootOrNavigation
-    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpression =
+    // from = 'from' rootOrNavigation fromElse? ;
+    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<NavigationExpression, NavigationExpression?> =
+        Pair(asNavigation(children[1] as Expression), children[2] as NavigationExpression?)
+
+    // fromElse = 'else' rootOrNavigation ;
+    private fun fromElse(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpression =
         asNavigation(children[1] as Expression)
 
     // collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
