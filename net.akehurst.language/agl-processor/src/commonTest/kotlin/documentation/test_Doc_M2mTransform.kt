@@ -143,6 +143,41 @@ class test_Doc_M2mTransform {
     }
 
     @Test
+    fun pivot() {
+        // m2m-transform.md: "Other parts"
+        val actual = transform(
+            """
+            top relation CircleDisc {
+              pivot n:String
+              domain s c:Circle { name == n }
+              domain d disc:Disc { label == n }
+            }
+            """
+        )
+        assertEquals(listOf(disc("c"), disc("d")), actual)
+    }
+
+    @Test
+    fun transform_test_and_import_types_parse() {
+        // m2m-transform.md: "Other parts" - parsed only, nothing runs them yet
+        val proc = Agl.registry.agl.m2mTransform.processor!!
+        val test = """
+            namespace example
+            transform-test ShapesToDrawingTest(s:Shapes, d:Drawing) {
+              test-case OneCircle {
+                domain s := Circle() { name := 'c' }
+                domain d := Disc() { label := 'c' }
+              }
+            }
+        """.trimIndent()
+        val r1 = proc.parse(test, Agl.parseOptions { goalRuleName("testUnit") })
+        assertTrue(r1.issues.errors.isEmpty(), r1.issues.toString())
+        val withImport = "namespace example\ntransform ShapesToDrawing(s:Shapes, d:Drawing) {\n  import-types drawing\n}"
+        val r2 = proc.parse(withImport)
+        assertTrue(r2.issues.errors.isEmpty(), r2.issues.toString())
+    }
+
+    @Test
     fun when_condition() {
         // m2m-transform.md: "when"
         val actual = transform(

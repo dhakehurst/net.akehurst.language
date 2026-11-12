@@ -177,3 +177,29 @@ top mapping SquarePoint {
 
 Result: `'s has x=1'` and `'s has x=3'`. Without `...`, the collection must match exactly.
 A collection can be named, `point == ps:[ ... ]`.
+
+## Other parts
+
+* `pivot n:String` (in a relation) declares a variable that is matched in every domain, e.g. the name that links a `Circle` and its `Disc`:
+
+  ```
+  top relation CircleDisc {
+    pivot n:String
+    domain s c:Circle { name == n }
+    domain d disc:Disc { label == n }
+  }
+  ```
+* `import-types ns` (first in the transform, after any options) imports the types used in the transform; `import ns` (in the namespace) imports other transforms.
+* `option name = expression` sets a transform option. No options are defined yet.
+* `transform-test` writes tests for a transform: each `test-case` gives an object for each domain.
+  AGL parses them but does not run them yet.
+
+  ```
+  namespace example
+  transform-test ShapesToDrawingTest(s:Shapes, d:Drawing) {
+    test-case OneCircle {
+      domain s := Circle() { name := 'c' }
+      domain d := Disc() { label := 'c' }
+    }
+  }
+  ```
