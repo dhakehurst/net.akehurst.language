@@ -91,6 +91,7 @@ class ReferenceResolverSimple(
     override fun beforeRoot(root: Any) {
         when (root) {
             is AsmStructure -> {
+                recordContainers(root)
                 //val ref = createReferableFunction.invoke()
                 //val elScope = rootScope//.rootScope.scopeMap[ref] ?: rootScope
                 // scopeStack.push(elScope)
@@ -352,6 +353,7 @@ class ReferenceResolverSimple(
         const val SCOPE_THIS = "\$scope"
         const val SCOPE_ROOT = "\$root"
         val SCOPE_ROOTS = setOf(SCOPE_THIS, SCOPE_ROOT)
+        const val CONTAINER = "\$container"
         const val PUBLIC = "public"
         const val PROTECTED = "protected"
         const val PRIVATE = "private"
@@ -403,7 +405,11 @@ class ReferenceResolverSimple(
                 when (ns) {
                     null -> emptyList()
                     else -> localResolve(ns, seg, Access.OUTSIDE, mutableListOf()).ifEmpty {
-                        ns.getChildScopeOrNull(seg)?.let { listOf(Found(seg, it.forTypeName, null, ns)) } ?: emptyList()
+                        // a child scope without an item; not when there is an item that is not visible
+                        when {
+                            null != ns.items[seg] -> emptyList()
+                            else -> ns.getChildScopeOrNull(seg)?.let { listOf(Found(seg, it.forTypeName, null, ns)) } ?: emptyList()
+                        }
                     }
                 }
             }
@@ -582,11 +588,37 @@ class ReferenceResolverSimple(
         else -> emptyList()
     }
 
+    // ---- containing elements, for '\$container' ----
+
+    /** the element that contains each element of the sentence (in the ASM, not the scope owner) */
+    private val _containerOf = mutableMapOf<AsmStructure, AsmStructure>()
+
+    private fun recordContainers(owner: AsmStructure) {
+        for (p in owner.property.values) {
+            if (p.isReference) continue
+            for (child in structuresIn(p.value)) {
+                if (child !== owner && !_containerOf.containsKey(child)) {
+                    _containerOf[child] = owner
+                    recordContainers(child)
+                }
+            }
+        }
+    }
+
+    private fun typedOf(el: AsmStructure?) = when (el) {
+        null -> _interpreter.objectGraph.nothing()
+        else -> _interpreter.objectGraph.typedAs(el, typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType)
+    }
+
+    /**
+     * evaluates an expression of an 'identify', 'import' or 'inherit' declaration on 'self'.
+     * '\$container' is the element that contains 'self' in the ASM ('\$nothing' for the root, or an element of another sentence)
+     */
     private fun evaluate(expr: Expression?, self: AsmStructure): Any? = when (expr) {
         null -> null
         else -> {
-            val elType = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-            val v = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, elType)), expr).self
+            val evc = EvaluationContext.ofSelf(typedOf(self), mapOf(CONTAINER to typedOf(_containerOf[self])))
+            val v = _interpreter.evaluateExpression(evc, expr).self
             when (v) {
                 is AsmPrimitive -> v.value
                 else -> v
