@@ -99,6 +99,24 @@ top mapping CircleToDisc {
 
 Result: only `:Disc { label = 'c' }`.
 
+A `when` can also require that another rule was already applied: `related R { ... }` for a relation,
+`mapped R { ... }` for a mapping. Give a value for each source domain and a variable for the target domain;
+the variable is bound to what `R` produced. `related all` / `mapped all` require it for every element of a collection.
+
+```
+top relation CircleDisc {
+  domain s c:Circle { name == n }
+  domain d disc:Disc { label == n }
+}
+top mapping CircleToLabel {
+  domain s c:Circle { name == n }
+  domain d l:String := 'disc ' + x.label
+  when { related CircleDisc { s := c  d := x } }
+}
+```
+
+Result: the discs `c` and `d`, and `'disc c'`, `'disc d'`.
+
 ## table
 
 A `table` is a rule given as a list of values, one column per domain. Call it from `where`:
