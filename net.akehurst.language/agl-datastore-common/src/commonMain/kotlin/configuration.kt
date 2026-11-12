@@ -95,7 +95,6 @@ class DatastoreCompositionDefault(
     override suspend fun open() {
         check(_isOpen.not()) { "Composition is already open" }
         val opened = mutableListOf<Datastore>()
-        val closeFailures = mutableMapOf<DatastoreIdentity, Throwable>()
         try {
             for (ds in datastore.values) {
                 ds.open()
@@ -442,6 +441,9 @@ class DatastoreCompositionDefault(
         }
 
         val opened = mutableListOf<Datastore>()
+        val closeFailures = mutableMapOf<DatastoreIdentity, Throwable>()
+        // the number of parts whose read was built into the chain
+        var built = 0
         try {
             if (_isOpen.not()) {
                 for ((i, ds) in parts.withIndex()) {
@@ -461,7 +463,6 @@ class DatastoreCompositionDefault(
                 try {
                     val am = newAccessorMutator()
                     var flow = emptyFlow<DataItem>()
-                    var built = 0
                     for ((i, ds) in parts.withIndex()) {
                         // the parts before one that failed (e.g. to open) are still tested
                         if (failedAt in 0..i) break
@@ -520,7 +521,7 @@ class DatastoreCompositionDefault(
         for ((i, ds) in parts.withIndex()) {
             results[ds.identity] = when {
                 failedAt in 0 until i -> DatastoreTestResult(false, "Not tested: an earlier part failed")
-                failedAt == i -> DatastoreTestResult(false, testFailureMessage(failure!!), itemCount = counts[i])
+                failedAt == i -> DatastoreTestResult(false, testFailureMessage(failure!!), itemCount = if (i < built) counts[i] else null)
                 else -> {
                     val n = counts[i]
                     val warnings = buildList {
