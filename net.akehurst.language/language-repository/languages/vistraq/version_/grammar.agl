@@ -48,7 +48,7 @@ grammar Expressions : Base {
 
     conditionalExpression = expression '?' expression ':' expression ;
 
-    literalValue = BOOLEAN < SINGLE_QUOTE_STRING < INTEGER < REAL < NULL ;
+    literalValue = BOOLEAN | SINGLE_QUOTE_STRING | INTEGER | REAL | NULL ;
     leaf BOOLEAN = 'true' | 'false' ;
     leaf SINGLE_QUOTE_STRING = "'(\\\\|\\'|[^'\\])*'" ;
     leaf INTEGER = "[0-9]+" ;
@@ -89,10 +89,10 @@ grammar GraphPathExpressions : Base {
 	nodeSelector = nodeTypeReferenceExpression aliasDefinition? ;
     nodeTypeReferenceExpression
         = nodeTypeReference
-        < NONE_NODE_TYPE
-        < ANY_NODE_TYPE
-        < negatedNodeTypeReferenceExpression
-        < nodeTypeReferenceGroup
+        | NONE_NODE_TYPE
+        | ANY_NODE_TYPE
+        | negatedNodeTypeReferenceExpression
+        | nodeTypeReferenceGroup
         ;
     negatedNodeTypeReferenceExpression = 'NOT' nodeTypeReferenceExpression ;
     nodeTypeReferenceGroup = '(' [nodeTypeReferenceExpression / 'OR' ]+ ')' ;

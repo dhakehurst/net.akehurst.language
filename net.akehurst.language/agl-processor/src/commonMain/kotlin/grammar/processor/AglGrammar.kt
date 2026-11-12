@@ -75,9 +75,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
             ruleTypeLabels = 'skip'? 'leaf'? ;
             rhs = empty | concatenation | choice ;
             empty = /* empty */ ;
-            choice = ambiguousChoice | priorityChoice | simpleChoice ;
+            choice = ambiguousChoice | simpleChoice ;
             ambiguousChoice = [concatenation / '||'] 2+ ;
-            priorityChoice = [concatenation / '<'] 2+ ;
             simpleChoice = [concatenation / '|'] 2+ ;
             concatenation = concatenationItem+ ;
             concatenationItem = simpleItemOrGroup | listOfItems ;
@@ -248,11 +247,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
                     empty("empty")
                     choice("choice") {
                         ref("ambiguousChoice")
-                        ref("priorityChoice") //TODO: remove this
                         ref("simpleChoice")
                     }
                     separatedList("ambiguousChoice", 2, -1) { ref("concatenation"); lit("||") }
-                    separatedList("priorityChoice", 2, -1) { ref("concatenation"); lit("<") }
                     separatedList("simpleChoice", 2, -1) { ref("concatenation"); lit("|") }
                     list("concatenation", 1, -1) { ref("concatenationItem") }
                     choice("concatenationItem") {
@@ -485,9 +482,6 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
                     propertyOf(setOf(VAR, CMP, STR), "items", "List", false) {
                         typeArgument("RuleItem")
                     }
-                }
-                interface_("ChoicePriority") {
-                    supertype("Choice")
                 }
                 interface_("ChoiceLongest") {
                     supertype("Choice")
@@ -761,16 +755,6 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
                         parameter(setOf(), "items", "List")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "items", "List", false) {
-                        typeArgument("RuleItem")
-                    }
-                }
-                data("ChoicePriorityDefault") {
-                    supertype("ChoiceAbstract")
-                    supertype("ChoicePriority")
-                    constructor_ {
-                        parameter(setOf(), "alternative", "List")
-                    }
-                    propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
                     }
                 }

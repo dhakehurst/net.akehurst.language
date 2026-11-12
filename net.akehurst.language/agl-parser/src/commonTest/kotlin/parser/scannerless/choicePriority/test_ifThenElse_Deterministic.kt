@@ -42,7 +42,7 @@ class test_ifThenElse_Priority : test_LeftCornerParserAbstract() {
                 ref("var")
                 ref("conditional")
             }
-            choice("conditional", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("conditional", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ifThen")
                 ref("ifThenElse")
             }

@@ -42,7 +42,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
     // must be fresh per test or automaton is not correct for different parses (due to caching)
     private val rrs = ruleSet("Test") {
         concatenation("S") { ref("expr") }
-        choicePriority("expr") {
+        choiceLongest("expr") {
             ref("VAR")
             ref("conditional")
         }

@@ -111,8 +111,6 @@ internal class RuntimeRuleSetBuilder2(
     override fun choiceLongest(ruleName: String, isSkip: Boolean, isPseudo: Boolean, init: ChoiceBuilder.() -> Unit) =
         choice(ruleName, RuntimeRuleChoiceKind.LONGEST_PRIORITY, isSkip, isPseudo, init)
 
-    override fun choicePriority(ruleName: String, isSkip: Boolean, isPseudo: Boolean, init: ChoiceBuilder.() -> Unit) =
-        choice(ruleName, RuntimeRuleChoiceKind.PRIORITY_LONGEST, isSkip, isPseudo, init)
 
     fun choice(name: String, choiceKind: RuntimeRuleChoiceKind, isSkip: Boolean = false, isPseudo: Boolean = false, init: ChoiceBuilder.() -> Unit) {
         val b = RuntimeRuleChoiceBuilder(this)

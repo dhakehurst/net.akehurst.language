@@ -318,7 +318,6 @@ internal class ConverterToRuntimeRules(
                 val items = grammarRuleItem.alternative.map { this.createRhsForChoiceAlternative(rule, it, arg) }
                 val choiceKind = when (grammarRuleItem) {
                     is ChoiceLongest -> RuntimeRuleChoiceKind.LONGEST_PRIORITY
-                    is ChoicePriority -> RuntimeRuleChoiceKind.PRIORITY_LONGEST
                     is ChoiceAmbiguous -> RuntimeRuleChoiceKind.AMBIGUOUS
                     else -> throw RuntimeException("unsupported")
                 }

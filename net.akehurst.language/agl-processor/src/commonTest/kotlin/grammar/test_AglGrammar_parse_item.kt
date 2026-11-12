@@ -584,29 +584,6 @@ class test_AglGrammar_parse_item {
     }
 
     @Test
-    fun priorityChoice__nonTerminals_a_b_c() {
-        val result = parse("priorityChoice", "a < b < c")
-        val expected = this.sppt(
-            """
-            priorityChoice {
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
-                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
-                } } } } } }
-                '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
-                    IDENTIFIER : 'b' WHITESPACE  : ' ' 
-                } } } } } }
-                '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } } }
-            }
-        """.trimIndent()
-        )
-        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(1, result.sppt!!.maxNumHeads)
-    }
-
-    @Test
     fun simpleChoice__nonTerminals_a_b_c() {
         val result = parse("simpleChoice", "a | b | c")
         val expected = this.sppt(
@@ -642,29 +619,6 @@ class test_AglGrammar_parse_item {
                 '|'
                 WHITESPACE : ' '
                 concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'b' } } } } } }
-            } }
-        """.trimIndent()
-        )
-        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(1, result.sppt!!.maxNumHeads)
-    }
-
-    @Test
-    fun choice__priority_nonTerminals_a_b_c() {
-        val result = parse("choice", "a < b < c")
-        val expected = this.sppt(
-            """
-            choice { priorityChoice {
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
-                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
-                } } } } } }
-                '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
-                    IDENTIFIER : 'b' WHITESPACE  : ' ' 
-                } } } } } }
-                '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } } }
             } }
         """.trimIndent()
         )
@@ -794,42 +748,6 @@ class test_AglGrammar_parse_item {
               } }
               ')'
             } } } } }
-        """.trimIndent()
-        )
-        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(1, result.sppt!!.maxNumHeads)
-    }
-
-    @Test
-    fun rule__priorityChoice_nonTerminal_a_b_c() {
-        val result = parse("rule", "r = a < b < c ;")
-        val expected = this.sppt(
-            """
-            rule { grammarRule {
-                ruleTypeLabels {
-                    §ruleTypeLabels§opt1 { §empty }
-                    §ruleTypeLabels§opt2 { §empty }
-                }
-                IDENTIFIER : 'r' WHITESPACE : ' '
-                '=' WHITESPACE : ' '
-                rhs { choice { priorityChoice {
-                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { possiblyQualifiedName {
-                        IDENTIFIER : 'a' WHITESPACE : ' '
-                    } } } } } }
-                    '<'
-                    WHITESPACE : ' '
-                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { possiblyQualifiedName {
-                        IDENTIFIER : 'b' WHITESPACE : ' '
-                    } } } } } }
-                    '<'
-                    WHITESPACE : ' '
-                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { possiblyQualifiedName {
-                        IDENTIFIER : 'c' WHITESPACE : ' '
-                    } } } } } }
-                } } }
-                ';'
-            } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })

@@ -258,7 +258,6 @@ interface Concatenation : RuleItem {
 interface ConcatenationItem : RuleItem
 
 interface ChoiceLongest : Choice
-interface ChoicePriority : Choice //TODO: think we can remove this
 interface ChoiceAmbiguous : Choice
 
 interface OptionalItem : ConcatenationItem {
