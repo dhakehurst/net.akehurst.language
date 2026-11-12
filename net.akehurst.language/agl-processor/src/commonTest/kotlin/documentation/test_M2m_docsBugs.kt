@@ -168,7 +168,7 @@ class test_M2m_docsBugs {
     }
 
     @Test
-    fun D23_when_not_applied_does_not_hold() {
+    fun D23a_when_rule_not_yet_applied_is_applied_first() {
         val actual = transform(
             """
             top mapping CircleToCopy {
@@ -182,7 +182,7 @@ class test_M2m_docsBugs {
             }
             """, input = input("circle c r 5")
         )
-        assertEquals(emptyList(), actual)
+        assertEquals(listOf(disc("copy", "c")), actual)
     }
 
     @Test
@@ -246,5 +246,21 @@ class test_M2m_docsBugs {
         assertTrue(some.issues.warnings.none { it.message.contains("matched nothing") }, some.issues.toString())
         val none = transformResult(rules, input("square s { 1 2 }", withUnit = true))
         assertTrue(none.issues.warnings.any { it.message.contains("matched nothing") }, none.issues.toString())
+    }
+
+    @Test
+    fun D23b_rule_applied_once_per_source() {
+        // CircleToDisc is a top rule and is also called by the 'where' of UnitToDrawing: one Disc per Circle
+        val result = transformResult(
+            CIRCLE_TO_DISC + """
+            top mapping UnitToDrawing {
+              domain s u:Unit { item == its }
+              domain d dr:Drawing := Drawing() { discs := ds }
+              where { map all CircleToDisc { s := its  d := ds } }
+            }
+            """, input("circle c r 5  circle d r 50", withUnit = true)
+        )
+        val discs = result.record.entries.first { it.key.name.value == "CircleToDisc" }.value.alternatives
+        assertEquals(2, discs.size, discs.toString())
     }
 }
