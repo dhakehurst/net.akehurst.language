@@ -66,7 +66,11 @@ class AsmPathSimple(
 }
 
 open class AsmSimple(
-    val objectGraph: ObjectGraphAccessorMutator,
+    /**
+     * used to create structures. null for an Asm that is only read, e.g. one deserialised after being
+     * sent from a worker (the object graph is not serialised), such an Asm cannot create structures.
+     */
+    val objectGraph: ObjectGraphAccessorMutator? = null,
 ) : Asm {
 
     companion object {
@@ -124,7 +128,8 @@ open class AsmSimple(
     fun removeRoot(root: Any) = (this.root as MutableList).remove(root)
 
     fun createStructure(parsePath: String, typeName: QualifiedName): AsmStructureSimple {
-        val obj = objectGraph.createStructureValue(typeName, emptyMap())
+        val og = objectGraph ?: error("This AsmSimple has no objectGraph (e.g. it was deserialised), so it cannot create structures")
+        val obj = og.createStructureValue(typeName, emptyMap())
         val el = obj.self as AsmStructureSimple
         el.parsePath = parsePath
         //this.elementIndex[asmPath] = el
@@ -370,7 +375,7 @@ class AsmStructureSimple(
 
     override var parsePath: String = "??"
     override var syntaxAnalyserPath: AsmPath? = null //TODO: not sure if still need this
-    override var semanticQualifiedPath: List<String>? = null; private set
+    override var semanticQualifiedPath: List<String>? = null
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
     override val propertyOrdered
@@ -398,9 +403,6 @@ class AsmStructureSimple(
     override fun qualifiedName(separator: String): String? =
         semanticQualifiedPath?.joinToString(separator)
 
-    override fun setSemanticQualifiedPath(segments: List<String>) {
-        semanticQualifiedPath = segments
-    }
 
     override fun hasProperty(name: PropertyValueName): Boolean = property.containsKey(name)
 

@@ -102,8 +102,11 @@ interface AsmListSeparated {
                     supertype("AsmStructure")
                     constructor_ {
                         parameter(setOf(VAL, CMP), "qualifiedTypeName", "QualifiedName")
+                        // identity is not serialised, so a deserialised structure gets a generated identity when first used
+                        parameter(setOf(), "identity", "Any", true)
                     }
                     propertyOf(setOf(VAR, REF, STR), "parsePath", "String", false)
+                    propertyOf(setOf(VAR, CMP, STR), "semanticQualifiedPath", "List", true) { typeArgument("String") }
                     propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")
@@ -126,7 +129,10 @@ interface AsmListSeparated {
                 }
                 data("AsmSimple") {
                     supertype("Asm")
-                    constructor_ {}
+                    constructor_ {
+                        // the objectGraph is not serialised (it is not a property here), so it is null when deserialised
+                        parameter(setOf(), "objectGraph", "Any", true)
+                    }
                     propertyOf(setOf(VAR, REF, STR), "elementIndex", "Map", false){
                         typeArgument("AsmPath")
                         typeArgument("AsmStructure")
