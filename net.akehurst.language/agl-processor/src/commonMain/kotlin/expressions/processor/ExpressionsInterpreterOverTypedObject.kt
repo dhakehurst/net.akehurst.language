@@ -137,7 +137,10 @@ open class ExpressionsInterpreterOverTypedObject(
         val start = evaluateExpression(evc, st)
         val result = expression.parts.fold(start) { acc, it ->
             when (it) {
-                is PropertyCall -> evaluatePropertyName(acc, PropertyName(it.propertyName))
+                is PropertyCall -> when {
+                    it.propertyName.startsWith("\$") -> evaluateSpecialProperty(acc, it.propertyName) ?: evaluatePropertyName(acc, PropertyName(it.propertyName))
+                    else -> evaluatePropertyName(acc, PropertyName(it.propertyName))
+                }
                 is MethodCall -> evaluateMethodCall(evc, acc, MethodName(it.methodName), it.arguments)
                 is IndexOperation -> evaluateIndexOperation(evc, acc, it.indices)
                 else -> error("should not happen")
@@ -145,6 +148,12 @@ open class ExpressionsInterpreterOverTypedObject(
         }
         return result
     }
+
+    /**
+     * the value of a special property ('.\$name') of 'obj', given by the user of the interpreter (e.g. '.\$owner' in references),
+     * null if it is not a special property, then it is an ordinary property of 'obj'
+     */
+    protected open fun evaluateSpecialProperty(obj: TypedObject, name: String): TypedObject? = null
 
     private fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
         return when {

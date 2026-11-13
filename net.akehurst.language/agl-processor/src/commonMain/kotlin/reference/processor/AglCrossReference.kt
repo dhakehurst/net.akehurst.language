@@ -60,11 +60,14 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 visibility = 'visibility' expression ;
                 aliasFor = 'alias-for' rootOrNavigation ;
                 scopeImports = scopeImport* ;
-                scopeImport = importDefinition | inheritDefinition ;
-                importDefinition = 'import' 'forall' rootOrNavigation ofType? importKind rootOrNavigation recursive? visibility? ;
+                scopeImport = importDefinition | inheritDefinition | inheritNamedDefinition ;
+                importDefinition = 'import' 'forall' rootOrNavigation ofType? importKind rootOrNavigation recursive? visibility? condition? ;
                 importKind = 'members-of' | 'element' ;
                 recursive = 'recursive' expression ;
-                inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation ;
+                inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation condition? ;
+                inheritNamedDefinition = 'inherit' 'named' namedPath condition? ;
+                namedPath = [namedSegment / '.']+ ;
+                namedSegment = IDENTIFIER | STRING ;
             
                 references = 'references' '{' referenceDefinitions '}' ;
                 referenceDefinitions = referenceDefinition* ;
@@ -73,7 +76,8 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
                 propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? condition? ;
                 condition = 'when' expression ;
-                from = 'from' rootOrNavigation fromElse? ;
+                from = 'from' fromInherited? rootOrNavigation fromElse? ;
+                fromInherited = 'inherited' ;
                 fromElse = 'else' rootOrNavigation ;
                 collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
                 ofType = 'of-type' possiblyQualifiedTypeReference ;
@@ -173,9 +177,10 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     choice("scopeImport") {
                         ref("importDefinition")
                         ref("inheritDefinition")
+                        ref("inheritNamedDefinition")
                     }
                     concatenation("importDefinition") {
-                        lit("import"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; ref("importKind"); ref("rootOrNavigation"); opt { ref("recursive") }; opt { ref("visibility") }
+                        lit("import"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; ref("importKind"); ref("rootOrNavigation"); opt { ref("recursive") }; opt { ref("visibility") }; opt { ref("condition") }
                     }
                     choice("importKind") {
                         lit("members-of")
@@ -183,7 +188,15 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     concatenation("recursive") { lit("recursive"); ref("expression") }
                     concatenation("inheritDefinition") {
-                        lit("inherit"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("members-of"); ref("rootOrNavigation")
+                        lit("inherit"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("members-of"); ref("rootOrNavigation"); opt { ref("condition") }
+                    }
+                    concatenation("inheritNamedDefinition") {
+                        lit("inherit"); lit("named"); ref("namedPath"); opt { ref("condition") }
+                    }
+                    separatedList("namedPath", 1, -1) { ref("namedSegment"); lit(".") }
+                    choice("namedSegment") {
+                        ref("IDENTIFIER")
+                        ref("STRING")
                     }
                     concatenation("references") {
                         lit("references"); lit("{"); ref("referenceDefinitions"); lit("}")
@@ -201,7 +214,8 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         lit("property"); ref("rootOrNavigation"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }; opt { ref("condition") }
                     }
                     concatenation("condition") { lit("when"); ref("expression") }
-                    concatenation("from") { lit("from"); ref("rootOrNavigation"); opt { ref("fromElse") } }
+                    concatenation("from") { lit("from"); opt { ref("fromInherited") }; ref("rootOrNavigation"); opt { ref("fromElse") } }
+                    concatenation("fromInherited") { lit("inherited") }
                     concatenation("fromElse") { lit("else"); ref("rootOrNavigation") }
                     concatenation("collectionReferenceExpression") {
                         lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("{"); ref("referenceExpressionList"); lit("}")
@@ -291,7 +305,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         parameter(setOf(), "fromNavigation", "NavigationExpression")
                         parameter(setOf(), "condition", "Expression")
                         parameter(setOf(), "fromElseNavigation", "NavigationExpression")
+                        parameter(setOf(), "fromInherited", "Boolean")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "fromInherited", "Boolean", false)
                     propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
                     propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", false)
                     propertyOf(setOf(VAL, CMP, STR), "fromElseNavigation", "NavigationExpression", true)

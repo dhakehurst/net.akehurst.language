@@ -57,6 +57,6 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 | `$nothing` | no value |
 
 Special names: `$self` (current object), `$nothing`; in [asm-transform](asm-transform.md) also `child`, `children`,
-`$matchedText`, `$alternative`; in [references](references.md) also `$scope`, `$root`; in [format](format.md) `$EOL`.
+`$matchedText`, `$alternative`; in [references](references.md) also `$container`, `$owner`, `$root`, `$previous`; in [format](format.md) `$EOL`.
 
 A file can define functions: `fun name(p: Type): Type = expression`.

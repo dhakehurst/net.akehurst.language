@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Reference DSL: 'import', 'inherit', 'visibility', 'alias-for', 'from $scope...' / 'from $root', and 'when' conditions.
+ * Reference DSL: 'import', 'inherit', 'visibility', 'alias-for', 'from $owner...' / 'from inherited ...' / 'from $root', and 'when' conditions.
  */
 class test_ReferenceResolverSimple_imports {
 
@@ -74,12 +74,12 @@ class test_ReferenceResolverSimple_imports {
                 scope Use { }
 
                 references {
-                    in Specialization { property qname refers-to Def from ${'$'}scope.owner }
+                    in Specialization { property qname refers-to Def from ${'$'}owner.${'$'}owner }
                     in Typing {
                         property qname refers-to Def from ${'$'}root when global == '${'$'}::'
                         property qname refers-to Def
                     }
-                    in Redefines { property qname refers-to Use from ${'$'}scope.owner.inherited }
+                    in Redefines { property qname refers-to Use from inherited ${'$'}owner.${'$'}owner }
                     in Alias { property qname refers-to Def|Package }
                     in AllImport { property qname refers-to Package|Def }
                     in OneImport { property qname refers-to Package|Def|Use }

@@ -497,10 +497,10 @@ class TypeTestExpressionDefault(
 ) : TypeTestExpression {
     override fun asString(indent: Indent, imports: List<Import>): String {
         val ttn = targetType.asString(indent, imports)
-        return "${expression.asString(indent, imports)} as $ttn"
+        return "${expression.asString(indent, imports)} is $ttn"
     }
 
-    override fun toString(): String = "$expression as $targetType"
+    override fun toString(): String = "$expression is $targetType"
 }
 
 data class TypeReferenceDefault(

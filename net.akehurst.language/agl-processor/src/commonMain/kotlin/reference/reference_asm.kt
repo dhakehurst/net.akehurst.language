@@ -263,7 +263,9 @@ data class ScopeImportDefault(
     override val ofType: PossiblyQualifiedName?,
     override val target: NavigationExpression,
     override val recursive: Expression? = null,
-    override val visibility: Expression? = null
+    override val visibility: Expression? = null,
+    override val condition: Expression? = null,
+    override val named: List<String>? = null
 ) : ScopeImport {
     override fun asString(indent: Indent, imports: List<Import>): String {
         val kw = when (kind) {
@@ -278,7 +280,15 @@ data class ScopeImportDefault(
         val ot = ofType?.let { " of-type ${it.value}" } ?: ""
         val rec = recursive?.let { " recursive ${it.asString(indent, emptyList())}" } ?: ""
         val vis = visibility?.let { " visibility ${it.asString(indent, emptyList())}" } ?: ""
-        return "${indent}$kw forall ${elements.asString(indent, emptyList())}$ot $what ${target.asString(indent, emptyList())}$rec$vis"
+        val cn = condition?.let { " when ${it.asString(indent, emptyList())}" } ?: ""
+        return when (named) {
+            null -> "${indent}$kw forall ${elements.asString(indent, emptyList())}$ot $what ${target.asString(indent, emptyList())}$rec$vis$cn"
+            else -> "${indent}$kw named ${named.joinToString(".") { n -> if (IDENTIFIER_REGEX.matches(n)) n else "'$n'" }}$cn"
+        }
+    }
+
+    private companion object {
+        val IDENTIFIER_REGEX = Regex("[a-zA-Z_][a-zA-Z_0-9-]*")
     }
 }
 
@@ -313,7 +323,8 @@ data class ReferenceExpressionPropertyDefault(
     override val refersToTypeName: List<PossiblyQualifiedName>,
     override val fromNavigation: NavigationExpression?,
     override val condition: Expression? = null,
-    override val fromElseNavigation: NavigationExpression? = null
+    override val fromElseNavigation: NavigationExpression? = null,
+    override val fromInherited: Boolean = false
 ) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
@@ -322,7 +333,7 @@ data class ReferenceExpressionPropertyDefault(
         val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
         val fr = when (fromNavigation) {
             null -> ""
-            else -> " from " + fromNavigation.asString(indent, emptyList()) + (fromElseNavigation?.let { " else " + it.asString(indent, emptyList()) } ?: "")
+            else -> " from " + (if (fromInherited) "inherited " else "") + fromNavigation.asString(indent, emptyList()) + (fromElseNavigation?.let { " else " + it.asString(indent, emptyList()) } ?: "")
         }
         val cn = when (condition) {
             null -> ""
