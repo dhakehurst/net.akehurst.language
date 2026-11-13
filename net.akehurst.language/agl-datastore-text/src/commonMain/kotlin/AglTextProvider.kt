@@ -23,7 +23,25 @@ open class AglTextProvider : DatastoreProvider {
          */
         const val ACCESS_RESOLVE_ACROSS_UNITS = "access.resolve-across-units"
 
+        /**
+         * path of a folder that holds the language definition, as files found by their extension (any file name):
+         * see the FILE_EXTENSION_* constants. Only the grammar file is required; at most one file of each kind.
+         * When given, the definition strings (config.grammar, config.format, config.crossReference) are not used.
+         */
         const val CONFIG_LANGUAGE_DIRECTORY = "config.lang-dir"
+
+        /** extension of the grammar file in a language directory (required) */
+        const val FILE_EXTENSION_GRAMMAR = "agl-grm"
+        /** extension of the types file in a language directory (optional) */
+        const val FILE_EXTENSION_TYPES = "agl-typ"
+        /** extension of the asm-transform file in a language directory (optional) */
+        const val FILE_EXTENSION_TRANSFORM = "agl-trf"
+        /** extension of the cross-reference file in a language directory (optional) */
+        const val FILE_EXTENSION_CROSS_REFERENCE = "agl-ref"
+        /** extension of the style file in a language directory (optional) */
+        const val FILE_EXTENSION_STYLE = "agl-sty"
+        /** extension of the format file in a language directory (optional) */
+        const val FILE_EXTENSION_FORMAT = "agl-fmt"
 
         /** input type for AglTextDatastore.read, for use as a DatastoreConnection targetType */
         const val PARSABLE_UNIT_TYPE = "net.akehurst.datastore.text.ParsableUnit"
@@ -48,8 +66,14 @@ open class AglTextProvider : DatastoreProvider {
                     }
                 }
                 alternative("Language Directory") {
-                    parameter(CONFIG_FORMAT_STR, "Format String", false) {
+                    parameter(CONFIG_LANGUAGE_DIRECTORY, "Language Directory", false) {
                         type("String")
+                        description(
+                            "Path of a folder that holds the language definition, one file of each kind, found by extension (any file name): " +
+                                    "grammar (.$FILE_EXTENSION_GRAMMAR, required), types (.$FILE_EXTENSION_TYPES), asm-transform (.$FILE_EXTENSION_TRANSFORM), " +
+                                    "cross-references (.$FILE_EXTENSION_CROSS_REFERENCE), style (.$FILE_EXTENSION_STYLE) and format (.$FILE_EXTENSION_FORMAT). " +
+                                    "Without a cross-reference file, no references are resolved."
+                        )
                     }
                 }
             }

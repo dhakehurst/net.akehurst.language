@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.akehurst.datastore.api.DataItem
 import net.akehurst.datastore.api.DataItemIdentity
 import net.akehurst.datastore.api.DataItemProvenance
@@ -16,7 +18,13 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromRegistryGrammars
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.api.processor.AsmTransformString
 import net.akehurst.language.api.processor.CrossReferenceString
+import net.akehurst.language.api.processor.StyleString
+import net.akehurst.language.api.processor.TypesString
+import net.akehurst.kotlinx.filesystem.UserFileSystemDefault
+import net.akehurst.kotlinx.filesystem.api.FileAccessMode
+import net.akehurst.kotlinx.filesystem.api.FileHandle
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.processor.ResolvedReference
@@ -98,31 +106,87 @@ open class AglTextDatastore(
 
     companion object {
 
+        /** the definitions of a language, as strings; only the grammar is required */
+        data class AglTextDefinitions(
+            val grammar: String,
+            val types: String? = null,
+            val transform: String? = null,
+            val crossReference: String? = null,
+            val style: String? = null,
+            val format: String? = null
+        )
+
         class AglTextConfig(val configuration: DatastoreConfiguration) {
-            val grammarStr by lazy {
-                configuration.getAsString(AglTextProvider.CONFIG_GRAMMAR_STR)
-            }
 
-            val formatStr by lazy {
-                configuration.getAsString(AglTextProvider.CONFIG_FORMAT_STR)
-            }
+            /** the language directory, if given; then the definitions come from its files, not from the definition strings */
+            val languageDirectory: String? get() = configuration.getAsStringOrNull(AglTextProvider.CONFIG_LANGUAGE_DIRECTORY)
 
-            val crossReferenceStr by lazy {
-                configuration.getAsStringOrNull(AglTextProvider.CONFIG_CROSS_REFERENCE_STR)
-            }
+            private val _mutex = Mutex()
+            private var _definitions: AglTextDefinitions? = null
+            private var _processor: LanguageProcessor<Asm, SentenceContext>? = null
 
-            val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
-                Agl.processorFromString(
-                    grammarDefinitionStr = grammarStr,
-                    configuration = Agl.configuration(base = Agl.configurationSimple()){
-                        this.formatString(FormatString(formatStr))
-                        crossReferenceStr?.let { this.crossReferenceString(CrossReferenceString(it)) }
-                    },
-                    aglOptions = Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } }
-                ).let {
-                    check(it.issues.errors.isEmpty()) { "Failed to construct AglTextDatastore Configuration:\n${it.issues}" }
-                    it.processor!!
+            /** the definitions, from the language directory if given, else from the definition strings. Read once. */
+            suspend fun definitions(): AglTextDefinitions = _mutex.withLock { definitionsUnlocked() }
+
+            private suspend fun definitionsUnlocked(): AglTextDefinitions = _definitions ?: run {
+                val dirPath = languageDirectory
+                when (dirPath) {
+                    null -> AglTextDefinitions(
+                        grammar = configuration.getAsString(AglTextProvider.CONFIG_GRAMMAR_STR),
+                        crossReference = configuration.getAsStringOrNull(AglTextProvider.CONFIG_CROSS_REFERENCE_STR),
+                        format = configuration.getAsString(AglTextProvider.CONFIG_FORMAT_STR)
+                    )
+
+                    else -> definitionsFromDirectory(dirPath)
                 }
+            }.also { _definitions = it }
+
+            /** the language processor, built from the definitions. Built once. */
+            suspend fun processor(): LanguageProcessor<Asm, SentenceContext> = _mutex.withLock {
+                _processor ?: run {
+                    val defs = definitionsUnlocked()
+                    Agl.processorFromString(
+                        grammarDefinitionStr = defs.grammar,
+                        configuration = Agl.configuration(base = Agl.configurationSimple()) {
+                            defs.types?.let { this.typesString(TypesString(it)) }
+                            defs.transform?.let { this.transformString(AsmTransformString(it)) }
+                            defs.crossReference?.let { this.crossReferenceString(CrossReferenceString(it)) }
+                            defs.style?.let { this.styleString(StyleString(it)) }
+                            defs.format?.let { this.formatString(FormatString(it)) }
+                        },
+                        aglOptions = Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } }
+                    ).let {
+                        check(it.issues.errors.isEmpty()) { "Failed to construct AglTextDatastore Configuration:\n${it.issues}" }
+                        it.processor!!
+                    }
+                }.also { _processor = it }
+            }
+
+            /**
+             * reads the definitions from the files of the directory, found by extension (see AglTextProvider.FILE_EXTENSION_*).
+             * Fails if the directory is not found, there is no grammar file, or there is more than one file of a kind.
+             */
+            private suspend fun definitionsFromDirectory(dirPath: String): AglTextDefinitions {
+                val dir = UserFileSystemDefault.getDirectory(dirPath, FileAccessMode.READ_ONLY)
+                    ?: error("Language Directory '$dirPath' is not found")
+                val files = dir.listContent().filterIsInstance<FileHandle>()
+                suspend fun read(extension: String): String? {
+                    val found = files.filter { it.extension == extension }
+                    return when (found.size) {
+                        0 -> null
+                        1 -> found[0].readContent() ?: error("Cannot read '${found[0].path}' in Language Directory '$dirPath'")
+                        else -> error("Language Directory '$dirPath' has more than one '.$extension' file: ${found.joinToString { it.name }}")
+                    }
+                }
+                return AglTextDefinitions(
+                    grammar = read(AglTextProvider.FILE_EXTENSION_GRAMMAR)
+                        ?: error("Language Directory '$dirPath' must hold a grammar file (a '.${AglTextProvider.FILE_EXTENSION_GRAMMAR}' file)"),
+                    types = read(AglTextProvider.FILE_EXTENSION_TYPES),
+                    transform = read(AglTextProvider.FILE_EXTENSION_TRANSFORM),
+                    crossReference = read(AglTextProvider.FILE_EXTENSION_CROSS_REFERENCE),
+                    style = read(AglTextProvider.FILE_EXTENSION_STYLE),
+                    format = read(AglTextProvider.FILE_EXTENSION_FORMAT)
+                )
             }
         }
 
@@ -148,7 +212,7 @@ open class AglTextDatastore(
     /** the processor's types plus the input types (ParsableUnit) */
     override suspend fun createTypes(): TypesDomain =
         typesDomain("AglText", true) {}
-            .merge(_parsedConfig.processor.typesDomain)
+            .merge(_parsedConfig.processor().typesDomain)
             .merge(_inputTypes)
 
     /**
@@ -159,7 +223,7 @@ open class AglTextDatastore(
     override suspend fun doRead(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
         val acrossUnits = accessConfiguration.getAsBooleanOrNull(AglTextProvider.ACCESS_RESOLVE_ACROSS_UNITS) ?: false
         return when {
-            acrossUnits && null != _parsedConfig.crossReferenceStr -> readAcrossUnits(input)
+            acrossUnits && null != _parsedConfig.definitions().crossReference -> readAcrossUnits(input)
             else -> input.map { parseUnit(it) }
         }
     }
@@ -211,7 +275,7 @@ open class AglTextDatastore(
     }
 
     /** a context for semantic analysis, if the datastore has a cross-reference definition */
-    private fun newContextOrNull(): SentenceContext? = _parsedConfig.crossReferenceStr?.let { contextAsmSimple() }
+    private suspend fun newContextOrNull(): SentenceContext? = _parsedConfig.definitions().crossReference?.let { contextAsmSimple() }
 
     private fun processOptions(
         sentenceIdentity: Any?,
@@ -259,7 +323,7 @@ open class AglTextDatastore(
     private suspend fun syntaxPass(item: DataItem): Any {
         val unit = unitOf(item) ?: return notAUnitItem(item)
         val sentenceIdentity = sentenceIdentityFor(item, unit)
-        val res = _parsedConfig.processor.process(unit.text, processOptions(sentenceIdentity, null, semanticAnalysis = false, buildScope = false, resolve = false))
+        val res = _parsedConfig.processor().process(unit.text, processOptions(sentenceIdentity, null, semanticAnalysis = false, buildScope = false, resolve = false))
         val asm = res.asm
         val lm = res.syntaxAnalysis?.locationMap
         // copied now: the processor clears its location map on the next parse
@@ -268,9 +332,9 @@ open class AglTextDatastore(
     }
 
     /** adds the unit's scope to 'context' */
-    private fun scopePass(p: Parsed, context: SentenceContext?) {
+    private suspend fun scopePass(p: Parsed, context: SentenceContext?) {
         if (null == context || null == p.asm || p.hasErrors) return
-        val res = _parsedConfig.processor.semanticAnalysis(
+        val res = _parsedConfig.processor().semanticAnalysis(
             p.asm, processOptions(p.sentenceIdentity, context, semanticAnalysis = true, buildScope = true, resolve = false, locationMap = p.locationMap())
         )
         p.issues.addAll(relevant(res.issues.all))
@@ -279,7 +343,7 @@ open class AglTextDatastore(
     /** resolves the unit's references in 'context', sets the unit's asm, locations and references, and gives the output item */
     private suspend fun resolvePass(p: Parsed, context: SentenceContext?, otherUnitLocations: Map<Any, InputLocation> = emptyMap()): DataItem {
         if (null != context && null != p.asm && p.hasErrors.not()) {
-            val res = _parsedConfig.processor.semanticAnalysis(
+            val res = _parsedConfig.processor().semanticAnalysis(
                 p.asm, processOptions(p.sentenceIdentity, context, semanticAnalysis = true, buildScope = false, resolve = true, locationMap = p.locationMap(otherUnitLocations))
             )
             // copied now: the processor reuses its lists for the next analysis
@@ -390,7 +454,7 @@ open class AglTextDatastore(
             ?: return unitItem(item, unit, issuesOf(IssueDefault(IssueKind.ERROR, AglTextIssueLocation(null), "the ParsableUnit has no asm to format.")))
         val asm = AsmSimple(am)
         asm.addRoot(root)
-        val res = _parsedConfig.processor.formatAsm(
+        val res = _parsedConfig.processor().formatAsm(
             asm,
             //TODO: options
         )
