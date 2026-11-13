@@ -46,7 +46,7 @@ interface DatastoreConnection {
 }
 
 /**
- * Identifies a composition configuration among the compositions of one owner (e.g. an EDITH project).
+ * Identifies a composition configuration among the compositions of one owner (e.g. a project in the client application).
  * A valid identity is non-blank, starts with a letter (a-z, A-Z), and has only letters, digits (0-9), '-' and '_',
  * so that it can be used in file names and query text. See [isValid].
  */
@@ -67,7 +67,7 @@ value class DatastoreCompositionIdentity(val value: String) {
 }
 
 interface DatastoreCompositionConfiguration {
-    /** chosen when the composition is created, then never changed; unique among the compositions of one owner (e.g. an EDITH project) */
+    /** chosen when the composition is created, then never changed; unique among the compositions of one owner (e.g. a project in the client application) */
     val identity: DatastoreCompositionIdentity
 
     /** a readable name; may be changed; blank means none (show the identity instead) */
