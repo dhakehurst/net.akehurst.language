@@ -23,7 +23,10 @@ import korlibs.io.file.VfsFile
 import korlibs.io.file.extension
 import korlibs.io.file.std.localCurrentDirVfs
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.LanguageProcessorResult
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.asm.api.Asm
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -68,12 +71,18 @@ data class SentenceData(
     val goalRuleName: String? get() = goalRule?.substringAfter("::")
 }
 
-suspend fun processorResultFor(testData: TestData) = Agl.processorFromStringSimple(
-    testData.grammar.grammarStr(),
-    configurationBase = Agl.configuration(Agl.configurationSimple()) {
-        testData.sentence.targetGrammarName?.let { targetGrammarName(it) }
-    }
-)
+// one processor per grammar file and target grammar, building a processor for every sentence is too slow
+private val processorResults = mutableMapOf<Pair<String, String?>, LanguageProcessorResult<Asm, SentenceContext>>()
+
+suspend fun processorResultFor(testData: TestData): LanguageProcessorResult<Asm, SentenceContext> {
+    val key = Pair(testData.grammar.name, testData.sentence.targetGrammarName)
+    return processorResults[key] ?: Agl.processorFromStringSimple(
+        testData.grammar.grammarStr(),
+        configurationBase = Agl.configuration(Agl.configurationSimple()) {
+            testData.sentence.targetGrammarName?.let { targetGrammarName(it) }
+        }
+    ).also { processorResults[key] = it }
+}
 
 suspend fun VfsFile.walk(recursive: Boolean, func: suspend (file: VfsFile) -> Unit = { }) {
     for (file in listSimple()) {
