@@ -3,7 +3,7 @@
 > **Keep this page up to date.** When a feature named here changes (parser algorithm, ambiguity handling,
 > error recovery, incremental parsing, platforms, IDE/LSP support, performance), update this page in the same commit.
 >
-> Last reviewed: 2026-11-11, against branch `2.4.0-inwork` at `40b8fb37` plus the reference DSL scoping change.
+> Last reviewed: 2026-11-13, against branch `2.4.0-inwork` at `fa239a2a`.
 
 AGL sits between the parser generators (ANTLR, tree-sitter) and the full language workbenches
 (Xtext, Langium, Spoofax, JetBrains MPS). It combines a general parser (like the GLR/GLL tools),
@@ -28,7 +28,7 @@ Where it is behind is raw speed, error recovery and community size.
    cross-references and scopes, semantic analysis, style, completion, formatting (M2T), M2M transforms and
    expressions, each as a small DSL. Langium and Xtext are the closest, but they are tied to their IDE/LSP setup.
    Name resolution (enclosing scopes, imports, inherited members, visibility, aliases) is declared in the reference DSL;
-   in Xtext and Langium the same needs scope-provider code.
+   in Xtext and Langium the same needs scope-provider code. Each DSL has a reference page in [dsl/](dsl/).
 7. **Completion from the grammar with no extra work.** Tree-sitter has none; ANTLR needs a library such as antlr4-c3.
 
 ## Weaknesses
@@ -43,9 +43,11 @@ Where it is behind is raw speed, error recovery and community size.
    ([net.akehurst.language.editor](https://github.com/dhakehurst/net.akehurst.language.editor)).
    Xtext, Langium, Spoofax and MPS ship editor generation as part of the framework.
    (This page does not yet compare the editor's features with theirs.)
-5. **Maturity and documentation.** A one-person project with a small community. Known open issues include
+5. **Maturity.** A one-person project with a small community. Known open issues include
    parse trees that are not always what one expects and a number of failing parser tests.
-6. **Kotlin/Native not enabled.** `Overview.md` lists Native, but `macosArm64()` is commented out in
+   The documentation is newer and smaller than that of ANTLR, Xtext or Langium: a [Getting Started](GETTING_STARTED.md)
+   guide and one reference page per DSL (see [Overview](Overview.md)), but no tutorials or worked examples yet.
+6. **Kotlin/Native not enabled.** Only JVM, JS and wasmJs are built; `macosArm64()` is commented out in
    `0_build-logic/src/main/kotlin/project-conventions.gradle.kts`.
 7. **No projectional editing.** That is MPS's niche, so it is a different category rather than a gap.
 
