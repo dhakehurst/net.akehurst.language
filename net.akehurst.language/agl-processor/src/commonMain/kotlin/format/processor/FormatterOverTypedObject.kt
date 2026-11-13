@@ -26,6 +26,7 @@ import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmReference
 import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -119,6 +120,8 @@ class FormatterOverTypedObject(
         val resultStr = when (self) {
             null -> ""
             else -> when {
+                // a reference is formatted as the text that refers, not as the element it refers to (whether resolved or not)
+                self.self is AsmReference -> (self.self as AsmReference).reference
                 self.type.isCollection && self.type.typeArguments.isNotEmpty() -> {
                     val selfRaw = self.self
                     val (coll, elType) = when {
@@ -132,6 +135,7 @@ class FormatterOverTypedObject(
                         else -> {
                             val formatRule = findRuleFor(formatSetName, elType)
                             coll.joinToString("") {
+                                if (it is AsmReference) return@joinToString it.reference
                                 val typedElem = self.accessor.toTypedObject(it, elType)
                                 val elemEvc = evc.childSelf(typedElem)
                                 val resStr = when (formatRule) {
@@ -487,6 +491,7 @@ class FormatterOverTypedObject(
     private fun formatTemplateElementExpressionSimple(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, templateElement: TemplateElementExpressionProperty): String {
         val value = getNamedValue(evc, templateElement.propertyName)
         return when {
+            value.self is AsmReference -> (value.self as AsmReference).reference
             value.type.isPrimitive -> objectGraph.valueOf(value).toString()
             else -> formatEvc(formatSetName, evc.childSelf(value))
         }
@@ -535,7 +540,11 @@ class FormatterOverTypedObject(
 
     private fun formatTemplateElementExpressionEmbedded(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, templateElement: TemplateElementExpressionEmbedded): String {
         val v = formatEvaluateExpression(formatSetName, evc, templateElement.expression)
-        return objectGraph.valueOf(v) as String
+        val value = objectGraph.valueOf(v)
+        return when (value) {
+            is AsmReference -> value.reference
+            else -> value as String
+        }
     }
 
     private fun formatFromWhen(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, formatExpr: FormatExpressionWhen): String {

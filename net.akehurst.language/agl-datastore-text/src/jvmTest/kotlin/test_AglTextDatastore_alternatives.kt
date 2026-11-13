@@ -73,7 +73,6 @@ class test_AglTextDatastore_alternatives {
         """.trimIndent()
 
         const val SENTENCE = "def a use a"
-        const val FORMAT_SENTENCE = "def a def b"
     }
 
     @BeforeTest
@@ -96,8 +95,7 @@ class test_AglTextDatastore_alternatives {
 
     /**
      * reads SENTENCE and checks the asm and the resolved reference (so grammar and cross-references were used),
-     * then reads FORMAT_SENTENCE and formats its asm back into the unit's text (so the format was used).
-     * (FORMAT_SENTENCE has no reference: a resolved reference is currently formatted as its target, e.g. 'use def a'.)
+     * then formats its asm back into the unit's text (so the format was used): a resolved reference is formatted as the text that refers.
      */
     private suspend fun assertReadsResolvesAndWrites(sut: Datastore) {
         sut.open()
@@ -107,13 +105,11 @@ class test_AglTextDatastore_alternatives {
         assertTrue(unit.asm is AsmStructure, "asm: ${unit.asm}")
         assertEquals(1, unit.resolvedReferences.size)
 
-        val read2 = sut.read(accessConfiguration(AglTextProvider.IDENTITY) {}, flowOf(unitItem(sut, FORMAT_SENTENCE))).toList()
-        val unit2 = read2[0].data.self as ParsableUnit
         sut.beginTransaction()
-        unit2.text = ""
-        val written = sut.write(accessConfiguration(AglTextProvider.IDENTITY) {}, flowOf(read2[0])).toList()
+        unit.text = ""
+        val written = sut.write(accessConfiguration(AglTextProvider.IDENTITY) {}, flowOf(read[0])).toList()
         assertTrue(written[0].issues.errors.isEmpty(), written[0].issues.toString())
-        assertEquals(FORMAT_SENTENCE, unit2.text.trim())
+        assertEquals(SENTENCE, unit.text.trim())
     }
 
     @Test
