@@ -3,6 +3,7 @@ package net.akehurst.datastore.common
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
@@ -305,22 +306,29 @@ class DatastoreCompositionDefault(
      */
     override suspend fun read(configuration: AccessCompositionConfiguration): Flow<DataItem> {
         check(_isOpen) { "Composition is not open" }
-        val am = newAccessorMutator()
-        var previous: Datastore? = null
-        var flow = emptyFlow<DataItem>()
-        for (ds in datastore.values) {
-            val dsCfg = configuration.part[ds.identity]
-                ?: error("Can't find access configuration for datastore '${ds.identity}'")
-            val prev = previous
-            val conns = prev?.let { p -> this.configuration.connection.filter { it.source == p.identity && it.target == ds.identity } } ?: emptyList()
-            val input = when {
-                conns.isNotEmpty() -> adapt(conns, flow, am)
-                else -> flow
-            }
-            flow = ds.read(dsCfg, input)
-            previous = ds
+        val parts = datastore.values.toList()
+        val partConfigs = parts.map { ds ->
+            configuration.part[ds.identity] ?: error("Can't find access configuration for datastore '${ds.identity}'")
         }
-        return flow.map { retype(it, am) }
+        // items that an adapter cannot turn into the next part's input (see adapt) skip the later parts
+        // and are sent straight to the output, where they arrive in the order the adapter saw them
+        return channelFlow {
+            val am = newAccessorMutator()
+            val bypass: suspend (DataItem) -> Unit = { send(retype(it, am)) }
+            var flow = emptyFlow<DataItem>()
+            for ((i, ds) in parts.withIndex()) {
+                val conns = when (i) {
+                    0 -> emptyList()
+                    else -> this@DatastoreCompositionDefault.configuration.connection.filter { it.source == parts[i - 1].identity && it.target == ds.identity }
+                }
+                val input = when {
+                    conns.isNotEmpty() -> adapt(conns, flow, am, bypass)
+                    else -> flow
+                }
+                flow = ds.read(partConfigs[i], input)
+            }
+            flow.collect { send(retype(it, am)) }
+        }
     }
 
     /** the item, with its data and the data of its parents typed by 'am' */
@@ -336,35 +344,77 @@ class DatastoreCompositionDefault(
      * For each source item, creates the target object of each connection.
      * Each end's expression is evaluated with $self = the source item's data.
      * Ends with a primitive type are constructor arguments, ends with a DataType are set through the association.
-     * The created item's identity is the connection's identity.
+     * The created item's identity is the connection's identity, its parent is the source item,
+     * and its issues are a copy of the source item's issues, so the next part (and the output) can show them.
+     *
+     * A source item is not adapted, and is given to 'bypass' instead (once, however many connections there are), when
+     * - its data is nothing (e.g. an error item, such as a ZipDatastore gives for an input that is not a zip archive), or
+     * - it has errors, and an end of a connection cannot be evaluated (the evaluation fails, or gives nothing).
+     * Such an item is never given to the next part as an input of the target type; read() sends it to the composition's output.
      */
-    private suspend fun adapt(connections: List<DatastoreConnection>, input: Flow<DataItem>, am: ObjectGraphAccessorMutator): Flow<DataItem> {
+    private suspend fun adapt(
+        connections: List<DatastoreConnection>,
+        input: Flow<DataItem>,
+        am: ObjectGraphAccessorMutator,
+        bypass: suspend (DataItem) -> Unit
+    ): Flow<DataItem> {
         val types = types()
         val interpreter = ExpressionsInterpreterOverTypedObjectCombined(am)
+        // an adapter gives null when the item cannot be adapted through its connection
         val adapters = connections.map { connection ->
             val targetType = connection.targetType.asPossiblyQualifiedName
             val (assocEnds, ctorEnds) = connection.end.partition { null != dataTypeOrNull(types, it.typeName) }
-            val adapter: suspend (DataItem) -> DataItem = { item ->
+            val adapter: suspend (DataItem) -> DataItem? = adapter@{ item ->
                 val evc = EvaluationContext.ofSelf(item.data)
-                val ctorArgs = ctorEnds.associate { end -> Pair(end.name, interpreter.evaluateStrSuspend(evc, end.expression)) }
+                val hasErrors = item.issues.errors.isNotEmpty()
+                // evaluate every end before creating anything, so nothing is created or linked for an item that is passed on
+                suspend fun evaluate(end: DatastoreConnectionEnd): TypedObject? = when {
+                    hasErrors -> try {
+                        interpreter.evaluateStrSuspend(evc, end.expression).takeUnless { it.isNothing }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (t: Throwable) {
+                        null
+                    }
+
+                    else -> interpreter.evaluateStrSuspend(evc, end.expression)
+                }
+
+                val ctorArgs = ctorEnds.associate { end -> Pair(end.name, evaluate(end) ?: return@adapter null) }
+                val endObjs = assocEnds.map { end -> evaluate(end) ?: return@adapter null }
                 val data = am.createStructureValueSuspend(targetType, ctorArgs)
-                assocEnds.forEach { end ->
+                endObjs.forEach { endObj ->
                     // link from the end object's side: its end name (the connection identity) is unique for each connection,
                     // whereas the target's end name (e.g. 'owner') can be the same in several connections (fan-out)
-                    val endObj = interpreter.evaluateStrSuspend(evc, end.expression)
                     am.setProperty(endObj, connection.identity, data)
                 }
                 DataItemDefault(
                     parent = item,
                     identity = DataItemIdentity(connection.identity),
                     data = data,
-                    provenance = ConnectionProvenance(connection.source, connection.target, connection.identity)
+                    provenance = ConnectionProvenance(connection.source, connection.target, connection.identity),
+                    issues = net.akehurst.kotlinx.issues.ram.IssueHolder(item.issues.all)
                 )
             }
             adapter
         }
         return input.transform { item ->
-            adapters.forEach { emit(it.invoke(item)) }
+            when {
+                item.data.isNothing -> bypass(item)
+                else -> {
+                    var bypassed = false
+                    adapters.forEach { adapter ->
+                        val adapted = adapter.invoke(item)
+                        when {
+                            null != adapted -> emit(adapted)
+                            bypassed.not() -> {
+                                bypassed = true
+                                bypass(item)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -475,7 +525,8 @@ class DatastoreCompositionDefault(
                             0 -> emptyList()
                             else -> this.configuration.connection.filter { it.source == parts[i - 1].identity && it.target == ds.identity }
                         }
-                        val input = if (conns.isNotEmpty()) adapt(conns, flow, am) else flow
+                        // an item that cannot be adapted was already counted (with its errors) by the part that gave it
+                        val input = if (conns.isNotEmpty()) adapt(conns, flow, am) { } else flow
                         val output = try {
                             ds.read(dsCfg, input)
                         } catch (e: CancellationException) {
