@@ -35,6 +35,7 @@ import net.akehurst.language.expressions.api.FunctionCall
 import net.akehurst.language.expressions.api.LiteralExpression
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.formatter.api.*
+import net.akehurst.language.agl.util.ReentrantLockCommon
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
@@ -92,22 +93,25 @@ class FormatterOverTypedObject(
     }
     private val _output = mutableMapOf<String, String>()
 
+    // the caches, the outputs and the issues of the object graph are shared by all calls, so one format at a time
+    private val _lock = ReentrantLockCommon()
+
     fun findRuleFor(formatSetName: PossiblyQualifiedName, type: TypeInstance): AglFormatRule? = _rules[formatSetName]?.entries?.firstOrNull { (ti, rl) ->
         type.conformsTo(ti)
     }?.value
 
-    override fun formatSelf(formatSetName: PossiblyQualifiedName, self: Any): FormatResult {
+    override fun formatSelf(formatSetName: PossiblyQualifiedName, self: Any): FormatResult = _lock.withLock {
         val typesSelf = objectGraph.toTypedObject(self, StdLibDefault.AnyType)
         val evc = EvaluationContext.ofSelf(typesSelf)
-        return format(formatSetName, evc)
+        format(formatSetName, evc)
     }
 
-    override fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): FormatResult {
+    override fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): FormatResult = _lock.withLock {
         if (evc.namedValues.contains(EOL_NAME).not()) {
             evc.setNamedValue(EOL_NAME, objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "\n"))
         }
         val str = formatEvc(formatSetName, evc)
-        return FormatResultDefault(_output + Pair(FormatResultDefault.DEFAULT, str), issues)
+        FormatResultDefault(_output + Pair(FormatResultDefault.DEFAULT, str), issues)
     }
 
     private fun formatEvc(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): String {

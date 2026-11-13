@@ -167,6 +167,55 @@ class test_LanguageProcessor_parallelParse {
     }
 
     @Test
+    fun expectedItemsAt_at_the_same_time() {
+        val processor = processor(null)
+        val text = SENTENCES[2]
+        val positions = listOf(0, 10, 25, 40, 60, text.length)
+        fun items(p: LanguageProcessor<Asm, SentenceContext>, pos: Int) = p.expectedItemsAt(text, pos).let { r -> Pair(r.issues.errors.map { it.toString() }, r.items.map { it.toString() }) }
+        val alone = positions.associateWith { items(processor(null), it) }
+        val results = runBlocking(Dispatchers.Default) {
+            (1..8).flatMap { positions.map { pos -> async { Pair(pos, items(processor, pos)) } } }.awaitAll()
+        }
+        results.forEach { (pos, r) -> assertEquals(alone[pos], r, "at position $pos") }
+    }
+
+    @Test
+    fun format_at_the_same_time() {
+        val grammar = """
+            namespace example
+            grammar Shapes {
+                skip leaf WS = "\s+" ;
+                unit = item* ;
+                item = circle | square ;
+                circle = 'circle' NAME radius? ;
+                radius = 'r' NUMBER ;
+                square = 'square' NAME '{' [point / ',']* '}' ;
+                point = NUMBER NUMBER ;
+                leaf NAME = "[a-z]+" ;
+                leaf NUMBER = "[0-9]+" ;
+            }
+        """.trimIndent()
+        val format = "namespace example\n" +
+                "format Shapes {\n" +
+                "    Unit -> \"$[item sep \$EOL]\"\n" +
+                "    Circle -> \"circle \$name\${radius}\"\n" +
+                "    Radius -> \" r \$number\"\n" +
+                "    Square -> \"square \$name { \$[point sep ', '] }\"\n" +
+                "    Point -> \"\$number \$number2\"\n" +
+                "}"
+        val res = Agl.processorFromStringSimple(GrammarString(grammar), formatterStr = net.akehurst.language.api.processor.FormatString(format))
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        val processor = res.processor!!
+        val sentences = (1..10).map { i -> "circle   c${"x".repeat(i)} r $i square s{1 $i,3 4}" }
+        val expected = sentences.associateWith { s -> processor.format(s).sentence }
+        assertTrue(expected.values.all { null != it && it.startsWith("circle c") }, expected.toString())
+        val results = runBlocking(Dispatchers.Default) {
+            (1..5).flatMap { sentences.map { s -> async { Pair(s, processor.format(s).sentence) } } }.awaitAll()
+        }
+        results.forEach { (s, r) -> assertEquals(expected[s], r, "for sentence:\n$s") }
+    }
+
+    @Test
     fun parse_scan_and_expectedAt_at_the_same_time() {
         val processor = processor(null)
         val text = SENTENCES[2]

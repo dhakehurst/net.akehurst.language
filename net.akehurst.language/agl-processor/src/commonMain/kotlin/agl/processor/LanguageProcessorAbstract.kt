@@ -371,7 +371,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val parseResult = this.parse(sentence, opts.parse)
         return if (null == parseResult.sppt) {
             FormatResultDefault(emptyMap(), parseResult.issues)
-        } else {
+        } else analysisLock.withLock { // the syntax analyser is shared, as in process()
             val synxResult = this.syntaxAnalysis(parseResult.sppt!!)
             if (null == synxResult.asm) {
                 FormatResultDefault(emptyMap(), parseResult.issues + synxResult.issues)
