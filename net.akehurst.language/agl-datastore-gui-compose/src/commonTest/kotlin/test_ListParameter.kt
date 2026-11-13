@@ -59,4 +59,14 @@ class test_ListParameter {
         assertFalse(pd.isSet)
         assertEquals("Required", draft.parameterIssues["paths"])
     }
+
+    @Test
+    fun blank_or_whitespace_text_is_not_set() {
+        val draft = ConfigurationDraft(ID, schema.datastore)
+        val pd = draft.parameter["paths"]!!
+        pd.text = " \n\t\n  "
+        assertFalse(pd.isSet)
+        assertEquals(null, pd.argument().getOrNull())
+        assertEquals("Required", draft.parameterIssues["paths"])
+    }
 }

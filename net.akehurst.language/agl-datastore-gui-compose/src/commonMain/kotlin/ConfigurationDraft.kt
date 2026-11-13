@@ -52,6 +52,8 @@ class ParameterDraft(val definition: DsConfigParameterDefinition) {
         get() = when {
             mode == ValueMode.SECRET_REFERENCE -> secretSource.isNotEmpty() || secretKey.isNotEmpty()
             definition.kind == ParameterKind.BOOLEAN -> null != boolean
+            // a List text with only blank lines is not set, like an empty text
+            definition.kind == ParameterKind.LIST -> listFromText(text).isNotEmpty()
             else -> text.isNotEmpty()
         }
 
