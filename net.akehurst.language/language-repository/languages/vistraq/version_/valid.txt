@@ -1,3 +1,4 @@
+MATCH any
 RETURN VALUE null
 RETURN VALUE true
 RETURN VALUE false

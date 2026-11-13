@@ -1,1 +1,0 @@
-package 'A longer name with whitespace' ;
