@@ -58,6 +58,10 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::importKind)
         super.register(this::recursive)
         super.register(this::inheritDefinition)
+        super.register(this::inheritNamedDefinition)
+        super.register(this::namedPath)
+        super.register(this::namedSegment)
+        super.register(this::fromInherited)
         super.register(this::referencesOpt)
         super.register(this::references)
         super.register(this::referenceDefinitions)
@@ -189,7 +193,8 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val target = asNavigation(children[5] as Expression)
         val recursive = children[6] as Expression?
         val visibility = children[7] as Expression?
-        return ScopeImportDefault(kind, elements, ofType, target, recursive, visibility)
+        val condition = children[8] as Expression?
+        return ScopeImportDefault(kind, elements, ofType, target, recursive, visibility, condition)
     }
 
     // importKind = 'members-of' | 'element' ;
@@ -203,13 +208,38 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun recursive(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[1] as Expression
 
-    // inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation ;
+    // inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation condition? ;
     private fun inheritDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
         val elements = children[2] as Expression
         val ofType = children[3] as PossiblyQualifiedName?
         val target = asNavigation(children[5] as Expression)
-        return ScopeImportDefault(ScopeImportKind.INHERIT, elements, ofType, target, null, null)
+        val condition = children[6] as Expression?
+        return ScopeImportDefault(ScopeImportKind.INHERIT, elements, ofType, target, null, null, condition)
     }
+
+    // inheritNamedDefinition = 'inherit' 'named' namedPath condition? ;
+    private fun inheritNamedDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
+        val named = children[2] as List<String>
+        val condition = children[3] as Expression?
+        val nothing = NavigationExpressionDefault(RootExpressionDefault.NOTHING, emptyList())
+        return ScopeImportDefault(ScopeImportKind.INHERIT, RootExpressionDefault.NOTHING, null, nothing, null, null, condition, named)
+    }
+
+    // namedPath = [namedSegment / '.']+ ;
+    private fun namedPath(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
+        (children as List<Any?>).toSeparatedList<Any?, String, String>().items
+
+    // namedSegment = IDENTIFIER | STRING ;  a STRING is written in single quotes, with \' and \\ escaped
+    private fun namedSegment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        (children[0] as String).let { s ->
+            when {
+                s.startsWith("'") -> s.substring(1, s.length - 1).replace("\\'", "'").replace("\\\\", "\\")
+                else -> s
+            }
+        }
+
+    // fromInherited = 'inherited' ;
+    private fun fromInherited(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Boolean = true
 
     private fun asNavigation(expr: Expression): NavigationExpression = when (expr) {
         is NavigationExpression -> expr
@@ -258,7 +288,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionPropertyDefault {
         val expr = children[1] as Expression
         val typeReferences = children[3] as List<PossiblyQualifiedName>
-        val from = children[4] as Pair<NavigationExpression, NavigationExpression?>?
+        val from = children[4] as Triple<NavigationExpression, NavigationExpression?, Boolean>?
         val condition = children[5] as Expression?
 
         val navigation = when (expr) {
@@ -269,7 +299,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
                 NavigationExpressionDefault(RootExpressionDefault.ERROR, emptyList())
             }
         }
-        return ReferenceExpressionPropertyDefault(navigation, typeReferences, from?.first, condition, from?.second).also {
+        return ReferenceExpressionPropertyDefault(navigation, typeReferences, from?.first, condition, from?.second, from?.third ?: false).also {
             typeReferences.forEachIndexed { i, n ->
 //                locationMap[PropertyValue(it, "typeReferences[$i]")] = locationMap[n]!!
                 locationMap.add(ParsePath(), PropertyValue(it, "typeReferences[$i]"), locationMap[n]!!)
@@ -281,9 +311,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun condition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[1] as Expression
 
-    // from = 'from' rootOrNavigation fromElse? ;
-    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<NavigationExpression, NavigationExpression?> =
-        Pair(asNavigation(children[1] as Expression), children[2] as NavigationExpression?)
+    // from = 'from' fromInherited? rootOrNavigation fromElse? ;
+    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Triple<NavigationExpression, NavigationExpression?, Boolean> =
+        Triple(asNavigation(children[2] as Expression), children[3] as NavigationExpression?, (children[1] as Boolean?) ?: false)
 
     // fromElse = 'else' rootOrNavigation ;
     private fun fromElse(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpression =

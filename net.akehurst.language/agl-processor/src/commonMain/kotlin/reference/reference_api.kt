@@ -172,10 +172,13 @@ enum class ScopeImportKind {
 }
 
 /**
- * 'import' 'forall' elements ofType? ('members-of' | 'element') target recursive? visibility?
- * 'inherit' 'forall' elements ofType? 'members-of' target
+ * 'import' 'forall' elements ofType? ('members-of' | 'element') target recursive? visibility? ('when' condition)?
+ * 'inherit' 'forall' elements ofType? 'members-of' target ('when' condition)?
+ * 'inherit' 'named' a.b.c ('when' condition)?
  *
- * 'elements' is evaluated on the element that owns the scope, 'target' (a reference property) and the other expressions on each of the resulting elements
+ * 'elements' is evaluated on the element that owns the scope, 'target' (a reference property) and the other expressions on each of the resulting elements.
+ * For 'inherit named', 'named' is the qualified name of the inherited element (looked up from the root scopes of the context)
+ * and the condition is evaluated on the element that owns the scope.
  */
 interface ScopeImport : Formatable {
     val kind: ScopeImportKind
@@ -188,6 +191,12 @@ interface ScopeImport : Formatable {
 
     /** gives 'public' or 'private' (anything else is 'public'); a 'public' import is also visible from outside */
     val visibility: Expression?
+
+    /** if not null, the import/inherit applies only when the condition is true */
+    val condition: Expression? get() = null
+
+    /** 'inherit named a.b.c': the names of the qualified name of the inherited element ('elements' and 'target' are not used); null for the 'forall' forms */
+    val named: List<String>? get() = null
 }
 
 interface ReferenceExpression  : Formatable {
@@ -213,6 +222,9 @@ interface ReferenceExpressionProperty : ReferenceExpression {
      * (e.g. the base of an expression chain 'f.h'). When <navigation> does not reach a reference, the normal lookup is used.
      */
     val fromElseNavigation: NavigationExpression? get() = null
+
+    /** 'from inherited <navigation>': the reference is looked up only in what the element reached by <navigation> inherits */
+    val fromInherited: Boolean get() = false
 
     /**
      * if not null, this reference expression applies only when the condition (evaluated on the referring element) is true.
