@@ -34,7 +34,10 @@ import kotlin.test.assertTrue
  */
 class test_DatastoreCompositionErrorItem {
 
-    class Source(val text: String)
+    class Source(val text: String) {
+        /** always null, so an end 'note' gives nothing */
+        val note: String? = null
+    }
     class Target(val text: String)
 
     private object Loc : DataItemIssueLocation
@@ -47,6 +50,7 @@ class test_DatastoreCompositionErrorItem {
             namespace("src") {
                 data("Source", implementation = Source::class) {
                     propertyOfWithBinding<Source, String>(setOf(REF, VAL), "text", "String", accessor = { it.text })
+                    propertyOfWithBinding<Source, String?>(setOf(REF, VAL), "note", "String", isNullable = true, accessor = { it.note })
                 }
             }
         }
@@ -165,6 +169,20 @@ class test_DatastoreCompositionErrorItem {
 
         assertEquals(listOf("a"), actual.map { it.identity.value })
         assertEquals(listOf("something is wrong with a"), actual[0].issues.errors.map { it.message })
+        assertTrue(sut.target!!.received.isEmpty())
+    }
+
+    @Test
+    fun item_without_errors_whose_constructor_end_gives_nothing_reaches_output_with_an_error() = runTest {
+        val sut = Fixture(listOf(Emit("a", "A")), textExpression = "note")
+
+        val actual = sut.read()
+
+        assertEquals(listOf("a"), actual.map { it.identity.value })
+        assertEquals(
+            listOf("Connection 'target': end 'text' (note) gives nothing for this item, so 'tgt.Target' cannot be created"),
+            actual[0].issues.errors.map { it.message }
+        )
         assertTrue(sut.target!!.received.isEmpty())
     }
 }

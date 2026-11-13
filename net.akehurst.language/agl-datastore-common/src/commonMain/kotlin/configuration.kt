@@ -340,6 +340,14 @@ class DatastoreCompositionDefault(
         issues = item.issues
     )
 
+    /** what adapting one source item through one connection gives */
+    private sealed class Adapted {
+        class Item(val item: DataItem) : Adapted()
+
+        /** the source item cannot be adapted; 'error' (if not null) is added to its issues */
+        class NotAdapted(val error: String?) : Adapted()
+    }
+
     /**
      * For each source item, creates the target object of each connection.
      * Each end's expression is evaluated with $self = the source item's data.
@@ -349,7 +357,11 @@ class DatastoreCompositionDefault(
      *
      * A source item is not adapted, and is given to 'bypass' instead (once, however many connections there are), when
      * - its data is nothing (e.g. an error item, such as a ZipDatastore gives for an input that is not a zip archive), or
-     * - it has errors, and an end of a connection cannot be evaluated (the evaluation fails, or gives nothing).
+     * - it has errors, and an end of a connection cannot be evaluated (the evaluation fails, or gives nothing), or
+     * - it has no errors, and a constructor end gives nothing for a parameter that is not nullable;
+     *   an error issue naming the connection, the end and its expression is then added to the item.
+     *   (A parameter is nullable if the target type's constructor whose parameters are the constructor ends has it nullable.
+     *   For a nullable parameter the constructor is still called with the value the end gives.)
      * Such an item is never given to the next part as an input of the target type; read() sends it to the composition's output.
      */
     private suspend fun adapt(
@@ -360,11 +372,14 @@ class DatastoreCompositionDefault(
     ): Flow<DataItem> {
         val types = types()
         val interpreter = ExpressionsInterpreterOverTypedObjectCombined(am)
-        // an adapter gives null when the item cannot be adapted through its connection
         val adapters = connections.map { connection ->
             val targetType = connection.targetType.asPossiblyQualifiedName
             val (assocEnds, ctorEnds) = connection.end.partition { null != dataTypeOrNull(types, it.typeName) }
-            val adapter: suspend (DataItem) -> DataItem? = adapter@{ item ->
+            val ctorEndNames = ctorEnds.map { it.name }.toSet()
+            val constructor = dataTypeOrNull(types, connection.targetType)?.constructors
+                ?.firstOrNull { c -> c.parameters.map { it.name.value }.toSet() == ctorEndNames }
+            val nullableParams = constructor?.parameters?.filter { it.typeInstance.isNullable }?.map { it.name.value }?.toSet() ?: emptySet()
+            val adapter: suspend (DataItem) -> Adapted = adapter@{ item ->
                 val evc = EvaluationContext.ofSelf(item.data)
                 val hasErrors = item.issues.errors.isNotEmpty()
                 // evaluate every end before creating anything, so nothing is created or linked for an item that is passed on
@@ -380,20 +395,31 @@ class DatastoreCompositionDefault(
                     else -> interpreter.evaluateStrSuspend(evc, end.expression)
                 }
 
-                val ctorArgs = ctorEnds.associate { end -> Pair(end.name, evaluate(end) ?: return@adapter null) }
-                val endObjs = assocEnds.map { end -> evaluate(end) ?: return@adapter null }
+                val ctorArgs = ctorEnds.associate { end ->
+                    val value = evaluate(end) ?: return@adapter Adapted.NotAdapted(null)
+                    if (value.isNothing && end.name !in nullableParams) {
+                        return@adapter Adapted.NotAdapted(
+                            "Connection '${connection.identity}': end '${end.name}' (${end.expression}) gives nothing for this item, " +
+                                "so '${connection.targetType}' cannot be created"
+                        )
+                    }
+                    Pair(end.name, value)
+                }
+                val endObjs = assocEnds.map { end -> evaluate(end) ?: return@adapter Adapted.NotAdapted(null) }
                 val data = am.createStructureValueSuspend(targetType, ctorArgs)
                 endObjs.forEach { endObj ->
                     // link from the end object's side: its end name (the connection identity) is unique for each connection,
                     // whereas the target's end name (e.g. 'owner') can be the same in several connections (fan-out)
                     am.setProperty(endObj, connection.identity, data)
                 }
-                DataItemDefault(
-                    parent = item,
-                    identity = DataItemIdentity(connection.identity),
-                    data = data,
-                    provenance = ConnectionProvenance(connection.source, connection.target, connection.identity),
-                    issues = net.akehurst.kotlinx.issues.ram.IssueHolder(item.issues.all)
+                Adapted.Item(
+                    DataItemDefault(
+                        parent = item,
+                        identity = DataItemIdentity(connection.identity),
+                        data = data,
+                        provenance = ConnectionProvenance(connection.source, connection.target, connection.identity),
+                        issues = net.akehurst.kotlinx.issues.ram.IssueHolder(item.issues.all)
+                    )
                 )
             }
             adapter
@@ -402,16 +428,25 @@ class DatastoreCompositionDefault(
             when {
                 item.data.isNothing -> bypass(item)
                 else -> {
-                    var bypassed = false
+                    var notAdapted = false
+                    val errors = mutableListOf<String>()
                     adapters.forEach { adapter ->
-                        val adapted = adapter.invoke(item)
-                        when {
-                            null != adapted -> emit(adapted)
-                            bypassed.not() -> {
-                                bypassed = true
-                                bypass(item)
+                        when (val adapted = adapter.invoke(item)) {
+                            is Adapted.Item -> emit(adapted.item)
+                            is Adapted.NotAdapted -> {
+                                notAdapted = true
+                                adapted.error?.let { errors.add(it) }
                             }
                         }
+                    }
+                    if (notAdapted) {
+                        val loc = CompositionIssueLocation(item.qualifiedIdentity)
+                        bypass(
+                            when {
+                                errors.isEmpty() -> item
+                                else -> withIssues(item, net.akehurst.kotlinx.issues.ram.IssueHolder(errors.map { IssueDefault(IssueKind.ERROR, loc, it) }))
+                            }
+                        )
                     }
                 }
             }
