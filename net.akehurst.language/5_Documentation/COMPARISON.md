@@ -46,7 +46,7 @@ Where it is behind is raw speed, error recovery and community size.
 5. **Maturity.** A one-person project with a small community. Known open issues include
    parse trees that are not always what one expects and a number of failing parser tests.
    The documentation is newer and smaller than that of ANTLR, Xtext or Langium: a [Getting Started](GETTING_STARTED.md)
-   guide and one reference page per DSL (see [Overview](Overview.md)), but no tutorials or worked examples yet.
+   guide and one reference page per DSL (see [Overview](Overview.md)).
 6. **Kotlin/Native not enabled.** Only JVM, JS and wasmJs are built; `macosArm64()` is commented out in
    `0_build-logic/src/main/kotlin/project-conventions.gradle.kts`.
 7. **No projectional editing.** That is MPS's niche, so it is a different category rather than a gap.
