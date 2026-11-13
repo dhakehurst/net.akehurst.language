@@ -663,7 +663,7 @@ class test_M2mPatternExecutor2 {
 
         val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.State"))!!.type()
         val input_pd = AsmStructureSimple("test.PartDefinition".asQualifiedName).also {
-            it.setSemanticQualifiedPath(listOf("part-1"))
+            it.semanticQualifiedPath = listOf("part-1")
             it.setProperty(PropertyValueName("name"), AsmPrimitiveSimple.stdString("part-1"), 0)
         }
         val input = mapOf<String, Any>(

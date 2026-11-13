@@ -106,6 +106,7 @@ interface AsmListSeparated {
                         parameter(setOf(), "identity", "Any", true)
                     }
                     propertyOf(setOf(VAR, REF, STR), "parsePath", "String", false)
+                    propertyOf(setOf(VAR, CMP, STR), "semanticQualifiedPath", "List", true) { typeArgument("String") }
                     propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")

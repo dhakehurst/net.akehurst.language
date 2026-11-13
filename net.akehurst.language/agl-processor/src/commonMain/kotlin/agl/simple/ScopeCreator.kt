@@ -207,7 +207,7 @@ class ScopeCreator(
             notSameLocation.isEmpty() -> {
                 scope.addToScope(referableName, el.qualifiedTypeName, this.locationMap[el]?.sentenceIdentity, scopeItem, replaceIfItemAlreadyExistsInScope)
                 // can also set the semantic identity of the AsmStructure
-                el.setSemanticQualifiedPath(scope.scopePath+referableName)
+                el.semanticQualifiedPath = scope.scopePath + referableName
             }
                 //existingItems.all { it.item != scopeItem } -> scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
             else -> {

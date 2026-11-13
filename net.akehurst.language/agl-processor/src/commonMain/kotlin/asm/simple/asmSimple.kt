@@ -375,7 +375,7 @@ class AsmStructureSimple(
 
     override var parsePath: String = "??"
     override var syntaxAnalyserPath: AsmPath? = null //TODO: not sure if still need this
-    override var semanticQualifiedPath: List<String>? = null; private set
+    override var semanticQualifiedPath: List<String>? = null
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
     override val propertyOrdered
@@ -403,9 +403,6 @@ class AsmStructureSimple(
     override fun qualifiedName(separator: String): String? =
         semanticQualifiedPath?.joinToString(separator)
 
-    override fun setSemanticQualifiedPath(segments: List<String>) {
-        semanticQualifiedPath = segments
-    }
 
     override fun hasProperty(name: PropertyValueName): Boolean = property.containsKey(name)
 

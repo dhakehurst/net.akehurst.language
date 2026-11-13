@@ -90,7 +90,7 @@ interface AsmStructure : AsmValue {
     /** '/' separated String representation of ParsePath */
     val parsePath: String
     var syntaxAnalyserPath: AsmPath? //TODO: not sure we still need this, maybe it is useful?
-    val semanticQualifiedPath:List<String>?
+    var semanticQualifiedPath:List<String>?
 
     val property: Map<PropertyValueName, AsmStructureProperty>
 
@@ -101,7 +101,6 @@ interface AsmStructure : AsmValue {
      */
     val children: List<Any>
 
-    fun setSemanticQualifiedPath(segments:List<String>)
     /*
         this will return null if the semanticQualifiedPath has not been set
      */
