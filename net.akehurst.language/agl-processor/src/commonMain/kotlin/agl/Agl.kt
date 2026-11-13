@@ -266,15 +266,18 @@ object Agl {
                 grammarDefinitionStr,
                 aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
             )
-            if (null == res.asm || res.asm!!.isEmpty) {
-                LanguageProcessorResult(null, res.allIssues)
-            } else {
-                val grammarDomain = res.asm ?: error("Unable to create processor for $grammarDefinitionStr")
-                val proc = processorFromGrammar(
-                    grammarDomain,
-                    configuration
-                )
-                LanguageProcessorResult(proc, res.allIssues)
+            when {
+                null == res.asm || res.asm!!.isEmpty -> LanguageProcessorResult(null, res.allIssues)
+                // the grammar has errors (e.g. a rule that is not found), a processor cannot be built from it
+                res.allIssues.errors.isNotEmpty() -> LanguageProcessorResult(null, res.allIssues)
+                else -> {
+                    val grammarDomain = res.asm ?: error("Unable to create processor for $grammarDefinitionStr")
+                    val proc = processorFromGrammar(
+                        grammarDomain,
+                        configuration
+                    )
+                    LanguageProcessorResult(proc, res.allIssues)
+                }
             }
         } catch (e: Throwable) {
             throw LanguageProcessorException("Unable to create processor for grammarDefinitionStr: ${e.message}", e)

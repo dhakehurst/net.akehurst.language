@@ -57,6 +57,27 @@ class test_Agl_processorFromStringSimple_parse {
     }
 
     @Test
+    fun rule_not_found_is_an_issue() {
+        val g = "namespace ns grammar Test { S = b; }"
+        val pr = Agl.processorFromStringSimple(GrammarString(g))
+        assertNull(pr.processor)
+        assertEquals(listOf("GrammarRule 'b' not found in grammar 'Test'"), pr.issues.errors.map { it.message })
+    }
+
+    @Test
+    fun rule_from_grammar_not_extended_is_an_issue() {
+        // B is defined in grammar Other, which Test does not extend
+        val g = """
+            namespace ns
+            grammar Other { B = 'b' ; }
+            grammar Test { S = 'a' | B ; }
+        """.trimIndent()
+        val pr = Agl.processorFromStringSimple(GrammarString(g))
+        assertNull(pr.processor)
+        assertEquals(listOf("GrammarRule 'B' not found in grammar 'Test'"), pr.issues.errors.map { it.message })
+    }
+
+    @Test
     fun single_line_comment_at_start() {
         val grammarStr = """
             // single line comment
