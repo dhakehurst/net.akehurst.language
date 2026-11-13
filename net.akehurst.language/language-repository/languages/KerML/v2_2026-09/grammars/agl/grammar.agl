@@ -320,7 +320,11 @@ grammar Types : FeatureValues {
     // KerML 8.2.4.1.1 Types
     Type = TypePrefix 'type' TypeDeclaration TypeBody ;
     TypePrefix = 'abstract'? PrefixMetadataMember* ;
-    TypeDeclaration = 'all'? Identification MultiplicityBounds? ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart* ;
+    TypeDeclaration = 'all'? Identification MultiplicityBounds? TypeSpecialization+ TypeRelationshipPart* ;
+    TypeSpecialization
+        = SpecializationPart
+        | ConjugationPart
+    ;
     SpecializationPart = SPECIALIZES [GeneralType / ',']+ ;
     ConjugationPart = CONJUGATES OwnedConjugation ;
     TypeRelationshipPart
@@ -397,7 +401,11 @@ grammar Classifiers : Types {
 
     // KerML 8.2.4.2.1 Classifiers
     Classifier = TypePrefix 'classifier' ClassifierDeclaration TypeBody ;
-    ClassifierDeclaration = 'all'? Identification MultiplicityBounds? ( SuperclassingPart | ConjugationPart )? TypeRelationshipPart* ;
+    ClassifierDeclaration = 'all'? Identification MultiplicityBounds? ClassifierSpecialization? TypeRelationshipPart* ;
+    ClassifierSpecialization
+        = SuperclassingPart
+        | ConjugationPart
+    ;
     SuperclassingPart = SPECIALIZES [QualifiedName / ',']+ ;
 
     // KerML 8.2.4.2.2 Subclassification
@@ -422,9 +430,13 @@ grammar Features : Classifiers {
     OwnedFeatureMember = MemberPrefix FeatureElement ;
 
     // KerML 8.2.4.3.1 Features
-    Feature =
-        ( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration? | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration ) FeatureValue? TypeBody
+    Feature = FeatureKind FeatureValue? TypeBody ;
+    FeatureKind
+        = FeatureWithKeyword
+        | FeatureWithoutKeyword
     ;
+    FeatureWithKeyword = FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration? ;
+    FeatureWithoutKeyword = ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration ;
     EndFeaturePrefix = 'const'? 'end' ;
     BasicFeaturePrefix = FeatureDirection? 'derived'? 'abstract'? ( 'composite' | 'portion' )? ( 'var' | 'const' )? ;
     FeaturePrefix = ( EndFeaturePrefix OwnedCrossFeature? | BasicFeaturePrefix ) PrefixMetadataMember* ;
@@ -434,13 +446,24 @@ grammar Features : Classifiers {
         | 'out'
         | 'inout'
     ;
-    FeatureDeclaration =
-        'all'? ( FeatureIdentification ( FeatureSpecializationPart | ConjugationPart )? | FeatureSpecializationPart | ConjugationPart ) FeatureRelationshipPart*
+    FeatureDeclaration = 'all'? FeatureDeclarationKind FeatureRelationshipPart* ;
+    FeatureDeclarationKind
+        = FeatureIdentified
+        | FeatureSpecialized
+        | ConjugationPart
+    ;
+    FeatureSpecialized = FeatureSpecializationPart ;
+    FeatureIdentified = FeatureIdentification FeatureIdentifiedSpecialization? ;
+    FeatureIdentifiedSpecialization
+        = FeatureSpecializationPart
+        | ConjugationPart
     ;
     FeatureIdentification
-        = '<' NAME '>' NAME?
-        | NAME
+        = FeatureShortName
+        | FeatureName
     ;
+    FeatureShortName = ShortName NAME? ;
+    FeatureName = NAME ;
     FeatureRelationshipPart
         = TypeRelationshipPart
         | ChainingPart
@@ -518,28 +541,43 @@ grammar Classes : Features {
 grammar Connectors : Classes {
 
     // KerML 8.2.5.5.1 Connectors
-    Connector = FeaturePrefix 'connector' ( FeatureDeclaration? FeatureValue? | ConnectorDeclaration ) TypeBody ;
+    Connector = FeaturePrefix 'connector' ConnectorKind TypeBody ;
+    ConnectorKind
+        = ConnectorSimple
+        | ConnectorDeclaration
+    ;
+    ConnectorSimple = FeatureDeclaration? FeatureValue? ;
     ConnectorDeclaration
         = BinaryConnectorDeclaration
         | NaryConnectorDeclaration
     ;
-    BinaryConnectorDeclaration = ( FeatureDeclaration? 'from' | 'all' 'from'? )? ConnectorEnd 'to' ConnectorEnd ;
+    BinaryConnectorDeclaration = BinaryConnectorPrefix? ConnectorEnd 'to' ConnectorEnd ;
+    BinaryConnectorPrefix
+        = BinaryConnectorNamed
+        | BinaryConnectorAll
+    ;
+    BinaryConnectorNamed = FeatureDeclaration? 'from' ;
+    BinaryConnectorAll = 'all' 'from'? ;
     NaryConnectorDeclaration = FeatureDeclaration? '(' ConnectorEnd ',' [ConnectorEnd / ',']+ ')' ;
     ConnectorEnd = MultiplicityBounds? ( NAME REFERENCES )? GeneralType ;
 
     // KerML 8.2.5.5.2 Binding Connectors
     BindingConnector = FeaturePrefix 'binding' BindingConnectorDeclaration TypeBody ;
     BindingConnectorDeclaration
-        = FeatureDeclaration ( 'of' ConnectorEnd '=' ConnectorEnd )?
-        | 'all'? ( 'of'? ConnectorEnd '=' ConnectorEnd )?
+        = BindingConnectorNamed
+        | BindingConnectorUnnamed
     ;
+    BindingConnectorNamed = FeatureDeclaration ( 'of' ConnectorEnd '=' ConnectorEnd )? ;
+    BindingConnectorUnnamed = 'all'? ( 'of'? ConnectorEnd '=' ConnectorEnd )? ;
 
     // KerML 8.2.5.5.3 Successions
     Succession = FeaturePrefix 'succession' SuccessionDeclaration TypeBody ;
     SuccessionDeclaration
-        = FeatureDeclaration ( 'first' ConnectorEnd 'then' ConnectorEnd )?
-        | 'all'? ( 'first'? ConnectorEnd 'then' ConnectorEnd )?
+        = SuccessionNamed
+        | SuccessionUnnamed
     ;
+    SuccessionNamed = FeatureDeclaration ( 'first' ConnectorEnd 'then' ConnectorEnd )? ;
+    SuccessionUnnamed = 'all'? ( 'first'? ConnectorEnd 'then' ConnectorEnd )? ;
 }
 
 grammar Behaviors : Classes {
@@ -580,9 +618,11 @@ grammar Interactions : Behaviors, Connectors {
     Flow = FeaturePrefix 'flow' FlowDeclaration TypeBody ;
     SuccessionFlow = FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody ;
     FlowDeclaration
-        = FeatureDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' FlowEnd 'to' FlowEnd )?
-        | 'all'? FlowEnd 'to' FlowEnd
+        = FlowNamed
+        | FlowUnnamed
     ;
+    FlowNamed = FeatureDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' FlowEnd 'to' FlowEnd )? ;
+    FlowUnnamed = 'all'? FlowEnd 'to' FlowEnd ;
     PayloadFeature
         = Identification PayloadFeatureSpecializationPart FeatureValue?
         | Identification FeatureValue
@@ -625,7 +665,11 @@ grammar Packages : Namespaces {
     PackageDeclaration = 'package' Identification ;
     PackageBody
         = ';'
-        | '{' ( NamespaceBodyElement | ElementFilterMember )* '}'
+        | '{' PackageBodyElement* '}'
+    ;
+    PackageBodyElement
+        = NamespaceBodyElement
+        | ElementFilterMember
     ;
     ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';' ;
 }

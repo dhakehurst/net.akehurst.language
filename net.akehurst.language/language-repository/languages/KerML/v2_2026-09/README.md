@@ -9,6 +9,7 @@ The KerML textual notation from the [SysML v2 Release](https://github.com/System
   Rule names and structure are as in the specification. Changes to the specification BNF are marked `// AGL:` in the grammar.
 - `agl` - tailored for AGL: split into modular grammars that extend each other, wrapper rules inlined,
   separated lists, and operator precedence given by a preference rule.
+  It also has `references.agl` (identify, scope and references rules).
 
 Both grammars set `#scanner: Classic`, because KerML reserves its keywords (KerML 8.2.2.6).
 
