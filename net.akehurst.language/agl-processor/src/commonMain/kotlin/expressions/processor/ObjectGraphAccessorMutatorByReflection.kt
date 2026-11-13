@@ -456,7 +456,11 @@ class ExternalGetterByReflection(
         val obj = when {
             null != matchingConstructor -> when {
                 null != matchingConstructor.execution -> {
-                    val args = matchingConstructor.parameters.map { p -> constructorArgs[p.name.value]!! }
+                    // a nothing value arrives as Unit (see nothing()); a nullable parameter is given null for it
+                    val args = matchingConstructor.parameters.map { p ->
+                        val arg = constructorArgs[p.name.value]!!
+                        if (Unit == arg && p.typeInstance.isNullable) null else arg
+                    }
                     matchingConstructor.execution!!.invoke(args)
                 }
                 //TODO

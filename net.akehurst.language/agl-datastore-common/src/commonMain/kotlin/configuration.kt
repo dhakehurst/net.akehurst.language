@@ -361,7 +361,7 @@ class DatastoreCompositionDefault(
      * - it has no errors, and a constructor end gives nothing for a parameter that is not nullable;
      *   an error issue naming the connection, the end and its expression is then added to the item.
      *   (A parameter is nullable if the target type's constructor whose parameters are the constructor ends has it nullable.
-     *   For a nullable parameter the constructor is still called with the value the end gives.)
+     *   For a nullable parameter the constructor is called with null.)
      * Such an item is never given to the next part as an input of the target type; read() sends it to the composition's output.
      */
     private suspend fun adapt(

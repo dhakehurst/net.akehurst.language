@@ -39,6 +39,7 @@ class test_DatastoreCompositionErrorItem {
         val note: String? = null
     }
     class Target(val text: String)
+    class OptionalTarget(val text: String?)
 
     private object Loc : DataItemIssueLocation
 
@@ -79,12 +80,18 @@ class test_DatastoreCompositionErrorItem {
                         execution { args -> Target(args[0] as String) }
                     }
                 }
+                data("OptionalTarget", implementation = OptionalTarget::class) {
+                    constructor_ {
+                        parameter(setOf(REF, VAL), "text", "String", nullable = true)
+                        execution { args -> OptionalTarget(args[0] as String?) }
+                    }
+                }
             }
         }
 
         override suspend fun doRead(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> = input.map {
             received.add(it)
-            assertIs<Target>(it.data.self, "the target datastore got an input that is not a Target: $it")
+            assertTrue(it.data.self is Target || it.data.self is OptionalTarget, "the target datastore got an input that is not a Target: $it")
             it
         }
 
@@ -106,7 +113,7 @@ class test_DatastoreCompositionErrorItem {
         }
     }
 
-    private class Fixture(emits: List<Emit>, textExpression: String = "text") {
+    private class Fixture(emits: List<Emit>, textExpression: String = "text", targetType: String = "tgt.Target") {
         var target: TargetDatastore? = null
         val registry = DatastoreProviderRegistryDefault().also {
             it.register(provider(PROVIDER_SRC) { i, c -> SourceDatastore(i, c, emits) })
@@ -115,7 +122,7 @@ class test_DatastoreCompositionErrorItem {
         val composition: DatastoreComposition = datastoreComposition("errors", registry) {
             datastore("src", PROVIDER_SRC) {}
             datastore("tgt", PROVIDER_TGT) {}
-            connect("src", "tgt", "tgt.Target") {
+            connect("src", "tgt", targetType, name = "target") {
                 end("text", "String", textExpression)
             }
         }
@@ -184,5 +191,17 @@ class test_DatastoreCompositionErrorItem {
             actual[0].issues.errors.map { it.message }
         )
         assertTrue(sut.target!!.received.isEmpty())
+    }
+
+    @Test
+    fun nullable_constructor_end_that_gives_nothing_is_given_null() = runTest {
+        val sut = Fixture(listOf(Emit("a", "A")), textExpression = "note", targetType = "tgt.OptionalTarget")
+
+        val actual = sut.read()
+
+        assertEquals(listOf("target"), actual.map { it.identity.value })
+        assertTrue(actual[0].issues.errors.isEmpty(), actual[0].issues.toString())
+        assertEquals(null, assertIs<OptionalTarget>(actual[0].data.self).text)
+        assertEquals(1, sut.target!!.received.size)
     }
 }
