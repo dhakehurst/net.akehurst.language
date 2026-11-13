@@ -277,7 +277,28 @@ interface ParseOptions {
      */
     var streamLagWarningLimit: Int
 
+    /**
+     * When not null, the parse (or expectedAt) using these options can be stopped by calling [ParseInterrupt.interrupt] on it,
+     * e.g. from another thread. Other parses (of the same processor) are not affected.
+     * Use a new [ParseInterrupt] for each parse, once interrupted it stays interrupted.
+     *
+     * Default value: `null`.
+     */
+    var interrupt: ParseInterrupt?
+
     fun clone(): ParseOptions
+}
+
+/**
+ * Stops the parses that were given it (in [ParseOptions.interrupt]).
+ * The parse stops at its next check (once per step of the parse), with a parse error giving the message.
+ */
+interface ParseInterrupt {
+    /** the message given to [interrupt], null if not interrupted */
+    val message: String?
+
+    /** can be called from a different thread to the one doing the parse */
+    fun interrupt(message: String)
 }
 
 /**
@@ -337,6 +358,7 @@ interface Parser {
 
     fun reset()
 
+    /** stops all parses of this parser that are running now, see also [ParseOptions.interrupt] */
     fun interrupt(message: String)
 
     /**

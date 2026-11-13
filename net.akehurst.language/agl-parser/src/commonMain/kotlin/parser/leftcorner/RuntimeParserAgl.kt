@@ -22,7 +22,9 @@ import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule.RuntimePreferenceOption
+import net.akehurst.language.agl.util.AutomatonBuildLock
 import net.akehurst.language.agl.util.Debug
+import kotlin.concurrent.Volatile
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.*
@@ -32,6 +34,7 @@ import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.Assoc
+import net.akehurst.language.parser.api.ParseInterrupt
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuntimeParser
 import net.akehurst.language.parsermessages.IssueMessage
@@ -102,6 +105,8 @@ internal class RuntimeParserAgl(
 
     val failedReasons = mutableMapOf<Int, MutableList<FailedParseReason>>()
 
+    // set by another thread
+    @Volatile
     private var interruptedMessage: String? = null
 
     private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeData?>()
@@ -144,7 +149,8 @@ internal class RuntimeParserAgl(
             //val skipLhsp = gState.rulePositions.map { this.stateSet.firstOf.expectedAt(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
             val skipLhsp = gState.rulePosition.flatMap {
                 possibleEndOfText.map { eot ->
-                    this.stateSet.firstOf.expectedAt(it, eot.part)
+                    // FirstOf keeps a cache while it calculates, so it is used under the lock
+                    AutomatonBuildLock.withLock { this.stateSet.firstOf.expectedAt(it, eot.part) }
                 }
             }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
             val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp)
@@ -159,8 +165,11 @@ internal class RuntimeParserAgl(
         this.interruptedMessage = message
     }
 
+    // given in the parse options, to stop only this parse
+    var parseInterrupt: ParseInterrupt? = null
+
     fun checkForTerminationRequest() {
-        val m = this.interruptedMessage
+        val m = this.interruptedMessage ?: this.parseInterrupt?.message
         if (null == m) {
             //do nothing
         } else {

@@ -114,7 +114,9 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     val completionProvider: CompletionProvider<AsmType, ContextType>?
 
     /**
-     * can be called from a different thread to stop the parser
+     * can be called from a different thread to stop the parser.
+     * Stops all parses of this processor that are running now.
+     * To stop only one parse, give it a [net.akehurst.language.parser.api.ParseInterrupt] in [ParseOptions.interrupt].
      */
     fun interrupt(message: String)
 

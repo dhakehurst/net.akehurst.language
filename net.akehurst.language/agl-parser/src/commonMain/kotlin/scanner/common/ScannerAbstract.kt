@@ -64,6 +64,17 @@ data class ScanByLineEndState(
  *   a pattern when both match the same length. When true a literal always beats a pattern, even a longer one.
  *   Only affects which token is chosen when a scanner picks one token per position, i.e. [scan] and [ScannerClassic].
  */
+/**
+ * A new scanner of the same kind, for the same terminals and options, with none of the state (cached leaves) of this one.
+ * A scanner keeps state about the sentence it scans, so each scan or parse uses its own scanner,
+ * which allows several scans/parses (with one processor) at the same time.
+ */
+fun Scanner.newInstance(): Scanner = when (this) {
+    is ScannerOnDemand -> ScannerOnDemand(this.regexEngine, this.validTerminals, this.literalOverLongerPattern)
+    is ScannerClassic -> ScannerClassic(this.regexEngine, this.validTerminals, this.literalOverLongerPattern)
+    else -> this // e.g. ScannerFromMatchables keeps no state
+}
+
 abstract class ScannerAbstract(
     override val regexEngine: RegexEngine,
     val literalOverLongerPattern: Boolean = false

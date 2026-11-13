@@ -18,6 +18,9 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.kotlinx.collections.MapNotNull
 import net.akehurst.kotlinx.collections.lazyMapNotNull
+import net.akehurst.language.agl.util.AutomatonBuildLock
+import net.akehurst.language.agl.util.concurrentMutableMapOf
+import net.akehurst.language.agl.util.lazyUnderBuildLock
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
@@ -94,7 +97,7 @@ class RuntimeRuleSet(
 
     val skipRules: List<RuntimeRule> by lazy { this.runtimeRules.filter { it.isSkip } }
 
-    val skipTerminals: Set<RuntimeRule> by lazy { this.skipParserStateSet?.usedTerminalRules ?: emptySet() }
+    val skipTerminals: Set<RuntimeRule> by lazyUnderBuildLock { this.skipParserStateSet?.usedTerminalRules ?: emptySet() }
 
     val nonSkipRules: Array<RuntimeRule> by lazy { this.runtimeRules.filter { it.isSkip.not() }.toTypedArray() }
 
@@ -161,14 +164,15 @@ class RuntimeRuleSet(
     }
 
     // userGoalRule -> ParserStateSet
-    private val states_cache = mutableMapOf<String, ParserStateSet>()
+    // read without a lock by parses running in parallel, written under AutomatonBuildLock
+    private val states_cache = concurrentMutableMapOf<String, ParserStateSet>()
     private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
     /**
      * <SKIP-MULTI> = <SKIP-CHOICE>+
      * <SKIP-CHOICE> = SR-0 | ... | SR-n
      */
-    val skipParserStateSet: ParserStateSet? by lazy {
+    val skipParserStateSet: ParserStateSet? by lazyUnderBuildLock {
         if (skipRules.isEmpty()) {
             null
         } else {
@@ -317,7 +321,7 @@ class RuntimeRuleSet(
     }
 
     override fun addPreBuiltFor(userGoalRuleName: String, automaton: Automaton) {
-        this.states_cache[userGoalRuleName] = automaton as ParserStateSet
+        AutomatonBuildLock.withLock { this.states_cache[userGoalRuleName] = automaton as ParserStateSet }
     }
 
     fun fetchStateSetFor(userGoalRule: Rule, automatonKind: AutomatonKind): ParserStateSet =
@@ -325,12 +329,14 @@ class RuntimeRuleSet(
 
     internal fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
         //TODO: need to cache by possibleEndOfText also
-        var stateSet = this.states_cache[userGoalRuleName]
-        if (null == stateSet) {
-            stateSet = ParserStateSet(nextStateSetNumber++, this, this.findRuntimeRule(userGoalRuleName), false, automatonKind, false)
-            this.states_cache[userGoalRuleName] = stateSet
+        return this.states_cache[userGoalRuleName] ?: AutomatonBuildLock.withLock {
+            var stateSet = this.states_cache[userGoalRuleName]
+            if (null == stateSet) {
+                stateSet = ParserStateSet(nextStateSetNumber++, this, this.findRuntimeRule(userGoalRuleName), false, automatonKind, false)
+                this.states_cache[userGoalRuleName] = stateSet
+            }
+            stateSet
         }
-        return stateSet
     }
 
     fun findEmbeddedRuleSets(found: Set<RuntimeRuleSet> = emptySet()): Set<RuntimeRuleSet> {

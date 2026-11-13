@@ -17,6 +17,7 @@
 package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.util.AutomatonBuildLock
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.api.AutomatonState
@@ -63,61 +64,47 @@ class ParserState(
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
         this.stateSet.createLookaheadSet(includesUP, includeEOT, matchAny, content)
 
-    fun transitionsGoal(previous: ParserState): List<Transition> {
-        val cache: List<Transition>? = this.outTransitions.findTransitionForIncompleteByPrevious(previous)
-        val trans = if (null == cache) {
-            if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
-            //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
-            // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
-            val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calTransitionsForGoal(this, previous).toList()
-            filteredTransitions.forEach { this.outTransitions.addTransitionForIncomplete(previous, it) }
-            // adding a transition can merge it with one added before (same action and target),
-            // so return what is now stored, not each intermediate transition
-            this.outTransitions.findTransitionForIncompleteByPrevious(previous)?.toList() ?: emptyList()
-        } else {
-            cache
+    // transitions are calculated (and cached) on demand, under AutomatonBuildLock so that parallel parses can share the automaton.
+    // Finding cached transitions does not take the lock, they are found only once all transitions of the context are added.
+    fun transitionsGoal(previous: ParserState): List<Transition> =
+        this.outTransitions.findTransitionForIncompleteByPrevious(previous) ?: AutomatonBuildLock.withLock {
+            this.outTransitions.findTransitionForIncompleteByPrevious(previous) ?: run {
+                // the transitions may already be there (added when the automaton was built), otherwise calculate them
+                if (this.outTransitions.hasTransitionForIncomplete(previous).not()) {
+                    if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
+                    val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calTransitionsForGoal(this, previous).toList()
+                    filteredTransitions.forEach { this.outTransitions.addTransitionForIncomplete(previous, it) }
+                }
+                this.outTransitions.calculatedIncomplete(previous)
+            }
         }
-        return trans
-    }
 
-    fun transitionsInComplete(previous: ParserState): List<Transition> {
-        val cache: List<Transition>? = this.outTransitions.findTransitionForIncompleteByPrevious(previous)
-        val trans = if (null == cache) {
-            if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
-            //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
-            // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
-            val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcTransitionsForInComplete(this, previous).toList()
-            filteredTransitions.forEach { this.outTransitions.addTransitionForIncomplete(previous, it) }
-            // adding a transition can merge it with one added before (same action and target),
-            // so return what is now stored, not each intermediate transition
-            this.outTransitions.findTransitionForIncompleteByPrevious(previous)?.toList() ?: emptyList()
-        } else {
-            cache
+    fun transitionsInComplete(previous: ParserState): List<Transition> =
+        this.outTransitions.findTransitionForIncompleteByPrevious(previous) ?: AutomatonBuildLock.withLock {
+            this.outTransitions.findTransitionForIncompleteByPrevious(previous) ?: run {
+                // the transitions may already be there (added when the automaton was built), otherwise calculate them
+                if (this.outTransitions.hasTransitionForIncomplete(previous).not()) {
+                    if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
+                    val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcTransitionsForInComplete(this, previous).toList()
+                    filteredTransitions.forEach { this.outTransitions.addTransitionForIncomplete(previous, it) }
+                }
+                this.outTransitions.calculatedIncomplete(previous)
+            }
         }
-        return trans
-    }
 
-    fun transitionsComplete(previous: ParserState, prevPrev: ParserState): List<Transition> {
-        val cache: List<Transition>? = this.outTransitions.findTransitionForCompleteByPrevious(previous, prevPrev)
-        val trans = if (null == cache) {
-            if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
-            //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
-            // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
-            val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcTransitionsForComplete(this, previous, prevPrev).toList()
-            filteredTransitions.forEach { this.outTransitions.addTransitionForComplete(previous, prevPrev, it) }
-            // adding a transition can merge it with one added before (same action and target),
-            // so return what is now stored, not each intermediate transition
-            this.outTransitions.findTransitionForCompleteByPrevious(previous, prevPrev)?.toList() ?: emptyList()
-        } else {
-            cache
+    fun transitionsComplete(previous: ParserState, prevPrev: ParserState): List<Transition> =
+        this.outTransitions.findTransitionForCompleteByPrevious(previous, prevPrev) ?: AutomatonBuildLock.withLock {
+            this.outTransitions.findTransitionForCompleteByPrevious(previous, prevPrev) ?: run {
+                // the transitions may already be there (added when the automaton was built), otherwise calculate them
+                if (this.outTransitions.hasTransitionForComplete(previous, prevPrev).not()) {
+                    if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
+                    val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcTransitionsForComplete(this, previous, prevPrev).toList()
+                    filteredTransitions.forEach { this.outTransitions.addTransitionForComplete(previous, prevPrev, it) }
+                }
+                this.outTransitions.calculatedComplete(previous, prevPrev)
+            }
         }
-        return trans
-    }
 
-    // --- AutomatonState ---
-
-
-    // --- Any ---
     override fun hashCode(): Int = this.number.value + this.stateSet.number * 31
 
     override fun equals(other: Any?): Boolean = when {

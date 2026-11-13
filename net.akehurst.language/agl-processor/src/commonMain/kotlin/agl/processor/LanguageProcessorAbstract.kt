@@ -55,6 +55,8 @@ import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.scanner.common.newInstance
+import net.akehurst.language.agl.util.ReentrantLockCommon
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SPPTParser
@@ -68,6 +70,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 ) : LanguageProcessor<AsmType, ContextType> {
 
     override val allIssues = IssueHolder(LanguageProcessorPhase.ALL)
+
+    // parses run in parallel, but the syntax and semantic analysers are shared (and keep state), so analysis is done one at a time
+    private val analysisLock = ReentrantLockCommon()
 
     abstract override val targetRuleSet: RuleSet?
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem?
@@ -206,7 +211,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun scan(sentence: String, options: ScanOptions?): ScanResult {
-        return this.scanner?.scan(SentenceDefault(sentence, null), options)?.also { scanner?.reset() } //TODO: check do we need a sentenceID ?
+        // a new scanner for each scan, so that scans and parses can run at the same time
+        return this.scanner?.newInstance()?.scan(SentenceDefault(sentence, null), options) //TODO: check do we need a sentenceID ?
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Scanner")
     }
 
@@ -216,6 +222,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             opts = opts.clone()
             opts.goalRuleName = this.defaultGoalRuleName?.value
         }
+        // each parse has its own scanner and runtime data, so the resets do not affect other parses running at the same time
         return this.parser?.parse(sentence, opts)?.also { scanner?.reset(); parser?.reset() }
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
     }
@@ -227,18 +234,22 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val opts = defaultOptions(options)
         val sa: SyntaxAnalyser<AsmType> = this.syntaxAnalyser
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SyntaxAnalyser")
-        sa.clear<AsmType>()
-        return sa.transform(sppt) as SyntaxAnalysisResult<AsmType>
+        return analysisLock.withLock {
+            sa.clear<AsmType>()
+            sa.transform(sppt) as SyntaxAnalysisResult<AsmType>
+        }
     }
 
     override  fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): SemanticAnalysisResult {
         val opts = defaultOptions(options)
         val semAnalyser = this.semanticAnalyser
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SemanticAnalyser")
-        semAnalyser.clear()
-        val sentenceId = opts.parse.sentenceIdentity.invoke()
-        val lm = opts.semanticAnalysis.locationMap
-        return semAnalyser.analyse(sentenceId, asm, lm, opts.semanticAnalysis)
+        return analysisLock.withLock {
+            semAnalyser.clear()
+            val sentenceId = opts.parse.sentenceIdentity.invoke()
+            val lm = opts.semanticAnalysis.locationMap
+            semAnalyser.analyse(sentenceId, asm, lm, opts.semanticAnalysis)
+        }
     }
 
     override fun process(sentence: String, options: ProcessOptions<AsmType, ContextType>?): ProcessResult<AsmType> {
@@ -268,8 +279,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return if (null == sppt || opts.syntaxAnalysis.enabled.not()) {
             ProcessResultDefault(null, parseResult, processIssues = issues)
         } else {
-            val synxResult: SyntaxAnalysisResult<AsmType> = this.syntaxAnalysis(sppt, opts)
-            processAfterSyntaxAnalysis(parseResult, synxResult, opts, issues)
+            // the analysers are shared and keep state (e.g. the location map used by the semantic analysis), so they are used by one process at a time
+            analysisLock.withLock {
+                val synxResult: SyntaxAnalysisResult<AsmType> = this.syntaxAnalysis(sppt, opts)
+                processAfterSyntaxAnalysis(parseResult, synxResult, opts, issues)
+            }
         }
     }
 
@@ -282,7 +296,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         opts: ProcessOptions<AsmType, ContextType>,
         sa: SyntaxAnalyserFromAsmTransformAbstract<AsmType, Any>,
         issues: IssueHolder
-    ): ProcessResult<AsmType> {
+    ): ProcessResult<AsmType> = analysisLock.withLock { // the syntax analyser is used during the parse
         sa.clear<AsmType>()
         val stream = SyntaxAnalysisStream(sa)
         val parseOpts = opts.parse.clone()
@@ -290,7 +304,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         parseOpts.streamListener = if (null == other) stream else ParseStreamListenerBoth(other, stream)
         val parseResult = this.parse(sentence, parseOpts)
         val synxResult = stream.result
-        return if (null == synxResult) {
+        if (null == synxResult) {
             issues.info(null, "There was no result from the streaming SyntaxAnalyser")
             ProcessResultDefault(null, parseResult, processIssues = issues)
         } else {

@@ -32,6 +32,9 @@ import net.akehurst.language.scanner.api.Matchable
 import net.akehurst.language.scanner.api.MatchableKind
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.scanner.common.ScanOptionsDefault
+import net.akehurst.language.scanner.common.newInstance
+import net.akehurst.language.agl.util.concurrentMutableMapOf
+import kotlin.concurrent.Volatile
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
@@ -54,7 +57,8 @@ class ParseOptionsDefault(
     override var reverseFindWordStartBySkipRules: Boolean = true,
     override var expectedAtFromAllTokenStarts: Boolean = false,
     override var streamListener: ParseStreamListener? = null,
-    override var streamLagWarningLimit: Int = 10000
+    override var streamLagWarningLimit: Int = 10000,
+    override var interrupt: ParseInterrupt? = null
 ) : ParseOptions {
     override fun clone() = ParseOptionsDefault(
         enabled = enabled,
@@ -67,8 +71,18 @@ class ParseOptionsDefault(
         reverseFindWordStartBySkipRules = reverseFindWordStartBySkipRules,
         expectedAtFromAllTokenStarts = expectedAtFromAllTokenStarts,
         streamListener = streamListener,
-        streamLagWarningLimit = streamLagWarningLimit
+        streamLagWarningLimit = streamLagWarningLimit,
+        interrupt = interrupt
     )
+}
+
+class ParseInterruptDefault : ParseInterrupt {
+    @Volatile
+    override var message: String? = null; private set
+
+    override fun interrupt(message: String) {
+        this.message = message
+    }
 }
 
 data class ParseResultDefault(
@@ -105,20 +119,39 @@ class LeftCornerParser(
     override val ruleSet: RuleSet get() = runtimeRuleSet
     internal val runtimeRuleSet = ruleSet as RuntimeRuleSet
 
-    // cached only so it can be interrupted
-    private var runtimeParser: RuntimeParserAgl? = null
+    /*
+     * Several parses (parse, expectedAt) may run at the same time, e.g. in different threads.
+     * Each parse has its own scanner (see [Scanner.newInstance]), RuntimeParserAgl (graph, heads) and issues.
+     * The automaton (in the RuntimeRuleSet) is shared, it is built on demand under AutomatonBuildLock.
+     */
 
-    private val _issues = IssueHolder(LanguageProcessorPhase.PARSE)
+    // the parses running now, kept only so they can be interrupted
+    private val _running = concurrentMutableMapOf<RuntimeParserAgl, Boolean>()
 
-    val runtimeDataIsEmpty: Boolean get() = runtimeParser?.graph?.isEmpty ?: true
+    // the last parse that was started, only for [runtimeDataIsEmpty]
+    @Volatile
+    private var lastRuntimeParser: RuntimeParserAgl? = null
+
+    val runtimeDataIsEmpty: Boolean get() = lastRuntimeParser?.graph?.isEmpty ?: true
 
     override fun reset() {
-        runtimeParser?.reset() //is this necessary?
-        runtimeParser = null
+        // each parse has its own runtime data, nothing is shared that needs to be reset
+        lastRuntimeParser = null
     }
 
+    /** interrupts all parses of this parser that are running now */
     override fun interrupt(message: String) {
-        this.runtimeParser?.interrupt(message)
+        this._running.keys.forEach { it.interrupt(message) }
+    }
+
+    private inline fun <T> running(rp: RuntimeParserAgl, block: () -> T): T {
+        this.lastRuntimeParser = rp
+        this._running[rp] = true
+        return try {
+            block()
+        } finally {
+            this._running.remove(rp)
+        }
     }
 
     override fun buildFor(goalRuleName: String) {
@@ -137,13 +170,15 @@ class LeftCornerParser(
         check(sentenceText.length < Int.MAX_VALUE) { "The parser can only handle a max sentence size < ${Int.MAX_VALUE} characters, requested size was ${sentenceText.length}" }
         val sentence = SentenceDefault(sentenceText, options.sentenceIdentity?.invoke())
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
+        val cacheSkip = options.cacheSkip
+        val issues = IssueHolder(LanguageProcessorPhase.PARSE)
+        val rp = createRuntimeParser(sentence, goalRuleName, scanner.newInstance(), automatonKind, cacheSkip, issues, options.interrupt)
+        return running(rp) { parse(sentence, options, rp, issues) }
+    }
+
+    private fun parse(sentence: Sentence, options: ParseOptions, rp: RuntimeParserAgl, issues: IssueHolder): ParseResult {
         val reportErrors = options.reportErrors
         val reportGrammarAmbiguities = options.reportGrammarAmbiguities
-        val cacheSkip = options.cacheSkip
-        _issues.clear()
-        scanner.reset()
-        val rp = createRuntimeParser(sentence, goalRuleName, scanner, automatonKind, cacheSkip)
-        this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
         val parseArgs = RuntimeParserAgl.Companion.GrowArgs(
@@ -159,7 +194,7 @@ class LeftCornerParser(
         var seasons = 1
         var maxNumHeads = 0
         val streamListener = options.streamListener
-        val streamer = streamListener?.let { ParseStreamer(it, sentence, this._issues, options.streamLagWarningLimit) }
+        val streamer = streamListener?.let { ParseStreamer(it, sentence, issues, options.streamLagWarningLimit) }
         if (null != streamer) {
             rp.graph.onAmbiguity = { existing, newChildren -> streamer.ambiguity(existing, newChildren) }
             streamer.start(rp.graph)
@@ -185,19 +220,19 @@ class LeftCornerParser(
             }
         } catch (e: ParserWontStopException) {
             val length = if (e.position < sentence.text.length) 1 else 0
-            this._issues.error(sentence.locationFor(e.position, length), IssueMessage.PARSER_WONT_STOP)
+            issues.error(sentence.locationFor(e.position, length), IssueMessage.PARSER_WONT_STOP)
             streamer?.fail()
-            return ParseResultDefault(null, this._issues)
+            return ParseResultDefault(null, issues)
         }
         catch (e: ParserInterruptedException) {
-            this._issues.error(sentence.locationFor(e.position, 0), IssueMessage.parserTerminated(e.reason))
+            issues.error(sentence.locationFor(e.position, 0), IssueMessage.parserTerminated(e.reason))
             streamer?.fail()
-            return ParseResultDefault(null, this._issues)
+            return ParseResultDefault(null, issues)
         }
 
         if (true == streamer?.stopped) {
             streamer.fail()
-            return ParseResultDefault(null, this._issues)
+            return ParseResultDefault(null, issues)
         }
 
         val match = rp.graph.treeData.complete
@@ -205,21 +240,21 @@ class LeftCornerParser(
         return if (match.root != null) {
             if (null != streamer) {
                 streamer.finish(rp.graph.treeData)
-                ParseResultDefault(null, this._issues)
+                ParseResultDefault(null, issues)
             } else {
                 val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
-                ParseResultDefault(sppt, this._issues)
+                ParseResultDefault(sppt, issues)
             }
         } else {
-            createParseIssuesFromFailures(sentence, options, rp)
+            createParseIssuesFromFailures(sentence, options, rp, issues)
             streamer?.fail()
 
             val sppt = null//TODO: provide best effort - SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
-            ParseResultDefault(sppt, this._issues)
+            ParseResultDefault(sppt, issues)
         }
     }
 
-    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp: RuntimeParserAgl) {
+    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp: RuntimeParserAgl, issues: IssueHolder) {
         if (options.reportErrors) {
             // need to include the 'startSkipFailures',
             val map1 = rp.failedReasons //no need to clone it as it will not be modified after this point
@@ -248,22 +283,23 @@ class LeftCornerParser(
                 val failedAtPosition = map2.keys.max()
                 val nextExpected = map2[failedAtPosition]?.filter { it.second.not() }?.map { it.third } ?: emptyList()
                 val loc = sentence.locationFor(failedAtPosition, 0)
-                addParseIssue(sentence, loc, nextExpected)
+                addParseIssue(sentence, loc, nextExpected, issues)
             }
         }
     }
 
-    private fun createRuntimeParser(sentence: Sentence, goalRuleName: String, scanner: Scanner, automatonKind: AutomatonKind, cacheSkip: Boolean): RuntimeParserAgl {
+    private fun createRuntimeParser(sentence: Sentence, goalRuleName: String, scanner: Scanner, automatonKind: AutomatonKind, cacheSkip: Boolean, issues: IssueHolder, interrupt: ParseInterrupt?): RuntimeParserAgl {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRuleName, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        return RuntimeParserAgl(sentence, false, s0.stateSet, skipStateSet, cacheSkip, goalRule, scanner, _issues)
+        return RuntimeParserAgl(sentence, false, s0.stateSet, skipStateSet, cacheSkip, goalRule, scanner, issues).also { it.parseInterrupt = interrupt }
     }
 
     private fun addParseIssue(
         sentence: Sentence,
         lastLocation: InputLocation,
-        nextExpected: List<RuntimeSpine>
+        nextExpected: List<RuntimeSpine>,
+        issues: IssueHolder
     ) {
         val expectedTerminals = nextExpected.flatMap { it.expectedNextTerminals }.toSet()
         val expected = expectedTerminals.map { it.tag }.toSet()
@@ -275,7 +311,7 @@ class LeftCornerParser(
         val contextInText = sentence.contextInText(location.position)
         val message = "Failed to match {$p} at: $contextInText"
 
-        this._issues.error(location, message, expected)
+        issues.error(location, message, expected)
     }
 
     private fun findNextExpectedAfterError3(
@@ -421,8 +457,7 @@ class LeftCornerParser(
                 val tokenStarts = when {
                     afterSkip >= position -> emptyList()
                     else -> {
-                        scanner.reset()
-                        val sr = scanner.scan(SentenceDefault(sentenceText.substring(0, position), options.sentenceIdentity.invoke()), ScanOptionsDefault(startAtPosition = afterSkip))
+                        val sr = scanner.newInstance().scan(SentenceDefault(sentenceText.substring(0, position), options.sentenceIdentity.invoke()), ScanOptionsDefault(startAtPosition = afterSkip))
                         sr.allTokens.map { it.position }.filter { it in afterSkip until position }.distinct().sorted()
                     }
                 }
@@ -446,9 +481,11 @@ class LeftCornerParser(
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val cacheSkip = options.cacheSkip
         val usedText = sentenceText.substring(0, usedPosition) // parse from start (0) to position - ignore rest of text
-        scanner.reset()
-        val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity.invoke()), goalRuleName, scanner, automatonKind, cacheSkip)
-        this.runtimeParser = rp
+        val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity.invoke()), goalRuleName, scanner.newInstance(), automatonKind, cacheSkip, IssueHolder(LanguageProcessorPhase.PARSE), options.interrupt)
+        return running(rp) { expectedSpinesAt(rp, usedPosition) }
+    }
+
+    private fun expectedSpinesAt(rp: RuntimeParserAgl, usedPosition: Int): Set<RuntimeSpine> {
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
         val parseArgs = RuntimeParserAgl.forExpectedAt

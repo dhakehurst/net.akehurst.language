@@ -92,10 +92,17 @@ class Matchable(
     val kind: MatchableKind
 ) {
     // create this so Regex is cached
+    // a Matchable belongs to a rule, so it is shared by every scanner (one per parse) of the rule set; a Regex can be used by several threads
+    @kotlin.concurrent.Volatile
     private var _regEx: Regex? = null
+    @kotlin.concurrent.Volatile
+    private var _regExEngine: RegexEngine? = null
 
     fun using(regexEngine: RegexEngine): Matchable {
-        _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression.escapedForRegex) else null
+        if (regexEngine !== _regExEngine) { // do not create the Regex again for each new scanner
+            _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression.escapedForRegex) else null
+            _regExEngine = regexEngine
+        }
         return this
     }
 
