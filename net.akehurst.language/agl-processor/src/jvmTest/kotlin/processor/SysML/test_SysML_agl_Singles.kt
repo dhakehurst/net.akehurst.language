@@ -56,7 +56,8 @@ class test_SysML_agl_Singles {
                     sentenceContext(context)
                 }
             })
-            // only errors: without a references.agl there is a warning 'Empty CrossReferenceDomain'
+            // only errors: the processor has no references (with references SysML needs the KerML base, see test_SysML_v2_2026_09_agl_references),
+            // so there is a warning 'Empty CrossReferenceDomain'
             assertEquals(expIssues, result.allIssues.errors.toSet(), result.allIssues.toString())
         }
     }
@@ -186,7 +187,7 @@ class test_SysML_agl_Singles {
         test_process(sentence, contextAsmSimple(), emptySet())
     }
 
-    @Ignore // TODO: needs a references.agl for SysML v2_2026-09 (not written yet), without it there is no scope to clash in
+    @Ignore // TODO: needs the processor with references, which SysML builds on the KerML processor (see test_SysML_v2_2026_09_agl_references)
     @Test
     fun semanticAnalysis_RootNamespace_name_clash() {
         val sentence = """

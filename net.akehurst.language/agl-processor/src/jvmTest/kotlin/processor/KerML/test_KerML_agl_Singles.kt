@@ -48,7 +48,7 @@ class test_KerML_agl_Singles {
                     sentenceContext(context)
                 }
             })
-            // only errors: without a references.agl there is a warning 'Empty CrossReferenceDomain'
+            // only errors: the processor has no references, so there is a warning 'Empty CrossReferenceDomain'
             assertEquals(expIssues, result.allIssues.errors.toSet(), result.allIssues.toString())
         }
     }
@@ -167,7 +167,9 @@ class test_KerML_agl_Singles {
         test_process(sentence, contextAsmSimple(), emptySet())
     }
 
-    @Ignore // TODO: needs a references.agl for KerML v2_2026-09 (not written yet), without it there is no scope to clash in
+    // TODO(David): with KerML_v2_2026_09.processorWithReferences() (references.agl) the duplicate 'datatype String' gives no error,
+    //  only warnings from evaluating the references ("Cannot get property 'name' on ${'$'}nothing", "Executing property 'shortName' on 'FeatureName' results in null")
+    @Ignore
     @Test
     fun semanticAnalysis_RootNamespace_name_clash() {
         val sentence = """
