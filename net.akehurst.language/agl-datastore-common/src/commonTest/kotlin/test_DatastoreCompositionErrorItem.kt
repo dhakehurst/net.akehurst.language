@@ -115,7 +115,7 @@ class test_DatastoreCompositionErrorItem {
                 end("text", "String", textExpression)
             }
         }
-        val access = composition.accessConfiguration {
+        val access = composition.accessConfiguration(registry) {
             access("src") {}
             access("tgt") {}
         }
