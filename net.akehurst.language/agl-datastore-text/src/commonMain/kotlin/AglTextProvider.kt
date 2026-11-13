@@ -43,6 +43,14 @@ open class AglTextProvider : DatastoreProvider {
         /** extension of the format file in a language directory (optional) */
         const val FILE_EXTENSION_FORMAT = "agl-fmt"
 
+        /**
+         * optional: a List of names (qualified, or simple if only one type has that name) of types of the parsed asm.
+         * Read then also gives each element of a unit's asm whose type is, or is a subtype of, one of them as an item of its own:
+         * after the unit's item, in text order, as a child of the item of its nearest enclosing element that is also an item,
+         * else of the unit's item. Without it, read gives one item per unit.
+         */
+        const val CONFIG_ITEM_TYPES = "config.item-types"
+
         /** input type for AglTextDatastore.read, for use as a DatastoreConnection targetType */
         const val PARSABLE_UNIT_TYPE = "net.akehurst.datastore.text.ParsableUnit"
 
@@ -76,6 +84,15 @@ open class AglTextProvider : DatastoreProvider {
                         )
                     }
                 }
+            }
+            parameter(CONFIG_ITEM_TYPES, "Item Types", true) {
+                type("List")
+                description(
+                    "Names of types of the parsed text (qualified, or simple if unique). Each element of one of these types (or a subtype) " +
+                            "is also read as an item of its own, a child of the item of its nearest enclosing element that is an item, else of the unit's item. " +
+                            "Its identity is '<type simple name>:<id>', where <id> is its identifying value from the cross-references ('identify ... by'), " +
+                            "else its index among its siblings of that type. Without it, there is one item per unit."
+                )
             }
         }
 

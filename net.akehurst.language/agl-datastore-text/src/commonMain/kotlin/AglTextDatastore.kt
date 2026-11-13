@@ -50,6 +50,15 @@ import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
+import net.akehurst.language.types.api.TypeDefinition
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.agl.simple.SemanticAnalyserSimple
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 
 /**
  * A unit of text and its ASM.
@@ -93,10 +102,26 @@ data class AglTextIssueLocation(
 ) : DataItemIssueLocation
 
 /**
+ * Where an element of a unit's asm is in the unit's text, e.g. for a deep link into a file.
+ * 'position' and 'length' are as in the element's InputLocation (ParsableUnit.locationOf);
+ * lines and columns count from 1: 'start' is the first character of its first token, 'end' the last character of its last token.
+ */
+data class AglTextElementLocation(
+    val position: Int,
+    val length: Int,
+    val startLine: Int,
+    val startColumn: Int,
+    val endLine: Int,
+    val endColumn: Int
+)
+
+/**
  * Provenance of a DataItem produced by an AglTextDatastore.
+ * 'elementLocation' is set for the item of an element of a unit's asm (see AglTextProvider.CONFIG_ITEM_TYPES), null for a unit's item.
  */
 data class AglTextProvenance(
-    val datastoreIdentity: DatastoreIdentity
+    val datastoreIdentity: DatastoreIdentity,
+    val elementLocation: AglTextElementLocation? = null
 ) : DataItemProvenance
 
 open class AglTextDatastore(
@@ -121,9 +146,46 @@ open class AglTextDatastore(
             /** the language directory, if given; then the definitions come from its files, not from the definition strings */
             val languageDirectory: String? get() = configuration.getAsStringOrNull(AglTextProvider.CONFIG_LANGUAGE_DIRECTORY)
 
+            /** the names given by config.item-types (empty if not given) */
+            val itemTypeNames: List<String>
+                get() = (configuration.valueOf(AglTextProvider.CONFIG_ITEM_TYPES) as List<*>?)?.map { it.toString().trim() }?.filter { it.isNotEmpty() } ?: emptyList()
+
             private val _mutex = Mutex()
             private var _definitions: AglTextDefinitions? = null
             private var _processor: LanguageProcessor<Asm, SentenceContext>? = null
+            private var _itemTypes: List<TypeDefinition>? = null
+
+            /**
+             * the types named by config.item-types, found in the processor's types: by qualified name, or by simple name if
+             * exactly one type has it. Fails if a name is not found, or a simple name is ambiguous. Found once.
+             */
+            suspend fun itemTypes(): List<TypeDefinition> {
+                _itemTypes?.let { return it }
+                val names = itemTypeNames
+                val result = when {
+                    names.isEmpty() -> emptyList()
+                    else -> {
+                        val td = processor().typesDomain
+                        names.map { name ->
+                            when {
+                                name.contains('.') -> td.findByQualifiedNameOrNull(QualifiedName(name))
+                                    ?: error("${AglTextProvider.CONFIG_ITEM_TYPES}: there is no type '$name' in the language's types")
+
+                                else -> {
+                                    val found = td.namespace.mapNotNull { it.findOwnedTypeNamed(SimpleName(name)) }
+                                    when (found.size) {
+                                        0 -> error("${AglTextProvider.CONFIG_ITEM_TYPES}: there is no type '$name' in the language's types")
+                                        1 -> found[0]
+                                        else -> error("${AglTextProvider.CONFIG_ITEM_TYPES}: more than one type is named '$name' (${found.joinToString { it.qualifiedName.value }}), use a qualified name")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                _itemTypes = result
+                return result
+            }
 
             /** the definitions, from the language directory if given, else from the definition strings. Read once. */
             suspend fun definitions(): AglTextDefinitions = _mutex.withLock { definitionsUnlocked() }
@@ -224,7 +286,7 @@ open class AglTextDatastore(
         val acrossUnits = accessConfiguration.getAsBooleanOrNull(AglTextProvider.ACCESS_RESOLVE_ACROSS_UNITS) ?: false
         return when {
             acrossUnits && null != _parsedConfig.definitions().crossReference -> readAcrossUnits(input)
-            else -> input.map { parseUnit(it) }
+            else -> flow { input.collect { item -> parseUnit(item).forEach { emit(it) } } }
         }
     }
 
@@ -241,6 +303,14 @@ open class AglTextDatastore(
      * 'source' is the ParsableUnit of the item, or null for an error item whose input is not a unit.
      */
     override fun provenanceFor(input: DataItem?, source: Any?): DataItemProvenance = AglTextProvenance(identity)
+
+    /**
+     * Provenance of the item of an element of a unit's asm (see AglTextProvider.CONFIG_ITEM_TYPES):
+     * by default AglTextProvenance of this datastore with the element's location.
+     * 'unitItem' is the item of the element's unit, 'location' is null if the element's location is not known.
+     */
+    open fun provenanceForElement(unitItem: DataItem, element: Any, location: AglTextElementLocation?): DataItemProvenance =
+        AglTextProvenance(identity, location)
 
     // ---
 
@@ -362,16 +432,21 @@ open class AglTextDatastore(
      * Parses the text of the input unit, and sets its 'asm', 'locations' and 'resolvedReferences'.
      * References are resolved within the unit (a new context for each unit).
      * If parsing fails, the item has the issues and 'asm' is null, so the rest of the flow is still read.
+     * Gives the unit's item, then the items of its elements (see elementItems).
      */
-    private suspend fun parseUnit(item: DataItem): DataItem = when (val p = syntaxPass(item)) {
-        is Parsed -> {
-            val context = newContextOrNull()
-            scopePass(p, context)
-            resolvePass(p, context)
-        }
-
-        else -> p as DataItem
+    private suspend fun parseUnit(item: DataItem): List<DataItem> = when (val p = syntaxPass(item)) {
+        is Parsed -> withElementItems(p, resolveWithinUnit(p))
+        else -> listOf(p as DataItem)
     }
+
+    /** builds the scope of the unit and resolves its references within the unit only; gives the unit's item */
+    private suspend fun resolveWithinUnit(p: Parsed): DataItem {
+        val context = newContextOrNull()
+        scopePass(p, context)
+        return resolvePass(p, context)
+    }
+
+    private suspend fun withElementItems(p: Parsed, unitItem: DataItem): List<DataItem> = listOf(unitItem) + elementItems(p, unitItem)
 
     /**
      * Reads all the input, then resolves references across its units, with one context for this read:
@@ -388,8 +463,8 @@ open class AglTextDatastore(
                 is Parsed -> when {
                     seen.add(p.sentenceIdentity) -> p.also { scopePass(it, context) }
                     else -> {
-                        val single = parseUnit(item)
-                        DataItemDefault(
+                        val single = resolveWithinUnit(p)
+                        val unitItem = DataItemDefault(
                             single.parent, single.identity, single.data, single.provenance,
                             net.akehurst.kotlinx.issues.ram.IssueHolder(
                                 listOf(
@@ -400,6 +475,7 @@ open class AglTextDatastore(
                                 ) + single.issues.all
                             )
                         )
+                        withElementItems(p, unitItem)
                     }
                 }
 
@@ -410,13 +486,125 @@ open class AglTextDatastore(
         // (the identity of an AsmStructureSimple includes its sentence identity, so elements of different units are never equal)
         val allLocations = parsed.filterIsInstance<Parsed>().flatMap { it.locations.entries }.associate { it.key to it.value }
         for (p in parsed) {
-            emit(
-                when (p) {
-                    is Parsed -> resolvePass(p, context, allLocations)
-                    else -> p as DataItem
-                }
-            )
+            when (p) {
+                is Parsed -> withElementItems(p, resolvePass(p, context, allLocations)).forEach { emit(it) }
+                is List<*> -> p.forEach { emit(it as DataItem) }
+                else -> emit(p as DataItem)
+            }
         }
+    }
+
+    /** an element that is an item, and what is needed to give its children unique identities */
+    private class ItemFrame(val element: Any?, val item: DataItem) {
+        val usedIdentities = mutableSetOf<String>()
+        val countByType = mutableMapOf<String, Int>()
+
+        /** 'base', or if a child already has it, 'base~n' with the smallest n from 1 that no child has */
+        fun uniqueIdentity(base: String): String {
+            var id = base
+            var n = 1
+            while (usedIdentities.contains(id)) {
+                id = "$base~$n"
+                n++
+            }
+            usedIdentities.add(id)
+            return id
+        }
+
+        /** the index of the next child of the type among the children of that type, from 0 */
+        fun nextIndex(typeSimpleName: String): Int {
+            val i = countByType[typeSimpleName] ?: 0
+            countByType[typeSimpleName] = i + 1
+            return i
+        }
+    }
+
+    /**
+     * The items of the elements of the unit's asm whose type is, or is a subtype of, one of config.item-types
+     * (empty if it is not given, or the unit has errors and so no asm). Depth first, in text order.
+     * Each is a child of the item of its nearest enclosing element that is an item, else of 'unitItem'.
+     * Identity '<type simple name>:<id>': <id> is the element's identifying value ('identify ... by' in the cross-references,
+     * in the scope the element is in), else its index among the children of its parent item with that type;
+     * '~n' is added if the parent item already has a child with that identity.
+     * The data is the element, typed by its type, by the accessor-mutator of the unit's item.
+     * The issues of the unit whose location is inside the element's text are on the element's item too.
+     */
+    private suspend fun elementItems(p: Parsed, unitItem: DataItem): List<DataItem> {
+        val itemTypes = _parsedConfig.itemTypes()
+        val root = p.unit.asm
+        if (itemTypes.isEmpty() || p.hasErrors || root !is AsmStructure) return emptyList()
+        val processor = _parsedConfig.processor()
+        val typesDomain = processor.typesDomain
+        val crossReferenceDomain: CrossReferenceDomain? = _parsedConfig.definitions().crossReference?.let { processor.crossReferenceDomain }
+        val interpreter = crossReferenceDomain?.let {
+            ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, it, IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS), p.locationMap()))
+        }
+        val accessor = unitItem.data.accessor
+        val sentence = SentenceDefault(p.unit.text, p.sentenceIdentity)
+
+        fun identifyingValue(scopeForTypeName: QualifiedName, el: AsmStructure): String? = when {
+            null == crossReferenceDomain || null == interpreter -> null
+            else -> when (val v = SemanticAnalyserSimple.identifyingValueInFor(interpreter, crossReferenceDomain, scopeForTypeName, el)) {
+                is String -> v
+                is List<*> -> v.takeIf { it.isNotEmpty() }?.joinToString(".")
+                else -> null
+            }
+        }
+
+        fun elementLocation(loc: InputLocation?): AglTextElementLocation? = loc?.let {
+            // the last character of the last token (not trailing white space)
+            var last = maxOf(it.position, it.endPosition - 1)
+            while (last > it.position && last < p.unit.text.length && p.unit.text[last].isWhitespace()) last--
+            val end = sentence.locationFor(last, 1)
+            AglTextElementLocation(it.position, it.length, it.line, it.column, end.line, end.column)
+        }
+
+        val result = mutableListOf<DataItem>()
+        val items = ArrayDeque<ItemFrame>().apply { addLast(ItemFrame(null, unitItem)) }
+        // as ScopeCreator: the type of the element that created the scope each element is in
+        val scopes = ArrayDeque<QualifiedName>().apply { addLast(CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME) }
+        AsmSimple.traverseDepthFirst(listOf(root), object : AsmTreeWalker {
+            override fun beforeRoot(root: Any) {}
+            override fun afterRoot(root: Any) {}
+            override fun onNothing(owningProperty: AsmStructureProperty?, value: Unit) {}
+            override fun onPrimitive(owningProperty: AsmStructureProperty?, value: Any) {}
+            override fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {}
+            override fun beforeList(owningProperty: AsmStructureProperty?, value: Collection<*>) {}
+            override fun afterList(owningProperty: AsmStructureProperty?, value: Collection<*>) {}
+
+            override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
+                val scopeForTypeName = scopes.last()
+                val id = identifyingValue(scopeForTypeName, value)
+                val createsScope = null != crossReferenceDomain && null != id && crossReferenceDomain.isScopeDefinedFor(typesDomain, value.qualifiedTypeName)
+                scopes.addLast(if (createsScope) value.qualifiedTypeName else scopeForTypeName)
+
+                val elType = typesDomain.findByQualifiedNameOrNull(value.qualifiedTypeName) ?: return
+                if (itemTypes.none { elType == it || elType.conformsTo(it) }) return
+                val parent = items.last()
+                val typeName = value.qualifiedTypeName.last.value
+                val index = parent.nextIndex(typeName)
+                val identity = parent.uniqueIdentity("$typeName:${id ?: index}")
+                val loc = p.locations[value]
+                val issues = when (loc) {
+                    null -> emptyList()
+                    else -> p.issues.filter { iss -> iss.location?.let { it.position >= loc.position && it.endPosition <= loc.endPosition } ?: false }
+                }
+                val type = (accessor.typesDomain.findByQualifiedNameOrNull(value.qualifiedTypeName) ?: elType).type()
+                val item = DataItemDefault(
+                    parent.item, DataItemIdentity(identity), accessor.typedAs(value, type),
+                    provenanceForElement(unitItem, value, elementLocation(loc)),
+                    net.akehurst.kotlinx.issues.ram.IssueHolder(toItemIssues(issues))
+                )
+                result.add(item)
+                items.addLast(ItemFrame(value, item))
+            }
+
+            override fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
+                scopes.removeLast()
+                if (items.last().element === value) items.removeLast()
+            }
+        })
+        return result
     }
 
     /** copies the locations of the elements of 'asm' from 'locationMap' */
