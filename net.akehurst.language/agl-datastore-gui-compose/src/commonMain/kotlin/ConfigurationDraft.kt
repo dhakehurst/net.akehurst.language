@@ -20,7 +20,7 @@ import net.akehurst.language.types.asm.StdLibDefault
 enum class ValueMode { VALUE, SECRET_REFERENCE }
 
 /** The kind of field used for a parameter, from its type. */
-enum class ParameterKind { STRING, INTEGER, REAL, BOOLEAN, OTHER }
+enum class ParameterKind { STRING, INTEGER, REAL, BOOLEAN, LIST, OTHER }
 
 val DsConfigParameterDefinition.kind: ParameterKind
     get() = when (type.qualifiedName) {
@@ -28,6 +28,7 @@ val DsConfigParameterDefinition.kind: ParameterKind
         StdLibDefault.Integer.qualifiedTypeName -> ParameterKind.INTEGER
         StdLibDefault.Real.qualifiedTypeName -> ParameterKind.REAL
         StdLibDefault.Boolean.qualifiedTypeName -> ParameterKind.BOOLEAN
+        StdLibDefault.List.qualifiedName -> ParameterKind.LIST
         else -> ParameterKind.OTHER
     }
 
@@ -36,7 +37,7 @@ val DsConfigParameterDefinition.kind: ParameterKind
  * unfinished or invalid value can stay in the form; they are converted when the configuration is built.
  */
 class ParameterDraft(val definition: DsConfigParameterDefinition) {
-    /** the value of a String, Integer, Real or other parameter, as typed */
+    /** the value of a String, Integer, Real, List (one element per line) or other parameter, as typed */
     var text by mutableStateOf("")
 
     /** the value of a Boolean parameter, null when not set */
@@ -83,6 +84,7 @@ class ParameterDraft(val definition: DsConfigParameterDefinition) {
             ParameterKind.INTEGER -> text.toLongOrNull()?.let { Result.success(it) } ?: Result.failure(IllegalStateException("'$text' is not an Integer"))
             ParameterKind.REAL -> text.toDoubleOrNull()?.let { Result.success(it) } ?: Result.failure(IllegalStateException("'$text' is not a Real"))
             ParameterKind.BOOLEAN -> Result.success(boolean)
+            ParameterKind.LIST -> Result.success(listFromText(text))
         }
     }
 
@@ -98,6 +100,10 @@ class ParameterDraft(val definition: DsConfigParameterDefinition) {
 
             is Boolean -> {
                 mode = ValueMode.VALUE; boolean = value
+            }
+
+            is List<*> -> {
+                mode = ValueMode.VALUE; text = if (definition.kind == ParameterKind.LIST) textOfList(value) else value.toString()
             }
 
             else -> {
@@ -119,6 +125,12 @@ class ParameterDraft(val definition: DsConfigParameterDefinition) {
 
             else -> a == b
         }
+
+        /** the elements of a List parameter's text: one per non-blank line, trimmed */
+        fun listFromText(text: String): List<String> = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+
+        /** the text of a List value: its elements joined by newlines */
+        fun textOfList(value: List<*>): String = value.joinToString("\n") { it.toString() }
 
         /** true if 'text' may be typed into a field of this kind (it may be an unfinished number) */
         fun accepts(kind: ParameterKind, text: String): Boolean = when (kind) {

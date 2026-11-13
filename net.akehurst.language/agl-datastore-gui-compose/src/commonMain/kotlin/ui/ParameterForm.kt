@@ -214,6 +214,8 @@ private fun ValueField(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = enabled,
                 readOnly = readOnly,
+                // a List: one element per line
+                singleLine = kind != ParameterKind.LIST,
                 visualTransformation = if (def.sensitive && !shown) PasswordVisualTransformation() else VisualTransformation.None,
                 keyboardOptions = when (kind) {
                     ParameterKind.INTEGER, ParameterKind.REAL -> KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -223,7 +225,11 @@ private fun ValueField(
                     { TextButton(onClick = { shown = !shown }) { Text(if (shown) strings.hide else strings.show) } }
                 } else null,
                 // the default is used when the field is left empty
-                placeholder = if (def.sensitive) null else parameter.defaultValue?.toString(),
+                placeholder = when {
+                    def.sensitive -> null
+                    kind == ParameterKind.LIST -> (parameter.defaultValue as? List<*>)?.let { ParameterDraft.textOfList(it) }
+                    else -> parameter.defaultValue?.toString()
+                },
             )
         }
     }
