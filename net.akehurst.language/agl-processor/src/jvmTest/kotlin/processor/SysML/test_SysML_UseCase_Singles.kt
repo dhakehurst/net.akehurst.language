@@ -22,39 +22,37 @@ import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@Ignore("SysML grammars need updating")
 class test_SysML_UseCase_Singles {
 
     private companion object {
-
-        private val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
+        const val grammarPath = "/SysML/v2_2026-09/grammars/agl/grammar.agl"
+        private val grammarStr = this::class.java.getResource(grammarPath).readText()
         var processor: LanguageProcessor<Asm, SentenceContext> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 
     @Test
     fun parse_grammar() {
-        val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource(grammarPath).readText()
         val res = Agl.registry.agl.grammar.processor!!.parse(grammarStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun process_grammar() {
-        val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource(grammarPath).readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
     @Test
     fun SINGLE_LINE_COMMENT() {
-        val goal = "graph"
+        val goal = "RootNamespace"
         val sentence = """
           // a comment
         """.trimIndent()
@@ -66,7 +64,7 @@ class test_SysML_UseCase_Singles {
 
     @Test
     fun MULTI_LINE_COMMENT() {
-        val goal = "graph"
+        val goal = "RootNamespace"
         val sentence = """
           /* a comment */
         """.trimIndent()
