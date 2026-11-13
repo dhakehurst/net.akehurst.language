@@ -141,6 +141,32 @@ class test_LanguageProcessor_parallelParse {
     }
 
     @Test
+    fun languageDefinition_processor_from_several_threads() {
+        val registry = net.akehurst.language.agl.processor.LanguageRegistryDefault()
+        val identity = net.akehurst.language.api.processor.LanguageIdentity("test.parallel.SysML")
+        val config = Agl.configuration(Agl.configurationSimple()) { grammarString(GrammarString(SYSML_GRAMMAR)) }
+        val aglOptions = Agl.options<net.akehurst.language.grammar.api.GrammarDomain, SentenceContext> {
+            semanticAnalysis {
+                sentenceContext(contextFromRegistryGrammars(registry))
+                option(net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+            }
+        }
+        val text = SENTENCES[0]
+        val results = runBlocking(Dispatchers.Default) {
+            (1..20).map {
+                async {
+                    val def = registry.findOrPlaceholder<Asm, SentenceContext>(identity, aglOptions, config)
+                    val proc = def.processor ?: error(def.issues.toString())
+                    Triple(def, proc, proc.parse(text))
+                }
+            }.awaitAll()
+        }
+        assertEquals(1, results.map { it.first }.distinct().size, "one LanguageDefinition")
+        assertEquals(1, results.map { it.second }.distinct().size, "one processor")
+        assertTrue(results.all { it.third.issues.errors.isEmpty() && null != it.third.sppt })
+    }
+
+    @Test
     fun parse_scan_and_expectedAt_at_the_same_time() {
         val processor = processor(null)
         val text = SENTENCES[2]

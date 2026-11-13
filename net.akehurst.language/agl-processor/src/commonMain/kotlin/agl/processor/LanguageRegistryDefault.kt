@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.util.ReentrantLockCommon
 import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.completion.processor.AglCompletion
 import net.akehurst.language.agl.Agl
@@ -131,10 +132,12 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     private val _grammars = mutableMapOf<QualifiedName, Grammar>()
 
-    //private val _registryLock = Mutex
+    // the registry may be used from several threads (e.g. an editor and direct calls), its maps are changed and read under this lock.
+    // The lock is never held while the (lazy) agl languages are created, the lazies take it when they register.
+    private val _registryLock = ReentrantLockCommon()
     private val _registry = mutableMapOf<LanguageIdentity, LanguageDefinition<*, *>>()
 
-    override val languages: Map<LanguageIdentity, LanguageDefinition<*, *>> get() = _registry
+    override val languages: Map<LanguageIdentity, LanguageDefinition<*, *>> get() = _registryLock.withLock { _registry.toMap() }
 
     override val grammars: List<Grammar> get() = languages.flatMap { it.value.grammarDomain!!.allDefinitions.toList() }
 
@@ -217,8 +220,8 @@ class LanguageRegistryDefault : LanguageRegistry {
         agl.completion
     }
 
-    fun <AsmType : Any, ContextType : Any> registerFromDefinition(definition: LanguageDefinition<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> {
-        return if (this._registry.containsKey(definition.identity)) {
+    fun <AsmType : Any, ContextType : Any> registerFromDefinition(definition: LanguageDefinition<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> = _registryLock.withLock {
+        if (this._registry.containsKey(definition.identity)) {
             error("LanguageDefinition '${definition.identity}' is already registered, please unregister the old one first")
         } else {
             this._registry[definition.identity] = definition
@@ -244,7 +247,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     )
 
     fun <AsmType : Any, ContextType : Any> registerFromLanguageObject(languageObject: LanguageObject<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> {
-        return if (this._registry.containsKey(languageObject.identity)) {
+        return if (_registryLock.withLock { this._registry.containsKey(languageObject.identity) }) {
             error("LanguageDefinition '${languageObject.identity}' is already registered, please unregister the old one first")
         } else {
             val definition = LanguageDefinitionFromAsm<AsmType, ContextType>(
@@ -258,9 +261,11 @@ class LanguageRegistryDefault : LanguageRegistry {
     }
 
     override fun unregister(identity: LanguageIdentity) {
-        val definition = this._registry.remove(identity)
-        definition?.grammarDomain?.allDefinitions?.forEach {
-            unregisterGrammar(it.qualifiedName)
+        _registryLock.withLock {
+            val definition = this._registry.remove(identity)
+            definition?.grammarDomain?.allDefinitions?.forEach {
+                unregisterGrammar(it.qualifiedName)
+            }
         }
     }
 
@@ -275,7 +280,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             agl.styleLanguageIdentity -> agl.style
             agl.formatLanguageIdentity -> agl.format
             agl.crossReferenceLanguageIdentity -> agl.crossReference
-            else -> this._registry[identity]
+            else -> _registryLock.withLock { this._registry[identity] }
         } as LanguageDefinition<AsmType, ContextType>?
     }
 
@@ -302,16 +307,18 @@ class LanguageRegistryDefault : LanguageRegistry {
         aglOptions: ProcessOptions<GrammarDomain, SentenceContext>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> {
-        val existing = this.findOrNull<AsmType, ContextType>(identity)
-        return if (null == existing) {
-            val placeholder = createLanguageDefinition(identity, aglOptions, configuration)
-            registerFromDefinition(placeholder)
-        } else {
-            existing
+        // findOrNull first (without the lock) as it may create an agl language
+        @Suppress("UNCHECKED_CAST")
+        return this.findOrNull<AsmType, ContextType>(identity) ?: _registryLock.withLock {
+            // check again under the lock, so that only one placeholder is registered when several threads ask at once
+            (this._registry[identity] as LanguageDefinition<AsmType, ContextType>?) ?: run {
+                val placeholder = createLanguageDefinition(identity, aglOptions, configuration)
+                registerFromDefinition(placeholder)
+            }
         }
     }
 
-    fun findGrammarOrNullByQualifiedName(qualifiedName: QualifiedName): Grammar? = _grammars[qualifiedName]
+    fun findGrammarOrNullByQualifiedName(qualifiedName: QualifiedName): Grammar? = _registryLock.withLock { _grammars[qualifiedName] }
 
     override fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar? =
         when (nameOrQName) {
@@ -320,10 +327,10 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
     override fun registerGrammar(grammar: Grammar) {
-        _grammars[grammar.qualifiedName] = grammar
+        _registryLock.withLock { _grammars[grammar.qualifiedName] = grammar }
     }
 
     fun unregisterGrammar(qualifiedName: QualifiedName) {
-        _grammars.remove(qualifiedName)
+        _registryLock.withLock { _grammars.remove(qualifiedName) }
     }
 }
