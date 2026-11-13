@@ -45,6 +45,7 @@ import net.akehurst.language.types.asm.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.jvm.JvmOverloads
+import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KMutableProperty1
@@ -374,14 +375,18 @@ class ExternalGetterByReflection(
     val typesDomain: TypesDomain,
     val issues: IssueHolder,
 ) : ExternalGetter {
+    /**
+     * type found for objects of a class (only found ones are cached, a type may be added to the domain later).
+     * Replaced, never changed, so it can be read while another thread adds to it (an entry may then be lost, and found again).
+     */
+    private var _typeByClass: Map<KClass<*>, TypeDefinition> = emptyMap()
+
     override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
         val tp = when (obj) {
             // fallback objects created when no implementation class exists
             is AsmStructure -> typesDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)
             is AsmReference -> obj.value?.qualifiedTypeName?.let { typesDomain.findByQualifiedNameOrNull(it) }
-            // match by declared implementation class first, as simple names can be the same in different namespaces
-            else -> mostSpecificTypeByImplementation(obj)
-                ?: typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+            else -> _typeByClass[obj::class] ?: typeForByClass(obj)?.also { _typeByClass = _typeByClass + Pair(obj::class, it) }
         }
         return when (tp) {
             null -> {
@@ -392,6 +397,11 @@ class ExternalGetterByReflection(
             else -> tp.type()
         }
     }
+
+    // match by declared implementation class first, as simple names can be the same in different namespaces
+    private fun typeForByClass(obj: Any): TypeDefinition? =
+        mostSpecificTypeByImplementation(obj)
+            ?: typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
 
     override fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? {
         val typeDef = typesDomain.findByQualifiedNameOrNull(qualifiedName)
@@ -646,11 +656,11 @@ constructor(
     override fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
         val lmb: (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it, StdLibDefault.AnyType))) }
-        return typedAs(lmb, lambdaType)
+        return TypedLambdaAny(this, lambdaType, lmb, lambda, null)
     }
 
     override fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
-        executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
+        executeMethodInternal(tobj, methodName, args, { decl -> null != decl.executionTyped }, { decl, o, a -> decl.executionTyped!!.invoke(o, a) }) { obj, decl, args ->
             decl.execution?.invoke(obj, args)
         }
 
@@ -687,7 +697,7 @@ constructor(
     override suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
         val lmb: suspend (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it, StdLibDefault.AnyType))) }
-        return typedAs(lmb, lambdaType)
+        return TypedLambdaAny(this, lambdaType, lmb, null, lambda)
     }
 
     override suspend fun createStructureValueSuspend(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject =
@@ -710,8 +720,23 @@ constructor(
 
 
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
-        executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
-            decl.executionSuspend?.invoke(obj, args)
+        executeMethodInternal(
+            tobj, methodName, args,
+            { decl -> null != decl.executionTypedSuspend || null != decl.executionTyped },
+            { decl, o, a ->
+                val typedSuspend = decl.executionTypedSuspend
+                when {
+                    null != typedSuspend -> typedSuspend.invoke(o, a)
+                    else -> decl.executionTyped!!.invoke(o, a)
+                }
+            }
+        ) { obj, decl, args ->
+            // a method may have only a non-suspend execution (e.g. std Collection.contains)
+            val execSuspend = decl.executionSuspend
+            when {
+                null != execSuspend -> execSuspend.invoke(obj, args)
+                else -> decl.execution?.invoke(obj, args)
+            }
         }
 
     override suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
@@ -937,9 +962,25 @@ constructor(
         tobj: TypedObject,
         methodName: String,
         args: List<TypedObject>,
+        hasTypedExecution: (decl: MethodDefinition) -> Boolean,
+        typedExecution: (decl: MethodDefinition, tobj: TypedObject, args: List<TypedObject>) -> TypedObject,
         methodExecution: (obj: Any, decl: MethodDefinition, args: List<*>) -> Any?
     ): TypedObject {
         val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]
+        return when {
+            // typed values are passed as they are, and the result is not re-typed
+            null != methRes && hasTypedExecution(methRes.original) -> typedExecution(methRes.original, tobj, args)
+            else -> executeMethodUntypedInternal(tobj, methRes, methodName, args, methodExecution)
+        }
+    }
+
+    private inline fun executeMethodUntypedInternal(
+        tobj: TypedObject,
+        methRes: MethodDefinitionResolved?,
+        methodName: String,
+        args: List<TypedObject>,
+        methodExecution: (obj: Any, decl: MethodDefinition, args: List<*>) -> Any?
+    ): TypedObject {
         return when (methRes) {
             null -> {
                 val obj = untyped(tobj)

@@ -50,6 +50,16 @@ interface TypedObject {
     fun asString(indent: Indent = Indent()): String
 }
 
+/**
+ * A lambda value (type std.Lambda) that can be invoked with a typed value, giving a typed value,
+ * as used by typed method executions (MethodDefinition.executionTyped), so that values keep their own type and accessor-mutator.
+ * 'self' is the untyped lambda, as used by untyped executions.
+ */
+interface TypedLambda : TypedObject {
+    fun invokeTyped(arg: TypedObject): TypedObject
+    suspend fun invokeTypedSuspend(arg: TypedObject): TypedObject
+}
+
 class EvaluationContext(
     val parent: EvaluationContext?,
     initialNamedValues: Map<String, TypedObject>

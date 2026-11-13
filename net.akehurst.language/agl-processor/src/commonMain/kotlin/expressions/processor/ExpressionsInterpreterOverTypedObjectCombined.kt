@@ -40,7 +40,12 @@ import net.akehurst.language.types.asm.StdLibDefault
  */
 open class ExpressionsInterpreterOverTypedObjectCombined(
     val objectGraph: ObjectGraphAccessorMutator,
-    val customFunctions: FunctionLib? = null
+    val customFunctions: FunctionLib? = null,
+    /**
+     * further types domains in which type references (e.g. in 'is', 'as') are looked up,
+     * after the types domain of the objectGraph, e.g. the source domains of a model-to-model transform
+     */
+    val otherTypesDomains: List<TypesDomain> = emptyList()
 ) {
 
     val issues get() = objectGraph.issues
@@ -267,10 +272,18 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject =
         objectGraph.createPrimitiveValue(expression.qualifiedTypeName, expression.value)
 
-    fun evaluateTypeReference(typeReference: TypeReference): TypeInstance {
+    fun evaluateTypeReference(typeReference: TypeReference): TypeInstance = evaluateTypeReference(typeReference, null)
+
+    /**
+     * Looks up the type in 'preferredTypesDomain' (if given), then in the types domain of the objectGraph, then in 'otherTypesDomains'.
+     * For 'is' and 'as' the preferred one is the types domain of the object tested or cast.
+     */
+    fun evaluateTypeReference(typeReference: TypeReference, preferredTypesDomain: TypesDomain?): TypeInstance {
         //TODO: issues rather than exceptions!
-        val decl = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
-        val targs = typeReference.typeArguments.map { evaluateTypeReference(it).asTypeArgument }
+        val domains = (listOfNotNull(preferredTypesDomain, typesDomain) + otherTypesDomains).distinct()
+        val decl = domains.firstNotNullOfOrNull { it.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) }
+            ?: error("Type not found ${typeReference.possiblyQualifiedName}")
+        val targs = typeReference.typeArguments.map { evaluateTypeReference(it, preferredTypesDomain).asTypeArgument }
         return decl.type(targs, typeReference.isNullable)
     }
 
@@ -324,6 +337,27 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
                 }
             }
         }
+    }
+
+    /**
+     * Collection + Collection, as in Kotlin: a Set gives a Set (union), otherwise a List with all elements of lhs then all of rhs.
+     * Elements are kept as they are (each keeps its own type and accessor-mutator).
+     */
+    private fun collectionPlus(lhs: TypedObject, rhs: TypedObject): TypedObject {
+        val elements = mutableListOf<TypedObject>()
+        lhs.forEachIndexed { _, el -> elements.add(el) }
+        rhs.forEachIndexed { _, el -> elements.add(el) }
+        val lhsElType = lhs.type.typeArguments.getOrNull(0)?.type
+        val rhsElType = rhs.type.typeArguments.getOrNull(0)?.type
+        val elType = when {
+            null != lhsElType && lhsElType == rhsElType -> lhsElType
+            else -> StdLibDefault.AnyType
+        }
+        val colType = when {
+            lhs.type.resolvedDefinition.conformsTo(StdLibDefault.Set) -> StdLibDefault.Set
+            else -> StdLibDefault.List
+        }
+        return objectGraph.createCollection(colType.type(listOf(elType.asTypeArgument)), elements)
     }
 
     //TODO: add operator functions to StdLib
@@ -476,6 +510,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
             objectGraph.isNothing(lhs) -> rhs
             objectGraph.isNothing(rhs) -> lhs
+            lhs.type.resolvedDefinition.conformsTo(StdLibDefault.Collection) && rhs.type.resolvedDefinition.conformsTo(StdLibDefault.Collection) -> collectionPlus(lhs, rhs)
             lhs.type.conformsTo(StdLibDefault.String) -> when {
                 rhs.type.conformsTo(StdLibDefault.String) -> {
                     val lhsv = objectGraph.untyped(lhs) as String
@@ -810,7 +845,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     ): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = eval(evc, expression.expression)
-        val tgtType = evaluateTypeReference(expression.targetType)
+        val tgtType = evaluateTypeReference(expression.targetType, exprResult.accessor.typesDomain)
         return objectGraph.cast(exprResult, tgtType)
     }
 
@@ -821,7 +856,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     ): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = eval(evc, expression.expression)
-        val tgtType = evaluateTypeReference(expression.targetType)
+        val tgtType = evaluateTypeReference(expression.targetType, exprResult.accessor.typesDomain)
         val res = exprResult.type.conformsTo(tgtType)
         return objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, res)
     }

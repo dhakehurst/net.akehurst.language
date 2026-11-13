@@ -418,7 +418,11 @@ class M2mTransformInterpreterCombined(
     // --- Shared, not dependent on suspend ---
     // ===================================================================================
 
-    private fun interpreter(og: ObjectGraphAccessorMutator) = ExpressionsInterpreterOverTypedObjectCombined(og)
+    /** types of all domains of the transform can be referred to in expressions (e.g. 'is', 'as'), those of 'og' first */
+    private fun interpreter(og: ObjectGraphAccessorMutator) = ExpressionsInterpreterOverTypedObjectCombined(
+        og, null,
+        domainAccessorMutatorByDomainName.values.filter { it !== og }.map { it.typesDomain }
+    )
 
     private fun compileRelationWhereClause(
         m2mExecution: M2mTransformExecution,
@@ -478,7 +482,10 @@ class M2mTransformInterpreterCombined(
         })
         val initVars = varsAfterWhen.namedValues.keys + whereSteps.flatMap { it.outputs }.toSet()
         val initExes = listOf(recordMapping) + whereSteps
-        val executor = M2mPatternExecutorCombined(m2mExecution.issues, m2mExecution.targetAccessorMutator, initVars, initExes)
+        val executor = M2mPatternExecutorCombined(
+            m2mExecution.issues, m2mExecution.targetAccessorMutator, initVars, initExes,
+            domainAccessorMutatorByDomainName.values.filter { it !== m2mExecution.targetAccessorMutator }.map { it.typesDomain }
+        )
         executor.build(tgtName, template, lhsType)
         return Pair(executor, tgtName)
     }

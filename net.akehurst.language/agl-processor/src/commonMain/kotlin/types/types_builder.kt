@@ -18,6 +18,7 @@
 package net.akehurst.language.types.builder
 
 import net.akehurst.language.base.api.*
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 import kotlin.jvm.JvmOverloads
@@ -1105,6 +1106,8 @@ class MethodParameterBuilder(
     private val _paramList = mutableListOf<ParameterDeclaration>()
     private var _execution: ((self: Any, args: List<*>) -> Any?)? = null
     private var _executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)? = null
+    private var _executionTyped: ((self: TypedObject, args: List<TypedObject>) -> TypedObject)? = null
+    private var _executionTypedSuspend: (suspend (self: TypedObject, args: List<TypedObject>) -> TypedObject)? = null
 
     fun returnTypeArgument(possiblyQualifiedTypeDeclarationName: String, nullable: Boolean = false, typeArguments: TypeArgumentBuilder.() -> Unit = {}) {
         val tab = TypeArgumentBuilder(_type, _namespace)
@@ -1148,6 +1151,16 @@ class MethodParameterBuilder(
         _executionSuspend = value
     }
 
+    /** see [MethodDefinition.executionTyped] */
+    fun executionTyped(value: (self: TypedObject, args: List<TypedObject>) -> TypedObject) {
+        _executionTyped = value
+    }
+
+    /** see [MethodDefinition.executionTypedSuspend] */
+    fun executionTypedSuspend(value: suspend (self: TypedObject, args: List<TypedObject>) -> TypedObject) {
+        _executionTypedSuspend = value
+    }
+
     fun build(): MethodDefinitionPrimitive {
         val rti = _returnTypeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, _returnTypeArgs, _returnTypeIsNullable)
 //        val ti = _namespace.createTypeInstance(
@@ -1165,6 +1178,8 @@ class MethodParameterBuilder(
         ).also {
             (it as MethodDefinitionAbstract).execution = _execution
             (it as MethodDefinitionAbstract).executionSuspend = _executionSuspend
+            (it as MethodDefinitionAbstract).executionTyped = _executionTyped
+            (it as MethodDefinitionAbstract).executionTypedSuspend = _executionTypedSuspend
         }
     }
 }

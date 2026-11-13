@@ -18,6 +18,7 @@
 package net.akehurst.language.types.asm
 
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.processor.*
@@ -1943,6 +1944,8 @@ abstract class MethodDefinitionAbstract() : MethodDefinition {
 
     override var execution: ((self: Any, args: List<*>) -> Any?)? = null
     override var executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)? = null
+    override var executionTyped: ((self: TypedObject, args: List<TypedObject>) -> TypedObject)? = null
+    override var executionTypedSuspend: (suspend (self: TypedObject, args: List<TypedObject>) -> TypedObject)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDefinitionResolved = MethodDefinitionResolvedSimple(
         this,
