@@ -45,6 +45,9 @@ grammar Base {
 
     // a short name, e.g. '<e1>' in 'part <e1> engine'
     ShortName = '<' NAME '>' ;
+    // parts of an import, 'import all A::*::**'
+    ImportAll = 'all' ;
+    ImportRecursive = '::' '**' ;
 
     leaf DECIMAL_VALUE = "[0-9]+" ;
     leaf EXPONENTIAL_VALUE = "[0-9]+[eE][+-]?[0-9]+" ;
@@ -58,6 +61,8 @@ grammar Base {
     REDEFINES   = ':>>' | 'redefines' ;
 
     QualifiedName = ( '$' '::' )? [NAME / '::']+ ;
+    // the name in an import or alias, a type of its own so that its reference is defined there (where the import needs it)
+    ImportedName = ( '$' '::' )? [NAME / '::']+ ;
     QualifiedNameList = [QualifiedName / ',']+ ;
     FeatureChain = [QualifiedName / '.']2+ ;
     // a QualifiedName or a FeatureChain
@@ -260,17 +265,22 @@ grammar Packages : Annotations, Expressions {
         | Import
     ;
     ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';' ;
-    AliasMember = MemberPrefix 'alias' Identification 'for' QualifiedName RelationshipBody ;
-    Import = VisibilityIndicator? 'import' 'all'? ImportDeclaration RelationshipBody ;
+    AliasMember = MemberPrefix 'alias' Identification 'for' ImportedName RelationshipBody ;
+    Import
+        = ImportOfMembership
+        | ImportOfNamespace
+    ;
+    ImportOfMembership = VisibilityIndicator? 'import' ImportAll? ImportedName ImportRecursive? FilterPackageMember* RelationshipBody ;
+    ImportOfNamespace =
+        VisibilityIndicator? 'import' ImportAll? ImportedName '::' '*' ImportRecursive? FilterPackageMember* RelationshipBody
+    ;
     ImportDeclaration
         = MembershipImport
         | NamespaceImport
-    ;
-    MembershipImport = QualifiedName ( '::' '**' )? ;
-    NamespaceImport
-        = QualifiedName '::' '*' ( '::' '**' )?
         | FilterPackage
     ;
+    MembershipImport = QualifiedName ImportRecursive? ;
+    NamespaceImport = QualifiedName '::' '*' ImportRecursive? ;
     FilterPackage = ImportDeclaration FilterPackageMember+ ;
     FilterPackageMember = '[' OwnedExpression ']' ;
 
@@ -438,9 +448,13 @@ grammar Occurrences : DefinitionAndUsage {
         = 'snapshot'
         | 'timeslice'
     ;
-    EventOccurrenceUsage =
-        OccurrenceUsagePrefix 'event' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'occurrence' UsageDeclaration? ) UsageCompletion
+    EventOccurrenceUsage = OccurrenceUsagePrefix 'event' EventOccurrenceKind UsageCompletion ;
+    EventOccurrenceKind
+        = EventOccurrenceReference
+        | EventOccurrenceDeclaration
     ;
+    EventOccurrenceReference = OwnedReferenceSubsetting FeatureSpecializationPart? ;
+    EventOccurrenceDeclaration = 'occurrence' UsageDeclaration? ;
 
     // SysML 8.2.2.9.3 Occurrence Successions
     SourceSuccessionMember = 'then' SourceEnd ;
@@ -480,9 +494,13 @@ grammar Connections : Ports {
 
     // SysML 8.2.2.13.1 Connection Definition and Usage
     ConnectionDefinition = OccurrenceDefinitionPrefix 'connection' 'def' Definition ;
-    ConnectionUsage =
-        OccurrenceUsagePrefix ( 'connection' UsageDeclaration FeatureValue? ( 'connect' ConnectorPart )? | 'connect' ConnectorPart ) DefinitionBody
+    ConnectionUsage = OccurrenceUsagePrefix ConnectionKind DefinitionBody ;
+    ConnectionKind
+        = ConnectionConnect
+        | ConnectionDeclaration
     ;
+    ConnectionConnect = 'connect' ConnectorPart ;
+    ConnectionDeclaration = 'connection' UsageDeclaration FeatureValue? ( 'connect' ConnectorPart )? ;
     ConnectorPart
         = BinaryConnectorPart
         | NaryConnectorPart
@@ -551,10 +569,9 @@ grammar Connections : Ports {
     FlowUsage = OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody ;
     SuccessionFlowUsage = OccurrenceUsagePrefix 'succession' 'flow' FlowDeclaration DefinitionBody ;
     FlowDeclaration
-        = UsageDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' FlowEnd 'to' FlowEnd )?
-        | FlowEnd 'to' FlowEnd
+        = UsageDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' FeatureReference 'to' FeatureReference )?
+        | FeatureReference 'to' FeatureReference
     ;
-    FlowEnd = FlowEndSubsetting? QualifiedName ;
     FlowEndSubsetting
         = QualifiedName '.'
         | FeatureChainPrefix
@@ -593,7 +610,13 @@ grammar Actions : Occurrences {
     ActionUsage = OccurrenceUsagePrefix 'action' ActionUsageDeclaration ActionBody ;
     ActionUsageDeclaration = UsageDeclaration FeatureValue? ;
     PerformActionUsage = OccurrenceUsagePrefix 'perform' PerformActionUsageDeclaration ActionBody ;
-    PerformActionUsageDeclaration = ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'action' UsageDeclaration ) FeatureValue? ;
+    PerformActionUsageDeclaration = PerformActionKind FeatureValue? ;
+    PerformActionKind
+        = PerformActionReference
+        | PerformActionDeclaration
+    ;
+    PerformActionReference = OwnedReferenceSubsetting FeatureSpecializationPart? ;
+    PerformActionDeclaration = 'action' UsageDeclaration ;
     ActionNode
         = ControlNode
         | SendNode
@@ -708,9 +731,13 @@ grammar States : Actions {
         = ';'
         | 'parallel'? '{' StateBodyItem* '}'
     ;
-    ExhibitStateUsage =
-        OccurrenceUsagePrefix 'exhibit' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'state' UsageDeclaration ) FeatureValue? StateUsageBody
+    ExhibitStateUsage = OccurrenceUsagePrefix 'exhibit' ExhibitStateKind FeatureValue? StateUsageBody ;
+    ExhibitStateKind
+        = ExhibitStateReference
+        | ExhibitStateDeclaration
     ;
+    ExhibitStateReference = OwnedReferenceSubsetting FeatureSpecializationPart? ;
+    ExhibitStateDeclaration = 'state' UsageDeclaration ;
 
     // SysML 8.2.2.18.3 Transition Usages
     TransitionUsage =
@@ -736,6 +763,12 @@ grammar Calculations : Actions {
     ResultExpressionMember = MemberPrefix? OwnedExpression ;
 
     // SysML 8.2.2.20 Constraints Textual Notation
+    AssertConstraintKind
+        = AssertConstraintReference
+        | AssertConstraintDeclaration
+    ;
+    AssertConstraintReference = OwnedReferenceSubsetting FeatureSpecializationPart? ;
+    AssertConstraintDeclaration = 'constraint' ConstraintUsageDeclaration ;
     ConstraintUsageDeclaration = UsageDeclaration FeatureValue? ;
 }
 
@@ -774,8 +807,14 @@ grammar Requirements : Calculations {
     // SysML 8.2.2.21.2 Requirement Usages
     RequirementUsage = OccurrenceUsagePrefix 'requirement' ConstraintUsageDeclaration RequirementBody ;
     SatisfyRequirementUsage =
-        OccurrenceUsagePrefix 'assert'? 'not'? 'satisfy' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'requirement' UsageDeclaration ) FeatureValue? ( 'by' FeatureReference )? RequirementBody
+        OccurrenceUsagePrefix 'assert'? 'not'? 'satisfy' SatisfyRequirementKind FeatureValue? ( 'by' FeatureReference )? RequirementBody
     ;
+    SatisfyRequirementKind
+        = SatisfyRequirementReference
+        | SatisfyRequirementDeclaration
+    ;
+    SatisfyRequirementReference = OwnedReferenceSubsetting FeatureSpecializationPart? ;
+    SatisfyRequirementDeclaration = 'requirement' UsageDeclaration ;
 
     // SysML 8.2.2.21.3 Concerns
     ConcernDefinition = OccurrenceDefinitionPrefix 'concern' 'def' DefinitionDeclaration RequirementBody ;
@@ -816,9 +855,13 @@ grammar Cases : Requirements {
     // SysML 8.2.2.25 Use Cases Textual Notation
     UseCaseDefinition = OccurrenceDefinitionPrefix 'use' 'case' 'def' DefinitionDeclaration CaseBody ;
     UseCaseUsage = OccurrenceUsagePrefix 'use' 'case' ConstraintUsageDeclaration CaseBody ;
-    IncludeUseCaseUsage =
-        OccurrenceUsagePrefix 'include' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'use' 'case' UsageDeclaration ) FeatureValue? CaseBody
+    IncludeUseCaseUsage = OccurrenceUsagePrefix 'include' IncludeUseCaseKind FeatureValue? CaseBody ;
+    IncludeUseCaseKind
+        = IncludeUseCaseReference
+        | IncludeUseCaseDeclaration
     ;
+    IncludeUseCaseReference = OwnedReferenceSubsetting FeatureSpecializationPart? ;
+    IncludeUseCaseDeclaration = 'use' 'case' UsageDeclaration ;
 }
 
 grammar Views : Requirements {
@@ -852,7 +895,11 @@ grammar Views : Requirements {
         | ViewRenderingMember
         | Expose
     ;
-    Expose = 'expose' ( MembershipImport | NamespaceImport ) RelationshipBody ;
+    Expose = 'expose' ( MembershipImport | NamespaceExpose ) RelationshipBody ;
+    NamespaceExpose
+        = NamespaceImport
+        | FilterPackage
+    ;
 
     // SysML 8.2.2.26.3 Viewpoints
     ViewpointDefinition = OccurrenceDefinitionPrefix 'viewpoint' 'def' DefinitionDeclaration RequirementBody ;
@@ -958,9 +1005,7 @@ grammar SysMLv2_1 : Attributes, Connections, States, Cases, Views, Metadata {
     ReturnParameterMember = MemberPrefix? 'return' UsageElement ;
     ConstraintDefinition = OccurrenceDefinitionPrefix 'constraint' 'def' DefinitionDeclaration CalculationBody ;
     ConstraintUsage = OccurrenceUsagePrefix 'constraint' ConstraintUsageDeclaration CalculationBody ;
-    AssertConstraintUsage =
-        OccurrenceUsagePrefix 'assert' 'not'? ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'constraint' ConstraintUsageDeclaration ) CalculationBody
-    ;
+    AssertConstraintUsage = OccurrenceUsagePrefix 'assert' 'not'? AssertConstraintKind CalculationBody ;
     RequirementConstraintMember = MemberPrefix? RequirementKind RequirementConstraintUsage ;
     RequirementConstraintUsage
         = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody

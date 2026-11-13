@@ -152,3 +152,72 @@ class test_KerML_v2_2026_09_agl : test_KerML_v2_2026_09("agl", emptySet()) {
 class test_KerML_v2_2026_09_standard_OnDemand : test_KerML_v2_2026_09("standard", emptySet(), ScannerKind.OnDemand)
 
 class test_KerML_v2_2026_09_agl_OnDemand : test_KerML_v2_2026_09("agl", emptySet(), ScannerKind.OnDemand)
+
+/**
+ * Tests the references of the 'agl' grammar: the example models are processed with references checked,
+ * in a context holding the KerML model libraries and the files of the same folder that an example uses.
+ */
+class test_KerML_v2_2026_09_agl_references {
+
+    private companion object {
+        /** relative paths (from 'valid') of example files that are known to have reference errors (mostly implicit specializations, not supported yet) */
+        val knownFailing = setOf(
+            "examples/Association Examples/ProductSelection_N_ary.kerml",
+            "examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+            "examples/Association Examples/ProductSelection_UnownedEnds.kerml",
+            "examples/Behavior Examples/Camera.kerml",
+            "examples/Behavior Examples/TakePicture.kerml",
+            "examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml",
+            "examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml",
+            "examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml",
+            "examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml",
+            "examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
+            "examples/Mass Roll-up Example/MassRollup_2.kerml",
+            "examples/Mass Roll-up Example/Vehicles_1.kerml",
+            "examples/Mass Roll-up Example/Vehicles_2.kerml",
+            "examples/Mass Roll-up Example/Vehicles_3.kerml",
+            "examples/Packet Example/Packets.kerml",
+            "examples/Simple Tests/Behaviors.kerml",
+            "examples/Simple Tests/Comments.kerml",
+            "examples/Simple Tests/Conjugation.kerml",
+            "examples/Simple Tests/Expressions.kerml",
+            "examples/Simple Tests/FeatureChains.kerml",
+            "examples/Simple Tests/FeatureInheritance.kerml",
+            "examples/Simple Tests/Filtering.kerml",
+            "examples/Simple Tests/Imports.kerml",
+            "examples/Simple Tests/MetadataTest.kerml",
+            "examples/Simple Tests/Redefinition.kerml",
+            "examples/Simple Tests/Scoping.kerml",
+            "examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml",
+            "examples/Variable Feature Examples/Enhancements/Moments.kerml",
+            "examples/Variable Feature Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml",
+            "examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml",
+            "examples/Variable Feature Examples/TimeVaryingCarDriver.kerml",
+            "examples/Variable Feature Examples/TimeVaryingFeatures.kerml",
+            "examples/Vehicle Example/VehicleUsages.kerml",
+        )
+    }
+
+    private val processor = KerML_v2_2026_09.processorWithReferences()
+
+    @Test
+    fun process_library() {
+        val ctx = net.akehurst.language.agl.simple.contextAsmSimple()
+        val errors = KerML_v2_2026_09.processLibrary(processor, ctx)
+        assertEquals(emptyList(), errors)
+    }
+
+    @Test
+    fun references_examples() {
+        val libCtx = net.akehurst.language.agl.simple.contextAsmSimple()
+        KerML_v2_2026_09.processLibrary(processor, libCtx)
+        val validDir = File(KerML_v2_2026_09.languageDir, "valid")
+        val files = KerML_v2_2026_09.sentenceFiles(File(validDir, "examples"), "kerml")
+        assertTrue(files.size > 50, "example files not found in '${validDir.absolutePath}'")
+        val failed = KerML_v2_2026_09.filesWithReferenceErrors(processor, files, libCtx, validDir)
+        val unexpectedFailures = failed - knownFailing
+        val unexpectedPasses = knownFailing - failed
+        assertTrue(unexpectedFailures.isEmpty(), "${unexpectedFailures.size} examples have reference errors:\n${unexpectedFailures.joinToString("\n") { "\"$it\"," }}")
+        assertTrue(unexpectedPasses.isEmpty(), "examples now have no reference errors, remove them from 'knownFailing':\n${unexpectedPasses.joinToString("\n")}")
+    }
+}
