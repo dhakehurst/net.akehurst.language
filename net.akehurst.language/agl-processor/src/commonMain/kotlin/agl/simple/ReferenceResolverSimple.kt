@@ -987,9 +987,11 @@ class ReferenceResolverSimple(
         var previous: AsmStructure? = null
         for (el in elements) {
             el!!
+            // the type of the element itself, the collection's element type may be a supertype or union of it
+            val elActualType = el.actualType(elType)
             val selected = when {
                 null == refExpr.ofType -> true
-                else -> el.conformsToType(elType, refExpr.ofType) // else el is filtered out by the 'ofType'
+                else -> elActualType.conformsToType(refExpr.ofType) // else el is filtered out by the 'ofType'
             }
             if (selected) {
                 val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure
@@ -1002,7 +1004,7 @@ class ReferenceResolverSimple(
                     }
                 }
                 for (re in applicableHere) {
-                    handleReferenceExpression(re, elContext, el, elType)
+                    handleReferenceExpression(re, elContext, el, elActualType)
                 }
                 previous = elStr
             }
@@ -1030,9 +1032,18 @@ class ReferenceResolverSimple(
         }
     }
 
-    private fun Any.conformsToType(selfType:TypeInstance, typeName: PossiblyQualifiedName): Boolean {
+    private fun TypeInstance.conformsToType(typeName: PossiblyQualifiedName): Boolean {
         val type = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName)?.type() ?: StdLibDefault.NothingType
-        return selfType.conformsTo(type)
+        return this.conformsTo(type)
+    }
+
+    /** the type of this element (an AsmStructure has its own type), or [declaredType] when it can't be found */
+    private fun Any.actualType(declaredType: TypeInstance): TypeInstance {
+        val value = (this as? TypedObject)?.self ?: this
+        return when (value) {
+            is AsmStructure -> typesDomain.findByQualifiedNameOrNull(value.qualifiedTypeName)?.type() ?: declaredType
+            else -> declaredType
+        }
     }
 
     private fun TypesDomain.typeOf(self: AsmValue): TypeDefinition =
