@@ -22,7 +22,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.reference.api.CrossReferenceDomain
@@ -67,10 +67,16 @@ class CompletionProviderSimple(
         return when {
             options.path.isEmpty() -> {
                 val result = if (null == sentenceContext) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-                    val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
-                    val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
+                    val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options, targetGrammar) }
+                    val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options, targetGrammar) }
                     expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
                 } else {
+                    // the expansions and tangibles of all spines, computed once (it is the same for each spine)
+                    val allSpinesItems by lazy {
+                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options, targetGrammar) }
+                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options, targetGrammar) }
+                        expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                    }
                     val items = nextExpected.flatMap { sp ->
                         val firstSpineNode = sp.elements.firstOrNull()
                         when (firstSpineNode) {
@@ -78,17 +84,8 @@ class CompletionProviderSimple(
                             else -> {
                                 val type = typeFor(firstSpineNode.rule)
                                 when (type) {
-                                    null -> {
-                                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
-                                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
-                                        expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
-                                    }
-                                    else -> {
-                                        val forTypes = provideForType(type, firstSpineNode, sentenceContext)
-                                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
-                                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
-                                        forTypes + expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
-                                    }
+                                    null -> allSpinesItems
+                                    else -> provideForType(type, firstSpineNode, sentenceContext) + allSpinesItems
                                 }
                             }
                         }
@@ -102,19 +99,19 @@ class CompletionProviderSimple(
                 val path = options.path
                 val (pthDepth0, pthExpIdx0) = path.first()
                 val initExpansions = nextExpected.flatMap { sp ->
-                    provideExpansionsForRuleItem(pthDepth0, sp.expectedNextRuleItems, options)
+                    provideExpansionsForRuleItem(pthDepth0, sp.expectedNextRuleItems, options, targetGrammar)
                 }
                 val expansions = when (path.size) {
                     1 -> initExpansions
                     else -> {
                         var lastItems = initExpansions
-                        var pthItem = lastItems[pthExpIdx0]!!.ruleItem
+                        // an index that is not in the list ends the path, as for the later path elements
+                        var pthItem = lastItems.getOrNull(pthExpIdx0)?.ruleItem
                         for (i in 1 until path.size) {
+                            if (null == pthItem) break
                             val (pthDepth, pthExpIdx) = path[i]
-                            lastItems = expand(pthDepth, pthItem, options)
-                            val ni = lastItems.getOrNull(pthExpIdx)?.ruleItem
-                            if (ni == null) break
-                            pthItem = ni
+                            lastItems = expand(pthDepth, pthItem, options, targetGrammar)
+                            pthItem = lastItems.getOrNull(pthExpIdx)?.ruleItem
                         }
                         lastItems
                     }
@@ -136,8 +133,10 @@ class CompletionProviderSimple(
                 null -> emptyList()
                 else -> {
                     var strProps: Set<PropertyDeclaration> = setOf(prop)
+                    // properties already looked at, so that a type whose first property is (or leads back to) itself does not loop for ever
+                    var visited: Set<PropertyDeclaration> = strProps
                     while (strProps.isNotEmpty() && strProps.all { it.typeInstance != StdLibDefault.String }) {
-                        strProps = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
+                        val next = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
                                 strProps.filter { it.typeInstance != StdLibDefault.String }.flatMap { prp ->
                                     val type = prp.typeInstance
                                     val td = type.resolvedDefinition
@@ -147,6 +146,8 @@ class CompletionProviderSimple(
                                         else -> emptyList()
                                     }
                                 }.toSet()
+                        strProps = next - visited
+                        visited = visited + next
                     }
                     strProps.flatMap { prp ->
                         val refTypeNames = crossReferenceDomain.referenceForProperty(prp.owner.qualifiedName, prp.name.value)

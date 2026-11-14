@@ -1,25 +1,37 @@
 [versions]
-project = "4.2.3.21"
+project = "4.2.4.0-SNAPSHOT"
 
-kotlin = "2.3.21"
-dokka = "2.1.0"
-buildconfig = "6.0.10"
-exportPublic = "2.3.21"
-nak-kotlinx = "2.3.21"
-jsIntegration = "2.3.21"
+kotlin = "2.4.0"
+dokka = "2.2.0"
+buildconfig = "6.1.2"
+exportPublic = "2.4.0-SNAPSHOT"
+nak-kotlinx = "2.4.0-SNAPSHOT"
+jsIntegration = "2.4.0-SNAPSHOT"
 vanniktech = "0.37.0"
+compose-multiplatform = "1.12.2"
+compose-material3 = "1.9.0"
 
-korlibs = "6.0.2"
+korlibs = "6.1.0"
 kotest = "6.1.11"
 #ksp = "2.2.21-2.0.4"
 kotlinx-coroutines = "1.11.0"
+kotlinx-serialization = "1.11.0"
 
 [libraries]
-korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
+korlibs-korio = { module = "org.korge:korlibs-io", version.ref = "korlibs" }
+korlibs-compression = { module = "org.korge:korlibs-compression", version.ref = "korlibs" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
 nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections", version.ref = "nak-kotlinx" }
 nak-kotlinx-utils = { module = "net.akehurst.kotlinx:kotlinx-utils", version.ref = "nak-kotlinx" }
+nak-kotlinx-filesystem = { module = "net.akehurst.kotlinx:kotlinx-filesystem", version.ref = "nak-kotlinx" }
+nak-kotlinx-secure-storage = { module = "net.akehurst.kotlinx:kotlinx-secure-storage", version.ref = "nak-kotlinx" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-multiplatform" }
 
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
@@ -45,3 +57,6 @@ buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig
 #reflex = { id = "net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref = "nak-kotlinx" }
 jsIntegration = { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }

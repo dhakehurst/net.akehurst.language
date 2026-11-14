@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.collections.MapIntTo
+import net.akehurst.kotlinx.collections.MapIntTo
 import kotlin.math.pow
 
 internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
@@ -116,6 +116,12 @@ internal class CompletedNodesStore<T>(val num: Int) {
     private var _goal: T? = null
     private var _eot = HashMap<Int, T>()//MapIntTo<T>()
     private var _skip: T? = null
+
+    /** forget the entries for input positions before [position] */
+    fun dropBefore(position: Int) {
+        this._map.keys.removeAll { it.second < position }
+        this._eot.keys.removeAll { it < position }
+    }
 
     fun clear() {
         this._map.clear()

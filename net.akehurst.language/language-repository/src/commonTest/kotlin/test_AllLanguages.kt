@@ -23,7 +23,10 @@ import korlibs.io.file.VfsFile
 import korlibs.io.file.extension
 import korlibs.io.file.std.localCurrentDirVfs
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.LanguageProcessorResult
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.asm.api.Asm
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -60,8 +63,26 @@ class GrammarData(
 data class SentenceData(
     val name: String,
     val text: String,
+    /** '<rule>' or '<grammar>::<rule>' */
     val goalRule: String?
-)
+) {
+    /** the grammar to build the processor for, null for the default grammar */
+    val targetGrammarName: String? get() = goalRule?.substringBefore("::", "")?.ifEmpty { null }
+    val goalRuleName: String? get() = goalRule?.substringAfter("::")
+}
+
+// one processor per grammar file and target grammar, building a processor for every sentence is too slow
+private val processorResults = mutableMapOf<Pair<String, String?>, LanguageProcessorResult<Asm, SentenceContext>>()
+
+suspend fun processorResultFor(testData: TestData): LanguageProcessorResult<Asm, SentenceContext> {
+    val key = Pair(testData.grammar.name, testData.sentence.targetGrammarName)
+    return processorResults[key] ?: Agl.processorFromStringSimple(
+        testData.grammar.grammarStr(),
+        configurationBase = Agl.configuration(Agl.configurationSimple()) {
+            testData.sentence.targetGrammarName?.let { targetGrammarName(it) }
+        }
+    ).also { processorResults[key] = it }
+}
 
 suspend fun VfsFile.walk(recursive: Boolean, func: suspend (file: VfsFile) -> Unit = { }) {
     for (file in listSimple()) {
@@ -118,19 +139,17 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
     val sentences = mutableListOf<SentenceData>()
     when {
         langDir["${sentenceKind}.txt"].exists() && langDir["${sentenceKind}.txt"].isFile() -> {
-            langDir["${sentenceKind}.txt"].readLines().forEach { line ->
+            // one sentence per line
+            // '//# <goal>' sets the goal rule for the following lines, '//# ' alone goes back to the default goal
+            // '// ...' is a comment, blank lines are ignored
+            var goal: String? = null
+            langDir["${sentenceKind}.txt"].readLines().forEach { rawLine ->
+                val line = rawLine.trim()
                 when {
-                    line.startsWith("#") -> {
-                        val goal = line.substringBefore(":")
-                        val sentence = line.substringAfter(":")
-                        sentences.add(SentenceData(sentence, sentence, goal))
-                    }
-
-                    else -> {
-                        if (line.isNotBlank()) {
-                            sentences.add(SentenceData(line, line, null))
-                        }
-                    }
+                    line.isEmpty() -> Unit // blank line
+                    line.startsWith("//#") -> goal = line.substringAfter("//#").trim().ifEmpty { null }
+                    line.startsWith("//") -> Unit // comment
+                    else -> sentences.add(SentenceData(line, line, goal))
                 }
             }
         }
@@ -161,7 +180,7 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
             }
         }
 
-        else -> error("No '$sentenceKind' sentence file or directory in ${langDir.path}")
+        else -> println("No '$sentenceKind' sentence file or directory in ${langDir.path}") // no sentences of this kind
     }
 
     return sentences
@@ -199,6 +218,11 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
  * - a directory named 'grammars' containing either:
  * -- one or more '<name>.agl' files that define grammars, or
  * -- one or more named subdirectories containing a 'grammar.agl' file, the name of the directory is the name for the grammar
+ *
+ * sentences are either:
+ * - a directory 'valid' / 'invalid', each file is one sentence; a first line '#<goal>' gives the goal rule ('<rule>' or '<grammar>::<rule>'), or
+ * - a file 'valid.txt' / 'invalid.txt' with one sentence per line;
+ *   a line '//# <goal>' sets the goal rule ('<rule>' or '<grammar>::<rule>') for the following lines, a line '//' starts a comment, blank lines are ignored
  *
  */
 
@@ -242,11 +266,11 @@ class test_AllLanguages : FunSpec({
     }
     context("parse") {
         withData(tests) { testData ->
-            val aglRes = Agl.processorFromStringSimple(testData.grammar.grammarStr())
+            val aglRes = processorResultFor(testData)
             assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
             val processor = aglRes.processor!!
             val parseResult = when {
-                null != testData.sentence.goalRule -> processor.parse(testData.sentence.text, Agl.parseOptions { goalRuleName(testData.sentence.goalRule) })
+                null != testData.sentence.goalRule -> processor.parse(testData.sentence.text, Agl.parseOptions { goalRuleName(testData.sentence.goalRuleName) })
                 else -> processor.parse(testData.sentence.text)
             }
             if (testData.isValid) {
@@ -260,12 +284,12 @@ class test_AllLanguages : FunSpec({
     }
     context("process") {
         withData(tests) { testData ->
-            val aglRes = Agl.processorFromStringSimple(testData.grammar.grammarStr())
+            val aglRes = processorResultFor(testData)
             assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
             val processor = aglRes.processor!!
 
             val procResult = when {
-                null != testData.sentence.goalRule -> processor.process(testData.sentence.text, Agl.options { parse { goalRuleName(testData.sentence.goalRule) } })
+                null != testData.sentence.goalRule -> processor.process(testData.sentence.text, Agl.options { parse { goalRuleName(testData.sentence.goalRuleName) } })
                 else -> processor.process(testData.sentence.text)
             }
             if (testData.isValid) {

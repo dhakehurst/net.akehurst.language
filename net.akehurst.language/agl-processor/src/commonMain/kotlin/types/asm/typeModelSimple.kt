@@ -18,6 +18,7 @@
 package net.akehurst.language.types.asm
 
 import net.akehurst.kotlinx.utils.Indent
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.processor.*
@@ -31,6 +32,87 @@ import net.akehurst.language.util.cached
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
+/**
+ * Find the type named 'name', as written in namespace 'context', by looking in this domain.
+ * A qualified name is found without needing an import (its namespace must be in this domain).
+ * A simple name is looked for in 'context' and then in the namespaces 'context' imports.
+ * Unlike TypesNamespace.findTypeNamed this does not need resolveImports to be called,
+ * and namespaces do not need to know the domain, so they can be moved to, or shared between, domains.
+ */
+fun TypesDomain.findTypeDefinitionOrNull(context: TypesNamespace, name: PossiblyQualifiedName): TypeDefinition? = when (name) {
+    is QualifiedName -> findNamespaceOrNull(name.front)?.findOwnedTypeNamed(name.last)
+    is SimpleName -> context.findOwnedTypeNamed(name)
+        ?: context.import.firstNotNullOfOrNull { findNamespaceOrNull(it.asQualifiedName)?.findOwnedTypeNamed(name) }
+}
+
+/**
+ * The definition of 'typeInstance', resolved through this domain (see findTypeDefinitionOrNull above).
+ * Use this instead of TypeInstance.resolvedDefinitionOrNull when a domain is available,
+ * e.g. for a qualified name whose namespace is not imported.
+ */
+fun TypesDomain.resolveTypeDefinitionOrNull(typeInstance: TypeInstance): TypeDefinition? =
+    typeInstance.resolvedDefinitionOrNull
+        ?: when (typeInstance) {
+            is TypeInstanceSimple -> findTypeDefinitionOrNull(typeInstance.namespace, typeInstance.qualifiedOrImportedTypeName)
+            else -> null
+        }
+
+/**
+ * the characteristics as written in the AglTypes language,
+ * CONSTRUCTOR is not written (it is given by a constructor parameter), nor is PRIMITIVE (only used in std)
+ */
+internal fun Set<PropertyCharacteristic>.asTypesString(): String = listOf(
+    PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE,
+    PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.READ_WRITE,
+    PropertyCharacteristic.STORED, PropertyCharacteristic.DERIVED, PropertyCharacteristic.IDENTITY
+).filter { this.contains(it) }.joinToString(separator = " ") { it.asString() }
+
+private val TYPES_IDENTIFIER = Regex("[a-zA-Z_][a-zA-Z_0-9-]*")
+
+/**
+ * a name as written in the AglTypes language: between backticks if it is not an IDENTIFIER (e.g. contains '$').
+ * Keywords need no quotes, where a name is expected they are parsed as a name.
+ */
+internal fun String.asTypesName(): String = when {
+    TYPES_IDENTIFIER.matches(this) -> this
+    else -> "`$this`"
+}
+
+/** each part as asTypesName */
+internal fun QualifiedName.asTypesName(): String = this.parts.joinToString(separator = ".") { it.value.asTypesName() }
+
+internal fun PossiblyQualifiedName.asTypesName(): String = when (this) {
+    is QualifiedName -> this.asTypesName()
+    is SimpleName -> this.value.asTypesName()
+}
+
+/** characteristics (if any) then 'name<sep>type' */
+internal fun asTypesString(characteristics: Set<PropertyCharacteristic>, nameAndType: String): String {
+    val chrs = characteristics.asTypesString()
+    return if (chrs.isBlank()) nameAndType else "$chrs $nameAndType"
+}
+
+/** a constructor parameter, with the characteristics of the property it sets (if any) */
+internal fun constructorParameterAsString(context: TypesNamespace, param: ParameterDeclaration, nameTypeSeparator: String): String =
+    asTypesString(param.property?.characteristics ?: emptySet(), "${param.name.value.asTypesName()}$nameTypeSeparator${param.typeInstance.signature(context, 0)}")
+
+/**
+ * A constructor parameter with characteristics sets a property; several constructors may set the same property.
+ * Returns null if there is no property of that name yet, or the existing property if it is a constructor property
+ * with the same type and characteristics, else a message saying why it conflicts.
+ */
+internal fun StructuredType.existingConstructorPropertyOrConflict(name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>): Pair<PropertyDeclaration?, String?> {
+    val existing = this.findOwnedPropertyOrNull(name)
+    val expectedChrs = characteristics + PropertyCharacteristic.CONSTRUCTOR + PropertyCharacteristic.STORED
+    return when {
+        null == existing -> Pair(null, null)
+        existing.isConstructor.not() -> Pair(null, "Constructor parameter '${name.value}' of '${this.qualifiedName.value}': a property of that name exists that is not set by a constructor")
+        existing.typeInstance != typeInstance -> Pair(null, "Constructor parameter '${name.value}' of '${this.qualifiedName.value}': type '${typeInstance}' differs from the type '${existing.typeInstance}' of the existing constructor property")
+        existing.characteristics != expectedChrs -> Pair(null, "Constructor parameter '${name.value}' of '${this.qualifiedName.value}': characteristics ${expectedChrs.map { it.asString() }} differ from those of the existing constructor property ${existing.characteristics.map { it.asString() }}")
+        else -> Pair(existing, null)
+    }
+}
+
 class TypesDomainSimple(
     override val name: SimpleName,
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
@@ -42,10 +124,24 @@ class TypesDomainSimple(
                 typesString.value.isBlank() -> ProcessResultDefault(typesDomain(name.value, true) { })
                 else -> {
                     val proc = Agl.registry.agl.types.processor ?: error("Types language not found!")
-                    proc.process(
+                    val res = proc.process(
                         sentence = typesString.value,
                         options = Agl.options { semanticAnalysis { sentenceContext(sentenceContext) } }
                     )
+                    // the parsed domain has a fixed name, the result gets the given name
+                    val named = res.asm?.let { td ->
+                        when (td.name) {
+                            name -> td
+                            else -> TypesDomainSimple(name, td.options).also { nd -> td.namespace.forEach { nd.addNamespace(it) } }
+                        }
+                    }
+                    // as for an empty types string, the std namespace is part of the domain, so that 'import std' can be resolved
+                    named?.let { td ->
+                        val noStd = null == td.findNamespaceOrNull(StdLibDefault.qualifiedName)
+                        if (noStd) td.addNamespace(StdLibDefault)
+                        if (noStd || td !== res.asm) td.resolveImports()
+                    }
+                    ProcessResultDefault(named, res.parse, res.syntaxAnalysis, res.semanticAnalysis, res.processIssues)
                 }
             }
         }
@@ -85,7 +181,13 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
     }
 
     override fun mergeNamespace(value: TypesNamespace) {
-        TODO("not implemented")
+        if (_namespace.value.containsKey(value.qualifiedName)) {
+            _namespace.value[value.qualifiedName]!!.merge(value)
+        } else {
+            (namespace as MutableList).add( value)
+            _namespace.reset()
+            value.options.parent = this.options //FIXME: could cause wrong parent if namespace in multiple Domains!
+        }
     }
 
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypesNamespace {
@@ -130,6 +232,36 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
     override fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypesNamespace>) {
         namespaces.forEach { this.addNamespace(it) }
         this.resolveImports()
+    }
+
+    override fun merge(other: Domain<TypesNamespace, TypeDefinition>): Domain<TypesNamespace, TypeDefinition> {
+        return this.merge(other)
+    }
+
+    override fun merge(other: TypesDomain): TypesDomain {
+        other.namespace.forEach {
+            mergeNamespace(it)
+        }
+        return this
+    }
+
+    override fun findAssociationOwnedPropertyOrNull(type: TypeInstance, propertyName: PropertyName): PropertyDeclarationResolved? =
+        findAssociationOwnedEndOrNull(type, propertyName)?.property
+
+    override fun findAssociationOwnedEndOrNull(type: TypeInstance, propertyName: PropertyName): AssociationOwnedEnd? {
+        val def = type.resolvedDefinition
+        val candidates = setOf(def) + def.allSuperTypes.map { it.resolvedDefinition }
+        for (ns in namespace) {
+            for (assoc in ns.association) {
+                val p = assoc.ownedProperty.firstOrNull { it.name == propertyName && candidates.contains(it.owner) }
+                if (null != p) {
+                    // the property for an end is named after that end
+                    val end = assoc.end.first { it.endName == propertyName }
+                    return AssociationOwnedEnd(assoc, end, p.resolved(emptyMap()))
+                }
+            }
+        }
+        return null
     }
 
     // --- DefinitionBlock ---
@@ -214,9 +346,11 @@ abstract class TypeInstanceAbstract() : TypeInstance {
                     true -> "?"
                     else -> ""
                 }
+                // printing must not fail if the definition can't be resolved (e.g. std not imported), use the name as given
+                val nameAsGiven = (this as? TypeInstanceSimple)?.qualifiedOrImportedTypeName?.asTypesName() ?: this.typeName.value.asTypesName()
                 val name = when {
-                    typeArguments.isEmpty() -> resolvedDefinitionOrNull?.signature(context, currentDepth + 1) ?: this.typeName.value
-                    else -> resolvedDefinition.name.value
+                    typeArguments.isEmpty() -> resolvedDefinitionOrNull?.signature(context, currentDepth + 1) ?: nameAsGiven
+                    else -> resolvedDefinitionOrNull?.name?.value?.asTypesName() ?: nameAsGiven
                 }
                 return "${name}$args$n"
             }
@@ -498,12 +632,13 @@ class TupleTypeInstanceSimple(
         )
     }
 
-    override fun hashCode(): Int = listOf(resolvedDefinition, typeArguments, isNullable).hashCode()
+    // a tuple type equals another if they have the same (name, type) type arguments, in any order
+    private val typeArgumentSet get() = typeArguments.map { Pair(it.name, it.type) }.toSet()
+    override fun hashCode(): Int = listOf(resolvedDefinition, typeArgumentSet, isNullable).hashCode()
     override fun equals(other: Any?): Boolean = when {
-        other !is TypeInstanceSimple -> false
-        this.resolvedDefinition != other.resolvedDefinition -> false
+        other !is TupleTypeInstanceSimple -> false
         this.isNullable != other.isNullable -> false
-        this.typeArguments != other.typeArguments -> false
+        this.typeArgumentSet != other.typeArgumentSet -> false
         else -> true
     }
 
@@ -558,6 +693,13 @@ class UnnamedSupertypeTypeInstance(
         else -> true
     }
 }*/
+
+class TypesAssociationSimple(
+    override val namespace: TypesNamespace,
+    override val end: List<AssociationEnd>,
+    override val property: List<PropertyDeclaration>,
+    override val ownedProperty: List<PropertyDeclaration>
+) : TypesAssociation
 
 class TypesNamespaceSimple(
     override val qualifiedName: QualifiedName,
@@ -769,8 +911,12 @@ abstract class TypesNamespaceAbstract(
         }
     }
 
+    private val _association = mutableListOf<TypesAssociation>()
+    override val association: List<TypesAssociation> get() = _association
+
     override fun findOrCreateAssociation(ends: List<AssociationEnd>): List<PropertyDeclaration> {
         val props = mutableListOf<PropertyDeclaration>()
+        val owned = mutableListOf<PropertyDeclaration>()
         for (i in ends.indices) {
             val thisEnd = ends[i]
             val thisEndType = if (null == thisEnd.collectionTypeName) {
@@ -786,7 +932,19 @@ abstract class TypesNamespaceAbstract(
                 } else {
                     val otherEnd = ends[j]
                     val otherEndDef = otherEnd.endType
-                    val pd = otherEndDef.appendPropertyStored(thisEnd.endName, thisEndType, thisEnd.characteristics)
+                    if (thisEnd.ownedByAssociation) {
+                        // navigation from an object is by a unique name (a subtype may redefine one)
+                        val clash = otherEndDef.findOwnedPropertyOrNull(thisEnd.endName)
+                            ?: (_association.flatMap { it.ownedProperty } + owned).firstOrNull { it.owner == otherEndDef && it.name == thisEnd.endName }
+                        check(null == clash) {
+                            "Association end '${thisEnd.endName.value}' clashes with an existing property or association end of the same name on '${otherEndDef.qualifiedName.value}'"
+                        }
+                    }
+                    val pd = when {
+                        thisEnd.ownedByAssociation -> PropertyDeclarationStored(otherEndDef, thisEnd.endName, thisEndType, thisEnd.characteristics + PropertyCharacteristic.STORED, -1)
+                            .also { owned.add(it) }
+                        else -> otherEndDef.appendPropertyStored(thisEnd.endName, thisEndType, thisEnd.characteristics)
+                    }
                     thisEnd.byEvaluation?.let { (pd as PropertyDeclarationAbstract).accessor = it.invoke(pd) }
                     thisEnd.byEvaluationSuspend?.let { (pd as PropertyDeclarationAbstract).accessorSuspend = it.invoke(pd) }
                     props.add(pd)
@@ -794,6 +952,7 @@ abstract class TypesNamespaceAbstract(
             }
         }
         props.forEach { p -> (p as PropertyDeclarationAbstract).setOpposite(props - p) }
+        _association.add(TypesAssociationSimple(this, ends, props, owned))
         return props
     }
 
@@ -823,9 +982,18 @@ abstract class TypesNamespaceAbstract(
             .sortedWith(compareBy<Map.Entry<SimpleName, TypeDefinition>> { it.value::class.simpleName }.thenBy { it.value.name.value })
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asStringInContext(this) }
         val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}" }
+        // the property for an end is on the type of the other end; only binary associations can be written (TODO: n-ary associations)
+        val assocstr = if (this.association.isEmpty()) "" else this.association.joinToString(prefix = "\n  ", separator = "\n  ") { a ->
+            a.end.joinToString(prefix = "association {\n    ", separator = "\n    ", postfix = "\n  }") { e ->
+                val owned = if (e.ownedByAssociation) "owned " else ""
+                val elementType = e.endType.signature(this, 0) + if (e.isNullable) "?" else ""
+                val endType = e.collectionTypeName?.let { "${it.value}<$elementType>" } ?: elementType
+                "end $owned${asTypesString(e.characteristics, "${e.endName.value.asTypesName()}: $endType")}"
+            }
+        }
         val s = """namespace $qualifiedName
 $importstr
-$types
+$types$assocstr
 """.trimIndent()
         return s
     }
@@ -885,7 +1053,7 @@ abstract class TypeDefinitionSimpleAbstract(
 
     override val method = mutableListOf<MethodDefinition>()
 
-    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.resolvedDefinition as DataType).allSuperTypes }
+    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { it.resolvedDefinition.allSuperTypes }
 
     override val allProperty: Map<PropertyName, PropertyDeclaration>
         get() = supertypes.flatMap {
@@ -957,14 +1125,22 @@ abstract class TypeDefinitionSimpleAbstract(
      * append a derived property, with the expression that derived it
      */
     override fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String): PropertyDeclarationDerived {
-        val propIndex = property.size
+        val propIndex = run {
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val prop = PropertyDeclarationDerived(this, name, typeInstance, description, expression, propIndex)
         this.addProperty(prop)
         return prop
     }
 
     override fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String): PropertyDeclarationPrimitive {
-        val propIndex = property.size
+        val propIndex = run {
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val prop = PropertyDeclarationPrimitive(this, name, typeInstance, description, propIndex)
         this.addProperty(prop)
         return prop
@@ -1034,10 +1210,10 @@ class SpecialTypeSimple(
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun findInOrCloneTo(other: TypesDomain): SpecialTypeSimple =
@@ -1069,10 +1245,10 @@ class SingletonTypeSimple(
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun findInOrCloneTo(other: TypesDomain): SingletonType =
@@ -1104,10 +1280,10 @@ class PrimitiveTypeSimple(
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun findInOrCloneTo(other: TypesDomain): PrimitiveType =
@@ -1140,10 +1316,10 @@ class EnumTypeSimple(
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun findInOrCloneTo(other: TypesDomain): EnumType =
@@ -1153,7 +1329,10 @@ class EnumTypeSimple(
                     .also { clone -> super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract) }
             }
 
-    override fun asStringInContext(context: TypesNamespace): String = "enum ${signature(context)}"
+    override fun asStringInContext(context: TypesNamespace): String = when {
+        literals.isEmpty() -> "enum ${signature(context)}"
+        else -> "enum ${signature(context)} { ${literals.joinToString(separator = ", ")} }"
+    }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
     override fun equals(other: Any?): Boolean = when {
@@ -1185,10 +1364,10 @@ class UnionTypeSimple(
     }*/
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun conformsTo(other: TypeDefinition): Boolean = when {
@@ -1243,7 +1422,11 @@ abstract class StructuredTypeSimpleAbstract : TypeDefinitionSimpleAbstract(), St
         accessor: ((self: Any) -> Any?)?,
         mutator: ((self: Any, value: Any?) -> Unit)?
     ): PropertyDeclaration {
-        val propIndex = if (index >= 0) index else property.size
+        val propIndex = if (index >= 0) index else {
+            val max = propertyByIndex.keys.maxOrNull() ?: 0
+            check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
+            max+1
+        }
         val pd = PropertyDeclarationStored(this, name, typeInstance, characteristics + PropertyCharacteristic.STORED, propIndex)
         pd.accessor = accessor
         pd.mutator = mutator
@@ -1267,7 +1450,7 @@ class TypeArgumentNamedSimple(
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String {
-        return "${name.value}:${type.signature(context, currentDepth)}"
+        return "${name.value.asTypesName()}:${type.signature(context, currentDepth)}"
     }
 
     override fun findInOrCloneTo(other: TypesDomain): TypeArgumentNamed {
@@ -1361,10 +1544,10 @@ class ValueTypeSimple(
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun findInOrCloneTo(other: TypesDomain): ValueType =
@@ -1379,21 +1562,9 @@ class ValueTypeSimple(
 
     override fun asStringInContext(context: TypesNamespace): String {
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
-        val cargs = this.property
-            .joinToString(separator = ", ") {
-                val psig = it.typeInstance.signature(context, 0)
-                val cmp_ref = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val val_var = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val chrs = when {
-                    cmp_ref.isBlank() -> val_var
-                    else -> "$cmp_ref $val_var"
-                }
-                "$chrs ${it.name}:$psig"
-            }
+        // a value type has one constructor with a single parameter
+        val cargs = this.constructors.firstOrNull()?.parameters?.joinToString(separator = ", ") { constructorParameterAsString(context, it, ":") }
+            ?: this.property.joinToString(separator = ", ") { asTypesString(it.characteristics, "${it.name.value.asTypesName()}:${it.typeInstance.signature(context, 0)}") }
 
         val props = this.property
             .joinToString(separator = "\n    ") {
@@ -1410,7 +1581,7 @@ class ValueTypeSimple(
                 }
                 "$chrs ${it.name}:$psig"
             }
-        return "value ${name}${sups} ( $cargs )"
+        return "value ${name.value.asTypesName()}${sups} ( $cargs )"
     }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
@@ -1436,10 +1607,10 @@ class InterfaceTypeSimple(
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun findInOrCloneTo(other: TypesDomain): InterfaceType =
@@ -1463,22 +1634,11 @@ class InterfaceTypeSimple(
             "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
+        // properties for association ends are written in the association
         val props = this.property
-            .joinToString(separator = "\n    ") {
-                val psig = it.typeInstance.signature(context, 0)
-                val cmp_ref = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val val_var = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val chrs = when {
-                    cmp_ref.isBlank() -> val_var
-                    else -> "$cmp_ref $val_var"
-                }
-                "$chrs ${it.name}:$psig"
-            }
-        return "interface ${name}${targs}${sups} {\n    $props\n  }"
+            .filter { it.opposite.isEmpty() }
+            .joinToString(separator = "\n    ") { asTypesString(it.characteristics, "${it.name.value.asTypesName()}:${it.typeInstance.signature(context, 0)}") }
+        return "interface ${name.value.asTypesName()}${targs}${sups} {\n    $props\n  }"
     }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
@@ -1513,10 +1673,10 @@ class DataTypeSimple(
     }
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun findInOrCloneTo(other: TypesDomain): DataType =
@@ -1552,22 +1712,17 @@ class DataTypeSimple(
             "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
+        // a parameter that sets a property is written with the property's characteristics
+        val cons = this.constructors.map { c ->
+            c.parameters.joinToString(prefix = "constructor(", separator = ", ", postfix = ")") { constructorParameterAsString(context, it, ": ") }
+        }
+        // properties set by constructor parameters are written with the parameters, properties for association ends in the association
+        val setByConstructor = this.constructors.flatMap { it.parameters }.mapNotNull { it.property }.toSet()
         val props = this.property
-            .joinToString(separator = "\n    ") {
-                val psig = it.typeInstance.signature(context, 0)
-                val cmp_ref = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val val_var = it.characteristics
-                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
-                    .joinToString(separator = " ") { ch -> ch.asString() }
-                val chrs = when {
-                    cmp_ref.isBlank() -> val_var
-                    else -> "$cmp_ref $val_var"
-                }
-                "$chrs ${it.name}: $psig"
-            }
-        return "data ${name}${targs}${sups} {\n    $props\n  }"
+            .filter { setByConstructor.contains(it).not() && it.opposite.isEmpty() }
+            .map { asTypesString(it.characteristics, "${it.name.value.asTypesName()}: ${it.typeInstance.signature(context, 0)}") }
+        val body = (cons + props).joinToString(separator = "\n    ")
+        return "data ${name.value.asTypesName()}${targs}${sups} {\n    $body\n  }"
     }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
@@ -1594,10 +1749,10 @@ class CollectionTypeSimple(
     override val isStdMap: Boolean get() = this == StdLibDefault.Map
 
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
-        null == context -> qualifiedName.value
-        context == this.namespace -> name.value
-        context.isImported(this.namespace.qualifiedName) -> name.value
-        else -> qualifiedName.value
+        null == context -> qualifiedName.asTypesName()
+        context == this.namespace -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        else -> qualifiedName.asTypesName()
     }
 
     override fun findInOrCloneTo(other: TypesDomain): CollectionType =
@@ -1658,6 +1813,7 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
     override var accessorSuspend: (suspend (self: Any) -> Any?)? = null
 
     override var mutator: ((self: Any, value: Any?) -> Any?)? = null
+    override var mutatorSuspend: (suspend (self: Any, value: Any?) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
         this,
@@ -1788,6 +1944,8 @@ abstract class MethodDefinitionAbstract() : MethodDefinition {
 
     override var execution: ((self: Any, args: List<*>) -> Any?)? = null
     override var executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)? = null
+    override var executionTyped: ((self: TypedObject, args: List<TypedObject>) -> TypedObject)? = null
+    override var executionTypedSuspend: (suspend (self: TypedObject, args: List<TypedObject>) -> TypedObject)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDefinitionResolved = MethodDefinitionResolvedSimple(
         this,
@@ -1801,7 +1959,7 @@ abstract class MethodDefinitionAbstract() : MethodDefinition {
     )
 }
 
-internal class MethodDefinitionPrimitiveSimple(
+class MethodDefinitionPrimitiveSimple(
     override val owner: TypeDefinition,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,
@@ -1879,14 +2037,16 @@ class MethodDefinitionResolvedSimple(
 class ParameterDefinitionSimple(
     override val name: TmParameterName,
     override val typeInstance: TypeInstance,
-    override val defaultValue: String?
+    override val defaultValue: String?,
+    override val property: PropertyDeclaration? = null
 ) : ParameterDeclaration {
 
     override fun findInOrCloneTo(other: TypesDomain): ParameterDeclaration =
         ParameterDefinitionSimple(
             this.name,
             this.typeInstance.findInOrCloneTo(other),
-            this.defaultValue
+            this.defaultValue,
+            this.property?.findInOrCloneTo(other)
         )
 
     override fun hashCode(): Int = listOf(name).hashCode()

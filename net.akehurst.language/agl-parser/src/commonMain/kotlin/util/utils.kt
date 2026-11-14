@@ -16,28 +16,50 @@
 
 package net.akehurst.language.util
 
+import net.akehurst.language.agl.util.ReentrantLockCommon
+import kotlin.concurrent.Volatile
+
 internal fun <E> MutableSet<E>.addIfNotNull(e: E?) = e?.let { this.add(it) }
 
 fun <V> cached(initializer: () -> V) = CachedValue(initializer)
 
-class CachedValue<V>(initializer: () -> V) {
+/** like [cached] but using the given [lock], e.g. one lock for several values whose initializers use each other */
+fun <V> cachedWithLock(lock: ReentrantLockCommon, initializer: () -> V) = CachedValue(initializer, lock)
+
+/**
+ * A value that is computed when first used, and computed again after [reset].
+ * Safe to use from several threads: the value is computed once (under [lock]), other threads wait for it.
+ */
+class CachedValue<V>(
+    initializer: () -> V,
+    private val lock: ReentrantLockCommon = ReentrantLockCommon()
+) {
     companion object {
         internal object UNINITIALIZED_VALUE
     }
 
     private var initializer: (() -> V) = initializer
+
+    @Volatile
     private var _value: Any? = UNINITIALIZED_VALUE
 
     var value: V
         get() {
-            if (_value === UNINITIALIZED_VALUE) {
-                _value = initializer.invoke()
+            val v = _value
+            if (v !== UNINITIALIZED_VALUE) {
+                @Suppress("UNCHECKED_CAST")
+                return v as V
             }
-            @Suppress("UNCHECKED_CAST")
-            return _value as V
+            return lock.withLock {
+                if (_value === UNINITIALIZED_VALUE) {
+                    _value = initializer.invoke()
+                }
+                @Suppress("UNCHECKED_CAST")
+                _value as V
+            }
         }
         set(value) {
-            this._value = value
+            lock.withLock { this._value = value }
         }
 
     // no point is making this a delegate..no way to access the delegate to enable reset
@@ -46,12 +68,15 @@ class CachedValue<V>(initializer: () -> V) {
     var resetAction:(old:V)->Unit = {}
 
     fun reset() {
-        if (_value==UNINITIALIZED_VALUE) {
-            //do nothing
-        } else {
-            val old = this._value as V
-            this._value = UNINITIALIZED_VALUE
-            this.resetAction.invoke(old)
+        lock.withLock {
+            if (_value === UNINITIALIZED_VALUE) {
+                //do nothing
+            } else {
+                @Suppress("UNCHECKED_CAST")
+                val old = this._value as V
+                this._value = UNINITIALIZED_VALUE
+                this.resetAction.invoke(old)
+            }
         }
     }
 

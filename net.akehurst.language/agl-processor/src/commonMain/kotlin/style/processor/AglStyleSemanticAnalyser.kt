@@ -102,7 +102,24 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         }
     }
 
+    /**
+     * The pattern of a meta rule is matched against each terminal as written in the grammar, quotes included (e.g. 'circle').
+     * A pattern that matches no terminal gives a warning.
+     */
     private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, sentenceContext: SentenceContext) {
+        val loc = locMap[rule]
+        val regex = try {
+            Regex(rule.pattern.unescapedFromAgl.value)
+        } catch (e: Throwable) {
+            _issues.error(loc, "Meta rule pattern \"${rule.pattern.value}\" is not a valid regular expression: ${e.message}")
+            null
+        }
+        if (null != regex) {
+            val terminals = sentenceContext.findItemsConformingTo { it.value == "LITERAL" || it.value == "PATTERN" }
+            if (terminals.none { regex.matches(it.referableName) }) {
+                _issues.warn(loc, "Meta rule pattern \"${rule.pattern.value}\" matches no terminal")
+            }
+        }
     }
 
     private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, sentenceContext: SentenceContext) {

@@ -18,16 +18,22 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.kotlinx.collections.OrderedSet
+import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmReference
 import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.api.PropertyValueName
+import net.akehurst.language.asm.simple.AsmReferenceSimple
+import net.akehurst.language.asm.simple.AsmStructureSimple
+import net.akehurst.language.asm.simple.raw
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -39,6 +45,7 @@ import net.akehurst.language.types.asm.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.jvm.JvmOverloads
+import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KMutableProperty1
@@ -368,8 +375,19 @@ class ExternalGetterByReflection(
     val typesDomain: TypesDomain,
     val issues: IssueHolder,
 ) : ExternalGetter {
+    /**
+     * type found for objects of a class (only found ones are cached, a type may be added to the domain later).
+     * Replaced, never changed, so it can be read while another thread adds to it (an entry may then be lost, and found again).
+     */
+    private var _typeByClass: Map<KClass<*>, TypeDefinition> = emptyMap()
+
     override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
-        val tp = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+        val tp = when (obj) {
+            // fallback objects created when no implementation class exists
+            is AsmStructure -> typesDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)
+            is AsmReference -> obj.value?.qualifiedTypeName?.let { typesDomain.findByQualifiedNameOrNull(it) }
+            else -> _typeByClass[obj::class] ?: typeForByClass(obj)?.also { _typeByClass = _typeByClass + Pair(obj::class, it) }
+        }
         return when (tp) {
             null -> {
                 issues.warn(null, "ExternalGetterByReflection cannot get type for ${obj::class.simpleName}, using '${ifNotFound.typeName.value}'")
@@ -380,15 +398,48 @@ class ExternalGetterByReflection(
         }
     }
 
+    // match by declared implementation class first, as simple names can be the same in different namespaces
+    private fun typeForByClass(obj: Any): TypeDefinition? =
+        mostSpecificTypeByImplementation(obj)
+            ?: typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+
     override fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? {
         val typeDef = typesDomain.findByQualifiedNameOrNull(qualifiedName)
         return when (typeDef) {
             null -> error("Type Definition for '${qualifiedName.value}' not found.")
-            is DataType -> tryCreateFromConstructor(typeDef.constructors, constructorArgs) ?: typeDef.constructDataType(*(constructorArgs.values.toTypedArray<Any>()))
+            is DataType -> tryCreateFromConstructor(typeDef.constructors, constructorArgs)
+                ?: when {
+                    hasImplementationClass(typeDef) -> typeDef.constructDataType(*(constructorArgs.values.toTypedArray<Any>()))
+                    else -> createAsmStructure(qualifiedName, constructorArgs)
+                }
             is ValueType -> tryCreateFromConstructor(typeDef.constructors, constructorArgs) ?: typeDef.constructValueType(constructorArgs.values.first())
 
             else -> error("Unsupported subtype of StructuredType: '${typeDef::class.simpleName}'")
         }
+    }
+
+    /**
+     * Finds a type whose 'implementation' class the object is an instance of
+     * (e.g. obj is FileHandleJVM, type 'FileHandle' has implementation = FileHandle::class).
+     * If several match, prefer the most specific (one that no other match conforms to).
+     */
+    private fun mostSpecificTypeByImplementation(obj: Any): TypeDefinition? {
+        // std.Any has implementation kotlin.Any, which matches every object, so it is not a useful candidate
+        val candidates = typesDomain.allDefinitions.filter { it.implementation != Any::class && it.implementation?.isInstance(obj) == true }
+        return candidates.firstOrNull { c -> candidates.none { o -> o !== c && o.conformsTo(c) } }
+            ?: candidates.firstOrNull()
+    }
+
+    private fun hasImplementationClass(typeDef: TypeDefinition): Boolean =
+        null != typeDef.implementation || null != runCatching { KotlinxReflect.classForName(typeDef.qualifiedName.value) }.getOrNull()
+
+    /** Used when there is no implementation class for the type, so it cannot be constructed by reflection. */
+    private fun createAsmStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): AsmStructure {
+        val obj = AsmStructureSimple(qualifiedName)
+        constructorArgs.forEach { (k, v) ->
+            obj.setProperty(PropertyValueName(k), v, obj.property.size)
+        }
+        return obj
     }
 
     private fun tryCreateFromConstructor(
@@ -415,7 +466,11 @@ class ExternalGetterByReflection(
         val obj = when {
             null != matchingConstructor -> when {
                 null != matchingConstructor.execution -> {
-                    val args = matchingConstructor.parameters.map { p -> constructorArgs[p.name.value]!! }
+                    // a nothing value arrives as Unit (see nothing()); a nullable parameter is given null for it
+                    val args = matchingConstructor.parameters.map { p ->
+                        val arg = constructorArgs[p.name.value]!!
+                        if (Unit == arg && p.typeInstance.isNullable) null else arg
+                    }
                     matchingConstructor.execution!!.invoke(args)
                 }
                 //TODO
@@ -432,33 +487,99 @@ class ExternalGetterByReflection(
     }
 
     override fun getProperty(obj: Any, propertyName: String): Any? {
-        return try {
-            obj.reflect().getProperty(propertyName)
-        } catch (t: Throwable) {
-            issues.error(null, "Unable to evaluate property '$propertyName': ${t.message}")
-            null
+        return when (obj) {
+            is Unit -> null
+            is AsmStructure -> {
+                val v = obj.getPropertyOrNull(PropertyValueName(propertyName))
+                when (v) {
+                    is AsmStructure -> v
+                    is AsmReference -> v
+                    else -> v?.raw
+                }
+            }
+
+            is AsmReference -> obj.value?.let {
+                val v = it.property[PropertyValueName(propertyName)]?.value
+                when (v) {
+                    is AsmStructure -> v
+                    is AsmReference -> v
+                    else -> v?.raw
+                }
+            }
+
+            else -> try {
+                obj.reflect().getProperty(propertyName)
+            } catch (t: Throwable) {
+                issues.error(null, "Unable to evaluate property '$propertyName': ${t.message}")
+                null
+            }
         }
     }
 
     override fun setProperty(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
-        try {
-            obj.reflect().setProperty(propertyName, value)
-        } catch (t: Throwable) {
-            issues.error(null, "Could not set property $propertyName to $value")
+        when (obj) {
+            is Unit -> Unit // do nothin
+            is AsmStructure -> {
+                val v = when {
+                    null == value -> Unit
+                    value is AsmValue -> value.raw
+                    else -> value //AsmAnySimple(value)
+                }
+                val v2 = when {
+                    isReference && v is AsmStructure -> {
+                        val refStr = v.semanticQualifiedPath?.joinToString(separator = ".")
+                        refStr?.let { AsmReferenceSimple(refStr, v) } ?: error("Cannot create reference for ${v} it has no semanticQualifiedPath")
+                    }
+
+                    else -> v
+                }
+                val nextIndex = (obj.property.maxOfOrNull { it.value.index } ?: -1) + 1 //TODO: MAXINT
+                obj.setProperty(PropertyValueName(propertyName), v2, nextIndex)
+            }
+
+            is AsmReference -> obj.value?.let { refrd ->
+                val v = when {
+                    null == value -> Unit
+                    value is AsmValue -> value.raw
+                    else -> value //AsmAnySimple(value)
+                }
+                val v2 = when {
+                    isReference && v is AsmStructure -> {
+                        val refStr = v.semanticQualifiedPath?.joinToString(separator = ".")
+                        refStr?.let { AsmReferenceSimple(refStr, v) } ?: error("Cannot create reference for ${v} it has no semanticQualifiedPath")
+                    }
+
+                    else -> v
+                }
+                val nextIndex = (refrd.property.maxOfOrNull { it.value.index } ?: -1) + 1 //TODO: MAXINT
+                refrd.setProperty(PropertyValueName(propertyName), v2, nextIndex)
+            }
+
+            else -> try {
+                obj.reflect().setProperty(propertyName, value)
+            } catch (t: Throwable) {
+                issues.error(null, "Could not set property $propertyName to $value")
+            }
         }
+
     }
 
     /** may be overridden to create object from suspending source */
-    override fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? =
+    override suspend fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? =
         createStructure(qualifiedName, constructorArgs)
 
     /** may be overridden to get property from suspending source */
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? =
         getProperty(obj, propertyName)
 
-    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) {
-        TODO("not implemented")
-    }
+    private val _links = AssociationLinkStore()
+
+    override fun getLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any): Any? = _links.get(association, end, obj)
+    override fun setLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) = _links.set(association, end, obj, value)
+
+    /** may be overridden to set property on suspending source */
+    override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) =
+        setProperty(obj, propertyName, isReference, value)
 }
 
 fun objectGraphSimpleAsm(
@@ -498,6 +619,7 @@ constructor(
             is Double -> StdLibDefault.Real
 
             is Instant -> StdLibDefault.Timestamp
+            is ByteArray -> StdLibDefault.Binary
             is Throwable -> StdLibDefault.Exception
             is Pair<*, *> -> {
                 val fstType = typeFor(obj.first, StdLibDefault.AnyType)
@@ -534,11 +656,11 @@ constructor(
     override fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
         val lmb: (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it, StdLibDefault.AnyType))) }
-        return typedAs(lmb, lambdaType)
+        return TypedLambdaAny(this, lambdaType, lmb, lambda, null)
     }
 
     override fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
-        executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
+        executeMethodInternal(tobj, methodName, args, { decl -> null != decl.executionTyped }, { decl, o, a -> decl.executionTyped!!.invoke(o, a) }) { obj, decl, args ->
             decl.execution?.invoke(obj, args)
         }
 
@@ -560,20 +682,22 @@ constructor(
      * }
      */
     override fun getProperty(tobj: TypedObject, propertyName: String): TypedObject =
-        getPropertyInternal(tobj, propertyName, externalGetter::getProperty) { obj, decl ->
+        getPropertyInternal(tobj, propertyName, externalGetter::getProperty, externalGetter::getLinkEnd) { obj, decl ->
             decl.accessor?.invoke(obj)
         }
 
     override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) =
-        setPropertyInternal(tobj, propertyName, value) { o, n, r, v ->
+        setPropertyInternal(tobj, propertyName, value, { o, n, r, v ->
             externalGetter.setProperty(o, n, r, v)
+        }, externalGetter::setLinkEnd) { obj, decl, value ->
+            decl.mutator?.invoke(obj,value)
         }
 
     // --- Suspend ---
     override suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
         val lmb: suspend (Any) -> Any = { it: Any -> untyped(lambda.invoke(toTypedObject(it, StdLibDefault.AnyType))) }
-        return typedAs(lmb, lambdaType)
+        return TypedLambdaAny(this, lambdaType, lmb, null, lambda)
     }
 
     override suspend fun createStructureValueSuspend(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject =
@@ -582,19 +706,42 @@ constructor(
         }
 
     override suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject =
-        getPropertyInternal(tobj, propertyName, { o, n -> externalGetter.getPropertySuspend(o, n) }) { obj, decl ->
+        getPropertyInternal(tobj, propertyName, { o, n -> externalGetter.getPropertySuspend(o, n) }, { a, e, o -> externalGetter.getLinkEndSuspend(a, e, o) }) { obj, decl ->
             decl.accessorSuspend?.invoke(obj) ?: decl.accessor?.invoke(obj)
         }
 
     override suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject) =
-        setPropertyInternal(tobj, propertyName, value) { o, n, r, v ->
+        setPropertyInternal(tobj, propertyName, value, { o, n, r, v ->
             externalGetter.setPropertySuspend(o, n, r, v)
+        }, { a, e, o, v -> externalGetter.setLinkEndSuspend(a, e, o, v) }) { obj, decl, value ->
+            // a property may have only a non-suspend mutator
+            decl.mutatorSuspend?.invoke(obj, value) ?: decl.mutator?.invoke(obj, value)
         }
 
 
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
-        executeMethodInternal(tobj, methodName, args) { obj, decl, args ->
-            decl.executionSuspend?.invoke(obj, args)
+        executeMethodInternal(
+            tobj, methodName, args,
+            { decl -> null != decl.executionTypedSuspend || null != decl.executionTyped },
+            { decl, o, a ->
+                val typedSuspend = decl.executionTypedSuspend
+                when {
+                    null != typedSuspend -> typedSuspend.invoke(o, a)
+                    else -> decl.executionTyped!!.invoke(o, a)
+                }
+            }
+        ) { obj, decl, args ->
+            // a method may have only a non-suspend execution (e.g. std Collection.contains)
+            val execSuspend = decl.executionSuspend
+            when {
+                null != execSuspend -> execSuspend.invoke(obj, args)
+                else -> decl.execution?.invoke(obj, args)
+            }
+        }
+
+    override suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunctionInternal(function, args, typeReferenceResolver) { decl, args ->
+            decl.executionSuspend?.invoke(args) ?: decl.execution?.invoke(args)
         }
 
     // --- Internal ---
@@ -635,11 +782,11 @@ constructor(
         }
     }
 
-
     private inline fun getPropertyInternal(
         tobj: TypedObject,
         propertyName: String,
         externalPropertyAccessor: (obj: Any, name: String) -> Any?,
+        linkEndAccessor: (association: TypesAssociation, end: AssociationEnd, obj: Any) -> Any?,
         propertyExecution: (obj: Any, decl: PropertyDeclaration) -> Any?
     ): TypedObject {
         return when {
@@ -667,8 +814,16 @@ constructor(
 
             else -> {
                 //TODO: bit mixed up with External and Primitive Accessors - don't think we need both.
-                val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
-                when (propRes) {
+                val typeProp = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                // a property owned by an association is a link end; its value is not held by the object
+                val linkEnd = if (null == typeProp) typesDomain.findAssociationOwnedEndOrNull(tobj.type, PropertyName(propertyName)) else null
+                val propRes = typeProp ?: linkEnd?.property
+                when {
+                    null != linkEnd -> {
+                        val value = linkEndAccessor(linkEnd.association, linkEnd.end, untyped(tobj))
+                        value?.let { toTypedObject(it, linkEnd.property.typeInstance) } ?: nothing()
+                    }
+                    else -> when (propRes) {
                     null -> {
                         val obj = untyped(tobj)
                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
@@ -724,6 +879,7 @@ constructor(
                         }
                     }
                 }
+                    }
             }
         }
     }
@@ -733,6 +889,8 @@ constructor(
         propertyName: String,
         value: TypedObject,
         externalPropertyMutator: (obj: Any, name: String, isReference: Boolean, value: Any?) -> Unit,
+        linkEndMutator: (association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) -> Unit,
+        propertyMutation: (obj: Any, decl: PropertyDeclaration,value: Any?) -> Unit
     ) {
         when {
             StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
@@ -746,8 +904,15 @@ constructor(
             else -> {
                 //TODO: bit mixed up with External and Primitive Accessors/Mutators - don't think we need both.
                 val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                // a property owned by an association is a link end; its value is not held by the object
+                val linkEnd = if (null == propRes) typesDomain.findAssociationOwnedEndOrNull(tobj.type, PropertyName(propertyName)) else null
                 val r = propRes?.isReference ?: false
-                when (propRes) {
+                when {
+                    null != linkEnd -> {
+                        val uv = if (value.type.resolvedDefinition == StdLibDefault.NothingType.resolvedDefinition) null else untyped(value)
+                        linkEndMutator(linkEnd.association, linkEnd.end, untyped(tobj), uv)
+                    }
+                    else -> when (propRes) {
                     null -> {
                         val obj = untyped(tobj)
                         val uv = untyped(value)
@@ -760,8 +925,14 @@ constructor(
                             propResOriginal.accessor is KMutableProperty1<*, *> -> {
                                 (propResOriginal.accessor as KMutableProperty1<Any, Any>).set(obj, value.untyped)
                             }
+                            propResOriginal.accessorSuspend is KMutableProperty1<*, *> -> {
+                                (propResOriginal.accessorSuspend as KMutableProperty1<Any, Any>).set(obj, value.untyped)
+                            }
                             (null != propResOriginal.mutator) -> {
-                                propResOriginal.mutator!!.invoke(obj, value.untyped)
+                                propertyMutation.invoke(obj, propResOriginal, value.untyped)
+                            }
+                            (null != propResOriginal.mutatorSuspend) -> {
+                                propertyMutation.invoke(obj, propResOriginal, value.untyped)
                             }
                             //TODO suspend !
                             else -> {
@@ -780,6 +951,7 @@ constructor(
                         }
                     }
                 }
+                    }
 
 
             }
@@ -790,9 +962,25 @@ constructor(
         tobj: TypedObject,
         methodName: String,
         args: List<TypedObject>,
+        hasTypedExecution: (decl: MethodDefinition) -> Boolean,
+        typedExecution: (decl: MethodDefinition, tobj: TypedObject, args: List<TypedObject>) -> TypedObject,
         methodExecution: (obj: Any, decl: MethodDefinition, args: List<*>) -> Any?
     ): TypedObject {
         val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]
+        return when {
+            // typed values are passed as they are, and the result is not re-typed
+            null != methRes && hasTypedExecution(methRes.original) -> typedExecution(methRes.original, tobj, args)
+            else -> executeMethodUntypedInternal(tobj, methRes, methodName, args, methodExecution)
+        }
+    }
+
+    private inline fun executeMethodUntypedInternal(
+        tobj: TypedObject,
+        methRes: MethodDefinitionResolved?,
+        methodName: String,
+        args: List<TypedObject>,
+        methodExecution: (obj: Any, decl: MethodDefinition, args: List<*>) -> Any?
+    ): TypedObject {
         return when (methRes) {
             null -> {
                 val obj = untyped(tobj)

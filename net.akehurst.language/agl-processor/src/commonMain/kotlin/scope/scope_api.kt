@@ -60,6 +60,13 @@ interface Scope {
 
     val rootScope: Scope
 
+    /**
+     * the scoped item (as created by SentenceContext.createScopedItem) of the element that owns this scope,
+     * when that element is not an item of the owning scope, i.e. the root element of a sentence for the sentence's root scope.
+     * null when unknown or for other scopes (their owning element is the item with the scope's name in the owning scope)
+     */
+    var ownerItem: Any?
+
     val isEmpty: Boolean
 
     fun clear()

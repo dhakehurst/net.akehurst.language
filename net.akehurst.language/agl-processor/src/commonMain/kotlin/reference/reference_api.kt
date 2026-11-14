@@ -21,6 +21,7 @@ import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.types.api.TypesDomain
 
 
 interface CrossReferenceDomain : Domain<CrossReferenceNamespace, DeclarationsForNamespace> {
@@ -31,6 +32,50 @@ interface CrossReferenceDomain : Domain<CrossReferenceNamespace, DeclarationsFor
     fun referencesFor(possiblyQualifiedTypeName: PossiblyQualifiedName): List<ReferenceExpression>
     fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: String): List<QualifiedName> //TODO: strProp: PropertyName
     fun identifyingExpressionFor(scopeForTypeName: SimpleName, possiblyQualifiedTypeName: PossiblyQualifiedName): Expression?
+
+    /**
+     * true if a scope is defined for the type, or for a type that it conforms to (supertype or union type).
+     */
+    fun isScopeDefinedFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): Boolean
+
+    /**
+     * Find how an element of type 'typeQualifiedName' is identified in the scope created by an element of type 'scopeForTypeQualifiedName'.
+     * Declared type names match by type conformance (supertypes and union types).
+     *  - an 'identify' inside a 'scope' block wins over a top-level 'identify'
+     *  - the nearest scope type wins, then the nearest identified type
+     *  - top-level 'identify' applies in every scope (including the root scope)
+     *  - more than one candidate in the result means the lookup is ambiguous
+     *
+     * @param scopeForTypeQualifiedName type of the element that created the scope, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME for the root scope
+     */
+    fun identifyingExpressionFor(typesDomain: TypesDomain, scopeForTypeQualifiedName: QualifiedName, typeQualifiedName: QualifiedName): CrossReferenceMatch<Identifiable>
+
+    /**
+     * The reference expressions that apply to the type, from every 'in' block whose type the given type conforms to.
+     * When several blocks give a reference for the same property (or collection), the nearest type wins.
+     * One item per property (or collection), with more than one candidate if ambiguous.
+     */
+    fun referencesFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<CrossReferenceMatch<ReferenceExpression>>
+
+    /**
+     * the 'import' and 'inherit' declarations of the scope created by an element of the type, found by type conformance
+     */
+    fun scopeImportsFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<ScopeImport>
+}
+
+/**
+ * Result of a lookup by type conformance.
+ * Empty: nothing found. One candidate: found. More than one candidate: ambiguous.
+ */
+data class CrossReferenceMatch<T>(
+    val candidates: List<T>
+) {
+    companion object {
+        fun <T> none() = CrossReferenceMatch<T>(emptyList())
+    }
+
+    val isAmbiguous: Boolean get() = candidates.size > 1
+    val singleOrNull: T? get() = candidates.singleOrNull()
 }
 
 interface CrossReferenceNamespace : Namespace<DeclarationsForNamespace> {
@@ -44,7 +89,7 @@ interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
     /**
      * typeName -> ScopeDefinition
      */
-    val scopeDefinition: Map<SimpleName, ScopeDefinition>
+    val scopeDefinition: Map<PossiblyQualifiedName, ScopeDefinition>
     val references: List<ReferenceDefinition>
 
     val isEmpty: Boolean
@@ -78,18 +123,80 @@ interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
 }
 
 interface ReferenceDefinition  : Formatable {
-    val inTypeName: SimpleName
+    val inTypeName: PossiblyQualifiedName
     val referenceExpressionList: List<ReferenceExpression>
 }
 
 interface ScopeDefinition : Formatable {
-    val scopeForTypeName: SimpleName
+    val scopeForTypeName: PossiblyQualifiedName
     val identifiables: List<Identifiable>
+
+    /**
+     * other scopes whose items are also visible in this scope ('import' and 'inherit')
+     */
+    val scopeImports: List<ScopeImport> get() = emptyList()
 }
 
 interface Identifiable  : Formatable {
-    val typeName: SimpleName
+    val typeName: PossiblyQualifiedName
     val identifiedBy: Expression
+
+    /**
+     * 'identify T by a | b': the identifying expressions, in order (identifiedBy is the first).
+     * The first that has a value for an element is its name (for its scope and path),
+     * the values of the others are further names by which the element is found in the same scope.
+     */
+    val identifiedByAlternatives: List<Expression> get() = listOf(identifiedBy)
+
+    /**
+     * evaluated on the identified element, gives 'public', 'protected' or 'private', anything else is 'public'
+     */
+    val visibility: Expression? get() = null
+
+    /**
+     * if not null, the identified element is an alias,
+     * a reference to it resolves to the element that this navigation (a reference property of the alias) refers to
+     */
+    val aliasFor: NavigationExpression? get() = null
+}
+
+enum class ScopeImportKind {
+    /** 'import ... members-of' : the items in the scope of the referred element are visible */
+    IMPORT_MEMBERS,
+
+    /** 'import ... element' : the referred element itself is visible, by its own name */
+    IMPORT_ELEMENT,
+
+    /** 'inherit ... members-of' : the items in the scope of the referred element are visible, also from outside (via qualified names) */
+    INHERIT
+}
+
+/**
+ * 'import' 'forall' elements ofType? ('members-of' | 'element') target recursive? visibility? ('when' condition)?
+ * 'inherit' 'forall' elements ofType? 'members-of' target ('when' condition)?
+ * 'inherit' 'named' a.b.c ('when' condition)?
+ *
+ * 'elements' is evaluated on the element that owns the scope, 'target' (a reference property) and the other expressions on each of the resulting elements.
+ * For 'inherit named', 'named' is the qualified name of the inherited element (looked up from the root scopes of the context)
+ * and the condition is evaluated on the element that owns the scope.
+ */
+interface ScopeImport : Formatable {
+    val kind: ScopeImportKind
+    val elements: Expression
+    val ofType: PossiblyQualifiedName?
+    val target: NavigationExpression
+
+    /** if it evaluates to true, the items of nested scopes are also visible */
+    val recursive: Expression?
+
+    /** gives 'public' or 'private' (anything else is 'public'); a 'public' import is also visible from outside */
+    val visibility: Expression?
+
+    /** if not null, the import/inherit applies only when the condition is true */
+    val condition: Expression? get() = null
+
+    /** 'inherit named a.b.c': the names of the qualified name of the inherited element ('elements' and 'target' are not used); null for the 'forall' forms */
+    val named: List<String>? get() = null
 }
 
 interface ReferenceExpression  : Formatable {
@@ -108,6 +215,22 @@ interface ReferenceExpressionProperty : ReferenceExpression {
     val refersToTypeName: List<PossiblyQualifiedName>
 
     val fromNavigation: NavigationExpression?
+
+    /**
+     * 'from \$previous.p else <navigation>': for the first element of a 'forall' (it has no previous element),
+     * the reference is looked up in the members of the target of the reference reached by <navigation> from the element of the 'in'
+     * (e.g. the base of an expression chain 'f.h'). When <navigation> does not reach a reference, the normal lookup is used.
+     */
+    val fromElseNavigation: NavigationExpression? get() = null
+
+    /** 'from inherited <navigation>': the reference is looked up only in what the element reached by <navigation> inherits */
+    val fromInherited: Boolean get() = false
+
+    /**
+     * if not null, this reference expression applies only when the condition (evaluated on the referring element) is true.
+     * Of several reference expressions for the same property, the first that applies is used.
+     */
+    val condition: Expression? get() = null
 }
 
 interface ReferenceExpressionCollection : ReferenceExpression {

@@ -102,7 +102,7 @@ class test_GenerateTypeModelViaReflection {
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
             listOf(AglBase.kompositeString, AglAsm.komposite)
         )
-        gen.include("net.akehurst.language.collections.ListSeparated")
+        gen.include("net.akehurst.kotlinx.collections.ListSeparated")
         gen.addPackage("net.akehurst.language.asm.api")
         gen.addPackage("net.akehurst.language.asm.simple")
         val tm = gen.generate()

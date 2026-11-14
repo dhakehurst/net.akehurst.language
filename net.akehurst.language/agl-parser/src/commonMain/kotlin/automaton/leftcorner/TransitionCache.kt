@@ -17,6 +17,7 @@
 package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.agl.util.CopyOnWriteMap
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.api.TransitionContext
 
@@ -46,8 +47,28 @@ interface TransitionCache {
     fun addTransitionForComplete(previous: ParserState, prevPrev: ParserState, tr: Transition): Transition
 
     // List because we don't want to convert to Set filtered list at runtime
+    /**
+     * the transitions for the context, null if [calculatedComplete]/[calculatedIncomplete] has not been called for it
+     * (an empty list if calculated and there are none).
+     * The returned list does not change, when transitions are merged a new list replaces it.
+     * Can be called while another thread adds transitions (under AutomatonBuildLock):
+     * the transitions of a context are added one at a time, so they are only found once all are added.
+     */
     fun findTransitionForCompleteByPrevious(previous: ParserState, prevPrev: ParserState): List<Transition>?
     fun findTransitionForIncompleteByPrevious(previous: ParserState): List<Transition>?
+
+    /** true if transitions were added for the context (e.g. when the automaton was built), call under AutomatonBuildLock */
+    fun hasTransitionForComplete(previous: ParserState, prevPrev: ParserState): Boolean
+    fun hasTransitionForIncomplete(previous: ParserState): Boolean
+
+    /**
+     * Call (under AutomatonBuildLock) when all transitions for the context have been added,
+     * so they can be found by [findTransitionForCompleteByPrevious]/[findTransitionForIncompleteByPrevious]
+     * (and a context without transitions is not calculated again).
+     * Returns the transitions for the context.
+     */
+    fun calculatedComplete(previous: ParserState, prevPrev: ParserState): List<Transition>
+    fun calculatedIncomplete(previous: ParserState): List<Transition>
     fun findTransitionByKey(key: TransitionPrevInfoKey): List<Transition>?
 
     fun previousFor(transition: Transition): List<TransitionPrevInfoKey>
@@ -101,8 +122,13 @@ class TransitionCacheLC1 : TransitionCache {
 
     // transitions referenced here
     //private val _transitionsByPrevious: MutableMap<ParserState, MutableList<Transition>> = mutableMapOf()
-    private val _transitionsCompleteByPrevious: MutableMap<CompleteKey, MutableList<Transition>> = mutableMapOf()
-    private val _transitionsIncompleteByPrevious: MutableMap<ParserState, MutableList<Transition>> = mutableMapOf()
+    // written under AutomatonBuildLock, read without it (by parses running in parallel), so values are never changed, only replaced
+    private val _transitionsCompleteByPrevious = CopyOnWriteMap<CompleteKey, List<Transition>>()
+    private val _transitionsIncompleteByPrevious = CopyOnWriteMap<ParserState, List<Transition>>()
+
+    // contexts whose transitions have all been added
+    private val _calculatedComplete = CopyOnWriteMap<CompleteKey, Boolean>()
+    private val _calculatedIncomplete = CopyOnWriteMap<ParserState, Boolean>()
 
     private val _allBuiltIncomplete get() = _transitionsIncompleteByPrevious.values.flatten()
     private val _allBuiltComplete get() = _transitionsCompleteByPrevious.values.flatten()
@@ -157,35 +183,57 @@ class TransitionCacheLC1 : TransitionCache {
 
     private fun updateIncompleteByPrevious(previousSet: Set<ParserState>, oldTransition: Transition?, newTransition: Transition) {
         for (pS in previousSet) {
-            var trans = this._transitionsIncompleteByPrevious[pS]
+            val trans = this._transitionsIncompleteByPrevious[pS]
             if (null == trans) {
-                trans = mutableListOf(newTransition)
-                this._transitionsIncompleteByPrevious[pS] = trans
+                this._transitionsIncompleteByPrevious[pS] = listOf(newTransition)
             } else {
-                if (null != oldTransition) trans.remove(oldTransition)
-                trans.add(newTransition)
+                val without = if (null != oldTransition) trans - oldTransition else trans
+                this._transitionsIncompleteByPrevious[pS] = without + newTransition
             }
         }
     }
 
     private fun updateCompleteByPrevious(prevKeySet: Set<CompleteKey>, oldTransition: Transition?, newTransition: Transition) {
         for (pk in prevKeySet) {
-            var trans = this._transitionsCompleteByPrevious[pk]
+            val trans = this._transitionsCompleteByPrevious[pk]
             if (null == trans) {
-                trans = mutableListOf(newTransition)
-                this._transitionsCompleteByPrevious[pk] = trans
+                this._transitionsCompleteByPrevious[pk] = listOf(newTransition)
             } else {
-                if (null != oldTransition) trans.remove(oldTransition)
-                trans.add(newTransition)
+                val without = if (null != oldTransition) trans - oldTransition else trans
+                this._transitionsCompleteByPrevious[pk] = without + newTransition
             }
         }
     }
 
-    override fun findTransitionForCompleteByPrevious(previous: ParserState, prevPrev: ParserState): List<Transition>? =
-        _transitionsCompleteByPrevious[CompleteKey(previous, prevPrev)]
+    override fun findTransitionForCompleteByPrevious(previous: ParserState, prevPrev: ParserState): List<Transition>? {
+        val key = CompleteKey(previous, prevPrev)
+        return when {
+            _calculatedComplete.containsKey(key) -> _transitionsCompleteByPrevious[key] ?: emptyList()
+            else -> null
+        }
+    }
 
-    override fun findTransitionForIncompleteByPrevious(previous: ParserState): List<Transition>? =
-        _transitionsIncompleteByPrevious[previous]
+    override fun findTransitionForIncompleteByPrevious(previous: ParserState): List<Transition>? = when {
+        _calculatedIncomplete.containsKey(previous) -> _transitionsIncompleteByPrevious[previous] ?: emptyList()
+        else -> null
+    }
+
+    override fun hasTransitionForComplete(previous: ParserState, prevPrev: ParserState): Boolean =
+        _transitionsCompleteByPrevious.containsKey(CompleteKey(previous, prevPrev))
+
+    override fun hasTransitionForIncomplete(previous: ParserState): Boolean =
+        _transitionsIncompleteByPrevious.containsKey(previous)
+
+    override fun calculatedComplete(previous: ParserState, prevPrev: ParserState): List<Transition> {
+        val key = CompleteKey(previous, prevPrev)
+        _calculatedComplete[key] = true
+        return _transitionsCompleteByPrevious[key] ?: emptyList()
+    }
+
+    override fun calculatedIncomplete(previous: ParserState): List<Transition> {
+        _calculatedIncomplete[previous] = true
+        return _transitionsIncompleteByPrevious[previous] ?: emptyList()
+    }
 
     override fun findTransitionByKey(key: TransitionPrevInfoKey): List<Transition>? {
         TODO("not implemented")

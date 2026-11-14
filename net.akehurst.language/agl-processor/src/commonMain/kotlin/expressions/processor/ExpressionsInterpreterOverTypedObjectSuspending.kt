@@ -27,7 +27,8 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
-//TODO: merge with other
+// replaced by ExpressionsInterpreterOverTypedObjectCombined (evaluateStrSuspend / evaluateExpressionSuspend)
+/*
 open class ExpressionsInterpreterOverTypedObjectSuspending(
     val objectGraph: ObjectGraphAccessorMutator,
     val customFunctions: FunctionLib? = null
@@ -638,4 +639,4 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
             self.setPropertySuspend( it.variable.name, value)
         }
     }
-}
+}*/

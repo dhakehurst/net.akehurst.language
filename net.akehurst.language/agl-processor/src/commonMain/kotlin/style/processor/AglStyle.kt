@@ -16,6 +16,8 @@
 
 package net.akehurst.language.style.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -131,6 +133,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
           // TODO
     """.trimIndent()
 
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
+
     override val grammarDomain by lazy {
         grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
@@ -179,7 +186,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         ref("STYLE_ID"); lit(":"); ref("styleValue"); lit(";")
                     }
                     choice("styleValue") {
-                        ref("STYLE_ID")
+                        ref("STYLE_VALUE")
                         ref("STRING")
                     }
                     concatenation("STYLE_ID", isLeaf = true) { pat("[-a-zA-Z_][-a-zA-Z_0-9]*") }
@@ -380,6 +387,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
     override val formatDomain by lazy {
         formatDomain(NAME) {
 //            TODO("not implemented")
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

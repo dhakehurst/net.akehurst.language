@@ -22,7 +22,7 @@ import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.ListSeparated
+import net.akehurst.kotlinx.collections.ListSeparated
 
 interface AsmPath {
     val value: String
@@ -79,10 +79,18 @@ data class PropertyValueName(override val value: String) : PublicValueType {
 }
 
 interface AsmStructure : AsmValue {
+    /**
+     * The fixed identity of this structure, used by equals and hashCode. It never changes once it has been used,
+     * so a structure can be kept in maps and sets. The syntax analyser sets it (sentence identity, type and parse path);
+     * otherwise it is given when the structure is created, or generated (unique, but different on each run).
+     * The semantic identity (semanticQualifiedPath) is separate: it is set later, by semantic analysis.
+     */
+    val identity: Any
+
     /** '/' separated String representation of ParsePath */
     val parsePath: String
     var syntaxAnalyserPath: AsmPath? //TODO: not sure we still need this, maybe it is useful?
-    val semanticQualifiedPath:List<String>?
+    var semanticQualifiedPath:List<String>?
 
     val property: Map<PropertyValueName, AsmStructureProperty>
 
@@ -93,7 +101,6 @@ interface AsmStructure : AsmValue {
      */
     val children: List<Any>
 
-    fun setSemanticQualifiedPath(segments:List<String>)
     /*
         this will return null if the semanticQualifiedPath has not been set
      */

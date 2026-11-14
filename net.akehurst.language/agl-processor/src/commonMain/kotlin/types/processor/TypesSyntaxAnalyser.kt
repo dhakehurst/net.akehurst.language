@@ -23,9 +23,11 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.types.api.*
@@ -34,13 +36,43 @@ import net.akehurst.language.types.asm.*
 internal data class TypeRefInfo(
     val name: PossiblyQualifiedName,
     val args: List<TypeRefInfo>,
-    val isNullable: Boolean
+    val isNullable: Boolean,
+    /** the name of this, when it is a named type argument (of a tuple type) */
+    val argName: String? = null,
+    /** true if a type argument list is given, even if it is empty ('<>') */
+    val hasTypeArgumentList: Boolean = args.isNotEmpty()
 ) {
-    fun toTypeInstance(contextType: TypeDefinition): TypeInstance {
-        val targs = args.map { it.toTypeInstance(contextType).asTypeArgument }
-        return contextType.namespace.createTypeInstance(contextType.qualifiedName, name, targs, isNullable)
+    /** a reference to std TupleType with a type argument list ('TupleType<>' or 'TupleType<a:A, ...>'), all of its type arguments are named */
+    val isTupleType: Boolean
+        get() = hasTypeArgumentList
+            && name.simpleName == StdLibDefault.TupleType.name
+            && (name is SimpleName || name == StdLibDefault.TupleType.qualifiedName)
+            && args.all { null != it.argName }
+
+    fun toTypeInstance(contextType: TypeDefinition): TypeInstance = when {
+        isTupleType -> {
+            val targs = args.map { TypeArgumentNamedSimple(PropertyName(it.argName!!), it.toTypeInstance(contextType)) }
+            contextType.namespace.createTupleTypeInstance(targs, isNullable)
+        }
+
+        else -> {
+            val targs = args.map { it.toTypeInstance(contextType).asTypeArgument }
+            contextType.namespace.createTypeInstance(contextType.qualifiedName, name, targs, isNullable)
+        }
     }
 }
+
+internal data class AssociationEndInfo(
+    val ownedByAssociation: Boolean,
+    val characteristics: Set<PropertyCharacteristic>,
+    val name: String,
+    val typeRef: TypeRefInfo
+)
+
+internal data class AssociationInfo(
+    val ends: List<AssociationEndInfo>,
+    val location: InputLocation?
+)
 
 internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypesDomain>() {
 
@@ -68,10 +100,18 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         super.register(this::constructor)
         super.register(this::constructorParameter)
         super.register(this::property)
+        super.register(this::characteristics)
         super.register(this::cmp_ref)
         super.register(this::val_var)
+        super.register(this::str_drv)
         super.register(this::typeReference)
         super.register(this::typeArgumentList)
+        super.register(this::typeArgument)
+        super.register(this::typeArgumentName)
+        super.register(this::name)
+        super.register(this::possiblyQualifiedName)
+        super.register(this::association)
+        super.register(this::associationEnd)
     }
 
     // --- Typemodel ---
@@ -79,7 +119,8 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     // override unit = option* namespace* ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypesDomain {
         val options = children[0] as List<Pair<String, String>>
-        val namespaces = children[1] as List<TypesNamespace>
+        val namespacesAndAssocs = children[1] as List<Pair<TypesNamespace, List<AssociationInfo>>>
+        val namespaces = namespacesAndAssocs.map { it.first }
         val name = SimpleName("ParsedTypesUnit") //TODO: how to specify name, does it matter?
 
         val optHolder = OptionHolderDefault(null, options.toMap())
@@ -87,23 +128,28 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         return TypesDomainSimple(
             name = name,
             optHolder
-        ).also {
-            namespaces.forEach { ns -> it.addNamespace(ns) }
+        ).also { domain ->
+            namespaces.forEach { ns -> domain.addNamespace(ns) }
+            // associations are created once all namespaces are known, their ends may be types from other namespaces
+            namespacesAndAssocs.forEach { (ns, assocs) ->
+                assocs.forEach { createAssociation(domain, ns, it) }
+            }
         }
     }
 
-    // namespace = 'namespace' possiblyQualifiedName option* import* definition* ;
-    private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypesNamespace {
+    // override namespace = 'namespace' possiblyQualifiedName option* import* definition* association* ;
+    private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<TypesNamespace, List<AssociationInfo>> {
         val pqn = children[1] as PossiblyQualifiedName
         val options = children[2] as List<Pair<String, String>>
         val imports = children[3] as List<Import>
         val defs = children[4] as List<(namespace: TypesNamespace) -> TypeDefinition>
+        val assocs = children[5] as List<AssociationInfo>
         val optHolder = OptionHolderDefault(null, options.toMap())
 
         val nsName = pqn.asQualifiedName(null)
         val namespace = TypesNamespaceSimple(nsName, optHolder, imports)
         defs.forEach { def -> def.invoke(namespace) }
-        return namespace
+        return Pair(namespace, assocs)
     }
 
     /*     override definition
@@ -159,8 +205,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
             ValueTypeSimple(namespace, name).also { vt ->
                 setLocationFor(vt, nodeInfo, sentence)
                 supertypes.forEach { st ->
-                    val targs = st.args.map { namespace.createTypeInstance(null,it.name).asTypeArgument }
-                    val ti = namespace.createTypeInstance(null,st.name, targs)
+                    val ti = createTypeInstance(namespace, vt, st)
                     vt.addSupertype(ti)
                 }
                 vt.addConstructor(listOf(cParam.invoke(vt)))
@@ -204,8 +249,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
             InterfaceTypeSimple(namespace, name).also { ift ->
                 tParams.forEach { tp -> ift.addTypeParameter(TypeParameterSimple(SimpleName((tp))) )}
                 supertypes.forEach { st ->
-                    val targs = st.args.map { namespace.createTypeInstance(null,it.name).asTypeArgument }
-                    val ti = namespace.createTypeInstance(null,st.name, targs)
+                    val ti = createTypeInstance(namespace, ift, st)
                     ift.addSupertype(ti)
                 }
                 property.forEach {
@@ -266,42 +310,70 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         return (children[1] as List<Any>).toSeparatedList<Any, TypeRefInfo, String>().items
     }
 
-    // constructor = 'constructor' '(' constructorParameter* ')' ;
+    // constructor = 'constructor' '(' [constructorParameter / ',']* ')' ;
     private fun constructor(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(TypeDefinition) -> ParameterDeclaration> =
-        children[2] as List<(TypeDefinition) -> ParameterDeclaration>
+        (children[2] as List<Any>).toSeparatedList<Any, (TypeDefinition) -> ParameterDeclaration, String>().items
 
-    // constructorParameter = cmp_ref? val_var? IDENTIFIER ':' typeReference ;
+    // constructorParameter = characteristics IDENTIFIER ':' typeReference ;
     private fun constructorParameter(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (TypeDefinition) -> ParameterDeclaration {
-        val cmpRef = children[0] as PropertyCharacteristic?
-        val valVar = children[1] as PropertyCharacteristic?
-        val name =TmParameterName(children[2] as String)
-        val typeRef = children[4] as TypeRefInfo
+        val characteristics = children[0] as Set<PropertyCharacteristic>
+        val name = TmParameterName(children[1] as String)
+        val typeRef = children[3] as TypeRefInfo
 
-        val characteristics = (cmpRef?.let { setOf(it) } ?: emptySet()) + (valVar?.let { setOf(it) } ?: emptySet())
         return { owner: TypeDefinition ->
             val tp = typeRef.toTypeInstance(owner)
-            if (characteristics.isNotEmpty() && owner is StructuredType) {
-                owner.appendPropertyStored(PropertyName(name.value), tp, characteristics)
+            // as the types builder does: a parameter with characteristics sets a property, several constructors may set the same property
+            val prop = when {
+                characteristics.isNotEmpty() && owner is StructuredType -> {
+                    val pn = PropertyName(name.value)
+                    val (existing, conflict) = owner.existingConstructorPropertyOrConflict(pn, tp, characteristics)
+                    when {
+                        null != conflict -> {
+                            issues.error(locationForNode(sentence, nodeInfo.node), conflict)
+                            null
+                        }
+                        else -> existing ?: owner.appendPropertyStored(pn, tp, characteristics + PropertyCharacteristic.CONSTRUCTOR)
+                    }
+                }
+                else -> null
             }
-            ParameterDefinitionSimple(name, tp, null) //TODO: default value
+            ParameterDefinitionSimple(name, tp, null, prop) //TODO: default value
                 .also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
 
-    // property = cmp_ref? val_var NAME : typeReference ; //TODO: grammarIndex !
+    // property = characteristics IDENTIFIER ':' typeReference ; //TODO: grammarIndex !
     private fun property(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (StructuredType) -> PropertyDeclaration {
-        val cmpRef = children[0] as PropertyCharacteristic?
-        val valVar = children[1] as PropertyCharacteristic
-        val name = PropertyName(children[2] as String)
-        val typeRef = children[4] as TypeRefInfo
+        val characteristics = children[0] as Set<PropertyCharacteristic>
+        val name = PropertyName(children[1] as String)
+        val typeRef = children[3] as TypeRefInfo
 
-        val characteristics = (cmpRef?.let { setOf(it) } ?: emptySet()) + setOf(valVar)
        return { owner: StructuredType ->
             val typeInstance = typeRef.toTypeInstance(owner)
-            owner.appendPropertyStored(name, typeInstance, characteristics)
-                .also { setLocationFor(it, nodeInfo, sentence) }
+            when {
+                // as the types builder does (derivedPropertyOf), the expression is not part of the text
+                characteristics.contains(PropertyCharacteristic.DERIVED) -> owner.appendPropertyDerived(name, typeInstance, "", "")
+                else -> owner.appendPropertyStored(name, typeInstance, characteristics)
+            }.also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
+
+    // characteristics = cmp_ref? val_var? str_drv? 'idn'? ;  (a fixed order, so e.g. stored and derived can't both be given)
+    private fun characteristics(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Set<PropertyCharacteristic> {
+        val cmpRef = children[0] as PropertyCharacteristic?
+        val valVar = children[1] as PropertyCharacteristic?
+        val strDrv = children[2] as PropertyCharacteristic?
+        val idn = (children[3] as String?)?.let { PropertyCharacteristic.IDENTITY }
+        return listOfNotNull(cmpRef, valVar, strDrv, idn).toSet()
+    }
+
+    // str_drv = 'str' | 'drv' ;
+    private fun str_drv(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCharacteristic =
+        when (children[0] as String) {
+            "str" -> PropertyCharacteristic.STORED
+            "drv" -> PropertyCharacteristic.DERIVED
+            else -> error("Value not allowed '${children[0]}'")
+        }
 
     // cmp_ref = 'cmp' | 'ref' ;
     private fun cmp_ref(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCharacteristic =
@@ -322,16 +394,40 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     // typeReference = possiblyQualifiedName typeArgumentList? '?'?;
     private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeRefInfo {
         val pqn = children[0] as PossiblyQualifiedName
-        val typeArgumentList = children[1] as List<TypeRefInfo>? ?: emptyList()
+        val typeArgumentList = children[1] as List<TypeRefInfo>?
         val isNullable = (children[2] as String?) != null
-        val tr = TypeRefInfo(pqn, typeArgumentList, isNullable)//.also { locationMap[it] = nodeInfo.node.locationIn(sentence) }
+        val tr = TypeRefInfo(pqn, typeArgumentList ?: emptyList(), isNullable, hasTypeArgumentList = null != typeArgumentList)//.also { locationMap[it] = nodeInfo.node.locationIn(sentence) }
         return tr
     }
 
-    //typeArgumentList = '<' [ typeReference / ',']+ '>' ;
+    //typeArgumentList = '<' [ typeArgument / ',']* '>' ;
     private fun typeArgumentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<TypeRefInfo> {
         val list = (children[1] as List<Any>).toSeparatedList<Any, TypeRefInfo, String>().items
         return list
+    }
+
+    // typeArgument = typeArgumentName? typeReference ;
+    private fun typeArgument(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeRefInfo {
+        val argName = children[0] as String?
+        val typeRef = children[1] as TypeRefInfo
+        return typeRef.copy(argName = argName)
+    }
+
+    // typeArgumentName = name ':' ;
+    private fun typeArgumentName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        children[0] as String
+
+    // override possiblyQualifiedName = [name / '.']+ ;
+    private fun possiblyQualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        (children as List<String>).joinToString(separator = "").asPossiblyQualifiedName
+
+    // name = IDENTIFIER | QUOTED_NAME ;
+    private fun name(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
+        val text = children[0] as String
+        return when {
+            text.length >= 2 && text.startsWith('`') && text.endsWith('`') -> text.substring(1, text.length - 1)
+            else -> text
+        }
     }
 
     private fun createTypeInstance(ns: TypesNamespace, contextType: TypeDefinition, tInfo:TypeRefInfo) : TypeInstance {
@@ -339,4 +435,40 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         val ti = ns.createTypeInstance(contextType.qualifiedName, tInfo.name, targs, false)
         return ti
     }
+
+    // association = 'association' '{' associationEnd associationEnd '}' ;
+    private fun association(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssociationInfo {
+        val ends = listOf(children[2] as AssociationEndInfo, children[3] as AssociationEndInfo)
+        return AssociationInfo(ends, locationForNode(sentence, nodeInfo.node))
+    }
+
+    // associationEnd = 'end' 'owned'? characteristics IDENTIFIER ':' typeReference ;
+    private fun associationEnd(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssociationEndInfo {
+        val owned = null != children[1]
+        val characteristics = children[2] as Set<PropertyCharacteristic>
+        val name = children[3] as String
+        val typeRef = children[5] as TypeRefInfo
+        return AssociationEndInfo(owned, characteristics, name, typeRef)
+    }
+
+    /**
+     * An end type 'List<A>' (one type argument) is a collection of A, as AssociationEnd.collectionTypeName,
+     * any other end type must be a DataType.
+     */
+    private fun createAssociation(domain: TypesDomain, ns: TypesNamespace, info: AssociationInfo) {
+        val ends = info.ends.map { e ->
+            val (elementRef, collectionTypeName) = when (e.typeRef.args.size) {
+                1 -> Pair(e.typeRef.args[0], e.typeRef.name)
+                else -> Pair(e.typeRef, null)
+            }
+            val endType = domain.findTypeDefinitionOrNull(ns, elementRef.name) as? DataType
+            if (null == endType) {
+                issues.error(info.location, "Association end '${e.name}': type '${elementRef.name.value}' is not found or is not a data type")
+                return
+            }
+            AssociationEnd(PropertyName(e.name), endType, elementRef.isNullable, collectionTypeName, e.characteristics, true, e.ownedByAssociation)
+        }
+        ns.findOrCreateAssociation(ends)
+    }
+
 }

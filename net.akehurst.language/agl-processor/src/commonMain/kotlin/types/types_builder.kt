@@ -18,6 +18,7 @@
 package net.akehurst.language.types.builder
 
 import net.akehurst.language.base.api.*
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 import kotlin.jvm.JvmOverloads
@@ -225,7 +226,8 @@ class AssociationBuilder(
             val isNullable: Boolean,
             val collectionTypeName: String?,
             val byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null,
-            val byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
+            val byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null,
+            val ownedByAssociation: Boolean = false
         )
     }
 
@@ -233,6 +235,8 @@ class AssociationBuilder(
     val REF = PropertyCharacteristic.REFERENCE
     val VAL = PropertyCharacteristic.READ_ONLY
     val VAR = PropertyCharacteristic.READ_WRITE
+    val STR = PropertyCharacteristic.STORED
+    val DER = PropertyCharacteristic.DERIVED
 
     private val _ends = mutableListOf<AssocEnd>()
 
@@ -242,9 +246,10 @@ class AssociationBuilder(
         endName: String,
         isNullable: Boolean = false,
         collectionTypeName: String? = null,
-        byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null
+        byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null,
+        ownedByAssociation: Boolean = false
     ) {
-        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluation))
+        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluation, ownedByAssociation = ownedByAssociation))
     }
 
     fun endSuspend(
@@ -253,9 +258,10 @@ class AssociationBuilder(
         endName: String,
         isNullable: Boolean = false,
         collectionTypeName: String? = null,
-        byEvaluation: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
+        byEvaluation: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null,
+        ownedByAssociation: Boolean = false
     ) {
-        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluationSuspend = byEvaluation))
+        _ends.add(AssocEnd(possiblyQualifiedTypeName, characteristics, endName, isNullable, collectionTypeName, byEvaluationSuspend = byEvaluation, ownedByAssociation = ownedByAssociation))
     }
 
     fun build(): List<PropertyDeclaration> {
@@ -269,7 +275,7 @@ class AssociationBuilder(
             val collectionTypeName = thisEnd.collectionTypeName?.asPossiblyQualifiedName
             val characteristics = thisEnd.characteristics
             val navigable = true //TODO
-            val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable)
+            val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable, thisEnd.ownedByAssociation)
             ae.byEvaluation = thisEnd.byEvaluation
             ae.byEvaluationSuspend = thisEnd.byEvaluationSuspend
             assocEnds.add(ae)
@@ -291,10 +297,8 @@ abstract class StructuredTypeBuilder(
 
     val CMP = PropertyCharacteristic.COMPOSITE
     val REF = PropertyCharacteristic.REFERENCE
-
     val VAL = PropertyCharacteristic.READ_ONLY
     val VAR = PropertyCharacteristic.READ_WRITE
-
     val STR = PropertyCharacteristic.STORED
     val DER = PropertyCharacteristic.DERIVED
 
@@ -305,7 +309,9 @@ abstract class StructuredTypeBuilder(
         typeName: String,
         isNullable: Boolean = false,
         accessor: ((self: T) -> V)? = null,
-        mutator: ((self: T, value: V) -> Unit)? = null,
+        mutator: ((self: T, value: V?) -> Unit)? = null,
+        accessorSuspend: (suspend (self: T) -> V?)? = null,
+        mutatorSuspend: (suspend (self: T, value: V?) -> Unit)? = null,
         init: TypeArgumentBuilder.() -> Unit = {}
     ): PropertyDeclaration {
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
@@ -316,6 +322,8 @@ abstract class StructuredTypeBuilder(
         return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics).also {
             (it as PropertyDeclarationStored).accessor = accessor as ((self: Any) -> Any?)?
             (it as PropertyDeclarationStored).mutator = mutator as ((self: Any, value: Any?) -> Unit)?
+            (it as PropertyDeclarationStored).accessorSuspend = accessorSuspend as (suspend (self: Any) -> Any?)?
+            (it as PropertyDeclarationStored).mutatorSuspend = mutatorSuspend as (suspend (self: Any, value:Any?) -> Unit)?
         }
     }
 
@@ -325,7 +333,11 @@ abstract class StructuredTypeBuilder(
         typeName: String,
         isNullable: Boolean = false,
         init: TypeArgumentBuilder.() -> Unit = {}
-    ): PropertyDeclaration = propertyOfWithBinding<Any,Any>(characteristics, propertyName, typeName, isNullable, null,null,init)
+    ): PropertyDeclaration = propertyOfWithBinding<Any,Any>(
+        characteristics, propertyName, typeName, isNullable,
+        null,null,null,null,
+        init
+    )
 
     fun <T : Any, V> propertyPrimitive(
         propertyName: String,
@@ -851,18 +863,25 @@ class ConstructorBuilder(
         val targs = tab.build()
         //val ty = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, targs, nullable)
         val ti = typeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, targs, nullable)
-        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ti, null))
-        if (characteristic.isNotEmpty()) {
-            when (_type) {
-                is DataType, is ValueType -> _type.appendPropertyStored(
-                    PropertyName(name),
-                    ti,
-                    characteristic + PropertyCharacteristic.CONSTRUCTOR,
-                    accessor = accessor as ((Any)->Any?)?,
-                    mutator = mutator as ((Any, Any?)->Unit)?
-                )
+        val prop = when {
+            characteristic.isEmpty() -> null
+            else -> when (_type) {
+                is DataType, is ValueType -> {
+                    // several constructors may set the same property
+                    val (existing, conflict) = _type.existingConstructorPropertyOrConflict(PropertyName(name), ti, characteristic)
+                    if (null != conflict) error(conflict)
+                    existing ?: _type.appendPropertyStored(
+                        PropertyName(name),
+                        ti,
+                        characteristic + PropertyCharacteristic.CONSTRUCTOR,
+                        accessor = accessor as ((Any)->Any?)?,
+                        mutator = mutator as ((Any, Any?)->Unit)?
+                    )
+                }
+                else -> null
             }
         }
+        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ti, null, prop))
     }
     fun parameter(
         characteristic: Set<PropertyCharacteristic>, name: String, typeName: String, nullable: Boolean = false,
@@ -1087,6 +1106,8 @@ class MethodParameterBuilder(
     private val _paramList = mutableListOf<ParameterDeclaration>()
     private var _execution: ((self: Any, args: List<*>) -> Any?)? = null
     private var _executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)? = null
+    private var _executionTyped: ((self: TypedObject, args: List<TypedObject>) -> TypedObject)? = null
+    private var _executionTypedSuspend: (suspend (self: TypedObject, args: List<TypedObject>) -> TypedObject)? = null
 
     fun returnTypeArgument(possiblyQualifiedTypeDeclarationName: String, nullable: Boolean = false, typeArguments: TypeArgumentBuilder.() -> Unit = {}) {
         val tab = TypeArgumentBuilder(_type, _namespace)
@@ -1130,6 +1151,16 @@ class MethodParameterBuilder(
         _executionSuspend = value
     }
 
+    /** see [MethodDefinition.executionTyped] */
+    fun executionTyped(value: (self: TypedObject, args: List<TypedObject>) -> TypedObject) {
+        _executionTyped = value
+    }
+
+    /** see [MethodDefinition.executionTypedSuspend] */
+    fun executionTypedSuspend(value: suspend (self: TypedObject, args: List<TypedObject>) -> TypedObject) {
+        _executionTypedSuspend = value
+    }
+
     fun build(): MethodDefinitionPrimitive {
         val rti = _returnTypeName.asTypeParameterReferenceOrNewTypeInstance(_namespace, _type, _returnTypeArgs, _returnTypeIsNullable)
 //        val ti = _namespace.createTypeInstance(
@@ -1147,6 +1178,8 @@ class MethodParameterBuilder(
         ).also {
             (it as MethodDefinitionAbstract).execution = _execution
             (it as MethodDefinitionAbstract).executionSuspend = _executionSuspend
+            (it as MethodDefinitionAbstract).executionTyped = _executionTyped
+            (it as MethodDefinitionAbstract).executionTypedSuspend = _executionTypedSuspend
         }
     }
 }

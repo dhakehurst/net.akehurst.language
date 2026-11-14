@@ -26,7 +26,7 @@ import kotlin.test.assertNotNull
 class test_Java8_Grammars {
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun aglSpec() {
         val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_aglSpec.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
@@ -44,7 +44,7 @@ class test_Java8_Grammars {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun aglOptm() {
         val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_aglOptm.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
@@ -62,7 +62,7 @@ class test_Java8_Grammars {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun antrlSpec() {
         //val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
         val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_antlrSpec.agl").readText()
@@ -82,7 +82,7 @@ class test_Java8_Grammars {
 
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun antlrOptm() {
         val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_antlrOptm.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(

@@ -16,6 +16,8 @@
 
 package net.akehurst.language.grammar.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -45,6 +47,11 @@ import net.akehurst.language.types.builder.typesDomain
 
 object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
+    const val OPTION_skipRequiredBetweenTokens = "skipRequiredBetweenTokens"
+    /** grammar option '#scanner: Classic' (or OnDemand), a [net.akehurst.language.scanner.api.ScannerKind] name */
+    const val OPTION_scanner = "scanner"
+    /** grammar option '#regexEngine: AGL' (or PLATFORM), a [net.akehurst.language.regex.api.RegexEngineKind] name */
+    const val OPTION_regexEngine = "regexEngine"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Grammar"
@@ -68,9 +75,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
             ruleTypeLabels = 'skip'? 'leaf'? ;
             rhs = empty | concatenation | choice ;
             empty = /* empty */ ;
-            choice = ambiguousChoice | priorityChoice | simpleChoice ;
+            choice = ambiguousChoice | simpleChoice ;
             ambiguousChoice = [concatenation / '||'] 2+ ;
-            priorityChoice = [concatenation / '<'] 2+ ;
             simpleChoice = [concatenation / '|'] 2+ ;
             concatenation = concatenationItem+ ;
             concatenationItem = simpleItemOrGroup | listOfItems ;
@@ -106,7 +112,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
         """.trimIndent()
 
     override val typesString: String by lazy {
-        typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString() +
+        typesDomain.findNamespaceOrNull(QualifiedName("net.akehurst.language.regex.api"))!!.asString() +
+                "\n" +
+                typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString() +
                 "\n" +
                 typesDomain.findNamespaceOrNull(QualifiedName(TYPES_ASM_NS_QN))!!.asString()
     }
@@ -187,6 +195,11 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
           // TODO
     """
 
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
+
     override val grammarDomain: GrammarDomain by lazy {
         grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
@@ -234,11 +247,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
                     empty("empty")
                     choice("choice") {
                         ref("ambiguousChoice")
-                        ref("priorityChoice") //TODO: remove this
                         ref("simpleChoice")
                     }
                     separatedList("ambiguousChoice", 2, -1) { ref("concatenation"); lit("||") }
-                    separatedList("priorityChoice", 2, -1) { ref("concatenation"); lit("<") }
                     separatedList("simpleChoice", 2, -1) { ref("concatenation"); lit("|") }
                     list("concatenation", 1, -1) { ref("concatenationItem") }
                     choice("concatenationItem") {
@@ -337,6 +348,31 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
     override val typesDomain: TypesDomain by lazy {
         //TODO: GrammarTypeNamespace?
         typesDomain("Grammar", true, AglBase.typesDomain.namespace) {
+            // escaped/unescaped values from agl-regex, used by Terminal (and Matchable)
+            namespace("net.akehurst.language.regex.api", listOf("std")) {
+                interface_("EscapedValue") {}
+                interface_("UnescapedValue") {}
+                data("EscapedPattern") {
+                    supertype("EscapedValue")
+                    constructor_ { parameter(setOf(), "value", "String", false) }
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+                data("UnescapedPattern") {
+                    supertype("UnescapedValue")
+                    constructor_ { parameter(setOf(), "value", "String", false) }
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+                data("EscapedLiteral") {
+                    supertype("EscapedValue")
+                    constructor_ { parameter(setOf(), "value", "String", false) }
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+                data("UnescapedLiteral") {
+                    supertype("UnescapedValue")
+                    constructor_ { parameter(setOf(), "value", "String", false) }
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+            }
             grammarTypeNamespace(TYPES_API_NS_QN, listOf("std", "net.akehurst.language.base.api")) {
                 enum("SeparatedListKind", listOf("Flat", "Left", "Right"))
                 enum("OverrideKind", listOf("REPLACE", "APPEND_ALTERNATIVE", "SUBSTITUTION"))
@@ -447,9 +483,6 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
                         typeArgument("RuleItem")
                     }
                 }
-                interface_("ChoicePriority") {
-                    supertype("Choice")
-                }
                 interface_("ChoiceLongest") {
                     supertype("Choice")
                 }
@@ -463,17 +496,17 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
                     }
                 }
             }
-            namespace(TYPES_ASM_NS_QN, listOf(TYPES_API_NS_QN, "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
+            namespace(TYPES_ASM_NS_QN, listOf(TYPES_API_NS_QN, "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm", "net.akehurst.language.regex.api")) {
                 data("TerminalDefault") {
                     supertype("TangibleItemAbstract")
                     supertype("Terminal")
                     constructor_ {
-                        parameter(setOf(), "value", "String")
+                        parameter(setOf(), "escapedValue", "EscapedValue")
                         parameter(setOf(), "isPattern", "Boolean")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "escapedValue", "EscapedValue", false)
                     propertyOf(setOf(VAL, REF, STR), "id", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "isPattern", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 data("TangibleItemAbstract") {
                     supertype("SimpleItemAbstract")
@@ -725,16 +758,6 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
                         typeArgument("RuleItem")
                     }
                 }
-                data("ChoicePriorityDefault") {
-                    supertype("ChoiceAbstract")
-                    supertype("ChoicePriority")
-                    constructor_ {
-                        parameter(setOf(), "alternative", "List")
-                    }
-                    propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
-                        typeArgument("RuleItem")
-                    }
-                }
                 data("ChoiceLongestDefault") {
                     supertype("ChoiceAbstract")
                     supertype("ChoiceLongest")
@@ -840,6 +863,11 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, SentenceContext>() {
         }
     }
 
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
+        }
+    }
+
     override val styleDomain: AglStyleDomain by lazy {
         styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
@@ -868,7 +896,7 @@ namespace net.akehurst.language.Grammar {
       else -> ': ${extends.join(',')} '
     }
     GrammarReference -> nameOrQName
-    GrammarOption -> '@$name $value'
+    GrammarOption -> '#$name: $value'
     GrammarRule -> '${isOverride?'override ':''}${isSkip?'skip ':''}${isLeaf?'leaf ':''}$name = $rhs ;'
     PreferenceRule -> ''
     ChoiceLongest -> when {

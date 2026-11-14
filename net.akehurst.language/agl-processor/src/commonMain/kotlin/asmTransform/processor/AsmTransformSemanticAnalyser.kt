@@ -111,6 +111,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
             for (trns in asm.namespace) {
                 for (trs in trns.definition) {
                     overrideDefaultRuleSet(trs)
+                    checkEveryRuleHasATransformRule(trs)
                     convertRulesThatSimplyRedefineDefaultType(trs)
                     createMissingTypes(trs)
 
@@ -130,6 +131,34 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
             _typesDomain.resolveImports()
         }
         return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
+    }
+
+    /**
+     * Without '#override-default-transform' the transform has only the rules written,
+     * so every (non leaf, non skip) rule of the grammar needs a transformation rule.
+     */
+    private fun checkEveryRuleHasATransformRule(trs: AsmTransformRuleSet) {
+        when {
+            trs.options.overrideDefault -> Unit
+            else -> {
+                val grammar = _grammarDomain.findDefinitionByQualifiedNameOrNull(trs.qualifiedName)
+                when (grammar) {
+                    null -> Unit // no grammar for this rule set, nothing to check
+                    else -> {
+                        val extendedRules = trs.extends.mapNotNull { _asm.resolveReference(it) }.flatMap { it.rules.keys }.toSet()
+                        val missing = grammar.resolvedGrammarRule
+                            .filter { it.isLeaf.not() && it.isSkip.not() }
+                            .filter { trs.rules.containsKey(it.name).not() && extendedRules.contains(it.name).not() }
+                        missing.forEach { gr ->
+                            _issues.error(
+                                null,
+                                "No transformation rule for grammar rule '${gr.name.value}' in '${trs.qualifiedName.value}', write one or use '#${OPTION_OVERRIDE_DEFAULT}'"
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -186,16 +215,41 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         // to define the type for a grammar Rule
         // thus only certain expressions are valid.
         val expr = trr.expression
-        val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Namespace '${trs.qualifiedName.value}' Should exist!")
+        val gtns = findOrCreateGrammarTypeNamespace(trs.qualifiedName)
         val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)
         val exprType = when {
             trr.isResolved -> trr.resolvedType
-            expr is CreateObjectExpression -> exprTypeResolver.typeFor(expr, StdLibDefault.AnyType)
+            expr is CreateObjectExpression -> {
+                val t = exprTypeResolver.typeFor(expr, StdLibDefault.AnyType)
+                when {
+                    StdLibDefault.NothingType != t -> t
+                    // an existing type from the transform generated from the grammar
+                    null != transformFromGrammar.value.typesDomain?.findFirstDefinitionByPossiblyQualifiedNameOrNull(expr.possiblyQualifiedTypeName) ->
+                        findOrCloneFromDefaultTypeForTransformRule(expr.possiblyQualifiedTypeName, trs, trr).type()
+
+                    else -> {
+                        _issues.error(
+                            null,
+                            "Type '${expr.possiblyQualifiedTypeName.value}' for rule '${trr.grammarRuleName.value}' not found, define it or use '#${OPTION_CREATE_TYPES}'"
+                        )
+                        StdLibDefault.NothingType
+                    }
+                }
+            }
+
             expr is CreateTupleExpression -> exprTypeResolver.typeFor(expr, StdLibDefault.AnyType)
             expr is CastExpression -> exprTypeResolver.typeFor(expr, StdLibDefault.AnyType)
-            else -> error("Unsupported expression type: $expr")
+            else -> unsupportedRuleExpression(trr)
         }
         return exprType
+    }
+
+    private fun unsupportedRuleExpression(trr: AsmTransformationRule): TypeInstance {
+        _issues.error(
+            null,
+            "The type of rule '${trr.grammarRuleName.value}' cannot be determined from '${trr.expression}', use 'Type() { ... }', 'tuple { ... }' or '<expression> as Type'"
+        )
+        return StdLibDefault.NothingType
     }
 
     /**
@@ -205,9 +259,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
      */
     private fun findOrCloneFromDefaultTypeForTransformRule(typePqn: PossiblyQualifiedName, trs: AsmTransformRuleSet, trr: AsmTransformationRule): TypeDefinition {
         val grmDecl = transformFromGrammar.value.typesDomain?.findFirstDefinitionByPossiblyQualifiedNameOrNull(typePqn)
+        grmDecl?.let { cloneSupertypesFromDefault(it) }
         val clonedTypeDeclOrCreated = grmDecl?.findInOrCloneTo(_typesDomain) ?: let {
             // need a grammarTypeNamespace
-            val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Should exist!")
+            val gtns = findOrCreateGrammarTypeNamespace(trs.qualifiedName)
             val t = gtns.findOwnedOrCreateDataTypeNamed(typePqn.simpleName)
             // no need to setTypeForGrammarRule, it is done later
             // gtns.setTypeForGrammarRule(trr.grammarRuleName, t.type())
@@ -222,6 +277,19 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         }
 
         return clonedTypeDeclOrCreated
+    }
+
+    /**
+     * the supertypes of a type from the default transform must also exist,
+     * even if the rule that created them was overridden (e.g. a choice rule whose type is rewritten)
+     */
+    private fun cloneSupertypesFromDefault(grmDecl: TypeDefinition) {
+        grmDecl.supertypes.forEach { st ->
+            st.resolvedDefinitionOrNull?.let { stDecl ->
+                cloneSupertypesFromDefault(stDecl)
+                stDecl.findInOrCloneTo(_typesDomain)
+            }
+        }
     }
 
     private fun overrideDefaultNamespace(ns: AsmTransformNamespace) {
@@ -247,7 +315,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         }
     }
 
-    private fun findOrCreateGrammarTypeNamespace(qn: QualifiedName) {
+    private fun findOrCreateGrammarTypeNamespace(qn: QualifiedName): GrammarTypesNamespace =
         _typesDomain.findNamespaceOrNull(qn) as GrammarTypesNamespace?
             ?: GrammarTypesNamespaceSimple.findOrCreateGrammarNamespace(_typesDomain, qn).also { tns ->
                 transformFromGrammar.value.typesDomain?.findNamespaceOrNull(tns.qualifiedName)?.let { gtns ->
@@ -255,7 +323,6 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                 }
                 _typesDomain.addNamespace(tns)
             }
-    }
 
     private fun createMissingTypeNamespaces(trs: AsmTransformRuleSet) {
         when {
@@ -276,6 +343,8 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                                 else -> {
                                     // rule not overridden so use default rule
                                     trs.setRule(grmRl)
+                                    // and its type, which is in the types of the default transform
+                                    findOrCloneFromDefaultTypeForTransformRule(grmRl.resolvedType.qualifiedTypeName, trs, grmRl)
                                 }
                             }
                         }
@@ -293,7 +362,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     val exprPqn = when {
                         trr.isResolved -> trr.resolvedType.qualifiedTypeName
                         expr is CreateObjectExpression -> {
-                            val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Should exist!")
+                            val gtns = findOrCreateGrammarTypeNamespace(trs.qualifiedName)
                             val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)
                             val t = gtns.findOwnedOrCreateDataTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
 
@@ -344,9 +413,9 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
 
                         expr is CreateTupleExpression -> StdLibDefault.TupleType.qualifiedName
                         expr is CastExpression -> expr.targetType.possiblyQualifiedName
-                        else -> error("Unsupported expression type: $expr")
+                        else -> null // error issue given in typeFor
                     }
-                    findOrCloneFromDefaultTypeForTransformRule(exprPqn, trs, trr)
+                    exprPqn?.let { findOrCloneFromDefaultTypeForTransformRule(exprPqn, trs, trr) }
                 }
             }
         }

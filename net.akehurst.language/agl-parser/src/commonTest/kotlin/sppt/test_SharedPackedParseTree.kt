@@ -194,7 +194,17 @@ class test_SharedPackedParseTree {
         //    }
 
         val rrs = runtimeRuleSet("test.Test") {
-            TODO()
+            pattern("WS", "\\s+", true)
+
+            concatenation("declaration") { literal("class"); ref("ID"); literal("{"); ref("propertyList"); literal("}") }
+            multi("propertyList", 0, -1, "property")
+            concatenation("property") { ref("ID"); literal(":"); ref("typeReference") }
+            concatenation("typeReference") { ref("ID"); ref("typeArgumentsOpt") }
+            optional("typeArgumentsOpt", "typeArguments")
+            concatenation("typeArguments") { literal("<"); ref("typeReferenceList"); literal(">") }
+            sList("typeReferenceList", 1, -1, "typeReference", "','")
+            literal("','", ",")
+            pattern("ID", "[A-Za-z_][A-Za-z0-9_]*")
         }
 
         val text = """

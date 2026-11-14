@@ -22,7 +22,9 @@ import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SpptDataNode
 
 interface RuleSet {
     val rule : List<Rule>
@@ -166,9 +168,21 @@ interface RuntimeSpine {
     val expectedNextTerminals: Set<Rule>
     val elements: List<RulePosition>
     val nextChildNumber: Int
+
+    /**
+     * position in the sentence up to which the text was parsed to produce this spine,
+     * i.e. the position at which the [expectedNextTerminals] are expected to start.
+     * In an [ExpectedAtResult] this can differ between spines, e.g. at the end of a partially typed word
+     * one spine may be for the word being unfinished (position of the word start)
+     * and another for the word being complete (the requested position).
+     */
+    val usedPosition: Int
 }
 
 interface ExpectedAtResult {
+    /**
+     * start of the word containing/preceding the requested position (each spine has its own [RuntimeSpine.usedPosition])
+     */
     val usedPosition: Int
     val spines: Set<RuntimeSpine>
 }
@@ -234,7 +248,101 @@ interface ParseOptions {
      */
     var reverseFindWordStartBySkipRules: Boolean
 
+    /**
+     * Only used by expectedAt when [reverseFindWordStartBySkipRules] is true.
+     * The text between the last skip match (e.g. whitespace) and the position is scanned into tokens.
+     * When false, only the start of the last of those tokens is used as the start of a possibly unfinished word.
+     * When true, the start of every one of those tokens is used,
+     * e.g. so that 'ab' (scanned as 'a' 'b') can also be the start of an unfinished 'abc'.
+     *
+     * Default value: `false`.
+     */
+    var expectedAtFromAllTokenStarts: Boolean
+
+    /**
+     * When not null, the parse is streamed to this listener while parsing,
+     * and no parse tree is kept: [ParseResult.sppt] is null.
+     * Nodes are sent bottom-up (post-order), left to right, once they can no longer change.
+     *
+     * Default value: `null` (no streaming, the parse tree is built as normal).
+     */
+    var streamListener: ParseStreamListener?
+
+    /**
+     * Only used when [streamListener] is not null.
+     * When the text parsed but not yet sent to the listener gets longer than this (in characters),
+     * one warning is raised, naming the rules that are still competing.
+     *
+     * Default value: `10000`.
+     */
+    var streamLagWarningLimit: Int
+
+    /**
+     * When not null, the parse (or expectedAt) using these options can be stopped by calling [ParseInterrupt.interrupt] on it,
+     * e.g. from another thread. Other parses (of the same processor) are not affected.
+     * Use a new [ParseInterrupt] for each parse, once interrupted it stays interrupted.
+     *
+     * Default value: `null`.
+     */
+    var interrupt: ParseInterrupt?
+
     fun clone(): ParseOptions
+}
+
+/**
+ * Stops the parses that were given it (in [ParseOptions.interrupt]).
+ * The parse stops at its next check (once per step of the parse), with a parse error giving the message.
+ */
+interface ParseInterrupt {
+    /** the message given to [interrupt], null if not interrupted */
+    val message: String?
+
+    /** can be called from a different thread to the one doing the parse */
+    fun interrupt(message: String)
+}
+
+/**
+ * Receives a parse bottom-up while it is parsed.
+ *
+ * Nodes arrive in post-order, left to right: the children of a branch are sent before the branch.
+ * A consumer can keep its own stack of values: push one value for each [leaf],
+ * and for each [branch] pop [numChildren] values and push one.
+ * Skip (e.g. whitespace) is not counted as a child; it is reported with [skip].
+ *
+ * A node is sent only once nothing later in the sentence can change it.
+ * If some text can be parsed in more than one way (an ambiguity the grammar does not resolve),
+ * an error is raised in the parse issues and the parse stops: [failed] is called.
+ */
+interface ParseStreamListener {
+    /** called once, before any node, with the sentence being parsed */
+    fun start(sentence: Sentence) {}
+
+    /** a terminal */
+    fun leaf(node: SpptDataNode)
+
+    /** skip text (e.g. whitespace or comments) from [startPosition] up to (not including) [nextInputPosition] */
+    fun skip(startPosition: Int, nextInputPosition: Int)
+
+    /** a non-terminal, its [numChildren] children were the most recent nodes sent and not yet used by another branch */
+    fun branch(node: SpptDataNode, numChildren: Int)
+
+    /**
+     * an embedded (other grammar) node starts: the nodes of the embedded tree follow, then [endEmbedded].
+     * Not called for an embedded node that has no embedded tree; that is sent with [leaf].
+     */
+    fun beginEmbedded(node: SpptDataNode) {}
+
+    /** the embedded node, after its embedded tree; it has one child, the embedded root. By default this is [branch] with one child */
+    fun endEmbedded(node: SpptDataNode) = branch(node, 1)
+
+    /** the parse finished and the whole sentence was sent; [issues] holds any warnings */
+    fun finished(issues: IssueCollection<LanguageIssue>)
+
+    /**
+     * the parse failed (a syntax error, or an ambiguity); the nodes sent so far are correct but the sentence is not complete.
+     * [committedUpTo] is the sentence position up to which nodes were sent.
+     */
+    fun failed(issues: IssueCollection<LanguageIssue>, committedUpTo: Int)
 }
 
 interface ParseResult {
@@ -250,6 +358,7 @@ interface Parser {
 
     fun reset()
 
+    /** stops all parses of this parser that are running now, see also [ParseOptions.interrupt] */
     fun interrupt(message: String)
 
     /**

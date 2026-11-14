@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import net.akehurst.language.parser.api.*
 import net.akehurst.language.regex.api.UnescapedLiteral
 import net.akehurst.language.regex.api.UnescapedPattern
-import std.extensions.implies
+import net.akehurst.kotlinx.utils.implies
 
 fun ruleSet(name: String, init: RuleSetBuilder.() -> Unit) : RuleSet = runtimeRuleSet(name, init)
 
@@ -111,8 +111,6 @@ internal class RuntimeRuleSetBuilder2(
     override fun choiceLongest(ruleName: String, isSkip: Boolean, isPseudo: Boolean, init: ChoiceBuilder.() -> Unit) =
         choice(ruleName, RuntimeRuleChoiceKind.LONGEST_PRIORITY, isSkip, isPseudo, init)
 
-    override fun choicePriority(ruleName: String, isSkip: Boolean, isPseudo: Boolean, init: ChoiceBuilder.() -> Unit) =
-        choice(ruleName, RuntimeRuleChoiceKind.PRIORITY_LONGEST, isSkip, isPseudo, init)
 
     fun choice(name: String, choiceKind: RuntimeRuleChoiceKind, isSkip: Boolean = false, isPseudo: Boolean = false, init: ChoiceBuilder.() -> Unit) {
         val b = RuntimeRuleChoiceBuilder(this)

@@ -39,7 +39,28 @@ interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
     // --- DefinitionBlock ---
     override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypesNamespace?
 
+    fun merge(other: TypesDomain): TypesDomain
+
+    /**
+     * find a property, owned by an association in this domain (AssociationEnd.ownedByAssociation),
+     * whose owner is the given type or one of its supertypes.
+     */
+    fun findAssociationOwnedPropertyOrNull(type: TypeInstance, propertyName: PropertyName): PropertyDeclarationResolved?
+
+    /**
+     * as findAssociationOwnedPropertyOrNull, but also gives the association and the end that the property navigates to.
+     * The values of such properties are links, stored outside the objects (see ExternalGetter.getLinkEnd).
+     */
+    fun findAssociationOwnedEndOrNull(type: TypeInstance, propertyName: PropertyName): AssociationOwnedEnd?
+
 }
+
+/** a property owned by an association: navigating it from an object at the other end gives the object(s) at 'end' */
+data class AssociationOwnedEnd(
+    val association: TypesAssociation,
+    val end: AssociationEnd,
+    val property: PropertyDeclarationResolved
+)
 
 data class AssociationEnd(
     val endName: PropertyName,
@@ -48,9 +69,28 @@ data class AssociationEnd(
     val collectionTypeName: PossiblyQualifiedName?,
     val characteristics: Set<PropertyCharacteristic>,
     val navigable: Boolean,
+    /**
+     * false (default): the property for this end is added to the type at the other end.
+     * true: the property for this end is owned by the association, and the type at the other end is not changed.
+     */
+    val ownedByAssociation: Boolean = false,
 ) {
     var byEvaluation: ((PropertyDeclaration) -> ((Any) -> Any?)?)? = null
     var byEvaluationSuspend: ((PropertyDeclaration) -> (suspend (Any) -> Any?)?)? = null
+}
+
+/**
+ * An association between DataTypes, created by TypesNamespace.findOrCreateAssociation.
+ */
+interface TypesAssociation {
+    val namespace: TypesNamespace
+    val end: List<AssociationEnd>
+
+    /** all properties created for the ends */
+    val property: List<PropertyDeclaration>
+
+    /** the properties for ends that are ownedByAssociation; these are not added to their owner types */
+    val ownedProperty: List<PropertyDeclaration>
 }
 
 interface TypesNamespace : Namespace<TypeDefinition> {
@@ -118,6 +158,9 @@ interface TypesNamespace : Namespace<TypeDefinition> {
      * TODO: support directionality and
      */
     fun findOrCreateAssociation(ends: List<AssociationEnd>): List<PropertyDeclaration>
+
+    /** the associations created in this namespace */
+    val association: List<TypesAssociation>
 
     fun createTypeInstance(
         contextQualifiedTypeName: QualifiedName?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
@@ -438,7 +481,8 @@ interface PropertyDeclaration {
     val accessor: ((self: Any) -> Any?)?
     val accessorSuspend: (suspend (self: Any) -> Any?)?
 
-    val mutator: ((self: Any, value: Any) -> Any?)?
+    val mutator: ((self: Any, value: Any?) -> Any?)?
+    val mutatorSuspend: (suspend (self: Any, value: Any?) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 
@@ -529,6 +573,17 @@ interface MethodDefinition {
     val execution: ((self: Any, args: List<*>) -> Any?)?
     val executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)?
 
+    /**
+     * An execution over typed values: self and args are not untyped and the result is not re-typed,
+     * so elements of collections keep their own type (and accessor-mutator).
+     * A lambda argument is a [net.akehurst.language.objectgraph.api.TypedLambda].
+     * If given, used in preference to [execution].
+     */
+    val executionTyped: ((self: net.akehurst.language.objectgraph.api.TypedObject, args: List<net.akehurst.language.objectgraph.api.TypedObject>) -> net.akehurst.language.objectgraph.api.TypedObject)? get() = null
+
+    /** as [executionTyped], for suspending evaluation; if not given, [executionTyped] is used */
+    val executionTypedSuspend: (suspend (self: net.akehurst.language.objectgraph.api.TypedObject, args: List<net.akehurst.language.objectgraph.api.TypedObject>) -> net.akehurst.language.objectgraph.api.TypedObject)? get() = null
+
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDefinitionResolved
     fun findInOrCloneTo(other: TypesDomain): MethodDefinition
 }
@@ -559,6 +614,9 @@ interface ParameterDeclaration {
     val name: TmParameterName
     val typeInstance: TypeInstance
     val defaultValue: String?
+
+    /** the property that this (constructor) parameter sets, if any; several constructors may set the same property */
+    val property: PropertyDeclaration?
 
     fun findInOrCloneTo(other: TypesDomain): ParameterDeclaration
 }

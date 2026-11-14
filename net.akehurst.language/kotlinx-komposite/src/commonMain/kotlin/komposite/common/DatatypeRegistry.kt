@@ -20,9 +20,11 @@ import net.akehurst.kotlinx.komposite.api.KompositeException
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.OptionHolder
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.expressions.processor.objectInstance
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesDomainSimpleAbstract
@@ -32,6 +34,7 @@ import kotlin.reflect.KClass
 class DatatypeRegistry : TypesDomainSimpleAbstract() {
 
     companion object {
+        const val LOOKUP_DEFINITION_OF_SINGLETON_NAMESPACE = "DefinitionOfSingletonNamespace"
         val KOTLIN_STD_STRING = """
             namespace kotlin {
                 primitive Boolean
@@ -113,6 +116,7 @@ class DatatypeRegistry : TypesDomainSimpleAbstract() {
 
         val KOTLIN_TO_AGL = mapOf(
             "kotlin.Any" to StdLibDefault.AnyType.qualifiedTypeName.value,
+            "kotlin.Unit" to StdLibDefault.NothingType.qualifiedTypeName.value,
             "kotlin.Boolean" to StdLibDefault.Boolean.qualifiedTypeName.value,
             "kotlin.String" to StdLibDefault.String.qualifiedTypeName.value,
             "kotlin.Int" to StdLibDefault.Integer.qualifiedTypeName.value,
@@ -139,6 +143,7 @@ class DatatypeRegistry : TypesDomainSimpleAbstract() {
             "kotlin.Function6" to StdLibDefault.Lambda.qualifiedTypeName.value,
             // to handle lack of qualified names
             "Any" to StdLibDefault.AnyType.qualifiedTypeName.value,
+            "Unit" to StdLibDefault.NothingType.qualifiedTypeName.value,
             "Boolean" to StdLibDefault.Boolean.qualifiedTypeName.value,
             "String" to StdLibDefault.String.qualifiedTypeName.value,
             "Int" to StdLibDefault.Integer.qualifiedTypeName.value,
@@ -152,6 +157,61 @@ class DatatypeRegistry : TypesDomainSimpleAbstract() {
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
 
     private val _primitiveMappers = mutableMapOf<KClass<*>, PrimitiveMapper<*, *>>()
+    private val _lookupMappers = mutableMapOf<String, LookupMapper>()
+
+    /**
+     * An object for which lookup.toKey gives a key is not walked (written) by value,
+     * it is written as (lookup.name, key) and found again, when read, by lookup.fromKey(key).
+     * e.g. so that a definition owned by a singleton is found in that singleton rather than constructed again.
+     */
+    fun registerLookup(lookup: LookupMapper) {
+        this._lookupMappers[lookup.name] = lookup
+    }
+
+    /** the (lookup name, key) for the value, if a registered lookup gives a key for it */
+    fun lookupKeyFor(value: Any): Pair<String, String>? {
+        for (lu in _lookupMappers.values) {
+            val key = lu.toKey(value)
+            if (null != key) return Pair(lu.name, key)
+        }
+        return null
+    }
+
+    fun lookupValueFor(lookupName: String, key: String): Any {
+        val lu = _lookupMappers[lookupName] ?: throw KompositeException("No lookup registered with name '$lookupName'")
+        return lu.fromKey(key) ?: throw KompositeException("Lookup '$lookupName' found nothing for key '$key'")
+    }
+
+    /**
+     * Type definitions owned by a namespace that is a registered singleton (e.g. StdLibDefault)
+     * are written by name, and looked up in that singleton when read.
+     */
+    fun registerLookupForDefinitionsOfSingletonNamespaces() {
+        registerLookup(LookupMapper(
+            name = LOOKUP_DEFINITION_OF_SINGLETON_NAMESPACE,
+            toKey = { value ->
+                when (value) {
+                    is TypeDefinition -> {
+                        val ns = value.namespace
+                        val st = this.findTypeDeclarationByKClass(ns::class)
+                        when (st) {
+                            is SingletonType -> "${st.qualifiedName.value}#${value.name.value}"
+                            else -> null
+                        }
+                    }
+
+                    else -> null
+                }
+            },
+            fromKey = { key ->
+                val stName = QualifiedName(key.substringBefore("#"))
+                val defName = SimpleName(key.substringAfter("#"))
+                val st = this.findByQualifiedNameOrNull(stName) as? SingletonType ?: throw KompositeException("Cannot find SingletonType '${stName.value}'")
+                val ns = st.objectInstance() as? TypesNamespace ?: throw KompositeException("Singleton '${stName.value}' is not a TypesNamespace")
+                ns.findOwnedDefinitionOrNull(defName)
+            }
+        ))
+    }
 
     fun registerPrimitiveMapper(mapper: PrimitiveMapper<*, *>) {
         this._primitiveMappers[mapper.primitiveKlass] = mapper
@@ -198,6 +258,27 @@ class DatatypeRegistry : TypesDomainSimpleAbstract() {
             it.primitiveKlass.simpleName == clsName //FIXME: use qualified name when JS supports it!
         }
     }
+
+    /**
+     * Kotlin values that are agl special values, e.g. kotlin.Unit is the agl value nothing (ObjectGraphAccessorMutator.nothing())
+     */
+    fun specialTypeFor(value: Any): SpecialType? = when (value) {
+        Unit -> StdLibDefault.NothingType.resolvedDefinition as SpecialType
+        else -> null
+    }
+
+    fun isSpecial(value: Any): Boolean = null != specialTypeFor(value)
+
+    /** the value of a special type, e.g. std.Nothing is kotlin.Unit */
+    fun specialValueFor(type: TypeDefinition): Any = when (type.qualifiedName) {
+        StdLibDefault.NothingType.resolvedDefinition.qualifiedName -> Unit
+        else -> throw KompositeException("No value is known for the special type '${type.qualifiedName.value}'")
+    }
+
+    /** find an agl type (e.g. from KOTLIN_TO_AGL) by its qualified name, in this registry or in the agl std lib */
+    fun findAglTypeOrNull(qualifiedName: QualifiedName): TypeDefinition? =
+        this.findByQualifiedNameOrNull(qualifiedName)
+            ?: if (qualifiedName.front == StdLibDefault.qualifiedName) StdLibDefault.findOwnedTypeNamed(qualifiedName.last) else null
 
     fun isSingleton(value: Any): Boolean {
         return this.findFirstDefinitionByNameOrNull(SimpleName(value::class.simpleName!!)) is SingletonType

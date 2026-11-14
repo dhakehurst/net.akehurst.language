@@ -23,7 +23,7 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.regex.api.EscapedPattern
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
@@ -174,7 +174,14 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     }
 
     // styleValue = STYLE_VALUE | STRING ;
-    fun styleValue(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
-        children[0] as String
+    // a STRING value (e.g. '#82AAFF') is given without its enclosing quotes
+    fun styleValue(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
+        val str = children[0] as String
+        return when {
+            str.length >= 2 && str.startsWith("'") && str.endsWith("'") -> str.substring(1, str.length - 1).replace("\\'", "'")
+            str.length >= 2 && str.startsWith("\"") && str.endsWith("\"") -> str.substring(1, str.length - 1).replace("\\\"", "\"")
+            else -> str
+        }
+    }
 
 }

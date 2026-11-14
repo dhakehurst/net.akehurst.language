@@ -1,0 +1,213 @@
+/**
+ * Copyright (C) 2026 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// KerML references (identify, scope, references) for the 'agl' KerML grammar
+
+namespace net.akehurst.language.kerML.KerMLv1_1
+    // every named element is an item of the scope of its owning element; it is found by its name and by its short name (KerML 8.2.3.5)
+    // the visibility is written on the membership (the ...Member element that contains the element)
+    identify net.akehurst.language.kerML.Namespaces.Namespace by namespaceDeclaration.identification.name | namespaceDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Packages.Package by packageDeclaration.identification.name | packageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Packages.LibraryPackage by packageDeclaration.identification.name | packageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Types.Type by typeDeclaration.identification.name | typeDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Classifiers.Classifier by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Classes.DataType by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Classes.Class by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Classes.Structure by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Classes.Association by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Classes.AssociationStructure by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Behaviors.Behavior by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Behaviors.Function by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Behaviors.Predicate by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Interactions.Interaction by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Metadata.Metaclass by classifierDeclaration.identification.name | classifierDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Types.MultiplicityRange by identification.name | identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Features.MultiplicitySubset by identification.name | identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Features.Feature by featureKind.featureDeclaration.featureDeclarationKind.featureIdentification.name | featureKind.featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Behaviors.Step by featureDeclaration.featureDeclarationKind.featureIdentification.name | featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Behaviors.Expression by featureDeclaration.featureDeclarationKind.featureIdentification.name | featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Behaviors.BooleanExpression by featureDeclaration.featureDeclarationKind.featureIdentification.name | featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Behaviors.Invariant by featureDeclaration.featureDeclarationKind.featureIdentification.name | featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Connectors.Connector by connectorKind.featureDeclaration.featureDeclarationKind.featureIdentification.name | connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentification.name | connectorKind.featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name | connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Connectors.BindingConnector by bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.name | bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Connectors.Succession by successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.name | successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Interactions.Flow by flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.name | flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Interactions.SuccessionFlow by flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.name | flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.kerML.Namespaces.AliasMember by identification.name | identification.shortName.name visibility memberPrefix.visibilityIndicator alias-for importedName.name
+
+    // the imports of a namespace or package
+    scope net.akehurst.language.kerML.Namespaces.RootNamespace {
+        import forall namespaceBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+        import forall namespaceBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+    }
+    scope net.akehurst.language.kerML.Namespaces.Namespace {
+        import forall namespaceBody.namespaceBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+        import forall namespaceBody.namespaceBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+    }
+    scope net.akehurst.language.kerML.Packages.Package {
+        import forall packageBody.packageBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+        import forall packageBody.packageBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+    }
+    scope net.akehurst.language.kerML.Packages.LibraryPackage {
+        import forall packageBody.packageBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+        import forall packageBody.packageBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+    }
+    // a classifier inherits the members of its superclassifiers (:>), a feature the members of its types (:),
+    // subsetted (:>), referenced (::>), crossed (=>) and redefined (:>>) features
+    scope net.akehurst.language.kerML.Classifiers.Classifier {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Base.Anything
+    }
+    scope net.akehurst.language.kerML.Classes.DataType {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Base.DataValue
+    }
+    scope net.akehurst.language.kerML.Classes.Class {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Occurrences.Occurrence
+    }
+    scope net.akehurst.language.kerML.Classes.Structure {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Objects.Object
+    }
+    scope net.akehurst.language.kerML.Classes.Association {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Links.Link
+    }
+    scope net.akehurst.language.kerML.Classes.AssociationStructure {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Objects.LinkObject
+    }
+    scope net.akehurst.language.kerML.Behaviors.Behavior {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Performances.Performance
+    }
+    scope net.akehurst.language.kerML.Behaviors.Function {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Performances.Evaluation
+    }
+    scope net.akehurst.language.kerML.Behaviors.Predicate {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Performances.BooleanEvaluation
+    }
+    scope net.akehurst.language.kerML.Interactions.Interaction {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+    }
+    scope net.akehurst.language.kerML.Metadata.Metaclass {
+        inherit forall classifierDeclaration.classifierSpecialization.qualifiedName members-of name
+        inherit named Metaobjects.Metaobject
+    }
+    scope net.akehurst.language.kerML.Features.Feature {
+        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit named Base.things
+    }
+    scope net.akehurst.language.kerML.Behaviors.Step {
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit named Performances.performances
+    }
+    scope net.akehurst.language.kerML.Behaviors.Expression {
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit named Performances.evaluations
+    }
+    scope net.akehurst.language.kerML.Behaviors.BooleanExpression {
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit named Performances.booleanEvaluations
+    }
+    scope net.akehurst.language.kerML.Behaviors.Invariant {
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit named Performances.trueEvaluations
+    }
+    scope net.akehurst.language.kerML.Connectors.Connector {
+        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit named Links.links
+    }
+    scope net.akehurst.language.kerML.Connectors.BindingConnector {
+        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+    }
+    scope net.akehurst.language.kerML.Connectors.Succession {
+        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+    }
+    scope net.akehurst.language.kerML.Interactions.Flow {
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit named Transfers.transfers
+    }
+    scope net.akehurst.language.kerML.Interactions.SuccessionFlow {
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit named Transfers.flowTransfersBefore
+    }
+    scope net.akehurst.language.kerML.Types.Type { }
+    scope net.akehurst.language.kerML.Types.MultiplicityRange { }
+    scope net.akehurst.language.kerML.Features.MultiplicitySubset { }
+
+    scope net.akehurst.language.kerML.Types.Type {
+        inherit named Base.Anything
+    }
+    references {
+        in net.akehurst.language.kerML.Namespaces.ImportOfMembership { property importedName.name refers-to net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember }
+        in net.akehurst.language.kerML.Namespaces.ImportOfNamespace { property importedName.name refers-to net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember }
+        in net.akehurst.language.kerML.Namespaces.AliasMember { property importedName.name refers-to net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember }
+        in net.akehurst.language.kerML.Base.QualifiedName { property name refers-to net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember }
+        // a feature chain a.b.c: each later element is a member of what the previous one refers to
+        in net.akehurst.language.kerML.Base.FeatureChain { forall qualifiedName { property name refers-to net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        in net.akehurst.language.kerML.Base.FeatureReference { forall qualifiedName { property name refers-to net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        // an expression chain f.h: the first name is a member of what the base expression refers to (only a name as base)
+        in net.akehurst.language.kerML.Expressions.FeatureChainExpression { forall featureReference { property name refers-to net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name else nonFeatureChainPrimaryExpression.qualifiedName.name } }
+    }

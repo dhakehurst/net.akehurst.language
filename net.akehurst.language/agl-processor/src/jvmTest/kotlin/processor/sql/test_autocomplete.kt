@@ -29,6 +29,7 @@ class test_autocomplete {
     private companion object {
         val grammarStr = test_autocomplete::class.java.getResource("/sql/version_/grammar.agl").readText()
         val referenceStr = test_autocomplete::class.java.getResource("/sql/version_/reference.agl").readText()
+        val autocompleteStr = test_autocomplete::class.java.getResource("/sql/version_/autocomplete.agl").readText()
 
         val testSuit = testSuit {
             testData("With grammar only") {
@@ -37,12 +38,12 @@ class test_autocomplete {
                     context(contextAsmSimple())
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "terminatedStatement", "<statement> ;"),
-                            CompletionItem(CompletionItemKind.PATTERN, "SELECT", "<SELECT>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "UPDATE", "<UPDATE>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "terminatedStatement", "<terminatedStatement>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "CREATE", "<CREATE>"),
                             CompletionItem(CompletionItemKind.PATTERN, "DELETE", "<DELETE>"),
                             CompletionItem(CompletionItemKind.PATTERN, "INSERT", "<INSERT>"),
-                            CompletionItem(CompletionItemKind.PATTERN, "CREATE", "<CREATE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "SELECT", "<SELECT>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "UPDATE", "<UPDATE>"),
                         )
                     )
                 }
@@ -50,7 +51,8 @@ class test_autocomplete {
                     context(contextAsmSimple())
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "columns", "<columns>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'*'", "*"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
@@ -66,6 +68,7 @@ class test_autocomplete {
                     })
                     expectedCompletionItems(
                         listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "tableRef", "<tableRef>"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
@@ -73,12 +76,13 @@ class test_autocomplete {
                 sentencePass("SELECT ") {
                     context(contextAsmSimple {
                         forSentence(null) {
-                            item("col1", "net.akehurst.language.sql.Column", null, "")
+                            item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", null, "")
                         }
                     })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "columns", "<columns>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'*'", "*"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
@@ -97,6 +101,7 @@ class test_autocomplete {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.REFERRED, "TableDefinition", "table1"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "tableRef", "<tableRef>"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
@@ -104,14 +109,15 @@ class test_autocomplete {
                 sentencePass("SELECT ") {
                     context(contextAsmSimple {
                         forSentence(null) {
-                            item("col1", "net.akehurst.language.sql.Column", null, "")
+                            item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", null, "")
                         }
                     })
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.REFERRED, "ColumnDefinition", "col1"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "columns", "<columns>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'*'", "*"),
                             CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
-                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
                         )
                     )
                 }
@@ -119,18 +125,20 @@ class test_autocomplete {
             testData("With Reference & Autocomplete file") {
                 grammarStr(grammarStr)
                 referenceStr(referenceStr)
+                completionStr(autocompleteStr)
                 sentencePass("") {
                     context(contextAsmSimple())
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "Select statement", "SELECT <columns> FROM <table-id>;"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "Update statement", "UPDATE <table-id> SET <column-values>;"),
                             CompletionItem(CompletionItemKind.SEGMENT, "Delete statement", "DELETE FROM <table-id>;"),
                             CompletionItem(CompletionItemKind.SEGMENT, "Insert statement", "INSERT INTO <table-id> ( <columns> ) VALUES ( <values> );"),
-                            CompletionItem(CompletionItemKind.LITERAL, "SELECT", "SELECT"),
-                            CompletionItem(CompletionItemKind.LITERAL, "UPDATE", "UPDATE"),
-                            CompletionItem(CompletionItemKind.LITERAL, "DELETE", "DELETE"),
-                            CompletionItem(CompletionItemKind.LITERAL, "INSERT", "INSERT"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "Select statement", "SELECT <columns> FROM <table-id>;"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "Update statement", "UPDATE <table-id> SET <column-values>;"),
+                            CompletionItem(CompletionItemKind.PATTERN, "CREATE", "<CREATE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "DELETE", "<DELETE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "INSERT", "<INSERT>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "SELECT", "<SELECT>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "UPDATE", "<UPDATE>"),
                         )
                     )
                 }

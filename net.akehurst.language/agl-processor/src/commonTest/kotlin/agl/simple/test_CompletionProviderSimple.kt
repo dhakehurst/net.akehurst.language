@@ -122,7 +122,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "[a-z]", "<PAT>")
+            CompletionItem(CompletionItemKind.PATTERN, "PAT", "<PAT>")
         )
         test(
             TestData(
@@ -185,7 +185,7 @@ class test_CompletionProviderSimple {
 
         val expected = listOf(
             CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<NAME>")
+            CompletionItem(CompletionItemKind.PATTERN, "NAME", "<NAME>")
         )
 
         test(
@@ -238,7 +238,7 @@ class test_CompletionProviderSimple {
         val expected = listOf(
             CompletionItem(CompletionItemKind.REFERRED, "TypeDef", "int"),
             CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<REF>"),
+            CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
         )
 
         test(
@@ -270,10 +270,11 @@ class test_CompletionProviderSimple {
                 sentence = sentence,
                 position = 0,
                 expected = listOf(
-                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+                    // "That" is a pattern (double quotes)
                     CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
-                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "<That> is a sentence ."),
                     CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+                    CompletionItem(CompletionItemKind.PATTERN, "That", "<That>"),
                 )
             )
         )
@@ -309,7 +310,7 @@ class test_CompletionProviderSimple {
                 sentence = sentence,
                 position = 3,
                 expected = listOf(
-                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+                    // word completion: only literals that extend the typed word are offered
                     CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
                 )
             )

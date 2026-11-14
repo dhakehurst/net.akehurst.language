@@ -58,6 +58,8 @@ class ScopeSimple(
     // accessor needed for serialisation which assumes mutableMap for deserialisation
     override val childScopes: Map<String, ScopeSimple> = _childScopes
 
+    override var ownerItem: Any? = null
+
     // accessor needed for serialisation which assumes mutableMap for deserialisation
     /**
      * referableName -> typeName -> item
@@ -108,6 +110,7 @@ class ScopeSimple(
 
     /** will overwrite existing items with other if qualifiedTypeName is the same */
     override fun merge(other: Scope) {
+        if (null == this.ownerItem) this.ownerItem = other.ownerItem
         other.childScopes.forEach { (k,v) ->
             val newScope = createOrGetChildScope(k,v.forTypeName)
             newScope.merge(v)

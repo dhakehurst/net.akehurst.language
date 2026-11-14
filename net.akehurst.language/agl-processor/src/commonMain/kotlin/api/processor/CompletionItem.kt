@@ -17,6 +17,7 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.grammar.api.Concatenation
+import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarRule
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.TangibleItem
@@ -28,14 +29,29 @@ enum class CompletionItemKind {
     REFERRED,
 }
 
+/**
+ * @param label name shown to the user, e.g. the rule name (for a PATTERN the leaf rule name, its regex is in [description])
+ * @param text the text inserted into the sentence
+ */
 data class CompletionItem(
     val kind: CompletionItemKind,
     val label: String,
     val text: String
 ) {
-    var id: Int? = 0
+    /** index of the expansion this item comes from (see CompletionProviderOptions.path), null if not from an expansion */
+    var id: Int? = null
+    /** more information for the user, e.g. shown on hover or pre-selection in an editor. For a PATTERN it is the pattern (regex) */
     var description: String = ""
+    /** the grammar item this completion comes from, if any (for use by code, not shown to the user) */
     var detail: RuleItem? = null
+
+    /**
+     * position in the sentence from which this item replaces the text (up to the requested position).
+     * Items in one result can have different positions, e.g. completing a partially typed word (its start)
+     * or inserting what is expected next (the requested position).
+     * null if not set, in which case use [ExpectedAtResult.offeredPosition].
+     */
+    var offeredPosition: Int? = null
 }
 
 interface SpineNode {
@@ -51,6 +67,13 @@ interface Spine {
     val expectedNextRuleItems: Set<RuleItem>
     val elements: List<SpineNode>
     val nextChildNumber: Int
+
+    /**
+     * the grammar that the sentence is parsed with.
+     * Rule references are resolved in it, so that overridden rules are used.
+     * null if not known, in which case a reference is resolved in the grammar that owns it.
+     */
+    val targetGrammar: Grammar? get() = null
 }
 
 interface CompletionProvider<AsmType : Any, ContextType : Any> {

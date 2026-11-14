@@ -18,6 +18,9 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.kotlinx.collections.MapNotNull
 import net.akehurst.kotlinx.collections.lazyMapNotNull
+import net.akehurst.language.agl.util.AutomatonBuildLock
+import net.akehurst.language.agl.util.concurrentMutableMapOf
+import net.akehurst.language.agl.util.lazyUnderBuildLock
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
@@ -29,7 +32,14 @@ class RuntimeRuleSet(
     val number: Int,
     val qualifiedName: String, //QualifiedName,
     val runtimeRules: List<RuntimeRule>,
-    val precedenceRules: List<PrefRule>
+    val precedenceRules: List<PrefRule>,
+    /**
+     * true (default): a skip (e.g. whitespace) is required between two tokens when the next token,
+     * matched from the start of the previous one, would run past the end of the previous one (e.g. keyword then identifier).
+     * false: skips are always optional.
+     * Set per grammar with the grammar option '#skipRequiredBetweenTokens: false'.
+     */
+    val skipRequiredBetweenTokens: Boolean = true
 ) : RuleSet {
 
     companion object {
@@ -87,7 +97,7 @@ class RuntimeRuleSet(
 
     val skipRules: List<RuntimeRule> by lazy { this.runtimeRules.filter { it.isSkip } }
 
-    val skipTerminals: Set<RuntimeRule> by lazy { this.skipParserStateSet?.usedTerminalRules ?: emptySet() }
+    val skipTerminals: Set<RuntimeRule> by lazyUnderBuildLock { this.skipParserStateSet?.usedTerminalRules ?: emptySet() }
 
     val nonSkipRules: Array<RuntimeRule> by lazy { this.runtimeRules.filter { it.isSkip.not() }.toTypedArray() }
 
@@ -154,14 +164,15 @@ class RuntimeRuleSet(
     }
 
     // userGoalRule -> ParserStateSet
-    private val states_cache = mutableMapOf<String, ParserStateSet>()
+    // read without a lock by parses running in parallel, written under AutomatonBuildLock
+    private val states_cache = concurrentMutableMapOf<String, ParserStateSet>()
     private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
     /**
      * <SKIP-MULTI> = <SKIP-CHOICE>+
      * <SKIP-CHOICE> = SR-0 | ... | SR-n
      */
-    val skipParserStateSet: ParserStateSet? by lazy {
+    val skipParserStateSet: ParserStateSet? by lazyUnderBuildLock {
         if (skipRules.isEmpty()) {
             null
         } else {
@@ -310,7 +321,7 @@ class RuntimeRuleSet(
     }
 
     override fun addPreBuiltFor(userGoalRuleName: String, automaton: Automaton) {
-        this.states_cache[userGoalRuleName] = automaton as ParserStateSet
+        AutomatonBuildLock.withLock { this.states_cache[userGoalRuleName] = automaton as ParserStateSet }
     }
 
     fun fetchStateSetFor(userGoalRule: Rule, automatonKind: AutomatonKind): ParserStateSet =
@@ -318,12 +329,14 @@ class RuntimeRuleSet(
 
     internal fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
         //TODO: need to cache by possibleEndOfText also
-        var stateSet = this.states_cache[userGoalRuleName]
-        if (null == stateSet) {
-            stateSet = ParserStateSet(nextStateSetNumber++, this, this.findRuntimeRule(userGoalRuleName), false, automatonKind, false)
-            this.states_cache[userGoalRuleName] = stateSet
+        return this.states_cache[userGoalRuleName] ?: AutomatonBuildLock.withLock {
+            var stateSet = this.states_cache[userGoalRuleName]
+            if (null == stateSet) {
+                stateSet = ParserStateSet(nextStateSetNumber++, this, this.findRuntimeRule(userGoalRuleName), false, automatonKind, false)
+                this.states_cache[userGoalRuleName] = stateSet
+            }
+            stateSet
         }
-        return stateSet
     }
 
     fun findEmbeddedRuleSets(found: Set<RuntimeRuleSet> = emptySet()): Set<RuntimeRuleSet> {
@@ -463,21 +476,25 @@ class RuntimeRuleSet(
             val cr = RuntimeRule(cloneNumber, rr.number, rr.name, rr.isSkip, rr.isPseudo)
             Pair(rr.tag, cr)
         }
+        // rules shared by all rule sets (e.g. <EMPTY>) are not in runtimeRules, they are used as they are
+        val shared = listOf(EMPTY, EMPTY_LIST, END_OF_TEXT, USE_RUNTIME_LOOKAHEAD, ANY_LOOKAHEAD, UNDEFINED_RULE).associateBy { it.tag }
+        val ruleMap = shared + clonedRules
         this.runtimeRules.forEach {
             val cr = clonedRules[it.tag] ?: error("Internal Error: cannot find cloned rule with tag '${it.tag}' ")
-            cr.setRhs(it.rhs.clone(clonedRules))
+            cr.setRhs(it.rhs.clone(ruleMap))
         }
         val rules = clonedRules.values.toList()
+        fun cloned(rr: RuntimeRule) = ruleMap[rr.tag] ?: error("Internal Error: cannot find cloned rule with tag '${rr.tag}' ")
         val clonedPrecedenceRules = this.precedenceRules.map {
-            val clonedCtx = clonedRules[it.contextRule.tag]!!
+            val clonedCtx = cloned(it.contextRule as RuntimeRule)
             val clonedPrecRules = (it as RuntimePreferenceRule).options.map { pr ->
-                val cTgt = pr.spine.map { clonedRules[it.tag]!! }
-                val cOp = pr.operators.map { clonedRules[it.tag]!! }.toSet()
+                val cTgt = pr.spine.map { cloned(it) }
+                val cOp = pr.operators.map { cloned(it) }.toSet()
                 RuntimePreferenceRule.RuntimePreferenceOption(pr.precedence, cTgt, pr.option, cOp, pr.associativity)
             }
             RuntimePreferenceRule(clonedCtx, clonedPrecRules)
         }
-        val clone = RuntimeRuleSet(cloneNumber, qualifiedName, rules, clonedPrecedenceRules)
+        val clone = RuntimeRuleSet(cloneNumber, qualifiedName, rules, clonedPrecedenceRules, skipRequiredBetweenTokens)
         return clone
     }
 

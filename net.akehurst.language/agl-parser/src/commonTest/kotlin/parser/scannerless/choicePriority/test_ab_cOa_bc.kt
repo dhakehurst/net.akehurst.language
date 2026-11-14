@@ -35,7 +35,7 @@ class test_ab_cOa_bc : test_LeftCornerParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("C") }
-            choice("C", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ab_c")
                 ref("a_bc")
             }

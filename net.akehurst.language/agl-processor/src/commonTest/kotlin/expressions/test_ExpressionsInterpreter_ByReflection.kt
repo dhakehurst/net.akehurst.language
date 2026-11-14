@@ -133,6 +133,32 @@ class test_ExpressionsInterpreter_ByReflection {
     }
 
     @Test
+    fun Map_function() {
+        val expression = $$"Map(Pair('a', 1), Pair('b', 2))['b']"
+        val tm = typesDomain("test", true) {
+        }
+        val self = Unit
+
+        test(
+            tm, self, StdLibDefault.NothingType.qualifiedTypeName.value, expression,
+            2L
+        )
+    }
+
+    @Test
+    fun List_function_index() {
+        val expression = $$"List('a', 'b', 'c')[1]"
+        val tm = typesDomain("test", true) {
+        }
+        val self = Unit
+
+        test(
+            tm, self, StdLibDefault.NothingType.qualifiedTypeName.value, expression,
+            "b"
+        )
+    }
+
+    @Test
     fun structure_self() {
         val expression = $$"$self"
         val tm = typesDomain("test", true) {
@@ -166,7 +192,7 @@ class test_ExpressionsInterpreter_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Unable to evaluate property 'prop2': Property prop2 not found on object TestObj(prop1=strValue, propList=[], propListA=[])"
+                "Unable to evaluate property 'prop2': Property 'prop2' not found on class 'TestObj'"
             ),
             LanguageIssue(
                 LanguageIssueKind.WARNING, LanguageProcessorPhase.INTERPRET,

@@ -32,7 +32,7 @@ class test_typeDefs : test_LeftCornerParserAbstract() {
 
     private val rrs = runtimeRuleSet {
         concatenation("S") { ref("type"); ref("name") }
-        choice("type",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+        choice("type",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
             ref("userDefined")
             ref("builtIn")
         }

@@ -23,7 +23,9 @@ import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SyntaxAnalysisOptions
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.parser.api.ParseInterrupt
 import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.parser.api.ParseStreamListener
 import net.akehurst.language.parser.api.SentenceIdentityFunction
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.scanner.api.ScanOptions
@@ -64,6 +66,10 @@ class ParseOptionsBuilder(
     private var _cacheSkip: Boolean = base.cacheSkip
     private var _reverseFindWordStartRegex = base.reverseFindWordStartRegex
     private var _reverseFindWordStartBySkipRules = base.reverseFindWordStartBySkipRules
+    private var _expectedAtFromAllTokenStarts = base.expectedAtFromAllTokenStarts
+    private var _streamListener = base.streamListener
+    private var _streamLagWarningLimit = base.streamLagWarningLimit
+    private var _interrupt = base.interrupt
 
     fun enabled(value: Boolean) {
         _enabled = value
@@ -97,6 +103,28 @@ class ParseOptionsBuilder(
         _reverseFindWordStartBySkipRules = value
     }
 
+    fun expectedAtFromAllTokenStarts(value: Boolean) {
+        _expectedAtFromAllTokenStarts = value
+    }
+
+    /**
+     * Stream the parse to [value] while parsing; no parse tree is kept (see [ParseOptions.streamListener]).
+     */
+    fun streamListener(value: ParseStreamListener?) {
+        _streamListener = value
+    }
+
+    fun streamLagWarningLimit(value: Int) {
+        _streamLagWarningLimit = value
+    }
+
+    /**
+     * the parse can be stopped by calling [ParseInterrupt.interrupt] on [value] (see [ParseOptions.interrupt]).
+     */
+    fun interrupt(value: ParseInterrupt?) {
+        _interrupt = value
+    }
+
     fun build(): ParseOptions {
         return ParseOptionsDefault(
             _enabled,
@@ -106,7 +134,11 @@ class ParseOptionsBuilder(
             _reportGrammarAmbiguities,
             _cacheSkip,
             _reverseFindWordStartRegex,
-            _reverseFindWordStartBySkipRules
+            _reverseFindWordStartBySkipRules,
+            _expectedAtFromAllTokenStarts,
+            _streamListener,
+            _streamLagWarningLimit,
+            _interrupt
         )
     }
 }
@@ -166,13 +198,21 @@ class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
 ) {
 
     private var _enabled = base.enabled
+    private var _streaming = base.streaming
 
     fun enabled(value: Boolean) {
         _enabled = value
     }
 
+    /**
+     * Build the ASM while parsing, no parse tree is kept (see [SyntaxAnalysisOptions.streaming]).
+     */
+    fun streaming(value: Boolean) {
+        _streaming = value
+    }
+
     fun build(): SyntaxAnalysisOptions<AsmType> {
-        return SyntaxAnalysisOptionsDefault<AsmType>(_enabled)
+        return SyntaxAnalysisOptionsDefault<AsmType>(_enabled, _streaming)
     }
 }
 

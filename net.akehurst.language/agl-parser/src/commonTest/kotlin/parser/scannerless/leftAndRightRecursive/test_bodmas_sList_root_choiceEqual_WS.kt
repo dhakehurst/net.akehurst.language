@@ -50,7 +50,7 @@ class test_bodmas_sList_root_choiceEqual_WS : test_LeftCornerParserAbstract() {
                 ref("add")
                 ref("sub")
             }
-            choice("root", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("root", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("var")
                 ref("bool")
             }

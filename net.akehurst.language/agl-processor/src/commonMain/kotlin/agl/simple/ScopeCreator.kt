@@ -22,6 +22,7 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -40,14 +41,40 @@ class ScopeCreator(
     val sentenceIdentity: Any?,
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
-    val identifyingValueInFor:  (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    val identifyingValueInFor:  (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
     val locationMap: LocationMap,
-    val issues: IssueHolder
+    val issues: IssueHolder,
+    /** further names of an element ('identify T by a | b': the values of b ...), it is added to the scope under each of them too */
+    val otherIdentifyingValuesInFor: (inTypeName: QualifiedName, item: AsmStructure) -> List<Any> = { _, _ -> emptyList() }
 ) : AsmTreeWalker {
+
+    companion object {
+        /** the name of the anonymous scope of an unnamed element is this prefix and a number; it cannot be written as a name in a reference */
+        const val ANONYMOUS_SCOPE_PREFIX = "\$anonymous"
+    }
 
     val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
 
+    /**
+     * the items added to a scope by this ScopeCreator (i.e. in this processing of the sentence): scope -> name -> (element, its type).
+     * A second element with the same name (and a conforming type) in the same scope is a duplicate definition.
+     * Items of the same sentence from an earlier processing (reprocessing the sentence) are not in here, so they are replaced, not reported.
+     */
+    /** the root element of the sentence, it owns the root scope */
+    private var rootElement: AsmStructure? = null
+
+    /** number of anonymous scopes created in a scope (for unnamed elements) */
+    private val anonymousScopeCount = mutableMapOf<Scope, Int>()
+
+    private val addedInThisRun = mutableMapOf<Scope, MutableMap<String, MutableList<Pair<AsmStructure, QualifiedName>>>>()
+
     override  fun beforeRoot(root: Any) {
+        // the root element owns the root scope of the sentence (it is not an item in any scope), so that a 'scope' block for its type applies (e.g. imports at file level)
+        if (root is AsmStructure) {
+            rootElement = root
+            val rootScope = currentScope.peek()
+            rootScope.ownerItem = context.createScopedItem.invoke(rootScope.scopePath, root, this.locationMap[root])
+        }
     }
 
     override  fun afterRoot(root: Any) {
@@ -79,17 +106,22 @@ class ScopeCreator(
     override  fun afterList(owningProperty: AsmStructureProperty?, value: Collection<*>) {}
 
     private  fun createScope(parentScope: Scope, el: AsmStructure): Scope {
-        return if (crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)) {
-            val inTypeName = parentScope.forTypeName.last
+        return if (crossReferenceDomain.isScopeDefinedFor(typesDomain, el.qualifiedTypeName)) {
+            val inTypeName = parentScope.forTypeName
             val refInParent = identifyingValueInFor.invoke(inTypeName, el)
             when {
                 // Nothing
+                // the root element owns the root scope (see beforeRoot)
+                el === rootElement && null == refInParent -> parentScope
+
                 null == refInParent -> {
-                    //TODO: do we actually need to do anything here ?
-                    //val ref = el.typeName.value  // use type name as ref
-                    // val scopeItem = createItemInScopeFunction.invoke(ref, el)
-                    //parentScope.createOrGetChildScope(ref, el.qualifiedTypeName, scopeItem)
-                    parentScope
+                    // an unnamed element: its members are in an anonymous scope of their own (found from inside it, not by name from outside).
+                    // The scope knows its element via ownerItem, as it is not an item of the parent scope.
+                    val n = anonymousScopeCount.getOrElse(parentScope) { 0 }
+                    anonymousScopeCount[parentScope] = n + 1
+                    val anon = parentScope.createOrGetChildScope("$ANONYMOUS_SCOPE_PREFIX$n", el.qualifiedTypeName)
+                    anon.ownerItem = context.createScopedItem.invoke(anon.scopePath, el, this.locationMap[el])
+                    anon
                 }
                 // String
                 refInParent is String -> {
@@ -98,9 +130,9 @@ class ScopeCreator(
                 // List<String>
                 refInParent is List<*> && refInParent.isNotEmpty() && refInParent.all { it is String } -> {
                     //TODO("Think this needs fixing!")
-                    val exp = crossReferenceDomain.identifyingExpressionFor(inTypeName, el.qualifiedTypeName)
-                    val scopeDefined = crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)
-                    val idExprDefinedInScope = crossReferenceDomain.identifyingExpressionFor(el.qualifiedTypeName.last, el.qualifiedTypeName)
+                    val exp = SemanticAnalyserSimple.identifyingExpressionFor(typesDomain, crossReferenceDomain, inTypeName, el.qualifiedTypeName)
+                    val scopeDefined = crossReferenceDomain.isScopeDefinedFor(typesDomain, el.qualifiedTypeName)
+                    val idExprDefinedInScope = SemanticAnalyserSimple.identifyingExpressionFor(typesDomain, crossReferenceDomain, el.qualifiedTypeName, el.qualifiedTypeName)
                     when {
                         // and scope defined with the same expression
                         scopeDefined && exp == idExprDefinedInScope -> {
@@ -132,7 +164,7 @@ class ScopeCreator(
     }
 
     private  fun addToScope(scope: Scope, el: AsmStructure) {
-        val inTypeName = scope.forTypeName.last
+        val inTypeName = scope.forTypeName
         val scopeLocalReference = identifyingValueInFor.invoke(inTypeName, el)
         when {
             null == scopeLocalReference -> {
@@ -144,14 +176,15 @@ class ScopeCreator(
             scopeLocalReference is String -> {
                 val ref = scopeLocalReference
                 addToScopeAs(scope, el, ref)
+                otherIdentifyingValuesInFor.invoke(inTypeName, el).filterIsInstance<String>().forEach { addToScopeAs(scope, el, it, isFurtherName = true) }
             }
 
             // List<String>
             scopeLocalReference is List<*> && scopeLocalReference.isNotEmpty() && scopeLocalReference.all { it is String } -> {
                 //TODO("Think this needs fixing!")
-                val exp = crossReferenceDomain.identifyingExpressionFor(inTypeName, el.qualifiedTypeName)
-                val scopeDefined = crossReferenceDomain.isScopeDefinedFor(el.qualifiedTypeName)
-                val idExprDefinedInScope = crossReferenceDomain.identifyingExpressionFor(el.typeName, el.qualifiedTypeName)
+                val exp = SemanticAnalyserSimple.identifyingExpressionFor(typesDomain, crossReferenceDomain, inTypeName, el.qualifiedTypeName)
+                val scopeDefined = crossReferenceDomain.isScopeDefinedFor(typesDomain, el.qualifiedTypeName)
+                val idExprDefinedInScope = SemanticAnalyserSimple.identifyingExpressionFor(typesDomain, crossReferenceDomain, el.qualifiedTypeName, el.qualifiedTypeName)
                 when {
                     scopeDefined.not() -> {
                         issues.error(
@@ -194,7 +227,8 @@ class ScopeCreator(
         }
     }
 
-    private fun addToScopeAs(scope: Scope, el: AsmStructure, referableName: String) {
+    /** isFurtherName: 'referableName' is not the first name of 'el' ('identify T by a | b'), so it does not give the element's semantic path */
+    private fun addToScopeAs(scope: Scope, el: AsmStructure, referableName: String, isFurtherName: Boolean = false) {
         val scopeItem = context.createScopedItem.invoke(scope.scopePath + referableName, el, this.locationMap[el])
         val existingItems = context.findItemsNamedConformingTo(referableName) { itemTypeName ->
             val itemType = typesDomain.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")
@@ -202,11 +236,30 @@ class ScopeCreator(
             itemType.conformsTo(requireType)
         }
         val notSameLocation = existingItems.filter { it.location != this.locationMap[el]?.sentenceIdentity }
+        val addedInScope = addedInThisRun.getOrPut(scope) { mutableMapOf() }.getOrPut(referableName) { mutableListOf() }
+        val duplicateInThisRun = addedInScope.any { (other, otherTypeName) ->
+            other !== el && run {
+                val itemType = typesDomain.findByQualifiedNameOrNull(otherTypeName) ?: error("Type not found '${otherTypeName.value}'")
+                val requireType = typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName) ?: error("Type not found '${el.qualifiedTypeName.value}'")
+                itemType.conformsTo(requireType)
+            }
+        }
         when {
+            duplicateInThisRun -> {
+                // defined twice in this sentence
+                this.ifItemAlreadyExistsInScopeIssueKind?.let {
+                    issues.raise(
+                        it, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                        this.locationMap[el], "'$referableName' with type '${el.qualifiedTypeName}' already exists in scope $scope"
+                    )
+                }
+            }
+
             notSameLocation.isEmpty() -> {
+                addedInScope.add(Pair(el, el.qualifiedTypeName))
                 scope.addToScope(referableName, el.qualifiedTypeName, this.locationMap[el]?.sentenceIdentity, scopeItem, replaceIfItemAlreadyExistsInScope)
                 // can also set the semantic identity of the AsmStructure
-                el.setSemanticQualifiedPath(scope.scopePath+referableName)
+                if (isFurtherName.not()) el.semanticQualifiedPath = scope.scopePath + referableName
             }
                 //existingItems.all { it.item != scopeItem } -> scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
             else -> {

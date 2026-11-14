@@ -17,6 +17,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -46,6 +47,7 @@ interface LanguageObject<AsmType : Any, ContextType : Any> {
     val crossReferenceString: String
     val styleString: String
     val formatString: String
+    val completionString: String
 
     val grammarDomain: GrammarDomain
     val typesDomain: TypesDomain
@@ -54,6 +56,7 @@ interface LanguageObject<AsmType : Any, ContextType : Any> {
     val crossReferenceDomain: CrossReferenceDomain
     val styleDomain: AglStyleDomain
     val formatDomain: AglFormatDomain
+    val completionDomain: AglCompletionDomain
 
     val defaultTargetGrammar: Grammar
     val defaultTargetGoalRule: String

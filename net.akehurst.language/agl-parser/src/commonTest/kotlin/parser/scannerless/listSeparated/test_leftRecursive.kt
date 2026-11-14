@@ -21,6 +21,8 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test
+import net.akehurst.language.parsermessages.IssueMessage
+import kotlin.test.assertTrue
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -61,15 +63,10 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
 
         val expected = "S { E { 'a' } }"
 
-        assertFailsWith<IllegalStateException> {
-            super.test_pass(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-            )
-        }
+        // parser does not terminate for this grammar, reported as an error issue
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertTrue(issues.errors.any { it.message == IssueMessage.PARSER_WONT_STOP }, issues.toString())
     }
 
     @Test
@@ -84,15 +81,10 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<IllegalStateException> {
-            super.test_pass(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-            )
-        }
+        // parser does not terminate for this grammar, reported as an error issue
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertTrue(issues.errors.any { it.message == IssueMessage.PARSER_WONT_STOP }, issues.toString())
     }
 
     @Test
@@ -107,14 +99,9 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<IllegalStateException> {
-            super.test_pass(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-            )
-        }
+        // parser does not terminate for this grammar, reported as an error issue
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertTrue(issues.errors.any { it.message == IssueMessage.PARSER_WONT_STOP }, issues.toString())
     }
 }

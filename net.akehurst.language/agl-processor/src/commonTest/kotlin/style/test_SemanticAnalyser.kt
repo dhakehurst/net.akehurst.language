@@ -184,4 +184,41 @@ class test_SemanticAnalyser {
         )
         testFail(grammarStr, sentence, sentence.length, expected)
     }
+
+    @Test
+    fun metaRule_matches_terminal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' '{' ;
+            }
+        """
+        val sentence = $$"""
+            namespace test
+            styles Test {
+              $$ "'[a-z]+'" {}
+            }
+        """.trimIndent()
+        test(grammarStr, sentence, sentence.length, emptyList())
+    }
+
+    @Test
+    fun metaRule_matches_no_terminal_warning() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' '{' ;
+            }
+        """
+        val sentence = $$"""
+            namespace test
+            styles Test {
+              $$ "'[0-9]+'" {}
+            }
+        """.trimIndent()
+        val testGrammar = grammarFor(grammarStr)
+        val actual = aglProc.process(sentence, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammar(testGrammar)) } })
+        assertTrue(actual.allIssues.errors.isEmpty(), actual.allIssues.toString())
+        assertEquals(listOf($$"Meta rule pattern \"'[0-9]+'\" matches no terminal"), actual.allIssues.warnings.map { it.message })
+    }
 }

@@ -38,7 +38,7 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.StructuredTypeSimpleAbstract
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
-import std.extensions.capitalise
+import net.akehurst.kotlinx.utils.capitalise
 import kotlin.reflect.KClass
 
 
@@ -89,7 +89,7 @@ internal class GrammarDomain2TransformDomain(
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     val transDomain = AsmTransformDomainDefault(
-        name = SimpleName("FromGrammar" + grammarDomain.allDefinitions.last().name.value),
+        name = grammarDomain.allDefinitions.last().name,
         namespace = emptyList()
     ).also {
         it.typesDomain = typesDomain
@@ -693,8 +693,16 @@ internal class Grammar2TransformRuleSet(
     private fun createUniquePropertyDeclaration(et: StructuredType, name: PropertyName, type: TypeInstance, childIndex: Int): PropertyDeclaration {
         val uniqueName = createUniquePropertyNameFor(et, name)
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-        val pd = et.appendPropertyStored(uniqueName, type, characteristics, childIndex)
+        // a property already declared by the user (types given for the grammar namespace) is used as declared
+        val pd = et.findOwnedPropertyOrNull(uniqueName)
+            ?: et.appendPropertyStored(uniqueName, type, characteristics, freePropertyIndex(et, childIndex))
         return pd
+    }
+
+    // a user declared property may already use the index, then use the next free one (properties are stored by index)
+    private fun freePropertyIndex(et: StructuredType, childIndex: Int): Int = when {
+        et.property.any { it.index == childIndex } -> -1
+        else -> childIndex
     }
 
     private fun <TP : DataType, TR : AsmTransformationRule> findOrCreateTrRule(rule: GrammarRule, cnm: ConstructAndModify<TP, TR>): AsmTransformationRule {
@@ -1609,7 +1617,10 @@ internal class Grammar2TransformRuleSet(
     ): VariableAssignmentStatement {
         val uniqueName = createUniquePropertyNameFor(et, name)
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-        val pd = et.appendPropertyStored(uniqueName, type, characteristics, childIndex)
+        // a property already declared by the user (types given for the grammar namespace) is used as declared
+        if (null == et.findOwnedPropertyOrNull(uniqueName)) {
+            et.appendPropertyStored(uniqueName, type, characteristics, freePropertyIndex(et, childIndex))
+        }
         //(trRule as TransformationRuleAbstract).appendAssignment(lhsPropertyName = uniqueName, rhs = rhsExpression)
         val variable = VariableDefinitionDefault(uniqueName.value, null)
         return VariableAssignmentStatementDefault(variable = variable, lhsGrammarRuleIndex = childIndex, rhs = rhsExpression)

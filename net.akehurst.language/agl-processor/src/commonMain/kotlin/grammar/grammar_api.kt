@@ -198,7 +198,7 @@ interface NormalRule : GrammarRule {
 enum class OverrideKind {
     /** '=' replace references to the original rule with this one */
     REPLACE,
-    /** '+|=' either append this as another option or convert the original to a choice and append this option */
+    /** '+=|' either append this as another option or convert the original to a choice and append this option */
     APPEND_ALTERNATIVE,
     /** '==' when a rule is inherited via multiple inheritance paths (i.e. diamond), specify which one to use */
     SUBSTITUTION //TODO: document this!
@@ -258,7 +258,6 @@ interface Concatenation : RuleItem {
 interface ConcatenationItem : RuleItem
 
 interface ChoiceLongest : Choice
-interface ChoicePriority : Choice //TODO: think we can remove this
 interface ChoiceAmbiguous : Choice
 
 interface OptionalItem : ConcatenationItem {

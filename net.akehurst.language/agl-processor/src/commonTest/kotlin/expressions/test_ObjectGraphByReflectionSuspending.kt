@@ -17,6 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.objectgraph.api.TypedObject
 import kotlinx.coroutines.test.runTest
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.asm.api.PropertyValueName
@@ -85,7 +86,10 @@ class test_ObjectGraphByReflectionSuspending {
             it.setProperty(PropertyValueName("a"),1L,0)
             it.setProperty(PropertyValueName("b"),true,1)
         }
-        assertEquals(expected, actual.self)
+        // AsmStructureSimple equality is by identity; compare the type and property values
+        val actualTuple = actual.self as AsmStructureSimple
+        assertEquals(expected.qualifiedTypeName, actualTuple.qualifiedTypeName)
+        assertEquals(expected.property.mapValues { it.value.value }, actualTuple.property.mapValues { (it.value.value as? TypedObject)?.self ?: it.value.value })
     }
 
     @Test

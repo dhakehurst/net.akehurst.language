@@ -1,0 +1,621 @@
+/**
+ * Copyright (C) 2026 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// SysML references (identify, scope, references) for the 'agl' SysML grammar.
+// The SysML processor is built on the KerML processor (KerML/v2_2026-09, grammar 'agl'): its types domain is the base of the SysML types
+// and the KerML references are merged into these, so the KerML model libraries (.kerml) are processed by the KerML processor.
+// So each 'refers-to' also lists the KerML element types.
+
+namespace net.akehurst.language.sysML.SysMLv2_1
+    // every named element is an item of the scope of its owning element
+    identify net.akehurst.language.sysML.Actions.AcceptNode by acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.name | acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.ActionDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.ActionUsage by actionUsageDeclaration.usageDeclaration.identification.name | actionUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.AssignmentNode by assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.name | assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.DecisionNode by usageDeclaration.identification.name | usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.ForLoopNode by usageDeclaration.identification.name | usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.ForkNode by usageDeclaration.identification.name | usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.IfNode by actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.identification.name | actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.JoinNode by usageDeclaration.identification.name | usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.MergeNode by usageDeclaration.identification.name | usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.SendNode by actionNodeUsageDeclaration.usageDeclaration.identification.name | actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.TerminateNode by actionNodeUsageDeclaration.usageDeclaration.identification.name | actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.WhileLoopNode by actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.identification.name | actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Annotations.Documentation by identification.name | identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Attributes.AttributeDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Attributes.AttributeUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Attributes.EnumeratedValue by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Attributes.EnumerationDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Attributes.EnumerationUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.AnalysisCaseDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.AnalysisCaseUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.CaseDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.CaseUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.UseCaseDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.UseCaseUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.VerificationCaseDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.VerificationCaseUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.AllocationDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.ConnectionDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.DefaultInterfaceEnd by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.FlowDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.FlowUsage by flowDeclaration.usageDeclaration.identification.name | flowDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.SuccessionFlowUsage by flowDeclaration.usageDeclaration.identification.name | flowDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.Message by messageDeclaration.usageDeclaration.identification.name | messageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.InterfaceDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.DefinitionAndUsage.DefaultReferenceUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature by usageDeclaration.identification.name | usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.DefinitionAndUsage.ReferenceUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Metadata.ExtendedDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Metadata.ExtendedUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Metadata.MetadataDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.IndividualDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.IndividualUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.ItemDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.ItemUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.OccurrenceDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.OccurrenceUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.PartDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.PartUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.PortionUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Packages.AliasMember by identification.name | identification.shortName.name visibility memberPrefix.visibilityIndicator alias-for importedName.name
+    identify net.akehurst.language.sysML.Packages.LibraryPackage by packageDeclaration.identification.name | packageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Packages.Package by packageDeclaration.identification.name | packageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Ports.PortDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Ports.PortUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Requirements.ActorUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Requirements.ConcernDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Requirements.ConcernUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Requirements.RequirementDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Requirements.RequirementUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Requirements.StakeholderUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Requirements.SubjectUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.StateAcceptActionUsage by acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.name | acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.StateAssignmentActionUsage by assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.name | assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.StateDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.StateSendActionUsage by sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.name | sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.StateUsage by actionUsageDeclaration.usageDeclaration.identification.name | actionUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.TransitionAcceptActionUsage by acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.name | acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.TransitionAssignmentActionUsage by assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.name | assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.TransitionSendActionUsage by sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.name | sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.SysMLv2_1.CalculationDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.SysMLv2_1.CalculationUsage by actionUsageDeclaration.usageDeclaration.identification.name | actionUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.SysMLv2_1.ConstraintDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.SysMLv2_1.ConstraintUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Views.RenderingDefinition by definition.definitionDeclaration.identification.name | definition.definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Views.RenderingUsage by usage.usageDeclaration.identification.name | usage.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Views.ViewDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Views.ViewUsage by usageDeclaration.identification.name | usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Views.ViewpointDefinition by definitionDeclaration.identification.name | definitionDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Views.ViewpointUsage by constraintUsageDeclaration.usageDeclaration.identification.name | constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Actions.PerformActionUsage by performActionUsageDeclaration.performActionKind.usageDeclaration.identification.name | performActionUsageDeclaration.performActionKind.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Cases.IncludeUseCaseUsage by includeUseCaseKind.usageDeclaration.identification.name | includeUseCaseKind.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Connections.ConnectionUsage by connectionKind.usageDeclaration.identification.name | connectionKind.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Occurrences.EventOccurrenceUsage by eventOccurrenceKind.usageDeclaration.identification.name | eventOccurrenceKind.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.Requirements.SatisfyRequirementUsage by satisfyRequirementKind.usageDeclaration.identification.name | satisfyRequirementKind.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.States.ExhibitStateUsage by exhibitStateKind.usageDeclaration.identification.name | exhibitStateKind.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+    identify net.akehurst.language.sysML.SysMLv2_1.AssertConstraintUsage by assertConstraintKind.constraintUsageDeclaration.usageDeclaration.identification.name | assertConstraintKind.constraintUsageDeclaration.usageDeclaration.identification.shortName.name visibility $container.memberPrefix.visibilityIndicator
+
+    // the elements that own other elements (namespaces)
+    scope net.akehurst.language.sysML.Packages.Package {
+        import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+        import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+    }
+    scope net.akehurst.language.sysML.Packages.LibraryPackage {
+        import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+        import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+    }
+    scope net.akehurst.language.sysML.Actions.AcceptNode {
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.ActionDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Actions.Action
+    }
+    scope net.akehurst.language.sysML.Actions.ActionUsage {
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Actions.actions
+    }
+    scope net.akehurst.language.sysML.Actions.AssignmentNode {
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.DecisionNode {
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.ForLoopNode {
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.ForkNode {
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.IfNode {
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.JoinNode {
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.MergeNode {
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.SendNode {
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.TerminateNode {
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Actions.WhileLoopNode {
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Attributes.AttributeDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Base.DataValue
+    }
+    scope net.akehurst.language.sysML.Attributes.AttributeUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Base.dataValues
+    }
+    scope net.akehurst.language.sysML.Attributes.EnumeratedValue {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Attributes.EnumerationDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+    }
+    scope net.akehurst.language.sysML.Attributes.EnumerationUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Cases.AnalysisCaseDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named AnalysisCases.AnalysisCase
+    }
+    scope net.akehurst.language.sysML.Cases.AnalysisCaseUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named AnalysisCases.analysisCases
+    }
+    scope net.akehurst.language.sysML.Cases.CaseDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Cases.Case
+    }
+    scope net.akehurst.language.sysML.Cases.CaseUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Cases.cases
+    }
+    scope net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Cases.UseCaseDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named UseCases.UseCase
+    }
+    scope net.akehurst.language.sysML.Cases.UseCaseUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named UseCases.useCases
+    }
+    scope net.akehurst.language.sysML.Cases.VerificationCaseDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named VerificationCases.VerificationCase
+    }
+    scope net.akehurst.language.sysML.Cases.VerificationCaseUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named VerificationCases.verificationCases
+    }
+    scope net.akehurst.language.sysML.Connections.AllocationDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Allocations.Allocation
+    }
+    scope net.akehurst.language.sysML.Connections.ConnectionDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Connections.Connection
+    }
+    scope net.akehurst.language.sysML.Connections.FlowUsage {
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Flows.flows
+    }
+    scope net.akehurst.language.sysML.Connections.SuccessionFlowUsage {
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Flows.successionFlows
+    }
+    scope net.akehurst.language.sysML.Connections.Message {
+        inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Flows.messages
+    }
+    // the body of an expression (e.g. '{ in i; ... }' of a forAll) owns its parameters
+    scope net.akehurst.language.sysML.Expressions.BodyExpression { }
+    scope net.akehurst.language.sysML.Connections.DefaultInterfaceEnd {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Connections.FlowDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Flows.MessageAction
+    }
+    scope net.akehurst.language.sysML.Connections.InterfaceDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Interfaces.Interface
+    }
+    scope net.akehurst.language.sysML.DefinitionAndUsage.DefaultReferenceUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature {
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.DefinitionAndUsage.ReferenceUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Metadata.ExtendedDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+    }
+    scope net.akehurst.language.sysML.Metadata.ExtendedUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Metadata.MetadataDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Metadata.MetadataItem
+    }
+    scope net.akehurst.language.sysML.Occurrences.IndividualDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+    }
+    scope net.akehurst.language.sysML.Occurrences.IndividualUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Occurrences.ItemDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Items.Item
+    }
+    scope net.akehurst.language.sysML.Occurrences.ItemUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Items.items
+    }
+    scope net.akehurst.language.sysML.Occurrences.OccurrenceDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Occurrences.Occurrence
+    }
+    scope net.akehurst.language.sysML.Occurrences.OccurrenceUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Occurrences.occurrences
+    }
+    scope net.akehurst.language.sysML.Occurrences.PartDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Parts.Part
+    }
+    scope net.akehurst.language.sysML.Occurrences.PartUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Parts.parts
+    }
+    scope net.akehurst.language.sysML.Occurrences.PortionUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Ports.PortDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Ports.Port
+    }
+    scope net.akehurst.language.sysML.Ports.PortUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Ports.ports
+    }
+    scope net.akehurst.language.sysML.Requirements.ActorUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Requirements.ConcernDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Requirements.ConcernCheck
+    }
+    scope net.akehurst.language.sysML.Requirements.ConcernUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Requirements.concernChecks
+    }
+    scope net.akehurst.language.sysML.Requirements.RequirementDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Requirements.RequirementCheck
+    }
+    scope net.akehurst.language.sysML.Requirements.RequirementUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Requirements.requirementChecks
+    }
+    scope net.akehurst.language.sysML.Requirements.StakeholderUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Requirements.SubjectUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.States.StateAcceptActionUsage {
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.States.StateAssignmentActionUsage {
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.States.StateDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named States.StateAction
+    }
+    scope net.akehurst.language.sysML.States.StateSendActionUsage {
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.States.StateUsage {
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named States.stateActions
+    }
+    scope net.akehurst.language.sysML.States.TransitionAcceptActionUsage {
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.States.TransitionAssignmentActionUsage {
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.States.TransitionSendActionUsage {
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.SysMLv2_1.CalculationDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Calculations.Calculation
+    }
+    scope net.akehurst.language.sysML.SysMLv2_1.CalculationUsage {
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Calculations.calculations
+    }
+    scope net.akehurst.language.sysML.SysMLv2_1.ConstraintDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Constraints.ConstraintCheck
+    }
+    scope net.akehurst.language.sysML.SysMLv2_1.ConstraintUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Constraints.constraintChecks
+    }
+    scope net.akehurst.language.sysML.Views.RenderingDefinition {
+        inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Views.Rendering
+    }
+    scope net.akehurst.language.sysML.Views.RenderingUsage {
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Views.renderings
+    }
+    scope net.akehurst.language.sysML.Views.ViewDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Views.View
+    }
+    scope net.akehurst.language.sysML.Views.ViewUsage {
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Views.views
+    }
+    scope net.akehurst.language.sysML.Views.ViewpointDefinition {
+        inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
+        inherit named Views.ViewpointCheck
+    }
+    scope net.akehurst.language.sysML.Views.ViewpointUsage {
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Views.viewpointChecks
+    }
+    scope net.akehurst.language.sysML.Actions.PerformActionUsage {
+        inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Cases.IncludeUseCaseUsage {
+        inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Connections.ConnectionUsage {
+        inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Connections.connections
+    }
+    scope net.akehurst.language.sysML.Occurrences.EventOccurrenceUsage {
+        inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.Requirements.SatisfyRequirementUsage {
+        inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Requirements.satisfiedRequirementChecks
+    }
+    scope net.akehurst.language.sysML.States.ExhibitStateUsage {
+        inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+    }
+    scope net.akehurst.language.sysML.SysMLv2_1.AssertConstraintUsage {
+        inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
+        inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
+        inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
+        inherit named Constraints.assertedConstraintChecks
+    }
+    scope net.akehurst.language.sysML.Actions.ActionNode { }
+    scope net.akehurst.language.sysML.States.StateActionUsage { }
+    scope net.akehurst.language.sysML.SysMLv2_1.DefinitionElement { }
+    scope net.akehurst.language.sysML.SysMLv2_1.UsageElement { }
+
+    references {
+        in net.akehurst.language.sysML.Packages.ImportOfMembership { property importedName.name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember }
+        in net.akehurst.language.sysML.Packages.ImportOfNamespace { property importedName.name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember }
+        in net.akehurst.language.sysML.Packages.AliasMember { property importedName.name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember }
+        in net.akehurst.language.sysML.Base.QualifiedName { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember }
+        // a feature chain a.b.c: each later element is a member of what the previous one refers to
+        in net.akehurst.language.sysML.Base.FeatureChain { forall qualifiedName { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        in net.akehurst.language.sysML.Base.FeatureReference { forall qualifiedName { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        // a FeatureReference is a list (of QualifiedName) property of the element that uses it, so each element that uses one has the chain rule: each later name is a member of what the previous one refers to
+        in net.akehurst.language.sysML.Connections.FlowEnds { forall featureReference { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } forall featureReference2 { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        in net.akehurst.language.sysML.Connections.FlowDeclarationUnnamed { forall featureReference { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } forall featureReference2 { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        in net.akehurst.language.sysML.Expressions.InvocationExpression { forall featureReference { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        in net.akehurst.language.sysML.Expressions.ConstructorExpression { forall featureReference { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        in net.akehurst.language.sysML.Actions.GuardedSuccession { forall featureReference { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        in net.akehurst.language.sysML.States.TransitionUsage { forall featureReference { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name } }
+        // an expression chain f.h: the first name is a member of what the base expression refers to (only a name as base)
+        in net.akehurst.language.sysML.Expressions.FeatureChainExpression { forall featureReference { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name else nonFeatureChainPrimaryExpression.qualifiedName.name } }
+        // 'assign f.h := ...': the first name of the target is a member of what the base expression refers to (only a name as base)
+        in net.akehurst.language.sysML.Actions.AssignmentNodeDeclaration { forall featureReference { property name refers-to net.akehurst.language.sysML.SysMLv2_1.DefinitionElement|net.akehurst.language.sysML.SysMLv2_1.UsageElement|net.akehurst.language.sysML.Actions.ActionNode|net.akehurst.language.sysML.Attributes.EnumeratedValue|net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage|net.akehurst.language.sysML.Connections.DefaultInterfaceEnd|net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature|net.akehurst.language.sysML.Requirements.ActorUsage|net.akehurst.language.sysML.Requirements.StakeholderUsage|net.akehurst.language.sysML.Requirements.SubjectUsage|net.akehurst.language.sysML.States.StateActionUsage|net.akehurst.language.sysML.States.TransitionAcceptActionUsage|net.akehurst.language.sysML.States.TransitionAssignmentActionUsage|net.akehurst.language.sysML.States.TransitionSendActionUsage|net.akehurst.language.sysML.Packages.AliasMember|net.akehurst.language.kerML.Namespaces.Namespace|net.akehurst.language.kerML.Packages.Package|net.akehurst.language.kerML.Packages.LibraryPackage|net.akehurst.language.kerML.Types.Type|net.akehurst.language.kerML.Classifiers.Classifier|net.akehurst.language.kerML.Classes.DataType|net.akehurst.language.kerML.Classes.Class|net.akehurst.language.kerML.Classes.Structure|net.akehurst.language.kerML.Classes.Association|net.akehurst.language.kerML.Classes.AssociationStructure|net.akehurst.language.kerML.Behaviors.Behavior|net.akehurst.language.kerML.Behaviors.Function|net.akehurst.language.kerML.Behaviors.Predicate|net.akehurst.language.kerML.Interactions.Interaction|net.akehurst.language.kerML.Metadata.Metaclass|net.akehurst.language.kerML.Types.MultiplicityRange|net.akehurst.language.kerML.Features.MultiplicitySubset|net.akehurst.language.kerML.Features.Feature|net.akehurst.language.kerML.Behaviors.Step|net.akehurst.language.kerML.Behaviors.Expression|net.akehurst.language.kerML.Behaviors.BooleanExpression|net.akehurst.language.kerML.Behaviors.Invariant|net.akehurst.language.kerML.Connectors.Connector|net.akehurst.language.kerML.Connectors.BindingConnector|net.akehurst.language.kerML.Connectors.Succession|net.akehurst.language.kerML.Interactions.Flow|net.akehurst.language.kerML.Interactions.SuccessionFlow|net.akehurst.language.kerML.Namespaces.AliasMember from $previous.name else assignmentTargetParameter.nonFeatureChainPrimaryExpression.qualifiedName.name } }
+    }

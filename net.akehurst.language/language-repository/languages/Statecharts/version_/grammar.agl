@@ -123,7 +123,7 @@ grammar Global : Expressions {
     StatechartSpecification = Namespace? Annotation* StatechartLevelDeclaration* ;
     Namespace = 'namespace' FQN ;
     StatechartLevelDeclaration = Interface | InternalDeclarations | ImportDeclarations ;
-    Interface = 'interface' ID? ':' AnnotatedDeclaration* ;
+    Interface = 'interface' Name? ':' AnnotatedDeclaration* ;
     AnnotatedDeclaration = Annotation* MemberDeclaration ;
     MemberDeclaration
         = VariableDeclaration
@@ -131,11 +131,11 @@ grammar Global : Expressions {
         | AliasDeclaration
         | OperationDeclaration
         ;
-    VariableDeclaration = VariableDeclarationKind ('readonly'?) ID (':' TypeSpecifier)? ('=' Expression)? ;
+    VariableDeclaration = VariableDeclarationKind ('readonly'?) Name (':' TypeSpecifier)? ('=' Expression)? ;
     VariableDeclarationKind = 'const' | 'var' ;
-    EventDeclaration = Direction? 'event' ID (':' TypeSpecifier)? ;
-    AliasDeclaration = 'alias' ID ':' TypeSpecifier ;
-    OperationDeclaration = 'operation' ID '(' ParameterList ')' (':' TypeSpecifier)? ;
+    EventDeclaration = Direction? 'event' Name (':' TypeSpecifier)? ;
+    AliasDeclaration = 'alias' Name ':' TypeSpecifier ;
+    OperationDeclaration = 'operation' Name '(' ParameterList ')' (':' TypeSpecifier)? ;
     ParameterList = [Parameter / ',']* ;
     InternalDeclarations = 'internal' ':' InternalDeclaration*;
     InternalDeclaration = AnnotatedDeclaration | LocalReaction ;
@@ -144,8 +144,11 @@ grammar Global : Expressions {
 
     Direction = 'in' | 'out' ;
 
+    // the name of a declaration: any identifier except the trigger keywords
+    leaf Name = "(?!(after|every|entry|exit|always|oncycle)(?![a-zA-Z_0-9]))[a-zA-Z_][a-zA-Z_0-9]*" ;
+
     Annotation = '@' FQN ('(' (Expression (',' Expression)*)? ')')?;
-    Parameter = ID ('...')? ':' TypeSpecifier;
+    Parameter = Name ('...')? ':' TypeSpecifier;
     LocalReaction = ReactionTrigger '/' ReactionEffect ;
 
     ReactionTrigger = EventSpecList Guard? | Guard ;

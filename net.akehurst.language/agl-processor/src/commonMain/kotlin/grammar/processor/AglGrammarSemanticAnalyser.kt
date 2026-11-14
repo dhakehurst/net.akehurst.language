@@ -16,6 +16,8 @@
 
 package net.akehurst.language.grammar.processor
 
+import net.akehurst.language.regex.api.RegexEngineKind
+import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
@@ -30,6 +32,7 @@ import net.akehurst.language.automaton.leftcorner.ParserStateSet
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.asm.GrammarRuleAbstract
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
@@ -107,6 +110,8 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 this.checkRuleUsage(grammar)
                 this.checkForDuplicates(grammar)
                 this.checkPreferenceRules(grammar)
+                this.checkLeafChoices(grammar)
+                this.checkOptions(grammar)
                 if (this@AglGrammarSemanticAnalyser._issues.errors.isEmpty() && _analyseAmbiguities) {
                     this.checkForAmbiguities(grammar, automatonKind)
                 }
@@ -125,6 +130,38 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
             this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
         } else {
             ref.resolveAs(g)
+        }
+    }
+
+    /**
+     * A leaf is matched with one regex, and a regex takes the first alternative of a choice that matches.
+     * The alternatives of a longest choice ('|') are put longest first when they all have a fixed length,
+     * otherwise their order is kept and the longest match is not guaranteed, so warn.
+     */
+    private fun checkOptions(grammar: Grammar) {
+        val scanner = grammar.options.get<Any>(AglGrammar.OPTION_scanner)
+        if (null != scanner && null == ScannerKind.entries.firstOrNull { it.name == scanner.toString() }) {
+            issueWarn(grammar, "Grammar option '${AglGrammar.OPTION_scanner}' has value '$scanner', expected one of ${ScannerKind.entries.joinToString { it.name }}", null)
+        }
+        val regexEngine = grammar.options.get<Any>(AglGrammar.OPTION_regexEngine)
+        if (null != regexEngine && null == RegexEngineKind.entries.firstOrNull { it.name == regexEngine.toString() }) {
+            issueWarn(grammar, "Grammar option '${AglGrammar.OPTION_regexEngine}' has value '$regexEngine', expected one of ${RegexEngineKind.entries.joinToString { it.name }}", null)
+        }
+    }
+
+    private fun checkLeafChoices(grammar: Grammar) {
+        grammar.grammarRule.forEach { rule ->
+            val rhs = rule.rhs
+            if (rule.isLeaf && rhs is ChoiceLongest && rhs.alternative.size > 1) {
+                val lengths = rhs.alternative.map { GrammarRuleAbstract.leafLength(it) }
+                if (lengths.any { it.isFixed.not() }) {
+                    issueWarn(
+                        rule,
+                        "Leaf rule '${rule.name}' is a choice with an alternative that can match a varying number of characters, the first alternative that matches is taken, not the longest.",
+                        null
+                    )
+                }
+            }
         }
     }
 
@@ -244,8 +281,13 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
             is Choice -> rhs.alternative.forEach { analyseRuleItem(context, grammar, it) }
             is Group -> analyseRuleItem(context, grammar, rhs.groupedContent)
             is OptionalItem -> analyseRuleItem(context, grammar, rhs.item)
-            is SimpleList -> analyseRuleItem(context, grammar, rhs.item)
+            is SimpleList -> {
+                if (0 == rhs.max) issueError(rhs, "A list must have a maximum greater than 0", null)
+                analyseRuleItem(context, grammar, rhs.item)
+            }
+
             is SeparatedList -> {
+                if (0 == rhs.max) issueError(rhs, "A list must have a maximum greater than 0", null)
                 analyseRuleItem(context, grammar, rhs.item)
                 analyseRuleItem(context, grammar, rhs.separator)
             }

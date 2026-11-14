@@ -92,24 +92,33 @@ class Matchable(
     val kind: MatchableKind
 ) {
     // create this so Regex is cached
+    // a Matchable belongs to a rule, so it is shared by every scanner (one per parse) of the rule set; a Regex can be used by several threads
+    @kotlin.concurrent.Volatile
     private var _regEx: Regex? = null
+    @kotlin.concurrent.Volatile
+    private var _regExEngine: RegexEngine? = null
 
     fun using(regexEngine: RegexEngine): Matchable {
-        _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression.escapedForRegex) else null
+        if (regexEngine !== _regExEngine) { // do not create the Regex again for each new scanner
+            _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression.escapedForRegex) else null
+            _regExEngine = regexEngine
+        }
         return this
     }
 
     /**
-     * true if the expression matches the text at the given position
+     * true if the expression matches the text at the given position.
+     * A scanner does not accept an empty match, so a REGEX that matches only the empty string is not a match.
      */
     fun isLookingAt(sentence: Sentence, atPosition: Int): Boolean = when (kind) {
         MatchableKind.EOT -> atPosition >= sentence.text.length
         MatchableKind.LITERAL -> sentence.text.regionMatches(atPosition, expression.value, 0, expression.value.length)
-        MatchableKind.REGEX -> _regEx!!.matchesAt(sentence.text, atPosition)
+        MatchableKind.REGEX -> _regEx!!.matchesAt(sentence.text, atPosition) && matchedLength(sentence, atPosition) > 0
     }
 
     /**
-     * length of text matched at the given position, -1 if no match
+     * length of text matched at the given position, -1 if no match.
+     * A scanner does not accept an empty match, so a REGEX that matches only the empty string gives -1.
      */
     fun matchedLength(sentence: Sentence, atPosition: Int): Int = when (kind) {
         MatchableKind.EOT -> if (atPosition >= sentence.text.length) 0 else -1
@@ -120,7 +129,8 @@ class Matchable(
 
         MatchableKind.REGEX -> {
             val m = _regEx!!.matchAt(sentence.text, atPosition)
-            m?.matchedText?.length ?: -1
+            val len = m?.matchedText?.length ?: -1
+            if (0 == len) -1 else len
         }
     }
 

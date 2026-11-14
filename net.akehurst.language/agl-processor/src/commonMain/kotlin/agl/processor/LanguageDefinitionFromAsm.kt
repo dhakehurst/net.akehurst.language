@@ -50,6 +50,8 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
 
     override val formatString: FormatString? get() = FormatString(this.formatter?.formatDomain?.asString() ?: "")
 
+    override val completionString: CompletionString? get() = this.processor?.completionDomain?.asString()?.let { CompletionString(it) }
+
     init {
         this._issues.clear()
 
@@ -80,7 +82,8 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         asmTransformStr: AsmTransformString?,
         crossReferenceStr: CrossReferenceString?,
         styleStr: StyleString?,
-        formatStr: FormatString?
+        formatStr: FormatString?,
+        completionStr: CompletionString?
     ) {
         error("Cannot update a LanguageDefinitionFromAsm")
     }

@@ -112,7 +112,7 @@ class test_Concatination_with_skip {
 
         val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "a"
+            "b"
         )
         assertEquals(expected, actual)
     }
@@ -124,7 +124,7 @@ class test_Concatination_with_skip {
 
         val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "a"
+            "b"
         )
         assertEquals(expected, actual)
     }
@@ -136,7 +136,7 @@ class test_Concatination_with_skip {
 
         val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "a"
+            "b"
         )
         assertEquals(expected, actual)
     }
@@ -148,7 +148,7 @@ class test_Concatination_with_skip {
 
         val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "b"
+            "c"
         )
         assertEquals(expected, actual)
     }

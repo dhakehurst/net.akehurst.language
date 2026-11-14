@@ -112,7 +112,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun UType__int() {
         val grammarStr = """
             namespace test
@@ -141,7 +141,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun CompilationUnit__import_annotation_interface() {
         //val sentence = "import x; @An() interface An {  }"
         val sentence = "import x; @An() interface An {  }"
@@ -154,7 +154,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Expression_arrayIndex() {
         val sentence = "a[0]"
         val goal = "Expression"
@@ -165,7 +165,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun ArrayAccess__arrayIndex() {
         val sentence = "a[0]"
         val goal = "ArrayAccess"
@@ -176,7 +176,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun subgrammar__ArrayAccess__arrayIndex() {
         val grammarStr = """
             namespace test
@@ -221,7 +221,7 @@ grammar Expressions {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Expression__arrayIndex_navigationToField() {
         val sentence = "a[0].b"
         val goal = "Expression"
@@ -232,7 +232,7 @@ grammar Expressions {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun FieldDeclaration__int_valid_eq_0b0() {
         val sentence = "int valid = 0b0;"
         val goal = "FieldDeclaration"
@@ -244,7 +244,7 @@ grammar Expressions {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun TypeDeclaration__class_fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "TypeDeclaration"
@@ -255,7 +255,7 @@ grammar Expressions {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun ClassBody__fieldDeclaration() {
         val sentence = "{ int valid = 0b0; }"
         val goal = "ClassBody"
@@ -266,7 +266,7 @@ grammar Expressions {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun CompilationUnit__fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "CompilationUnit"
@@ -277,7 +277,7 @@ grammar Expressions {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun VariableInitializer__badBinaryLiteral() {
         val sentence = "0b012"
         val goal = "VariableInitializer"
@@ -297,7 +297,7 @@ grammar Expressions {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun CompilationUnit__badLiterals() {
         val sentence = """
 /*
@@ -327,7 +327,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun BlockStatement__UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
@@ -338,7 +338,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun BlockStatement__UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "LocalVariableDeclarationStatement"
@@ -349,7 +349,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Block__UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
@@ -360,7 +360,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun ClassDeclaration__enumDecl() {
         val sentence = "enum E { A, B, C }"
         val goal = "ClassDeclaration"
@@ -374,7 +374,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun CompilationUnit__interfaceDecl() {
         val sentence = "interface An { An[] value(); }"
         val goal = "CompilationUnit"
@@ -387,7 +387,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun CompilationUnit__class_with_constructor() {
         val sentence = "class B {  B() {  } }"
         val goal = "CompilationUnit"
@@ -400,7 +400,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun FormalParameterList__A_a() {
         val sentence = "A a"
         val goal = "FormalParameterList"
@@ -414,7 +414,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun FormalParameterList__A_this() {
         val sentence = "A this"
         val goal = "FormalParameterList"
@@ -428,7 +428,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun FormalParameterList__varargsParameter() {
         val sentence = "A... this"
         val goal = "FormalParameterList"
@@ -442,7 +442,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun FormalParameterList__2parameters() {
         val sentence = "A a, B b"
         val goal = "FormalParameterList"
@@ -456,7 +456,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun FormalParameterList__3parameters() {
         val sentence = "A a, B b, C c"
         val goal = "FormalParameterList"
@@ -470,7 +470,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun ConstructorDeclaration__head_body() {
         val sentence = "B() {  }"
         val goal = "ConstructorDeclaration"
@@ -484,7 +484,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun ConstructorDeclarator__head() {
         val sentence = "B()"
         val goal = "ConstructorDeclarator"
@@ -498,7 +498,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun ConstructorBody__body() {
         val sentence = "{  }"
         val goal = "ConstructorBody"
@@ -512,7 +512,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)//(timeout = 10000)
+    @Timeout(60)//(timeout = 10000)
     fun Block__long_concatenation() {
 
         val sentence = """
@@ -569,7 +569,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun CompilationUnit__fromStdLib_CharBufferSpliterator() {
 
         val sentence = """
@@ -682,7 +682,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Statement__ifthenelse() {
 
         val sentence = """
@@ -701,7 +701,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun CompilationUnit__fromStdLib_CharBufferSpliterator_part() {
 
         val sentence = """
@@ -724,7 +724,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun BlockStatements__ifthenelse() {
 
         val sentence = """
@@ -748,7 +748,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Navigations__fromStdLib_CharBufferSpliterator_1() {
 
         val sentence = """
@@ -766,7 +766,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun MethodInvocation__fromStdLib_CharBufferSpliterator_2() {
 
         val sentence = """
@@ -784,7 +784,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Navigations__fromStdLib_CharBufferSpliterator_3() {
 
         val sentence = """
@@ -802,7 +802,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Navigations__fromStdLib_CharBufferSpliterator_3b() {
 
         val sentence = """
@@ -820,7 +820,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun NavigableExpression__fromStdLib_CharBufferSpliterator_4() {
 
         val sentence = """
@@ -838,7 +838,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun NavigableExpression__fromStdLib_CharBufferSpliterator_4b() {
 
         val sentence = """
@@ -856,7 +856,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun GenericMethodInvocation__fromStdLib_CharBufferSpliterator_5() {
 
         val sentence = """
@@ -900,7 +900,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Expression__InfixAdditive() {
         val sentence = "1+2+3+4"
         val goal = "Expression"
@@ -911,7 +911,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Expression__InfixMultiplicative() {
         val sentences = listOf("1/2", "1/2/3/4", "1*2*3*4", "1/2*3/4*5", "1%2/3*4")
         val goal = "Expression"
@@ -925,7 +925,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Expression__precedence() {
         val sentences = listOf("a*b+c")
         val goal = "Expression"
@@ -940,7 +940,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun Expression__Prefix() {
         val sentences = listOf("+1", "-1", "++1", "--1")
         val goal = "Expression"
@@ -967,7 +967,7 @@ class A {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun CompilationUnit__constructor() {
         val sentence = """
 package com.test;

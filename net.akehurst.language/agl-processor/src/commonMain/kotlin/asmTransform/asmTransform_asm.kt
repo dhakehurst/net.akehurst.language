@@ -52,10 +52,8 @@ class AsmTransformDomainDefault(
                     semanticAnalysis { sentenceContext(context) }
                 }
             )
-            return when {
-                res.allIssues.errors.isEmpty() -> res
-                else -> error(res.allIssues.toString())
-            }
+            // errors are returned as issues of the result (as TypesDomainSimple.fromString does), not thrown
+            return res
         }
 
         fun fromGrammarDomain(

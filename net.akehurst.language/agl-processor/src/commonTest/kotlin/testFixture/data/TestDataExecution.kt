@@ -44,6 +44,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
         typeStr = testData.typeStr?.let { TypesString(it) },
         transformStr = testData.transformStr?.let { AsmTransformString(it) },
         referenceStr = testData.referenceStr?.let { CrossReferenceString(it) },
+        completionStr = testData.completionStr?.let { CompletionString(it) },
         grammarAglOptions = Agl.options {
             semanticAnalysis {
                 sentenceContext(contextFromGrammarRegistry(Agl.registry))

@@ -30,20 +30,14 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.*
 
-@Ignore // Kerml grammars need updating
 class test_KerML_agl_Singles {
 
     private companion object {
-        private val languagePathStr = "/KerML/v2_2023-08/grammars/agl"
+        private val languagePathStr = "/KerML/v2_2026-09/grammars/agl"
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
-        private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
-        val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
-            Agl.processorFromStringSimple(
-                grammarDefinitionStr = GrammarString(grammarStr),
-                referenceStr = CrossReferenceString(crossReferenceModelStr)
-            ).processor!!
-        }
+        // with its references.agl and style.agl
+        val processor: LanguageProcessor<Asm, SentenceContext> by lazy { KerML_v2_2026_09.processorWithReferences() }
 
         fun test_process(sentence: String, context: SentenceContext, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
@@ -51,7 +45,8 @@ class test_KerML_agl_Singles {
                     sentenceContext(context)
                 }
             })
-            assertEquals(expIssues, result.allIssues.all, result.allIssues.toString())
+            // only errors: the KerML library is not in the context, so the implicit specializations ('inherit named') give warnings
+            assertEquals(expIssues, result.allIssues.errors.toSet(), result.allIssues.toString())
         }
     }
 
@@ -184,7 +179,7 @@ class test_KerML_agl_Singles {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(17, 1, 2, 16, null),
-                "(String,com.itemis.sysml.kerml.cst.KerML.DataType) already exists in scope //", null
+                "'String' with type 'net.akehurst.language.kerML.Classes.DataType' already exists in scope /", null
             )
         )
 

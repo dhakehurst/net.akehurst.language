@@ -19,6 +19,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
 import testFixture.utils.parseError
 import kotlin.test.*
@@ -53,6 +54,27 @@ class test_Agl_processorFromStringSimple_parse {
     @BeforeTest
     fun before() {
         //Agl.registry.agl.grammar.processor?.buildFor()
+    }
+
+    @Test
+    fun rule_not_found_is_an_issue() {
+        val g = "namespace ns grammar Test { S = b; }"
+        val pr = Agl.processorFromStringSimple(GrammarString(g))
+        assertNull(pr.processor)
+        assertEquals(listOf("GrammarRule 'b' not found in grammar 'Test'"), pr.issues.errors.map { it.message })
+    }
+
+    @Test
+    fun rule_from_grammar_not_extended_is_an_issue() {
+        // B is defined in grammar Other, which Test does not extend
+        val g = """
+            namespace ns
+            grammar Other { B = 'b' ; }
+            grammar Test { S = 'a' | B ; }
+        """.trimIndent()
+        val pr = Agl.processorFromStringSimple(GrammarString(g))
+        assertNull(pr.processor)
+        assertEquals(listOf("GrammarRule 'B' not found in grammar 'Test'"), pr.issues.errors.map { it.message })
     }
 
     @Test
@@ -361,8 +383,8 @@ class test_Agl_processorFromStringSimple_parse {
     }
 
     @Test
-    fun literal_choice_priority() {
-
+    fun priority_choice_is_a_syntax_error() {
+        // '<' (priority choice) was removed from the grammar language, use '|'
         val grammarStr = """
             namespace test
             grammar Test {
@@ -371,50 +393,9 @@ class test_Agl_processorFromStringSimple_parse {
         """.trimIndent()
 
         val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
-        assertNotNull(pr.processor)
-
-        val result = pr.processor!!.parse("b");
-        val expected = pr.processor!!.spptParser.parse(
-            """
-             abc|1 { 'b' }
-        """
-        )
-        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
-//        assertEquals(expected, result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(pr.issues.errors.isNotEmpty())
+        assertEquals(LanguageProcessorPhase.PARSE, pr.issues.errors.first().phase)
     }
-
-    @Test
-    fun nonTerminal_choice_priority() {
-
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                choice = a < b < c < d < e < f < g;
-                a = 'a' ;
-                b = 'b' ;
-                c = 'c' ;
-                d = 'd' ;
-                e = 'e' ;
-                f = 'f' ;
-                g = 'g' ;
-            }
-        """.trimIndent()
-
-        val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
-        assertNotNull(pr.processor)
-
-        val result = pr.processor!!.parse("f");
-        val expected = pr.processor!!.spptParser.parse(
-            """
-             choice|5 { f { 'f' } }
-        """
-        )
-        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
-//        assertEquals(expected, result.sppt)
-        assertTrue(result.issues.isEmpty())
-    }
-
     @Test
     fun literal_optional() {
 

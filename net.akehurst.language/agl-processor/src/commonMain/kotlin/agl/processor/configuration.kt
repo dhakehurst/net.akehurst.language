@@ -17,6 +17,8 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.completion.asm.AglCompletionDomainDefault
+import net.akehurst.language.completion.processor.completionProviderWithDefinitions
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.CompletionProviderSimple
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
@@ -36,6 +38,10 @@ import net.akehurst.language.regex.agl.RegexEngineAgl
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.regex.api.RegexEngineKind
 import net.akehurst.language.scanner.api.ScannerKind
+import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.style.asm.AglStyleDomainDefault
@@ -52,6 +58,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
     override val crossReferenceString: CrossReferenceString? = null,
     override val styleString: StyleString? = null,
     override val formatString: FormatString? = null,
+    override val completionString: CompletionString? = null,
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
@@ -65,6 +72,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
 
     override var formatResolver: FormatResolver<AsmType, ContextType>? = null,
     override var styleResolver: StyleResolver<AsmType, ContextType>? = null,
+    override var completionResolver: CompletionResolver<AsmType, ContextType>? = null,
     override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = null
 
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
@@ -79,26 +87,17 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override val crossReferenceString: CrossReferenceString? = null,
     override val styleString: StyleString? = null,
     override val formatString: FormatString? = null,
+    override val completionString: CompletionString? = null,
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
 
-    override val scannerResolver: ScannerResolver<AsmType, ContextType>? = {
-        val regexEngine = when (regexEngineKind) {
-            RegexEngineKind.PLATFORM -> RegexEnginePlatform
-            RegexEngineKind.AGL -> RegexEngineAgl
-        }
-        val scanner = when (scannerKind) {
-            ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
-            ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
-        }
-        ProcessResultDefault(scanner)
-    },
+    override val scannerResolver: ScannerResolver<AsmType, ContextType>? = { defaultScannerFor(it, scannerKind, regexEngineKind) },
     override val parserResolver: ParserResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) })
     },
     override var typesResolver: TypesResolver<AsmType, ContextType>? = { p ->
-        TypesDomainSimple.fromString(SimpleName("FromGrammar" + p.grammarDomain!!.name.value), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
+        TypesDomainSimple.fromString((p.targetGrammar?.name ?: p.grammarDomain!!.name), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>? = null,
     override var transformResolver: TransformResolver<AsmType, ContextType>? = { p ->
@@ -117,7 +116,13 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
     },
-    override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = null,
+    override var completionResolver: CompletionResolver<AsmType, ContextType>? = { p ->
+        AglCompletionDomainDefault.fromString(p.grammarDomain?.let { contextFromGrammar(it) }, p.configuration.completionString ?: CompletionString(""))
+    },
+    // no default provider, but the completion definitions (completionString) are applied to the default items, if there are any
+    override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = { p ->
+        completionProviderWithDefinitions(p, null)
+    },
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class LanguageProcessorConfigurationSimple(
@@ -130,27 +135,18 @@ internal class LanguageProcessorConfigurationSimple(
     override val crossReferenceString: CrossReferenceString? = null,
     override val styleString: StyleString? = null,
     override val formatString: FormatString? = null,
+    override val completionString: CompletionString? = null,
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
-    override val scannerResolver: ScannerResolver<Asm, SentenceContext>? = {
-        val regexEngine = when (regexEngineKind) {
-            RegexEngineKind.PLATFORM -> RegexEnginePlatform
-            RegexEngineKind.AGL -> RegexEngineAgl
-        }
-        val scanner = when (scannerKind) {
-            ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
-            ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
-        }
-        ProcessResultDefault(scanner)
-    },
+    override val scannerResolver: ScannerResolver<Asm, SentenceContext>? = { defaultScannerFor(it, scannerKind, regexEngineKind) },
     override val parserResolver: ParserResolver<Asm, SentenceContext>? = { p ->
         ProcessResultDefault(
             p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) },
         )
     },
     override var typesResolver: TypesResolver<Asm, SentenceContext>? = { p ->
-        TypesDomainSimple.fromString(SimpleName("FromGrammar" + p.grammarDomain!!.name.value), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
+        TypesDomainSimple.fromString((p.targetGrammar?.name ?: p.grammarDomain!!.name), contextFromGrammar(p.grammarDomain!!), p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactorySimple>? = { AsmFactorySimple() },
     override val transformResolver: TransformResolver<Asm, SentenceContext>? = { p ->
@@ -177,9 +173,42 @@ internal class LanguageProcessorConfigurationSimple(
     override var styleResolver: StyleResolver<Asm, SentenceContext>? = { p ->
         AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
     },
+    override var completionResolver: CompletionResolver<Asm, SentenceContext>? = { p ->
+        AglCompletionDomainDefault.fromString(p.grammarDomain?.let { contextFromGrammar(it) }, p.configuration.completionString ?: CompletionString(""))
+    },
     override var completionProviderResolver: CompletionProviderResolver<Asm, SentenceContext>? = { p ->
-        ProcessResultDefault(
+        // the completion definitions (completionString), if any, are applied to the items of the simple provider
+        completionProviderWithDefinitions(
+            p,
             CompletionProviderSimple(p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typesDomain, p.crossReferenceDomain),
         )
     }
 ) : LanguageProcessorConfiguration<Asm, SentenceContext>
+
+/**
+ * Creates the scanner for the target grammar of [processor].
+ * The grammar options '#scanner' and '#regexEngine' take priority over [scannerKind] and [regexEngineKind].
+ * (An explicit 'scanner(...)' in a configuration replaces this resolver, so it takes priority over the grammar options.)
+ */
+internal fun defaultScannerFor(processor: LanguageProcessor<*, *>, scannerKind: ScannerKind, regexEngineKind: RegexEngineKind): ProcessResult<Scanner> {
+    val issues = IssueHolder(LanguageProcessorPhase.ALL)
+    val options = processor.targetGrammar?.options
+    val sk = options?.get<Any>(AglGrammar.OPTION_scanner)?.let { v ->
+        ScannerKind.entries.firstOrNull { it.name == v.toString() }
+            ?: null.also { issues.warn(null, "Grammar option '${AglGrammar.OPTION_scanner}' has value '$v', using '${scannerKind.name}'") }
+    } ?: scannerKind
+    val rek = options?.get<Any>(AglGrammar.OPTION_regexEngine)?.let { v ->
+        RegexEngineKind.entries.firstOrNull { it.name == v.toString() }
+            ?: null.also { issues.warn(null, "Grammar option '${AglGrammar.OPTION_regexEngine}' has value '$v', using '${regexEngineKind.name}'") }
+    } ?: regexEngineKind
+    val regexEngine = when (rek) {
+        RegexEngineKind.PLATFORM -> RegexEnginePlatform
+        RegexEngineKind.AGL -> RegexEngineAgl
+    }
+    val terminals = processor.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList()
+    val scanner = when (sk) {
+        ScannerKind.Classic -> ScannerClassic(regexEngine, terminals)
+        ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, terminals)
+    }
+    return ProcessResultDefault(scanner, processIssues = issues)
+}

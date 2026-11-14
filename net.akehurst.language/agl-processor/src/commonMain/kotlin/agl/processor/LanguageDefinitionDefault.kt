@@ -57,17 +57,20 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     override var formatString: FormatString? = null; private set
 
+    override var completionString: CompletionString? = null; private set
+
     init {
         updateFromConfigurationWithoutNotification(initialConfiguration)
     }
 
-    override fun update(grammarString: GrammarString?, typesString: TypesString?, asmTransformString: AsmTransformString?, crossReferenceString: CrossReferenceString?, styleString: StyleString?, formatString: FormatString?) {
+    override fun update(grammarString: GrammarString?, typesString: TypesString?, asmTransformString: AsmTransformString?, crossReferenceString: CrossReferenceString?, styleString: StyleString?, formatString: FormatString?, completionString: CompletionString?) {
         val oldGrammarStr = this.grammarString
         val oldTypesStr = this.typesString
         val oldTransformStr = this.asmTransformString
         val oldCrossReferenceStr = this.crossReferenceString
         val oldStyleStr = this.styleString
         val oldFormatStr = this.formatString
+        val oldCompletionStr = this.completionString
 
         val newConfig = Agl.configuration(base = this.configuration) {
             grammarString?.let { grammarString(it) }
@@ -76,6 +79,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             crossReferenceString?.let { crossReferenceString(it) }
             styleString?.let { styleString(it) }
             formatString?.let { formatString(it) }
+            completionString?.let { completionString(it) }
         }
         updateFromConfigurationWithoutNotification(newConfig)
 
@@ -85,6 +89,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         notifyCrossReferenceStringObservers(oldCrossReferenceStr, this.crossReferenceString)
         notifyStyleStringObservers(oldStyleStr, this.styleString)
         notifyFormatStringObservers(oldFormatStr, this.formatString)
+        notifyCompletionStringObservers(oldCompletionStr, this.completionString)
     }
 
     fun updateFromConfigurationWithoutNotification(configuration: LanguageProcessorConfiguration<AsmType, ContextType>) {
@@ -106,6 +111,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this.crossReferenceString = configuration.crossReferenceString
         this.styleString = configuration.styleString
         this.formatString = configuration.formatString
+        this.completionString = configuration.completionString
 
 //        this._scannerResolver = configuration.scannerResolver
 //        this._parserResolver = configuration.parserResolver
@@ -164,6 +170,12 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     private fun notifyStyleStringObservers(oldValue: StyleString?, newValue: StyleString?) {
         if (oldValue != newValue) {
             styleStrObservers.forEach { it.invoke(oldValue, newValue) }
+        }
+    }
+
+    private fun notifyCompletionStringObservers(oldValue: CompletionString?, newValue: CompletionString?) {
+        if (oldValue != newValue) {
+            completionStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
 
