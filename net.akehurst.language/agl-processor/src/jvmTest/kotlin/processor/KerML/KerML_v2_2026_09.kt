@@ -70,16 +70,27 @@ object KerML_v2_2026_09 {
 
     private val packageRegex = Regex("^\\s*(?:library\\s+|standard\\s+)*package\\s+('[^']+'|\\w+)", RegexOption.MULTILINE)
 
-    /** the files of 'folder' (other than f) whose top-level packages f uses (as 'P::'), transitively */
-    fun usedFiles(f: File, folder: List<File>): List<File> {
-        val pkgs = folder.associateWith { g -> packageRegex.findAll(g.readText()).map { it.groupValues[1] }.toList() }
+    /**
+     * the files of 'files' (other than f) whose top-level packages f uses (as 'P::'), transitively.
+     * A package is taken from the folder of the file that uses it; if no file there defines it, from the first file (of 'files') that does.
+     */
+    fun usedFiles(f: File, files: List<File>): List<File> {
+        val pkgs = files.associateWith { g -> packageRegex.findAll(g.readText()).map { it.groupValues[1] }.toList() }
+        val definedBy = mutableMapOf<String, MutableList<File>>()
+        pkgs.forEach { (g, ps) -> ps.forEach { definedBy.getOrPut(it) { mutableListOf() }.add(g) } }
         val used = mutableListOf<File>()
         val todo = mutableListOf(f)
         while (todo.isNotEmpty()) {
-            val t = todo.removeAt(0).readText()
-            for (g in folder) {
-                if (g != f && g !in used && pkgs[g]!!.any { t.contains("$it::") }) {
-                    used.add(g); todo.add(g)
+            val u = todo.removeAt(0)
+            val t = u.readText()
+            for ((pkg, defs) in definedBy) {
+                if (t.contains("$pkg::")) {
+                    val sameFolder = defs.filter { it.parentFile == u.parentFile }
+                    for (g in sameFolder.ifEmpty { defs.take(1) }) {
+                        if (g != f && g !in used) {
+                            used.add(g); todo.add(g)
+                        }
+                    }
                 }
             }
         }
@@ -88,13 +99,13 @@ object KerML_v2_2026_09 {
 
     /**
      * processes each of 'files' with references checked, in a context holding the libraries ('libraryContext')
-     * and the files of the same folder that it uses (see usedFiles).
+     * and the files that it uses (see usedFiles).
      * Returns the files (relative to 'baseDir') that have errors.
      */
     fun filesWithReferenceErrors(processor: LanguageProcessor<Asm, SentenceContext>, files: List<File>, libraryContext: SentenceContext, baseDir: File): Set<String> =
         files.filter { f ->
             val ctx = libraryContext.union(contextAsmSimple())
-            processFiles(processor, usedFiles(f, files.filter { it.parentFile == f.parentFile }), ctx, false)
+            processFiles(processor, usedFiles(f, files), ctx, false)
             processFiles(processor, listOf(f), ctx, true).isNotEmpty()
         }.map { it.relativeTo(baseDir).invariantSeparatorsPath }.toSet()
 }
