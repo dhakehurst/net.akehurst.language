@@ -66,6 +66,19 @@ class IssueHolder(
         this.addAll(other.all)
     }
 
+    /**
+     * runs 'action'; if 'drop' is true for its result, the issues of kind 'kind' that 'action' raised are removed again
+     * (issues that were already held before are kept)
+     */
+    fun <T> dropIssuesRaisedIf(kind: LanguageIssueKind, action: () -> T, drop: (result: T) -> Boolean): T {
+        val before = _issues.toSet()
+        val result = action()
+        if (drop(result) && _issues.size > before.size) {
+            _issues.removeAll { it.kind == kind && it !in before }
+        }
+        return result
+    }
+
     override val size: Int get() = this._issues.size
     override fun iterator(): Iterator<LanguageIssue> = this._issues.iterator()
     override fun isEmpty(): Boolean = this._issues.isEmpty()

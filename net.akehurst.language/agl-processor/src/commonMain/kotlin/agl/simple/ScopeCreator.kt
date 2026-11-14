@@ -50,6 +50,13 @@ class ScopeCreator(
 
     val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
 
+    /**
+     * the items added to a scope by this ScopeCreator (i.e. in this processing of the sentence): scope -> name -> (element, its type).
+     * A second element with the same name (and a conforming type) in the same scope is a duplicate definition.
+     * Items of the same sentence from an earlier processing (reprocessing the sentence) are not in here, so they are replaced, not reported.
+     */
+    private val addedInThisRun = mutableMapOf<Scope, MutableMap<String, MutableList<Pair<AsmStructure, QualifiedName>>>>()
+
     override  fun beforeRoot(root: Any) {
         // the root element owns the root scope of the sentence (it is not an item in any scope), so that a 'scope' block for its type applies (e.g. imports at file level)
         if (root is AsmStructure) {
@@ -212,8 +219,27 @@ class ScopeCreator(
             itemType.conformsTo(requireType)
         }
         val notSameLocation = existingItems.filter { it.location != this.locationMap[el]?.sentenceIdentity }
+        val addedInScope = addedInThisRun.getOrPut(scope) { mutableMapOf() }.getOrPut(referableName) { mutableListOf() }
+        val duplicateInThisRun = addedInScope.any { (other, otherTypeName) ->
+            other !== el && run {
+                val itemType = typesDomain.findByQualifiedNameOrNull(otherTypeName) ?: error("Type not found '${otherTypeName.value}'")
+                val requireType = typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName) ?: error("Type not found '${el.qualifiedTypeName.value}'")
+                itemType.conformsTo(requireType)
+            }
+        }
         when {
+            duplicateInThisRun -> {
+                // defined twice in this sentence
+                this.ifItemAlreadyExistsInScopeIssueKind?.let {
+                    issues.raise(
+                        it, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                        this.locationMap[el], "'$referableName' with type '${el.qualifiedTypeName}' already exists in scope $scope"
+                    )
+                }
+            }
+
             notSameLocation.isEmpty() -> {
+                addedInScope.add(Pair(el, el.qualifiedTypeName))
                 scope.addToScope(referableName, el.qualifiedTypeName, this.locationMap[el]?.sentenceIdentity, scopeItem, replaceIfItemAlreadyExistsInScope)
                 // can also set the semantic identity of the AsmStructure
                 if (isFurtherName.not()) el.semanticQualifiedPath = scope.scopePath + referableName

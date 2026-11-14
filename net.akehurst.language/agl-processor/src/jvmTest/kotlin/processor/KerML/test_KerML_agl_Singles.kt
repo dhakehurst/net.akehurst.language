@@ -36,11 +36,8 @@ class test_KerML_agl_Singles {
         private val languagePathStr = "/KerML/v2_2026-09/grammars/agl"
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
 
-        val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
-            Agl.processorFromStringSimple(
-                grammarDefinitionStr = GrammarString(grammarStr)
-            ).processor!!
-        }
+        // with its references.agl and style.agl
+        val processor: LanguageProcessor<Asm, SentenceContext> by lazy { KerML_v2_2026_09.processorWithReferences() }
 
         fun test_process(sentence: String, context: SentenceContext, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
@@ -48,7 +45,7 @@ class test_KerML_agl_Singles {
                     sentenceContext(context)
                 }
             })
-            // only errors: the processor has no references, so there is a warning 'Empty CrossReferenceDomain'
+            // only errors: the KerML library is not in the context, so the implicit specializations ('inherit named') give warnings
             assertEquals(expIssues, result.allIssues.errors.toSet(), result.allIssues.toString())
         }
     }
@@ -167,9 +164,6 @@ class test_KerML_agl_Singles {
         test_process(sentence, contextAsmSimple(), emptySet())
     }
 
-    // TODO(David): with KerML_v2_2026_09.processorWithReferences() (references.agl) the duplicate 'datatype String' gives no error,
-    //  only warnings from evaluating the references ("Cannot get property 'name' on ${'$'}nothing", "Executing property 'shortName' on 'FeatureName' results in null")
-    @Ignore
     @Test
     fun semanticAnalysis_RootNamespace_name_clash() {
         val sentence = """
@@ -185,7 +179,7 @@ class test_KerML_agl_Singles {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(17, 1, 2, 16, null),
-                "(String,net.akehurst.language.kerML.KerMLv1_1.DataType) already exists in scope //", null
+                "'String' with type 'net.akehurst.language.kerML.Classes.DataType' already exists in scope /", null
             )
         )
 
