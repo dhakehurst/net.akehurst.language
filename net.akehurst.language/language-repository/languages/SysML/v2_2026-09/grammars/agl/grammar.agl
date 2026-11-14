@@ -562,16 +562,23 @@ grammar Connections : Ports {
     // SysML 8.2.2.16 Flows Textual Notation
     FlowDefinition = OccurrenceDefinitionPrefix 'flow' 'def' Definition ;
     Message = OccurrenceUsagePrefix 'message' MessageDeclaration DefinitionBody ;
+    // tailored: the alternatives are rules, so each has a type (a named message has a 'usageDeclaration')
     MessageDeclaration
-        = UsageDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' OwnedReferenceSubsetting 'to' OwnedReferenceSubsetting )?
-        | OwnedReferenceSubsetting 'to' OwnedReferenceSubsetting
+        = MessageDeclarationNamed
+        | MessageDeclarationUnnamed
     ;
+    MessageDeclarationNamed = UsageDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' OwnedReferenceSubsetting 'to' OwnedReferenceSubsetting )? ;
+    MessageDeclarationUnnamed = OwnedReferenceSubsetting 'to' OwnedReferenceSubsetting ;
     FlowUsage = OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody ;
     SuccessionFlowUsage = OccurrenceUsagePrefix 'succession' 'flow' FlowDeclaration DefinitionBody ;
+    // tailored: the alternatives are rules, so each has a type (a named flow has a 'usageDeclaration')
     FlowDeclaration
-        = UsageDeclaration FeatureValue? ( 'of' PayloadFeature )? ( 'from' FeatureReference 'to' FeatureReference )?
-        | FeatureReference 'to' FeatureReference
+        = FlowDeclarationNamed
+        | FlowDeclarationUnnamed
     ;
+    FlowDeclarationNamed = UsageDeclaration FeatureValue? ( 'of' PayloadFeature )? FlowEnds? ;
+    FlowEnds = 'from' FeatureReference 'to' FeatureReference ;
+    FlowDeclarationUnnamed = FeatureReference 'to' FeatureReference ;
     FlowEndSubsetting
         = QualifiedName '.'
         | FeatureChainPrefix
@@ -666,8 +673,8 @@ grammar Actions : Occurrences {
 
     // SysML 8.2.2.17.5 Assignment Action Usages
     AssignmentNode = OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody ;
-    AssignmentNodeDeclaration = ActionNodeUsageDeclaration? 'assign' AssignmentTargetParameter FeatureReference ':=' OwnedExpression ;
-    AssignmentTargetParameter = ( NonFeatureChainPrimaryExpression '.' )? ;
+    AssignmentNodeDeclaration = ActionNodeUsageDeclaration? 'assign' AssignmentTargetParameter? FeatureReference ':=' OwnedExpression ;
+    AssignmentTargetParameter = NonFeatureChainPrimaryExpression '.' ;
 
     // SysML 8.2.2.17.6 Terminate Action Usages
     TerminateNode = OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'terminate' OwnedExpression? ActionBody ;

@@ -107,6 +107,18 @@ class test_ReferenceResolverSimple_previousElse {
     }
 
     @Test
+    fun chain__base_declared_after_use() {
+        // the typing reference of f (defined on its nested qualifiedName) is not yet resolved by the tree walk when g is handled
+        val targets = test(
+            """
+            def D { feat h }
+            def C { feat g = f.h  feat f : D }
+            """.trimIndent()
+        )
+        assertTrue(targets.any { it.contains("D.h") }, targets.toString())
+    }
+
+    @Test
     fun chain__three_parts() {
         test(
             """

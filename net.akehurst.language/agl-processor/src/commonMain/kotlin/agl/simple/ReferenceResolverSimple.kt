@@ -156,6 +156,18 @@ class ReferenceResolverSimple(
     private fun resolveReferencesOf(value: AsmStructure, elScope: Scope) {
         if (_referencesHandled.contains(value)) return
         _referencesHandled.add(value)
+        _resolving.addLast(value)
+        try {
+            handleReferencesOf(value, elScope)
+        } finally {
+            _resolving.removeLast()
+        }
+    }
+
+    // elements whose references are being handled, innermost last
+    private val _resolving = ArrayDeque<AsmStructure>()
+
+    private fun handleReferencesOf(value: AsmStructure, elScope: Scope) {
         val references = crossReferenceDomain.referencesFor(typesDomain, value.qualifiedTypeName)
         val type = typesDomain.findByQualifiedNameOrNull(value.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         for (match in references) {
@@ -453,8 +465,8 @@ class ReferenceResolverSimple(
         val inheritAccess = if (access == Access.OUTSIDE) Access.OUTSIDE else Access.SUBTYPE
         // 'inherit forall ...' first, then 'inherit named ...'
         val inherits = scopeImports.filter { it.kind == ScopeImportKind.INHERIT }
-        val inherited = inherits.filter { null == it.named }.flatMap { si ->
-            importElementsOf(si, ownerEl).flatMap { src -> targetsOf(si, src, s) }.flatMap { t -> scopeOfElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
+        val inherited = inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) ->
+            srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.flatMap { t -> scopeOfElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
         }.distinct()
         if (inherited.isNotEmpty()) return inherited
         val inheritedNamed = inherits.filter { null != it.named }.flatMap { si ->
@@ -590,8 +602,31 @@ class ReferenceResolverSimple(
     private fun inheritedScopesOf(s: Scope): List<Scope> {
         val ownerEl = ownerElementOf(s) ?: return emptyList()
         val inherits = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName).filter { it.kind == ScopeImportKind.INHERIT }
-        return inherits.filter { null == it.named }.flatMap { si -> importElementsOf(si, ownerEl).flatMap { src -> targetsOf(si, src, s) }.mapNotNull { scopeOfElement(it) } } +
+        return inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) -> srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.mapNotNull { scopeOfElement(it) } } +
                 inherits.filter { null != it.named }.flatMap { si -> namedTargetsOf(si, ownerEl).mapNotNull { scopeOfAnyElement(it) } }
+    }
+
+    /**
+     * the elements selected by each 'inherit forall' of 'inherits' (the scope imports for the type of 'ownerEl'), and whether their references may be resolved now.
+     * An element within which a reference is being resolved (e.g. the typing of 'ownerEl', which is looked up in the scope of 'ownerEl') is left out:
+     * the inheritance would depend on itself. While that is so, the references of the other elements are not resolved now either,
+     * as they could need what is not resolved yet (e.g. 'ref p : T :> p.q', 'q' needs the typing 'T'); the tree walk resolves them later.
+     */
+    private fun inheritForallSources(inherits: List<ScopeImport>, ownerEl: AsmStructure): List<Triple<ScopeImport, List<AsmStructure>, Boolean>> {
+        val sources = inherits.filter { null == it.named }.map { si -> Pair(si, importElementsOf(si, ownerEl)) }
+        val beingResolved = { src: AsmStructure -> _resolving.any { r -> isWithin(r, src) } }
+        val anyBeingResolved = sources.any { (_, srcs) -> srcs.any(beingResolved) }
+        return sources.map { (si, srcs) -> Triple(si, srcs.filterNot(beingResolved), !anyBeingResolved) }
+    }
+
+    /** true if 'el' is 'ancestor' or contained in it (in the ASM) */
+    private fun isWithin(el: AsmStructure, ancestor: AsmStructure): Boolean {
+        var c: AsmStructure? = el
+        while (null != c) {
+            if (c === ancestor) return true
+            c = _containerOf[c]
+        }
+        return false
     }
 
     /** the elements found by the qualified name of an 'inherit named', if its condition holds for 'ownerEl', per rule */
@@ -690,10 +725,27 @@ class ReferenceResolverSimple(
         }.filter { el -> null == si.condition || evaluate(si.condition, el) == true }
     }
 
-    /** the elements referred to by the 'target' (a reference property) of an import/inherit declaration, evaluated on 'sourceEl', which is in scope 's' */
-    private fun targetsOf(si: ScopeImport, sourceEl: AsmStructure, s: Scope): List<AsmStructure> {
-        resolveReferencesOf(sourceEl, s)
+    /** the elements referred to by the 'target' (a reference property) of an import/inherit declaration, evaluated on 'sourceEl', which is in scope 's'; with 'resolveNow' the references needed are first resolved, if not yet done */
+    private fun targetsOf(si: ScopeImport, sourceEl: AsmStructure, s: Scope, resolveNow: Boolean = true): List<AsmStructure> {
+        if (resolveNow) {
+            resolveReferencesOf(sourceEl, s)
+            resolveReferencesAlong(si.target, sourceEl, s)
+        }
         return referredElements(evaluate(si.target, sourceEl))
+    }
+
+    /**
+     * the reference may be defined on any element along navigation 'nav' from 'el' (e.g. 'members-of typedBy.featureTyping.name' with the reference on the element of 'featureTyping'),
+     * so handle the references of each element along it, as the walk may not have reached them yet
+     */
+    private fun resolveReferencesAlong(nav: NavigationExpression, el: AsmStructure, s: Scope) {
+        val start = (nav.start as? RootExpression)?.name ?: return
+        val props = listOf(start) + nav.parts.map { (it as? PropertyCall)?.propertyName ?: return }
+        var els = listOf(el)
+        for (pn in props.dropLast(1)) {
+            els = els.flatMap { structuresIn(evaluate(RootExpressionDefault(pn), it)) }
+            els.forEach { resolveReferencesOf(it, scopeForElement[it] ?: s) }
+        }
     }
 
     private fun referredElements(v: Any?): List<AsmStructure> = when (v) {
