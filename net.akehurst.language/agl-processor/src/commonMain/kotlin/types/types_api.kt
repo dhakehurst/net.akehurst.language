@@ -573,6 +573,17 @@ interface MethodDefinition {
     val execution: ((self: Any, args: List<*>) -> Any?)?
     val executionSuspend: (suspend (self: Any, args: List<*>) -> Any?)?
 
+    /**
+     * An execution over typed values: self and args are not untyped and the result is not re-typed,
+     * so elements of collections keep their own type (and accessor-mutator).
+     * A lambda argument is a [net.akehurst.language.objectgraph.api.TypedLambda].
+     * If given, used in preference to [execution].
+     */
+    val executionTyped: ((self: net.akehurst.language.objectgraph.api.TypedObject, args: List<net.akehurst.language.objectgraph.api.TypedObject>) -> net.akehurst.language.objectgraph.api.TypedObject)? get() = null
+
+    /** as [executionTyped], for suspending evaluation; if not given, [executionTyped] is used */
+    val executionTypedSuspend: (suspend (self: net.akehurst.language.objectgraph.api.TypedObject, args: List<net.akehurst.language.objectgraph.api.TypedObject>) -> net.akehurst.language.objectgraph.api.TypedObject)? get() = null
+
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDefinitionResolved
     fun findInOrCloneTo(other: TypesDomain): MethodDefinition
 }

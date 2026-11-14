@@ -46,7 +46,9 @@ class M2mPatternExecutorCombined(
     val issues: IssueHolder,
     val accessorMutator: ObjectGraphAccessorMutator,
     initialKnownVariableNames: Set<String>,
-    initialExes: List<ExecutionStepCombined>
+    initialExes: List<ExecutionStepCombined>,
+    /** further types domains for type references in expressions, e.g. the source domains of the transform */
+    otherTypesDomains: List<net.akehurst.language.types.api.TypesDomain> = emptyList()
 ) {
 
     companion object {
@@ -88,7 +90,7 @@ class M2mPatternExecutorCombined(
     internal val _harvestSources = mutableMapOf<String, HarvestSource>()
     val executionPlan get() = _executions.topologicalSort(::compareExecutions)
 
-    private val _exprInterp = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
+    private val _exprInterp = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator, null, otherTypesDomains)
 
     fun addExecution(value: ExecutionStepCombined) {
         value.index = _executions.size
