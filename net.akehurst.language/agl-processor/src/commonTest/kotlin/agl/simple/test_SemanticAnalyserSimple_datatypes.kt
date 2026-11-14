@@ -314,4 +314,52 @@ class test_SemanticAnalyserSimple_datatypes {
         assertEquals(expected, result2.allIssues.all)
 
     }
+
+    private fun errorsFor(sentence: String, sentenceIdentity: Any? = null, context: net.akehurst.language.api.semanticAnalyser.SentenceContext = contextAsmSimple()) =
+        processor.process(sentence = sentence, Agl.options {
+            if (null != sentenceIdentity) parse { sentenceIdentity { sentenceIdentity } }
+            semanticAnalysis { sentenceContext(context) }
+        }).allIssues.errors
+
+    @Test
+    fun duplicate_in_one_sentence__fail() {
+        val sentence = "primitive String\nprimitive String"
+        val expected = listOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(17, 1, 2, 16, null), "'String' with type 'test.Test.Primitive' already exists in scope /"),
+        )
+        assertEquals(expected, errorsFor(sentence))
+        // same with a sentence identity
+        assertEquals(listOf(InputLocation(17, 1, 2, 16, 1)), errorsFor(sentence, 1).map { it.location })
+    }
+
+    @Test
+    fun duplicate_in_nested_scope__fail() {
+        val sentence = "primitive String datatype A { x : String x : String }"
+        val errors = errorsFor(sentence)
+        assertEquals(1, errors.size, errors.toString())
+        assertTrue(errors[0].message.startsWith("'x' with type 'test.Test.Property' already exists in scope"), errors.toString())
+        assertEquals(41, errors[0].location?.position)
+    }
+
+    @Test
+    fun same_name_in_different_scopes() {
+        val sentence = "primitive String datatype A { x : String } datatype B { x : String }"
+        assertEquals(emptyList(), errorsFor(sentence))
+    }
+
+    @Test
+    fun reprocess_same_sentence_with_duplicate__fail_each_time() {
+        val sentence = "primitive String\nprimitive String"
+        val context = contextAsmSimple()
+        assertEquals(1, errorsFor(sentence, 1, context).size)
+        assertEquals(1, errorsFor(sentence, 1, context).size)
+    }
+
+    @Test
+    fun reprocess_same_sentence_changed() {
+        val context = contextAsmSimple()
+        assertEquals(emptyList(), errorsFor("primitive String", 1, context))
+        // the sentence is edited: String moves, Int is added; not a duplicate of the earlier processing
+        assertEquals(emptyList(), errorsFor("primitive Int\nprimitive String", 1, context))
+    }
 }

@@ -183,6 +183,8 @@ class test_KerML_v2_2026_09_agl_references {
             "examples/Simple Tests/Filtering.kerml",
             "examples/Simple Tests/Imports.kerml",
             "examples/Simple Tests/MetadataTest.kerml",
+            // an unnamed redefining feature has an anonymous scope; it needs the effective name (the redefined feature's name) in references.agl
+            "examples/Simple Tests/Redefinition.kerml",
             "examples/Simple Tests/Scoping.kerml",
             "examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml",
             "examples/Variable Feature Examples/Enhancements/Moments.kerml",

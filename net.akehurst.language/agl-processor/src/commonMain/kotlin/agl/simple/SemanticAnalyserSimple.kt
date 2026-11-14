@@ -32,6 +32,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.*
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceDomain
@@ -114,7 +115,14 @@ class SemanticAnalyserSimple(
             onAmbiguous: ((message: String) -> Unit)? = null
         ): List<Any> {
             val exps = identifyingAlternativesFor(interpreter.typesDomain, crossReferenceDomain, inScopeForTypeQualifiedName, self.qualifiedTypeName, onAmbiguous)
-            return exps.mapNotNull { identifyingValueOf(interpreter, it, self) }.distinct()
+            return when {
+                exps.size > 1 -> exps.mapNotNull { exp ->
+                    // an alternative is often absent (e.g. no short name): no warnings (e.g. navigating $nothing) for an alternative that has no value
+                    interpreter.objectGraph.issues.dropIssuesRaisedIf(LanguageIssueKind.WARNING, { identifyingValueOf(interpreter, exp, self) }) { it == null }
+                }.distinct()
+
+                else -> exps.mapNotNull { identifyingValueOf(interpreter, it, self) }.distinct()
+            }
         }
 
         private fun identifyingValueOf(interpreter: ExpressionsInterpreterOverTypedObject, exp: Expression?, self: AsmStructure): Any? = when (exp) {

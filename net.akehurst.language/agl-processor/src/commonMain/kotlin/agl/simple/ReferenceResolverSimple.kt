@@ -131,7 +131,8 @@ class ReferenceResolverSimple(
         val elScope = when {
             null != value.semanticQualifiedPath -> scopeOfElement(value) ?: parentScope
             else -> when (refInParent) {
-                null -> parentScope
+                // an unnamed element: its anonymous scope, if it has one (see ScopeCreator)
+                null -> anonymousScopeOf[value] ?: parentScope
                 is String -> parentScope.getChildScopeOrNull(refInParent) ?: parentScope
                 is List<*> -> when {
                     refInParent.all { it is String } -> {
@@ -677,8 +678,8 @@ class ReferenceResolverSimple(
 
     /** the element that created scope 's', i.e. the item in the owning scope with the scope's name and type */
     private fun ownerElementOf(s: Scope): AsmStructure? {
-        // the root scope of a sentence: its root element
-        if (s.scopePath.isEmpty()) return elementOf(s.ownerItem)
+        // the root scope of a sentence (its root element) or the anonymous scope of an unnamed element
+        if (s.scopePath.isEmpty() || null != s.ownerItem) return elementOf(s.ownerItem)
         val owner = ownerScopeOf(s) ?: return null
         val name = s.scopePath.last()
         val items = owner.items[name] ?: return null
@@ -687,7 +688,20 @@ class ReferenceResolverSimple(
 
     /** the scope of element 'el': the scope it created, or the root scope of a sentence for its root element */
     private fun scopeOfAnyElement(el: AsmStructure): Scope? =
-        scopeOfElement(el) ?: sentenceContext.scopeForSentence.values.firstOrNull { elementOf(it.ownerItem) === el }
+        scopeOfElement(el) ?: sentenceContext.scopeForSentence.values.firstOrNull { elementOf(it.ownerItem) === el } ?: anonymousScopeOf[el]
+
+    /** the anonymous scopes of unnamed elements (they have an ownerItem, and the element has no semantic path) */
+    private val anonymousScopeOf: Map<AsmStructure, Scope> by lazy {
+        val map = mutableMapOf<AsmStructure, Scope>()
+        fun walk(sc: Scope) {
+            sc.childScopes.values.forEach { ch ->
+                ch.ownerItem?.let { elementOf(it) }?.let { map[it] = ch }
+                walk(ch)
+            }
+        }
+        sentenceContext.scopeForSentence.values.forEach { walk(it) }
+        map
+    }
 
     /** the scope created by element 'el', found via its semantic path */
     private fun scopeOfElement(el: AsmStructure): Scope? {

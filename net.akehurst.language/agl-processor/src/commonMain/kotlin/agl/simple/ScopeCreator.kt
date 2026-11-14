@@ -48,11 +48,30 @@ class ScopeCreator(
     val otherIdentifyingValuesInFor: (inTypeName: QualifiedName, item: AsmStructure) -> List<Any> = { _, _ -> emptyList() }
 ) : AsmTreeWalker {
 
+    companion object {
+        /** the name of the anonymous scope of an unnamed element is this prefix and a number; it cannot be written as a name in a reference */
+        const val ANONYMOUS_SCOPE_PREFIX = "\$anonymous"
+    }
+
     val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
+
+    /**
+     * the items added to a scope by this ScopeCreator (i.e. in this processing of the sentence): scope -> name -> (element, its type).
+     * A second element with the same name (and a conforming type) in the same scope is a duplicate definition.
+     * Items of the same sentence from an earlier processing (reprocessing the sentence) are not in here, so they are replaced, not reported.
+     */
+    /** the root element of the sentence, it owns the root scope */
+    private var rootElement: AsmStructure? = null
+
+    /** number of anonymous scopes created in a scope (for unnamed elements) */
+    private val anonymousScopeCount = mutableMapOf<Scope, Int>()
+
+    private val addedInThisRun = mutableMapOf<Scope, MutableMap<String, MutableList<Pair<AsmStructure, QualifiedName>>>>()
 
     override  fun beforeRoot(root: Any) {
         // the root element owns the root scope of the sentence (it is not an item in any scope), so that a 'scope' block for its type applies (e.g. imports at file level)
         if (root is AsmStructure) {
+            rootElement = root
             val rootScope = currentScope.peek()
             rootScope.ownerItem = context.createScopedItem.invoke(rootScope.scopePath, root, this.locationMap[root])
         }
@@ -92,12 +111,17 @@ class ScopeCreator(
             val refInParent = identifyingValueInFor.invoke(inTypeName, el)
             when {
                 // Nothing
+                // the root element owns the root scope (see beforeRoot)
+                el === rootElement && null == refInParent -> parentScope
+
                 null == refInParent -> {
-                    //TODO: do we actually need to do anything here ?
-                    //val ref = el.typeName.value  // use type name as ref
-                    // val scopeItem = createItemInScopeFunction.invoke(ref, el)
-                    //parentScope.createOrGetChildScope(ref, el.qualifiedTypeName, scopeItem)
-                    parentScope
+                    // an unnamed element: its members are in an anonymous scope of their own (found from inside it, not by name from outside).
+                    // The scope knows its element via ownerItem, as it is not an item of the parent scope.
+                    val n = anonymousScopeCount.getOrElse(parentScope) { 0 }
+                    anonymousScopeCount[parentScope] = n + 1
+                    val anon = parentScope.createOrGetChildScope("$ANONYMOUS_SCOPE_PREFIX$n", el.qualifiedTypeName)
+                    anon.ownerItem = context.createScopedItem.invoke(anon.scopePath, el, this.locationMap[el])
+                    anon
                 }
                 // String
                 refInParent is String -> {
@@ -212,8 +236,27 @@ class ScopeCreator(
             itemType.conformsTo(requireType)
         }
         val notSameLocation = existingItems.filter { it.location != this.locationMap[el]?.sentenceIdentity }
+        val addedInScope = addedInThisRun.getOrPut(scope) { mutableMapOf() }.getOrPut(referableName) { mutableListOf() }
+        val duplicateInThisRun = addedInScope.any { (other, otherTypeName) ->
+            other !== el && run {
+                val itemType = typesDomain.findByQualifiedNameOrNull(otherTypeName) ?: error("Type not found '${otherTypeName.value}'")
+                val requireType = typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName) ?: error("Type not found '${el.qualifiedTypeName.value}'")
+                itemType.conformsTo(requireType)
+            }
+        }
         when {
+            duplicateInThisRun -> {
+                // defined twice in this sentence
+                this.ifItemAlreadyExistsInScopeIssueKind?.let {
+                    issues.raise(
+                        it, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                        this.locationMap[el], "'$referableName' with type '${el.qualifiedTypeName}' already exists in scope $scope"
+                    )
+                }
+            }
+
             notSameLocation.isEmpty() -> {
+                addedInScope.add(Pair(el, el.qualifiedTypeName))
                 scope.addToScope(referableName, el.qualifiedTypeName, this.locationMap[el]?.sentenceIdentity, scopeItem, replaceIfItemAlreadyExistsInScope)
                 // can also set the semantic identity of the AsmStructure
                 if (isFurtherName.not()) el.semanticQualifiedPath = scope.scopePath + referableName
