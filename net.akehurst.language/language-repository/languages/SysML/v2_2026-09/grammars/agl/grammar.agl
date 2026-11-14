@@ -359,16 +359,15 @@ grammar DefinitionAndUsage : Packages {
 
     // SysML 8.2.2.6.5 Specialization
     SubclassificationPart = SPECIALIZES [QualifiedName / ',']+ ;
-    FeatureSpecializationPart
-        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
-        | MultiplicityPart FeatureSpecialization*
-    ;
+    // tailored: the multiplicity is one of the specializations, so all of them are in one list ('featureSpecialization')
+    FeatureSpecializationPart = FeatureSpecialization+ ;
     FeatureSpecialization
         = Typings
         | Subsettings
         | References
         | Crosses
         | Redefinitions
+        | MultiplicityPart
     ;
     Typings = TypedBy ( ',' FeatureTyping )* ;
     TypedBy = DEFINED_BY FeatureTyping ;
@@ -477,10 +476,8 @@ grammar Occurrences : DefinitionAndUsage {
         | OwnedFeatureTyping MultiplicityRange?
         | MultiplicityRange OwnedFeatureTyping
     ;
-    PayloadFeatureSpecializationPart
-        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
-        | MultiplicityPart FeatureSpecialization+
-    ;
+    // tailored: the multiplicity is one of the specializations, so all of them are in one list ('featureSpecialization')
+    PayloadFeatureSpecializationPart = FeatureSpecialization+ ;
 }
 
 grammar Ports : Occurrences {
@@ -1015,9 +1012,11 @@ grammar SysMLv2_1 : Attributes, Connections, States, Cases, Views, Metadata {
     AssertConstraintUsage = OccurrenceUsagePrefix 'assert' 'not'? AssertConstraintKind CalculationBody ;
     RequirementConstraintMember = MemberPrefix? RequirementKind RequirementConstraintUsage ;
     RequirementConstraintUsage
-        = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody
-        | ( PrefixMetadataMember* 'constraint' | PrefixMetadataMember+ ) ConstraintUsageDeclaration CalculationBody
+        = RequirementConstraintUsageReference
+        | RequirementConstraintUsageDeclared
     ;
+    RequirementConstraintUsageReference = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody ;
+    RequirementConstraintUsageDeclared = ( PrefixMetadataMember* 'constraint' | PrefixMetadataMember+ ) ConstraintUsageDeclaration CalculationBody ;
 
     // choices extended with the rules from the grammars above
     override AnnotatingElement

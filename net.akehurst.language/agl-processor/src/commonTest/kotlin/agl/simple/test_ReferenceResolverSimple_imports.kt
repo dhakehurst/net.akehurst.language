@@ -236,7 +236,7 @@ class test_ReferenceResolverSimple_imports {
     @Test
     fun import_one__alias_imported_by_its_name() {
         val targets = test("package A { def X alias Y for X } package B { import A::Y use u : Y }")
-        assertEquals(listOf(":Def[X]", ":Def[X]", ":Def[X]"), targets.map { it.toString() })
+        assertEquals(listOf(":Def[A.X]", ":Def[A.X]", ":Def[A.X]"), targets.map { it.toString() })
     }
 
     @Test

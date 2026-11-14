@@ -487,7 +487,7 @@ class ReferenceResolverSimple(
         val inherits = scopeImports.filter { it.kind == ScopeImportKind.INHERIT }
         val inherited = inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) ->
             srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.flatMap { t -> scopeOfElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
-        }.distinct()
+        }.distinct().let { hideOverridden(it) }
         if (inherited.isNotEmpty()) return inherited
         val inheritedNamed = inherits.filter { null != it.named }.flatMap { si ->
             namedTargetsOf(si, ownerEl).flatMap { t -> scopeOfAnyElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
@@ -520,6 +520,36 @@ class ReferenceResolverSimple(
             }
         }
         return imported.distinct()
+    }
+
+    /**
+     * of items found in different inherited scopes, those that another of them inherits (e.g. a redefined feature, inherited by the feature that redefines it) are hidden by it
+     */
+    private fun hideOverridden(found: List<Found>): List<Found> = when {
+        found.size < 2 -> found
+        else -> {
+            val scopes = found.map { f -> elementOf(f.item)?.let { scopeOfAnyElement(it) } }
+            found.filterIndexed { i, _ ->
+                val si = scopes[i]
+                null == si || scopes.indices.none { j -> j != i && null != scopes[j] && si in allInheritedScopesOf(scopes[j]!!) }
+            }
+        }
+    }
+
+    /** the scopes that scope 's' inherits, directly or indirectly */
+    private fun allInheritedScopesOf(s: Scope): List<Scope> {
+        val result = mutableListOf<Scope>()
+        val todo = ArrayDeque(listOf(s))
+        while (todo.isNotEmpty()) {
+            val next = todo.removeFirst()
+            for (inh in inheritedScopesOf(next)) {
+                if (inh !== s && result.none { it === inh }) {
+                    result.add(inh)
+                    todo.addLast(inh)
+                }
+            }
+        }
+        return result
     }
 
     /** the last part of the name an element import refers to its element by, null if it is not a reference */

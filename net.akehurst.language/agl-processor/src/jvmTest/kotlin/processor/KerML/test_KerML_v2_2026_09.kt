@@ -166,9 +166,6 @@ class test_KerML_v2_2026_09_agl_references {
             "examples/Association Examples/ProductSelection_OwnedEnds.kerml",
             "examples/Association Examples/ProductSelection_UnownedEnds.kerml",
             "examples/Behavior Examples/TakePicture.kerml",
-            "examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml",
-            "examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml",
-            "examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
             "examples/Mass Roll-up Example/MassRollup_2.kerml",
             "examples/Mass Roll-up Example/Vehicles_1.kerml",
             "examples/Mass Roll-up Example/Vehicles_2.kerml",
@@ -183,14 +180,9 @@ class test_KerML_v2_2026_09_agl_references {
             "examples/Simple Tests/Filtering.kerml",
             "examples/Simple Tests/Imports.kerml",
             "examples/Simple Tests/MetadataTest.kerml",
-            // an unnamed redefining feature has an anonymous scope; it needs the effective name (the redefined feature's name) in references.agl
-            "examples/Simple Tests/Redefinition.kerml",
             "examples/Simple Tests/Scoping.kerml",
-            "examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml",
             "examples/Variable Feature Examples/Enhancements/Moments.kerml",
             "examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml",
-            "examples/Variable Feature Examples/TimeVaryingCarDriver.kerml",
-            "examples/Variable Feature Examples/TimeVaryingFeatures.kerml",
             "examples/Vehicle Example/VehicleUsages.kerml",
         )
     }

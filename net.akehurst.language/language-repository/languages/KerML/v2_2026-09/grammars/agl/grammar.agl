@@ -473,10 +473,8 @@ grammar Features : Classifiers {
     ChainingPart = 'chains' ( QualifiedName | FeatureChain ) ;
     InvertingPart = 'inverse' 'of' OwnedFeatureInverting ;
     TypeFeaturingPart = 'featured' 'by' [QualifiedName / ',']+ ;
-    FeatureSpecializationPart
-        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
-        | MultiplicityPart FeatureSpecialization*
-    ;
+    // tailored: the multiplicity is one of the specializations, so all of them are in one list ('featureSpecialization')
+    FeatureSpecializationPart = FeatureSpecialization+ ;
     MultiplicityPart
         = MultiplicityBounds
         | MultiplicityBounds? ( 'ordered' 'nonunique'? | 'nonunique' 'ordered'? )
@@ -487,6 +485,7 @@ grammar Features : Classifiers {
         | References
         | Crosses
         | Redefinitions
+        | MultiplicityPart
     ;
     Typings = TypedBy ( ',' GeneralType )* ;
     TypedBy = TYPED_BY GeneralType ;
@@ -629,10 +628,8 @@ grammar Interactions : Behaviors, Connectors {
         | GeneralType MultiplicityBounds?
         | MultiplicityBounds GeneralType
     ;
-    PayloadFeatureSpecializationPart
-        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
-        | MultiplicityPart FeatureSpecialization+
-    ;
+    // tailored: the multiplicity is one of the specializations, so all of them are in one list ('featureSpecialization')
+    PayloadFeatureSpecializationPart = FeatureSpecialization+ ;
     FlowEnd = ( GeneralType '.' )? QualifiedName ;
 }
 
