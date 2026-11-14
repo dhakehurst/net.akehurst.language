@@ -211,8 +211,12 @@ class ReferencesSemanticAnalyser(
                 else -> TODO()
             }
 
-            is CollectionType -> {
-                val loopVarType = collTypeInstance.typeArguments[0].type.resolvedDefinition
+            else -> {
+                // 'forall' over a single value (not a collection) : the loop variable has the type of the value
+                val loopVarType = when (collTypeInstance.resolvedDefinition) {
+                    is CollectionType -> collTypeInstance.typeArguments[0].type.resolvedDefinition
+                    else -> collTypeInstance.resolvedDefinition
+                }
                 val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
                     val ofType = _grammarNamespace?.findTypeNamed(ofTypeName)
                     when {
@@ -230,8 +234,6 @@ class ReferencesSemanticAnalyser(
                     checkReferenceExpression(crossReferenceDomain, filteredLoopVarType, ref, re, importedNamespaces)
                 }
             }
-
-            else -> TODO()
         }
 
     }

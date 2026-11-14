@@ -137,8 +137,10 @@ class ExpressionTypeResolver(
     fun WhenExpression.typeOfWhenExpressionFor(self: TypeInstance): TypeInstance {
         val opts = this.options.map {
             it.expression.typeOfExpressionFor(self)
-        }
-        return commonSuperTypeOf(opts)
+        } + this.elseOption.expression.typeOfExpressionFor(self)
+        // a '\$nothing' option does not contribute to the type, unless all options are '\$nothing'
+        val notNothing = opts.filter { it != StdLibDefault.NothingType }
+        return commonSuperTypeOf(notNothing.ifEmpty { opts })
     }
 
     fun TernaryConditionExpression.typeOfTernaryConditionFor(self: TypeInstance): TypeInstance {

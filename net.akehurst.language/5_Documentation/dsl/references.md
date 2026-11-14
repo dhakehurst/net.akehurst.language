@@ -46,7 +46,7 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 | `property p refers-to A\|B` | property `p` is a reference to an `A` or a `B` |
 | `forall list of-type T { ... }` | apply the inner lines to each element of `list` (optionally only those of type `T`) |
 | `... from E` | start the lookup in the scope of element `E` (or of the element that reference `E` refers to) instead of the current scope |
-| `... from inherited E` | look the name up only in what element `E` inherits (e.g. a redefined feature) |
+| `... from inherited E` | look the name up in what element `E` inherits, then outwards from `E`, but never in `E`'s own members (e.g. a redefined feature: not the redefining feature itself) |
 | `... when expr` | use this line only when `expr` is true; the first line that holds wins |
 
 Names are looked up in the current scope, then in the enclosing scopes.
@@ -55,7 +55,7 @@ Expressions are written in the [expressions](expressions.md) language. Their spe
 | Special value | Meaning |
 |---|---|
 | `$self` | the object the expression is evaluated on |
-| `$container` | the object that contains `$self` in the ASM (`$nothing` for the root, or an object of another sentence) |
+| `$container` | the object that contains `$self` in the ASM (`$nothing` for the root) |
 | `$owner` | the object that owns the scope `$self` is in (the namespace owner, not the ASM container) |
 | `$root` | the root object of the sentence of `$self`; `from $root` is the root scope |
 | `$previous` | in a `forall`, the element before this one (`from $previous.p`: the members of what `p` of the previous element refers to) |

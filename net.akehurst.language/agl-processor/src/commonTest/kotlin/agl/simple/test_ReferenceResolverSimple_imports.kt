@@ -221,9 +221,22 @@ class test_ReferenceResolverSimple_imports {
     ).let { }
 
     @Test
+    fun redefinition__not_inherited__looked_up_outwards_not_itself() {
+        // 'from inherited E': nothing inherited, so outwards from Sports; the redefining 'wheel' (a member of Sports) is not found
+        val targets = test("use wheel def Sports { use wheel :>> wheel }")
+        assertEquals(listOf(":Use[wheel]"), targets.map { it.toString() })
+    }
+
+    @Test
     fun alias__resolves_to_target() {
         val targets = test("package A { def X } package B { alias Y for A::X use u : Y }")
         assertTrue(targets.any { it.toString().contains("Def") }, targets.toString())
+    }
+
+    @Test
+    fun import_one__alias_imported_by_its_name() {
+        val targets = test("package A { def X alias Y for X } package B { import A::Y use u : Y }")
+        assertEquals(listOf(":Def[X]", ":Def[X]", ":Def[X]"), targets.map { it.toString() })
     }
 
     @Test
