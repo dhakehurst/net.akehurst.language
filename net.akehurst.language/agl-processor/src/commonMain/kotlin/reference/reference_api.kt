@@ -21,6 +21,7 @@ import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
 
 
@@ -61,6 +62,14 @@ interface CrossReferenceDomain : Domain<CrossReferenceNamespace, DeclarationsFor
      * the 'import' and 'inherit' declarations of the scope created by an element of the type, found by type conformance
      */
     fun scopeImportsFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<ScopeImport>
+
+    /**
+     * the type named 'typeName' in a type reference of 'declaration' ('refers-to' of a ReferenceExpression, 'of-type' of a ScopeImport or of a 'forall'),
+     * resolved in the namespace block that holds the declaration: a qualified name as is,
+     * a simple name in the types namespace with the name of the block (and its imports), then in the block's imports.
+     * null if not found, or if 'declaration' is not a declaration of this domain and 'typeName' is not qualified
+     */
+    fun findTypeNamedIn(typesDomain: TypesDomain, declaration: Any, typeName: PossiblyQualifiedName): TypeDefinition?
 }
 
 /**

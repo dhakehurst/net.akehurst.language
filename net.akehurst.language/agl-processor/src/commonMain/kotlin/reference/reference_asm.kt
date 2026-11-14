@@ -29,6 +29,7 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.reference.api.*
+import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
 
 class CrossReferenceDomainDefault(
@@ -120,6 +121,9 @@ class CrossReferenceDomainDefault(
 
     override fun scopeImportsFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<ScopeImport> =
         lookupFor(typesDomain).scopeImportsFor(typeQualifiedName)
+
+    override fun findTypeNamedIn(typesDomain: TypesDomain, declaration: Any, typeName: PossiblyQualifiedName): TypeDefinition? =
+        lookupFor(typesDomain).findTypeNamedIn(declaration, typeName)
 
     private var _lookup: CrossReferenceLookup? = null
 

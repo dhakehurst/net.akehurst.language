@@ -21,6 +21,7 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.reference.api.*
+import net.akehurst.language.types.api.DataType
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.api.TypesNamespace
@@ -28,11 +29,46 @@ import net.akehurst.language.types.api.UnionType
 import net.akehurst.language.types.asm.StdLibDefault
 
 /**
+ * Resolves a type name written in a cross-reference definition (identify, scope, in, refers-to, of-type),
+ * relative to the namespace block that holds it.
+ * Such a name is the type of an item the language puts in scope, i.e. one of the language's own types or of a namespace imported explicitly.
+ * The import of std that every namespace generated from a grammar has (for the types of properties, e.g. String, List) is not used here:
+ *  - a qualified name is looked up as is,
+ *  - a simple name:
+ *      1. in the types namespace with the same name as the namespace block,
+ *      2. in the namespaces that namespace imports (e.g. of extended or embedded grammars), except std,
+ *      3. in the imports of the namespace block, std (if imported) last.
+ * null if not found.
+ */
+fun TypesDomain.findCrossReferenceTypeOrNull(typesNamespace: TypesNamespace?, imported: List<TypesNamespace>, name: PossiblyQualifiedName): TypeDefinition? =
+    when (name) {
+        is QualifiedName -> this.findByQualifiedNameOrNull(name)
+        is SimpleName -> {
+            val isStd = { qn: QualifiedName -> qn == StdLibDefault.qualifiedName }
+            val importedByTypesNamespace = typesNamespace?.import
+                ?.filterNot { isStd(it.asQualifiedName) }
+                ?.mapNotNull { this.findNamespaceOrNull(it.asQualifiedName) }
+                ?: emptyList()
+            val (importedStd, importedOther) = imported.partition { isStd(it.qualifiedName) }
+            (listOfNotNull(typesNamespace) + importedByTypesNamespace + importedOther + importedStd)
+                .firstNotNullOfOrNull { it.findOwnedTypeNamed(name) }
+        }
+    }
+
+/**
+ * true if objects of the type can be referred to ('refers-to'): a data type, or a union type of which every alternative is a data type
+ */
+val TypeDefinition.isReferableType: Boolean
+    get() = when (this) {
+        is DataType -> true
+        is UnionType -> this.alternatives.all { it.resolvedDefinition.isReferableType }
+        else -> false
+    }
+
+/**
  * Looks up scope, identify and reference ('in') declarations for the type of an element.
  *
- * Declared type names are resolved once against the TypesDomain:
- *  - a qualified name is looked up as is,
- *  - a simple name in the types namespace with the same name as the declaring namespace block, then in the block's imports.
+ * Declared type names are resolved once against the TypesDomain, see findCrossReferenceTypeOrNull.
  *
  * A declaration for type T applies to every element whose type conforms to T (T itself, a supertype, or a union type that contains it).
  * The nearest declaration wins (the type itself has distance 0, a direct supertype or union 1, and so on).
@@ -48,10 +84,20 @@ class CrossReferenceLookup(
     private class ResolvedReferenceDefinition(val type: TypeDefinition, val definition: ReferenceDefinition)
     private data class Candidate<T>(val key: List<Int>, val item: T)
 
+    /** where simple type names of a declaration are resolved: the types namespace with the name of the namespace block, and the block's imports */
+    private class NameContext(val typesNamespace: TypesNamespace?, val imported: List<TypesNamespace>)
+
+    /** an object used as a key by identity, so equal declarations in different namespace blocks are different keys */
+    private class ByIdentity(val obj: Any) {
+        override fun equals(other: Any?): Boolean = other is ByIdentity && other.obj === obj
+        override fun hashCode(): Int = obj.hashCode()
+    }
+
     private val _scopes = mutableListOf<ResolvedScope>()
     private val _everywhere = mutableListOf<ResolvedIdentifiable>()
     private val _references = mutableListOf<ResolvedReferenceDefinition>()
 
+    private val _nameContext = mutableMapOf<ByIdentity, NameContext>()
     private val _distanceCache = mutableMapOf<Pair<TypeDefinition, TypeDefinition>, Int?>()
     private val _isScopeCache = mutableMapOf<QualifiedName, Boolean>()
     private val _identifyCache = mutableMapOf<Pair<QualifiedName, QualifiedName>, CrossReferenceMatch<Identifiable>>()
@@ -62,6 +108,9 @@ class CrossReferenceLookup(
         for (decl in crossReferenceDomain.declarationsForNamespace.values) {
             val typesNamespace = typesDomain.findNamespaceOrNull(decl.namespace.qualifiedName)
             val imported = decl.importedNamespaces.mapNotNull { typesDomain.findNamespaceOrNull(it.asQualifiedName) }
+            val nameContext = NameContext(typesNamespace, imported)
+            decl.scopeDefinition.values.forEach { sd -> sd.scopeImports.forEach { _nameContext[ByIdentity(it)] = nameContext } }
+            decl.references.forEach { ref -> ref.referenceExpressionList.forEach { addNameContext(it, nameContext) } }
             for ((scopeTypeName, scopeDef) in decl.scopeDefinition) {
                 val ids = scopeDef.identifiables.mapNotNull { id ->
                     resolveTypeOrNull(typesNamespace, imported, id.typeName)?.let { ResolvedIdentifiable(it, id) }
@@ -162,10 +211,27 @@ class CrossReferenceLookup(
         return candidates.filter { comparator.compare(it.key, min) == 0 }.map { it.item }
     }
 
-    private fun resolveTypeOrNull(typesNamespace: TypesNamespace?, imported: List<TypesNamespace>, name: PossiblyQualifiedName): TypeDefinition? = when (name) {
-        is QualifiedName -> typesDomain.findByQualifiedNameOrNull(name) ?: typesNamespace?.findTypeNamed(name)
-        is SimpleName -> typesNamespace?.findTypeNamed(name) ?: imported.firstNotNullOfOrNull { it.findOwnedTypeNamed(name) }
+    /**
+     * the type named 'typeName' in a type reference of 'declaration' (a ReferenceExpression or ScopeImport of the domain),
+     * resolved like the other declared type names (see class comment).
+     * For an object that is not a declaration of the domain only a qualified name is resolved.
+     */
+    fun findTypeNamedIn(declaration: Any, typeName: PossiblyQualifiedName): TypeDefinition? {
+        val ctx = _nameContext[ByIdentity(declaration)]
+        return when {
+            null != ctx -> resolveTypeOrNull(ctx.typesNamespace, ctx.imported, typeName)
+            typeName is QualifiedName -> typesDomain.findByQualifiedNameOrNull(typeName)
+            else -> null
+        }
     }
+
+    private fun addNameContext(re: ReferenceExpression, nameContext: NameContext) {
+        _nameContext[ByIdentity(re)] = nameContext
+        if (re is ReferenceExpressionCollection) re.referenceExpressionList.forEach { addNameContext(it, nameContext) }
+    }
+
+    private fun resolveTypeOrNull(typesNamespace: TypesNamespace?, imported: List<TypesNamespace>, name: PossiblyQualifiedName): TypeDefinition? =
+        typesDomain.findCrossReferenceTypeOrNull(typesNamespace, imported, name)
 
     /**
      * number of steps from 'type' to 'target' through supertypes and union types,

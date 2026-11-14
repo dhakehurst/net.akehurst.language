@@ -199,7 +199,7 @@ class ReferencesSemanticAnalyser(
         importedNamespaces: List<TypesNamespace>
     ) {
         refExpr.ofType?.let {
-            val type = _grammarNamespace?.findTypeNamed(it)
+            val type = findReferredToType(it, importedNamespaces)
             when (type) {
                 null -> raiseError(it, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', the of-type '$it' is not found")
             }
@@ -218,7 +218,7 @@ class ReferencesSemanticAnalyser(
                     else -> collTypeInstance.resolvedDefinition
                 }
                 val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
-                    val ofType = _grammarNamespace?.findTypeNamed(ofTypeName)
+                    val ofType = findReferredToType(ofTypeName, importedNamespaces)
                     when {
                         null == ofType -> error("Should not happen, checked above.")
                         //TODO: needs a conforms to to check transitive closure of supertypes
@@ -246,10 +246,11 @@ class ReferencesSemanticAnalyser(
         importedNamespaces: List<TypesNamespace>
     ) {
         refExpr.refersToTypeName.forEachIndexed { i, n ->
-            if (null == findReferredToType(n, importedNamespaces)) {
-                raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' not found")
-            } else {
-                //OK
+            val referredTo = findReferredToType(n, importedNamespaces)
+            when {
+                null == referredTo -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' not found")
+                referredTo.isReferableType.not() -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' is not a data type")
+                else -> Unit //OK
             }
         }
 
@@ -269,12 +270,8 @@ class ReferencesSemanticAnalyser(
         }
     }
 
-    private fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypesNamespace>): TypeDefinition? {
-        return when (name) {
-            is QualifiedName -> _typesDomain?.findByQualifiedNameOrNull(name) ?: _grammarNamespace?.findTypeNamed(name)
-            is SimpleName -> _grammarNamespace?.findTypeNamed(name)
-                ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name) }
-        }
-    }
+    /** a type name of the cross-reference definition, see findCrossReferenceTypeOrNull */
+    private fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypesNamespace>): TypeDefinition? =
+        _typesDomain?.findCrossReferenceTypeOrNull(_grammarNamespace, importedNamespaces, name)
 
 }

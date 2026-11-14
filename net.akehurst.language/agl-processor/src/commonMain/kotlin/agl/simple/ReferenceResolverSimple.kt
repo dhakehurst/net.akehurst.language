@@ -45,6 +45,7 @@ import net.akehurst.language.reference.api.ScopeImportKind
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
+import net.akehurst.language.reference.asm.isReferableType
 import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.objectgraph.api.TypedObject
@@ -301,7 +302,7 @@ class ReferenceResolverSimple(
             return
         }
         val chainScope = chain?.previousTarget?.let { scopeOfElement(it) }
-        val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
+        val referredToTypes = refExpr.refersToTypeName.mapNotNull { crossReferenceDomain.findTypeNamedIn(typesDomain, refExpr, it) }.filter { it.isReferableType }
         val conforms = { typeName: QualifiedName ->
             val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDefinition
             referredToTypes.any { td -> itemType.conformsTo(td) }
@@ -784,7 +785,7 @@ class ReferenceResolverSimple(
 
     /** the elements of the scope owner, selected by an import/inherit declaration */
     private fun importElementsOf(si: ScopeImport, ownerEl: AsmStructure): List<AsmStructure> {
-        val ofType = si.ofType?.let { typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
+        val ofType = si.ofType?.let { crossReferenceDomain.findTypeNamedIn(typesDomain, si, it) }
         return structuresIn(evaluate(si.elements, ownerEl)).filter { el ->
             when (ofType) {
                 null -> true
@@ -987,12 +988,14 @@ class ReferenceResolverSimple(
         var previous: AsmStructure? = null
         for (el in elements) {
             el!!
+            val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure
+            // a structure has its own type, which may be a subtype of the element type of the collection
+            val elOwnType = elStr?.let { typesDomain.findByQualifiedNameOrNull(it.qualifiedTypeName)?.type() } ?: elType
             val selected = when {
                 null == refExpr.ofType -> true
-                else -> el.conformsToType(elType, refExpr.ofType) // else el is filtered out by the 'ofType'
+                else -> el.conformsToType(elOwnType, refExpr, refExpr.ofType) // else el is filtered out by the 'ofType'
             }
             if (selected) {
-                val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure
                 if (usesPrevious && null != elStr) _referencesHandled.add(elStr)
                 val elContext = ReferenceExpressionContext(sentenceContext.element, sentenceContext.scope, previous)
                 val applicableHere = applicable(refExpr.referenceExpressionList, el)
@@ -1002,7 +1005,7 @@ class ReferenceResolverSimple(
                     }
                 }
                 for (re in applicableHere) {
-                    handleReferenceExpression(re, elContext, el, elType)
+                    handleReferenceExpression(re, elContext, el, elOwnType)
                 }
                 previous = elStr
             }
@@ -1030,8 +1033,9 @@ class ReferenceResolverSimple(
         }
     }
 
-    private fun Any.conformsToType(selfType:TypeInstance, typeName: PossiblyQualifiedName): Boolean {
-        val type = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName)?.type() ?: StdLibDefault.NothingType
+    /** 'typeName' is resolved in the namespace block that holds 'declaration' */
+    private fun Any.conformsToType(selfType:TypeInstance, declaration: ReferenceExpression, typeName: PossiblyQualifiedName): Boolean {
+        val type = crossReferenceDomain.findTypeNamedIn(typesDomain, declaration, typeName)?.type() ?: StdLibDefault.NothingType
         return selfType.conformsTo(type)
     }
 
