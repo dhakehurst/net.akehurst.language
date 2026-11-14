@@ -1,0 +1,30 @@
+namespace net.akehurst.language.C
+
+styles C_11 {
+    $keyword {
+        foreground: blue;
+        font-weight: bold;
+    }
+
+    LINE_COMMENT, BLOCK_COMMENT {
+        foreground: gray;
+        font-style: italic;
+    }
+
+    PREPROCESSING_DIRECTIVE {
+        foreground: DarkMagenta;
+    }
+
+    STRING_LITERAL, CHARACTER_CONSTANT {
+        foreground: DarkGreen;
+    }
+
+    INTEGER_CONSTANT, FLOATING_CONSTANT {
+        foreground: DarkCyan;
+    }
+
+    TypedefName {
+        foreground: DarkRed;
+        font-style: italic;
+    }
+}

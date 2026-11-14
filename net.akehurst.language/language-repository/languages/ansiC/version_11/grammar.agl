@@ -1,5 +1,396 @@
+/**
+ * Copyright (C) 2026 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * C11 (ISO/IEC 9899:2011) grammar tailored for AGL.
+ *
+ * Based on the phrase structure grammar of the standard (Annex A.2) and its lexical grammar (Annex A.1).
+ * It accepts preprocessed C:
+ *  - preprocessing directives ('#include', '#define', ...) are skipped, not processed,
+ *    so macros are not expanded.
+ *  - digraphs ('<:', '<%', ...), trigraphs and universal character names in identifiers are not supported.
+ * Differences to the grammar of the standard:
+ *  - it is modular: one grammar per clause of the standard, using grammar inheritance.
+ *  - expressions are written for AGL, with a preference rule for the operator precedence (6.5),
+ *    so a parse gives one tree with the correct grouping.
+ *    'constant-expression' is an assignment expression ('Expr'): the constraints of 6.6 are semantic.
+ *  - declaration specifiers are structured so that a typedef name can only be the type specifier,
+ *    and only when no other type specifier is given (6.7.2), e.g. in 'unsigned x;' 'x' is the declarator.
+ *  - lists such as 'X ( ',' X )*' are AGL separated lists '[X / ',']+'.
+ * As in every context free grammar of C, a typedef name cannot be told apart from another identifier,
+ * so some sentences are ambiguous, e.g. 'a * b;' (a declaration of 'b' if 'a' is a typedef name, else an expression)
+ * or '(a) - b' (a cast if 'a' is a typedef name).
+ */
 namespace net.akehurst.language.C
 
-grammar C_11 {
+// A.1 Lexical grammar
+grammar Lexical {
 
+    skip leaf WHITE_SPACE = "\s+" ;
+    skip leaf LINE_COMMENT = "//[^\r\n]*" ;
+    skip leaf BLOCK_COMMENT = "/[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
+    // preprocessing directives are not processed, a backslash at the end of a line continues the directive
+    skip leaf PREPROCESSING_DIRECTIVE = "#([^\r\n\\]|\\[^\r\n]|\\\r?\n)*" ;
+
+    // A.1.3 Identifiers
+    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+
+    // A.1.5 Constants
+    leaf INTEGER_CONSTANT = "(0[xX][0-9a-fA-F]+|[1-9][0-9]*|0[0-7]*)([uU](ll|LL|[lL])?|(ll|LL|[lL])[uU]?)?" ;
+    leaf FLOATING_CONSTANT = "(([0-9]*[.][0-9]+|[0-9]+[.])([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+|0[xX]([0-9a-fA-F]*[.][0-9a-fA-F]+|[0-9a-fA-F]+[.]?)[pP][+-]?[0-9]+)[flFL]?" ;
+    leaf CHARACTER_CONSTANT = "[LuU]?'([^'\\\r\n]|\\(['\"?\\abfnrtv]|[0-7]{1,3}|x[0-9a-fA-F]+|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}))+'" ;
+    // the enumeration constants are identifiers
+    Constant = INTEGER_CONSTANT | FLOATING_CONSTANT | CHARACTER_CONSTANT ;
+
+    // A.1.6 String literals, adjacent string literals are concatenated (5.1.1.2)
+    leaf STRING_LITERAL = "(u8|[uUL])?\"([^\"\\\r\n]|\\(['\"?\\abfnrtv]|[0-7]{1,3}|x[0-9a-fA-F]+|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}))*\"" ;
+    StringLiteral = STRING_LITERAL+ ;
+}
+
+// A.2.1 Expressions (6.5)
+// Operator precedence is given by the preference rule, lowest precedence first.
+// The operand of a unary operator or a cast is a CastOperand, which has a higher precedence than all binary operators.
+grammar Expressions : Lexical {
+
+    // the comma operator, 'expression' in the standard
+    Expression = [Expr / ',']+ ;
+
+    // 'assignment-expression' in the standard
+    Expr
+        = AssignmentExpression
+        | ConditionalExpression
+        | LogicalOrExpression
+        | LogicalAndExpression
+        | InclusiveOrExpression
+        | ExclusiveOrExpression
+        | AndExpression
+        | EqualityExpression
+        | RelationalExpression
+        | ShiftExpression
+        | AdditiveExpression
+        | MultiplicativeExpression
+        | CastOperand
+    ;
+
+    preference Expr {
+        AssignmentExpression on '=', '*=', '/=', '%=', '+=', '-=', '<<=', '>>=', '&=', '^=', '|=' right
+        ConditionalExpression on '?' right
+        LogicalOrExpression on '||' left
+        LogicalAndExpression on '&&' left
+        InclusiveOrExpression on '|' left
+        ExclusiveOrExpression on '^' left
+        AndExpression on '&' left
+        EqualityExpression on '==', '!=' left
+        RelationalExpression on '<', '>', '<=', '>=' left
+        ShiftExpression on '<<', '>>' left
+        AdditiveExpression on '+', '-' left
+        MultiplicativeExpression on '*', '/', '%' left
+    }
+
+    AssignmentExpression = Expr AssignmentOperator Expr ;
+    AssignmentOperator = '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ;
+    ConditionalExpression = Expr '?' Expression ':' Expr ;
+    LogicalOrExpression = Expr '||' Expr ;
+    LogicalAndExpression = Expr '&&' Expr ;
+    InclusiveOrExpression = Expr '|' Expr ;
+    ExclusiveOrExpression = Expr '^' Expr ;
+    AndExpression = Expr '&' Expr ;
+    EqualityExpression = Expr EqualityOperator Expr ;
+    EqualityOperator = '==' | '!=' ;
+    RelationalExpression = Expr RelationalOperator Expr ;
+    RelationalOperator = '<' | '>' | '<=' | '>=' ;
+    ShiftExpression = Expr ShiftOperator Expr ;
+    ShiftOperator = '<<' | '>>' ;
+    AdditiveExpression = Expr AdditiveOperator Expr ;
+    AdditiveOperator = '+' | '-' ;
+    MultiplicativeExpression = Expr MultiplicativeOperator Expr ;
+    MultiplicativeOperator = '*' | '/' | '%' ;
+
+    // 'constant-expression' in the standard
+    ConstantExpression = Expr ;
+
+    // 6.5.4 Cast operators
+    CastOperand = CastExpression | UnaryOperand ;
+    CastExpression = '(' TypeName ')' CastOperand ;
+
+    // 6.5.3 Unary operators
+    UnaryOperand = UnaryExpression | PostfixOperand ;
+    UnaryExpression
+        = PreIncrementExpression
+        | PreDecrementExpression
+        | UnaryOperatorExpression
+        | SizeofExpression
+        | SizeofTypeExpression
+        | AlignofExpression
+    ;
+    PreIncrementExpression = '++' UnaryOperand ;
+    PreDecrementExpression = '--' UnaryOperand ;
+    UnaryOperatorExpression = UnaryOperator CastOperand ;
+    UnaryOperator = '&' | '*' | '+' | '-' | '~' | '!' ;
+    SizeofExpression = 'sizeof' UnaryOperand ;
+    SizeofTypeExpression = 'sizeof' '(' TypeName ')' ;
+    AlignofExpression = '_Alignof' '(' TypeName ')' ;
+
+    // 6.5.2 Postfix operators
+    PostfixOperand = PostfixExpression | PrimaryExpression ;
+    PostfixExpression
+        = ArraySubscriptExpression
+        | FunctionCallExpression
+        | MemberExpression
+        | PointerMemberExpression
+        | PostIncrementExpression
+        | PostDecrementExpression
+        | CompoundLiteral
+    ;
+    ArraySubscriptExpression = PostfixOperand '[' Expression ']' ;
+    FunctionCallExpression = PostfixOperand '(' ArgumentExpressionList? ')' ;
+    ArgumentExpressionList = [Expr / ',']+ ;
+    MemberExpression = PostfixOperand '.' IDENTIFIER ;
+    PointerMemberExpression = PostfixOperand '->' IDENTIFIER ;
+    PostIncrementExpression = PostfixOperand '++' ;
+    PostDecrementExpression = PostfixOperand '--' ;
+    CompoundLiteral = '(' TypeName ')' '{' InitializerList ','? '}' ;
+
+    // 6.5.1 Primary expressions
+    PrimaryExpression
+        = IDENTIFIER
+        | Constant
+        | StringLiteral
+        | ParenthesizedExpression
+        | GenericSelection
+    ;
+    ParenthesizedExpression = '(' Expression ')' ;
+
+    // 6.5.1.1 Generic selection
+    GenericSelection = '_Generic' '(' Expr ',' GenericAssocList ')' ;
+    GenericAssocList = [GenericAssociation / ',']+ ;
+    GenericAssociation = ( TypeName | 'default' ) ':' Expr ;
+
+    // defined in Declarations
+    TypeName = 'TypeName is defined in grammar Declarations' ;
+    InitializerList = 'InitializerList is defined in grammar Declarations' ;
+}
+
+// A.2.2 Declarations (6.7)
+grammar Declarations : Expressions {
+
+    Declaration
+        = DeclarationSpecifiers InitDeclaratorList? ';'
+        | StaticAssertDeclaration
+    ;
+
+    // 6.7.2: a typedef name, struct, union, enum or atomic type specifier is the only type specifier,
+    // the keywords 'int', 'unsigned', ... can be combined.
+    DeclarationSpecifiers
+        = NonTypeSpecifier* NamedTypeSpecifier NonTypeSpecifier*
+        | NonTypeSpecifier* BasicTypeSpecifier BasicDeclarationSpecifier*
+    ;
+    BasicDeclarationSpecifier = BasicTypeSpecifier | NonTypeSpecifier ;
+    NonTypeSpecifier
+        = StorageClassSpecifier
+        | TypeQualifier
+        | FunctionSpecifier
+        | AlignmentSpecifier
+    ;
+
+    InitDeclaratorList = [InitDeclarator / ',']+ ;
+    InitDeclarator = Declarator ( '=' Initializer )? ;
+
+    // 6.7.1 Storage-class specifiers
+    StorageClassSpecifier = 'typedef' | 'extern' | 'static' | '_Thread_local' | 'auto' | 'register' ;
+
+    // 6.7.2 Type specifiers
+    BasicTypeSpecifier = 'void' | 'char' | 'short' | 'int' | 'long' | 'float' | 'double' | 'signed' | 'unsigned' | '_Bool' | '_Complex' ;
+    NamedTypeSpecifier
+        = AtomicTypeSpecifier
+        | StructOrUnionSpecifier
+        | EnumSpecifier
+        | TypedefName
+    ;
+
+    // 6.7.2.1 Structure and union specifiers
+    StructOrUnionSpecifier
+        = StructOrUnion IDENTIFIER? '{' StructDeclaration* '}'
+        | StructOrUnion IDENTIFIER
+    ;
+    StructOrUnion = 'struct' | 'union' ;
+    // without a declarator list for an anonymous structure or union member
+    StructDeclaration
+        = SpecifierQualifierList StructDeclaratorList? ';'
+        | StaticAssertDeclaration
+    ;
+    SpecifierQualifierList
+        = NonTypeQualifier* NamedTypeSpecifier NonTypeQualifier*
+        | NonTypeQualifier* BasicTypeSpecifier BasicSpecifierQualifier*
+    ;
+    BasicSpecifierQualifier = BasicTypeSpecifier | NonTypeQualifier ;
+    NonTypeQualifier = TypeQualifier | AlignmentSpecifier ;
+    StructDeclaratorList = [StructDeclarator / ',']+ ;
+    StructDeclarator
+        = Declarator
+        | Declarator? ':' ConstantExpression
+    ;
+
+    // 6.7.2.2 Enumeration specifiers
+    EnumSpecifier
+        = 'enum' IDENTIFIER? '{' EnumeratorList ','? '}'
+        | 'enum' IDENTIFIER
+    ;
+    EnumeratorList = [Enumerator / ',']+ ;
+    Enumerator = IDENTIFIER ( '=' ConstantExpression )? ;
+
+    // 6.7.2.4 Atomic type specifiers
+    AtomicTypeSpecifier = '_Atomic' '(' TypeName ')' ;
+
+    // 6.7.3 Type qualifiers
+    TypeQualifier = 'const' | 'restrict' | 'volatile' | '_Atomic' ;
+
+    // 6.7.4 Function specifiers
+    FunctionSpecifier = 'inline' | '_Noreturn' ;
+
+    // 6.7.5 Alignment specifier
+    AlignmentSpecifier = '_Alignas' '(' ( TypeName | ConstantExpression ) ')' ;
+
+    // 6.7.6 Declarators
+    Declarator = Pointer? DirectDeclarator ;
+    DirectDeclarator
+        = IDENTIFIER
+        | '(' Declarator ')'
+        | ArrayDeclarator
+        | FunctionDeclarator
+    ;
+    ArrayDeclarator = DirectDeclarator '[' ArraySize ']' ;
+    ArraySize
+        = TypeQualifier* Expr?
+        | 'static' TypeQualifier* Expr
+        | TypeQualifier+ 'static' Expr
+        | TypeQualifier* '*'
+    ;
+    // the identifier list is the old (K&R) style, e.g. 'int f(a, b) int a, b; { ... }'
+    FunctionDeclarator
+        = DirectDeclarator '(' ParameterTypeList ')'
+        | DirectDeclarator '(' IdentifierList? ')'
+    ;
+    Pointer = PointerPart+ ;
+    PointerPart = '*' TypeQualifier* ;
+    ParameterTypeList = ParameterList ( ',' '...' )? ;
+    ParameterList = [ParameterDeclaration / ',']+ ;
+    ParameterDeclaration
+        = DeclarationSpecifiers Declarator
+        | DeclarationSpecifiers AbstractDeclarator?
+    ;
+    IdentifierList = [IDENTIFIER / ',']+ ;
+
+    // 6.7.7 Type names
+    override TypeName = SpecifierQualifierList AbstractDeclarator? ;
+    AbstractDeclarator
+        = Pointer
+        | Pointer? DirectAbstractDeclarator
+    ;
+    DirectAbstractDeclarator
+        = '(' AbstractDeclarator ')'
+        | DirectAbstractDeclarator? '[' ArraySize ']'
+        | DirectAbstractDeclarator? '(' ParameterTypeList? ')'
+    ;
+
+    // 6.7.8 Type definitions
+    TypedefName = IDENTIFIER ;
+
+    // 6.7.9 Initialization
+    Initializer
+        = Expr
+        | '{' InitializerList ','? '}'
+    ;
+    override InitializerList = [DesignatedInitializer / ',']+ ;
+    DesignatedInitializer = Designation? Initializer ;
+    Designation = Designator+ '=' ;
+    Designator
+        = '[' ConstantExpression ']'
+        | '.' IDENTIFIER
+    ;
+
+    // 6.7.10 Static assertions
+    StaticAssertDeclaration = '_Static_assert' '(' ConstantExpression ',' StringLiteral ')' ';' ;
+}
+
+// A.2.3 Statements (6.8)
+grammar Statements : Declarations {
+
+    Statement
+        = LabeledStatement
+        | CompoundStatement
+        | ExpressionStatement
+        | IfStatement
+        | IfElseStatement
+        | SwitchStatement
+        | WhileStatement
+        | DoStatement
+        | ForStatement
+        | GotoStatement
+        | ContinueStatement
+        | BreakStatement
+        | ReturnStatement
+    ;
+
+    // 6.8.1 Labeled statements
+    LabeledStatement
+        = IDENTIFIER ':' Statement
+        | 'case' ConstantExpression ':' Statement
+        | 'default' ':' Statement
+    ;
+
+    // 6.8.2 Compound statement
+    CompoundStatement = '{' BlockItem* '}' ;
+    BlockItem = Declaration | Statement ;
+
+    // 6.8.3 Expression and null statements
+    ExpressionStatement = Expression? ';' ;
+
+    // 6.8.4 Selection statements, an 'else' belongs to the nearest 'if' (6.8.4.1), given by the preference rule
+    IfStatement = 'if' '(' Expression ')' Statement ;
+    IfElseStatement = 'if' '(' Expression ')' Statement 'else' Statement ;
+    preference Statement {
+        IfElseStatement on 'else' right
+    }
+    SwitchStatement = 'switch' '(' Expression ')' Statement ;
+
+    // 6.8.5 Iteration statements
+    WhileStatement = 'while' '(' Expression ')' Statement ;
+    DoStatement = 'do' Statement 'while' '(' Expression ')' ';' ;
+    ForStatement = 'for' '(' ForInit Expression? ';' Expression? ')' Statement ;
+    ForInit = Expression? ';' | Declaration ;
+
+    // 6.8.6 Jump statements
+    GotoStatement = 'goto' IDENTIFIER ';' ;
+    ContinueStatement = 'continue' ';' ;
+    BreakStatement = 'break' ';' ;
+    ReturnStatement = 'return' Expression? ';' ;
+}
+
+// A.2.4 External definitions (6.9)
+grammar C_11 : Statements {
+
+    #defaultGoalRule: TranslationUnit
+    // C reserves its keywords (6.4.1), the Classic scanner does that
+    #scanner: Classic
+
+    TranslationUnit = ExternalDeclaration* ;
+    ExternalDeclaration = FunctionDefinition | Declaration ;
+
+    // 6.9.1 Function definitions, the declaration list is for the old (K&R) style parameters
+    FunctionDefinition = DeclarationSpecifiers Declarator DeclarationList? CompoundStatement ;
+    DeclarationList = Declaration+ ;
 }
