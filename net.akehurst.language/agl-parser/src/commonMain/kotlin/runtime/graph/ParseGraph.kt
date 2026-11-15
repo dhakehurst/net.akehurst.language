@@ -29,6 +29,7 @@ import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.TreeDataGrowing
+import net.akehurst.language.sppt.treedata.compareChildAlternatives
 
 internal class ParseGraph(
     val sentence: Sentence,
@@ -356,6 +357,46 @@ internal class ParseGraph(
         return true
     }
 
+    /**
+     * The merge decision could not decide between the existing complete node and the new one
+     * (same rule, start, end, option and dynamic priority, e.g. different splits of the input between concatenation children).
+     * Keeping whichever came first makes the tree depend on the order of the parse
+     * (pre-built vs on-demand automaton, earlier parses with the same processor),
+     * so the children are chosen with the same order independent rule as for growing nodes, see [compareChildAlternatives].
+     */
+    private fun chooseUndecidableCompleteParentFirstChild(existing: SpptDataNode, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex): Boolean {
+        val newChildren = listOf(child)
+        if (newIsPreferredAlternative(existing, newChildren)) {
+            this.treeData.setFirstChildForComplete(newParent.complete, child, false)
+        }
+        this.addGrowingHead(previous, newParent)
+        return true
+    }
+
+    /** see [chooseUndecidableCompleteParentFirstChild] */
+    private fun chooseUndecidableCompleteParentLastChild(existing: SpptDataNode, oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex?): Boolean {
+        val chain = this.treeData.growingChainOf(oldParent)
+        if (null != chain) {
+            val newChildren = chain.toList() + child
+            if (newIsPreferredAlternative(existing, newChildren)) {
+                this.treeData.setNextChildForCompleteParent(oldParent, newParent.complete, child, false)
+            }
+        }
+        this.addGrowingHead(previous, newParent)
+        return true
+    }
+
+    private fun newIsPreferredAlternative(existing: SpptDataNode, newChildren: List<SpptDataNode>): Boolean {
+        val existingAlternatives = this.treeData.complete.childrenFor(existing)
+        return when (existingAlternatives.size) {
+            1 -> {
+                val existingChildren = existingAlternatives[0].second
+                existingChildren != newChildren && compareChildAlternatives(newChildren, existingChildren) > 0
+            }
+            else -> false // none, or ambiguous alternatives kept on purpose: leave as is
+        }
+    }
+
     private fun mergeDecisionOnLength(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>,ifEqual: (reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         val newReasonList = reasonList+MergeReason.LENGTH
         val existingLength = existingParent.nextInputPosition - existingParent.startPosition
@@ -591,7 +632,7 @@ internal class ParseGraph(
                     }
                     MergeChoice.UNDECIDABLE -> {
                         onAmbiguity?.invoke(existingComplete) { listOf(child) }
-                        useExistingCompleteParentFirstChild(parent, child, previous)
+                        chooseUndecidableCompleteParentFirstChild(existingComplete, parent, child, previous)
                         //keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     }
                 }
@@ -655,7 +696,7 @@ internal class ParseGraph(
                     }
                     MergeChoice.UNDECIDABLE -> {
                         onAmbiguity?.invoke(existingComplete) { (this.treeData.growingChainOf(previous)?.toList() ?: emptyList()) + child }
-                        useExistingCompleteParentLastChild(parent, child, prevPrev)
+                        chooseUndecidableCompleteParentLastChild(existingComplete, previous, parent, child, prevPrev)
                         //keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
                     }
                 }

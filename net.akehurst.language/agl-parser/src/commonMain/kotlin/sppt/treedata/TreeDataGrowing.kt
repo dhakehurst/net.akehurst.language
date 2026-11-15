@@ -74,6 +74,29 @@ internal class ChildChain<CN> private constructor(
     }
 }
 
+/**
+ * Order independent choice between two child lists of the same node (same rule, start and end).
+ * > 0 prefers [a], < 0 prefers [b].
+ * Rule: at the first child that differs, the longer child wins, then (same rule) the higher option,
+ * then a fixed order on rule number and option so that the result never depends on the order of the parse.
+ * Used both when two derivations meet at the same growing node and when they give the same complete node
+ * that the merge decision can not decide (see ParseGraph).
+ */
+internal fun compareChildAlternatives(a: List<SpptDataNode>, b: List<SpptDataNode>): Int {
+    for (i in 0 until minOf(a.size, b.size)) {
+        val x = a[i]
+        val y = b[i]
+        if (x == y) continue
+        val lx = x.nextInputPosition - x.startPosition
+        val ly = y.nextInputPosition - y.startPosition
+        if (lx != ly) return lx.compareTo(ly)
+        if (x.rule == y.rule && x.option != y.option) return x.option.asIndex.compareTo(y.option.asIndex)
+        if (x.rule.number != y.rule.number) return -x.rule.number.compareTo(y.rule.number)
+        if (x.option != y.option) return x.option.asIndex.compareTo(y.option.asIndex)
+    }
+    return a.size.compareTo(b.size)
+}
+
 class TreeDataGrowing<GN, CN : SpptDataNode>(
     val forStateSetNumber: Int
 ) {
@@ -179,26 +202,7 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
         this.addGrowingChildren(newParent, extended)
     }
 
-    /**
-     * Order independent choice between two child lists of the same node (same rule, start and end).
-     * > 0 prefers [a], < 0 prefers [b].
-     * Rule: at the first child that differs, the longer child wins, then (same rule) the higher option,
-     * then a fixed order on rule number and option so that the result never depends on the order of the parse.
-     */
-    private fun compareAlternatives(a: List<CN>, b: List<CN>): Int {
-        for (i in 0 until minOf(a.size, b.size)) {
-            val x = a[i]
-            val y = b[i]
-            if (x == y) continue
-            val lx = x.nextInputPosition - x.startPosition
-            val ly = y.nextInputPosition - y.startPosition
-            if (lx != ly) return lx.compareTo(ly)
-            if (x.rule == y.rule && x.option != y.option) return x.option.asIndex.compareTo(y.option.asIndex)
-            if (x.rule.number != y.rule.number) return -x.rule.number.compareTo(y.rule.number)
-            if (x.option != y.option) return x.option.asIndex.compareTo(y.option.asIndex)
-        }
-        return a.size.compareTo(b.size)
-    }
+    private fun compareAlternatives(a: List<CN>, b: List<CN>): Int = compareChildAlternatives(a, b)
 /*
     fun inGrowingParentChildAt(parent: GN, childIndex: Int): CN? {
         val children = this._growingChildren[parent]
