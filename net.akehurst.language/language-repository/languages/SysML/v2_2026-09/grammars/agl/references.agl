@@ -113,6 +113,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     identify net.akehurst.language.sysML.SysMLv2_1.AssertConstraintUsage by assertConstraintKind.constraintUsageDeclaration.usageDeclaration.identification.name | assertConstraintKind.constraintUsageDeclaration.usageDeclaration.identification.shortName.name | when { assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization.filter({ s -> s is net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions }).size == 0 -> $nothing else -> assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization.filter({ s -> s is net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions }).first.redefines.ownedRedefinition.name.last } visibility $container.memberPrefix.visibilityIndicator
 
     // the elements that own other elements (namespaces)
+    // a usage has the members of its types; for a conjugated port typing ('~P', typedBy.featureTyping.qualifiedName) the members of P
     scope net.akehurst.language.sysML.Packages.Package {
         import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
@@ -123,6 +124,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Actions.AcceptNode {
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -133,6 +135,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Actions.ActionUsage {
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -140,60 +143,70 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Actions.AssignmentNode {
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.DecisionNode {
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.ForLoopNode {
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.ForkNode {
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.IfNode {
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.JoinNode {
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.MergeNode {
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.SendNode {
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.TerminateNode {
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.WhileLoopNode {
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -204,6 +217,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Attributes.AttributeUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -211,6 +225,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Attributes.EnumeratedValue {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -220,6 +235,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Attributes.EnumerationUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -230,6 +246,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Cases.AnalysisCaseUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -241,6 +258,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Cases.CaseUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -248,6 +266,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -258,6 +277,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Cases.UseCaseUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -269,6 +289,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Cases.VerificationCaseUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -284,6 +305,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Connections.FlowUsage {
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -291,6 +313,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Connections.SuccessionFlowUsage {
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -298,6 +321,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Connections.Message {
         inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -307,6 +331,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     scope net.akehurst.language.sysML.Expressions.BodyExpression { }
     scope net.akehurst.language.sysML.Connections.DefaultInterfaceEnd {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -321,18 +346,21 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.DefinitionAndUsage.DefaultReferenceUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.DefinitionAndUsage.OwnedCrossFeature {
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.DefinitionAndUsage.ReferenceUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -342,6 +370,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Metadata.ExtendedUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -363,6 +392,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Occurrences.IndividualUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -373,6 +403,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Occurrences.ItemUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -384,6 +415,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Occurrences.OccurrenceUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -395,6 +427,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Occurrences.PartUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -402,6 +435,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Occurrences.PortionUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -412,6 +446,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Ports.PortUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -419,6 +454,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Requirements.ActorUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -429,6 +465,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Requirements.ConcernUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -440,6 +477,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Requirements.RequirementUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -447,24 +485,28 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Requirements.StakeholderUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Requirements.SubjectUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.StateAcceptActionUsage {
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.StateAssignmentActionUsage {
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -475,12 +517,14 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.States.StateSendActionUsage {
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.StateUsage {
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -488,18 +532,21 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.States.TransitionAcceptActionUsage {
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.TransitionAssignmentActionUsage {
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.TransitionSendActionUsage {
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -510,6 +557,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.SysMLv2_1.CalculationUsage {
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -521,6 +569,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.SysMLv2_1.ConstraintUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -532,6 +581,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.SysMLv2_1.RequirementConstraintUsageDeclared {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -543,6 +593,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Views.RenderingUsage {
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -554,6 +605,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Views.ViewUsage {
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -565,6 +617,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     scope net.akehurst.language.sysML.Views.ViewpointUsage {
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -574,6 +627,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall performActionUsageDeclaration.performActionKind of-type net.akehurst.language.sysML.Actions.PerformActionReference members-of ownedReferenceSubsetting.name
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -582,12 +636,14 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall includeUseCaseKind of-type net.akehurst.language.sysML.Cases.IncludeUseCaseReference members-of ownedReferenceSubsetting.name
         inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Connections.ConnectionUsage {
         inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -597,6 +653,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall eventOccurrenceKind of-type net.akehurst.language.sysML.Occurrences.EventOccurrenceReference members-of ownedReferenceSubsetting.name
         inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -605,6 +662,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall satisfyRequirementKind of-type net.akehurst.language.sysML.Requirements.SatisfyRequirementReference members-of ownedReferenceSubsetting.name
         inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -614,6 +672,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall exhibitStateKind of-type net.akehurst.language.sysML.States.ExhibitStateReference members-of ownedReferenceSubsetting.name
         inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
@@ -622,6 +681,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall assertConstraintKind of-type net.akehurst.language.sysML.Calculations.AssertConstraintReference members-of ownedReferenceSubsetting.name
         inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
+        inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
         inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions members-of redefines.ownedRedefinition.name
         inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
