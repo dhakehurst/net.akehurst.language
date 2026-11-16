@@ -19,6 +19,9 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.SpineDefault
+import net.akehurst.language.agl.completionProvider.SentenceCompletion
+import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
@@ -472,13 +475,51 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                         .onEach { it.offeredPosition = wordStart }
                 }
                 val nextSpines = (byPosition[pos] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
-                val next = completionProvider!!.provide(nextSpines, opts.completionProvider)
+                val next = completionProvider!!.provide(nextSpines, optionsWithOwnSentence(sentence, pos, nextSpines, opts).completionProvider)
                     .onEach { it.offeredPosition = pos }
                 val offered = wordCompletions.firstOrNull()?.offeredPosition ?: pos
                 ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
             }
 
             else -> expectedTerminalsAt(sentence, position, options)
+        }
+    }
+
+    /**
+     * [opts] with a completion context that also holds the definitions in the text before [position] (q22/q39).
+     * The text before [position] usually does not parse, so the open rules of a spine are completed with generated text
+     * ([SentenceCompletion]), the result is processed (issues ignored) into a copy of the given context.
+     * The given context is not changed. [opts] is returned as it is when there is no context, no semantic analyser,
+     * or no completed text gives an ASM.
+     * NOTE: a work-around, it could be replaced by error recovery in the parser that gives a partial tree.
+     */
+    private fun optionsWithOwnSentence(sentence: String, position: Int, spines: Set<SpineDefault>, opts: ProcessOptions<AsmType, ContextType>): ProcessOptions<AsmType, ContextType> {
+        val givenContext = opts.completionProvider.sentenceContext as? SentenceContext
+        return when {
+            null == givenContext || null == this.semanticAnalyser -> opts
+            else -> {
+                val before = sentence.substring(0, position)
+                val texts = spines.mapNotNull { SentenceCompletion.completionTextFor(it, targetGrammar) }.distinct().take(5)
+                var result = opts
+                for (txt in texts) {
+                    val ctx = givenContext.union(SentenceContextAny())
+                    val procOpts = opts.clone()
+                    @Suppress("UNCHECKED_CAST")
+                    procOpts.semanticAnalysis.sentenceContext = ctx as ContextType
+                    // its own identity, so the given scopes are kept, and the (old) scope of this sentence is not replaced
+                    val ownIdentity = Any()
+                    procOpts.parse.sentenceIdentity = { ownIdentity }
+                    // a failure here only means the own definitions are not offered
+                    val res = runCatching { this.process(before + " " + txt, procOpts) }.getOrNull()
+                    if (null != res?.asm) {
+                        val withCtx = opts.clone()
+                        withCtx.completionProvider.sentenceContext = ctx as ContextType
+                        result = withCtx
+                        break
+                    }
+                }
+                result
+            }
         }
     }
 
