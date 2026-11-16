@@ -307,7 +307,12 @@ class ReferenceResolverSimple(
             val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDefinition
             referredToTypes.any { td -> itemType.conformsTo(td) }
         }
-        val found = when {
+        // an element whose name is computed from this reference (e.g. 'perform a;' is named 'a') is not a target of it, that would be circular:
+        // while looking up, such an element is not an item of its scope (so the lookup goes on as if it was not there)
+        val selfStr = (self as? TypedObject)?.self as? AsmStructure ?: self as? AsmStructure
+        val outerExcluding = _excluding
+        _excluding = selfStr?.let { r -> { f: Found -> isNamedByReference(f, r, refExpr) } }
+        val found = try { when {
             // 'from \$previous...' : members of the previous target, visible from outside
             null != chain -> when (chainScope) {
                 null -> emptyList()
@@ -321,19 +326,10 @@ class ReferenceResolverSimple(
                 scope.scopePath.isEmpty() -> emptyList()
                 else -> sentenceContext.scopeForSentence.values.flatMap { rootScope -> resolveQualifiedName(chainFrom(rootScope, scope.scopePath.dropLast(1)), qName, scope.rootScope) }
             }
+        } } finally {
+            _excluding = outerExcluding
         }
-        // an element whose name is computed from this reference (e.g. 'perform a;' is named 'a') is not a target of it, that would be circular;
-        // if only such elements are found, the normal lookup goes on outwards from the scope they are in
-        val selfStr = (self as? TypedObject)?.self as? AsmStructure ?: self as? AsmStructure
-        var notCircular = found.filterNot { null != selfStr && isNamedByReference(it, selfStr, refExpr) }
-        var excluded = found
-        while (notCircular.isEmpty() && excluded.isNotEmpty() && null == chain && null == fromScopes) {
-            val outer = excluded.first().owner.scopePath
-            if (outer.isEmpty()) break
-            excluded = sentenceContext.scopeForSentence.values.flatMap { rootScope -> resolveQualifiedName(chainFrom(rootScope, outer.dropLast(1)), qName, scope.rootScope) }
-            notCircular = excluded.filterNot { null != selfStr && isNamedByReference(it, selfStr, refExpr) }
-        }
-        val targets = notCircular
+        val targets = found
             .flatMap { aliasTargets(it, mutableListOf()) }
             .distinctBy { Pair(it.typeName, it.item) }
             .filter { conforms.invoke(it.typeName) }
@@ -483,7 +479,10 @@ class ReferenceResolverSimple(
 
     /** items named 'name' owned by scope 's', that are visible with 'access' */
     private fun ownedItems(s: Scope, name: String, access: Access): List<Found> =
-        s.items[name]?.map { (typeName, p) -> Found(name, typeName, p.second, s) }?.filter { isVisible(visibilityOf(it), access) } ?: emptyList()
+        s.items[name]?.map { (typeName, p) -> Found(name, typeName, p.second, s) }?.filter { isVisible(visibilityOf(it), access) && _excluding?.invoke(it) != true } ?: emptyList()
+
+    // while a reference is looked up: the items that are not targets of it (see handleCreateReference)
+    private var _excluding: ((Found) -> Boolean)? = null
 
     /** items named 'name' in scope 's': owned, else inherited, else imported */
     private fun localResolve(s: Scope, name: String, access: Access, visited: MutableList<Scope>): List<Found> {
@@ -792,25 +791,46 @@ class ReferenceResolverSimple(
      */
     private fun isNamedByReference(f: Found, referring: AsmStructure, refExpr: ReferenceExpressionPropertyDefault): Boolean {
         val el = elementOf(f.item) ?: return false
-        // the property names from 'el' down to 'referring'
-        val path = mutableListOf<String>()
+        // only an element that is or contains 'referring' can be named by its reference
         recordContainersFor(referring)
-        var c: AsmStructure = referring
-        while (c !== el) {
-            val parent = containerOf(c) ?: return false // 'el' does not contain 'referring'
-            val pn = parent.property.values.firstOrNull { p -> structuresIn(p.value).any { it === c } }?.name?.value ?: return false
-            path.add(0, pn)
-            c = parent
-        }
+        var c: AsmStructure? = referring
+        while (null != c && c !== el) c = containerOf(c)
+        if (null == c) return false
         val referringProps = refExpr.referringPropertyNavigation.let { nav ->
             val start = (nav.start as? RootExpression)?.name ?: return false
             listOf(start) + nav.parts.map { (it as? PropertyCall)?.propertyName ?: return false }
         }
-        val expected = path + referringProps
         val id = crossReferenceDomain.identifyingExpressionFor(typesDomain, f.owner.forTypeName, el.qualifiedTypeName).singleOrNull ?: return false
         return id.identifiedByAlternatives.any { alt ->
-            nameValue(evaluate(alt, el)) == f.name && navigationsIn(alt).any { isSubsequenceFromStart(expected, it) }
+            nameValue(evaluate(alt, el)) == f.name && navigationsIn(alt).any { navigationReaches(el, it, referring, referringProps) }
         }
+    }
+
+    /**
+     * true if navigating the property names 'nav' from 'el' reaches 'referring' and then continues with 'referringProps'
+     * ('first' and 'last' of a list are its first and last element; a property of a list is the property of each element; references are not followed)
+     */
+    private fun navigationReaches(el: AsmStructure, nav: List<String>, referring: AsmStructure, referringProps: List<String>): Boolean {
+        var values: List<Any?> = listOf(el)
+        for (i in nav.indices) {
+            if (values.any { v -> structuresIn(v).any { it === referring } } && nav.drop(i).take(referringProps.size) == referringProps) return true
+            values = values.flatMap { navigateProperty(it, nav[i]) }
+            if (values.isEmpty()) return false
+        }
+        return false
+    }
+
+    private fun navigateProperty(v: Any?, name: String): List<Any?> = when (v) {
+        null, is AsmNothing, is AsmReference -> emptyList()
+        is TypedObject -> navigateProperty(v.self, name)
+        is AsmStructure -> v.getPropertyOrNull(PropertyValueName(name))?.let { listOf(it) } ?: emptyList()
+        is AsmList -> navigateProperty(v.elements, name)
+        is List<*> -> when (name) {
+            "first" -> listOfNotNull(v.firstOrNull())
+            "last" -> listOfNotNull(v.lastOrNull())
+            else -> v.flatMap { navigateProperty(it, name) }
+        }
+        else -> emptyList()
     }
 
     /** the name given by an identifying value (a String, or the last of a List<String>) */
@@ -844,15 +864,6 @@ class ReferenceResolverSimple(
         else -> emptyList()
     }
 
-    /** true if 'expected' is a subsequence of 'nav' that starts with the first of 'nav' (other names in 'nav', e.g. 'last', are skipped) */
-    private fun isSubsequenceFromStart(expected: List<String>, nav: List<String>): Boolean {
-        if (expected.isEmpty() || nav.isEmpty() || nav[0] != expected[0]) return false
-        var i = 0
-        for (n in nav) {
-            if (i < expected.size && n == expected[i]) i++
-        }
-        return i == expected.size
-    }
 
     /** if the found item is an alias, the items for what it is an alias for (transitively), else the item itself */
     private fun aliasTargets(f: Found, seen: MutableList<AsmStructure>): List<Found> {
