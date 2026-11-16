@@ -30,6 +30,10 @@ import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesDomainSimple
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.types.api.DataType
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -366,5 +370,36 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         }
 
         GrammarTypeModelTest.tmAssertEquals(expected, actual)
+    }
+
+    @Test
+    fun override_choice__inherited_rules_keep_base_types() {
+        val grammarStr = """
+            namespace test
+            grammar Base {
+                S = P ;
+                P = A | B ;
+                A = 'a' ;
+                B = 'b' C ;
+                C = 'c' ;
+            }
+            grammar Derived : Base {
+                override P = A | B | D ;
+                D = 'd' ;
+            }
+        """.trimIndent()
+
+        val result = Agl.processorFromStringSimple(GrammarString(grammarStr))
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = result.processor!!.typesDomain
+        val baseNs = actual.findNamespaceOrNull(QualifiedName("test.Base"))!!
+        val derivedNs = actual.findNamespaceOrNull(QualifiedName("test.Derived"))!!
+
+        // inherited rules (A, B, C) are not overridden in Derived, so their types are only in Base
+        assertEquals(setOf("P", "D"), derivedNs.ownedTypes.map { it.name.value }.toSet())
+        assertEquals(setOf("S", "P", "A", "B", "C"), baseNs.ownedTypes.map { it.name.value }.toSet())
+        val b = baseNs.findOwnedTypeNamed(SimpleName("B")) as DataType
+        assertEquals(listOf("c"), b.property.map { it.name.value })
     }
 }
