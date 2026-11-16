@@ -122,6 +122,9 @@ class CrossReferenceDomainDefault(
     override fun scopeImportsFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<ScopeImport> =
         lookupFor(typesDomain).scopeImportsFor(typeQualifiedName)
 
+    override fun importsIntoScope(typesDomain: TypesDomain): List<ScopeImport> =
+        lookupFor(typesDomain).importsIntoScope
+
     override fun findTypeNamedIn(typesDomain: TypesDomain, declaration: Any, typeName: PossiblyQualifiedName): TypeDefinition? =
         lookupFor(typesDomain).findTypeNamedIn(declaration, typeName)
 
@@ -213,6 +216,8 @@ data class DeclarationsForNamespaceDefault(
         // identifiables of the root scope are written at the top level
         scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.let { root ->
             root.identifiables.forEach { lines.add(it.asString(indent)) }
+            // and the 'import-into-scope' declarations
+            root.scopeImports.forEach { lines.add(it.asString(indent)) }
         }
         scopeDefinition.values
             .filter { it.scopeForTypeName != CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last }
@@ -269,7 +274,8 @@ data class ScopeImportDefault(
     override val recursive: Expression? = null,
     override val visibility: Expression? = null,
     override val condition: Expression? = null,
-    override val named: List<String>? = null
+    override val named: List<String>? = null,
+    override val intoScope: Boolean = false
 ) : ScopeImport {
     override fun asString(indent: Indent, imports: List<Import>): String {
         val kw = when (kind) {
@@ -285,8 +291,9 @@ data class ScopeImportDefault(
         val rec = recursive?.let { " recursive ${it.asString(indent, emptyList())}" } ?: ""
         val vis = visibility?.let { " visibility ${it.asString(indent, emptyList())}" } ?: ""
         val cn = condition?.let { " when ${it.asString(indent, emptyList())}" } ?: ""
-        return when (named) {
-            null -> "${indent}$kw forall ${elements.asString(indent, emptyList())}$ot $what ${target.asString(indent, emptyList())}$rec$vis$cn"
+        return when {
+            intoScope -> "${indent}import-into-scope ${ofType?.value ?: ""} $what ${target.asString(indent, emptyList())}$rec$vis$cn"
+            null == named -> "${indent}$kw forall ${elements.asString(indent, emptyList())}$ot $what ${target.asString(indent, emptyList())}$rec$vis$cn"
             else -> "${indent}$kw named ${named.joinToString(".") { n -> if (IDENTIFIER_REGEX.matches(n)) n else "'$n'" }}$cn"
         }
     }

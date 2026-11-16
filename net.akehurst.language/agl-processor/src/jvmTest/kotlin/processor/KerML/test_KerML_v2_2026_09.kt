@@ -163,8 +163,6 @@ class test_KerML_v2_2026_09_agl_references {
         /** relative paths (from 'valid') of example files that are known to have reference errors (mostly implicit specializations, not supported yet) */
         val knownFailing = setOf(
             "examples/Association Examples/ProductSelection_N_ary.kerml",
-            "examples/Association Examples/ProductSelection_OwnedEnds.kerml",
-            "examples/Association Examples/ProductSelection_UnownedEnds.kerml",
             "examples/Behavior Examples/TakePicture.kerml",
             "examples/Mass Roll-up Example/MassRollup_2.kerml",
             "examples/Mass Roll-up Example/Vehicles_1.kerml",
@@ -182,7 +180,6 @@ class test_KerML_v2_2026_09_agl_references {
             "examples/Simple Tests/MetadataTest.kerml",
             "examples/Simple Tests/Scoping.kerml",
             "examples/Variable Feature Examples/Enhancements/Moments.kerml",
-            "examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml",
             "examples/Vehicle Example/VehicleUsages.kerml",
         )
     }

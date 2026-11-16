@@ -443,6 +443,12 @@ internal class Grammar2TransformRuleSet(
             null == refRule -> StdLibDefault.NothingType
             refRule.isLeaf ->StdLibDefault.String
             refRule.rhs is EmptyRule -> StdLibDefault.NothingType
+            refRule.grammar.qualifiedName != this.grammar.qualifiedName -> {
+                // rule is inherited (not overridden here), its type is owned by the grammar that defines the rule
+                val owner = grm2Ns[refRule.grammar.qualifiedName]?.g2rs
+                    ?: error("Grammar2TransformRuleSet not created for '${refRule.grammar.qualifiedName.value}'.")
+                owner.typeForRhs(refRule, refRule.rhs)
+            }
             else -> {
                 typeForRhs(refRule,refRule.rhs)
             }

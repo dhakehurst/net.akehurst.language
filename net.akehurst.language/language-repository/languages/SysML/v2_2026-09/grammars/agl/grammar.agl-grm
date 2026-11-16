@@ -744,9 +744,11 @@ grammar States : Actions {
     ExhibitStateDeclaration = 'state' UsageDeclaration ;
 
     // SysML 8.2.2.18.3 Transition Usages
+    // tailored: the declaration of a named transition ('transition T first ...') is its own rule, so its name can be navigated to
     TransitionUsage =
-        'transition' ( UsageDeclaration 'first' )? FeatureReference TriggerActionMember? GuardExpressionMember? EffectBehaviorMember? 'then' ConnectorEnd ActionBody
+        'transition' TransitionUsageDeclaration? FeatureReference TriggerActionMember? GuardExpressionMember? EffectBehaviorMember? 'then' ConnectorEnd ActionBody
     ;
+    TransitionUsageDeclaration = UsageDeclaration 'first' ;
     TargetTransitionUsage =
         ( 'transition' TriggerActionMember? GuardExpressionMember? EffectBehaviorMember? | TriggerActionMember GuardExpressionMember? EffectBehaviorMember? | GuardExpressionMember EffectBehaviorMember? )? 'then' ConnectorEnd ActionBody
     ;

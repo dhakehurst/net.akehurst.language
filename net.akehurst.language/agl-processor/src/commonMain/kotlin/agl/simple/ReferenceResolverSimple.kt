@@ -482,7 +482,8 @@ class ReferenceResolverSimple(
         if (owned.isNotEmpty()) return owned
         val ownerEl = ownerElementOf(s) ?: return emptyList()
         val scopeImports = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName)
-        if (scopeImports.isEmpty()) return emptyList()
+        val importsIntoScope = importsIntoScopeOf(ownerEl)
+        if (scopeImports.isEmpty() && importsIntoScope.isEmpty()) return emptyList()
         val inheritAccess = if (access == Access.OUTSIDE) Access.OUTSIDE else Access.SUBTYPE
         // 'inherit forall ...' first, then 'inherit named ...'
         val inherits = scopeImports.filter { it.kind == ScopeImportKind.INHERIT }
@@ -494,28 +495,28 @@ class ReferenceResolverSimple(
             namedTargetsOf(si, ownerEl).flatMap { t -> scopeOfAnyElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
         }.distinct()
         if (inheritedNamed.isNotEmpty()) return inheritedNamed
-        val imported = scopeImports.filter { it.kind != ScopeImportKind.INHERIT }.flatMap { si ->
-            importElementsOf(si, ownerEl).flatMap { impEl ->
-                when {
-                    access == Access.OUTSIDE && normaliseVisibility(evaluate(si.visibility, impEl)) != PUBLIC -> emptyList()
-                    else -> {
-                        val recursive = evaluate(si.recursive, impEl) == true
-                        targetsOf(si, impEl, s).flatMap { t ->
-                            val direct = when (si.kind) {
-                                // the element is imported under the name it is imported by (e.g. an alias for it), or its own name
-                                ScopeImportKind.IMPORT_ELEMENT -> foundForElement(t).filter { it.name == name || importedNameOf(si, impEl) == name }.map { Found(name, it.typeName, it.item, it.owner) }
-                                else -> scopeOfElement(t)?.let { localResolve(it, name, Access.OUTSIDE, visited) } ?: emptyList()
-                            }
-                            val nested = when {
-                                recursive -> scopeOfElement(t)?.let { ts ->
-                                    descendantScopes(ts).flatMap { localResolve(it, name, Access.OUTSIDE, visited) }
-                                        .let { if (si.kind == ScopeImportKind.IMPORT_ELEMENT) localResolve(ts, name, Access.OUTSIDE, visited) + it else it }
-                                } ?: emptyList()
-
-                                else -> emptyList()
-                            }
-                            direct + nested
+        // the imports declared for the scope ('import forall ...'), then the elements in the scope that import into it ('import-into-scope ...')
+        val imports = scopeImports.filter { it.kind != ScopeImportKind.INHERIT }.flatMap { si -> importElementsOf(si, ownerEl).map { Pair(si, it) } } + importsIntoScope
+        val imported = imports.flatMap { (si, impEl) ->
+            when {
+                access == Access.OUTSIDE && normaliseVisibility(evaluate(si.visibility, impEl)) != PUBLIC -> emptyList()
+                else -> {
+                    val recursive = evaluate(si.recursive, impEl) == true
+                    targetsOf(si, impEl, s).flatMap { t ->
+                        val direct = when (si.kind) {
+                            // the element is imported under the name it is imported by (e.g. an alias for it), or its own name
+                            ScopeImportKind.IMPORT_ELEMENT -> foundForElement(t).filter { it.name == name || importedNameOf(si, impEl) == name }.map { Found(name, it.typeName, it.item, it.owner) }
+                            else -> scopeOfElement(t)?.let { localResolve(it, name, Access.OUTSIDE, visited) } ?: emptyList()
                         }
+                        val nested = when {
+                            recursive -> scopeOfElement(t)?.let { ts ->
+                                descendantScopes(ts).flatMap { localResolve(it, name, Access.OUTSIDE, visited) }
+                                    .let { if (si.kind == ScopeImportKind.IMPORT_ELEMENT) localResolve(ts, name, Access.OUTSIDE, visited) + it else it }
+                            } ?: emptyList()
+
+                            else -> emptyList()
+                        }
+                        direct + nested
                     }
                 }
             }
@@ -784,14 +785,45 @@ class ReferenceResolverSimple(
     }
 
     /** the elements of the scope owner, selected by an import/inherit declaration */
-    private fun importElementsOf(si: ScopeImport, ownerEl: AsmStructure): List<AsmStructure> {
+    private fun importElementsOf(si: ScopeImport, ownerEl: AsmStructure): List<AsmStructure> =
+        structuresIn(evaluate(si.elements, ownerEl)).filter { el -> isSelectedBy(si, el) }
+
+    /** 'el' conforms to the 'of-type' of the import/inherit declaration (if it has one), and its condition (if any) holds for 'el' */
+    private fun isSelectedBy(si: ScopeImport, el: AsmStructure): Boolean {
         val ofType = si.ofType?.let { crossReferenceDomain.findTypeNamedIn(typesDomain, si, it) }
-        return structuresIn(evaluate(si.elements, ownerEl)).filter { el ->
-            when (ofType) {
-                null -> true
-                else -> typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)?.conformsTo(ofType) ?: false
+        val conforms = when (ofType) {
+            null -> true
+            else -> typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)?.conformsTo(ofType) ?: false
+        }
+        return conforms && (null == si.condition || evaluate(si.condition, el) == true)
+    }
+
+    private val _importsIntoScopeOf = mutableMapOf<AsmStructure, List<Pair<ScopeImport, AsmStructure>>>()
+
+    /**
+     * the elements in the scope of 'ownerEl' that import into it ('import-into-scope'), with the declaration that selects each:
+     * the elements contained (in the ASM) in 'ownerEl', not looking inside elements that have a scope of their own (what they contain is in their scope)
+     */
+    private fun importsIntoScopeOf(ownerEl: AsmStructure): List<Pair<ScopeImport, AsmStructure>> {
+        // (a declaration whose type is not found selects nothing; the semantic analysis of the references reports it)
+        val intos = crossReferenceDomain.importsIntoScope(typesDomain).filter { si -> si.ofType?.let { crossReferenceDomain.findTypeNamedIn(typesDomain, si, it) } != null }
+        if (intos.isEmpty()) return emptyList()
+        return _importsIntoScopeOf.getOrPut(ownerEl) {
+            val result = mutableListOf<Pair<ScopeImport, AsmStructure>>()
+            val visited = mutableSetOf<AsmStructure>()
+            fun walk(el: AsmStructure) {
+                for (p in el.property.values) {
+                    if (p.isReference) continue
+                    for (child in structuresIn(p.value)) {
+                        if (child === ownerEl || !visited.add(child)) continue
+                        intos.filter { isSelectedBy(it, child) }.forEach { result.add(Pair(it, child)) }
+                        if (null == scopeOfAnyElement(child)) walk(child)
+                    }
+                }
             }
-        }.filter { el -> null == si.condition || evaluate(si.condition, el) == true }
+            walk(ownerEl)
+            result
+        }
     }
 
     /** the elements referred to by the 'target' (a reference property) of an import/inherit declaration, evaluated on 'sourceEl', which is in scope 's'; with 'resolveNow' the references needed are first resolved, if not yet done */
