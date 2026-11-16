@@ -210,7 +210,6 @@ class test_SysML_v2_2026_09_agl_references {
             "examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml",
             "examples/Vehicle Example/VehicleIndividuals.sysml",
             "examples/Vehicle Example/VehicleUsages.sysml",
-            "examples/v1 Spec Examples/D.4.7.8 Dynamics/HSUVDynamics.sysml",
             "training/16. Conditional Succession/Conditional Succession Example-1.sysml",
             "training/16. Conditional Succession/Conditional Succession Example-2.sysml",
             "training/17. Control/Control Structures Example.sysml",
