@@ -22,6 +22,14 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsGoal
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.expressions.api.CreateObjectExpression
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.api.ReferenceExpressionProperty
+import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.parser.api.RuntimeSpine
@@ -143,6 +151,115 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     .thenBy(CompletionItem::label)
             )
             return sorted
+        }
+
+        /**
+         * The key used by [provideReferencesForSpine] for a leaf item expected next:
+         * the name of the leaf rule, or the id of a literal terminal.
+         */
+        fun referenceKeyFor(tangible: TangibleItem): String = when {
+            tangible.owningRule.isLeaf -> tangible.owningRule.name.value
+            tangible is Terminal -> tangible.id
+            tangible is NonTerminal -> tangible.ruleReference.value
+            else -> tangible.toString()
+        }
+
+        /**
+         * Items that refer to elements in the [sentenceContext], for the leaf items expected next in the [spine].
+         *
+         * - the property a leaf item gives a value to comes from the asm-transform rule of the grammar rule that holds the leaf:
+         *   its assignment for the child number of the leaf
+         * - what that property refers to comes from the [crossReferenceDomain] ('property <p> refers-to <T>')
+         * - an element of the context is offered when its type conforms to a referred to type (both types in the [typesDomain]),
+         *   otherwise when its type name is the referred to name (a simple name matches the last part of the type name)
+         * - an element is offered for a leaf only when its name matches the leaf (pattern or literal value), so it is valid there
+         *
+         * The key of the result is [referenceKeyFor] the leaf, only leaves with at least one item are in the result.
+         */
+        fun provideReferencesForSpine(
+            spine: Spine,
+            sentenceContext: SentenceContext,
+            transformRuleSet: AsmTransformRuleSet,
+            typesDomain: TypesDomain,
+            crossReferenceDomain: CrossReferenceDomain
+        ): Map<String, List<CompletionItem>> {
+            val result = linkedMapOf<String, MutableList<CompletionItem>>()
+            val visited = mutableSetOf<GrammarRule>()
+
+            fun matchesType(itemTypeName: QualifiedName, refersTo: PossiblyQualifiedName): Boolean {
+                val refType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(refersTo)
+                val itemType = typesDomain.findByQualifiedNameOrNull(itemTypeName)
+                return when {
+                    null != refType && null != itemType -> itemType.conformsTo(refType)
+                    refersTo is QualifiedName -> refersTo == itemTypeName
+                    else -> refersTo.simpleName == itemTypeName.last
+                }
+            }
+
+            fun matchesLeaf(text: String, leaf: Terminal): Boolean = when {
+                leaf.isPattern -> runCatching { Regex(leaf.unescapedValue.value).matches(text) }.getOrDefault(true)
+                else -> leaf.unescapedValue.value == text
+            }
+
+            fun lookup(rule: GrammarRule, childNumber: Int, leafKey: String, leaf: Terminal) {
+                val tr = transformRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(rule.name) ?: return
+                val expr = tr.expression as? CreateObjectExpression ?: return
+                val propertyName = expr.propertyAssignments.firstOrNull { it.lhsGrammarRuleIndex == childNumber }?.variable?.name ?: return
+                val ownerTypeName = tr.resolvedType.resolvedDefinition.qualifiedName
+                val refersTo = crossReferenceDomain.referencesFor(typesDomain, ownerTypeName)
+                    .flatMap { it.candidates }
+                    .filterIsInstance<ReferenceExpressionProperty>()
+                    .filter { it.referringPropertyNavigation.asString() == propertyName }
+                    .flatMap { it.refersToTypeName }
+                if (refersTo.isEmpty()) return
+                val items = sentenceContext.findItemsConformingTo { itemTypeName -> refersTo.any { matchesType(itemTypeName, it) } }
+                    .filter { matchesLeaf(it.referableName, leaf) }
+                    .map { CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName) }
+                if (items.isNotEmpty()) result.getOrPut(leafKey) { mutableListOf() }.addAll(items)
+            }
+
+            fun canBeEmpty(item: RuleItem): Boolean = when (item) {
+                is OptionalItem -> true
+                is ListOfItems -> 0 == item.min
+                else -> false
+            }
+
+            lateinit var walkRhs: (GrammarRule, RuleItem) -> Unit
+            fun walkItem(rule: GrammarRule, childNumber: Int, item: RuleItem) {
+                when (item) {
+                    is Terminal -> if (item.isLiteral) lookup(rule, childNumber, item.id, item)
+                    is NonTerminal -> {
+                        val ref = referencedRuleFor(item, spine.targetGrammar)
+                        when {
+                            ref.isLeaf -> lookup(rule, childNumber, ref.name.value, ref.compressedLeaf)
+                            visited.add(ref) -> walkRhs(ref, ref.rhs)
+                            else -> Unit
+                        }
+                    }
+
+                    is OptionalItem -> walkItem(rule, childNumber, item.item)
+                    is ListOfItems -> walkItem(rule, childNumber, item.item)
+                    is Choice, is Concatenation -> walkRhs(rule, item)
+                    else -> Unit // e.g. a group is a child of its own
+                }
+            }
+            walkRhs = { rule, rhs ->
+                when (rhs) {
+                    is Choice -> rhs.alternative.forEach { walkRhs(rule, it) }
+                    is Concatenation -> for ((idx, it) in rhs.items.withIndex()) {
+                        walkItem(rule, idx, it)
+                        if (canBeEmpty(it).not()) break
+                    }
+
+                    else -> walkItem(rule, 0, rhs)
+                }
+            }
+
+            val first = spine.elements.firstOrNull()
+            if (null != first) {
+                spine.expectedNextRuleItems.forEach { walkItem(first.rule, first.nextChildNumber, it) }
+            }
+            return result
         }
 
         // id is the index in [expansions] (used by CompletionProviderOptions.path), empty segments are not offered

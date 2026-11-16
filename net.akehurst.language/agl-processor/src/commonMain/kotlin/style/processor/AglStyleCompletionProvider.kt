@@ -66,7 +66,13 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
         return if (null == context) {
             emptyList()
         } else {
-            val items = spines.flatMap { spine -> spine.expectedNextLeafNonTerminalOrTerminal.flatMap { provideForTerminalItem(spine, it, options) } }
+            val items = spines.flatMap { spine ->
+                // items referring to the grammar being styled, from the references definition of AglStyle
+                val refs = CompletionProviderAbstract.provideReferencesForSpine(spine, context, styleTransformRuleSet, AglStyle.typesDomain, AglStyle.crossReferenceDomain)
+                refs.values.flatten() + spine.expectedNextLeafNonTerminalOrTerminal
+                    .filter { CompletionProviderAbstract.referenceKeyFor(it) !in refs.keys }
+                    .flatMap { provideForTerminalItem(spine, it, options) }
+            }
             defaultSortAndFilter(items)
         }
     }
@@ -85,9 +91,6 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
             // e.g. a rule from AglBase that has no transform rule in the style rule set
             ?: return CompletionProviderAbstract.provideDefaultForSpine(spine, options)
         return when (ruleName) {
-            GrammarRuleName("LITERAL") -> LITERAL(nextExpected, itemType, options.sentenceContext!!)
-            GrammarRuleName("PATTERN") -> PATTERN(nextExpected, itemType, options.sentenceContext!!)
-            GrammarRuleName("IDENTIFIER") -> IDENTIFIER(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("META_IDENTIFIER") -> META_IDENTIFIER(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("STYLE_ID") -> STYLE_ID(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("STYLE_VALUE") -> STYLE_VALUE(nextExpected, itemType, options.sentenceContext!!)
@@ -97,31 +100,6 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
             GrammarRuleName("style") -> style(nextExpected, itemType, options.sentenceContext!!)
                 ?: CompletionProviderAbstract.provideDefaultForSpine(spine, options)
             else -> CompletionProviderAbstract.provideDefaultForSpine(spine, options)
-        }
-    }
-
-    private fun LITERAL(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
-        val scopeItems = context.findItemsConformingTo { it.value == "LITERAL" }
-        return scopeItems.map {
-            CompletionItem(CompletionItemKind.REFERRED, "LITERAL", it.referableName).also {
-                it.description = "Reference to a literal value used in the grammar. Literals are enclosed in single quotes or leaf rules."
-            }
-        }
-    }
-
-    private fun PATTERN(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
-        val scopeItems = context.findItemsConformingTo { it.value == "PATTERN" }
-        return scopeItems.map {
-            CompletionItem(CompletionItemKind.REFERRED, "PATTERN", it.referableName).also {
-                it.description = "Reference to a pattern value (regular expression) used in the grammar. Patterns are enclosed in double quotes or leaf rules."
-            }
-        }
-    }
-
-    private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
-        val scopeItems = context.findItemsConformingTo { it == grammarRuleTypeDefinition.qualifiedName }
-        return scopeItems.map {
-            CompletionItem(CompletionItemKind.REFERRED, grammarRuleTypeDefinition.name.value, it.referableName)
         }
     }
 
