@@ -468,7 +468,9 @@ grammar Occurrences : DefinitionAndUsage {
     PartUsage = OccurrenceUsagePrefix 'part' Usage ;
 
     // SysML 8.2.2.13.1 Connection Definition and Usage
-    ConnectorEnd = MultiplicityRange? ( NAME REFERENCES )? OwnedReferenceSubsetting ;
+    // tailored: the optional name is a rule (was the group '( NAME REFERENCES )?'), so it can be navigated (identify ConnectorEnd)
+    ConnectorEnd = MultiplicityRange? ConnectorEndName? OwnedReferenceSubsetting ;
+    ConnectorEndName = NAME REFERENCES ;
 
     // SysML 8.2.2.16 Flows Textual Notation
     PayloadFeature
@@ -546,7 +548,9 @@ grammar Connections : Ports {
     ;
     BinaryInterfacePart = InterfaceEnd 'to' InterfaceEnd ;
     NaryInterfacePart = '(' InterfaceEnd ',' [InterfaceEnd / ',']+ ')' ;
-    InterfaceEnd = MultiplicityRange? ( NAME REFERENCES )? OwnedReferenceSubsetting ;
+    // tailored: the optional name is a rule (was the group '( NAME REFERENCES )?'), so it can be navigated (identify InterfaceEnd)
+    InterfaceEnd = MultiplicityRange? InterfaceEndName? OwnedReferenceSubsetting ;
+    InterfaceEndName = NAME REFERENCES ;
 
     // SysML 8.2.2.15 Allocations Textual Notation
     AllocationDefinition = OccurrenceDefinitionPrefix 'allocation' 'def' Definition ;
