@@ -98,12 +98,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace $NAMESPACE_NAME
+        namespace ${NAMESPACE_NAME}.style.api
           references {
-            in scope property typeReference refers-to GrammarRule
-            in identifiable property typeReference refers-to GrammarRule
-            in referenceDefinition property typeReference refers-to GrammarRule
-            in referenceDefinition property propertyReference refers-to GrammarRule
+            in AglStyleSelector {
+              property value refers-to GrammarRule | LITERAL | PATTERN
+            }
           }
     """.trimIndent()
 
@@ -335,7 +334,10 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     createObject("tagRule", "AglStyleTagRule") { /* custom SyntaxAnalyser */ }
                     transToListOf("selectorExpression", "AglStyleSelector", $$"/* custom SyntaxAnalyser */ $nothing")
                     transToListOf("selectorAndComposition", "AglStyleSelector", $$"/* custom SyntaxAnalyser */ $nothing")
-                    createObject("selectorSingle", "AglStyleSelector") { /* custom SyntaxAnalyser */ }
+                    createObject("selectorSingle", "AglStyleSelector") {
+                        /* custom SyntaxAnalyser, the assignment says which property the leaf gives a value to (used for completion) */
+                        assignment("value", 0, "child[0]")
+                    }
                     transToListOf("styleList", "AglStyleDeclaration", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("style", "AglStyleDeclaration") { /* custom SyntaxAnalyser */ }
                     child0StringRule("styleValue")
@@ -355,7 +357,12 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
 
     override val crossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            // GrammarRule, LITERAL and PATTERN are the types of the items in a context from a grammar (contextFromGrammar)
+            declarationsFor("${NAMESPACE_NAME}.style.api") {
+                reference("AglStyleSelector") {
+                    property("value", listOf("GrammarRule", "LITERAL", "PATTERN"), null)
+                }
+            }
         }
     }
 
