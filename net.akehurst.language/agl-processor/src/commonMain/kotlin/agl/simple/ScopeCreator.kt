@@ -230,7 +230,9 @@ class ScopeCreator(
     /** isFurtherName: 'referableName' is not the first name of 'el' ('identify T by a | b'), so it does not give the element's semantic path */
     private fun addToScopeAs(scope: Scope, el: AsmStructure, referableName: String, isFurtherName: Boolean = false) {
         val scopeItem = context.createScopedItem.invoke(scope.scopePath + referableName, el, this.locationMap[el])
-        val existingItems = context.findItemsNamedConformingTo(referableName) { itemTypeName ->
+        // items of other sentences with the same name: the context holds the root scope of each sentence, so only items of a root scope can clash;
+        // an item of a nested scope (e.g. 'a.x') is not a duplicate of a top-level item of another sentence ('x')
+        val existingItems = if (scope.scopePath.isNotEmpty()) emptyList() else context.findItemsNamedConformingTo(referableName) { itemTypeName ->
             val itemType = typesDomain.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")
             val requireType = typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName) ?: error("Type not found '${el.qualifiedTypeName.value}'")
             itemType.conformsTo(requireType)

@@ -314,12 +314,12 @@ class ReferenceResolverSimple(
                 else -> resolveMembersOf(chainScope, qName)
             }
             // Use context (not scope) because the reference could have been created from a different sentence
-            null == fromScopes -> sentenceContext.scopeForSentence.values.flatMap { rootScope -> resolveQualifiedName(chainFrom(rootScope, scope.scopePath), qName, scope.rootScope) }
+            null == fromScopes -> resolveQualifiedNameInAll(scope.scopePath, qName, scope.rootScope)
             // 'from inherited E' (E has the scope 'scope'): the members of each inherited scope in turn (as seen from a subtype), the first that gives a result is used;
             // if none does, the normal lookup outwards from E, starting in the scope that E is in (so not in E's own members)
             else -> fromScopes.firstNotNullOfOrNull { st -> resolveInheritedMembersOf(st, qName).ifEmpty { null } } ?: when {
                 scope.scopePath.isEmpty() -> emptyList()
-                else -> sentenceContext.scopeForSentence.values.flatMap { rootScope -> resolveQualifiedName(chainFrom(rootScope, scope.scopePath.dropLast(1)), qName, scope.rootScope) }
+                else -> resolveQualifiedNameInAll(scope.scopePath.dropLast(1), qName, scope.rootScope)
             }
         }
         val targets = found
@@ -446,6 +446,36 @@ class ReferenceResolverSimple(
         }
         found = resolveRest(found, qName.drop(1))
         return found.filter { null != it.item }
+    }
+
+    /**
+     * as resolveQualifiedName, for the scopes along 'scopePath' in every sentence of the context (scopes of the same path in different sentences are one namespace):
+     * the first part of the name is looked up at the innermost depth first, in each sentence that has a scope there, then outwards;
+     * the nearest depth with that name is used (e.g. 'x' inside 'a' is found as 'a.x', not as a top-level 'x' of another sentence).
+     */
+    private fun resolveQualifiedNameInAll(scopePath: List<String>, qName: List<String>, homeRoot: Scope?): List<Found> {
+        if (qName.isEmpty()) return emptyList()
+        val chains = sentenceContext.scopeForSentence.values.map { chainFrom(it, scopePath) }
+        val maxDepth = chains.maxOfOrNull { it.size } ?: return emptyList()
+        val first = qName.first()
+        var found = emptyList<Found>()
+        for (d in (maxDepth - 1) downTo 0) {
+            found = chains.filter { it.size > d }.flatMap { ch -> firstPartIn(ch[d], first, qName.size > 1, homeRoot) }
+            if (found.isNotEmpty()) break
+        }
+        return resolveRest(found, qName.drop(1)).filter { null != it.item }
+    }
+
+    /** the items for the first part of a name in scope 's' (see resolveQualifiedName); with 'hasRest' also a child scope without an item */
+    private fun firstPartIn(s: Scope, first: String, hasRest: Boolean, homeRoot: Scope?): List<Found> {
+        val found = when {
+            s.scopePath.isEmpty() && s !== homeRoot -> ownedItems(s, first, Access.INSIDE)
+            else -> localResolve(s, first, Access.INSIDE, mutableListOf())
+        }
+        return when {
+            found.isEmpty() && hasRest -> s.getChildScopeOrNull(first)?.let { listOf(Found(first, it.forTypeName, null, s)) } ?: emptyList()
+            else -> found
+        }
     }
 
     /** the remaining parts of a qualified name, each looked up only inside the scope found for the part before, and only items visible from outside are found */

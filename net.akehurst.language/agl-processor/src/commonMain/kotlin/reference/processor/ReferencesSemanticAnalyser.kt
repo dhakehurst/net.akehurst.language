@@ -30,6 +30,8 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
+import net.akehurst.language.expressions.api.*
+import net.akehurst.language.reference.api.ScopeImportKind
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -42,11 +44,18 @@ import net.akehurst.language.types.asm.StdLibDefault
 class ReferencesSemanticAnalyser(
 ) : SemanticAnalyser<CrossReferenceDomain, SentenceContext> {
 
+    private companion object {
+        /** special values of expressions in references, given by the resolver; their types are not known here */
+        val SPECIAL_VALUES = setOf("\$owner", "\$container", "\$root", "\$previous")
+    }
+
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
     // cached
     private var _locationMap: LocationMap? = null
-    private var _grammarNamespace: GrammarTypesNamespace? = null
+    private var _grammarNamespace: TypesNamespace? = null
+    /** type of the element of the 'in' block being checked ('from' and 'else' are evaluated on it, also inside a 'forall') */
+    private var _inType: TypeDefinition? = null
     private var _typeResolver: ExpressionTypeResolver? = null
     private var _typesDomain: TypesDomain? = null
 
@@ -84,7 +93,7 @@ class ReferencesSemanticAnalyser(
 
                     else -> {
                         _typeResolver = ExpressionTypeResolver(typesDomain, ns, _issues)
-                        _grammarNamespace = ns as GrammarTypesNamespace
+                        _grammarNamespace = ns
                         it.scopeDefinition.values.forEach {
                             checkScopeDefinition(it as ScopeDefinitionDefault, importedNamespaces)
                             checkScopeImports(it, importedNamespaces)
@@ -168,6 +177,13 @@ class ReferencesSemanticAnalyser(
                     raiseError(ReferencesSyntaxAnalyser.PropertyValue(identifiable, "simpleTypeName"), "Type to identify '${identifiable.typeName}' not found")
                 }
 
+                else -> {
+                    checkNavigations(identifiable.visibility, identifiedType, "$msgStart, visibility of '${identifiable.typeName}'", identifiable)
+                    checkNavigations(identifiable.aliasFor, identifiedType, "$msgStart, alias-for of '${identifiable.typeName}'", identifiable)
+                }
+            }
+            when {
+                null == identifiedType -> Unit
                 else -> identifiable.identifiedByAlternatives.forEach { identifiedBy ->
                     val identifyingProperty = _typeResolver!!.typeFor(identifiedBy, identifiedType.type())
                     when (identifyingProperty) {
@@ -184,16 +200,128 @@ class ReferencesSemanticAnalyser(
     }
 
     private fun checkScopeImports(scopeDef: ScopeDefinitionDefault, importedNamespaces: List<TypesNamespace>) {
+        val isRoot = CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last == scopeDef.scopeForTypeName
+        // the type of the element that owns the scope, null for the root scope (any root element)
+        val ownerType = if (isRoot) null else findReferredToType(scopeDef.scopeForTypeName, importedNamespaces)
         scopeDef.scopeImports.forEach { si ->
-            si.ofType?.let {
-                if (null == findReferredToType(it, importedNamespaces)) {
+            val ofType = si.ofType?.let {
+                val t = findReferredToType(it, importedNamespaces)
+                if (null == t) {
                     when {
                         si.intoScope -> raiseError(si, "For 'import-into-scope', the type '$it' is not found")
                         else -> raiseError(si, "In scope for type '${scopeDef.scopeForTypeName}', the of-type '$it' is not found")
                     }
                 }
+                t
+            }
+            val what = when {
+                si.intoScope -> "For 'import-into-scope ${si.ofType?.value}'"
+                si.kind == ScopeImportKind.INHERIT -> "In scope for type '${scopeDef.scopeForTypeName}', inherit"
+                else -> "In scope for type '${scopeDef.scopeForTypeName}', import"
+            }
+            if (null == si.named) {
+                // the type of each selected element: the of-type, else the (element) type of 'elements' evaluated on the scope owner
+                val elementType: TypeDefinition? = when {
+                    si.intoScope -> ofType
+                    null != ofType -> {
+                        if (null != ownerType) checkNavigations(si.elements, ownerType, "$what, forall", si)
+                        ofType
+                    }
+
+                    null != ownerType -> {
+                        checkNavigations(si.elements, ownerType, "$what, forall", si)
+                        elementTypeOf(si.elements, ownerType)
+                    }
+
+                    else -> null
+                }
+                if (null != elementType) {
+                    checkNavigations(si.target, elementType, what, si)
+                    checkNavigations(si.recursive, elementType, "$what, recursive", si)
+                    checkNavigations(si.visibility, elementType, "$what, visibility", si)
+                    checkNavigations(si.condition, elementType, "$what, when", si)
+                }
+            } else {
+                if (null != ownerType) checkNavigations(si.condition, ownerType, "$what named, when", si)
             }
         }
+    }
+
+    /** the type of the elements of 'expr' evaluated on 'selfType' (the element type of a collection), null if it cannot be determined */
+    private fun elementTypeOf(expr: Expression, selfType: TypeDefinition): TypeDefinition? {
+        if (usesSpecialValue(expr)) return null
+        // its own issues: a property that is not found is already reported by checkNavigations
+        val ti = ExpressionTypeResolver(_typesDomain!!, _grammarNamespace!!, IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)).typeFor(expr, selfType.type())
+        val td = ti.resolvedDefinition
+        return when {
+            td is CollectionType -> ti.typeArguments.getOrNull(0)?.type?.resolvedDefinition
+            td is SpecialType -> null
+            else -> td
+        }?.takeIf { it !is SpecialType }
+    }
+
+    private fun usesSpecialValue(expr: Expression): Boolean = when (expr) {
+        is RootExpression -> expr.name in SPECIAL_VALUES
+        is NavigationExpression -> usesSpecialValue(expr.start) || expr.parts.any { it is PropertyCall && it.propertyName.startsWith("\$") }
+        else -> false
+    }
+
+    /**
+     * checks that the properties navigated to in 'expr' (evaluated on an element of type 'selfType') exist, an error for each that does not.
+     * Only navigations are checked (also those in infix, group, ternary and when expressions);
+     * a navigation is checked up to the first part that is not a property, or a special value ('\$owner', '\$container', '\$root', '\$previous'), or a type that is not structured.
+     */
+    private fun checkNavigations(expr: Expression?, selfType: TypeDefinition, what: String, location: Any) {
+        when (expr) {
+            null -> Unit
+            is RootExpression -> checkNavigationParts(expr, emptyList(), selfType, what, location, expr)
+            is NavigationExpression -> when (val st = expr.start) {
+                is RootExpression -> checkNavigationParts(st, expr.parts, selfType, what, location, expr)
+                else -> checkNavigations(st, selfType, what, location)
+            }
+
+            is InfixExpression -> expr.expressions.forEach { checkNavigations(it, selfType, what, location) }
+            is GroupExpression -> checkNavigations(expr.expression, selfType, what, location)
+            is TernaryConditionExpression -> listOf(expr.condition, expr.trueExpression, expr.falseExpression).forEach { checkNavigations(it, selfType, what, location) }
+            is WhenExpression -> {
+                expr.options.forEach { checkNavigations(it.condition, selfType, what, location); checkNavigations(it.expression, selfType, what, location) }
+                checkNavigations(expr.elseOption.expression, selfType, what, location)
+            }
+
+            else -> Unit // not checked
+        }
+    }
+
+    private fun checkNavigationParts(start: RootExpression, parts: List<NavigationPart>, selfType: TypeDefinition, what: String, location: Any, whole: Expression) {
+        if (start.isNothing || start.name in SPECIAL_VALUES) return
+        var type: TypeInstance = when {
+            start.isSelf -> selfType.type()
+            else -> propertyTypeOrNull(selfType.type(), start.name) ?: run {
+                if (isCheckable(selfType)) raiseError(location, "$what, '${whole.asString()}': type '${selfType.name}' has no property '${start.name}'")
+                return
+            }
+        }
+        for (part in parts) {
+            val pn = (part as? PropertyCall)?.propertyName ?: return
+            if (pn.startsWith("\$")) return
+            val td = type.resolvedDefinition
+            if (td !is StructuredType) return
+            type = propertyTypeOrNull(type, pn) ?: run {
+                if (isCheckable(td)) raiseError(location, "$what, '${whole.asString()}': type '${td.name}' has no property '$pn'")
+                return
+            }
+        }
+    }
+
+    /**
+     * a missing property is an error only for a structured type without subtypes:
+     * the elements of a type with subtypes (e.g. the supertype made for a grammar choice) can have properties that the type itself does not have
+     */
+    private fun isCheckable(type: TypeDefinition): Boolean = type is StructuredType && type.subtypes.isEmpty()
+
+    private fun propertyTypeOrNull(type: TypeInstance, name: String): TypeInstance? = when (type.resolvedDefinition) {
+        is StructuredType -> type.allResolvedProperty[PropertyName(name)]?.typeInstance
+        else -> null
     }
 
     private fun checkReferenceDefinition(crossReferenceDomain: CrossReferenceDomain, ref: ReferenceDefinitionDefault, importedNamespaces: List<TypesNamespace>) {
@@ -207,6 +335,7 @@ class ReferencesSemanticAnalyser(
             }
 
             else -> {
+                _inType = contextType
                 for (refExpr in ref.referenceExpressionList) {
                     checkReferenceExpression(crossReferenceDomain, contextType, ref, refExpr, importedNamespaces)
                 }
@@ -298,6 +427,18 @@ class ReferencesSemanticAnalyser(
         importedNamespaces: List<TypesNamespace>
     ) {
         checkReferredToTypeNames(ref, refExpr, importedNamespaces)
+        val what = "For references in '${ref.inTypeName}', property '${refExpr.referringPropertyNavigation}'"
+        checkNavigations(refExpr.condition, contextType, "$what, when", refExpr)
+        // 'from' and 'else' are evaluated on the element of the 'in' block
+        val inType = _inType ?: contextType
+        checkNavigations(refExpr.fromNavigation, inType, "$what, from", refExpr)
+        refExpr.fromElseNavigation?.let { elseNav ->
+            val fromStart = refExpr.fromNavigation?.start
+            when {
+                fromStart is RootExpression && fromStart.name == "\$previous" -> checkNavigations(elseNav, inType, "$what, else", refExpr)
+                else -> raiseError(refExpr, "$what: 'else' is only used with 'from \$previous...', it is ignored here")
+            }
+        }
 
         val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyNavigation, contextType.type())
         when (prop) {
