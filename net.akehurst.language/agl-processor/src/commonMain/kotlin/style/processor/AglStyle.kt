@@ -21,6 +21,7 @@ import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -98,12 +99,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace $NAMESPACE_NAME
+        namespace ${NAMESPACE_NAME}.style.api
           references {
-            in scope property typeReference refers-to GrammarRule
-            in identifiable property typeReference refers-to GrammarRule
-            in referenceDefinition property typeReference refers-to GrammarRule
-            in referenceDefinition property propertyReference refers-to GrammarRule
+            in AglStyleSelector {
+              property value refers-to GrammarRule | LITERAL | PATTERN
+            }
           }
     """.trimIndent()
 
@@ -135,7 +135,21 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
 
     override val completionString: String = """
         namespace $NAMESPACE_NAME
-          // TODO
+          completion $NAME {
+            style -> replace [
+              CompletionItem() { label := 'style' text := '<STYLE_ID>: <STYLE_VALUE>;' }
+            ]
+            STYLE_ID -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'foreground' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'background' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'font-style' }
+            ]
+            STYLE_VALUE -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := '<colour>' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'bold' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'italic' }
+            ]
+          }
     """.trimIndent()
 
     override val grammarDomain by lazy {
@@ -335,7 +349,10 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     createObject("tagRule", "AglStyleTagRule") { /* custom SyntaxAnalyser */ }
                     transToListOf("selectorExpression", "AglStyleSelector", $$"/* custom SyntaxAnalyser */ $nothing")
                     transToListOf("selectorAndComposition", "AglStyleSelector", $$"/* custom SyntaxAnalyser */ $nothing")
-                    createObject("selectorSingle", "AglStyleSelector") { /* custom SyntaxAnalyser */ }
+                    createObject("selectorSingle", "AglStyleSelector") {
+                        /* custom SyntaxAnalyser, the assignment says which property the leaf gives a value to (used for completion) */
+                        assignment("value", 0, "child[0]")
+                    }
                     transToListOf("styleList", "AglStyleDeclaration", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("style", "AglStyleDeclaration") { /* custom SyntaxAnalyser */ }
                     child0StringRule("styleValue")
@@ -355,7 +372,12 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
 
     override val crossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            // GrammarRule, LITERAL and PATTERN are the types of the items in a context from a grammar (contextFromGrammar)
+            declarationsFor("${NAMESPACE_NAME}.style.api") {
+                reference("AglStyleSelector") {
+                    property("value", listOf("GrammarRule", "LITERAL", "PATTERN"), null)
+                }
+            }
         }
     }
 
@@ -392,6 +414,23 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
 
     override val completionDomain: AglCompletionDomain by lazy {
         completionDomain(NAME) {
+            namespace(NAMESPACE_NAME) {
+                completion(NAME) {
+                    replace("style") {
+                        item(label = "style", text = "<STYLE_ID>: <STYLE_VALUE>;")
+                    }
+                    replace("STYLE_ID") {
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "foreground")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "background")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "font-style")
+                    }
+                    replace("STYLE_VALUE") {
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "<colour>")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "bold")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "italic")
+                    }
+                }
+            }
         }
     }
 
