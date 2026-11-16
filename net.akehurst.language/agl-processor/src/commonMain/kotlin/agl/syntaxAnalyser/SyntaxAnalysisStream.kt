@@ -140,7 +140,8 @@ class SyntaxAnalysisStream<AsmType : Any, AsmValueType : Any>(
         for (i in children.indices) {
             val c = children[i].cell
             c.parent = cell
-            if (isList) c.listIndex = i
+            // as TreeDataWalkerDepthFirst: every child has its index in the path
+            c.listIndex = i
         }
         val info = NodeInfo(node, numChildren)
         val s = sa

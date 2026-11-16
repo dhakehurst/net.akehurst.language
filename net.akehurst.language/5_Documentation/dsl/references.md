@@ -50,6 +50,9 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 | `... when expr` | use this line only when `expr` is true; the first line that holds wins |
 
 Names are looked up in the current scope, then in the enclosing scopes.
+A reference never resolves to an object whose name is computed from that same reference (that would be circular),
+e.g. with `identify Perform by target.name` and `in Perform { property target.name refers-to Action }`, in `perform tp` the reference `tp` skips the perform itself
+and the lookup goes on outwards (see `test_ReferenceResolverSimple_namedByReference`).
 Expressions are written in the [expressions](expressions.md) language. Their special values are all elements:
 
 | Special value | Meaning |

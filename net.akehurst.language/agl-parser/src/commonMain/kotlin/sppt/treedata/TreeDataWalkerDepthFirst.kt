@@ -211,10 +211,8 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                     else -> i
                 }
                 val childOfTotal = ChildInfo(propertyIndex, i, totChildrenIncSkip)
-                val childPath = when {
-                    nodeInfo.node.rule.isList -> nodeInfo.path + i.toString() + ch.rule.tag
-                    else -> nodeInfo.path + ch.rule.tag
-                }
+                // every child has its index in the path (list item or concatenation child), so two children with the same rule have different paths
+                val childPath = nodeInfo.path + i.toString() + ch.rule.tag
                 // carry the childOfTotal, rest is unused
                 stack.push(StackInfo(false, childPath, ch, nodeInfo.parentAlt, nodeInfo.alt, childOfTotal, emptyMap(), -1))
             }
