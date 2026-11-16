@@ -64,6 +64,12 @@ interface CrossReferenceDomain : Domain<CrossReferenceNamespace, DeclarationsFor
     fun scopeImportsFor(typesDomain: TypesDomain, typeQualifiedName: QualifiedName): List<ScopeImport>
 
     /**
+     * the top-level 'import-into-scope' declarations: an element whose type conforms to the 'ofType' of one of them
+     * imports into the scope that it is in (see ScopeImport.intoScope)
+     */
+    fun importsIntoScope(typesDomain: TypesDomain): List<ScopeImport>
+
+    /**
      * the type named 'typeName' in a type reference of 'declaration' ('refers-to' of a ReferenceExpression, 'of-type' of a ScopeImport or of a 'forall'),
      * resolved in the namespace block that holds the declaration: a qualified name as is,
      * a simple name in the types namespace with the name of the block (and its imports), then in the block's imports.
@@ -182,6 +188,7 @@ enum class ScopeImportKind {
 
 /**
  * 'import' 'forall' elements ofType? ('members-of' | 'element') target recursive? visibility? ('when' condition)?
+ * 'import-into-scope' ofType ('members-of' | 'element') target recursive? visibility? ('when' condition)?   (top-level)
  * 'inherit' 'forall' elements ofType? 'members-of' target ('when' condition)?
  * 'inherit' 'named' a.b.c ('when' condition)?
  *
@@ -206,6 +213,13 @@ interface ScopeImport : Formatable {
 
     /** 'inherit named a.b.c': the names of the qualified name of the inherited element ('elements' and 'target' are not used); null for the 'forall' forms */
     val named: List<String>? get() = null
+
+    /**
+     * 'import-into-scope': declared at the top level, on the side of the importing element rather than of the scope.
+     * Each element whose type conforms to 'ofType' is an import of the scope that it is in (the scope of the element that owns it, as for 'identify');
+     * 'target' and the other expressions are evaluated on that element ('elements' is '\$self').
+     */
+    val intoScope: Boolean get() = false
 }
 
 interface ReferenceExpression  : Formatable {

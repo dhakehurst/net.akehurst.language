@@ -98,6 +98,13 @@ class CrossReferenceLookup(
     private val _references = mutableListOf<ResolvedReferenceDefinition>()
 
     private val _nameContext = mutableMapOf<ByIdentity, NameContext>()
+
+    /** the top-level 'import-into-scope' declarations of all namespace blocks */
+    val importsIntoScope: List<ScopeImport> by lazy {
+        crossReferenceDomain.declarationsForNamespace.values.flatMap { decl ->
+            decl.scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.scopeImports?.filter { it.intoScope } ?: emptyList()
+        }
+    }
     private val _distanceCache = mutableMapOf<Pair<TypeDefinition, TypeDefinition>, Int?>()
     private val _isScopeCache = mutableMapOf<QualifiedName, Boolean>()
     private val _identifyCache = mutableMapOf<Pair<QualifiedName, QualifiedName>, CrossReferenceMatch<Identifiable>>()
