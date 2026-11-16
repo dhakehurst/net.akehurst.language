@@ -426,10 +426,11 @@ class test_CompletionProviderDefault_datatypes {
                 grammarStr(GRAMMAR)
                 referenceStr(CROSS_REFERENCE)
                 processOptions(Agl.options { completionProvider { depth(1) } })
-                sentencePass("class A { prop :", "Nothing in scope") {
+                sentencePass("class A { prop :", "Nothing in the given context") {
                     context(contextAsmSimple { })
                     expectedCompletionItems(
                         listOf(
+                            CompletionItem(CompletionItemKind.REFERRED, "Datatype", "A"), // defined in the sentence itself (q22)
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )
@@ -443,6 +444,7 @@ class test_CompletionProviderDefault_datatypes {
                     })
                     expectedCompletionItems(
                         listOf(
+                            CompletionItem(CompletionItemKind.REFERRED, "Datatype", "A"), // defined in the sentence itself (q22)
                             CompletionItem(CompletionItemKind.REFERRED, "Primitive", "ExternalType"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
@@ -453,7 +455,8 @@ class test_CompletionProviderDefault_datatypes {
                     context(contextAsmSimple { })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"), //TODO(David): q22, needs the context from the sentence itself
+                            CompletionItem(CompletionItemKind.REFERRED, "Datatype", "A"), // defined in the sentence itself (q22)
+                            CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                         )

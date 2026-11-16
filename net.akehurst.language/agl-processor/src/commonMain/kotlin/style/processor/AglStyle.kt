@@ -21,6 +21,7 @@ import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -134,7 +135,23 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
 
     override val completionString: String = """
         namespace $NAMESPACE_NAME
-          // TODO
+          completion $NAME {
+            style -> replace [
+              CompletionItem() { label := 'style' text := '<STYLE_ID>: <STYLE_VALUE>;' }
+            ]
+            STYLE_ID -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'foreground' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'background' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'font-style' }
+            ]
+            STYLE_VALUE -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := '<colour>' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'bold' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'italic' }
+            ]
+            styleValue -> hide
+            STRING -> hide
+          }
     """.trimIndent()
 
     override val grammarDomain by lazy {
@@ -399,6 +416,25 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
 
     override val completionDomain: AglCompletionDomain by lazy {
         completionDomain(NAME) {
+            namespace(NAMESPACE_NAME) {
+                completion(NAME) {
+                    replace("style") {
+                        item(label = "style", text = "<STYLE_ID>: <STYLE_VALUE>;")
+                    }
+                    replace("STYLE_ID") {
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "foreground")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "background")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "font-style")
+                    }
+                    replace("STYLE_VALUE") {
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "<colour>")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "bold")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "italic")
+                    }
+                    hide("styleValue")
+                    hide("STRING")
+                }
+            }
         }
     }
 

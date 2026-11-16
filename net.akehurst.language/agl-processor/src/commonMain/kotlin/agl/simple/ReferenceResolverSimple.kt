@@ -307,7 +307,12 @@ class ReferenceResolverSimple(
             val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDefinition
             referredToTypes.any { td -> itemType.conformsTo(td) }
         }
-        val found = when {
+        // an element whose name is computed from this reference (e.g. 'perform a;' is named 'a') is not a target of it, that would be circular:
+        // while looking up, such an element is not an item of its scope (so the lookup goes on as if it was not there)
+        val selfStr = (self as? TypedObject)?.self as? AsmStructure ?: self as? AsmStructure
+        val outerExcluding = _excluding
+        _excluding = selfStr?.let { r -> { f: Found -> isNamedByReference(f, r, refExpr) } }
+        val found = try { when {
             // 'from \$previous...' : members of the previous target, visible from outside
             null != chain -> when (chainScope) {
                 null -> emptyList()
@@ -321,6 +326,8 @@ class ReferenceResolverSimple(
                 scope.scopePath.isEmpty() -> emptyList()
                 else -> resolveQualifiedNameInAll(scope.scopePath.dropLast(1), qName, scope.rootScope)
             }
+        } } finally {
+            _excluding = outerExcluding
         }
         val targets = found
             .flatMap { aliasTargets(it, mutableListOf()) }
@@ -502,7 +509,10 @@ class ReferenceResolverSimple(
 
     /** items named 'name' owned by scope 's', that are visible with 'access' */
     private fun ownedItems(s: Scope, name: String, access: Access): List<Found> =
-        s.items[name]?.map { (typeName, p) -> Found(name, typeName, p.second, s) }?.filter { isVisible(visibilityOf(it), access) } ?: emptyList()
+        s.items[name]?.map { (typeName, p) -> Found(name, typeName, p.second, s) }?.filter { isVisible(visibilityOf(it), access) && _excluding?.invoke(it) != true } ?: emptyList()
+
+    // while a reference is looked up: the items that are not targets of it (see handleCreateReference)
+    private var _excluding: ((Found) -> Boolean)? = null
 
     /** items named 'name' in scope 's': owned, else inherited, else imported */
     private fun localResolve(s: Scope, name: String, access: Access, visited: MutableList<Scope>): List<Found> {
@@ -803,6 +813,87 @@ class ReferenceResolverSimple(
         PROTECTED, PRIVATE -> v as String
         else -> PUBLIC
     }
+
+    /**
+     * true if the name by which 'f' is found is computed from the reference being resolved:
+     * the element of 'f' is or contains 'referring' (the element with the referring property), and an identifying expression
+     * of the element that gives the name navigates through 'referring' to the referring property
+     */
+    private fun isNamedByReference(f: Found, referring: AsmStructure, refExpr: ReferenceExpressionPropertyDefault): Boolean {
+        val el = elementOf(f.item) ?: return false
+        // only an element that is or contains 'referring' can be named by its reference
+        recordContainersFor(referring)
+        var c: AsmStructure? = referring
+        while (null != c && c !== el) c = containerOf(c)
+        if (null == c) return false
+        val referringProps = refExpr.referringPropertyNavigation.let { nav ->
+            val start = (nav.start as? RootExpression)?.name ?: return false
+            listOf(start) + nav.parts.map { (it as? PropertyCall)?.propertyName ?: return false }
+        }
+        val id = crossReferenceDomain.identifyingExpressionFor(typesDomain, f.owner.forTypeName, el.qualifiedTypeName).singleOrNull ?: return false
+        return id.identifiedByAlternatives.any { alt ->
+            nameValue(evaluate(alt, el)) == f.name && navigationsIn(alt).any { navigationReaches(el, it, referring, referringProps) }
+        }
+    }
+
+    /**
+     * true if navigating the property names 'nav' from 'el' reaches 'referring' and then continues with 'referringProps'
+     * ('first' and 'last' of a list are its first and last element; a property of a list is the property of each element; references are not followed)
+     */
+    private fun navigationReaches(el: AsmStructure, nav: List<String>, referring: AsmStructure, referringProps: List<String>): Boolean {
+        var values: List<Any?> = listOf(el)
+        for (i in nav.indices) {
+            if (values.any { v -> structuresIn(v).any { it === referring } } && nav.drop(i).take(referringProps.size) == referringProps) return true
+            values = values.flatMap { navigateProperty(it, nav[i]) }
+            if (values.isEmpty()) return false
+        }
+        return false
+    }
+
+    private fun navigateProperty(v: Any?, name: String): List<Any?> = when (v) {
+        null, is AsmNothing, is AsmReference -> emptyList()
+        is TypedObject -> navigateProperty(v.self, name)
+        is AsmStructure -> v.getPropertyOrNull(PropertyValueName(name))?.let { listOf(it) } ?: emptyList()
+        is AsmList -> navigateProperty(v.elements, name)
+        is List<*> -> when (name) {
+            "first" -> listOfNotNull(v.firstOrNull())
+            "last" -> listOfNotNull(v.lastOrNull())
+            else -> v.flatMap { navigateProperty(it, name) }
+        }
+        else -> emptyList()
+    }
+
+    /** the name given by an identifying value (a String, or the last of a List<String>) */
+    private fun nameValue(v: Any?): String? = when (v) {
+        is String -> v
+        is TypedObject -> nameValue(v.self)
+        is AsmPrimitive -> v.value as? String
+        is List<*> -> nameValue(v.lastOrNull())
+        else -> null
+    }
+
+    /** the property names of each navigation (from the element the expression is evaluated on) in 'e' */
+    private fun navigationsIn(e: Expression?): List<List<String>> = when (e) {
+        null -> emptyList()
+        is RootExpression -> if (e.isSelf || e.isNothing || e.name.startsWith("\$")) emptyList() else listOf(listOf(e.name))
+        is NavigationExpression -> {
+            val args = e.parts.filterIsInstance<MethodCall>().flatMap { mc -> mc.arguments.flatMap { navigationsIn(it) } }
+            val start = e.start
+            val own = when {
+                start is RootExpression && !(start.isSelf || start.isNothing || start.name.startsWith("\$")) ->
+                    listOf(listOf(start.name) + e.parts.filterIsInstance<PropertyCall>().map { it.propertyName })
+                else -> navigationsIn(start)
+            }
+            own + args
+        }
+        is WhenExpression -> e.options.flatMap { navigationsIn(it.condition) + navigationsIn(it.expression) } + navigationsIn(e.elseOption.expression)
+        is InfixExpression -> e.expressions.flatMap { navigationsIn(it) }
+        is TernaryConditionExpression -> navigationsIn(e.condition) + navigationsIn(e.trueExpression) + navigationsIn(e.falseExpression)
+        is CastExpression -> navigationsIn(e.expression)
+        is TypeTestExpression -> navigationsIn(e.expression)
+        else -> emptyList()
+    }
+
 
     /** if the found item is an alias, the items for what it is an alias for (transitively), else the item itself */
     private fun aliasTargets(f: Found, seen: MutableList<AsmStructure>): List<Found> {
