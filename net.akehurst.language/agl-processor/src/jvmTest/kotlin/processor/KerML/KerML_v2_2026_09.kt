@@ -39,9 +39,9 @@ object KerML_v2_2026_09 {
     /** a new processor for the 'agl' grammar with its style and references (each call creates a new one, as a SysML processor adds its types to it) */
     fun processorWithReferences(): LanguageProcessor<Asm, SentenceContext> {
         val res = Agl.processorFromStringSimple(
-            GrammarString(File(grammarDir, "grammar.agl").readText()),
-            referenceStr = CrossReferenceString(File(grammarDir, "references.agl").readText()),
-            styleStr = StyleString(File(grammarDir, "style.agl").readText()),
+            GrammarString(File(grammarDir, "grammar.agl-grm").readText()),
+            referenceStr = CrossReferenceString(File(grammarDir, "references.agl-ref").readText()),
+            styleStr = StyleString(File(grammarDir, "style.agl-sty").readText()),
         )
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         return res.processor!!

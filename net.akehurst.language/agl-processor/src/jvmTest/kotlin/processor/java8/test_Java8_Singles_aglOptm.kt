@@ -36,7 +36,7 @@ import kotlin.test.*
 class test_Java8_Singles_aglOptm {
 
     companion object {
-        val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
+        val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl-grm"
         val grammarStr = this::class.java.getResource(grammarFile)?.readText() ?: error("file not found '$grammarFile'")
         val proc: LanguageProcessor<Asm, SentenceContext> = createJava8Processor(grammarFile, true)
 

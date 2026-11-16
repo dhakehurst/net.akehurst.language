@@ -101,8 +101,8 @@ suspend fun VfsFile.walk(recursive: Boolean, func: suspend (file: VfsFile) -> Un
 suspend fun fetchGrammars(langDir: VfsFile): List<GrammarData> {
     val grammars = mutableListOf<GrammarData>()
     when {
-        langDir["grammar.agl"].exists() && langDir["grammar.agl"].isFile() -> {
-            grammars.add(GrammarData(langDir["grammar.agl"]))
+        langDir["grammar.agl-grm"].exists() && langDir["grammar.agl-grm"].isFile() -> {
+            grammars.add(GrammarData(langDir["grammar.agl-grm"]))
         }
 
         langDir["grammars"].exists() && langDir["grammars"].isDirectory() -> {
@@ -110,18 +110,18 @@ suspend fun fetchGrammars(langDir: VfsFile): List<GrammarData> {
                 when {
                     grammarsEntry.isDirectory() -> {
                         when {
-                            grammarsEntry["grammar.agl"].exists() && grammarsEntry["grammar.agl"].isFile() -> grammars.add(
-                                GrammarData(grammarsEntry["grammar.agl"])
+                            grammarsEntry["grammar.agl-grm"].exists() && grammarsEntry["grammar.agl-grm"].isFile() -> grammars.add(
+                                GrammarData(grammarsEntry["grammar.agl-grm"])
                             )
 
-                            else -> Unit // grammar-directory does not contain a 'grammar.agl' file
+                            else -> Unit // grammar-directory does not contain a 'grammar.agl-grm' file
                         }
                     }
 
                     grammarsEntry.isFile() -> {
                         when {
-                            "agl" == grammarsEntry.extension -> grammars.add(GrammarData(grammarsEntry))
-                            else -> Unit // file does not have a '.agl' extension
+                            "agl-grm" == grammarsEntry.extension -> grammars.add(GrammarData(grammarsEntry))
+                            else -> Unit // file does not have a '.agl-grm' extension
                         }
                     }
 
@@ -130,7 +130,7 @@ suspend fun fetchGrammars(langDir: VfsFile): List<GrammarData> {
             }
         }
 
-        else -> Unit // no grammar.agl file or grammars directory
+        else -> Unit // no grammar.agl-grm file or grammars directory
     }
     return grammars
 }
@@ -190,7 +190,7 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
 /**
  * <lang1>
  *     <version 1>
- *         grammar.agl
+ *         grammar.agl-grm
  *         valid
  *             <sentence-name1>.txt
  *             <sentence-name2>.txt
@@ -198,26 +198,26 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
  *             <sentence-name1>.txt
  *     <version 2>
  *         grammars
- *             <grammar-name1>.agl
- *             <grammar-name2>.agl
+ *             <grammar-name1>.agl-grm
+ *             <grammar-name2>.agl-grm
  *         valid.txt
  *         invalid.txt
  * <lang2>
  *     <version 1>
  *         grammars
  *             <grammar-name1>
- *                 grammar.agl
+ *                 grammar.agl-grm
  *             <grammar-name2>
- *                 grammar.agl
+ *                 grammar.agl-grm
  *
  * each language should be in a directory with a name that identifies the language
  * versions of the languages are named directories under that
  *
  * each language/version should have one or more grammars defined either:
- * - a single grammar named 'grammar.agl', or
+ * - a single grammar named 'grammar.agl-grm', or
  * - a directory named 'grammars' containing either:
- * -- one or more '<name>.agl' files that define grammars, or
- * -- one or more named subdirectories containing a 'grammar.agl' file, the name of the directory is the name for the grammar
+ * -- one or more '<name>.agl-grm' files that define grammars, or
+ * -- one or more named subdirectories containing a 'grammar.agl-grm' file, the name of the directory is the name for the grammar
  *
  * sentences are either:
  * - a directory 'valid' / 'invalid', each file is one sentence; a first line '#<goal>' gives the goal rule ('<rule>' or '<grammar>::<rule>'), or
