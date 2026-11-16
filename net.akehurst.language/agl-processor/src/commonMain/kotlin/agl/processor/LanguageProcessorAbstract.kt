@@ -19,6 +19,9 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.SpineDefault
+import net.akehurst.language.agl.completionProvider.SentenceCompletion
+import net.akehurst.language.agl.simple.SentenceContextAny
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
@@ -401,11 +404,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
      */
     override fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
         val opts = defaultOptions(options)
-        val parserExpectedAt = this.parser?.expectedAt(sentence, position, opts.parse)
-            ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
+        val (parserExpectedAt, pos) = parserExpectedAtOrAtError(sentence, position, opts)
         val byPosition = parserExpectedAt.spines.groupBy { it.usedPosition }
-        val wordCompletions = byPosition.keys.filter { it < position }.sorted().flatMap { wordStart ->
-            val prefix = sentence.substring(wordStart, position)
+        val wordCompletions = byPosition.keys.filter { it < pos }.sorted().flatMap { wordStart ->
+            val prefix = sentence.substring(wordStart, pos)
             byPosition[wordStart]!!
                 .flatMap { it.expectedNextTerminals }
                 .filter { it.isLiteral && it.unescapedTerminalValue.startsWith(prefix) && it.unescapedTerminalValue != prefix }
@@ -413,13 +415,13 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 .flatMap { completionItemsForTerminal(it, opts) }
                 .onEach { it.offeredPosition = wordStart }
         }
-        val next = (byPosition[position] ?: emptyList())
+        val next = (byPosition[pos] ?: emptyList())
             .flatMap { it.expectedNextTerminals }
             .filter { it.isTerminal }
             .toSet()
             .flatMap { completionItemsForTerminal(it, opts) }
-            .onEach { it.offeredPosition = position }
-        val offered = wordCompletions.firstOrNull()?.offeredPosition ?: position
+            .onEach { it.offeredPosition = pos }
+        val offered = wordCompletions.firstOrNull()?.offeredPosition ?: pos
         return ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
     }
 
@@ -452,15 +454,14 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return when {
             null != completionProvider -> {
                 val opts = defaultOptions(options)
-                val parserExpected = this.parser?.expectedAt(sentence, position, opts.parse)
-                    ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
+                val (parserExpected, pos) = parserExpectedAtOrAtError(sentence, position, opts)
                 // see comment on expectedTerminalsAt
                 // not the spine that only expects end-of-text (the text so far being a complete sentence)
                 val byPosition = parserExpected.spines
                     .filterNot { sp -> sp.expectedNextTerminals.all { it.isEndOfText } }
                     .groupBy { it.usedPosition }
-                val wordCompletions = byPosition.keys.filter { it < position }.sorted().flatMap { wordStart ->
-                    val prefix = sentence.substring(wordStart, position)
+                val wordCompletions = byPosition.keys.filter { it < pos }.sorted().flatMap { wordStart ->
+                    val prefix = sentence.substring(wordStart, pos)
                     val spines = byPosition[wordStart]!!.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
                     completionProvider!!.provide(spines, opts.completionProvider)
                         .filter {
@@ -473,14 +474,72 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                         }
                         .onEach { it.offeredPosition = wordStart }
                 }
-                val nextSpines = (byPosition[position] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
-                val next = completionProvider!!.provide(nextSpines, opts.completionProvider)
-                    .onEach { it.offeredPosition = position }
-                val offered = wordCompletions.firstOrNull()?.offeredPosition ?: position
+                val nextSpines = (byPosition[pos] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
+                val next = completionProvider!!.provide(nextSpines, optionsWithOwnSentence(sentence, pos, nextSpines, opts).completionProvider)
+                    .onEach { it.offeredPosition = pos }
+                val offered = wordCompletions.firstOrNull()?.offeredPosition ?: pos
                 ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
             }
 
             else -> expectedTerminalsAt(sentence, position, options)
+        }
+    }
+
+    /**
+     * [opts] with a completion context that also holds the definitions in the text before [position] (q22/q39).
+     * The text before [position] usually does not parse, so the open rules of a spine are completed with generated text
+     * ([SentenceCompletion]), the result is processed (issues ignored) into a copy of the given context.
+     * The given context is not changed. [opts] is returned as it is when there is no context, no semantic analyser,
+     * or no completed text gives an ASM.
+     * NOTE: a work-around, it could be replaced by error recovery in the parser that gives a partial tree.
+     */
+    private fun optionsWithOwnSentence(sentence: String, position: Int, spines: Set<SpineDefault>, opts: ProcessOptions<AsmType, ContextType>): ProcessOptions<AsmType, ContextType> {
+        val givenContext = opts.completionProvider.sentenceContext as? SentenceContext
+        return when {
+            null == givenContext || null == this.semanticAnalyser -> opts
+            else -> {
+                val before = sentence.substring(0, position)
+                val texts = spines.mapNotNull { SentenceCompletion.completionTextFor(it, targetGrammar) }.distinct().take(5)
+                var result = opts
+                for (txt in texts) {
+                    val ctx = givenContext.union(SentenceContextAny())
+                    val procOpts = opts.clone()
+                    @Suppress("UNCHECKED_CAST")
+                    procOpts.semanticAnalysis.sentenceContext = ctx as ContextType
+                    // its own identity, so the given scopes are kept, and the (old) scope of this sentence is not replaced
+                    val ownIdentity = Any()
+                    procOpts.parse.sentenceIdentity = { ownIdentity }
+                    // a failure here only means the own definitions are not offered
+                    val res = runCatching { this.process(before + " " + txt, procOpts) }.getOrNull()
+                    if (null != res?.asm) {
+                        val withCtx = opts.clone()
+                        withCtx.completionProvider.sentenceContext = ctx as ContextType
+                        result = withCtx
+                        break
+                    }
+                }
+                result
+            }
+        }
+    }
+
+    /**
+     * what the parser expects at [position], and the position it is for.
+     * When the text before [position] does not parse (nothing is expected), it is what is expected at the first parse error.
+     */
+    private fun parserExpectedAtOrAtError(sentence: String, position: Int, opts: ProcessOptions<AsmType, ContextType>): Pair<net.akehurst.language.parser.api.ExpectedAtResult, Int> {
+        val parser = this.parser ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
+        val atPosition = parser.expectedAt(sentence, position, opts.parse)
+        val errorPosition = when {
+            atPosition.spines.isNotEmpty() -> null
+            else -> parser.parse(sentence.substring(0, position), opts.parse).issues.errors
+                .mapNotNull { it.location?.position }
+                .filter { it < position }
+                .minOrNull()
+        }
+        return when (errorPosition) {
+            null -> Pair(atPosition, position)
+            else -> Pair(parser.expectedAt(sentence, errorPosition, opts.parse), errorPosition)
         }
     }
 

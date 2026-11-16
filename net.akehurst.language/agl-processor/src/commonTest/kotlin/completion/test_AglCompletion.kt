@@ -284,4 +284,17 @@ $rules
         )
         assertTrue(proc.allIssues.errors.all { null != it.location }, proc.allIssues.toString())
     }
+
+    @Test
+    fun aglStyle_completionString_same_as_completionDomain() {
+        val res = AglCompletionDomainDefault.fromString(
+            net.akehurst.language.grammar.processor.contextFromGrammar(net.akehurst.language.style.processor.AglStyle.grammarDomain),
+            CompletionString(net.akehurst.language.style.processor.AglStyle.completionString)
+        )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        assertEquals(
+            net.akehurst.language.style.processor.AglStyle.completionDomain.allCompletionRules.map { it.toString() },
+            res.asm!!.allCompletionRules.map { it.toString() }
+        )
+    }
 }

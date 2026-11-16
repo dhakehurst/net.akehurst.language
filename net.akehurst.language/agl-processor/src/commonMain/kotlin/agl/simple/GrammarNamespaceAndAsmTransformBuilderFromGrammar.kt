@@ -355,6 +355,30 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
+    /**
+     * a choice of data types becomes a union (rather than a data type that is the supertype of the alternatives)
+     * when the rule creates its own type (normal rule or replacing override) and
+     * at least one alternative type is owned by another grammar's types namespace
+     */
+    private fun choiceNeedsUnion(choiceRule: GrammarRule, subtypeTypes: List<TypeInstance>): Boolean {
+        val createsOwnType = when (choiceRule) {
+            is NormalRule -> true
+            is OverrideRule -> choiceRule.overrideKind == OverrideKind.REPLACE
+            else -> false
+        }
+        return createsOwnType && subtypeTypes.any { it.resolvedDefinition.namespace != grammarTypeNamespace }
+    }
+
+    /**
+     * the DataType of the rule that a replacing override rule overrides, null if not an override or the type is not a DataType
+     */
+    private fun overriddenDataTypeOrNull(rule: GrammarRule): DataType? {
+        if (rule !is OverrideRule || rule.overrideKind != OverrideKind.REPLACE) return null
+        val superRule = grammar.extendsResolved.firstNotNullOfOrNull { it.findAllResolvedGrammarRule(rule.name) } ?: return null
+        val owner = grm2Ns[superRule.grammar.qualifiedName]?.g2rs ?: return null
+        return owner.findTypeForRuleName(superRule.name)?.resolvedDefinition as? DataType
+    }
+
     private fun typeForRhsChoice(choice: Choice, choiceRule: GrammarRule): TypeInstance {
         return when (choice.alternative.size) {
             1 -> error("Internal Error: choice should have more than one alternative")
@@ -369,7 +393,22 @@ internal class Grammar2TransformRuleSet(
                     }
 
                     subtypeTypes.all { it.resolvedDefinition is PrimitiveType } -> StdLibDefault.String
-                    subtypeTypes.all { it.resolvedDefinition is DataType } -> createOrFindDefaultTypeForRule(choiceRule)
+                    subtypeTypes.all { it.resolvedDefinition is DataType } -> when {
+                        choiceNeedsUnion(choiceRule, subtypeTypes) -> {
+                            // some alternative types are owned by another grammar's namespace,
+                            // use a union so that those types are not given a supertype from this grammar
+                            val existing = findTypeForRuleName(choiceRule.name)
+                            existing ?: run {
+                                val name = this.configuration?.typeNameFor(choiceRule) ?: SimpleName(choiceRule.name.value)
+                                val unionType = grammarTypeNamespace.findOwnedOrCreateUnionTypeNamed(name) { ut ->
+                                    subtypeTypes.forEach { ut.addAlternative(it) }
+                                }
+                                unionType.type()
+                            }
+                        }
+
+                        else -> createOrFindDefaultTypeForRule(choiceRule)
+                    }
                     subtypeTypes.all { it.resolvedDefinition == StdLibDefault.List } -> { //=== PrimitiveType.LIST } -> {
                         val itemType = StdLibDefault.AnyType//TODO: compute better elementType ?
                         val choiceType = StdLibDefault.List.type(listOf(itemType.asTypeArgument))
@@ -443,6 +482,12 @@ internal class Grammar2TransformRuleSet(
             null == refRule -> StdLibDefault.NothingType
             refRule.isLeaf ->StdLibDefault.String
             refRule.rhs is EmptyRule -> StdLibDefault.NothingType
+            refRule.grammar.qualifiedName != this.grammar.qualifiedName -> {
+                // rule is inherited (not overridden here), its type is owned by the grammar that defines the rule
+                val owner = grm2Ns[refRule.grammar.qualifiedName]?.g2rs
+                    ?: error("Grammar2TransformRuleSet not created for '${refRule.grammar.qualifiedName.value}'.")
+                owner.typeForRhs(refRule, refRule.rhs)
+            }
             else -> {
                 typeForRhs(refRule,refRule.rhs)
             }
@@ -819,6 +864,28 @@ internal class Grammar2TransformRuleSet(
                         expression = EXPRESSION_CHILD(0)
                     )
 
+                    subtypeTransforms.all { it.resolvedType.resolvedDefinition is DataType } && _grRuleNameToType[choiceRule.name]?.resolvedDefinition is UnionType -> {
+                        // union, see typeForRhsChoice; alternatives owned by this grammar get the type of the overridden rule as supertype
+                        _grRuleNameToTrRule[choiceRule.name] ?: run {
+                            val ut = _grRuleNameToType[choiceRule.name]!!
+                            val tr = asmTransformationRule(type = ut, expression = EXPRESSION_CHILD(0))
+                            tr.grammarRuleName = choiceRule.name
+                            _grRuleNameToTrRule[choiceRule.name] = tr
+                            val overridden = overriddenDataTypeOrNull(choiceRule)
+                            if (null != overridden) {
+                                val oti = overridden.namespace.createTypeInstance(null, overridden.qualifiedName)
+                                subtypeTransforms.forEach {
+                                    val subType = it.resolvedType.resolvedDefinition as DataType
+                                    if (subType.namespace == grammarTypeNamespace && subType != overridden && subType.supertypes.none { it.resolvedDefinition == overridden }) {
+                                        subType.addSupertype(oti)
+                                        overridden.addSubtype(subType.type())
+                                    }
+                                }
+                            }
+                            tr
+                        }
+                    }
+
                     subtypeTransforms.all { it.resolvedType.resolvedDefinition is DataType } -> findOrCreateTrRule(
                         choiceRule,
                         ConstructAndModify(
@@ -835,6 +902,12 @@ internal class Grammar2TransformRuleSet(
                                     val subType = it.resolvedType.resolvedDefinition as DataType
                                     subType.addSupertype(dti)
                                     dt.addSubtype(subType.type())
+                                }
+                                // a replacing override rule's type is a subtype of the type of the overridden rule
+                                val overridden = overriddenDataTypeOrNull(choiceRule)
+                                if (null != overridden && overridden != dt && dt.supertypes.none { it.resolvedDefinition == overridden }) {
+                                    dt.addSupertype(overridden.namespace.createTypeInstance(null, overridden.qualifiedName))
+                                    overridden.addSubtype(dt.type())
                                 }
                             })
                     )

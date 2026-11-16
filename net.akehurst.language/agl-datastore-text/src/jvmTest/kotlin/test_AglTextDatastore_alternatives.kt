@@ -72,6 +72,15 @@ class test_AglTextDatastore_alternatives {
             }
         """.trimIndent()
 
+        val completionStr = """
+            namespace test
+            completion Refs {
+                decl -> replace [
+                    CompletionItem() { label := 'definition' text := 'def <name>' }
+                ]
+            }
+        """.trimIndent()
+
         const val SENTENCE = "def a use a"
     }
 
@@ -139,6 +148,7 @@ class test_AglTextDatastore_alternatives {
                 "refs.agl-fmt" to formatStr,
                 "refs.agl-ref" to crossReferenceStr,
                 "refs.agl-sty" to styleStr,
+                "refs.agl-cpl" to completionStr,
                 "readme.txt" to "not part of the language"
             )
         )

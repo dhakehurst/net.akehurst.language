@@ -100,7 +100,11 @@ class test_AglGrammar_expectedItemsAt {
         val sentence = "namespace"
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 9)
 
-        val expected = listOf<CompletionItem>()
+        // the word is complete (no literal starts with it, other than itself), so what comes next is expected (q38)
+        val expected = listOf<CompletionItem>(
+            CompletionItem(CompletionItemKind.SEGMENT, "possiblyQualifiedName", "<possiblyQualifiedName>"),
+            CompletionItem(CompletionItemKind.PATTERN, "IDENTIFIER", "<IDENTIFIER>")
+        )
 
         assertEquals(0, result.offset)
         assertEquals(expected, result.items)

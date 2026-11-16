@@ -81,6 +81,7 @@ class test_CompletionProvider {
             CompletionItem(kind=CompletionItemKind.SEGMENT, label="rule", text="<rule>"),
             CompletionItem(kind=CompletionItemKind.LITERAL, label="'$$'", text="$$"),
             CompletionItem(kind=CompletionItemKind.LITERAL, label="'}'", text="}"),
+            CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
             CompletionItem(kind=CompletionItemKind.PATTERN, label= "SPECIAL_IDENTIFIER", text="<SPECIAL_IDENTIFIER>"),
         )
         test(grammarStr, sentence, sentence.length, expected)
@@ -116,6 +117,7 @@ class test_CompletionProvider {
             CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
             CompletionItem(CompletionItemKind.REFERRED, "LITERAL", "'a'"),
             CompletionItem(CompletionItemKind.SEGMENT, "selectorSingle", "<selectorSingle>"),
+            CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
             CompletionItem(CompletionItemKind.PATTERN, "SPECIAL_IDENTIFIER", "<SPECIAL_IDENTIFIER>"),
         )
         test(grammarStr, sentence, sentence.length, expected)
@@ -238,6 +240,7 @@ class test_CompletionProvider {
             CompletionItem(CompletionItemKind.SEGMENT, "rule", "<rule>"),
             CompletionItem(CompletionItemKind.LITERAL, "'$$'", "$$"),
             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
+            CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
             CompletionItem(CompletionItemKind.PATTERN, "SPECIAL_IDENTIFIER", "<SPECIAL_IDENTIFIER>"),
         )
         test(grammarStr, sentence, sentence.length, expected)
