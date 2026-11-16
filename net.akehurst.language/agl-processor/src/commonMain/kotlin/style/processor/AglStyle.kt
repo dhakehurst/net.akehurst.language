@@ -149,6 +149,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
               CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'bold' },
               CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'italic' }
             ]
+            styleValue -> hide
+            STRING -> hide
           }
     """.trimIndent()
 
@@ -429,6 +431,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "bold")
                         item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "italic")
                     }
+                    hide("styleValue")
+                    hide("STRING")
                 }
             }
         }
