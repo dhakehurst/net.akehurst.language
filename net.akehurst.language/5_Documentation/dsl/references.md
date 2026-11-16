@@ -64,12 +64,14 @@ Expressions are written in the [expressions](expressions.md) language. Their spe
 
 ## Imports, inheritance, visibility, aliases
 
-These are written inside a `scope` block, or on an `identify` line:
+These are written inside a `scope` block, on an `identify` line, or (`import-into-scope`) at the top level:
 
 | Syntax | Meaning |
 |---|---|
 | `import forall nav members-of ref` | for each `nav`, the members of the scope that `ref` refers to are visible here |
 | `import forall nav element ref` | for each `nav`, only the object that `ref` refers to is visible here |
+| `import-into-scope T members-of ref` | (top level) each object of type `T` is an import of the scope it is in: the members of the scope that `ref` (evaluated on that object) refers to are visible there. For a language whose imports can be in many kinds of body (e.g. SysML imports in packages, part and action bodies), one line instead of an `import forall` in each scope |
+| `import-into-scope T element ref` | (top level) as above, only the object that `ref` refers to is visible |
 | `... recursive expr` | also import what the imported scope imports, while `expr` holds |
 | `inherit forall nav members-of ref` | inherit the members of the scope that `ref` refers to (for example a supertype) |
 | `inherit named a.b.c` | inherit the members of the element with qualified name `a.b.c`, looked up from the root scopes of the context (for example a library element every element of the type specializes); a name that is not an identifier is quoted: `'my lib'.b` |
@@ -85,4 +87,5 @@ and there is one warning for that rule.
 
 A complete worked example (packages, imports, specialization, redefinition, aliases, global names) is the test
 `agl-processor/src/commonTest/kotlin/agl/simple/test_ReferenceResolverSimple_imports.kt`;
-`inherit named`, `when` on imports and inheritance, and `$owner` are in `test_ReferenceResolverSimple_inheritNamed.kt`.
+`inherit named`, `when` on imports and inheritance, and `$owner` are in `test_ReferenceResolverSimple_inheritNamed.kt`;
+`import-into-scope` is in `test_ReferenceResolverSimple_importIntoScope.kt`.

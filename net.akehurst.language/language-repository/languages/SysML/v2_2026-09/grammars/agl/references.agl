@@ -115,20 +115,15 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     identify net.akehurst.language.sysML.States.ExhibitStateUsage by exhibitStateKind.usageDeclaration.identification.name | exhibitStateKind.usageDeclaration.identification.shortName.name | when { exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization.filter({ s -> s is net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions }).size == 0 -> $nothing else -> exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization.filter({ s -> s is net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions }).first.redefines.ownedRedefinition.name.last } visibility $container.memberPrefix.visibilityIndicator
     identify net.akehurst.language.sysML.SysMLv2_1.AssertConstraintUsage by assertConstraintKind.constraintUsageDeclaration.usageDeclaration.identification.name | assertConstraintKind.constraintUsageDeclaration.usageDeclaration.identification.shortName.name | when { assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization.filter({ s -> s is net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions }).size == 0 -> $nothing else -> assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization.filter({ s -> s is net.akehurst.language.sysML.DefinitionAndUsage.Redefinitions }).first.redefines.ownedRedefinition.name.last } visibility $container.memberPrefix.visibilityIndicator
 
+    // an import imports into the scope that it is in (of a package, or of the definition or usage in whose body it is)
+    import-into-scope net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+    import-into-scope net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+
     // the elements that own other elements (namespaces)
-    // an import in the body of a definition or usage imports into that definition or usage (as in a package)
     // a usage has the members of its types; for a conjugated port typing ('~P', typedBy.featureTyping.qualifiedName) the members of P
-    scope net.akehurst.language.sysML.Packages.Package {
-        import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
-    scope net.akehurst.language.sysML.Packages.LibraryPackage {
-        import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall packageBody.packageBodyElement of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
+    scope net.akehurst.language.sysML.Packages.Package { }
+    scope net.akehurst.language.sysML.Packages.LibraryPackage { }
     scope net.akehurst.language.sysML.Actions.AcceptNode {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -136,14 +131,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.ActionDefinition {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Actions.Action
     }
     scope net.akehurst.language.sysML.Actions.ActionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -152,8 +143,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Actions.actions
     }
     scope net.akehurst.language.sysML.Actions.AssignmentNode {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -161,8 +150,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.DecisionNode {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -170,8 +157,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.ForLoopNode {
-        import forall actionBodyParameter.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBodyParameter.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -179,8 +164,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.ForkNode {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -188,8 +171,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.IfNode {
-        import forall actionBodyParameter.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBodyParameter.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -197,8 +178,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.JoinNode {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -206,8 +185,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.MergeNode {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -215,8 +192,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.SendNode {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -224,8 +199,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.TerminateNode {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -233,8 +206,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Actions.WhileLoopNode {
-        import forall actionBodyParameter.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBodyParameter.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -242,14 +213,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall actionNodePrefix.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Attributes.AttributeDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Base.DataValue
     }
     scope net.akehurst.language.sysML.Attributes.AttributeUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -258,8 +225,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Base.dataValues
     }
     scope net.akehurst.language.sysML.Attributes.EnumeratedValue {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -270,8 +235,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
     }
     scope net.akehurst.language.sysML.Attributes.EnumerationUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -279,14 +242,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Cases.AnalysisCaseDefinition {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named AnalysisCases.AnalysisCase
     }
     scope net.akehurst.language.sysML.Cases.AnalysisCaseUsage {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -295,14 +254,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named AnalysisCases.analysisCases
     }
     scope net.akehurst.language.sysML.Cases.CaseDefinition {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Cases.Case
     }
     scope net.akehurst.language.sysML.Cases.CaseUsage {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -311,8 +266,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Cases.cases
     }
     scope net.akehurst.language.sysML.Cases.ObjectiveRequirementUsage {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -320,14 +273,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Cases.UseCaseDefinition {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named UseCases.UseCase
     }
     scope net.akehurst.language.sysML.Cases.UseCaseUsage {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -336,14 +285,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named UseCases.useCases
     }
     scope net.akehurst.language.sysML.Cases.VerificationCaseDefinition {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named VerificationCases.VerificationCase
     }
     scope net.akehurst.language.sysML.Cases.VerificationCaseUsage {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -352,20 +297,14 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named VerificationCases.verificationCases
     }
     scope net.akehurst.language.sysML.Connections.AllocationDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Allocations.Allocation
     }
     scope net.akehurst.language.sysML.Connections.ConnectionDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Connections.Connection
     }
     scope net.akehurst.language.sysML.Connections.FlowUsage {
-        import forall definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -374,8 +313,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Flows.flows
     }
     scope net.akehurst.language.sysML.Connections.SuccessionFlowUsage {
-        import forall definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall flowDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -384,8 +321,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Flows.successionFlows
     }
     scope net.akehurst.language.sysML.Connections.Message {
-        import forall definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall messageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -394,13 +329,8 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Flows.messages
     }
     // the body of an expression (e.g. '{ in i; ... }' of a forAll) owns its parameters
-    scope net.akehurst.language.sysML.Expressions.BodyExpression {
-        import forall expressionBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall expressionBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
+    scope net.akehurst.language.sysML.Expressions.BodyExpression { }
     scope net.akehurst.language.sysML.Connections.DefaultInterfaceEnd {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -408,20 +338,14 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Connections.FlowDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Flows.MessageAction
     }
     scope net.akehurst.language.sysML.Connections.InterfaceDefinition {
-        import forall interfaceBody.interfaceBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall interfaceBody.interfaceBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Interfaces.Interface
     }
     scope net.akehurst.language.sysML.DefinitionAndUsage.DefaultReferenceUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -436,8 +360,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.DefinitionAndUsage.ReferenceUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -445,13 +367,9 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Metadata.ExtendedDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
     }
     scope net.akehurst.language.sysML.Metadata.ExtendedUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -459,8 +377,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Metadata.MetadataDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Metadata.MetadataItem
     }
@@ -473,13 +389,9 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall ownedRedefinition of-type net.akehurst.language.sysML.Base.QualifiedName members-of name
     }
     scope net.akehurst.language.sysML.Occurrences.IndividualDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
     }
     scope net.akehurst.language.sysML.Occurrences.IndividualUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -487,14 +399,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Occurrences.ItemDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Items.Item
     }
     scope net.akehurst.language.sysML.Occurrences.ItemUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -503,14 +411,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Items.items
     }
     scope net.akehurst.language.sysML.Occurrences.OccurrenceDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Occurrences.Occurrence
     }
     scope net.akehurst.language.sysML.Occurrences.OccurrenceUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -519,14 +423,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Occurrences.occurrences
     }
     scope net.akehurst.language.sysML.Occurrences.PartDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Parts.Part
     }
     scope net.akehurst.language.sysML.Occurrences.PartUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -535,8 +435,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Parts.parts
     }
     scope net.akehurst.language.sysML.Occurrences.PortionUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -544,14 +442,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Ports.PortDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Ports.Port
     }
     scope net.akehurst.language.sysML.Ports.PortUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -560,8 +454,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Ports.ports
     }
     scope net.akehurst.language.sysML.Requirements.ActorUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -569,14 +461,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Requirements.ConcernDefinition {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Requirements.ConcernCheck
     }
     scope net.akehurst.language.sysML.Requirements.ConcernUsage {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -585,14 +473,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Requirements.concernChecks
     }
     scope net.akehurst.language.sysML.Requirements.RequirementDefinition {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Requirements.RequirementCheck
     }
     scope net.akehurst.language.sysML.Requirements.RequirementUsage {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -601,8 +485,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Requirements.requirementChecks
     }
     scope net.akehurst.language.sysML.Requirements.StakeholderUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -610,8 +492,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Requirements.SubjectUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -619,8 +499,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.StateAcceptActionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -628,8 +506,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall acceptNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.StateAssignmentActionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -637,14 +513,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall assignmentNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.StateDefinition {
-        import forall stateDefBody.stateBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall stateDefBody.stateBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named States.StateAction
     }
     scope net.akehurst.language.sysML.States.StateSendActionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -652,8 +524,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.StateUsage {
-        import forall stateUsageBody.stateBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall stateUsageBody.stateBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -683,14 +553,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall sendNodeDeclaration.actionNodeUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.SysMLv2_1.CalculationDefinition {
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Calculations.Calculation
     }
     scope net.akehurst.language.sysML.SysMLv2_1.CalculationUsage {
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall actionUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -699,14 +565,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Calculations.calculations
     }
     scope net.akehurst.language.sysML.SysMLv2_1.ConstraintDefinition {
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Constraints.ConstraintCheck
     }
     scope net.akehurst.language.sysML.SysMLv2_1.ConstraintUsage {
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -716,13 +578,9 @@ namespace net.akehurst.language.sysML.SysMLv2_1
     }
     // a referenced constraint ('require c1;'): the usage has the members of the constraint it references
     scope net.akehurst.language.sysML.SysMLv2_1.RequirementConstraintUsageReference {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall ownedReferenceSubsetting of-type net.akehurst.language.sysML.Base.QualifiedName members-of name
     }
     scope net.akehurst.language.sysML.SysMLv2_1.RequirementConstraintUsageDeclared {
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -731,14 +589,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Constraints.constraintChecks
     }
     scope net.akehurst.language.sysML.Views.RenderingDefinition {
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definition.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definition.definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Views.Rendering
     }
     scope net.akehurst.language.sysML.Views.RenderingUsage {
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usage.usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usage.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -747,14 +601,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Views.renderings
     }
     scope net.akehurst.language.sysML.Views.ViewDefinition {
-        import forall viewDefinitionBody.viewDefinitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall viewDefinitionBody.viewDefinitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Views.View
     }
     scope net.akehurst.language.sysML.Views.ViewUsage {
-        import forall viewBody.viewBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall viewBody.viewBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -763,14 +613,10 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Views.views
     }
     scope net.akehurst.language.sysML.Views.ViewpointDefinition {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall definitionDeclaration.subclassificationPart.qualifiedName members-of name
         inherit named Views.ViewpointCheck
     }
     scope net.akehurst.language.sysML.Views.ViewpointUsage {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -779,8 +625,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Views.viewpointChecks
     }
     scope net.akehurst.language.sysML.Actions.PerformActionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall performActionUsageDeclaration.performActionKind of-type net.akehurst.language.sysML.Actions.PerformActionReference members-of ownedReferenceSubsetting.name
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
@@ -790,8 +634,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.States.StatePerformActionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall performActionUsageDeclaration.performActionKind of-type net.akehurst.language.sysML.Actions.PerformActionReference members-of ownedReferenceSubsetting.name
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
@@ -801,14 +643,8 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     // a transition owns its trigger, guard and effect (so two transitions may each have an effect 'do action D')
-    scope net.akehurst.language.sysML.States.TransitionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
-    scope net.akehurst.language.sysML.States.TargetTransitionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
+    scope net.akehurst.language.sysML.States.TransitionUsage { }
+    scope net.akehurst.language.sysML.States.TargetTransitionUsage { }
     scope net.akehurst.language.sysML.States.TransitionPerformActionUsage {
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall performActionUsageDeclaration.performActionKind of-type net.akehurst.language.sysML.Actions.PerformActionReference members-of ownedReferenceSubsetting.name
@@ -819,8 +655,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall performActionUsageDeclaration.performActionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Cases.IncludeUseCaseUsage {
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall caseBody.caseBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall includeUseCaseKind of-type net.akehurst.language.sysML.Cases.IncludeUseCaseReference members-of ownedReferenceSubsetting.name
         inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
@@ -830,8 +664,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall includeUseCaseKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Connections.ConnectionUsage {
-        import forall definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
         inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.qualifiedName.name
         inherit forall connectionKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Subsettings members-of subsets.ownedSubsetting.name
@@ -840,8 +672,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Connections.connections
     }
     scope net.akehurst.language.sysML.Occurrences.EventOccurrenceUsage {
-        import forall usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall usageCompletion.definitionBody.definitionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall eventOccurrenceKind of-type net.akehurst.language.sysML.Occurrences.EventOccurrenceReference members-of ownedReferenceSubsetting.name
         inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
@@ -851,8 +681,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall eventOccurrenceKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.Requirements.SatisfyRequirementUsage {
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall requirementBody.requirementBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall satisfyRequirementKind of-type net.akehurst.language.sysML.Requirements.SatisfyRequirementReference members-of ownedReferenceSubsetting.name
         inherit forall satisfyRequirementKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
@@ -863,8 +691,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Requirements.satisfiedRequirementChecks
     }
     scope net.akehurst.language.sysML.States.ExhibitStateUsage {
-        import forall stateUsageBody.stateBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall stateUsageBody.stateBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall exhibitStateKind of-type net.akehurst.language.sysML.States.ExhibitStateReference members-of ownedReferenceSubsetting.name
         inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
@@ -874,8 +700,6 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit forall exhibitStateKind.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.References members-of ownedReferenceSubsetting.name
     }
     scope net.akehurst.language.sysML.SysMLv2_1.AssertConstraintUsage {
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall calculationBody.calculationBodyPart.calculationBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
         // the referencing form (e.g. 'perform a;'): the usage has the members of the feature it references
         inherit forall assertConstraintKind of-type net.akehurst.language.sysML.Calculations.AssertConstraintReference members-of ownedReferenceSubsetting.name
         inherit forall assertConstraintKind.constraintUsageDeclaration.usageDeclaration.featureSpecializationPart.featureSpecialization of-type net.akehurst.language.sysML.DefinitionAndUsage.Typings members-of typedBy.featureTyping.name
@@ -886,10 +710,7 @@ namespace net.akehurst.language.sysML.SysMLv2_1
         inherit named Constraints.assertedConstraintChecks
     }
     scope net.akehurst.language.sysML.Actions.ActionNode { }
-    scope net.akehurst.language.sysML.States.StateActionUsage {
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall actionBody.actionBodyItem of-type net.akehurst.language.sysML.Packages.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
+    scope net.akehurst.language.sysML.States.StateActionUsage { }
     scope net.akehurst.language.sysML.SysMLv2_1.DefinitionElement { }
     scope net.akehurst.language.sysML.SysMLv2_1.UsageElement { }
 

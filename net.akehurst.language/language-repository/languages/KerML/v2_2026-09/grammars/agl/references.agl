@@ -49,23 +49,14 @@ namespace net.akehurst.language.kerML.KerMLv1_1
     identify net.akehurst.language.kerML.Interactions.SuccessionFlow by flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.name | flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentification.shortName.name | when { flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart.filter({ s -> s is net.akehurst.language.kerML.Features.Redefinitions }).size == 0 -> $nothing else -> flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart.filter({ s -> s is net.akehurst.language.kerML.Features.Redefinitions }).first.redefines.generalType.name.last } visibility $container.memberPrefix.visibilityIndicator
     identify net.akehurst.language.kerML.Namespaces.AliasMember by identification.name | identification.shortName.name visibility memberPrefix.visibilityIndicator alias-for importedName.name
 
-    // the imports of a namespace or package
-    scope net.akehurst.language.kerML.Namespaces.RootNamespace {
-        import forall namespaceBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall namespaceBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
-    scope net.akehurst.language.kerML.Namespaces.Namespace {
-        import forall namespaceBody.namespaceBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall namespaceBody.namespaceBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
-    scope net.akehurst.language.kerML.Packages.Package {
-        import forall packageBody.packageBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall packageBody.packageBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
-    scope net.akehurst.language.kerML.Packages.LibraryPackage {
-        import forall packageBody.packageBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-        import forall packageBody.packageBodyElement of-type net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
-    }
+    // an import imports into the scope that it is in (of the root namespace, a namespace, a package, or the type in whose body it is)
+    import-into-scope net.akehurst.language.kerML.Namespaces.ImportOfMembership element importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+    import-into-scope net.akehurst.language.kerML.Namespaces.ImportOfNamespace members-of importedName.name recursive importRecursive != $nothing visibility visibilityIndicator
+
+    scope net.akehurst.language.kerML.Namespaces.RootNamespace { }
+    scope net.akehurst.language.kerML.Namespaces.Namespace { }
+    scope net.akehurst.language.kerML.Packages.Package { }
+    scope net.akehurst.language.kerML.Packages.LibraryPackage { }
     // a classifier inherits the members of its superclassifiers (:>), a feature the members of its types (:),
     // subsetted (:>), referenced (::>), crossed (=>) and redefined (:>>) features
     scope net.akehurst.language.kerML.Classifiers.Classifier {

@@ -50,8 +50,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
             grammar $NAME : Expressions {
             
                 override namespace = 'namespace' possiblyQualifiedName import* declarations ;
-                declarations = rootIdentifiables scopes references? ;
-                rootIdentifiables = identifiable* ;
+                declarations = rootDeclarations scopes references? ;
+                rootDeclarations = rootDeclaration* ;
+                rootDeclaration = identifiable | importIntoScope ;
                 scopes = scope* ;
                 scope = 'scope' possiblyQualifiedTypeReference '{' identifiables scopeImports '}' ;
                 identifiables = identifiable* ;
@@ -63,6 +64,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 scopeImport = importDefinition | inheritDefinition | inheritNamedDefinition ;
                 importDefinition = 'import' 'forall' rootOrNavigation ofType? importKind rootOrNavigation recursive? visibility? condition? ;
                 importKind = 'members-of' | 'element' ;
+                importIntoScope = 'import-into-scope' possiblyQualifiedTypeReference importKind rootOrNavigation recursive? visibility? condition? ;
                 recursive = 'recursive' expression ;
                 inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation condition? ;
                 inheritNamedDefinition = 'inherit' 'named' namedPath condition? ;
@@ -159,9 +161,13 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         ref("declarations")
                     }
                     concatenation("declarations") {
-                        ref("rootIdentifiables"); ref("scopes"); opt { ref("references") }
+                        ref("rootDeclarations"); ref("scopes"); opt { ref("references") }
                     }
-                    list("rootIdentifiables", 0, -1) { ref("identifiable") }
+                    list("rootDeclarations", 0, -1) { ref("rootDeclaration") }
+                    choice("rootDeclaration") {
+                        ref("identifiable")
+                        ref("importIntoScope")
+                    }
                     list("scopes", 0, -1) { ref("scope") }
                     concatenation("scope") {
                         lit("scope"); ref("possiblyQualifiedTypeReference"); lit("{"); ref("identifiables"); ref("scopeImports"); lit("}")
@@ -185,6 +191,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     choice("importKind") {
                         lit("members-of")
                         lit("element")
+                    }
+                    concatenation("importIntoScope") {
+                        lit("import-into-scope"); ref("possiblyQualifiedTypeReference"); ref("importKind"); ref("rootOrNavigation"); opt { ref("recursive") }; opt { ref("visibility") }; opt { ref("condition") }
                     }
                     concatenation("recursive") { lit("recursive"); ref("expression") }
                     concatenation("inheritDefinition") {

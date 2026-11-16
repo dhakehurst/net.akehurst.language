@@ -44,7 +44,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::unit)
         super.register(this::namespace)
         super.register(this::declarations)
-        super.register(this::rootIdentifiables)
+        super.register(this::rootDeclarations)
+        super.register(this::rootDeclaration)
+        super.register(this::importIntoScope)
         super.register(this::scopes)
         super.register(this::scope)
         super.register(this::identifiables)
@@ -112,23 +114,31 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         return ns
     }
 
-    // declarations = rootIdentifiables scopes referencesOpt
+    // declarations = rootDeclarations scopes referencesOpt
     private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (CrossReferenceNamespace) -> DeclarationsForNamespaceDefault {
-        val rootIdentifiables = children[0] as List<IdentifiableDefault>
+        val rootDeclarations = children[0] as List<Any>
+        val rootIdentifiables = rootDeclarations.filterIsInstance<IdentifiableDefault>()
+        val importsIntoScope = rootDeclarations.filterIsInstance<ScopeImportDefault>()
         val scopes = children[1] as List<ScopeDefinitionDefault>
         val referencesOpt = children[2] as List<ReferenceDefinitionDefault>?
         return { ns ->
             val decl = DeclarationsForNamespaceDefault(ns)
             (decl.scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
+            // top-level 'import-into-scope' declarations are held by the root scope definition (like top-level 'identify')
+            (decl.scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.scopeImports as MutableList?)?.addAll(importsIntoScope)
             scopes.forEach { decl.scopeDefinition[it.scopeForTypeName] = it }
             referencesOpt?.let { decl.references.addAll(referencesOpt) }
             decl.also { setLocationFor(it,nodeInfo,sentence) }
         }
     }
 
-    // rootIdentifiables = identifiable*
-    private fun rootIdentifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<IdentifiableDefault> =
-        children as List<IdentifiableDefault>
+    // rootDeclarations = rootDeclaration* ;
+    private fun rootDeclarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Any> =
+        children as List<Any>
+
+    // rootDeclaration = identifiable | importIntoScope ;
+    private fun rootDeclaration(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Any =
+        children[0] as Any
 
     // scopes = scope* ;
     private fun scopes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ScopeDefinitionDefault> =
@@ -195,6 +205,17 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val visibility = children[7] as Expression?
         val condition = children[8] as Expression?
         return ScopeImportDefault(kind, elements, ofType, target, recursive, visibility, condition)
+    }
+
+    // importIntoScope = 'import-into-scope' possiblyQualifiedTypeReference importKind rootOrNavigation recursive? visibility? condition? ;
+    private fun importIntoScope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
+        val ofType = children[1] as PossiblyQualifiedName
+        val kind = children[2] as ScopeImportKind
+        val target = asNavigation(children[3] as Expression)
+        val recursive = children[4] as Expression?
+        val visibility = children[5] as Expression?
+        val condition = children[6] as Expression?
+        return ScopeImportDefault(kind, RootExpressionDefault.SELF, ofType, target, recursive, visibility, condition, intoScope = true)
     }
 
     // importKind = 'members-of' | 'element' ;

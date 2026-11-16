@@ -154,7 +154,10 @@ class ReferencesSemanticAnalyser(
         scopeDef.scopeImports.forEach { si ->
             si.ofType?.let {
                 if (null == findReferredToType(it, importedNamespaces)) {
-                    raiseError(si, "In scope for type '${scopeDef.scopeForTypeName}', the of-type '$it' is not found")
+                    when {
+                        si.intoScope -> raiseError(si, "For 'import-into-scope', the type '$it' is not found")
+                        else -> raiseError(si, "In scope for type '${scopeDef.scopeForTypeName}', the of-type '$it' is not found")
+                    }
                 }
             }
         }
