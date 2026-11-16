@@ -27,9 +27,9 @@ import kotlin.test.Test
 class test_autocomplete {
 
     private companion object {
-        val grammarStr = test_autocomplete::class.java.getResource("/sql/version_/grammar.agl").readText()
-        val referenceStr = test_autocomplete::class.java.getResource("/sql/version_/reference.agl").readText()
-        val autocompleteStr = test_autocomplete::class.java.getResource("/sql/version_/autocomplete.agl").readText()
+        val grammarStr = test_autocomplete::class.java.getResource("/sql/version_/grammar.agl-grm").readText()
+        val referenceStr = test_autocomplete::class.java.getResource("/sql/version_/reference.agl-ref").readText()
+        val autocompleteStr = test_autocomplete::class.java.getResource("/sql/version_/autocomplete.agl-cpl").readText()
 
         val testSuit = testSuit {
             testData("With grammar only") {

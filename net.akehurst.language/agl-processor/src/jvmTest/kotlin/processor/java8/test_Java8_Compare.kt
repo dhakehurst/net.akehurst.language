@@ -54,11 +54,11 @@ class test_Java8_Compare {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_aglSpec.agl", true)
-        var aglOptmProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_aglOptm.agl", true)
+        var aglSpecProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_aglSpec.agl-grm", true)
+        var aglOptmProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_aglOptm.agl-grm", true)
 
-        var antlrSpecProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_antlrSpec.agl")
-        var antlrOptmProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl")
+        var antlrSpecProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_antlrSpec.agl-grm")
+        var antlrOptmProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl-grm")
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, SentenceContext> {
             println("Building $path")

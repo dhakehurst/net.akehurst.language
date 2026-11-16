@@ -18,7 +18,7 @@
  * SysML v2 textual grammar tailored for AGL.
  *
  * Based on the textual BNF of the SysML v2 Release 2026-09.1 (SysML v2.1 Beta 2, KerML v1.1 Beta 2),
- * with the same corrections as the 'standard' grammar (see ../standard/grammar.agl, marked '// AGL:').
+ * with the same corrections as the 'standard' grammar (see ../standard/grammar.agl-grm, marked '// AGL:').
  * It accepts the same language as the 'standard' grammar, but:
  *  - it is modular: one grammar per group of specification clauses, using grammar inheritance.
  *    Choices that need rules of later grammars are extended in the last grammar (SysMLv2_1).

@@ -1,3 +1,4 @@
+#TranslationUnit
 #include <stdio.h>
 
 /* the classic first program */

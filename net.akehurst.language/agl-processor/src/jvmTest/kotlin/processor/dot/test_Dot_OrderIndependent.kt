@@ -35,7 +35,7 @@ import kotlin.test.assertTrue
 class test_Dot_OrderIndependent {
 
     private companion object {
-        val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl")!!.readText()
+        val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl-grm")!!.readText()
         fun sentence(name: String) = this::class.java.getResource("/dot/version_9.0.0/valid/$name")!!.readText()
         fun processor(): LanguageProcessor<Asm, SentenceContext> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }

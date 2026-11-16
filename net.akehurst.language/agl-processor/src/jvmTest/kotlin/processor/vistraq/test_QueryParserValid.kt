@@ -32,7 +32,7 @@ class test_QueryParserValid {
 
     private companion object {
 
-        val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found")
+        val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/version_/grammar.agl-grm")?.readText() ?: error("File not found")
 
         //val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
         var processor = tgqlprocessor()

@@ -23,7 +23,8 @@ import kotlin.test.Test
 /**
  * Two derivations give the same complete node (same rule, start, end and option) that the merge decision can not decide,
  * here different splits of the input between the children of a concatenation.
- * The choice must not depend on the order of the parse: at the first child that differs, the longer child wins.
+ * The choice must not depend on the order of the parse: at the first child that differs, the longer child wins,
+ * so lists are greedy (no dynamic priority for concatenation children).
  * (test_LeftCornerParserAbstract also checks that the pre-built automaton gives the same tree.)
  */
 class test_Undecidable_concatenationSplit : test_LeftCornerParserAbstract() {
@@ -63,8 +64,8 @@ class test_Undecidable_concatenationSplit : test_LeftCornerParserAbstract() {
     fun list_aaa() {
         val expected = """
             S {
-              A { 'a' 'a' }
-              B { 'a' }
+              A { 'a' 'a' 'a' }
+              B { <EMPTY_LIST> }
             }
         """.trimIndent()
         super.test_pass(rrsList, "S", "aaa", 1, expected)

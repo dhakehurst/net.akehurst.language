@@ -499,10 +499,11 @@ internal class ParseGraph(
                 }
             }
 
+            // concatenation: no dynamic priority of the children (lists are greedy),
+            // TODO: possible future enhancement: a syntax for a non-greedy list
+            // an equal length is decided by the order independent child rule, see chooseUndecidableCompleteParent*
             else -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
-                mergeDecisionOnDynamicPriority(existingParent, newParent, rl) { rl2->
-                    MergeDecision(rl2,MergeChoice.UNDECIDABLE,"${newParent.dynamicPriority} == ${existingParent.dynamicPriority}")
-                }
+                MergeDecision(rl, MergeChoice.UNDECIDABLE, "same length")
             }
         }
     }

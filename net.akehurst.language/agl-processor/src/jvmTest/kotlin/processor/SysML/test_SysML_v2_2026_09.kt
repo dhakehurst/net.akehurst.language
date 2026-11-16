@@ -49,8 +49,8 @@ abstract class test_SysML_v2_2026_09(
 
     private val languageDir = File("../language-repository/languages/SysML/v2_2026-09")
     private val grammarDir = File(languageDir, "grammars/$grammarName")
-    private val grammarStr by lazy { File(grammarDir, "grammar.agl").readText() }
-    private val styleStr by lazy { File(grammarDir, "style.agl").readText() }
+    private val grammarStr by lazy { File(grammarDir, "grammar.agl-grm").readText() }
+    private val styleStr by lazy { File(grammarDir, "style.agl-sty").readText() }
 
     private val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
         val res = Agl.processorFromStringSimple(
@@ -245,11 +245,11 @@ class test_SysML_v2_2026_09_agl_references {
     private val kermlProcessor = KerML_v2_2026_09.processorWithReferences()
 
     private val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
-        val referenceStr = CrossReferenceString(File(grammarDir, "references.agl").readText())
+        val referenceStr = CrossReferenceString(File(grammarDir, "references.agl-ref").readText())
         val kermlCrossReferenceDomain = kermlProcessor.crossReferenceDomain // created before the SysML types are added to the KerML types domain
         val res = Agl.processorFromStringSimple(
-            GrammarString(File(grammarDir, "grammar.agl").readText()),
-            styleStr = StyleString(File(grammarDir, "style.agl").readText()),
+            GrammarString(File(grammarDir, "grammar.agl-grm").readText()),
+            styleStr = StyleString(File(grammarDir, "style.agl-sty").readText()),
             configurationBase = Agl.configuration(Agl.configurationSimple()) {
                 typesResolver { ProcessResultDefault(kermlProcessor.typesDomain) }
                 crossReferenceResolver { p ->

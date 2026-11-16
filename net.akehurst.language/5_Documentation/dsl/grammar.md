@@ -41,6 +41,23 @@ A rule is `name = right-hand-side ;`.
 | `r = ;` | empty rule (matches nothing) |
 | `// ...`, `/* ... */` | comments |
 
+## Lists are greedy
+
+When the input can be split in more than one way between the items of a concatenation, an earlier item takes as much as it can.
+A list takes everything it can match, even when that leaves a following optional empty:
+
+```agl
+S = 'b' vs oa ;
+vs = v+ ;
+oa = 'a'? ;
+leaf v = "[a-z]" ;
+```
+
+`baa` parses as `S { 'b' vs { v : 'a' v : 'a' } oa { <EMPTY> } }`.
+The choice does not depend on the order in which the parser finds the alternatives.
+
+Possible future enhancement: a syntax for a non-greedy list.
+
 ## skip and leaf
 
 - `skip` rules (typically white space and comments) may appear between any two tokens.
