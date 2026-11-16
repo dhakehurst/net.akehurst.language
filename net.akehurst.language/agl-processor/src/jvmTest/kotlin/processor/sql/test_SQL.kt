@@ -31,7 +31,7 @@ class test_SQLValid {
 
     companion object {
 
-        private val grammarStr = test_SQLValid::class.java.getResource("/sql/version_/grammar.agl").readText()
+        private val grammarStr = test_SQLValid::class.java.getResource("/sql/version_/grammar.agl-grm").readText()
         val processor by lazy {
             Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         }

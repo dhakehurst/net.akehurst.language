@@ -39,8 +39,8 @@ class test_AnsiC_11 {
 
     private companion object {
         val languageDir = File("../language-repository/languages/ansiC/version_11")
-        val grammarStr by lazy { File(languageDir, "grammar.agl").readText() }
-        val styleStr by lazy { File(languageDir, "style.agl").readText() }
+        val grammarStr by lazy { File(languageDir, "grammar.agl-grm").readText() }
+        val styleStr by lazy { File(languageDir, "style.agl-sty").readText() }
 
         val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
             val res = Agl.processorFromStringSimple(GrammarString(grammarStr), styleStr = StyleString(styleStr))

@@ -1,3 +1,4 @@
+#TranslationUnit
 #include <stdlib.h>
 #define NEW(T) ((T *) malloc(sizeof(T)))
 

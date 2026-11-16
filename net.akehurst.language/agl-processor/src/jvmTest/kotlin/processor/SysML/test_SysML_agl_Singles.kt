@@ -35,7 +35,7 @@ class test_SysML_agl_Singles {
 
     private companion object {
         private val languagePathStr = "/SysML/v2_2026-09/grammars/agl"
-        private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
+        private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl-grm").readText()
 
         val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
             val res = Agl.processorFromStringSimple(
@@ -64,14 +64,14 @@ class test_SysML_agl_Singles {
 
     @Test
     fun parse_grammar() {
-        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl-grm").readText()
         val res = Agl.registry.agl.grammar.processor!!.parse(grammarStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun process_grammar() {
-        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl-grm").readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
@@ -79,7 +79,7 @@ class test_SysML_agl_Singles {
     @Ignore
     @Test
     fun check_grammar() {
-        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl-grm").readText()
         val res = Agl.registry.agl.grammar.processor!!.process(
             grammarStr,
             Agl.options {

@@ -33,7 +33,7 @@ class test_TypesAsStringRoundTripFromGrammars {
 
     private val grammarFiles: List<File>
         get() {
-            val repo = File("../language-repository/languages").walkTopDown().filter { it.isFile && it.name.startsWith("grammar", true) && it.name.endsWith(".agl") }
+            val repo = File("../language-repository/languages").walkTopDown().filter { it.isFile && it.name.startsWith("grammar", true) && it.name.endsWith(".agl-grm") }
             val resources = File("src/jvmTest/resources").walkTopDown().filter { it.isFile && it.name.endsWith(".agl") }
             return (repo + resources).sortedBy { it.path }.toList()
         }

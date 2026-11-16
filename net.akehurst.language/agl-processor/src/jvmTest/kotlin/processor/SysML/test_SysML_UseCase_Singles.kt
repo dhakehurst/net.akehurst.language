@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 class test_SysML_UseCase_Singles {
 
     private companion object {
-        const val grammarPath = "/SysML/v2_2026-09/grammars/agl/grammar.agl"
+        const val grammarPath = "/SysML/v2_2026-09/grammars/agl/grammar.agl-grm"
         private val grammarStr = this::class.java.getResource(grammarPath).readText()
         var processor: LanguageProcessor<Asm, SentenceContext> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 

@@ -34,7 +34,7 @@ class test_StatechartTools {
 
     companion object {
 
-        private val grammarStr= this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found")
+        private val grammarStr= this::class.java.getResource("/Statecharts/version_/grammar.agl-grm")?.readText() ?: error("File not found")
         //private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl")?.readText() ?: error("File not found")
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
 
