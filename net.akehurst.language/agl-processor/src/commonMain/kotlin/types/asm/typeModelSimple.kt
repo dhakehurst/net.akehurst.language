@@ -1212,7 +1212,7 @@ class SpecialTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
@@ -1247,7 +1247,7 @@ class SingletonTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
@@ -1282,7 +1282,7 @@ class PrimitiveTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
@@ -1318,7 +1318,7 @@ class EnumTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
@@ -1366,7 +1366,7 @@ class UnionTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
@@ -1374,8 +1374,10 @@ class UnionTypeSimple(
         this === other -> true
         other == StdLibDefault.NothingType.resolvedDefinition -> false
         other == StdLibDefault.AnyType.resolvedDefinition -> true
-        other is UnionType -> this.alternatives == other.alternatives
-        else -> false
+        other is UnionType && this.alternatives == other.alternatives -> true
+        // a union conforms to a type when each of its alternatives does
+        this.alternatives.isEmpty() -> false
+        else -> this.alternatives.all { it.resolvedDefinition.conformsTo(other) }
     }
 
     override fun findInOrCloneTo(other: TypesDomain): UnionType =
@@ -1546,7 +1548,7 @@ class ValueTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
@@ -1609,7 +1611,7 @@ class InterfaceTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
@@ -1675,7 +1677,7 @@ class DataTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
@@ -1751,7 +1753,7 @@ class CollectionTypeSimple(
     override fun signature(context: TypesNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.asTypesName()
         context == this.namespace -> name.value.asTypesName()
-        context.isImported(this.namespace.qualifiedName) -> name.value.asTypesName()
+        context.isImported(this.namespace.qualifiedName) && null == context.findOwnedTypeNamed(this.name) -> name.value.asTypesName() // qualify when an owned type hides the imported one
         else -> qualifiedName.asTypesName()
     }
 
