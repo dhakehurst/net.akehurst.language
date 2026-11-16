@@ -112,6 +112,39 @@ class ReferencesSemanticAnalyser(
         _issues.error(loc, message)
     }
 
+    private fun raiseWarning(obj: Any?, message: String) {
+        val loc = obj?.let { _locationMap?.get(obj) }
+        _issues.warn(loc, message)
+    }
+
+    /** checks only the referred to type names ('refers-to'), e.g. when the type of the referring element is not known */
+    private fun checkReferredToTypeNames(ref: ReferenceDefinitionDefault, list: List<ReferenceExpression>, importedNamespaces: List<TypesNamespace>) {
+        for (re in list) {
+            when (re) {
+                is ReferenceExpressionPropertyDefault -> checkReferredToTypeNames(ref, re, importedNamespaces)
+                is ReferenceExpressionCollectionDefault -> {
+                    re.ofType?.let {
+                        if (null == findReferredToType(it, importedNamespaces)) {
+                            raiseError(it, "For references in '${ref.inTypeName}', forall '${re.expression}', the of-type '$it' is not found")
+                        }
+                    }
+                    checkReferredToTypeNames(ref, re.referenceExpressionList, importedNamespaces)
+                }
+            }
+        }
+    }
+
+    private fun checkReferredToTypeNames(ref: ReferenceDefinitionDefault, refExpr: ReferenceExpressionPropertyDefault, importedNamespaces: List<TypesNamespace>) {
+        refExpr.refersToTypeName.forEach { n ->
+            val referredTo = findReferredToType(n, importedNamespaces)
+            when {
+                null == referredTo -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' not found")
+                referredTo.isReferableType.not() -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' is not a data type")
+                else -> Unit //OK
+            }
+        }
+    }
+
     private fun checkScopeDefinition(scopeDef: ScopeDefinitionDefault, importedNamespaces: List<TypesNamespace>) {
         val msgStart = if (CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last == scopeDef.scopeForTypeName) {
             //do nothing
@@ -198,29 +231,45 @@ class ReferencesSemanticAnalyser(
         refExpr: ReferenceExpressionCollectionDefault,
         importedNamespaces: List<TypesNamespace>
     ) {
-        refExpr.ofType?.let {
+        val ofType = refExpr.ofType?.let {
             val type = findReferredToType(it, importedNamespaces)
             when (type) {
                 null -> raiseError(it, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', the of-type '$it' is not found")
             }
+            type
         }
         val collTypeInstance = _typeResolver!!.typeFor(refExpr.expression, contextType.type())
-        when (collTypeInstance.resolvedDefinition) {
-            is SpecialType -> when {
-                StdLibDefault.NothingType == collTypeInstance.resolvedDefinition -> Unit
-                else -> TODO()
+        val collType = collTypeInstance.resolvedDefinition
+        when {
+            // the type resolver has already reported why the expression has no type (e.g. a property not found)
+            StdLibDefault.NothingType.resolvedDefinition == collType -> Unit
+
+            // the type of the expression cannot be determined, the references are resolved on the actual objects;
+            // only the referred to type names can be checked
+            StdLibDefault.AnyType.resolvedDefinition == collType -> {
+                raiseWarning(
+                    refExpr,
+                    "For references in '${ref.inTypeName}', the type of forall expression '${refExpr.expression}' cannot be determined, its references are not type checked"
+                )
+                checkReferredToTypeNames(ref, refExpr.referenceExpressionList, importedNamespaces)
             }
+
+            collType is SpecialType -> raiseError(
+                refExpr,
+                "For references in '${ref.inTypeName}', forall expression '${refExpr.expression}' has type '${collType.name}', it must be a collection or a single value"
+            )
+
+            // of-type not found, error already reported
+            null != refExpr.ofType && null == ofType -> Unit
 
             else -> {
                 // 'forall' over a single value (not a collection) : the loop variable has the type of the value
-                val loopVarType = when (collTypeInstance.resolvedDefinition) {
+                val loopVarType = when (collType) {
                     is CollectionType -> collTypeInstance.typeArguments[0].type.resolvedDefinition
-                    else -> collTypeInstance.resolvedDefinition
+                    else -> collType
                 }
-                val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
-                    val ofType = findReferredToType(ofTypeName, importedNamespaces)
+                val filteredLoopVarType = ofType?.let {
                     when {
-                        null == ofType -> error("Should not happen, checked above.")
                         //TODO: needs a conforms to to check transitive closure of supertypes
                         loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.resolvedDefinition == loopVarType } -> ofType //no error
                         loopVarType is UnionType && loopVarType.alternatives.any { it.resolvedDefinition == ofType } -> ofType
@@ -245,14 +294,7 @@ class ReferencesSemanticAnalyser(
         refExpr: ReferenceExpressionPropertyDefault,
         importedNamespaces: List<TypesNamespace>
     ) {
-        refExpr.refersToTypeName.forEachIndexed { i, n ->
-            val referredTo = findReferredToType(n, importedNamespaces)
-            when {
-                null == referredTo -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' not found")
-                referredTo.isReferableType.not() -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' is not a data type")
-                else -> Unit //OK
-            }
-        }
+        checkReferredToTypeNames(ref, refExpr, importedNamespaces)
 
         val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyNavigation, contextType.type())
         when (prop) {
