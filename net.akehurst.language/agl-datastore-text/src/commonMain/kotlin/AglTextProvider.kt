@@ -42,6 +42,8 @@ open class AglTextProvider : DatastoreProvider {
         const val FILE_EXTENSION_STYLE = "agl-sty"
         /** extension of the format file in a language directory (optional) */
         const val FILE_EXTENSION_FORMAT = "agl-fmt"
+        /** extension of the completion file in a language directory (optional) */
+        const val FILE_EXTENSION_COMPLETION = "agl-cpl"
 
         /**
          * optional: a List of names (qualified, or simple if only one type has that name) of types of the parsed asm.
@@ -79,7 +81,7 @@ open class AglTextProvider : DatastoreProvider {
                         description(
                             "Path of a folder that holds the language definition, one file of each kind, found by extension (any file name): " +
                                     "grammar (.$FILE_EXTENSION_GRAMMAR, required), types (.$FILE_EXTENSION_TYPES), asm-transform (.$FILE_EXTENSION_TRANSFORM), " +
-                                    "cross-references (.$FILE_EXTENSION_CROSS_REFERENCE), style (.$FILE_EXTENSION_STYLE) and format (.$FILE_EXTENSION_FORMAT). " +
+                                    "cross-references (.$FILE_EXTENSION_CROSS_REFERENCE), style (.$FILE_EXTENSION_STYLE), format (.$FILE_EXTENSION_FORMAT) and completion (.$FILE_EXTENSION_COMPLETION). " +
                                     "Without a cross-reference file, no references are resolved."
                         )
                     }
