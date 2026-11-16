@@ -18,6 +18,7 @@
 package net.akehurst.language.agl
 
 import net.akehurst.language.completion.api.AglCompletionDomain
+import net.akehurst.language.completion.processor.completionProviderWithDefinitions
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
@@ -101,7 +102,8 @@ object Agl {
             formatResolver = { p -> ProcessResultDefault<AglFormatDomain>(languageObject.formatDomain) },
             styleResolver = { p -> ProcessResultDefault<AglStyleDomain>(languageObject.styleDomain) },
             completionResolver = { p -> ProcessResultDefault<AglCompletionDomain>(languageObject.completionDomain) },
-            completionProviderResolver = { p -> ProcessResultDefault<CompletionProvider<AsmType, ContextType>>(languageObject.completionProvider) },
+            // the language object's provider, with its completion definitions applied (when it has any)
+            completionProviderResolver = { p -> completionProviderWithDefinitions(p, languageObject.completionProvider) },
         )
 
     /** like [configurationBase], plus the default syntax analyser (builds an [Asm]) and the default semantic analyser */
