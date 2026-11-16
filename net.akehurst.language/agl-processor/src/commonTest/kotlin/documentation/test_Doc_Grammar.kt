@@ -97,6 +97,31 @@ class test_Doc_Grammar {
     }
 
     @Test
+    fun lists_greedy() {
+        // grammar.md: "Lists are greedy"
+        val grammar = """
+            namespace example
+            grammar Greedy {
+                S = 'b' vs oa ;
+                vs = v+ ;
+                oa = 'a'? ;
+                leaf v = "[a-z]" ;
+            }
+        """
+        val expected = """
+            S {
+              'b'
+              vs {
+                v : 'a'
+                v : 'a'
+              }
+              oa { <EMPTY> }
+            }
+        """.trimIndent()
+        assertEquals(expected, tree(grammar, "baa"))
+    }
+
+    @Test
     fun skip_and_leaf() {
         // grammar.md: "skip and leaf"
         val grammar = """

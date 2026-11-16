@@ -102,7 +102,7 @@ class test_optional__with_var_covered_by_preceeding_list : test_LeftCornerParser
         val sentence = "baka"
 
         val expected = """
-             S { 'b'  vList {v:'a'} kvlOpt{ kvl{ 'k' vList { v:'a' } } } }
+             S { 'b' vList {v:'a' v:'k' v:'a'} kvlOpt{<EMPTY>} }
         """.trimIndent()
 
         super.test_pass(rrs, goal, sentence, 2, expected)
@@ -112,7 +112,7 @@ class test_optional__with_var_covered_by_preceeding_list : test_LeftCornerParser
     fun baakaa() {
         val sentence = "baakaa"
 
-        val expected = "S { 'b'  vList {v:'a' v:'a'} kvlOpt{ kvl{ 'k'vList { v:'a' v:'a' } } } }"
+        val expected = "S { 'b' vList {v:'a' v:'a' v:'k' v:'a' v:'a'} kvlOpt{<EMPTY>} }"
 
         super.test_pass(rrs, goal, sentence, 2, expected)
     }
