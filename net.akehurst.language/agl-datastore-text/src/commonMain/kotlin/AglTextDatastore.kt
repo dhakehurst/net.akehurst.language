@@ -25,6 +25,7 @@ import net.akehurst.language.api.processor.TypesString
 import net.akehurst.kotlinx.filesystem.UserFileSystemDefault
 import net.akehurst.kotlinx.filesystem.api.FileAccessMode
 import net.akehurst.kotlinx.filesystem.api.FileHandle
+import net.akehurst.language.api.processor.CompletionString
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.processor.ResolvedReference
@@ -138,7 +139,8 @@ open class AglTextDatastore(
             val transform: String? = null,
             val crossReference: String? = null,
             val style: String? = null,
-            val format: String? = null
+            val format: String? = null,
+            val completion: String? = null
         )
 
         class AglTextConfig(val configuration: DatastoreConfiguration) {
@@ -215,6 +217,7 @@ open class AglTextDatastore(
                             defs.crossReference?.let { this.crossReferenceString(CrossReferenceString(it)) }
                             defs.style?.let { this.styleString(StyleString(it)) }
                             defs.format?.let { this.formatString(FormatString(it)) }
+                            defs.completion?.let { this.completionString(CompletionString(it)) }
                         },
                         aglOptions = Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } }
                     ).let {
@@ -247,7 +250,8 @@ open class AglTextDatastore(
                     transform = read(AglTextProvider.FILE_EXTENSION_TRANSFORM),
                     crossReference = read(AglTextProvider.FILE_EXTENSION_CROSS_REFERENCE),
                     style = read(AglTextProvider.FILE_EXTENSION_STYLE),
-                    format = read(AglTextProvider.FILE_EXTENSION_FORMAT)
+                    format = read(AglTextProvider.FILE_EXTENSION_FORMAT),
+                    completion = read(AglTextProvider.FILE_EXTENSION_COMPLETION)
                 )
             }
         }
