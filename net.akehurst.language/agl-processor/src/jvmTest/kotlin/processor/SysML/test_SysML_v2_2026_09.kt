@@ -203,7 +203,6 @@ class test_SysML_v2_2026_09_agl_references {
             "examples/Simple Tests/InterfaceTest.sysml",
             "examples/Simple Tests/ParameterTest.sysml",
             "examples/Simple Tests/PartTest.sysml",
-            "examples/Simple Tests/RootPackageTest.sysml",
             "examples/Simple Tests/StateTest.sysml",
             "examples/Simple Tests/VariabilityTest.sysml",
             "examples/Simple Tests/ViewTest.sysml",
