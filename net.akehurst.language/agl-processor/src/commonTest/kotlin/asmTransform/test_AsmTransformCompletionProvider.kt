@@ -67,4 +67,23 @@ class test_AsmTransformCompletionProvider {
         val sentence = "namespace test\n  asm-transform Test {\n    "
         test(sentence, listOf(), false)
     }
+
+    @Test
+    fun grammarRuleName_after_modifyRule() {
+        // the modify rule ends with an embedded Expressions::expression whose grammar has a preference rule
+        val sentence = "namespace test\n  asm-transform Test {\n    S : { S -> b := child[1] }\n    "
+        test(sentence, listOf(
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "B"),
+        ))
+    }
+
+    @Test
+    fun grammarRuleName_after_expressionRule() {
+        val sentence = "namespace test\n  asm-transform Test {\n    B : child[0]\n    "
+        test(sentence, listOf(
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "B"),
+        ))
+    }
 }
