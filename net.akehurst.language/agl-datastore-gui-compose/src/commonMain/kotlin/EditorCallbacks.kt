@@ -93,6 +93,13 @@ data class EditorStrings(
     val partId: String = "Part id",
     val provider: String = "Provider",
     val datastoreConfiguration: String = "Datastore configuration",
+    /** before the platforms the provider supports, e.g. "Runs on: JVM, JS (browser)" */
+    val supportedPlatforms: String = "Runs on",
+    /** the label of the location choice (DatastoreLocation) */
+    val location: String = "Use on",
+    val locationAny: String = "Client or server",
+    val locationClient: String = "Client only",
+    val locationServer: String = "Server only",
     val accessConfiguration: String = "Access configuration",
     val connection: String = "Connection",
     val addConnection: String = "Add connection",

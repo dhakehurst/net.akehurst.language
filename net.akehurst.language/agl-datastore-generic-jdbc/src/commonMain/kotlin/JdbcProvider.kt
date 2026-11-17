@@ -3,6 +3,7 @@ package net.akehurst.datastore.generic.jdbc
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DatastorePlatform
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.common.datastoreProviderSchema
@@ -10,7 +11,8 @@ import net.akehurst.datastore.common.datastoreProviderSchema
 /**
  * Provides JdbcDatastores: datastores over a relational database, reached through JDBC.
  * The types are computed from the database metadata: one data type per table (and view), one property per column,
- * and associations from foreign keys. JVM only; the application adds the JDBC driver of its database.
+ * and associations from foreign keys. The provider is in common code, so it can be registered (and its schema shown) on every platform,
+ * but its datastores run on the JVM only; the application adds the JDBC driver of its database.
  */
 open class JdbcProvider : DatastoreProvider {
 
@@ -95,7 +97,15 @@ open class JdbcProvider : DatastoreProvider {
     }
 
     /** override to provide a custom datastore, e.g. a subclass that overrides provenanceFor */
-    override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore =
-        JdbcDatastore(datastoreIdentity, configuration)
+    /** JDBC is a Java API */
+    override val supportedPlatforms: Set<DatastorePlatform> = setOf(DatastorePlatform.JVM)
+
+    override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore {
+        checkSupportedOnCurrentPlatform()
+        return createJdbcDatastore(datastoreIdentity, configuration)
+    }
 
 }
+
+/** a JdbcDatastore on the JVM; throws on other platforms (JdbcProvider.provide checks the platform first) */
+internal expect fun createJdbcDatastore(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore

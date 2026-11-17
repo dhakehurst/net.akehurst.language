@@ -33,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DatastoreLocation
+import net.akehurst.datastore.api.DatastorePlatform
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.gui.compose.CompositionEditorState
 import net.akehurst.datastore.gui.compose.ConnectionDraft
@@ -301,6 +303,7 @@ private fun PartDetail(state: CompositionEditorState, part: PartDraft, callbacks
             modifier = Modifier.fillMaxWidth(),
             readOnly = readOnly,
         )
+        LocationLine(part, customisation, readOnly)
         Text(strings.datastoreConfiguration, style = MaterialTheme.typography.titleSmall)
         val errors = issues.mapNotNull { i -> (i.location as? IssueLocation.Part)?.takeIf { it.part == part }?.parameterIdentity?.let { Pair(it, i.message) } }.toMap()
         ParameterForm(part.datastore, errors, state.secretSourceIds, customisation, readOnly = readOnly)
@@ -317,6 +320,42 @@ private fun PartDetail(state: CompositionEditorState, part: PartDraft, callbacks
         val partIssues = issues.filter { (it.location as? IssueLocation.Part)?.let { l -> l.part == part && null == l.parameterIdentity } == true }
         partIssues.forEach { IssueText(it) }
     }
+}
+
+/** The platforms the part's provider supports, and the choice of where the datastore may be used (client, server or either). */
+@Composable
+private fun LocationLine(part: PartDraft, customisation: EditorCustomisation, readOnly: Boolean) {
+    val strings = customisation.strings
+    val platforms = part.provider.supportedPlatforms
+    Text(
+        "${strings.supportedPlatforms}: ${DatastorePlatform.entries.filter { it in platforms }.joinToString { platformLabel(it) }.ifEmpty { "-" }}",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(strings.location, style = MaterialTheme.typography.bodySmall)
+        ChoiceButton(
+            current = locationLabel(part.datastore.location, customisation),
+            options = DatastoreLocation.entries,
+            optionLabel = { locationLabel(it, customisation) },
+            onChoose = { part.datastore.location = it },
+            enabled = !readOnly,
+        )
+    }
+}
+
+internal fun platformLabel(platform: DatastorePlatform): String = when (platform) {
+    DatastorePlatform.JVM -> "JVM"
+    DatastorePlatform.JS_BROWSER -> "JS (browser)"
+    DatastorePlatform.JS_NODE -> "JS (Node)"
+    DatastorePlatform.WASM_JS_BROWSER -> "WasmJs (browser)"
+    DatastorePlatform.WASM_JS_NODE -> "WasmJs (Node)"
+    DatastorePlatform.NATIVE -> "Native"
+}
+
+private fun locationLabel(location: DatastoreLocation, customisation: EditorCustomisation): String = when (location) {
+    DatastoreLocation.ANY -> customisation.strings.locationAny
+    DatastoreLocation.CLIENT -> customisation.strings.locationClient
+    DatastoreLocation.SERVER -> customisation.strings.locationServer
 }
 
 /** "Types: loading", "Types: N types" or "Types: not available: reason", with a retry button. */

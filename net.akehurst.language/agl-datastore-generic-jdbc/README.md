@@ -40,3 +40,4 @@ val access = accessConfiguration(JdbcProvider.IDENTITY) {
 | J15 | A foreign-key end on the referencing type can be set to a row of the referenced table, or to null / nothing: it sets the key columns, stored when the row is written. Setting it to a row of another table fails. | done |
 | J16 | A many-to-many end can be set to a List of rows of the other table: the value is seen at once, and when the row is written (and stored) its rows of the join table are replaced by these. | done |
 | J17 | Not yet: setting the reverse (List) end of a foreign key; writing a join table directly; NUMERIC/DECIMAL as exact decimals. | open |
+| J18 | `JdbcProvider` is in commonMain, so it can be registered (and its configuration edited) on every platform; `supportedPlatforms` is `JVM` only, and on JS and WasmJs `provide` throws `DatastorePlatformNotSupportedException`. | done |
