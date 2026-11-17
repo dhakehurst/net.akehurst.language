@@ -22,6 +22,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
@@ -55,7 +56,9 @@ class CompletionProviderSimple(
     val targetGrammar: Grammar,
     val grammar2TypesDomain: Grammar2TypesDomainMapping,
     val typesDomain: TypesDomain,
-    val crossReferenceDomain: CrossReferenceDomain
+    val crossReferenceDomain: CrossReferenceDomain,
+    /** the asm-transform rules of [targetGrammar], used to find the property a leaf gives a value to (see [provideReferencesForSpine]) */
+    val transformRuleSet: AsmTransformRuleSet? = null
 ) : CompletionProviderAbstract<Asm, SentenceContext>() {
 
     val targetNamespace = typesDomain.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypesNamespaceSimple?
@@ -63,44 +66,29 @@ class CompletionProviderSimple(
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
         val sentenceContext = options.sentenceContext
+        // the rule items of all spines, without duplicates, so that each is expanded once
+        // (the same list is used with a path, so that the ids of the items stay the same)
+        val allRuleItems = nextExpected.flatMap { it.expectedNextRuleItems }.toSet()
+        val allTangibles = nextExpected.flatMap { it.expectedNextLeafNonTerminalOrTerminal }.toSet()
 
         return when {
             options.path.isEmpty() -> {
-                val result = if (null == sentenceContext) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-                    val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options, targetGrammar) }
-                    val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options, targetGrammar) }
-                    expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
-                } else {
-                    // the expansions and tangibles of all spines, computed once (it is the same for each spine)
-                    val allSpinesItems by lazy {
-                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options, targetGrammar) }
-                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options, targetGrammar) }
-                        expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                val defaultItems = expansionToCompletionItem(provideForRuleItems(allRuleItems, options, targetGrammar)) +
+                        provideForTangibles(allTangibles, options, targetGrammar)
+                val result = when (sentenceContext) {
+                    null -> defaultItems
+                    else -> {
+                        val referred = nextExpected.flatMap { sp -> provideReferredFor(sp, sentenceContext) }
+                        referred + defaultItems
                     }
-                    val items = nextExpected.flatMap { sp ->
-                        val firstSpineNode = sp.elements.firstOrNull()
-                        when (firstSpineNode) {
-                            null -> provideDefaultForSpine(sp, options)
-                            else -> {
-                                val type = typeFor(firstSpineNode.rule)
-                                when (type) {
-                                    null -> allSpinesItems
-                                    else -> provideForType(type, firstSpineNode, sentenceContext) + allSpinesItems
-                                }
-                            }
-                        }
-                    }
-                    items.toSet().toList() //TODO: can we remove duplicates earlier!
                 }
-                defaultSortAndFilter(result)
+                defaultSortAndFilter(result.toSet().toList())
             }
 
             else -> {
                 val path = options.path
                 val (pthDepth0, pthExpIdx0) = path.first()
-                val initExpansions = nextExpected.flatMap { sp ->
-                    provideExpansionsForRuleItem(pthDepth0, sp.expectedNextRuleItems, options, targetGrammar)
-                }
+                val initExpansions = provideExpansionsForRuleItem(pthDepth0, allRuleItems, options, targetGrammar)
                 val expansions = when (path.size) {
                     1 -> initExpansions
                     else -> {
@@ -118,6 +106,26 @@ class CompletionProviderSimple(
                 }
                 val cis = expansionToCompletionItem(expansions)
                 defaultSortAndFilter(cis)
+            }
+        }
+    }
+
+    /**
+     * the items of [sentenceContext] that can be referred to at the end of [spine].
+     * Uses the grammar walk of [provideReferencesForSpine] when there is a [transformRuleSet],
+     * otherwise the properties of the type of the rule of the spine ([provideForType]).
+     */
+    private fun provideReferredFor(spine: Spine, sentenceContext: SentenceContext): List<CompletionItem> {
+        val trs = transformRuleSet
+        return when {
+            null != trs -> provideReferencesForSpine(spine, sentenceContext, trs, typesDomain, crossReferenceDomain).values.flatten()
+            else -> {
+                val firstSpineNode = spine.elements.firstOrNull()
+                val type = firstSpineNode?.let { typeFor(it.rule) }
+                when {
+                    null == firstSpineNode || null == type -> emptyList()
+                    else -> provideForType(type, firstSpineNode, sentenceContext)
+                }
             }
         }
     }

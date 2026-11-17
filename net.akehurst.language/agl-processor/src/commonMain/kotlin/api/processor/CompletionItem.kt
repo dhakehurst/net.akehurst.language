@@ -52,7 +52,22 @@ data class CompletionItem(
      * null if not set, in which case use [ExpectedAtResult.offeredPosition].
      */
     var offeredPosition: Int? = null
+
+    /**
+     * edits to the sentence, other than inserting [text], to apply when this item is chosen,
+     * e.g. an import for a name from another namespace (as LSP additionalTextEdits).
+     * The positions are in the sentence as it is before any edit.
+     */
+    var additionalEdits: List<CompletionEdit> = emptyList()
 }
+
+/**
+ * insert [text] into the sentence at [position] (an additional edit of a [CompletionItem])
+ */
+data class CompletionEdit(
+    val position: Int,
+    val text: String
+)
 
 interface SpineNode {
     val rule: GrammarRule
