@@ -21,7 +21,15 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.StyleString
+import net.akehurst.language.agl.processor.tokensWithSemanticTags
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
+import net.akehurst.language.agl.simple.contextAsmSimple
+import net.akehurst.language.api.processor.CrossReferenceString
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.documentation.test_Doc_GettingStarted.Companion.SHAPES_GRAMMAR
+import net.akehurst.language.grammar.processor.contextFromGrammar
+import net.akehurst.language.style.api.AglStyleTagRule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -88,5 +96,82 @@ class test_Doc_Style {
         assertTrue(definition.issues.errors.isEmpty(), definition.issues.toString())
         assertEquals(listOf("\$keyword"), styleSet.tagRules.single().selector.map { it.value })
         assertEquals(1, styleSet.metaRules.size)
+    }
+
+    private val shapesReferences = """
+        namespace example.Shapes
+            identify Circle by name
+            identify Square by name
+            references {
+                in Connection {
+                    property source refers-to Circle|Square
+                    property target refers-to Circle|Square
+                }
+            }
+    """.trimIndent()
+
+    @Test
+    fun semantic_selectors() {
+        // style.md: "Semantic selectors"
+        val style = """
+            namespace example
+            styles Shapes {
+                identify Shape {
+                    font-weight: bold;
+                }
+                refers-to Circle {
+                    foreground: red;
+                }
+                type Connection {
+                    font-style: italic;
+                }
+            }
+        """.trimIndent()
+        val definition = Agl.languageDefinitionFromStringSimple(
+            LanguageIdentity("example.Shapes3"),
+            GrammarString(SHAPES_GRAMMAR),
+            referenceStr = CrossReferenceString(shapesReferences),
+            styleStr = StyleString(style)
+        )
+        val styleSet = definition.styleDomain!!.allDefinitions.single()
+        assertTrue(definition.issues.errors.isEmpty(), definition.issues.toString())
+        assertEquals(
+            listOf("identify example.Shapes.Shape", "refers-to example.Shapes.Circle", "type example.Shapes.Connection"),
+            styleSet.tagRules.map { it.selector.single().matchTag }
+        )
+
+        val sentence = "circle c\nconnect c to c"
+        val result = definition.processor!!.process(sentence, Agl.options<Asm, SentenceContext> { semanticAnalysis { sentenceContext(contextAsmSimple()) } })
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
+        val tokens = tokensWithSemanticTags(result.parse!!.sppt!!.tokensByLineAll(), result.semanticAnalysis!!.semanticTags).flatten()
+        val names = tokens.filter { sentence.substring(it.position, it.position + it.length) == "c" }
+        assertTrue(names[0].tagList.contains("identify example.Shapes.Shape"), names[0].tagList.toString())     // bold
+        assertTrue(names[1].tagList.contains("refers-to example.Shapes.Circle"), names[1].tagList.toString())   // red
+        val to = tokens.first { sentence.substring(it.position, it.position + it.length) == "to" }
+        assertTrue(to.tagList.contains("type example.Shapes.Connection"), to.tagList.toString())                // italic
+    }
+
+    @Test
+    fun semantic_selectors_import_types() {
+        // style.md: "Semantic selectors" (import-types)
+        val definition = Agl.languageDefinitionFromStringSimple(
+            LanguageIdentity("example.Shapes4"),
+            GrammarString(SHAPES_GRAMMAR),
+            referenceStr = CrossReferenceString(shapesReferences)
+        )
+        val style = """
+            namespace other
+            styles X {
+                import-types example.Shapes
+                refers-to Circle { foreground: red; }
+            }
+        """.trimIndent()
+        val res = Agl.registry.agl.style.processor!!.process(
+            style,
+            Agl.options { semanticAnalysis { sentenceContext(contextFromGrammar(definition.grammarDomain!!).union(contextFromTypesDomain(definition.typesDomain!!))) } }
+        )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val sel = (res.asm!!.allDefinitions.single().rules.single() as AglStyleTagRule).selector.single()
+        assertEquals("refers-to example.Shapes.Circle", sel.matchTag)
     }
 }

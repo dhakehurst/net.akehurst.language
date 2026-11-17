@@ -255,7 +255,8 @@ class test_SemanticAnalyserSimple_datatypes {
                 source = expectedResolvedList[0].source,
                 sourceLocation = InputLocation(38,9,3,6,null),
                 target = expectedResolvedList[0].target,
-                targetLocation = InputLocation(0,1,1,16,null)
+                targetLocation = InputLocation(0,1,1,16,null),
+                referringLocation = InputLocation(38,9,3,6,null)
             )
         )
         assertEquals(expectedResolved, result.semanticAnalysis?.resolvedReferences)

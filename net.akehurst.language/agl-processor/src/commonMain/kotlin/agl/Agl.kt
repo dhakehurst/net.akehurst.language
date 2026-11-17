@@ -210,7 +210,7 @@ object Agl {
                 crossReferenceResolver { p: LanguageProcessor<Asm, SentenceContext> -> CrossReferenceDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), referenceStr) }
             }
             if (null != styleStr) {
-                styleResolver { p: LanguageProcessor<Asm, SentenceContext> -> AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), styleStr) }
+                styleResolver { p: LanguageProcessor<Asm, SentenceContext> -> AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!).union(contextFromTypesDomain(p.typesDomain)), styleStr) }
             }
             if (null != formatterStr) {
                 formatResolver { p: LanguageProcessor<Asm, SentenceContext> -> Agl.formatDomain(formatterStr, p.typesDomain) }

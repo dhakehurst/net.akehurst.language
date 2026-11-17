@@ -27,6 +27,10 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
+import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.style.api.*
@@ -70,7 +74,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
                     ss.rules.forEach { rule ->
                         when (rule) {
                             is AglStyleMetaRule -> analyseMetaRule(rule, locMap, sentenceContext)
-                            is AglStyleTagRule -> analyseTagRule(rule, locMap, sentenceContext)
+                            is AglStyleTagRule -> analyseTagRule(ss, rule, locMap, sentenceContext)
                         }
                     }
                 }
@@ -122,7 +126,33 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         }
     }
 
-    private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, sentenceContext: SentenceContext) {
+    /**
+     * The type of a semantic selector ('type T', 'identify T', 'refers-to T') is resolved in the types domain of the context (if it has one):
+     * a qualified name directly; a simple name in the types namespace with the qualified name of the style set
+     * (e.g. 'example.Shapes' for 'namespace example styles Shapes', where the types of 'namespace example grammar Shapes' are),
+     * then in the 'import-types' namespaces, in order.
+     */
+    private fun resolveSemanticSelector(styleSet: StyleSet, sel: AglStyleSelector, loc: InputLocation?, sentenceContext: SentenceContext) {
+        val typesDomain = sentenceContext.findItemsConformingTo { it.value == TypesDomain::class.simpleName }.firstOrNull()?.item as TypesDomain?
+        if (null != typesDomain) {
+            val name = sel.value.substringAfter(' ').asPossiblyQualifiedName
+            val type = when (name) {
+                is QualifiedName -> typesDomain.findByQualifiedNameOrNull(name)
+                is SimpleName -> {
+                    val namespaces = listOf(styleSet.qualifiedName) + styleSet.importTypes.map { it.asQualifiedName }
+                    namespaces.firstNotNullOfOrNull { typesDomain.findNamespaceOrNull(it)?.findOwnedTypeNamed(name) }
+                }
+
+                else -> null
+            }
+            when (type) {
+                null -> _issues.error(loc, "Type '${name.value}' not found for style rule")
+                else -> sel.resolveTypeAs(type.qualifiedName)
+            }
+        }
+    }
+
+    private fun analyseTagRule(styleSet: StyleSet, rule: AglStyleTagRule, locMap: LocationMap, sentenceContext: SentenceContext) {
         rule.selector.forEach { sel ->
             val loc = locMap[sel]
             // TODO: user types
@@ -146,6 +176,8 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
                 }
 
                 AglStyleSelectorKind.SPECIAL -> Unit
+                // semantic selectors, matched against the tags from semantic analysis of a sentence
+                AglStyleSelectorKind.TYPE, AglStyleSelectorKind.IDENTIFY, AglStyleSelectorKind.REFERS_TO -> resolveSemanticSelector(styleSet, sel, loc, sentenceContext)
             }
         }
     }
