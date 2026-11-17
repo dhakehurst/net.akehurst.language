@@ -462,6 +462,23 @@ class test_CompletionProviderDefault_datatypes {
                         )
                     )
                 }
+                sentencePass("primitive InternalType class A { prop : Int", "typed word completed by a local item") {
+                    context(contextAsmSimple { })
+                    expectedCompletionItems(
+                        listOf(
+                            // completes the typed word 'Int', from its start
+                            CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"),
+                            // 'Int' is complete, what can come next
+                            CompletionItem(CompletionItemKind.REFERRED, "Datatype", "A"),
+                            CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <typeReference>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeArgumentList> >"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'<'", "<"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
+                        )
+                    )
+                }
             }
         }
 
