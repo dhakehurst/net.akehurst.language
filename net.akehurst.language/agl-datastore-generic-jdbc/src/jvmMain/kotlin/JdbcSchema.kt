@@ -31,7 +31,7 @@ data class JdbcTable(
     val name: String,
     val isView: Boolean,
     val columns: List<JdbcColumn>,
-    /** the primary key columns, in key order; empty if there is no primary key */
+    /** the primary key columns, in key order (or the key columns configured by config.keys); empty if there is none */
     val primaryKey: List<String>,
     val foreignKeys: List<JdbcForeignKey>,
 ) {
@@ -69,7 +69,7 @@ data class JdbcSchema(
          * Reads the tables (and, if 'includeViews', the views) of 'schema' (null: the connection's current schema)
          * whose names match one of 'tableNames' (globs, matched ignoring case; empty: all).
          */
-        fun read(connection: Connection, schema: String?, tableNames: List<Regex>, includeViews: Boolean): JdbcSchema {
+        fun read(connection: Connection, schema: String?, tableNames: List<Regex>, includeViews: Boolean, keys: Map<String, List<String>> = emptyMap()): JdbcSchema {
             val md = connection.metaData
             val catalog = connection.catalog
             val sch = schema?.takeIf { it.isNotBlank() } ?: connection.schema
@@ -82,12 +82,35 @@ data class JdbcSchema(
                     if (tableNames.isEmpty() || tableNames.any { it.matches(name) }) found.add(Pair(name, isView))
                 }
             }
-            val tables = found.sortedBy { it.first }.map { (name, isView) -> readTable(md, catalog, sch, name, isView) }
+            val tables = withKeys(found.sortedBy { it.first }.map { (name, isView) -> readTable(md, catalog, sch, name, isView) }, keys)
             val selected = tables.map { it.name }.toSet()
             // foreign keys to tables that are not read give no associations
             val result = tables.map { t -> t.copy(foreignKeys = t.foreignKeys.filter { it.referencedTable in selected }) }
             val quote = md.identifierQuoteString?.trim()?.takeIf { it.isNotEmpty() } ?: ""
             return JdbcSchema(sch, catalog, result, quote)
+        }
+
+        /**
+         * the tables, each without a primary key given the key columns of 'keys' (table name -> column names; names matched exactly,
+         * else ignoring case if unique). Fails for a name that is not a selected table, a table that has a primary key, or a column it does not have.
+         */
+        private fun withKeys(tables: List<JdbcTable>, keys: Map<String, List<String>>): List<JdbcTable> {
+            if (keys.isEmpty()) return tables
+            fun <T> find(what: String, name: String, items: List<T>, nameOf: (T) -> String): T =
+                items.firstOrNull { nameOf(it) == name } ?: items.filter { nameOf(it).equals(name, ignoreCase = true) }.let { found ->
+                    when (found.size) {
+                        1 -> found.first()
+                        0 -> error("config.keys: there is no $what '$name'")
+                        else -> error("config.keys: more than one $what is named '$name' ignoring case, give the exact name")
+                    }
+                }
+
+            val byTable = keys.entries.associate { (tn, cols) ->
+                val t = find("selected table or view", tn, tables) { it.name }
+                check(t.primaryKey.isEmpty()) { "config.keys: '${t.name}' has a primary key (${t.primaryKey.joinToString()})" }
+                Pair(t.name, cols.map { c -> find("column of '${t.name}'", c, t.columns) { it.name }.name })
+            }
+            return tables.map { t -> byTable[t.name]?.let { t.copy(primaryKey = it) } ?: t }
         }
 
         private fun readTable(md: DatabaseMetaData, catalog: String?, schema: String?, name: String, isView: Boolean): JdbcTable {

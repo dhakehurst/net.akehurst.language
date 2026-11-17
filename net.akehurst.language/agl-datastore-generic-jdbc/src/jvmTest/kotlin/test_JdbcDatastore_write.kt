@@ -251,4 +251,47 @@ class test_JdbcDatastore_write {
         assertFailsWith<IllegalArgumentException> { sut.accessorMutator().setPropertySuspend(bob.data, "DEPARTMENT", project.data) }
         sut.close()
     }
+
+    private suspend fun openWithKeys(url: String, vararg keys: String): Datastore {
+        val cfg = datastoreConfiguration(JdbcProvider.IDENTITY) {
+            argument(JdbcProvider.CONFIG_URL, url)
+            argument(JdbcProvider.CONFIG_KEYS, keys.toList())
+        }
+        return JdbcProvider().provide(DatastoreIdentity("db"), cfg).also { it.open() }
+    }
+
+    @Test
+    fun configured_key_gives_view_rows_a_stable_identity() = runTest {
+        val sut = openWithKeys(TestDb.create(*TestDb.HR), "active_employee: id")
+        assertEquals(listOf("ACTIVE_EMPLOYEE:10", "ACTIVE_EMPLOYEE:12"), read(sut, "ACTIVE_EMPLOYEE").map { it.identity.value })
+        // a view is still not written
+        val item = read(sut, "ACTIVE_EMPLOYEE").first()
+        sut.beginTransaction()
+        assertEquals(1, sut.write(noAccess, flowOf(item)).toList().single().issues.errors.size)
+        assertEquals(emptyList(), sut.delete(noAccess, flowOf(item.identity)).toList())
+        sut.rollback()
+        sut.close()
+    }
+
+    @Test
+    fun configured_key_lets_a_table_without_primary_key_be_written_and_deleted() = runTest {
+        val url = TestDb.create("CREATE TABLE LOG (CODE VARCHAR(10), MSG VARCHAR(100))", "INSERT INTO LOG VALUES ('a', 'one'), ('b', 'two')")
+        val sut = openWithKeys(url, "LOG: CODE")
+        val items = read(sut, "LOG")
+        assertEquals(listOf("LOG:a", "LOG:b"), items.map { it.identity.value })
+        (items[0].data.self as JdbcRow)["MSG"] = "uno"
+        sut.beginTransaction()
+        assertTrue(sut.write(noAccess, flowOf(items[0])).toList().single().issues.isEmpty())
+        assertEquals(listOf(DataItemIdentity("LOG:b")), sut.delete(noAccess, flowOf(DataItemIdentity("LOG:b"))).toList())
+        sut.commit()
+        assertEquals(listOf("uno"), query(url, "SELECT MSG FROM LOG"))
+        sut.close()
+    }
+
+    @Test
+    fun configured_key_for_a_table_with_a_primary_key_fails() = runTest {
+        val sut = openWithKeys(TestDb.create(*TestDb.HR), "EMPLOYEE: NAME")
+        assertFailsWith<IllegalStateException> { sut.types() }
+        sut.close()
+    }
 }
