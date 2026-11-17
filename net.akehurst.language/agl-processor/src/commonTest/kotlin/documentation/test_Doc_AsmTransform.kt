@@ -105,6 +105,65 @@ class test_Doc_AsmTransform {
     }
 
     @Test
+    fun modify_object_of_first_item() {
+        // asm-transform.md: "Modify the object of the first item"
+        val grammar = """
+            namespace example
+            grammar Shapes {
+                skip leaf WS = "\s+" ;
+                unit = coloured* ;
+                coloured = shape colour ;
+                shape = circle | square ;
+                circle = 'circle' ID ;
+                square = 'square' ID ;
+                leaf colour = 'red' | 'blue' ;
+                leaf ID = "[a-z]+" ;
+            }
+        """
+        val transform = """
+            #override-default-transform
+            #create-missing-types
+            namespace example
+            asm-transform Shapes {
+                coloured: { Shape -> colour := child[1] }
+            }
+        """
+        val result = Agl.processorFromStringSimple(GrammarString(grammar.trimIndent()), transformStr = AsmTransformString(transform.trimIndent()))
+        check(result.issues.errors.isEmpty()) { result.issues.toString() }
+        val processed = result.processor!!.process("circle c red square s blue")
+        assertTrue(processed.allIssues.errors.isEmpty(), processed.allIssues.toString())
+        val expected = """
+            :Unit {
+              coloured = [
+                :Circle {
+                  id = 'c'
+                  colour = 'red'
+                }
+                :Square {
+                  id = 's'
+                  colour = 'blue'
+                }
+              ]
+            }
+        """.trimIndent()
+        assertEquals(expected, processed.asm!!.asString().trim(), result.processor!!.typesDomain.asString())
+    }
+
+    @Test
+    fun modify_new_property_needs_create_missing_types() {
+        val transform = """
+            #override-default-transform
+            namespace example
+            asm-transform Shapes {
+                circle: { Circle -> label := child[1] }
+            }
+        """
+        val proc = Agl.processorFromStringSimple(GrammarString(SHAPES_GRAMMAR), transformStr = AsmTransformString(transform.trimIndent())).processor!!
+        proc.transformDomain // build it
+        assertTrue(proc.allIssues.errors.any { it.message.contains("has no property 'label'") }, proc.allIssues.toString())
+    }
+
+    @Test
     fun existing_type_without_create_missing_types() {
         // asm-transform.md: "Options" (a rule that uses an existing type needs no '#create-missing-types')
         val transform = """

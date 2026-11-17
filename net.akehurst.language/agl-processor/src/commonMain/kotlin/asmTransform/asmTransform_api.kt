@@ -20,6 +20,7 @@ package net.akehurst.language.asmTransform.api
 import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
@@ -96,5 +97,13 @@ interface SelfStatement {
 
 }
 
+/**
+ * `grammarRuleName: { T -> p := e ... }`
+ * modifies the object given by the first item of the grammar rule (child[0], e.g. created by a rule of a choice),
+ * setting the given properties (usually from the following items), the result is that same object.
+ * 'T' is the type of the grammar rule.
+ */
 interface ModifyObjectRule : AsmTransformationRule {
+    val possiblyQualifiedTypeName: PossiblyQualifiedName
+    val modifyStatements: List<VariableAssignmentStatement>
 }

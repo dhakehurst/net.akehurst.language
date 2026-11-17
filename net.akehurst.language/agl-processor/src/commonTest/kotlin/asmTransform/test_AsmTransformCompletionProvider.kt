@@ -40,6 +40,7 @@ class test_AsmTransformCompletionProvider {
         """
         val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
         val types = typesDomain("Test", true) { }
+        val typesWithT = typesDomain("Test", true) { namespace("test") { data("T1") } }
 
         fun test(sentence: String, expected: List<CompletionItem>, withContext: Boolean = true) {
             val actual = aglProc.expectedItemsAt(sentence, sentence.length, Agl.options {
@@ -79,11 +80,15 @@ class test_AsmTransformCompletionProvider {
     }
 
     @Test
-    fun grammarRuleName_after_expressionRule() {
-        val sentence = "namespace test\n  asm-transform Test {\n    B : child[0]\n    "
-        test(sentence, listOf(
-            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "B"),
-        ))
+    fun typeName_in_modifyRule() {
+        val sentence = "namespace test\n  asm-transform Test {\n    S : { "
+        val actual = aglProc.expectedItemsAt(sentence, sentence.length, Agl.options {
+            completionProvider {
+                sentenceContext(contextFromGrammarAndTypesDomain(grammar, typesWithT))
+            }
+        })
+        assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
+        val refs = actual.items.filter { it.kind == CompletionItemKind.REFERRED && it.label == "TypeDefinition" }
+        assertTrue(refs.any { it.text == "T1" }, actual.items.joinToString("\n"))
     }
 }

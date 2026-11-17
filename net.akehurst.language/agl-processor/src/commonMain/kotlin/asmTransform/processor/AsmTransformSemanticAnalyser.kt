@@ -28,6 +28,7 @@ import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.api.AsmTransformNamespace
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
+import net.akehurst.language.asmTransform.api.ModifyObjectRule
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.asmTransform.asm.AsmTransformationRuleDefault
 import net.akehurst.language.asmTransform.asm.asmTransformationRule
@@ -113,6 +114,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     overrideDefaultRuleSet(trs)
                     checkEveryRuleHasATransformRule(trs)
                     convertRulesThatSimplyRedefineDefaultType(trs)
+                    resolveModifyRules(trs)
                     createMissingTypes(trs)
 
                     for (ref in trs.extends) {
@@ -123,7 +125,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     }
                     for (trr in trs.rules.values) {
                         val ti = typeFor(trs, trr) // always fetch the type, so that it gets created if need be TODO: maybe do type creation in separate phase!
-                        (trr as AsmTransformationRuleDefault).resolveTypeAs(ti)
+                        trr.resolveTypeAs(ti)
                     }
                 }
             }
@@ -205,6 +207,56 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
             else -> when {
                 rulesToConvert.isNotEmpty() -> {
                     _issues.error(null, "Transformation rules in '${trs.qualifiedName}' rewrite their type, but '${OPTION_OVERRIDE_DEFAULT}' is not specified")
+                }
+            }
+        }
+    }
+
+    /**
+     * nonTerm: { T -> p := e ... }
+     * the object from child[0] is modified, its properties 'p' are set, 'T' is the type of the grammar rule.
+     * 'T' must exist (or is created with '#create-missing-types'), as must its properties 'p'.
+     */
+    private fun resolveModifyRules(trs: AsmTransformRuleSet) {
+        val modifyRules = trs.rules.values.filterIsInstance<ModifyObjectRule>()
+        if (modifyRules.isEmpty()) return
+        val gtns = findOrCreateGrammarTypeNamespace(trs.qualifiedName)
+        val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)
+        modifyRules.forEach { trr ->
+            val pqn = trr.possiblyQualifiedTypeName
+            val existing = _typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn)
+                ?: transformFromGrammar.value.typesDomain?.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn)?.let { findOrCloneFromDefaultTypeForTransformRule(pqn, trs, trr) }
+            val typeDecl = when {
+                null != existing -> existing
+                trs.options.createTypes -> findOrCloneFromDefaultTypeForTransformRule(pqn, trs, trr)
+                else -> null
+            }
+            when (typeDecl) {
+                null -> _issues.error(
+                    null,
+                    "Type '${pqn.value}' not found (in the transformation rule for '${trr.grammarRuleName.value}'), use '#${OPTION_CREATE_TYPES}' to create it"
+                )
+
+                else -> {
+                    trr.modifyStatements.forEach { ms ->
+                        val propName = PropertyName(ms.variable.name)
+                        when {
+                            null != typeDecl.findAllPropertyOrNull(propName) -> Unit
+                            trs.options.createTypes && typeDecl is StructuredType -> {
+                                var propType = exprTypeResolver.typeFor(ms.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
+                                if (propType == StdLibDefault.NothingType) {
+                                    propType = StdLibDefault.AnyType
+                                }
+                                typeDecl.appendPropertyStored(propName, propType, setOf(PropertyCharacteristic.COMPOSITE), ms.lhsGrammarRuleIndex ?: -1)
+                            }
+
+                            else -> _issues.error(
+                                null,
+                                "Type '${typeDecl.qualifiedName.value}' has no property '${propName.value}' (set in the transformation rule for '${trr.grammarRuleName.value}'), use '#${OPTION_CREATE_TYPES}' to create it"
+                            )
+                        }
+                    }
+                    trr.resolveTypeAs(typeDecl.type())
                 }
             }
         }

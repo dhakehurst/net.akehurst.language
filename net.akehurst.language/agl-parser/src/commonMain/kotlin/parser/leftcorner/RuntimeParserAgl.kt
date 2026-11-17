@@ -660,7 +660,14 @@ internal class RuntimeParserAgl(
                         else -> error("Internal Error: should never happen - transition is: ${it}")
                     }
                 }
-                resolvePrecedence(transWithValidLookahead, runtimeContext, possibleEndOfText, parseArgs)
+                when {
+                    // at the end of the text (e.g. the position given to expectedAt) every continuation is still possible,
+                    // so preference rules (which choose by the next token) must not drop any
+                    parseArgs.allowEOTAfterSkip && this.graph.scanner.isEnd(sentence, runtimeContext.head.nextInputPositionAfterSkip) ->
+                        transWithValidLookahead.map { it.first }
+
+                    else -> resolvePrecedence(transWithValidLookahead, runtimeContext, possibleEndOfText, parseArgs)
+                }
             }
 
             else -> transitions
