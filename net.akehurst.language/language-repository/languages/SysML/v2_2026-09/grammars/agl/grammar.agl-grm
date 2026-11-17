@@ -473,11 +473,15 @@ grammar Occurrences : DefinitionAndUsage {
     ConnectorEndName = NAME REFERENCES ;
 
     // SysML 8.2.2.16 Flows Textual Notation
+    // tailored: each alternative is its own rule (was a choice of groups), so the declared payload is an element that can be identified (e.g. 'accept x : T', then 't.x')
     PayloadFeature
-        = Identification? PayloadFeatureSpecializationPart FeatureValue?
-        | OwnedFeatureTyping MultiplicityRange?
-        | MultiplicityRange OwnedFeatureTyping
+        = PayloadFeatureDeclared
+        | PayloadFeatureTyped
+        | PayloadFeatureMultiplicityTyped
     ;
+    PayloadFeatureDeclared = Identification? PayloadFeatureSpecializationPart FeatureValue? ;
+    PayloadFeatureTyped = OwnedFeatureTyping MultiplicityRange? ;
+    PayloadFeatureMultiplicityTyped = MultiplicityRange OwnedFeatureTyping ;
     // tailored: the multiplicity is one of the specializations, so all of them are in one list ('featureSpecialization')
     PayloadFeatureSpecializationPart = FeatureSpecialization+ ;
 }
@@ -655,10 +659,12 @@ grammar Actions : Occurrences {
     AcceptNode = OccurrenceUsagePrefix AcceptNodeDeclaration ActionBody ;
     AcceptNodeDeclaration = ActionNodeUsageDeclaration? 'accept' AcceptParameterPart ;
     AcceptParameterPart = PayloadParameter ( 'via' OwnedExpression )? ;
+    // tailored: the triggered alternative is its own rule (was a group), so it can be identified
     PayloadParameter
         = PayloadFeature
-        | Identification PayloadFeatureSpecializationPart? TriggerExpression
+        | PayloadParameterTriggered
     ;
+    PayloadParameterTriggered = Identification PayloadFeatureSpecializationPart? TriggerExpression ;
     TriggerExpression
         = ( 'at' | 'after' ) OwnedExpression
         | 'when' OwnedExpression
