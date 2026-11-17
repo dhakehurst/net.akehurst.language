@@ -37,6 +37,7 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.style.asm.AglStyleDomainDefault
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.types.builder.typesDomain
 
@@ -148,6 +149,10 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
               CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := '<colour>' },
               CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'bold' },
               CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'italic' }
+            ]
+            SPECIAL_IDENTIFIER -> add [
+              CompletionItem() { kind := 'LITERAL' label := 'SPECIAL_IDENTIFIER' text := '${'$'}keyword' },
+              CompletionItem() { kind := 'LITERAL' label := 'SPECIAL_IDENTIFIER' text := '${'$'}nostyle' }
             ]
             styleValue -> hide
             STRING -> hide
@@ -430,6 +435,10 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "<colour>")
                         item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "bold")
                         item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "italic")
+                    }
+                    add("SPECIAL_IDENTIFIER") {
+                        item(kind = CompletionItemKind.LITERAL, label = "SPECIAL_IDENTIFIER", text = AglStyleDomainDefault.KEYWORD_STYLE_ID.value)
+                        item(kind = CompletionItemKind.LITERAL, label = "SPECIAL_IDENTIFIER", text = AglStyleDomainDefault.NO_STYLE_ID.value)
                     }
                     hide("styleValue")
                     hide("STRING")

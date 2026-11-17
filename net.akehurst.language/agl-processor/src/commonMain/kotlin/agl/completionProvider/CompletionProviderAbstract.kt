@@ -169,7 +169,8 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
          *
          * - the property a leaf item gives a value to comes from the asm-transform rule of the grammar rule that holds the leaf:
          *   its assignment for the child number of the leaf
-         * - what that property refers to comes from the [crossReferenceDomain] ('property <p> refers-to <T>')
+         * - what that property refers to comes from the [crossReferenceDomain] ('property <p> refers-to <T>'),
+         *   or, when given in an enclosing type (a navigation 'a.p', or a 'forall'), from the reference recorded for the owner of the last property
          * - an element of the context is offered when its type conforms to a referred to type (both types in the [typesDomain]),
          *   otherwise when its type name is the referred to name (a simple name matches the last part of the type name)
          * - an element is offered for a leaf only when its name matches the leaf (pattern or literal value), so it is valid there
@@ -211,6 +212,9 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     .filterIsInstance<ReferenceExpressionProperty>()
                     .filter { it.referringPropertyNavigation.asString() == propertyName }
                     .flatMap { it.refersToTypeName }
+                    // a reference given in an enclosing type (e.g. 'property tableRef.ref' or in a 'forall'),
+                    // recorded for the type that owns the last property of the navigation
+                    .ifEmpty { crossReferenceDomain.referenceForProperty(ownerTypeName, propertyName) }
                 if (refersTo.isEmpty()) return
                 val items = sentenceContext.findItemsConformingTo { itemTypeName -> refersTo.any { matchesType(itemTypeName, it) } }
                     .filter { matchesLeaf(it.referableName, leaf) }
@@ -392,7 +396,18 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     is TangibleItem -> when (item) {
                         is EmptyRule -> listOf(textFor(item, options))
                         is Terminal -> listOf(textFor(item, options))
-                        is Embedded -> listOf(textFor(item, options)) //TODO: could expand this !
+                        // expanded like a rule reference, its rule (and the rules it refers to) resolved in the embedded grammar
+                        is Embedded -> when (val ruleDepth = options.ruleDepth[item.embeddedGoalName.value] ?: curDepth) {
+                            0 -> listOf(textFor(item, options))
+                            else -> {
+                                val embeddedGrammar = item.embeddedGrammarReference.resolved
+                                val embeddedRule = embeddedGrammar?.findAllResolvedGrammarRule(item.embeddedGoalName)
+                                when {
+                                    null == embeddedGrammar || null == embeddedRule || embeddedRule.isLeaf -> listOf(textFor(item, options))
+                                    else -> expandItem(ruleDepth - 1, embeddedRule.rhs, options, embeddedGrammar).map { Expansion(it.ruleItem, it.name ?: item.embeddedGoalName.value, it.list) }
+                                }
+                            }
+                        }
                         // a depth given for the rule (options.ruleDepth) is used instead of the current depth
                         is NonTerminal -> when (val ruleDepth = options.ruleDepth[item.ruleReference.value] ?: curDepth) {
                             0 -> listOf(textFor(item, options))

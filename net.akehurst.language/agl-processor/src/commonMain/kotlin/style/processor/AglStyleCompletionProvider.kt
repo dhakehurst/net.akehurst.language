@@ -91,7 +91,6 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
             // e.g. a rule from AglBase that has no transform rule in the style rule set
             ?: return CompletionProviderAbstract.provideDefaultForSpine(spine, options)
         return when (ruleName) {
-            GrammarRuleName("META_IDENTIFIER") -> META_IDENTIFIER(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("selectorAndComposition") -> selectorAndComposition(nextExpected, itemType, options.sentenceContext!!)
             GrammarRuleName("rule"), GrammarRuleName("tagRule"), GrammarRuleName("metaRule") -> rule(nextExpected, itemType, options.sentenceContext!!)
                 ?: CompletionProviderAbstract.provideDefaultForSpine(spine, options)
@@ -100,15 +99,6 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
             else -> CompletionProviderAbstract.provideDefaultForSpine(spine, options)
         }
     }
-
-    private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
-        return listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.KEYWORD_STYLE_ID.value),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.NO_STYLE_ID.value)
-        )
-    }
-
-
 
     private fun selectorAndComposition(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
         return listOf(

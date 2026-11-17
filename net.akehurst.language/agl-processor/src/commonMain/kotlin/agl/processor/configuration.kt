@@ -180,7 +180,10 @@ internal class LanguageProcessorConfigurationSimple(
         // the completion definitions (completionString), if any, are applied to the items of the simple provider
         completionProviderWithDefinitions(
             p,
-            CompletionProviderSimple(p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typesDomain, p.crossReferenceDomain),
+            CompletionProviderSimple(
+                p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typesDomain, p.crossReferenceDomain,
+                p.targetGrammar?.let { tg -> p.transformDomain.findNamespaceOrNull(tg.namespace.qualifiedName)?.findOwnedDefinitionOrNull(tg.name) }
+            ),
         )
     }
 ) : LanguageProcessorConfiguration<Asm, SentenceContext>
