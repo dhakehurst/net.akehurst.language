@@ -657,7 +657,7 @@ internal class RuntimeParserAgl(
                         else -> error("Internal Error: should never happen - transition is: ${it}")
                     }
                 }
-                resolvePrecedence(transWithValidLookahead, runtimeContext, possibleEndOfText, parseArgs)
+                resolvePrecedenceByToken(transWithValidLookahead, runtimeContext, possibleEndOfText, parseArgs)
             }
 
             else -> transitions
@@ -666,6 +666,59 @@ internal class RuntimeParserAgl(
             ambiguity(runtimeContext, trans2, possibleEndOfText)
         }
         return trans2
+    }
+
+    /**
+     * Choices that consume different tokens at the next position (e.g. '-' and '->', both found by the on-demand scanner)
+     * are not alternatives for the same input: the following input decides between them, so all are kept.
+     * Only choices for the same token are resolved against each other (preference rules, else GRAFT over HEIGHT and the left-most GRAFT).
+     * A token is identified by the length of its match; a choice whose lookahead matches several tokens is a choice for each of them.
+     * Exception: if one preference rule has options that match choices for different tokens, that rule decides between all the choices.
+     */
+    private fun resolvePrecedenceByToken(
+        transitions: List<Pair<Transition, LookaheadSetPart>>,
+        runtimeContext: RuntimeContext,
+        possibleEndOfText: Set<LookaheadSet>,
+        parseArgs: GrowArgs
+    ): List<Transition> {
+        if (2 > transitions.size || parseArgs.noLookahead) return resolvePrecedence(transitions, runtimeContext, possibleEndOfText, parseArgs)
+        val position = runtimeContext.head.nextInputPositionAfterSkip
+        // for each choice, the tokens (by match length) found at the position that its lookahead allows; null = any token
+        val tokensOf = transitions.map { (_, lh) -> tokensFoundAt(lh, position) }
+        val allTokens = tokensOf.filterNotNull().flatten().toSet()
+        val forEveryToken = tokensOf.all { null == it || it == allTokens }
+        return when {
+            allTokens.size < 2 || forEveryToken -> resolvePrecedence(transitions, runtimeContext, possibleEndOfText, parseArgs)
+            preferenceRuleCoversDifferentTokens(transitions, tokensOf, runtimeContext) -> resolvePrecedence(transitions, runtimeContext, possibleEndOfText, parseArgs)
+            else -> allTokens.flatMap { tk ->
+                val forToken = transitions.filterIndexed { i, _ -> tokensOf[i]?.contains(tk) ?: true }
+                resolvePrecedence(forToken, runtimeContext, possibleEndOfText, parseArgs)
+            }.distinct()
+        }
+    }
+
+    /** the lengths of the tokens allowed by 'lh' that are found at 'position' (-1 for end of text); null if 'lh' allows any token */
+    private fun tokensFoundAt(lh: LookaheadSetPart, position: Int): Set<Int>? = when {
+        lh.matchANY -> null
+        else -> {
+            val lengths = lh.content.mapNotNull { t ->
+                this.graph.scanner.findOrTryCreateLeaf(sentence, position, t)?.let { it.nextInputPosition - position }
+            }.toMutableSet()
+            if (lh.includesEOT && this.graph.scanner.isEnd(sentence, position)) lengths.add(-1)
+            lengths
+        }
+    }
+
+    /** true if one preference option matches a choice for one token and another option of the same rule matches a choice for a different token */
+    private fun preferenceRuleCoversDifferentTokens(transitions: List<Pair<Transition, LookaheadSetPart>>, tokensOf: List<Set<Int>?>, runtimeContext: RuntimeContext): Boolean {
+        val precRules = this.stateSet.precedenceRulesFor(runtimeContext.head.state) ?: return false
+        val matched = transitions.mapIndexedNotNull { i, (tr, lh) ->
+            when {
+                precedenceFor(precRules, tr.target.rulePosition, lh, runtimeContext).isEmpty() -> null
+                else -> tokensOf[i]
+            }
+        }
+        return matched.any { a -> matched.any { b -> null != a && null != b && a.intersect(b).isEmpty() } }
     }
 
     private fun transitionsWithValidLookahead(
