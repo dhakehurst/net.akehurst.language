@@ -75,8 +75,12 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 referenceDefinitions = referenceDefinition* ;
                 referenceDefinition = 'in' possiblyQualifiedTypeReference '{' referenceExpressionList '}' ;
                 referenceExpressionList = referenceExpression* ;
-                referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
+                referenceExpression = propertyReferenceExpression | propertyReferenceWhen | collectionReferenceExpression ;
                 propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? condition? ;
+                propertyReferenceWhen = 'property' rootOrNavigation 'when' '{' propertyWhenItem+ '}' ;
+                propertyWhenItem = propertyWhenOption | propertyWhenElse ;
+                propertyWhenOption = expression '->' 'refers-to' typeReferences from? ;
+                propertyWhenElse = 'else' '->' 'refers-to' typeReferences from? ;
                 condition = 'when' expression ;
                 from = 'from' fromInherited? rootOrNavigation fromElse? ;
                 fromInherited = 'inherited' ;
@@ -230,7 +234,22 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     list("referenceExpressionList", 0, -1) { ref("referenceExpression") }
                     choice("referenceExpression") {
                         ref("propertyReferenceExpression")
+                        ref("propertyReferenceWhen")
                         ref("collectionReferenceExpression")
+                    }
+                    concatenation("propertyReferenceWhen") {
+                        lit("property"); ref("rootOrNavigation"); lit("when"); lit("{"); lst(1, -1) { ref("propertyWhenItem") }; lit("}")
+                    }
+                    // 'else' is also an expression (a navigation), last option wins, so 'else -> ...' is a propertyWhenElse
+                    choice("propertyWhenItem") {
+                        ref("propertyWhenOption")
+                        ref("propertyWhenElse")
+                    }
+                    concatenation("propertyWhenOption") {
+                        ref("expression"); lit("->"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }
+                    }
+                    concatenation("propertyWhenElse") {
+                        lit("else"); lit("->"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }
                     }
                     concatenation("propertyReferenceExpression") {
                         lit("property"); ref("rootOrNavigation"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }; opt { ref("condition") }
@@ -250,6 +269,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     separatedList("typeReferences", 1, -1) { ref("possiblyQualifiedTypeReference"); lit("|") }
                     concatenation("possiblyQualifiedTypeReference") { ref("possiblyQualifiedName") }
                     concatenation("simpleTypeName") { ref("IDENTIFIER") }
+
                 }
             }
         }
@@ -293,6 +313,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("PossiblyQualifiedName")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "whenOptionIndex", "Integer", false)
                 }
                 interface_("ReferenceExpressionCollection") {
                     supertype("ReferenceExpression")
@@ -389,7 +410,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         parameter(setOf(), "condition", "Expression")
                         parameter(setOf(), "fromElseNavigation", "NavigationExpression")
                         parameter(setOf(), "fromInherited", "Boolean")
+                        parameter(setOf(), "whenOptionIndex", "Integer")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "whenOptionIndex", "Integer", false)
                     propertyOf(setOf(VAL, CMP, STR), "fromInherited", "Boolean", false)
                     propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
                     propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", true)

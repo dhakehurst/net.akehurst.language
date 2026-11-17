@@ -71,6 +71,10 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::referenceExpressionList)
         super.register(this::referenceExpression)
         super.register(this::propertyReferenceExpression)
+        super.register(this::propertyReferenceWhen)
+        super.register(this::propertyWhenOption)
+        super.register(this::propertyWhenElse)
+        super.register(this::propertyWhenItem)
         super.register(this::from)
         super.register(this::fromElse)
         super.register(this::condition)
@@ -126,8 +130,23 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
             (decl.scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
             // top-level 'import-into-scope' declarations are held by the root scope definition (like top-level 'identify')
             (decl.scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.scopeImports as MutableList?)?.addAll(importsIntoScope)
-            scopes.forEach { decl.scopeDefinition[it.scopeForTypeName] = it }
-            referencesOpt?.let { decl.references.addAll(referencesOpt) }
+            scopes.forEach {
+                // one 'scope' block per type: a second block for the same type is an error (it would replace the first)
+                if (decl.scopeDefinition.containsKey(it.scopeForTypeName)) {
+                    issues.error(locationMap[it.scopeForTypeName], "There is more than one 'scope ${it.scopeForTypeName.value} { }' block in namespace '${ns.qualifiedName.value}', only one is allowed for a type", null)
+                }
+                decl.scopeDefinition[it.scopeForTypeName] = it
+            }
+            referencesOpt?.let {
+                // one 'in' block per type: a second block for the same type is an error
+                val seen = mutableSetOf<PossiblyQualifiedName>()
+                referencesOpt.forEach {
+                    if (!seen.add(it.inTypeName)) {
+                        issues.error(locationMap[it.inTypeName], "There is more than one 'in ${it.inTypeName.value} { }' block in namespace '${ns.qualifiedName.value}', only one is allowed for a type", null)
+                    }
+                }
+                decl.references.addAll(referencesOpt)
+            }
             decl.also { setLocationFor(it,nodeInfo,sentence) }
         }
     }
@@ -298,12 +317,44 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     }
 
     // referenceExpressionList = referenceExpression* ;
+    // a 'property p when { ... }' gives one reference expression per option
     private fun referenceExpressionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceExpressionAbstract> =
-        children as List<ReferenceExpressionAbstract>
+        children.flatMap { if (it is List<*>) it as List<ReferenceExpressionAbstract> else listOf(it as ReferenceExpressionAbstract) }
 
-    //referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
-    private fun referenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionAbstract =
-        children[0] as ReferenceExpressionAbstract
+    //referenceExpression = propertyReferenceExpression | propertyReferenceWhen | collectionReferenceExpression ;
+    private fun referenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Any =
+        children[0]!!
+
+    // propertyReferenceWhen = 'property' rootOrNavigation 'when' '{' propertyWhenItem+ '}' ;
+    // one reference expression per option, in order, each with the option's condition ('else' has none); the first whose condition holds is used
+    private fun propertyReferenceWhen(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceExpressionPropertyDefault> {
+        val navigation = asNavigation(children[1] as Expression)
+        val options = children[4] as List<WhenOption>
+        options.dropLast(1).filter { null == it.condition }.forEach {
+            issues.error(locationMap[navigation], "In 'property ${navigation.asString()} when { }', 'else' must be the last option", null)
+        }
+        return options.mapIndexed { i, opt ->
+            ReferenceExpressionPropertyDefault(navigation, opt.typeReferences, opt.from?.first, opt.condition, opt.from?.second, opt.from?.third ?: false, i).also {
+                opt.typeReferences.forEachIndexed { j, n ->
+                    locationMap.add(ParsePath(), PropertyValue(it, "typeReferences[$j]"), locationMap[n]!!)
+                }
+            }
+        }
+    }
+
+    // propertyWhenItem = propertyWhenOption | propertyWhenElse ;
+    private fun propertyWhenItem(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WhenOption =
+        children[0] as WhenOption
+
+    private data class WhenOption(val condition: Expression?, val typeReferences: List<PossiblyQualifiedName>, val from: Triple<NavigationExpression, NavigationExpression?, Boolean>?)
+
+    // propertyWhenOption = expression '->' 'refers-to' typeReferences from? ;
+    private fun propertyWhenOption(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WhenOption =
+        WhenOption(children[0] as Expression, children[3] as List<PossiblyQualifiedName>, children[4] as Triple<NavigationExpression, NavigationExpression?, Boolean>?)
+
+    // propertyWhenElse = 'else' '->' 'refers-to' typeReferences from? ;
+    private fun propertyWhenElse(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WhenOption =
+        WhenOption(null, children[3] as List<PossiblyQualifiedName>, children[4] as Triple<NavigationExpression, NavigationExpression?, Boolean>?)
 
     //propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
     private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionPropertyDefault {

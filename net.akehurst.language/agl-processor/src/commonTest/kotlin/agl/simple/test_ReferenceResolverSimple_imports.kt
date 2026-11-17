@@ -76,8 +76,10 @@ class test_ReferenceResolverSimple_imports {
                 references {
                     in Specialization { property qname refers-to Def from ${'$'}owner.${'$'}owner }
                     in Typing {
-                        property qname refers-to Def from ${'$'}root when global == '${'$'}::'
-                        property qname refers-to Def
+                        property qname when {
+                            global == '${'$'}::' -> refers-to Def from ${'$'}root
+                            else -> refers-to Def
+                        }
                     }
                     in Redefines { property qname refers-to Use from inherited ${'$'}owner.${'$'}owner }
                     in Alias { property qname refers-to Def|Package }

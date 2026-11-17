@@ -251,9 +251,12 @@ interface ReferenceExpressionProperty : ReferenceExpression {
 
     /**
      * if not null, this reference expression applies only when the condition (evaluated on the referring element) is true.
-     * Of several reference expressions for the same property, the first that applies is used.
+     * The options of a 'property p when { c -> ... else -> ... }' are reference expressions for the same property, the first that applies is used.
      */
     val condition: Expression? get() = null
+
+    /** the position of this reference expression in the options of a 'property p when { ... }', -1 if it is not an option of one */
+    val whenOptionIndex: Int get() = -1
 }
 
 interface ReferenceExpressionCollection : ReferenceExpression {
