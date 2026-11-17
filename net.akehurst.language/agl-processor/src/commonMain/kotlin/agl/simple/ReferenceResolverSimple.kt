@@ -1147,7 +1147,7 @@ class ReferenceResolverSimple(
                 null == refExpr.ofType -> true
                 else -> elActualType.conformsToType(refExpr, refExpr.ofType) // else el is filtered out by the 'ofType'
             }
-            if (selected) {
+            if (selected && forallConditionHolds(refExpr, el, elActualType)) {
                 val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure
                 if (usesPrevious && null != elStr) _referencesHandled.add(elStr)
                 val elContext = ReferenceExpressionContext(sentenceContext.element, sentenceContext.scope, previous)
@@ -1162,6 +1162,19 @@ class ReferenceResolverSimple(
                 }
                 previous = elStr
             }
+        }
+    }
+
+    /** 'forall ... when c { ... }': true if there is no condition or 'c' is true for the element 'el' */
+    private fun forallConditionHolds(refExpr: ReferenceExpressionCollectionDefault, el: Any, elType: TypeInstance): Boolean {
+        val cond = refExpr.condition ?: return true
+        val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure
+        return when (elStr) {
+            null -> {
+                val v = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(el, elType)), cond).self
+                v == true || (v is AsmPrimitive && v.value == true)
+            }
+            else -> evaluate(cond, elStr) == true
         }
     }
 

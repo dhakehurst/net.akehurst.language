@@ -367,7 +367,8 @@ data class ReferenceExpressionPropertyDefault(
 data class ReferenceExpressionCollectionDefault(
     override val expression: Expression,
     override val ofType: PossiblyQualifiedName?,
-    override val referenceExpressionList: List<ReferenceExpressionAbstract>
+    override val referenceExpressionList: List<ReferenceExpressionAbstract>,
+    override val condition: Expression? = null
 ) : ReferenceExpressionAbstract(), ReferenceExpressionCollection {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
@@ -377,7 +378,11 @@ data class ReferenceExpressionCollectionDefault(
             null -> ""
             else -> " of-type " + ofType.value
         }
-        sb.append("${indent}forall $ex$ot {")
+        val cond = when (condition) {
+            null -> ""
+            else -> " when " + condition.asString(indent, emptyList())
+        }
+        sb.append("${indent}forall $ex$ot$cond {")
         when {
             referenceExpressionList.isEmpty() -> sb.append(" }")
             else -> {

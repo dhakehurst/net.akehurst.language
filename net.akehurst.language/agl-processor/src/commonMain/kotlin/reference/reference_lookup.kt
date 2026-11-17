@@ -206,7 +206,7 @@ class CrossReferenceLookup(
 
     private fun keyFor(re: ReferenceExpression): String = when (re) {
         is ReferenceExpressionProperty -> "property " + re.referringPropertyNavigation.asString()
-        is ReferenceExpressionCollection -> "forall " + re.expression.asString() + " " + (re.ofType?.value ?: "")
+        is ReferenceExpressionCollection -> "forall " + re.expression.asString() + " " + (re.ofType?.value ?: "") + (re.condition?.let { " when " + it.asString() } ?: "")
         else -> re.asString()
     }
 

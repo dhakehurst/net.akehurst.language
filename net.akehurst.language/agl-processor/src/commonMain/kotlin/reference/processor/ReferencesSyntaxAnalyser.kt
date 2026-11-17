@@ -340,12 +340,13 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun fromElse(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpression =
         asNavigation(children[1] as Expression)
 
-    // collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
+    // collectionReferenceExpression = 'forall' rootOrNavigation ofType? condition? '{' referenceExpressionList '}' ;
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionCollectionDefault {
         val rootOrNavigation = children[1] as Expression
-        val referenceExpression = children[4] as List<ReferenceExpressionAbstract>
         val ofType = children[2] as PossiblyQualifiedName?
-        return ReferenceExpressionCollectionDefault(rootOrNavigation, ofType, referenceExpression)
+        val condition = children[3] as Expression?
+        val referenceExpression = children[5] as List<ReferenceExpressionAbstract>
+        return ReferenceExpressionCollectionDefault(rootOrNavigation, ofType, referenceExpression, condition)
     }
 
     // ofType = 'of-type' possiblyQualifiedTypeReference ;

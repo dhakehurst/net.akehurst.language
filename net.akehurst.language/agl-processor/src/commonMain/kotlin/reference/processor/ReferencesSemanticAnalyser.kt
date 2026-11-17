@@ -427,6 +427,7 @@ class ReferencesSemanticAnalyser(
                         }
                     }
                 } ?: loopVarType
+                checkNavigations(refExpr.condition, filteredLoopVarType, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', when", refExpr)
                 for (re in refExpr.referenceExpressionList) {
                     checkReferenceExpression(crossReferenceDomain, filteredLoopVarType, ref, re, importedNamespaces)
                 }

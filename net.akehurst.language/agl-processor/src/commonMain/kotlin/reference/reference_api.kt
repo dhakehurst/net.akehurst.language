@@ -260,5 +260,11 @@ interface ReferenceExpressionCollection : ReferenceExpression {
     val expression: Expression
     val ofType: PossiblyQualifiedName?
     val referenceExpressionList: List<ReferenceExpression>
+
+    /**
+     * 'forall ... when c { ... }': the reference expressions are used only for the elements for which 'c' is true ('c' is evaluated on each element, after 'of-type').
+     * null if there is no condition
+     */
+    val condition: Expression? get() = null
 }
 

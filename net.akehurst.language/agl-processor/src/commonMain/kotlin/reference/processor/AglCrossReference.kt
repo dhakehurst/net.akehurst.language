@@ -81,7 +81,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 from = 'from' fromInherited? rootOrNavigation fromElse? ;
                 fromInherited = 'inherited' ;
                 fromElse = 'else' rootOrNavigation ;
-                collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
+                collectionReferenceExpression = 'forall' rootOrNavigation ofType? condition? '{' referenceExpressionList '}' ;
                 ofType = 'of-type' possiblyQualifiedTypeReference ;
                 
                 rootOrNavigation = rootExpression | navigationExpression ;
@@ -105,9 +105,20 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
             
             interface ScopeDefinition {
                 cmp identifiables
+                cmp scopeImports
             }
             interface Identifiable {
                 cmp identifiedBy
+                cmp identifiedByAlternatives
+                cmp visibility
+                cmp aliasFor
+            }
+            interface ScopeImport {
+                cmp elements
+                cmp target
+                cmp recursive
+                cmp visibility
+                cmp condition
             }
             interface ReferenceDefinition {
                 cmp referenceExpressionList
@@ -116,9 +127,11 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 cmp referringPropertyNavigation
                 cmp fromNavigation
                 cmp fromElseNavigation
+                cmp condition
             }
             interface ReferenceExpressionCollection {
                 cmp expression
+                cmp condition
                 cmp referenceExpressionList
             }
         """.trimIndent()
@@ -227,7 +240,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     concatenation("fromInherited") { lit("inherited") }
                     concatenation("fromElse") { lit("else"); ref("rootOrNavigation") }
                     concatenation("collectionReferenceExpression") {
-                        lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("{"); ref("referenceExpressionList"); lit("}")
+                        lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; opt { ref("condition") }; lit("{"); ref("referenceExpressionList"); lit("}")
                     }
                     concatenation("ofType") { lit("of-type"); ref("possiblyQualifiedTypeReference") }
                     choice("rootOrNavigation") {
@@ -247,19 +260,45 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
             namespace("net.akehurst.language.reference.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.expressions.api")) {
                 interface_("ScopeDefinition") {
                     supertype("Formatable")
+                    propertyOf(setOf(VAL, CMP, STR), "scopeForTypeName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(VAR, CMP, STR), "identifiables", "List", false){
                         typeArgument("Identifiable")
                     }
+                    propertyOf(setOf(VAR, CMP, STR), "scopeImports", "List", false){
+                        typeArgument("ScopeImport")
+                    }
+                }
+                enum("ScopeImportKind", listOf("IMPORT_MEMBERS", "IMPORT_ELEMENT", "INHERIT"))
+                interface_("ScopeImport") {
+                    supertype("Formatable")
+                    propertyOf(setOf(VAL, CMP, STR), "kind", "ScopeImportKind", false)
+                    propertyOf(setOf(VAL, CMP, STR), "elements", "Expression", false)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", true)
+                    propertyOf(setOf(VAL, CMP, STR), "target", "NavigationExpression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "recursive", "Expression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "named", "List", true){
+                        typeArgument("String")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "intoScope", "Boolean", false)
                 }
                 interface_("ReferenceExpressionProperty") {
                     supertype("ReferenceExpression")
-                    propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", true)
                     propertyOf(setOf(VAL, CMP, STR), "fromElseNavigation", "NavigationExpression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "fromInherited", "Boolean", false)
                     propertyOf(setOf(VAL, CMP, STR), "referringPropertyNavigation", "NavigationExpression", false)
+                    propertyOf(setOf(VAL, REF, STR), "refersToTypeName", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
                 }
                 interface_("ReferenceExpressionCollection") {
                     supertype("ReferenceExpression")
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", true)
+                    propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
                     propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpression")
                     }
@@ -269,13 +308,20 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 }
                 interface_("ReferenceDefinition") {
                     supertype("Formatable")
+                    propertyOf(setOf(VAL, CMP, STR), "inTypeName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpression")
                     }
                 }
                 interface_("Identifiable") {
                     supertype("Formatable")
+                    propertyOf(setOf(VAL, CMP, STR), "typeName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(VAL, CMP, STR), "identifiedBy", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "identifiedByAlternatives", "List", false){
+                        typeArgument("Expression")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "aliasFor", "NavigationExpression", true)
                 }
                 interface_("DeclarationsForNamespace") {
                     supertype("Definition"){ ref("DeclarationsForNamespace") }
@@ -303,7 +349,35 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     propertyOf(setOf(VAR, CMP, STR), "identifiables", "List", false){
                         typeArgument("Identifiable")
                     }
+                    propertyOf(setOf(VAR, CMP, STR), "scopeImports", "List", false){
+                        typeArgument("ScopeImport")
+                    }
                     propertyOf(setOf(VAL, CMP, STR), "scopeForTypeName", "PossiblyQualifiedName", false)
+                }
+                data("ScopeImportDefault") {
+                    supertype("ScopeImport")
+                    constructor_ {
+                        parameter(setOf(), "kind", "ScopeImportKind")
+                        parameter(setOf(), "elements", "Expression")
+                        parameter(setOf(), "ofType", "PossiblyQualifiedName")
+                        parameter(setOf(), "target", "NavigationExpression")
+                        parameter(setOf(), "recursive", "Expression")
+                        parameter(setOf(), "visibility", "Expression")
+                        parameter(setOf(), "condition", "Expression")
+                        parameter(setOf(), "named", "List")
+                        parameter(setOf(), "intoScope", "Boolean")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "kind", "ScopeImportKind", false)
+                    propertyOf(setOf(VAL, CMP, STR), "elements", "Expression", false)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", true)
+                    propertyOf(setOf(VAL, CMP, STR), "target", "NavigationExpression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "recursive", "Expression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
+                    propertyOf(setOf(VAL, CMP, STR), "named", "List", true){
+                        typeArgument("String")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "intoScope", "Boolean", false)
                 }
                 data("ReferenceExpressionPropertyDefault") {
                     supertype("ReferenceExpressionAbstract")
@@ -318,7 +392,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     propertyOf(setOf(VAL, CMP, STR), "fromInherited", "Boolean", false)
                     propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
-                    propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", true)
                     propertyOf(setOf(VAL, CMP, STR), "fromElseNavigation", "NavigationExpression", true)
                     propertyOf(setOf(VAL, CMP, STR), "referringPropertyNavigation", "NavigationExpression", false)
                     propertyOf(setOf(VAR, REF, STR), "refersToTypeName", "List", false){
@@ -332,9 +406,11 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         parameter(setOf(), "expression", "Expression")
                         parameter(setOf(), "ofType", "PossiblyQualifiedName")
                         parameter(setOf(), "referenceExpressionList", "List")
+                        parameter(setOf(), "condition", "Expression")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
-                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", true)
                     propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpressionAbstract")
                     }
