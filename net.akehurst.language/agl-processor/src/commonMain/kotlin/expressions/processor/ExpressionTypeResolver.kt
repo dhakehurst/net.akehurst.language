@@ -182,9 +182,9 @@ class ExpressionTypeResolver(
         return StdLibDefault.TupleType.typeTuple(args)
     }
 
-    fun OnExpression.typeOfOnExpressionFor(self: TypeInstance): TypeInstance {
-        TODO()
-    }
+    // the result of an OnExpression is the object its expression gives, with the properties set
+    fun OnExpression.typeOfOnExpressionFor(self: TypeInstance): TypeInstance =
+        this.expression.typeOfExpressionFor(self)
 
     fun LambdaExpression.typeOfLambdaExpressionFor(self: TypeInstance): TypeInstance {
         TODO()

@@ -43,6 +43,7 @@ import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.builder.typesDomain
+import net.akehurst.language.types.api.PropertyCharacteristic.*
 
 object AsmTransform : LanguageObjectAbstract<AsmTransformDomain, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
@@ -96,8 +97,15 @@ grammar $NAME : Base {
     """
 
     override val crossReferenceString = """
-        namespace $NAMESPACE_NAME
-          // TODO
+        namespace net.akehurst.language.asmTransform.asm
+          references {
+            in AsmTransformationRuleDefault {
+              property grammarRuleName refers-to GrammarRule
+            }
+            in ModifyObjectRuleDefault {
+              property possiblyQualifiedTypeName refers-to TypeDefinition
+            }
+          }
     """.trimIndent()
 
     override val styleString: String = """
@@ -175,7 +183,15 @@ grammar $NAME : Base {
                 interface_("AsmTransformDomain") {}
             }
             namespace("net.akehurst.language.asmTransform.asm", listOf("std", "net.akehurst.language.base.asm","net.akehurst.language.asmTransform.api")) {
-                //TODO
+                //TODO: the other types, currently only what completion (of asm-transform definitions) needs
+                data("AsmTransformationRuleDefault") {
+                    // a GrammarRuleName (value class holding a String)
+                    propertyOf(setOf(VAR, REF, STR), "grammarRuleName", "String", false)
+                }
+                data("ModifyObjectRuleDefault") {
+                    // a PossiblyQualifiedName (value class holding a String)
+                    propertyOf(setOf(VAL, REF, STR), "possiblyQualifiedTypeName", "String", false)
+                }
             }
         }
     }
@@ -195,6 +211,12 @@ grammar $NAME : Base {
                     createObject("unit", "AsmTransformDomain") {
 
                     }
+                    // custom SyntaxAnalyser, the assignment says which property the grammar rule name gives a value to (used for completion)
+                    createObject("transformRule", "AsmTransformationRuleDefault") { assignment("grammarRuleName", 0, "child[0]") }
+                    transRule("grammarRuleName", "String", "child[0]")
+                    createObject("modifyRule", "ModifyObjectRuleDefault") { assignment("possiblyQualifiedTypeName", 1, "child[1]") }
+                    transRule("possiblyQualifiedTypeName", "String", "child[0]")
+                    transRule("possiblyQualifiedName", "String", "\$matchedText")
                     //TODO: currently the types are not found in the typemodel
                     //    createObject("unit", "DefinitionBlock") {
                     //        assignment("definitions", "child[1]")
@@ -239,8 +261,12 @@ grammar $NAME : Base {
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
-
+            // GrammarRule is the type of the rules in a context from a grammar (contextFromGrammar, used by contextFromGrammarAndTypesDomain)
+            declarationsFor("net.akehurst.language.asmTransform.asm") {
+                reference("AsmTransformationRuleDefault") { property("grammarRuleName", listOf("GrammarRule"), null) }
+                // TypeDefinition is the type of the types in a context from a types domain (contextFromTypesDomain)
+                reference("ModifyObjectRuleDefault") { property("possiblyQualifiedTypeName", listOf("TypeDefinition"), null) }
+            }
         }
     }
 

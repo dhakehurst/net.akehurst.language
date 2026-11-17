@@ -54,6 +54,25 @@ The namespace and name are those of the grammar (`example` and `Shapes`). Each r
 | `r: tuple { p := expr ... }` | create a tuple |
 | `r: expr as Type` | the value of `expr`, with type `Type` |
 | `r: Type` | keep the default properties, change only the type (needs `#override-default-transform`) |
+| `r: { Type -> p := expr ... }` | modify the object of the first item (`child[0]`) by setting its properties, the result is that object, `Type` is the type of `r` |
+
+### Modify the object of the first item
+
+A modify rule lets the first item of a rule create the object (for example through a choice),
+and the following items add properties to it:
+
+```agl
+#override-default-transform
+#create-missing-types
+namespace example
+asm-transform Shapes {
+    coloured: { Shape -> colour := child[1] }
+}
+```
+
+For the grammar rules `coloured = shape colour ;  shape = circle | square ;`,
+`circle c red` gives a `:Circle { id = 'c'  colour = 'red' }`.
+`Shape` (the type of `coloured`) and its property `colour` must exist, or be created with `#create-missing-types`.
 
 The expressions are written in the [expressions](expressions.md) language. In a rule, these names refer to the parse node:
 

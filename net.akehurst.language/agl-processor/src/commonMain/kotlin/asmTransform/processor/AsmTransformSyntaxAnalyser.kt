@@ -163,10 +163,7 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
     private fun modifyRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AsmTransformationRule {
         val possiblyQualifiedTypeName = children[1] as PossiblyQualifiedName
         val statements = children[3] as List<VariableAssignmentStatement>
-        val expr = OnExpressionDefault(RootExpressionDefault("\$it"))
-        expr.propertyAssignments = statements
-        val tr = AsmTransformationRuleDefault(expr)
-        return tr
+        return ModifyObjectRuleDefault(possiblyQualifiedTypeName, statements)
     }
 
     // assignmentStatement = propertyName grammarRuleIndex? ':=' expression ;

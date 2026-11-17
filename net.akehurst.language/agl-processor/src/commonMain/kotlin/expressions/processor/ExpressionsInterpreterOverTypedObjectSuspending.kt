@@ -70,7 +70,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
         is FunctionCall -> this.evaluateFunctionCall(evc, expression)
         is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
-        is OnExpression -> TODO()
+        is OnExpression -> evaluateExpression(evc, expression.expression).also { self -> propertyAssignmentBlock(evc, self, expression.propertyAssignments) }
         is NavigationExpression -> this.evaluateNavigation(evc, expression)
         is LambdaExpression -> this.evaluateLambda(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)

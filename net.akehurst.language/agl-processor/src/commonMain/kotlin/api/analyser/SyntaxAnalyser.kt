@@ -49,6 +49,15 @@ interface LocationMap {
     fun add(path: ParsePath, obj: Any, location: InputLocation)
     operator fun get(obj: Any?): InputLocation?
     fun getByPath(obj: Any?, path: ParsePath): InputLocation?
+
+    /**
+     * records where the value of property 'propertyName' of 'obj' is in the sentence,
+     * e.g. the identifier of a declaration or of a reference (used for semantic styling)
+     */
+    fun addPropertyLocation(obj: Any, propertyName: String, location: InputLocation) {}
+
+    /** the location of the value of property 'propertyName' of 'obj', or null if not recorded */
+    fun getPropertyLocation(obj: Any?, propertyName: String): InputLocation? = null
 }
 
 /**

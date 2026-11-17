@@ -45,6 +45,7 @@ import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceAbstract
 import net.akehurst.language.sppt.api.*
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
+import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
@@ -188,6 +189,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { setLocationFor(it.self, nodeInfo, sentence) }
+                (value?.self as? AsmStructure)?.let { setPropertyLocationsFor(it, adjChildren, sentence) }
                 stack.push(ChildData(nodeInfo, value))
                 // path = path.parent!!
             }
@@ -555,6 +557,27 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             }
 
             else -> typeUse
+        }
+    }
+
+    /**
+     * Records where the value of each String (or List of String) property of 'structure' is in the sentence:
+     * the location of the direct child parse node whose value equals the property value.
+     * Children are taken in order, each at most once, so two properties with the same text get different locations.
+     * A property whose value does not come from a direct child (e.g. computed by the transform) gets no location.
+     */
+    private fun setPropertyLocationsFor(structure: AsmStructure, children: List<ChildData>, sentence: Sentence) {
+        val used = mutableSetOf<Int>()
+        structure.propertyOrdered.forEach { prop ->
+            val pv = prop.value
+            val isText = pv is String || (pv is List<*> && pv.isNotEmpty() && pv.all { it is String })
+            if (isText) {
+                val idx = children.indices.firstOrNull { i -> i !in used && children[i].value?.self == pv }
+                if (null != idx) {
+                    used.add(idx)
+                    locationMap.addPropertyLocation(structure, prop.name.value, sentence.locationForNode(children[idx].nodeInfo.node))
+                }
+            }
         }
     }
 
