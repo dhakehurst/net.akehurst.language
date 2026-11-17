@@ -246,7 +246,7 @@ interface ReferenceExpressionProperty : ReferenceExpression {
      */
     val fromElseNavigation: NavigationExpression? get() = null
 
-    /** 'from inherited <navigation>': the reference is looked up in what the element E reached by <navigation> inherits, then outwards from E (never in E's own members) */
+    /** 'from inherited <navigation>': the reference is looked up starting in each scope that the element E reached by <navigation> inherits, in sentence order, outwards from it (first result wins); else outwards from E (never in E's own members) */
     val fromInherited: Boolean get() = false
 
     /**

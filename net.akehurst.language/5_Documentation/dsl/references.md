@@ -46,7 +46,7 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 | `property p refers-to A\|B` | property `p` is a reference to an `A` or a `B` |
 | `forall list of-type T { ... }` | apply the inner lines to each element of `list` (optionally only those of type `T`) |
 | `... from E` | start the lookup in the scope of element `E` (or of the element that reference `E` refers to) instead of the current scope |
-| `... from inherited E` | look the name up in what element `E` inherits, then outwards from `E`, but never in `E`'s own members (e.g. a redefined feature: not the redefining feature itself) |
+| `... from inherited E` | look the name up starting in each scope that element `E` inherits in turn (in the order the inheriting elements are in the sentence), going outwards from that scope; the first that gives a result is used. If none does, outwards from `E`, but never in `E`'s own members (e.g. a redefined feature: not the redefining feature itself) |
 | `... when expr` | use this line only when `expr` is true; the first line that holds wins |
 
 Names are looked up in the current scope, then in the enclosing scopes.
