@@ -65,7 +65,10 @@ data class SemanticTag(
 interface SemanticAnalysisResult {
     val resolvedReferences:List<ResolvedReference>
     val issues: IssueCollection<LanguageIssue>
-    /** semantic tags for styling, empty if the semantic analyser does not compute them */
+    /**
+     * semantic tags for styling, empty if the semantic analyser does not compute them
+     * (SemanticAnalyserSimple does; TODO: the semantic analysers of the AGL languages themselves do not yet)
+     */
     val semanticTags: List<SemanticTag> get() = emptyList()
 }
 

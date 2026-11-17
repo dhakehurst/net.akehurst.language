@@ -43,6 +43,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::namespace)
         super.register(this::styleSet)
         super.register(this::extends)
+        super.register(this::typeImport)
         super.register(this::rule)
         super.register(this::metaRule)
         super.register(this::tagRule)
@@ -74,18 +75,24 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         return StyleNamespaceDefault(qualifiedName = qualifiedName.asQualifiedName(null), import = imports)
     }
 
-    // styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
+    // styleSet = 'styles' IDENTIFIER extends? '{' typeImport* rule* '}' ;
     fun styleSet(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: StyleNamespaceDefault) -> Unit {
         val name = SimpleName(children[1] as String)
         val extendsLambda = children[2] as? (StyleNamespace) -> List<StyleSetReference>
-        val rules: List<AglStyleTagRule> = children[4] as List<AglStyleTagRule>
+        val typeImports = children[4] as List<Import>
+        val rules: List<AglStyleTagRule> = children[5] as List<AglStyleTagRule>
         return { ns ->
             val extends = extendsLambda?.invoke(ns) ?: emptyList()
             val ss = AglStyleSetDefault(ns, name, extends)
                 .also { setLocationFor(it, nodeInfo, sentence) }
+            typeImports.forEach { ss.addImportType(it) }
             (ss.rules as MutableList).addAll(rules)
         }
     }
+
+    // typeImport = 'import-types' possiblyQualifiedName ;
+    fun typeImport(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Import =
+        Import((children[1] as PossiblyQualifiedName).value)
 
     // extends = ':' [possiblyQualifiedName / ',']+ ;
     fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (StyleNamespace) -> List<StyleSetReference> {

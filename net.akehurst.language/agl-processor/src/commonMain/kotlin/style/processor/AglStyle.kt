@@ -53,7 +53,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
         namespace $NAMESPACE_NAME
             grammar $NAME : ${AglBase.NAME} {
                 override unit = namespace styleSet* ;
-                styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
+                styleSet = 'styles' IDENTIFIER extends? '{' typeImport* rule* '}' ;
+                typeImport = 'import-types' possiblyQualifiedName ;
                 extends = ':' [possiblyQualifiedName / ',']+ ;
                 rule = metaRule | tagRule ;
                 metaRule = '$$' PATTERN '{' styleList '}' ;
@@ -185,9 +186,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     }
                     concatenation("styleSet") {
                         lit("styles"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
+                        lst(0, -1) { ref("typeImport") }
                         lst(0, -1) { ref("rule") }
                         lit("}")
                     }
+                    concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
                     concatenation("extends") {
                         lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
                     }
@@ -374,6 +377,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     createObject("unit", "AglStyleDomain") { /* custom SyntaxAnalyser */ }
                     createObject("namespace", "StyleNamespace") { /* custom SyntaxAnalyser */ }
                     createObject("styleSet", "StyleSet") { /* custom SyntaxAnalyser */ }
+                    createObject("typeImport", "Import") { /* custom SyntaxAnalyser */ }
                     transToListOf("extends", "StyleSetReference", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("rule", "AglStyleRule") { /* custom SyntaxAnalyser */ }
                     createObject("metaRule", "AglStyleMetaRule") { /* custom SyntaxAnalyser */ }

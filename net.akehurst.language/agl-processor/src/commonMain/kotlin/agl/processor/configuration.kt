@@ -114,7 +114,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         FormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
-        AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
+        AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!).union(contextFromTypesDomain(p.typesDomain)), p.configuration.styleString ?: StyleString(""))
     },
     override var completionResolver: CompletionResolver<AsmType, ContextType>? = { p ->
         AglCompletionDomainDefault.fromString(p.grammarDomain?.let { contextFromGrammar(it) }, p.configuration.completionString ?: CompletionString(""))
@@ -171,7 +171,7 @@ internal class LanguageProcessorConfigurationSimple(
         FormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<Asm, SentenceContext>? = { p ->
-        AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!), p.configuration.styleString ?: StyleString(""))
+        AglStyleDomainDefault.fromString(contextFromGrammar(p.grammarDomain!!).union(contextFromTypesDomain(p.typesDomain)), p.configuration.styleString ?: StyleString(""))
     },
     override var completionResolver: CompletionResolver<Asm, SentenceContext>? = { p ->
         AglCompletionDomainDefault.fromString(p.grammarDomain?.let { contextFromGrammar(it) }, p.configuration.completionString ?: CompletionString(""))

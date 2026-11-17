@@ -19,6 +19,7 @@ package net.akehurst.language.style.builder
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
@@ -85,6 +86,12 @@ class StylesBuilder internal constructor(
     private val _extends = mutableListOf<StyleSetReference>()
     private val _rules = mutableListOf<AglStyleRule>()
 
+    private val _importTypes = mutableListOf<Import>()
+
+    fun importTypes(vararg namespaceQualifiedName: String) {
+        namespaceQualifiedName.forEach { _importTypes.add(Import(it)) }
+    }
+
     fun extends(styleSetName: String) {
         _extends.add(StyleSetReferenceDefault(_namespace, styleSetName.asPossiblyQualifiedName))
     }
@@ -113,6 +120,7 @@ class StylesBuilder internal constructor(
     }
 
     fun build() = AglStyleSetDefault(_namespace, _name, _extends).also { ss ->
+        _importTypes.forEach { ss.addImportType(it) }
         (ss.rules as MutableList).addAll(_rules)
     }
 }
