@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import net.akehurst.datastore.api.DatastoreConfiguration
+import net.akehurst.datastore.api.DatastoreLocation
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DsConfigParameterChoice
 import net.akehurst.datastore.api.DsConfigParameterDefinition
@@ -156,6 +157,9 @@ class ConfigurationDraft(
 
     private val _choice = mutableStateMapOf<String, String>()
 
+    /** where the datastore may be used (DatastoreConfiguration.location); only edited for a datastore configuration, an access configuration keeps ANY */
+    var location: DatastoreLocation by mutableStateOf(DatastoreLocation.ANY)
+
     /**
      * The chosen alternative of a choice. A choice is identified by its path: the indexes of the
      * parameter infos that lead to it, e.g. "2" or "1/0". The first alternative is chosen by default.
@@ -193,7 +197,7 @@ class ConfigurationDraft(
     fun build(): DatastoreConfiguration? = when {
         parameterIssues.isNotEmpty() -> null
         schemaIssues.isNotEmpty() -> null
-        else -> DatastoreConfigurationDefault(providerIdentity, arguments, parameterSet)
+        else -> DatastoreConfigurationDefault(providerIdentity, arguments, parameterSet, location)
     }
 
     /**
@@ -214,6 +218,7 @@ class ConfigurationDraft(
     /** fills the draft from an existing configuration */
     fun load(configuration: DatastoreConfiguration) {
         parameter.values.forEach { it.load(configuration.argument[it.definition.identity]) }
+        location = configuration.location
         chooseAlternativesFor(parameterSet.parameterInfo, "", configuration.argument.keys)
     }
 

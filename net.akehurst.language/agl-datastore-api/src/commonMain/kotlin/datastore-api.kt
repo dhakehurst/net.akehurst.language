@@ -72,7 +72,12 @@ interface DatastoreProviderRegistry {
 
     fun register(provider: DatastoreProvider)
     fun getOrNull(providerIdentity: DatastoreProviderIdentity): DatastoreProvider?
+    /** Throws DatastorePlatformNotSupportedException if the provider is not supported on the current platform. */
     fun provide(providerIdentity: DatastoreProviderIdentity, datastoreIdentity: DatastoreIdentity, datastoreConfiguration: DatastoreConfiguration): Datastore
+
+    /** DatastoreProvider.canRunHere of the configuration's provider; false if that provider is not registered */
+    fun canRunHere(configuration: DatastoreConfiguration, role: DatastoreRole): Boolean =
+        getOrNull(configuration.providerIdentity)?.canRunHere(configuration, role) ?: false
 }
 
 sealed interface DsConfigParameterInfo {
@@ -148,6 +153,29 @@ interface DatastoreProvider {
     /** the parameters of this provider's datastore and access configurations */
     val schema: DatastoreProviderSchema
 
+    /**
+     * the platforms this provider's datastores can run on. A provider is in common code, so it can be registered
+     * (and its schema shown) on every platform, even those it does not support. Default: every platform.
+     */
+    val supportedPlatforms: Set<DatastorePlatform> get() = DatastorePlatform.ALL
+
+    /** true if this provider's datastores can run on the current platform (DatastorePlatform.current) */
+    val isSupportedOnCurrentPlatform: Boolean get() = DatastorePlatform.current in supportedPlatforms
+
+    /**
+     * true if a datastore with 'configuration' can be used here, by an application running as 'role':
+     * this provider is supported on the current platform, and the configuration's location allows 'role'.
+     * E.g. a client decides with it whether to use the datastore itself, or to ask its server to.
+     */
+    fun canRunHere(configuration: DatastoreConfiguration, role: DatastoreRole): Boolean =
+        isSupportedOnCurrentPlatform && configuration.location.allows(role)
+
+    /** Throws DatastorePlatformNotSupportedException unless 'isSupportedOnCurrentPlatform'; see DatastorePlatformNotSupportedException */
+    fun checkSupportedOnCurrentPlatform() {
+        if (!isSupportedOnCurrentPlatform) throw DatastorePlatformNotSupportedException(identity, DatastorePlatform.current, supportedPlatforms)
+    }
+
+    /** Throws DatastorePlatformNotSupportedException if this provider is not supported on the current platform. */
     fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration):Datastore
 }
 
@@ -156,6 +184,12 @@ interface DatastoreConfiguration {
     val providerIdentity:DatastoreProviderIdentity
 
     val argument: Map<String, Any>
+
+    /**
+     * where the datastore may be used (client, server, or either); see DatastoreProvider.canRunHere.
+     * Set in a datastore configuration; an access configuration is always ANY.
+     */
+    val location: DatastoreLocation get() = DatastoreLocation.ANY
 
     /** true if the parameter is declared sensitive in the provider's schema; its value must not be logged or shown */
     fun isSensitive(parameterIdentity: String): Boolean = false
