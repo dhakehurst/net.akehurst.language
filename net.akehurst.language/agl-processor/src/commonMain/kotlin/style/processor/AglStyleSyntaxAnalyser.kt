@@ -49,6 +49,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::selectorExpression)
         super.register(this::selectorAndComposition)
         super.register(this::selectorSingle)
+        super.register(this::semanticSelector)
+        super.register(this::semanticKind)
         super.register(this::styleList)
         super.register(this::style)
         super.register(this::styleValue)
@@ -138,8 +140,9 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun selectorAndComposition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleSelector> =
         (children as List<Any>).toSeparatedList<Any, AglStyleSelector, String>().items
 
-    // selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER ;
+    // selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER | semanticSelector ;
     fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleSelector {
+        if (4 == nodeInfo.alt.option.asIndex) return children[0] as AglStyleSelector
         // Must match what is done in AglGrammarSyntaxAnalyser.terminal,
         // but keep the enclosing (single or double) quotes
         val isPattern = nodeInfo.node.rule.tag == "PATTERN"
@@ -161,6 +164,24 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         //return listOf(value)
         return AglStyleSelector(mt, kind)
     }
+
+    // semanticSelector = semanticKind possiblyQualifiedName ;
+    // the value is the tag a token gets from semantic analysis, e.g. 'refers-to Circle'
+    fun semanticSelector(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleSelector {
+        val kindText = children[0] as String
+        val typeName = children[1] as PossiblyQualifiedName
+        val kind = when (kindText) {
+            "type" -> AglStyleSelectorKind.TYPE
+            "identify" -> AglStyleSelectorKind.IDENTIFY
+            "refers-to" -> AglStyleSelectorKind.REFERS_TO
+            else -> error("Internal error: semanticKind '$kindText' not handled")
+        }
+        return AglStyleSelector("$kindText ${typeName.value}", kind)
+    }
+
+    // semanticKind = 'type' | 'identify' | 'refers-to' ;
+    fun semanticKind(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        children[0] as String
 
     // styleList = style* ;
     fun styleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleDeclaration> =

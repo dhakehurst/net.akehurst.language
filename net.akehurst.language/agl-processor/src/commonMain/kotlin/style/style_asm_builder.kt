@@ -101,6 +101,9 @@ class StylesBuilder internal constructor(
                 it.startsWith("'") -> AglStyleSelectorKind.LITERAL
                 it.startsWith("\"") -> AglStyleSelectorKind.PATTERN
                 it.startsWith("$") -> AglStyleSelectorKind.SPECIAL
+                it.startsWith("type ") -> AglStyleSelectorKind.TYPE
+                it.startsWith("identify ") -> AglStyleSelectorKind.IDENTIFY
+                it.startsWith("refers-to ") -> AglStyleSelectorKind.REFERS_TO
                 else -> AglStyleSelectorKind.RULE_NAME
             }
             AglStyleSelector(it, kind)

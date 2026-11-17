@@ -63,7 +63,9 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                  | selectorSingle
                  ; //TODO
                 selectorAndComposition = [selectorSingle /',']2+ ;
-                selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER ;
+                selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER | semanticSelector ;
+                semanticSelector = semanticKind possiblyQualifiedName ;
+                semanticKind = 'type' | 'identify' | 'refers-to' ;
                 styleList = style* ;
                 style = STYLE_ID ':' styleValue ';' ;
                 styleValue = STYLE_VALUE | STRING ;
@@ -209,6 +211,15 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         ref("PATTERN")
                         ref("IDENTIFIER")
                         ref("SPECIAL_IDENTIFIER")
+                        ref("semanticSelector")
+                    }
+                    concatenation("semanticSelector") {
+                        ref("semanticKind"); ref("possiblyQualifiedName")
+                    }
+                    choice("semanticKind") {
+                        lit("type")
+                        lit("identify")
+                        lit("refers-to")
                     }
                     // these must match what is in the AglGrammarGrammar
                     concatenation("LITERAL", isLeaf = true) { pat(CommonRegexPatterns.LITERAL.value) }
@@ -233,7 +244,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
     override val typesDomain by lazy {
         typesDomain(NAME, true, AglBase.typesDomain.namespace) {
             grammarTypeNamespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
-                enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
+                enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META", "TYPE", "IDENTIFY", "REFERS_TO"))
                 interface_("AglStyleDomain") {
                     supertype("Domain") { ref("StyleNamespace"); ref("StyleSet") }
                 }
@@ -373,6 +384,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         /* custom SyntaxAnalyser, the assignment says which property the leaf gives a value to (used for completion) */
                         assignment("value", 0, "child[0]")
                     }
+                    createObject("semanticSelector", "AglStyleSelector") { /* custom SyntaxAnalyser */ }
+                    leafStringRule("semanticKind")
                     transToListOf("styleList", "AglStyleDeclaration", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("style", "AglStyleDeclaration") { /* custom SyntaxAnalyser */ }
                     child0StringRule("styleValue")

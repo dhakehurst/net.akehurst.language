@@ -28,16 +28,45 @@ interface SyntaxAnalysisResult<out AsmType : Any> {
     val locationMap: LocationMap
 }
 
+/**
+ * @param source the element that holds the referring property
+ * @param sourceLocation the location of 'source'
+ * @param referringLocation the location of the referring value itself (e.g. the identifier), if known
+ */
 data class ResolvedReference(
     val source:Any?,
     val sourceLocation: InputLocation?,
     val target: Any?,
-    val targetLocation: InputLocation?
+    val targetLocation: InputLocation?,
+    val referringLocation: InputLocation? = null
 )
+
+/**
+ * Semantic information about a part of a sentence, for styling (see the style DSL selectors 'type', 'identify' and 'refers-to').
+ * Each tag is '<kind> <qualified type name>', e.g. 'refers-to example.Shapes.Circle'.
+ * The tags of an element's type hold the type and every type it conforms to.
+ */
+data class SemanticTag(
+    val location: InputLocation,
+    val tags: List<String>
+) {
+    companion object {
+        /** all tokens of an element of the type */
+        const val KIND_TYPE = "type"
+        /** the identifier that names (declares) an element of the type */
+        const val KIND_IDENTIFY = "identify"
+        /** an identifier that refers to an element of the type */
+        const val KIND_REFERS_TO = "refers-to"
+
+        fun tag(kind: String, typeQualifiedName: String) = "$kind $typeQualifiedName"
+    }
+}
 
 interface SemanticAnalysisResult {
     val resolvedReferences:List<ResolvedReference>
     val issues: IssueCollection<LanguageIssue>
+    /** semantic tags for styling, empty if the semantic analyser does not compute them */
+    val semanticTags: List<SemanticTag> get() = emptyList()
 }
 
 interface ProcessResult<out AsmType:Any> {

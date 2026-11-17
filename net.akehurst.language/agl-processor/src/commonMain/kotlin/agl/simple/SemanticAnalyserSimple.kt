@@ -23,6 +23,8 @@ import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.processor.SemanticTag
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
@@ -167,6 +169,10 @@ class SemanticAnalyserSimple(
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _resolvedReferences = mutableListOf<ResolvedReference>()
     private lateinit var _locationMap: LocationMap
+    /** element -> names it is declared with (added to a scope under) */
+    private val _declared = mutableListOf<Pair<AsmStructure, String>>()
+    /** type qualified name -> qualified names of the types it conforms to (itself first) */
+    private val _conformingTypeNames = mutableMapOf<QualifiedName, List<String>>()
 
     private val _accessor by lazy {
         objectGraphSimpleAsm(typesDomain, null, _issues, _locationMap)
@@ -178,6 +184,7 @@ class SemanticAnalyserSimple(
     override fun clear() {
         _resolvedReferences.clear()
         _issues.clear()
+        _declared.clear()
     }
 
     override  fun analyse(
@@ -195,7 +202,62 @@ class SemanticAnalyserSimple(
                 checkAndResolveReferences(options, sentenceIdentity, asm, _locationMap, context)
             }
         }
-        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences, _issues, semanticTags(asm))
+    }
+
+    /**
+     * The semantic tags of the sentence (for styling):
+     * 'type T' on every element (T = its type and each type it conforms to),
+     * 'identify T' on the identifier that declares an element, 'refers-to T' on the identifier of each resolved reference (T from the target).
+     * An identifier gets tags only where the syntax analyser recorded the location of the property that holds it.
+     */
+    private fun semanticTags(asm: Asm): List<SemanticTag> {
+        val result = mutableListOf<SemanticTag>()
+        val visited = mutableSetOf<AsmStructure>()
+        fun walk(v: Any?) {
+            when (v) {
+                is AsmStructure -> if (visited.add(v)) {
+                    _locationMap[v]?.let { loc -> result.add(SemanticTag(loc, conformingTypeNames(v.qualifiedTypeName).map { SemanticTag.tag(SemanticTag.KIND_TYPE, it) })) }
+                    v.children.forEach { walk(it) }
+                }
+
+                is AsmList -> v.elements.forEach { walk(it) }
+                is Collection<*> -> v.forEach { walk(it) }
+                else -> Unit
+            }
+        }
+        asm.root.forEach { walk(it) }
+        _declared.distinct().forEach { (el, name) ->
+            identifierLocation(el, name)?.let { loc ->
+                result.add(SemanticTag(loc, conformingTypeNames(el.qualifiedTypeName).map { SemanticTag.tag(SemanticTag.KIND_IDENTIFY, it) }))
+            }
+        }
+        _resolvedReferences.forEach { ref ->
+            val loc = ref.referringLocation
+            val target = ref.target as? AsmStructure
+            if (null != loc && null != target) {
+                result.add(SemanticTag(loc, conformingTypeNames(target.qualifiedTypeName).map { SemanticTag.tag(SemanticTag.KIND_REFERS_TO, it) }))
+            }
+        }
+        return result
+    }
+
+    /** location of the property of 'el' whose value is 'name' (or a list whose last part is 'name') */
+    private fun identifierLocation(el: AsmStructure, name: String): InputLocation? =
+        el.propertyOrdered.firstNotNullOfOrNull { prop ->
+            val pv = prop.value
+            val holdsName = pv == name || (pv is List<*> && pv.lastOrNull() == name)
+            if (holdsName) _locationMap.getPropertyLocation(el, prop.name.value) else null
+        }
+
+    private fun conformingTypeNames(typeName: QualifiedName): List<String> = _conformingTypeNames.getOrPut(typeName) {
+        val def = typesDomain.findByQualifiedNameOrNull(typeName)
+        when (def) {
+            null -> listOf(typeName.value)
+            else -> listOf(typeName.value) + typesDomain.allDefinitions
+                .filter { it != def && def.conformsTo(it) && it != StdLibDefault.AnyType.resolvedDefinition }
+                .map { it.qualifiedName.value }
+        }
     }
 
     private  fun checkAndResolveReferences(options: SemanticAnalysisOptions<SentenceContext>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContext) {
@@ -252,7 +314,8 @@ class SemanticAnalyserSimple(
                     options.ifItemAlreadyExistsInScopeIssueKind,
                     { scopeType: QualifiedName, el: AsmStructure -> identifyingValueInFor(scopeType, el) },
                     _locationMap, _issues,
-                    { scopeType: QualifiedName, el: AsmStructure -> identifyingValuesInFor(_interpreter, crossReferenceDomain, scopeType, el).drop(1) }
+                    { scopeType: QualifiedName, el: AsmStructure -> identifyingValuesInFor(_interpreter, crossReferenceDomain, scopeType, el).drop(1) },
+                    { el: AsmStructure, name: String -> _declared.add(Pair(el, name)) }
                 )
                 asm.traverseDepthFirst(scopeCreator)
             }

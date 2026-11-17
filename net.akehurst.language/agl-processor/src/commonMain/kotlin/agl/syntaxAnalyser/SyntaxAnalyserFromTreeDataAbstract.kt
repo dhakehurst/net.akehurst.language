@@ -32,9 +32,17 @@ import net.akehurst.language.sppt.treedata.locationForNode
 
 class LocationMapDefault() : LocationMap {
     private val _map = mutableMapOf<Any, MutableMap<ParsePath, InputLocation>>()
+    private val _propertyMap = mutableMapOf<Any, MutableMap<String, InputLocation>>()
     override fun clear() {
         _map.clear()
+        _propertyMap.clear()
     }
+
+    override fun addPropertyLocation(obj: Any, propertyName: String, location: InputLocation) {
+        _propertyMap.getOrPut(obj) { mutableMapOf() }[propertyName] = location
+    }
+
+    override fun getPropertyLocation(obj: Any?, propertyName: String): InputLocation? = obj?.let { _propertyMap[it]?.get(propertyName) }
 
     override fun get(obj: Any?): InputLocation? {
         var ppm = _map[obj]

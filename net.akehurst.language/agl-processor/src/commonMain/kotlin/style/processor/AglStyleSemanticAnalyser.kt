@@ -146,6 +146,8 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
                 }
 
                 AglStyleSelectorKind.SPECIAL -> Unit
+                // semantic selectors, matched against the tags from semantic analysis of a sentence
+                AglStyleSelectorKind.TYPE, AglStyleSelectorKind.IDENTIFY, AglStyleSelectorKind.REFERS_TO -> Unit
             }
         }
     }

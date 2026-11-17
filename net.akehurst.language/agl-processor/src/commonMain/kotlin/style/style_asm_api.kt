@@ -59,7 +59,11 @@ interface AglStyleTagRule : AglStyleRule {
     val selector: List<AglStyleSelector>
 }
 
-enum class AglStyleSelectorKind { SPECIAL, LITERAL, PATTERN, RULE_NAME }
+/**
+ * TYPE, IDENTIFY and REFERS_TO are semantic selectors ('type T', 'identify T', 'refers-to T'),
+ * their value is the semantic tag they match (see SemanticTag)
+ */
+enum class AglStyleSelectorKind { SPECIAL, LITERAL, PATTERN, RULE_NAME, TYPE, IDENTIFY, REFERS_TO }
 data class AglStyleSelector(
     val value: String,
     val kind: AglStyleSelectorKind
