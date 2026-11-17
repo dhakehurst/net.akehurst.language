@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.agl.util.ReentrantLockCommon
 import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.completion.processor.AglCompletion
@@ -56,10 +58,23 @@ fun contextFromGrammarRegistry(registry: GrammarRegistry = Agl.registry): Senten
     return context
 }
 
+/**
+ * The context for an asm-transform definition:
+ * the whole grammar domain ('grammar') and types domain ('types'), used by AsmTransformSemanticAnalyser,
+ * and (CR6 a) the rules of the grammars (as [contextFromGrammar]) and the types (as [contextFromTypesDomain]), e.g. for completion.
+ *
+ * TODO: future enhancement (CR6 b, David 2026-11-17): a context of only the proper (rule and type) items,
+ *  with another way to give the grammar domain and the types domain to AsmTransformSemanticAnalyser
+ *  (it writes the types it creates into the types domain, and generates the default transform from the whole grammar domain).
+ */
 //@Deprecated("Currently no alternative, but to be replaced")
-fun contextFromGrammarAndTypesDomain(grammarDomain: GrammarDomain, typesDomain: TypesDomain)= SentenceContextAny().also {
-    it.addToScope(null, listOf("grammar"), QualifiedName("GrammarDomain"),null, grammarDomain)
-    it.addToScope(null, listOf("types"), QualifiedName("TypesDomain"),null, typesDomain)
+fun contextFromGrammarAndTypesDomain(grammarDomain: GrammarDomain, typesDomain: TypesDomain): SentenceContext {
+    val domains = SentenceContextAny().also {
+        it.addToScope(null, listOf("grammar"), QualifiedName("GrammarDomain"), null, grammarDomain)
+        it.addToScope(null, listOf("types"), QualifiedName("TypesDomain"), null, typesDomain)
+    }
+    // the domain items first, they are found by name ('grammar', 'types') with any type
+    return domains.union(contextFromGrammar(grammarDomain)).union(contextFromTypesDomain(typesDomain))
 }
 
 fun contextFromRegistryGrammars(registry: LanguageRegistry = Agl.registry): SentenceContext = registry.let {
