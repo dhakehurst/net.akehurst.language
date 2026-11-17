@@ -16,10 +16,12 @@ kotest = "6.1.11"
 #ksp = "2.2.21-2.0.4"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
+h2 = "2.3.232"
 
 [libraries]
 korlibs-korio = { module = "org.korge:korlibs-io", version.ref = "korlibs" }
 korlibs-compression = { module = "org.korge:korlibs-compression", version.ref = "korlibs" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
 nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections", version.ref = "nak-kotlinx" }
 nak-kotlinx-utils = { module = "net.akehurst.kotlinx:kotlinx-utils", version.ref = "nak-kotlinx" }
