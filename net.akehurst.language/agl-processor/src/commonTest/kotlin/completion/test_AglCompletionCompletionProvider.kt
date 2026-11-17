@@ -65,10 +65,12 @@ class test_AglCompletionCompletionProvider {
             CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
             CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "B"),
             CompletionItem(CompletionItemKind.SEGMENT, "completionRule", "<completionRule>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "forItem", "<forItem>"),
             CompletionItem(CompletionItemKind.SEGMENT, "option", "<option>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'in'", "in"),
             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
+            CompletionItem(CompletionItemKind.PATTERN, "STRING", "<STRING>"),
         )
         test(sentence, sentence.length, expected)
     }
@@ -91,6 +93,8 @@ class test_AglCompletionCompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
             CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "B"),
+            CompletionItem(CompletionItemKind.SEGMENT, "forItem", "<forItem>"),
+            CompletionItem(CompletionItemKind.PATTERN, "STRING", "<STRING>"),
         )
         test(sentence, sentence.length, expected)
     }
@@ -100,11 +104,13 @@ class test_AglCompletionCompletionProvider {
         val sentence = "namespace test completion Test { "
         val expected = listOf(
             CompletionItem(CompletionItemKind.SEGMENT, "completionRule", "<completionRule>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "forItem", "<forItem>"),
             CompletionItem(CompletionItemKind.SEGMENT, "option", "<option>"),
             CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.LITERAL, "'in'", "in"),
             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
             CompletionItem(CompletionItemKind.PATTERN, "IDENTIFIER", "<IDENTIFIER>"),
+            CompletionItem(CompletionItemKind.PATTERN, "STRING", "<STRING>"),
         )
         test(sentence, sentence.length, expected, false)
     }
