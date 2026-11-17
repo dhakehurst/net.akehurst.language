@@ -472,10 +472,6 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("ReferenceExpression")
                     }
                 }
-                //TODO: the other properties of ScopeImportDefault, currently only what completion (of references definitions) needs
-                data("ScopeImportDefault") {
-                    propertyOf(setOf(VAL, CMP, STR), "ofType", "PossiblyQualifiedName", true)
-                }
                 data("IdentifiableDefault") {
                     supertype("Identifiable")
                     constructor_ {
@@ -549,6 +545,8 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     createObject("importIntoScope", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 1, "child[1]") }
                     createObject("referenceDefinition", "ReferenceDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("inTypeName", 1, "child[1]") }
                     createObject("propertyReferenceExpression", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
+                    createObject("propertyWhenOption", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
+                    createObject("propertyWhenElse", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
                     createObject("collectionReferenceExpression", "ReferenceExpressionCollectionDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 2, "child[2]") }
                     transRule("ofType", "PossiblyQualifiedName", "child[1]")
                     transToListOf("typeReferences", "PossiblyQualifiedName", "children")

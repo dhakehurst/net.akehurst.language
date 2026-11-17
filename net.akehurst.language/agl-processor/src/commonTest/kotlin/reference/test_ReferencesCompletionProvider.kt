@@ -74,6 +74,19 @@ class test_ReferencesCompletionProvider {
         ))
     }
 
+    // the type names of an option of a 'property p when { }' block are completed like those of 'property p refers-to'
+    @Test
+    fun refers_to_in_when_option() {
+        val sentence = "namespace my.lang\n  import other.ns2\n  references {\n    in Person {\n      property employer when {\n        true -> refers-to "
+        test(sentence, listOf(
+            "REFERRED TypeDefinition 'Person' (my.lang.Person)",
+            "REFERRED TypeDefinition 'my.lang.Company' (my.lang.Company)",
+            "REFERRED TypeDefinition 'Thing' (other.ns.Thing) +edit@36'\\nimport other.ns'",
+            "REFERRED TypeDefinition 'Gadget' (other.ns2.Gadget)",
+            "REFERRED TypeDefinition 'other.ns2.Company' (other.ns2.Company)",
+        ))
+    }
+
     // other.ns2 is not imported: its Company is qualified because it would clash with my.lang.Company, the import goes after the namespace name
     @Test
     fun in_type() {
