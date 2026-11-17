@@ -185,9 +185,11 @@ class ReferencesSemanticAnalyser(
             when {
                 null == identifiedType -> Unit
                 else -> identifiable.identifiedByAlternatives.forEach { identifiedBy ->
-                    val identifyingProperty = _typeResolver!!.typeFor(identifiedBy, identifiedType.type())
-                    when (identifyingProperty) {
-                        StdLibDefault.NothingType -> {
+                    // the properties navigated to must exist (a later one may be a property of a subtype, see missingProperties);
+                    // the type resolver is used only to report why when one does not
+                    when {
+                        missingProperties(identifiedBy, identifiedType).isNotEmpty() -> {
+                            _typeResolver!!.typeFor(identifiedBy, identifiedType.type())
                             raiseError(
                                 ReferencesSyntaxAnalyser.PropertyValue(identifiable, "expression"),
                                 "$msgStart, '${identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
@@ -268,56 +270,70 @@ class ReferencesSemanticAnalyser(
 
     /**
      * checks that the properties navigated to in 'expr' (evaluated on an element of type 'selfType') exist, an error for each that does not.
-     * Only navigations are checked (also those in infix, group, ternary and when expressions);
-     * a navigation is checked up to the first part that is not a property, or a special value ('\$owner', '\$container', '\$root', '\$previous'), or a type that is not structured.
      */
     private fun checkNavigations(expr: Expression?, selfType: TypeDefinition, what: String, location: Any) {
-        when (expr) {
-            null -> Unit
-            is RootExpression -> checkNavigationParts(expr, emptyList(), selfType, what, location, expr)
-            is NavigationExpression -> when (val st = expr.start) {
-                is RootExpression -> checkNavigationParts(st, expr.parts, selfType, what, location, expr)
-                else -> checkNavigations(st, selfType, what, location)
-            }
-
-            is InfixExpression -> expr.expressions.forEach { checkNavigations(it, selfType, what, location) }
-            is GroupExpression -> checkNavigations(expr.expression, selfType, what, location)
-            is TernaryConditionExpression -> listOf(expr.condition, expr.trueExpression, expr.falseExpression).forEach { checkNavigations(it, selfType, what, location) }
-            is WhenExpression -> {
-                expr.options.forEach { checkNavigations(it.condition, selfType, what, location); checkNavigations(it.expression, selfType, what, location) }
-                checkNavigations(expr.elseOption.expression, selfType, what, location)
-            }
-
-            else -> Unit // not checked
-        }
-    }
-
-    private fun checkNavigationParts(start: RootExpression, parts: List<NavigationPart>, selfType: TypeDefinition, what: String, location: Any, whole: Expression) {
-        if (start.isNothing || start.name in SPECIAL_VALUES) return
-        var type: TypeInstance = when {
-            start.isSelf -> selfType.type()
-            else -> propertyTypeOrNull(selfType.type(), start.name) ?: run {
-                if (isCheckable(selfType)) raiseError(location, "$what, '${whole.asString()}': type '${selfType.name}' has no property '${start.name}'")
-                return
-            }
-        }
-        for (part in parts) {
-            val pn = (part as? PropertyCall)?.propertyName ?: return
-            if (pn.startsWith("\$")) return
-            val td = type.resolvedDefinition
-            if (td !is StructuredType) return
-            type = propertyTypeOrNull(type, pn) ?: run {
-                if (isCheckable(td)) raiseError(location, "$what, '${whole.asString()}': type '${td.name}' has no property '$pn'")
-                return
-            }
-        }
+        missingProperties(expr, selfType).forEach { raiseError(location, "$what, $it") }
     }
 
     /**
-     * a missing property is an error only for a structured type without subtypes:
-     * the elements of a type with subtypes (e.g. the supertype made for a grammar choice) can have properties that the type itself does not have
+     * the properties navigated to in 'expr' (evaluated on an element of type 'selfType') that do not exist, as messages.
+     * Only navigations are checked (also those in infix, group, ternary and when expressions);
+     * a navigation is checked up to the first part that is not a property, or a special value ('\$owner', '\$container', '\$root', '\$previous').
+     * The first property must be a property of 'selfType' (or a supertype). A later property may also be a property of a subtype of the type before it
+     * (e.g. of an alternative of a grammar choice, whose supertype has no properties); the check stops there.
      */
-    private fun isCheckable(type: TypeDefinition): Boolean = type is StructuredType && type.subtypes.isEmpty()
+    private fun missingProperties(expr: Expression?, selfType: TypeDefinition): List<String> = when (expr) {
+        null -> emptyList()
+        is RootExpression -> listOfNotNull(missingInNavigation(expr, emptyList(), selfType, expr))
+        is NavigationExpression -> when (val st = expr.start) {
+            is RootExpression -> listOfNotNull(missingInNavigation(st, expr.parts, selfType, expr))
+            else -> missingProperties(st, selfType)
+        }
+
+        is InfixExpression -> expr.expressions.flatMap { missingProperties(it, selfType) }
+        is GroupExpression -> missingProperties(expr.expression, selfType)
+        is TernaryConditionExpression -> listOf(expr.condition, expr.trueExpression, expr.falseExpression).flatMap { missingProperties(it, selfType) }
+        is WhenExpression -> expr.options.flatMap { missingProperties(it.condition, selfType) + missingProperties(it.expression, selfType) } +
+                missingProperties(expr.elseOption.expression, selfType)
+
+        else -> emptyList() // not checked
+    }
+
+    private fun missingInNavigation(start: RootExpression, parts: List<NavigationPart>, selfType: TypeDefinition, whole: Expression): String? {
+        if (start.isNothing || start.name in SPECIAL_VALUES) return null
+        var type: TypeInstance = when {
+            start.isSelf -> selfType.type()
+            selfType !is StructuredType -> return null
+            else -> propertyTypeOrNull(selfType.type(), start.name) ?: return "'${whole.asString()}': type '${selfType.name}' has no property '${start.name}'"
+        }
+        for (part in parts) {
+            val pn = (part as? PropertyCall)?.propertyName ?: return null
+            if (pn.startsWith("\$")) return null
+            val td = type.resolvedDefinition
+            if (td !is StructuredType) return null
+            type = propertyTypeOrNull(type, pn) ?: return when {
+                // the value may be of a subtype that has the property; its type is not known here, so the check stops
+                allSubtypesOf(td).any { null != propertyTypeOrNull(it.type(), pn) } -> null
+                else -> "'${whole.asString()}': type '${td.name}' has no property '$pn'"
+            }
+        }
+        return null
+    }
+
+    /** the subtypes of 'type', transitively */
+    private fun allSubtypesOf(type: TypeDefinition): List<TypeDefinition> {
+        val result = mutableListOf<TypeDefinition>()
+        val todo = ArrayDeque(listOf(type))
+        while (todo.isNotEmpty()) {
+            for (st in todo.removeFirst().subtypes.map { it.resolvedDefinition }) {
+                if (result.none { it === st } && st !== type) {
+                    result.add(st)
+                    todo.addLast(st)
+                }
+            }
+        }
+        return result
+    }
 
     private fun propertyTypeOrNull(type: TypeInstance, name: String): TypeInstance? = when (type.resolvedDefinition) {
         is StructuredType -> type.allResolvedProperty[PropertyName(name)]?.typeInstance

@@ -267,6 +267,13 @@ class test_SysML_v2_2026_09_agl_references {
         libraryContext()
     }
 
+    /** the references definition is checked when the processor first uses it; it must have no errors (they are also in every process result) */
+    @Test
+    fun references_definition_has_no_errors() {
+        processor.crossReferenceDomain
+        assertEquals(emptyList(), processor.allIssues.errors.map { it.message })
+    }
+
     @Test
     fun references_examples() {
         val libCtx = libraryContext()
