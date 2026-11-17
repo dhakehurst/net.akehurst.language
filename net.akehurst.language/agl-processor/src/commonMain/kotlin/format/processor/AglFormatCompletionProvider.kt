@@ -18,11 +18,31 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
+import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionProviderOptions
+import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.formatter.api.AglFormatDomain
 
+/**
+ * The default items, where a type name is expected (a type reference, e.g. the type a format rule is for)
+ * the types in the sentence context (e.g. contextFromTypesDomain), from the references definition of AglFormat.
+ * Simple names are offered, with an additional edit that imports the namespace when needed, qualified names on a clash (CR1).
+ */
 class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatDomain, SentenceContext>() {
 
-        //TODO
+    companion object {
+        private val transformRuleSet by lazy {
+            AglFormat.asmTransformDomain.findDefinitionByQualifiedNameOrNull(AglFormat.defaultTargetGrammar.qualifiedName)
+                ?: error("Internal error: transform rule set for '${AglFormat.defaultTargetGrammar.qualifiedName}' not found")
+        }
+    }
+
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
+        val items = nextExpected.flatMap { spine ->
+            provideDefaultWithReferencesForSpine(spine, options, options.sentenceContext, transformRuleSet, AglFormat.typesDomain, AglFormat.crossReferenceDomain)
+        }
+        return defaultSortAndFilter(items)
+    }
 
 }

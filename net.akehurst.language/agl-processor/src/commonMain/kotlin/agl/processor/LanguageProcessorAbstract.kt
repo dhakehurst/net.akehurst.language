@@ -504,6 +504,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
      * [opts] with a completion context that also holds the definitions in the text before [position] (q22/q39).
      * The text before [position] usually does not parse, so the open rules of a spine are completed with generated text
      * ([SentenceCompletion]), the result is processed (issues ignored) into a copy of the given context.
+     * The ASM and its location map are set as CompletionProviderOptions.sentenceAsm/sentenceLocationMap (CR5).
      * The given context is not changed. [opts] is returned as it is when there is no context, no semantic analyser,
      * or no completed text gives an ASM.
      * NOTE: a work-around, it could be replaced by error recovery in the parser that gives a partial tree.
@@ -529,6 +530,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                     if (null != res?.asm) {
                         val withCtx = opts.clone()
                         withCtx.completionProvider.sentenceContext = ctx as ContextType
+                        // CR5: the own sentence ASM, e.g. for its namespace and imports, positions before [position] are those of the sentence
+                        withCtx.completionProvider.sentenceAsm = res.asm
+                        withCtx.completionProvider.sentenceLocationMap = res.syntaxAnalysis?.locationMap
                         result = withCtx
                         break
                     }

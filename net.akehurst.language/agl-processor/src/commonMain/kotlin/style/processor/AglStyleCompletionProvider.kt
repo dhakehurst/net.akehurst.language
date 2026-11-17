@@ -93,19 +93,9 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
         // the literals of selectorAndComposition, rule (tagRule, metaRule) and style, with their labels and the '{' snippet,
         // are now in the AglStyle completion definition (completionString), so the functions for them below are not used
         return when (ruleName) {
-            GrammarRuleName("META_IDENTIFIER") -> META_IDENTIFIER(nextExpected, itemType, options.sentenceContext!!)
             else -> CompletionProviderAbstract.provideDefaultForSpine(spine, options)
         }
     }
-
-    private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
-        return listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.KEYWORD_STYLE_ID.value),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.NO_STYLE_ID.value)
-        )
-    }
-
-
 
     private fun selectorAndComposition(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext): List<CompletionItem> {
         return listOf(

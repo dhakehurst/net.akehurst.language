@@ -108,6 +108,15 @@ interface CompletionProviderOptions<ContextType : Any> {
      */
     var ruleDepth: Map<String, Int>
 
+    /**
+     * set by the processor: the ASM of the text before the completion position (completed with generated text so it can be processed),
+     * null if none could be made. Used e.g. to find the namespace and imports of the sentence.
+     */
+    var sentenceAsm: Any?
+
+    /** set by the processor: the locations of the elements of [sentenceAsm] (positions are in the sentence) */
+    var sentenceLocationMap: LocationMap?
+
     val other: Map<String, Any>
 
     fun clone(): CompletionProviderOptions<ContextType>

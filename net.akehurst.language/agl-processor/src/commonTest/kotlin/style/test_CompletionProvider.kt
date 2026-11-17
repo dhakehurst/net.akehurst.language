@@ -86,6 +86,8 @@ class test_CompletionProvider {
             CompletionItem(kind=CompletionItemKind.LITERAL, label="'refers-to'", text="refers-to"),
             CompletionItem(kind=CompletionItemKind.LITERAL, label="'type'", text="type"),
             CompletionItem(kind=CompletionItemKind.LITERAL, label="'}'", text="}"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$nostyle"),
             CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
             CompletionItem(kind=CompletionItemKind.PATTERN, label= "SPECIAL_IDENTIFIER", text="<SPECIAL_IDENTIFIER>"),
         )
@@ -125,6 +127,8 @@ class test_CompletionProvider {
             CompletionItem(CompletionItemKind.LITERAL, "'identify'", "identify"),
             CompletionItem(CompletionItemKind.LITERAL, "'refers-to'", "refers-to"),
             CompletionItem(CompletionItemKind.LITERAL, "'type'", "type"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$nostyle"),
             CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
             CompletionItem(CompletionItemKind.PATTERN, "SPECIAL_IDENTIFIER", "<SPECIAL_IDENTIFIER>"),
         )
@@ -251,6 +255,8 @@ class test_CompletionProvider {
             CompletionItem(CompletionItemKind.LITERAL, "'refers-to'", "refers-to"),
             CompletionItem(CompletionItemKind.LITERAL, "'type'", "type"),
             CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$nostyle"),
             CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
             CompletionItem(CompletionItemKind.PATTERN, "SPECIAL_IDENTIFIER", "<SPECIAL_IDENTIFIER>"),
         )
