@@ -26,6 +26,7 @@ open class JdbcProvider : DatastoreProvider {
         const val CONFIG_INCLUDE_VIEWS = "config.include-views"
         const val CONFIG_DRIVER_PROPERTIES = "config.driver-properties"
         const val CONFIG_FETCH_SIZE = "config.fetch-size"
+        const val CONFIG_KEYS = "config.keys"
 
         const val DEFAULT_FETCH_SIZE = 500L
 
@@ -68,6 +69,10 @@ open class JdbcProvider : DatastoreProvider {
                     type("Boolean")
                     default(true)
                     description("Also give types for the views of the schema (that match 'Tables').")
+                }
+                parameter(CONFIG_KEYS, "Keys", optional = true) {
+                    type("List")
+                    description("Key columns for tables or views that have no primary key, one 'NAME: COLUMN, COLUMN' per line. A row's identity is then its key values; a table (not a view) with a key can also be written and deleted.")
                 }
                 parameter(CONFIG_DRIVER_PROPERTIES, "Driver properties", optional = true) {
                     type("List")

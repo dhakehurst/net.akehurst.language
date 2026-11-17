@@ -207,7 +207,16 @@ open class JdbcDatastore(
             ?: emptyList()
         val includeViews = configuration.getAsBooleanOrNull(JdbcProvider.CONFIG_INCLUDE_VIEWS) ?: true
         val schemaName = configuration.getAsStringOrNull(JdbcProvider.CONFIG_SCHEMA)
-        val schema = withConnection { JdbcSchema.read(it, schemaName, tableGlobs, includeViews) }
+        val keys = (configuration.valueOf(JdbcProvider.CONFIG_KEYS) as List<*>?)
+            ?.map { it.toString().trim() }?.filter { it.isNotEmpty() }
+            ?.associate { line ->
+                val i = line.indexOf(':')
+                require(i > 0) { "${JdbcProvider.CONFIG_KEYS}: '$line' is not 'NAME: COLUMN, COLUMN'" }
+                val cols = line.substring(i + 1).split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                require(cols.isNotEmpty()) { "${JdbcProvider.CONFIG_KEYS}: '$line' names no column" }
+                Pair(line.substring(0, i).trim(), cols)
+            } ?: emptyMap()
+        val schema = withConnection { JdbcSchema.read(it, schemaName, tableGlobs, includeViews, keys) }
         val assocs = JdbcAssociations(schema)
         _schema = schema
         _associations = assocs
