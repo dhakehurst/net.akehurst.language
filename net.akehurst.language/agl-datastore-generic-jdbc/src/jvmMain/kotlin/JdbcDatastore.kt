@@ -5,6 +5,9 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
+import net.akehurst.language.objectgraph.api.TypedObject
+import net.akehurst.language.types.asm.PropertyDeclarationAbstract
 import net.akehurst.kotlinx.issues.api.IssueKind
 import net.akehurst.kotlinx.issues.ram.IssueDefault
 import net.akehurst.kotlinx.issues.ram.IssueHolder
@@ -67,6 +70,9 @@ class JdbcRow(
     values: Map<String, Any?>,
 ) {
     private val _values = values.toMutableMap()
+
+    /** many-to-many ends set on this row (end name -> rows), stored in the join table when the row is written */
+    internal val pendingLinks = mutableMapOf<String, List<JdbcRow>>()
 
     /** column name -> value */
     val values: Map<String, Any?> get() = _values
@@ -225,8 +231,10 @@ open class JdbcDatastore(
                 assocs.foreignKeys.forEach { a ->
                     association {
                         // a property of the table's type: the referenced row, or null if a key column is null
-                        endSuspend(a.foreignKey.referencedTable, setOf(REF, VAL), a.forwardName, isNullable = true, byEvaluation = { _ ->
-                            { obj -> referencedRow(obj as JdbcRow, a.foreignKey) }
+                        // setting it sets the key columns (stored when the row is written); null sets them to null
+                        endSuspend(a.foreignKey.referencedTable, setOf(REF, VAR), a.forwardName, isNullable = true, byEvaluation = { pd ->
+                            (pd as PropertyDeclarationAbstract).mutator = { obj, value -> setReference(obj as JdbcRow, a.foreignKey, a.forwardName, value) }
+                            ; { obj -> referencedRow(obj as JdbcRow, a.foreignKey) }
                         })
                         // a property of the referenced table's type: the rows that refer to it
                         endSuspend(a.table.name, setOf(REF, VAL), a.reverseName, collectionTypeName = "List", byEvaluation = { _ ->
@@ -237,17 +245,85 @@ open class JdbcDatastore(
                 assocs.manyToMany.forEach { m ->
                     association {
                         // a property of A's type: the B rows
-                        endSuspend(m.foreignKeyB.referencedTable, setOf(REF, VAL), m.nameOnA, collectionTypeName = "List", byEvaluation = { _ ->
-                            { obj -> joinedRows(obj as JdbcRow, m.joinTable, m.foreignKeyA, m.foreignKeyB) }
+                        // setting it replaces the links of the row (stored in the join table when the row is written)
+                        endSuspend(m.foreignKeyB.referencedTable, setOf(REF, VAR), m.nameOnA, collectionTypeName = "List", byEvaluation = { pd ->
+                            (pd as PropertyDeclarationAbstract).mutator = { obj, value -> setLinks(obj as JdbcRow, m.nameOnA, m.foreignKeyB.referencedTable, value) }
+                            ; { obj -> (obj as JdbcRow).pendingLinks[m.nameOnA] ?: joinedRows(obj, m.joinTable, m.foreignKeyA, m.foreignKeyB) }
                         })
                         // a property of B's type: the A rows
-                        endSuspend(m.foreignKeyA.referencedTable, setOf(REF, VAL), m.nameOnB, collectionTypeName = "List", byEvaluation = { _ ->
-                            { obj -> joinedRows(obj as JdbcRow, m.joinTable, m.foreignKeyB, m.foreignKeyA) }
+                        endSuspend(m.foreignKeyA.referencedTable, setOf(REF, VAR), m.nameOnB, collectionTypeName = "List", byEvaluation = { pd ->
+                            (pd as PropertyDeclarationAbstract).mutator = { obj, value -> setLinks(obj as JdbcRow, m.nameOnB, m.foreignKeyA.referencedTable, value) }
+                            ; { obj -> (obj as JdbcRow).pendingLinks[m.nameOnB] ?: joinedRows(obj, m.joinTable, m.foreignKeyB, m.foreignKeyA) }
                         })
                     }
                 }
             }
         }
+    }
+
+    // --- setting association ends ---
+
+    /** a value given to an association end: a row (possibly a TypedObject of one), or null / nothing */
+    private fun rowOrNull(value: Any?): JdbcRow? = when (value) {
+        null -> null
+        is JdbcRow -> value
+        is TypedObject -> rowOrNull(value.self)
+        else -> null
+    }
+
+    /** sets the key columns of 'row' to those of 'value' (a row of fk.referencedTable), or to null if 'value' is null or nothing */
+    protected fun setReference(row: JdbcRow, fk: JdbcForeignKey, endName: String, value: Any?) {
+        val target = rowOrNull(value)
+        require(null == target || target.table.name == fk.referencedTable) {
+            "'${row.table.name}.$endName' must be set to a row of '${fk.referencedTable}', not of '${target?.table?.name}'"
+        }
+        fk.columns.forEachIndexed { i, c -> row[c] = target?.values?.get(fk.referencedColumns[i]) }
+    }
+
+    /** sets the many-to-many end 'endName' of 'row' to the rows of 'value' (a List of rows of 'targetTable'; null or nothing: none) */
+    protected fun setLinks(row: JdbcRow, endName: String, targetTable: String, value: Any?) {
+        val list = when (value) {
+            null -> emptyList()
+            is TypedObject -> if (value.isNothing) emptyList() else (value.self as? List<*> ?: listOf(value.self))
+            is List<*> -> value
+            else -> listOf(value)
+        }
+        val rows = list.map { e ->
+            val r = rowOrNull(e) ?: throw IllegalArgumentException("'${row.table.name}.$endName' must be set to rows of '$targetTable'")
+            require(r.table.name == targetTable) { "'${row.table.name}.$endName' must be set to rows of '$targetTable', not of '${r.table.name}'" }
+            r
+        }
+        row.pendingLinks[endName] = rows
+    }
+
+    /** stores the many-to-many ends set on 'row' (see setLinks): its rows in each join table are replaced */
+    protected suspend fun storeLinks(row: JdbcRow) {
+        if (row.pendingLinks.isEmpty()) return
+        val schema = schema()
+        val ends = associations().manyToMany.flatMap { m ->
+            listOf(
+                Triple(m.foreignKeyA.referencedTable to m.nameOnA, m, Pair(m.foreignKeyA, m.foreignKeyB)),
+                Triple(m.foreignKeyB.referencedTable to m.nameOnB, m, Pair(m.foreignKeyB, m.foreignKeyA)),
+            )
+        }.associate { Pair(it.first, Pair(it.second, it.third)) }
+        for ((endName, targets) in row.pendingLinks) {
+            val (m, keys) = ends[row.table.name to endName] ?: continue
+            val (from, to) = keys
+            val fromValues = from.referencedColumns.map { row.values[it] }
+            withConnection { c ->
+                val where = from.columns.joinToString(" AND ") { "${schema.quote(it)} = ?" }
+                c.prepareStatement("DELETE FROM ${schema.sqlName(m.joinTable)} WHERE $where").use { ps -> bind(ps, fromValues); ps.executeUpdate() }
+                val cols = from.columns + to.columns
+                val sql = "INSERT INTO ${schema.sqlName(m.joinTable)} (${cols.joinToString { schema.quote(it) }}) VALUES (${cols.joinToString { "?" }})"
+                c.prepareStatement(sql).use { ps ->
+                    targets.distinct().forEach { t ->
+                        bind(ps, fromValues + to.referencedColumns.map { t.values[it] })
+                        ps.executeUpdate()
+                    }
+                }
+            }
+        }
+        row.pendingLinks.clear()
     }
 
     // --- navigation of associations ---
@@ -383,10 +459,52 @@ open class JdbcDatastore(
         else -> DataItemIdentity("${row.table.name}:${row.key.joinToString(",") { keyText(it) }}")
     }
 
+    /** a key value as text: '\\' and ',' are escaped with '\\'; a Binary is hex; null is empty */
     private fun keyText(v: Any?): String = when (v) {
         null -> ""
         is ByteArray -> v.joinToString("") { it.toUByte().toString(16).padStart(2, '0') }
-        else -> v.toString()
+        else -> v.toString().replace("\\", "\\\\").replace(",", "\\,")
+    }
+
+    /** the key texts of an identity's key part (see keyText) */
+    private fun splitKeyText(text: String): List<String> {
+        val result = mutableListOf<String>()
+        val sb = StringBuilder()
+        var i = 0
+        while (i < text.length) {
+            val ch = text[i]
+            when {
+                ch == '\\' && i + 1 < text.length -> { sb.append(text[i + 1]); i++ }
+                ch == ',' -> { result.add(sb.toString()); sb.clear() }
+                else -> sb.append(ch)
+            }
+            i++
+        }
+        result.add(sb.toString())
+        return result
+    }
+
+    /** a key value from its text, as the std type of 'column'; null if it cannot be converted */
+    private fun keyValueOf(text: String, column: JdbcColumn): Any? = when (column.stdType) {
+        "Integer" -> text.toLongOrNull()
+        "Real" -> text.toDoubleOrNull()
+        "Boolean" -> text.toBooleanStrictOrNull()
+        "Timestamp" -> try { Instant.parse(text) } catch (e: IllegalArgumentException) { null }
+        "Binary" -> if (text.length % 2 == 0) text.chunked(2).map { it.toIntOrNull(16)?.toByte() ?: return null }.toByteArray() else null
+        else -> text
+    }
+
+    /** the table and primary key values of a row's item identity (see identityOf); null if it is not one of a table with a primary key */
+    protected suspend fun rowKeyOf(identity: DataItemIdentity): Pair<JdbcTable, List<Any?>>? {
+        val text = identity.value
+        val i = text.indexOf(':')
+        if (i <= 0) return null
+        val table = schema().tableOrNull(text.substring(0, i)) ?: return null
+        if (table.primaryKey.isEmpty() || table.isView) return null
+        val parts = splitKeyText(text.substring(i + 1))
+        if (parts.size != table.primaryKey.size) return null
+        val values = table.primaryKey.zip(parts).map { (col, part) -> keyValueOf(part, table.column(col)) ?: return null }
+        return Pair(table, values)
     }
 
     /**
@@ -475,7 +593,7 @@ open class JdbcDatastore(
                 row.table.isView -> "'${row.table.name}' is a view; it cannot be written"
                 row.table.primaryKey.isEmpty() -> "'${row.table.name}' has no primary key; it cannot be written"
                 else -> try {
-                    store(row, mode)
+                    store(row, mode) ?: run { storeLinks(row); null }
                 } catch (e: java.sql.SQLException) {
                     "'${row.table.name}' row ${row.key}: ${e.message ?: e::class.simpleName}"
                 }
@@ -489,6 +607,28 @@ open class JdbcDatastore(
                     )
                 }
             )
+        }
+    }
+
+    override val supportsDelete: Boolean get() = true
+
+    /**
+     * input: identities of row items ('<TABLE>:<primary key values>', as read gives them).
+     * Each row is deleted in the open database transaction (applied on commit, undone on rollback).
+     * output: the identities of the rows deleted. An identity that is not one of a row of a table of this datastore
+     * (with a primary key), or whose row does not exist, is not output. A row the database refuses to delete
+     * (e.g. another row refers to it) fails the delete with the database's message.
+     * The access configuration is not used.
+     */
+    override suspend fun doDelete(accessConfiguration: DatastoreConfiguration, input: Flow<DataItemIdentity>): Flow<DataItemIdentity> {
+        val schema = schema()
+        return input.transform { id ->
+            val (table, key) = rowKeyOf(id) ?: return@transform
+            val where = table.primaryKey.joinToString(" AND ") { "${schema.quote(it)} = ?" }
+            val n = withConnection { c ->
+                c.prepareStatement("DELETE FROM ${schema.sqlName(table)} WHERE $where").use { ps -> bind(ps, key); ps.executeUpdate() }
+            }
+            if (n > 0) emit(id)
         }
     }
 

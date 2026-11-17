@@ -1,5 +1,6 @@
 package net.akehurst.datastore.generic.jdbc
 
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -20,6 +21,8 @@ import java.sql.DriverManager
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import net.akehurst.language.objectgraph.api.TypedObject
 import kotlin.test.assertTrue
 
 class test_JdbcDatastore_write {
@@ -154,6 +157,98 @@ class test_JdbcDatastore_write {
         val out = sut.write(noAccess, flowOf(view, other)).toList()
         assertTrue(out.all { it.issues.errors.size == 1 }, out.map { it.issues }.toString())
         sut.rollback()
+        sut.close()
+    }
+
+    private fun query(url: String, sql: String): List<String> = DriverManager.getConnection(url).use { c ->
+        c.createStatement().use { st ->
+            st.executeQuery(sql).use { rs -> generateSequence { if (rs.next()) rs.getString(1) else null }.toList() }
+        }
+    }
+
+    @Test
+    fun delete_rows_by_identity() = runTest {
+        val url = TestDb.create(*TestDb.HR, "INSERT INTO EMPLOYEE VALUES (13, 'Dave', 2, NULL, NULL, TRUE, NULL)")
+        val sut = open(url)
+        assertTrue(sut.supportsDelete)
+        sut.beginTransaction()
+        val ids = listOf("EMPLOYEE:13", "EMPLOYEE:99", "NO_TABLE:1", "EMPLOYEE:x").map { DataItemIdentity(it) }
+        val deleted = sut.delete(noAccess, ids.asFlow()).toList()
+        assertEquals(listOf(DataItemIdentity("EMPLOYEE:13")), deleted)
+        sut.commit()
+        assertEquals(listOf("Alice", "Bob", "Carol"), names(url))
+        sut.close()
+    }
+
+    @Test
+    fun delete_of_a_referenced_row_fails() = runTest {
+        val url = TestDb.create(*TestDb.HR)
+        val sut = open(url)
+        sut.beginTransaction()
+        assertFailsWith<java.sql.SQLException> { sut.delete(noAccess, flowOf(DataItemIdentity("DEPARTMENT:1"))).toList() }
+        sut.rollback()
+        sut.close()
+    }
+
+    @Test
+    fun key_text_is_escaped_in_identity_and_delete() = runTest {
+        val url = TestDb.create("CREATE TABLE K (A VARCHAR(20), B VARCHAR(20), PRIMARY KEY (A, B))", "INSERT INTO K VALUES ('x,y', 'z\\w')")
+        val sut = open(url)
+        val item = read(sut, "K").single()
+        assertEquals("K:x\\,y,z\\\\w", item.identity.value)
+        sut.beginTransaction()
+        assertEquals(listOf(item.identity), sut.delete(noAccess, flowOf(item.identity)).toList())
+        sut.commit()
+        assertEquals(emptyList(), query(url, "SELECT A FROM K"))
+        sut.close()
+    }
+
+    @Test
+    fun set_foreign_key_end_sets_the_key_columns() = runTest {
+        val url = TestDb.create(*TestDb.HR)
+        val sut = open(url)
+        val am = sut.accessorMutator()
+        val bob = read(sut, "EMPLOYEE WHERE ID = 11").single()
+        val sales = read(sut, "DEPARTMENT WHERE ID = 2").single()
+        am.setPropertySuspend(bob.data, "DEPARTMENT", sales.data)
+        assertEquals(2L, (bob.data.self as JdbcRow).values["DEPT_ID"])
+        am.setPropertySuspend(bob.data, "FK_EMP_MANAGER", am.nothing())
+        assertEquals(null, (bob.data.self as JdbcRow).values["MANAGER_ID"])
+        sut.beginTransaction()
+        val out = sut.write(noAccess, flowOf(bob)).toList()
+        assertTrue(out.single().issues.isEmpty(), out.single().issues.toString())
+        sut.commit()
+        assertEquals(listOf("2"), query(url, "SELECT DEPT_ID FROM EMPLOYEE WHERE ID = 11"))
+        assertEquals(listOf("1"), query(url, "SELECT COUNT(*) FROM EMPLOYEE WHERE ID = 11 AND MANAGER_ID IS NULL"))
+        sut.close()
+    }
+
+    @Test
+    fun set_many_to_many_end_replaces_the_join_rows() = runTest {
+        val url = TestDb.create(*TestDb.HR)
+        val sut = open(url)
+        val am = sut.accessorMutator()
+        val alice = read(sut, "EMPLOYEE WHERE ID = 10").single()
+        val parser = read(sut, "PROJECT WHERE ID = 100").single()
+        am.setPropertySuspend(alice.data, "PROJECT", am.toTypedObject(listOf(parser.data.self), StdLibDefault.List.type(listOf(parser.data.type.asTypeArgument))))
+        // the set value is seen before it is written
+        assertEquals(listOf(parser.data.self), (alice.data.getPropertySuspend("PROJECT").self as List<*>).map { if (it is TypedObject) it.self else it })
+        sut.beginTransaction()
+        val out = sut.write(noAccess, flowOf(alice)).toList()
+        assertTrue(out.single().issues.isEmpty(), out.single().issues.toString())
+        sut.commit()
+        assertEquals(listOf("100"), query(url, "SELECT PROJ_ID FROM EMPLOYEE_PROJECT WHERE EMP_ID = 10"))
+        assertEquals(listOf("101"), query(url, "SELECT PROJ_ID FROM EMPLOYEE_PROJECT WHERE EMP_ID = 11"))
+        sut.close()
+    }
+
+    @Test
+    fun set_foreign_key_end_to_a_row_of_another_table_fails() = runTest {
+        val url = TestDb.create(*TestDb.HR)
+        val sut = open(url)
+        val bob = read(sut, "EMPLOYEE WHERE ID = 11").single()
+        val project = read(sut, "PROJECT").first()
+        assertFailsWith<IllegalArgumentException> { sut.accessorMutator().setPropertySuspend(bob.data, "DEPARTMENT", project.data) }
         sut.close()
     }
 }
