@@ -233,6 +233,13 @@ interface ReferenceExpressionProperty : ReferenceExpression {
     val referringPropertyNavigation: NavigationExpression
 
     /**
+     * the navigation to the property that becomes the reference: referringPropertyNavigation without its trailing method calls.
+     * The value looked up is that of the whole referringPropertyNavigation
+     * (e.g. 'property name.removeSurrounding("'") refers-to T': the value of name, without surrounding quotes, is looked up, and 'name' becomes the reference)
+     */
+    val referringPropertyPath: NavigationExpression
+
+    /**
      * type of the asm element referred to
      */
     val refersToTypeName: List<PossiblyQualifiedName>

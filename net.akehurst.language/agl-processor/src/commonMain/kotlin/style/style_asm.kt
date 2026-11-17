@@ -85,7 +85,15 @@ class AglStyleSetDefault(
     override val options: OptionHolder = OptionHolderDefault(null,emptyMap())
 ) : StyleSet, DefinitionAbstract<StyleSet>() {
 
+    override val importTypes: List<Import> = mutableListOf()
+
     override val rules: List<AglStyleRule> = mutableListOf()
+
+    override fun addImportType(value: Import) {
+        if (this.importTypes.contains(value).not()) {
+            (this.importTypes as MutableList).add(value)
+        }
+    }
 
     override val metaRules: List<AglStyleMetaRule> get() = rules.filterIsInstance<AglStyleMetaRule>()
     override val tagRules: List<AglStyleTagRule> get() = rules.filterIsInstance<AglStyleTagRule>()
@@ -105,6 +113,13 @@ class AglStyleSetDefault(
         }
         sb.append("styles ${name.value}$extends {\n")
         val newIndent = indent.inc
+        if (importTypes.isNotEmpty()) {
+            val importStr = importTypes
+                .sortedBy { it.value }
+                .joinToString(separator = "\n") { "${newIndent}import-types ${it.value}" }
+            sb.append(importStr)
+            sb.append("\n")
+        }
         val rules = rules // do not sort, order matters
             .joinToString(separator = "\n") { "$newIndent${it.asString(newIndent)}" }
         sb.append(rules)

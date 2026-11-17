@@ -45,7 +45,9 @@ class ScopeCreator(
     val locationMap: LocationMap,
     val issues: IssueHolder,
     /** further names of an element ('identify T by a | b': the values of b ...), it is added to the scope under each of them too */
-    val otherIdentifyingValuesInFor: (inTypeName: QualifiedName, item: AsmStructure) -> List<Any> = { _, _ -> emptyList() }
+    val otherIdentifyingValuesInFor: (inTypeName: QualifiedName, item: AsmStructure) -> List<Any> = { _, _ -> emptyList() },
+    /** called for each name an element is added to a scope under, i.e. the element is declared with that name */
+    val onDeclared: (item: AsmStructure, referableName: String) -> Unit = { _, _ -> }
 ) : AsmTreeWalker {
 
     companion object {
@@ -255,6 +257,7 @@ class ScopeCreator(
 
     /** isFurtherName: 'referableName' is not the first name of 'el' ('identify T by a | b'), so it does not give the element's semantic path */
     private fun addToScopeAs(scope: Scope, el: AsmStructure, referableName: String, isFurtherName: Boolean = false) {
+        onDeclared.invoke(el, referableName)
         val scopeItem = context.createScopedItem.invoke(scope.scopePath + referableName, el, this.locationMap[el])
         // items of other sentences with the same name: the context holds the root scope of each sentence, so only items of a root scope can clash;
         // an item of a nested scope (e.g. 'a.x') is not a duplicate of a top-level item of another sentence ('x')

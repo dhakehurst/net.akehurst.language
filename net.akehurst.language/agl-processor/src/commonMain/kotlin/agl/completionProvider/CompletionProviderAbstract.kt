@@ -312,7 +312,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                 val refersTo = crossReferenceDomain.referencesFor(typesDomain, owner)
                     .flatMap { it.candidates }
                     .filterIsInstance<ReferenceExpressionProperty>()
-                    .filter { it.referringPropertyNavigation.asString() == propertyName }
+                    .filter { it.referringPropertyPath.asString() == propertyName }
                     .flatMap { it.refersToTypeName }
                     // a reference given in an enclosing type (e.g. 'property tableRef.ref' or in a 'forall'),
                     // recorded for the type that owns the last property of the navigation

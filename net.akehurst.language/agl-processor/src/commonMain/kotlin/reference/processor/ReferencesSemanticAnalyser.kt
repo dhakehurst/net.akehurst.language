@@ -347,7 +347,7 @@ class ReferencesSemanticAnalyser(
     private fun checkPropertyOnce(ref: ReferenceDefinitionDefault, list: List<ReferenceExpression>, where: String) {
         list.filterIsInstance<ReferenceExpressionPropertyDefault>()
             .filter { it.whenOptionIndex <= 0 } // one per line or per 'when { }' block
-            .groupBy { it.referringPropertyNavigation.asString() }
+            .groupBy { it.referringPropertyPath.asString() }
             .filter { it.value.size > 1 }
             .forEach { (prop, lines) ->
                 raiseError(
@@ -476,7 +476,7 @@ class ReferencesSemanticAnalyser(
             }
         }
 
-        val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyNavigation, contextType.type())
+        val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyPath, contextType.type())
         when (prop) {
             null -> {
                 raiseError(
