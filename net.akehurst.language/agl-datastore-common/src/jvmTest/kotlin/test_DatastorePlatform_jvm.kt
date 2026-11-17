@@ -1,4 +1,6 @@
-package net.akehurst.datastore.api
+package net.akehurst.datastore.common
+
+import net.akehurst.datastore.api.DatastorePlatform
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
