@@ -27,7 +27,9 @@ import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.MethodCall
 import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.expressions.asm.NavigationExpressionDefault
 import net.akehurst.language.reference.api.*
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
@@ -337,6 +339,14 @@ data class ReferenceExpressionPropertyDefault(
     override val fromElseNavigation: NavigationExpression? = null,
     override val fromInherited: Boolean = false
 ) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
+
+    override val referringPropertyPath: NavigationExpression by lazy {
+        val keep = referringPropertyNavigation.parts.dropLastWhile { it is MethodCall }
+        when (keep.size) {
+            referringPropertyNavigation.parts.size -> referringPropertyNavigation
+            else -> NavigationExpressionDefault(referringPropertyNavigation.start, keep)
+        }
+    }
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()

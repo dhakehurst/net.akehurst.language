@@ -456,7 +456,7 @@ class ReferencesSemanticAnalyser(
             }
         }
 
-        val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyNavigation, contextType.type())
+        val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyPath, contextType.type())
         when (prop) {
             null -> {
                 raiseError(

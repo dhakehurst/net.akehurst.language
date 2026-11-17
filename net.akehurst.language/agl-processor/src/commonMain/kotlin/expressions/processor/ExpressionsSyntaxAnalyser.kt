@@ -166,8 +166,14 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         0 -> LiteralExpressionDefault(StdLibDefault.Boolean.qualifiedTypeName, (children[0] as String).toBoolean())
         1 -> LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, (children[0] as String).toLong())
         2 -> LiteralExpressionDefault(StdLibDefault.Real.qualifiedTypeName, (children[0] as String).toDouble())
-        3 -> LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName, (children[0] as String).trim('\''))
+        3 -> LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName, unquoteString(children[0] as String))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'literal'")
+    }
+
+    /** the text of a STRING literal without its surrounding quotes, with the escapes \' and \\ replaced (trim('\'') also removed quotes that belong to the text, e.g. in '\'') */
+    private fun unquoteString(text: String): String = when {
+        text.length >= 2 && text.startsWith('\'') && text.endsWith('\'') -> text.substring(1, text.length - 1).replace("\\'", "'").replace("\\\\", "\\")
+        else -> text
     }
 
     // navigation = navigationRoot navigationPartList ;
