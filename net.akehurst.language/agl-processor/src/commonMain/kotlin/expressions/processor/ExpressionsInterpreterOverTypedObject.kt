@@ -72,7 +72,7 @@ open class ExpressionsInterpreterOverTypedObject(
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
         is FunctionCall -> this.evaluateFunctionCall(evc, expression)
         is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
-        is OnExpression -> TODO()
+        is OnExpression -> this.evaluateOn(evc, expression)
         is NavigationExpression -> this.evaluateNavigation(evc, expression)
         is LambdaExpression -> this.evaluateLambda(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)
@@ -624,6 +624,13 @@ open class ExpressionsInterpreterOverTypedObject(
         }
         val tuple = objectGraph.createTupleValue(props)
         return tuple
+    }
+
+    /** evaluate the expression, then set the properties of the resulting object, result is that (same) object */
+    private fun evaluateOn(evc: EvaluationContext, expression: OnExpression): TypedObject {
+        return evaluateExpression(evc, expression.expression).also { self ->
+            propertyAssignmentBlock(evc, self, expression.propertyAssignments)
+        }
     }
 
     private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {

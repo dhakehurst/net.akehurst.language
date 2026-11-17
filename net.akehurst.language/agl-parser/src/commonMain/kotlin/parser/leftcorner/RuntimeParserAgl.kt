@@ -420,12 +420,15 @@ internal class RuntimeParserAgl(
                 val rt: LookaheadSetPart = runtimeLhs.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                 //possibleEndOfText.flatMap { eot ->
                 //    runtimeLhs.map { rt ->
-                val lh = when (acceptEOT) {
-                    true -> lh1.union(LookaheadSetPart.EOT)
-                    false -> lh1
+                // acceptEOT: also accept the real end of the text (e.g. the position given to expectedAt).
+                // EOT is not added to the guard before resolving, because in an embedded (or skip) parser
+                // EOT resolves to the lookahead of the outer parser, which would make every transition valid there.
+                val atEnd = acceptEOT && this.graph.scanner.isEnd(sentence, position)
+                val lookingAt: Boolean = atEnd || this.graph.isLookingAt(lh1, eot, rt, position)
+                val resolved = when (atEnd) {
+                    true -> lh1.resolve(eot, rt).union(LookaheadSetPart.EOT)
+                    false -> lh1.resolve(eot, rt)
                 }
-                val lookingAt: Boolean = this.graph.isLookingAt(lh, eot, rt, position)
-                val resolved = lh.resolve(eot, rt)
                 Pair(lookingAt, resolved)
                 //     }
                 // }
@@ -657,7 +660,14 @@ internal class RuntimeParserAgl(
                         else -> error("Internal Error: should never happen - transition is: ${it}")
                     }
                 }
-                resolvePrecedenceByToken(transWithValidLookahead, runtimeContext, possibleEndOfText, parseArgs)
+                when {
+                    // at the end of the text (e.g. the position given to expectedAt) every continuation is still possible,
+                    // so preference rules (which choose by the next token) must not drop any
+                    parseArgs.allowEOTAfterSkip && this.graph.scanner.isEnd(sentence, runtimeContext.head.nextInputPositionAfterSkip) ->
+                        transWithValidLookahead.map { it.first }
+
+                    else -> resolvePrecedenceByToken(transWithValidLookahead, runtimeContext, possibleEndOfText, parseArgs)
+                }
             }
 
             else -> transitions
@@ -1015,9 +1025,11 @@ internal class RuntimeParserAgl(
                     val (skipData, skipFailed) = parseSkipIfAny(head.nextInputPositionAfterSkip, l.nextInputPosition, runtimeLhs, lh, possibleEndOfText, parseArgs)
                     if (skipFailed.not() || l.isEmptyMatch) { //TODO: check for isEmptyMatch feels like a hack!
                         val nextInputPositionAfterSkip = skipData?.root?.nextInputNoSkip ?: l.nextInputPosition
-                        val hasLh = possibleEndOfText.any { eot ->
+                        // allowEOTAfterSkip: accept the real end of the text, see matchedLookahead
+                        val atEnd = parseArgs.allowEOTAfterSkip && this.graph.scanner.isEnd(sentence, nextInputPositionAfterSkip)
+                        val hasLh = atEnd || possibleEndOfText.any { eot ->
                             runtimeLhs.any { rt ->
-                                this.graph.isLookingAt(lh, eot, rt, nextInputPositionAfterSkip)
+                                this.graph.isLookingAt(lh1, eot, rt, nextInputPositionAfterSkip)
                             }
                         }
                         if (parseArgs.noLookahead || hasLh) {
@@ -1056,11 +1068,9 @@ internal class RuntimeParserAgl(
                 val lhWithMatch = transition.lookaheadGuard.flatMap { lh ->
                     possibleEndOfText.flatMap { eot ->
                         runtimeLhs.mapNotNull { rt ->
-                            val lhg = when (parseArgs.allowEOTAfterSkip) {
-                                true -> lh.guardLookaheadSet.union(this.stateSet, LookaheadSet.EOT)
-                                false -> lh.guardLookaheadSet
-                            }
-                            val b = this.graph.isLookingAt(lhg, eot, rt, head.nextInputPositionAfterSkip) //TODO: if(transition.lookaheadGuard.includesUP) {
+                            // allowEOTAfterSkip: accept the real end of the text, see matchedLookahead
+                            val atEnd = parseArgs.allowEOTAfterSkip && this.graph.scanner.isEnd(sentence, head.nextInputPositionAfterSkip)
+                            val b = atEnd || this.graph.isLookingAt(lh.guardLookaheadSet, eot, rt, head.nextInputPositionAfterSkip) //TODO: if(transition.lookaheadGuard.includesUP) {
                             if (b) Triple(eot, rt, lh.upLookaheadSet) else null
                         }
                     }

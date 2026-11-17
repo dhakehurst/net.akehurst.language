@@ -40,6 +40,7 @@ class test_AsmTransformCompletionProvider {
         """
         val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
         val types = typesDomain("Test", true) { }
+        val typesWithT = typesDomain("Test", true) { namespace("test") { data("T1") } }
 
         fun test(sentence: String, expected: List<CompletionItem>, withContext: Boolean = true) {
             val actual = aglProc.expectedItemsAt(sentence, sentence.length, Agl.options {
@@ -66,5 +67,28 @@ class test_AsmTransformCompletionProvider {
     fun no_context() {
         val sentence = "namespace test\n  asm-transform Test {\n    "
         test(sentence, listOf(), false)
+    }
+
+    @Test
+    fun grammarRuleName_after_modifyRule() {
+        // the modify rule ends with an embedded Expressions::expression whose grammar has a preference rule
+        val sentence = "namespace test\n  asm-transform Test {\n    S : { S -> b := child[1] }\n    "
+        test(sentence, listOf(
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "B"),
+        ))
+    }
+
+    @Test
+    fun typeName_in_modifyRule() {
+        val sentence = "namespace test\n  asm-transform Test {\n    S : { "
+        val actual = aglProc.expectedItemsAt(sentence, sentence.length, Agl.options {
+            completionProvider {
+                sentenceContext(contextFromGrammarAndTypesDomain(grammar, typesWithT))
+            }
+        })
+        assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
+        val refs = actual.items.filter { it.kind == CompletionItemKind.REFERRED && it.label == "TypeDefinition" }
+        assertTrue(refs.any { it.text == "T1" }, actual.items.joinToString("\n"))
     }
 }
