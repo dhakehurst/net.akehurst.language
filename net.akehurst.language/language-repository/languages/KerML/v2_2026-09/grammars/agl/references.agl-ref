@@ -240,7 +240,6 @@ namespace net.akehurst.language.kerML.KerMLv1_1
         inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Transfers.flowTransfersBefore
     }
-    scope net.akehurst.language.kerML.Types.Type { }
     scope net.akehurst.language.kerML.Types.MultiplicityRange { }
     scope net.akehurst.language.kerML.Features.MultiplicitySubset { }
 

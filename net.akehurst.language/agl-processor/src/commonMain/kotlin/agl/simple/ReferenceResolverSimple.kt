@@ -249,7 +249,7 @@ class ReferenceResolverSimple(
         }
         if (null != fromNav && !isFromPrevious && null == fromScope) return // issue already raised
         val fromScopes = when {
-            null != fromScope && refExpr.fromInherited -> inheritedScopesOf(fromScope)
+            null != fromScope && refExpr.fromInherited -> inheritedScopesInSentenceOrderOf(fromScope)
             else -> null
         }
         val scope = when {
@@ -320,9 +320,10 @@ class ReferenceResolverSimple(
             }
             // Use context (not scope) because the reference could have been created from a different sentence
             null == fromScopes -> resolveQualifiedNameInAll(scope.scopePath, qName, scope.rootScope)
-            // 'from inherited E' (E has the scope 'scope'): the members of each inherited scope in turn (as seen from a subtype), the first that gives a result is used;
+            // 'from inherited E' (E has the scope 'scope'): each inherited scope in turn (in the order the inheriting elements are in the sentence),
+            // the lookup starts in that scope and goes outwards from it, the first that gives a result is used;
             // if none does, the normal lookup outwards from E, starting in the scope that E is in (so not in E's own members)
-            else -> fromScopes.firstNotNullOfOrNull { st -> resolveInheritedMembersOf(st, qName).ifEmpty { null } } ?: when {
+            else -> fromScopes.firstNotNullOfOrNull { st -> resolveQualifiedNameInAll(st.scopePath, qName, st.rootScope).ifEmpty { null } } ?: when {
                 scope.scopePath.isEmpty() -> emptyList()
                 else -> resolveQualifiedNameInAll(scope.scopePath.dropLast(1), qName, scope.rootScope)
             }
@@ -701,6 +702,21 @@ class ReferenceResolverSimple(
         val inherits = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName).filter { it.kind == ScopeImportKind.INHERIT }
         return inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) -> srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.mapNotNull { scopeOfElement(it) } } +
                 inherits.filter { null != it.named }.flatMap { si -> namedTargetsOf(si, ownerEl).mapNotNull { scopeOfAnyElement(it) } }
+    }
+
+    /**
+     * the scopes that scope 's' inherits, as inheritedScopesOf, but those from 'inherit forall ...' ordered by the position in the sentence of the element
+     * that gives them (e.g. 'f redefines a : B' : first the scope of 'a', then that of 'B', whatever the order of the inherit rules); then those from 'inherit named ...'
+     */
+    private fun inheritedScopesInSentenceOrderOf(s: Scope): List<Scope> {
+        val ownerEl = ownerElementOf(s) ?: return emptyList()
+        val inherits = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName).filter { it.kind == ScopeImportKind.INHERIT }
+        val fromForall = inheritForallSources(inherits, ownerEl)
+            .flatMap { (si, srcs, resolveNow) -> srcs.map { src -> Pair(src, targetsOf(si, src, s, resolveNow).mapNotNull { scopeOfElement(it) }) } }
+            .sortedBy { (src, _) -> _locationMap[src]?.position ?: Int.MAX_VALUE } // stable, so without a position the rule order is kept
+            .flatMap { it.second }
+        val fromNamed = inherits.filter { null != it.named }.flatMap { si -> namedTargetsOf(si, ownerEl).mapNotNull { scopeOfAnyElement(it) } }
+        return (fromForall + fromNamed).distinct()
     }
 
     /**

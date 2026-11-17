@@ -42,6 +42,7 @@ import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
+import net.akehurst.language.types.api.PropertyCharacteristic.*
 
 /**
  * The AGL completion language: customises the completion items offered for a language.
@@ -53,11 +54,14 @@ import net.akehurst.language.types.builder.typesDomain
  *     CompletionItem() { label := 'Select statement' text := 'SELECT <columns> FROM <table-id>;' description := 'query rows of a table' }
  *   ]
  *   SELECT -> decorate { description := 'select or SELECT' }
+ *   ';' -> decorate { label := 'end of ' + $rules.first }
+ *   '(' -> add [ CompletionItem() { label := 'group' text := '( <expression> )' } ]
  *   COMMENT -> hide
  *   in select columns -> depth 2
  * }
  * ```
  * A rule applies where the named grammar rule (or leaf) is expected next, and with `in <rule>` only inside that rule (at any level).
+ * Instead of a rule name, a quoted literal (e.g. `'{'`) applies to every expected literal with that text.
  * The actions are
  * - `add [ items ]` add the items to the generated ones
  * - `replace [ items ]` leave out the generated items for the rule and add the items
@@ -65,8 +69,12 @@ import net.akehurst.language.types.builder.typesDomain
  * - `decorate { label := .. text := .. description := .. }` change the generated items for the rule
  * - `depth n` expand the rule to n levels of rule references
  *
- * An item is `CompletionItem() { kind := '..' label := '..' text := '..' description := '..' }`,
- * kind is one of LITERAL, PATTERN, SEGMENT (default), REFERRED. Currently the values must be literal strings.
+ * An item is `CompletionItem() { kind := '..' label := .. text := .. description := .. }`,
+ * kind is one of LITERAL, PATTERN, SEGMENT (default), REFERRED, given as a literal string.
+ * The other values are expressions that give a String, evaluated each time items are provided. In them
+ * - `$expected` is the rule name (or the literal text) of the completion rule,
+ * - `$rules` is the list of the names of the rules that enclose the position, innermost first,
+ * - in `decorate`, `$self` is the generated item (with kind, label, text, description).
  */
 object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceContext>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
@@ -82,7 +90,8 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
         grammar $NAME : ${AglExpressions.NAME} {
             override definition = completion ;
             completion = 'completion' IDENTIFIER '{' option* completionRule* '}' ;
-            completionRule = context? IDENTIFIER '->' completionAction ;
+            completionRule = context? forItem '->' completionAction ;
+            forItem = IDENTIFIER | STRING ;
             context = 'in' IDENTIFIER ;
             completionAction = add | replace | hide | decorate | depth ;
             add = 'add' itemList ;
@@ -110,8 +119,13 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace $NAMESPACE_NAME
-            // TODO
+        namespace $NAMESPACE_NAME.completion.api
+          references {
+            in CompletionRule {
+              property forItem refers-to GrammarRule
+              property context refers-to GrammarRule
+            }
+          }
     """.trimIndent()
 
     override val styleString: String = """
@@ -146,7 +160,11 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
                         lit("}")
                     }
                     concatenation("completionRule") {
-                        opt { ref("context") }; ref("IDENTIFIER"); lit("->"); ref("completionAction")
+                        opt { ref("context") }; ref("forItem"); lit("->"); ref("completionAction")
+                    }
+                    choice("forItem") {
+                        ref("IDENTIFIER")
+                        ref("STRING")
                     }
                     concatenation("context") { lit("in"); ref("IDENTIFIER") }
                     choice("completionAction") {
@@ -170,7 +188,15 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
     }
 
     override val typesDomain: TypesDomain by lazy {
-        typesDomain(NAME, true, AglBase.typesDomain.namespace) { }
+        typesDomain(NAME, true, AglBase.typesDomain.namespace) {
+            //TODO: the other types of the completion domain, currently only what completion (of completion definitions) needs
+            namespace("net.akehurst.language.completion.api", listOf("std", "net.akehurst.language.base.api")) {
+                interface_("CompletionRule") {
+                    propertyOf(setOf(VAL, REF, STR), "context", "String", true)
+                    propertyOf(setOf(VAL, REF, STR), "forItem", "String", false)
+                }
+            }
+        }
     }
 
     override val asmTransformDomain: AsmTransformDomain by lazy {
@@ -181,7 +207,14 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
         ) {
             namespace(NAMESPACE_NAME) {
                 ruleSet(NAME) {
-                    //TODO
+                    //TODO: the other rules, currently only what completion (of completion definitions) needs
+                    importTypes("net.akehurst.language.completion.api")
+                    createObject("completionRule", "CompletionRule") {
+                        /* custom SyntaxAnalyser, the assignments say which property the leaves give a value to (used for completion) */
+                        assignment("context", 0, "child[0]")
+                        assignment("forItem", 1, "child[1]")
+                    }
+                    transRule("context", "String", "child[1]")
                 }
             }
         }
@@ -189,7 +222,13 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            // GrammarRule is the type of the rules in a context from a grammar (contextFromGrammar)
+            declarationsFor("net.akehurst.language.completion.api") {
+                reference("CompletionRule") {
+                    property("forItem", listOf("GrammarRule"), null)
+                    property("context", listOf("GrammarRule"), null)
+                }
+            }
         }
     }
 

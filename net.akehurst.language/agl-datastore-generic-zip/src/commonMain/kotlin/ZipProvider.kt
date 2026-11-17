@@ -3,6 +3,7 @@ package net.akehurst.datastore.generic.zip
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DatastorePlatform
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.common.datastoreProviderSchema
@@ -103,6 +104,9 @@ open class ZipProvider : DatastoreProvider {
     }
 
     /** override to provide a custom datastore, e.g. a subclass that overrides provenanceFor */
+    /** common code only, so every platform */
+    override val supportedPlatforms: Set<DatastorePlatform> = DatastorePlatform.ALL
+
     override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore =
         ZipDatastore(datastoreIdentity, configuration)
 
