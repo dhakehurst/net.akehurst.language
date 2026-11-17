@@ -71,8 +71,7 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
-            }
+            namespace test.Test
         """
         val sentence = "a"
         val context: SentenceContext? = null
