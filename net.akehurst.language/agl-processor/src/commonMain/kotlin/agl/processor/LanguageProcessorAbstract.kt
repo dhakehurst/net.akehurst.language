@@ -74,6 +74,17 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val allIssues = IssueHolder(LanguageProcessorPhase.ALL)
 
+    /**
+     * the errors in the definitions of the language (types, transform, references, format, completion), found when they are created (lazily).
+     * They are also given in the result of every 'process', so that they are seen. Not cleared by 'clear', as the definitions are not created again.
+     */
+    private val _definitionErrors = IssueHolder(LanguageProcessorPhase.ALL)
+
+    private fun addDefinitionIssues(definition: String, issues: IssueCollection<LanguageIssue>) {
+        this.allIssues.addAllFrom(issues)
+        issues.errors.forEach { _definitionErrors.addAll(listOf(it.copy(message = "In the $definition of the language: ${it.message}"))) }
+    }
+
     // parses run in parallel, but the syntax and semantic analysers are shared (and keep state), so analysis is done one at a time
     private val analysisLock = ReentrantLockCommon()
 
@@ -111,7 +122,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val baseTypesDomain: TypesDomain by lazy {
         val res = configuration.typesResolver?.invoke(this)
-        res?.let { this.allIssues.addAllFrom(res.allIssues) }
+        res?.let { addDefinitionIssues("types definition", res.allIssues) }
         res?.asm?.let { td -> GrammarTypesNamespaceSimple.withGrammarNamespaces(td, this.grammarDomain.allDefinitions.map { it.qualifiedName }) }
             ?: typesDomain((this.targetGrammar?.name ?: this.grammarDomain.name).value, true) {}
     }
@@ -120,7 +131,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val transformDomain: AsmTransformDomain by lazy {
         val res = configuration.transformResolver?.invoke(this)
-        res?.let { this.allIssues.addAllFrom(res.allIssues) }
+        res?.let { addDefinitionIssues("transform definition", res.allIssues) }
         res?.asm
             ?: AsmTransformDomainDefault.fromGrammarDomain(this.grammarDomain, this.baseTypesDomain).asm
             ?: error("should not happen")
@@ -133,7 +144,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         val res = configuration.crossReferenceResolver?.invoke(this)
-        res?.let { this.allIssues.addAllFrom(res.allIssues) }
+        res?.let { addDefinitionIssues("references definition", res.allIssues) }
         res?.asm ?: CrossReferenceDomainDefault(this.targetGrammar?.name ?: grammarDomain.name)
     }
 
@@ -151,13 +162,13 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val formatDomain: AglFormatDomain? by lazy {
         val res = configuration.formatResolver?.invoke(this)
-        res?.let { this.allIssues.addAllFrom(res.allIssues) }
+        res?.let { addDefinitionIssues("format definition", res.allIssues) }
         res?.asm
     }
 
     override val completionDomain: AglCompletionDomain? by lazy {
         val res = configuration.completionResolver?.invoke(this)
-        res?.let { this.allIssues.addAllFrom(res.allIssues) }
+        res?.let { addDefinitionIssues("completion definition", res.allIssues) }
         res?.asm
     }
 
@@ -259,7 +270,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val opts = defaultOptions(options)
         val sa = this.syntaxAnalyser
         val issues = IssueHolder()
-        return when {
+        val result = when {
             opts.syntaxAnalysis.enabled && opts.syntaxAnalysis.streaming -> when (sa) {
                 is SyntaxAnalyserFromAsmTransformAbstract<*, *> -> {
                     @Suppress("UNCHECKED_CAST")
@@ -274,6 +285,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
             else -> processTree(sentence, opts, issues)
         }
+        // errors in the language definitions (e.g. the references, created while processing) are part of every result
+        issues.addAll(_definitionErrors)
+        return result
     }
 
     private fun processTree(sentence: String, opts: ProcessOptions<AsmType, ContextType>, issues: IssueHolder): ProcessResult<AsmType> {

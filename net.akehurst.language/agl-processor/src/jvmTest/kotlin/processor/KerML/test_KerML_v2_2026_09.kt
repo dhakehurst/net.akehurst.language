@@ -187,6 +187,13 @@ class test_KerML_v2_2026_09_agl_references {
 
     private val processor = KerML_v2_2026_09.processorWithReferences()
 
+    /** the references definition is checked when the processor first uses it; it must have no errors (they are also in every process result) */
+    @Test
+    fun references_definition_has_no_errors() {
+        processor.crossReferenceDomain
+        assertEquals(emptyList(), processor.allIssues.errors.map { it.message })
+    }
+
     @Test
     fun process_library() {
         val ctx = net.akehurst.language.agl.simple.contextAsmSimple()
