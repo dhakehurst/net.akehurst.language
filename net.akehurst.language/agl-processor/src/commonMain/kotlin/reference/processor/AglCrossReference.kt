@@ -146,8 +146,27 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace ${NAMESPACE_NAME}
-           // TODO
+        namespace ${NAMESPACE_NAME}.reference.asm
+          references {
+            in ScopeDefinitionDefault {
+              property scopeForTypeName refers-to TypeDefinition
+            }
+            in IdentifiableDefault {
+              property typeName refers-to TypeDefinition
+            }
+            in ScopeImportDefault {
+              property ofType refers-to TypeDefinition
+            }
+            in ReferenceDefinitionDefault {
+              property inTypeName refers-to TypeDefinition
+            }
+            in ReferenceExpressionPropertyDefault {
+              property refersToTypeName refers-to TypeDefinition
+            }
+            in ReferenceExpressionCollectionDefault {
+              property ofType refers-to TypeDefinition
+            }
+          }
     """.trimIndent()
 
     override val styleString = """
@@ -453,6 +472,10 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("ReferenceExpression")
                     }
                 }
+                //TODO: the other properties of ScopeImportDefault, currently only what completion (of references definitions) needs
+                data("ScopeImportDefault") {
+                    propertyOf(setOf(VAL, CMP, STR), "ofType", "PossiblyQualifiedName", true)
+                }
                 data("IdentifiableDefault") {
                     supertype("Identifiable")
                     constructor_ {
@@ -516,7 +539,21 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
         asmTransform(name = NAME, typesDomain = typesDomain, createTypes = false) {
             namespace(qualifiedName = NAMESPACE_NAME) {
                 ruleSet(NAME) {
-                    //TODO
+                    //TODO: the other rules, currently only what completion (of references definitions) needs:
+                    // the assignments say which property the type names give a value to
+                    importTypes("net.akehurst.language.base.api", "net.akehurst.language.reference.asm")
+                    createObject("scope", "ScopeDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("scopeForTypeName", 1, "child[1]") }
+                    createObject("identifiable", "IdentifiableDefault") { /* custom SyntaxAnalyser */ assignment("typeName", 1, "child[1]") }
+                    createObject("importDefinition", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 3, "child[3]") }
+                    createObject("inheritDefinition", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 3, "child[3]") }
+                    createObject("importIntoScope", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 1, "child[1]") }
+                    createObject("referenceDefinition", "ReferenceDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("inTypeName", 1, "child[1]") }
+                    createObject("propertyReferenceExpression", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
+                    createObject("collectionReferenceExpression", "ReferenceExpressionCollectionDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 2, "child[2]") }
+                    transRule("ofType", "PossiblyQualifiedName", "child[1]")
+                    transToListOf("typeReferences", "PossiblyQualifiedName", "children")
+                    transRule("possiblyQualifiedTypeReference", "PossiblyQualifiedName", "child[0]")
+                    transRule("possiblyQualifiedName", "PossiblyQualifiedName", "children")
                 }
             }
         }
@@ -524,7 +561,15 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
 
     override val crossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            // TypeDefinition is the type of the types in a context from a types domain (contextFromTypesDomain)
+            declarationsFor("${NAMESPACE_NAME}.reference.asm") {
+                reference("ScopeDefinitionDefault") { property("scopeForTypeName", listOf("TypeDefinition"), null) }
+                reference("IdentifiableDefault") { property("typeName", listOf("TypeDefinition"), null) }
+                reference("ScopeImportDefault") { property("ofType", listOf("TypeDefinition"), null) }
+                reference("ReferenceDefinitionDefault") { property("inTypeName", listOf("TypeDefinition"), null) }
+                reference("ReferenceExpressionPropertyDefault") { property("refersToTypeName", listOf("TypeDefinition"), null) }
+                reference("ReferenceExpressionCollectionDefault") { property("ofType", listOf("TypeDefinition"), null) }
+            }
         }
     }
 

@@ -214,6 +214,7 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
                         assignment("context", 0, "child[0]")
                         assignment("forItem", 1, "child[1]")
                     }
+                    transRule("forItem", "String", "child[0]")
                     transRule("context", "String", "child[1]")
                 }
             }

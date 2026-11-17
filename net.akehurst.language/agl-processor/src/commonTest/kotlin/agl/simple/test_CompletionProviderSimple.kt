@@ -41,6 +41,7 @@ class test_CompletionProviderSimple {
             val context: SentenceContext? = contextAsmSimple(),
             val sentence: String,
             val position: Int,
+            val depth: Int? = null,
             val expected: List<CompletionItem>
         )
 
@@ -58,6 +59,7 @@ class test_CompletionProviderSimple {
             val actual = proc.expectedItemsAt(data.sentence, data.position, Agl.options {
                 completionProvider {
                     sentenceContext(data.context)
+                    data.depth?.let { depth(it) }
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
@@ -163,6 +165,34 @@ class test_CompletionProviderSimple {
                 grammarStr = grammarStr,
                 sentence = sentence,
                 position = sentence.length,
+                expected = expected
+            )
+        )
+    }
+
+    @Test
+    fun embedded_expanded_with_depth() {
+        val grammarStr = """
+            namespace test
+            grammar Inner {
+                S = 'a' 'b' ;
+            }
+            grammar Test {
+                S = 'x' Inner::S ;
+            }
+        """
+        val sentence = ""
+        // the embedded rule is expanded like any other rule (q41)
+        val expected = listOf(
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "S", text = "x a b"),
+            CompletionItem(CompletionItemKind.LITERAL, "'x'", "x")
+        )
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = sentence.length,
+                depth = 2,
                 expected = expected
             )
         )

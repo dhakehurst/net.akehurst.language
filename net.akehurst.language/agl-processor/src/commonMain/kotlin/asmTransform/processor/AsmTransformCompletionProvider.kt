@@ -18,9 +18,29 @@
 package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
+import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionProviderOptions
+import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 
+/**
+ * The default items, where a grammar rule name is expected (the rule a transform rule is for)
+ * the rules in the sentence context (contextFromGrammarAndTypesDomain), from the references definition of AsmTransform.
+ */
 class AsmTransformCompletionProvider : CompletionProviderAbstract<AsmTransformDomain, SentenceContext>() {
-    //TODO
+
+    companion object {
+        private val transformRuleSet by lazy {
+            AsmTransform.asmTransformDomain.findDefinitionByQualifiedNameOrNull(AsmTransform.defaultTargetGrammar.qualifiedName)
+                ?: error("Internal error: transform rule set for '${AsmTransform.defaultTargetGrammar.qualifiedName}' not found")
+        }
+    }
+
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
+        val items = nextExpected.flatMap { spine ->
+            provideDefaultWithReferencesForSpine(spine, options, options.sentenceContext, transformRuleSet, AsmTransform.typesDomain, AsmTransform.crossReferenceDomain)
+        }
+        return defaultSortAndFilter(items)
+    }
 }

@@ -24,7 +24,12 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.base.api.Domain
 import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.scope.api.ItemInScope
+import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.reference.api.CrossReferenceDomain
@@ -154,6 +159,83 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
         }
 
         /**
+         * the namespace the completion position is in, the namespaces it imports, and where an import is inserted
+         */
+        data class VisibleNamespaces(
+            val own: String,
+            val imports: List<String>,
+            /** position to insert an import, null if not known */
+            val importPosition: Int?
+        ) {
+            val all: Set<String> get() = setOf(own) + imports
+        }
+
+        /**
+         * the [VisibleNamespaces] from the ASM of the sentence (when it is a [Domain]): its last namespace (the one that holds the completion position).
+         * An import is inserted after the last import of that namespace, else after its name.
+         */
+        fun visibleNamespacesOf(sentenceAsm: Any?, sentenceLocationMap: LocationMap?): VisibleNamespaces? {
+            val ns = (sentenceAsm as? Domain<*, *>)?.namespace?.lastOrNull() ?: return null
+            val lastImport = ns.import.lastOrNull()
+            val loc = when {
+                null == sentenceLocationMap -> null
+                null != lastImport -> sentenceLocationMap[lastImport]
+                else -> sentenceLocationMap[ns.qualifiedName] ?: sentenceLocationMap[SimpleName(ns.qualifiedName.value)]
+            }
+            return VisibleNamespaces(ns.qualifiedName.value, ns.import.map { it.value }, loc?.let { it.position + it.length })
+        }
+
+        /**
+         * the items in the scopes of the [sentenceContext] (nested scopes too) that conform, each with the path of its scope
+         */
+        fun allItemsConformingTo(sentenceContext: SentenceContext, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<Pair<List<String>, ItemInScope>> {
+            val res = mutableListOf<Pair<List<String>, ItemInScope>>()
+            fun walk(path: List<String>, scope: Scope) {
+                scope.findItemsConformingTo(conformsToFunc).forEach { res.add(Pair(path, it)) }
+                scope.childScopes.forEach { (id, child) -> walk(path + id, child) }
+            }
+            sentenceContext.scopeForSentence.values.forEach { walk(emptyList(), it) }
+            return res
+        }
+
+        /**
+         * the item offered for a referred to element found at [path] (CR1, David 2026-11-17):
+         * - an element in the root scope: its name
+         * - otherwise (e.g. a type, the path is its namespace) the simple name, with the qualified name as the description;
+         *   if its namespace is not visible, the simple name and an additional edit that inserts the import;
+         *   the qualified name if the simple name clashes (another found element with the same name is visible),
+         *   or when the import position is not known
+         * - with no [visible] namespaces (no ASM of the sentence), the simple name, the qualified name if another found element has the same name
+         */
+        fun completionItemForReferred(path: List<String>, item: ItemInScope, found: List<Pair<List<String>, ItemInScope>>, visible: VisibleNamespaces?): CompletionItem {
+            val label = item.qualifiedTypeName.last.value
+            val name = item.referableName
+            return when {
+                path.isEmpty() -> CompletionItem(CompletionItemKind.REFERRED, label, name)
+                else -> {
+                    val ns = path.joinToString(".")
+                    val qualified = "$ns.$name"
+                    val sameNameNs = found.filter { (p, it) -> p.isNotEmpty() && it.referableName == name && p.joinToString(".") != ns }.map { it.first.joinToString(".") }
+                    var edits = emptyList<CompletionEdit>()
+                    val text = when {
+                        null == visible -> if (sameNameNs.isEmpty()) name else qualified
+                        sameNameNs.any { it in visible.all } -> qualified
+                        ns in visible.all -> name
+                        null == visible.importPosition -> qualified
+                        else -> {
+                            edits = listOf(CompletionEdit(visible.importPosition, "\nimport $ns"))
+                            name
+                        }
+                    }
+                    CompletionItem(CompletionItemKind.REFERRED, label, text).also {
+                        it.description = qualified
+                        it.additionalEdits = edits
+                    }
+                }
+            }
+        }
+
+        /**
          * The key used by [provideReferencesForSpine] for a leaf item expected next:
          * the name of the leaf rule, or the id of a literal terminal.
          */
@@ -172,10 +254,14 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
          *   When that rule's transform rule does not create an object (e.g. `context = 'in' IDENTIFIER` transformed to a String),
          *   the value is the value of the rule, so the assignment of the rule that holds it (for its child number) is used, and so on outwards
          *   (rules from the grammar, and rules of the spine). A rule with no transform rule stops the search.
-         * - what that property refers to comes from the [crossReferenceDomain] ('property <p> refers-to <T>')
+         * - what that property refers to comes from the [crossReferenceDomain] ('property <p> refers-to <T>'),
+         *   or, when given in an enclosing type (a navigation 'a.p', or a 'forall'), from the reference recorded for the owner of the last property
          * - an element of the context is offered when its type conforms to a referred to type (both types in the [typesDomain]),
          *   otherwise when its type name is the referred to name (a simple name matches the last part of the type name)
          * - an element is offered for a leaf only when its name matches the leaf (pattern or literal value), so it is valid there
+         *
+         * - items in nested scopes are found too (e.g. the types of a context from a types domain), the path of the scope is their namespace,
+         *   see [completionItemForReferred] for the text inserted for them (CR1)
          *
          * The key of the result is [referenceKeyFor] the leaf, only leaves with at least one item are in the result.
          */
@@ -184,10 +270,13 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             sentenceContext: SentenceContext,
             transformRuleSet: AsmTransformRuleSet,
             typesDomain: TypesDomain,
-            crossReferenceDomain: CrossReferenceDomain
+            crossReferenceDomain: CrossReferenceDomain,
+            sentenceAsm: Any? = null,
+            sentenceLocationMap: LocationMap? = null
         ): Map<String, List<CompletionItem>> {
             val result = linkedMapOf<String, MutableList<CompletionItem>>()
             val visited = mutableSetOf<GrammarRule>()
+            val visible = visibleNamespacesOf(sentenceAsm, sentenceLocationMap)
 
             fun matchesType(itemTypeName: QualifiedName, refersTo: PossiblyQualifiedName): Boolean {
                 val refType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(refersTo)
@@ -219,15 +308,19 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                 }
                 val (expr, childNumber) = found ?: return
                 val propertyName = expr.propertyAssignments.firstOrNull { it.lhsGrammarRuleIndex == childNumber }?.variable?.name ?: return
-                val refersTo = crossReferenceDomain.referencesFor(typesDomain, ownerTypeName!!)
+                val owner = ownerTypeName ?: return
+                val refersTo = crossReferenceDomain.referencesFor(typesDomain, owner)
                     .flatMap { it.candidates }
                     .filterIsInstance<ReferenceExpressionProperty>()
                     .filter { it.referringPropertyNavigation.asString() == propertyName }
                     .flatMap { it.refersToTypeName }
+                    // a reference given in an enclosing type (e.g. 'property tableRef.ref' or in a 'forall'),
+                    // recorded for the type that owns the last property of the navigation
+                    .ifEmpty { crossReferenceDomain.referenceForProperty(owner, propertyName) }
                 if (refersTo.isEmpty()) return
-                val items = sentenceContext.findItemsConformingTo { itemTypeName -> refersTo.any { matchesType(itemTypeName, it) } }
-                    .filter { matchesLeaf(it.referableName, leaf) }
-                    .map { CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName) }
+                val referred = allItemsConformingTo(sentenceContext) { itemTypeName -> refersTo.any { matchesType(itemTypeName, it) } }
+                    .filter { matchesLeaf(it.second.referableName, leaf) }
+                val items = referred.map { (scopePath, it) -> completionItemForReferred(scopePath, it, referred, visible) }
                 if (items.isNotEmpty()) result.getOrPut(leafKey) { mutableListOf() }.addAll(items)
             }
 
@@ -369,7 +462,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             return when (sentenceContext) {
                 null -> default
                 else -> {
-                    val refs = provideReferencesForSpine(spine, sentenceContext, transformRuleSet, typesDomain, crossReferenceDomain)
+                    val refs = provideReferencesForSpine(spine, sentenceContext, transformRuleSet, typesDomain, crossReferenceDomain, options.sentenceAsm, options.sentenceLocationMap)
                     // a segment that is only the placeholder of such a leaf (e.g. '<IDENTIFIER>') is left out too
                     val placeholders = refs.keys.map { "<$it>" }.toSet()
                     refs.values.flatten() + default.filter { item ->
@@ -515,7 +608,18 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     is TangibleItem -> when (item) {
                         is EmptyRule -> listOf(textFor(item, options))
                         is Terminal -> listOf(textFor(item, options))
-                        is Embedded -> listOf(textFor(item, options)) //TODO: could expand this !
+                        // expanded like a rule reference, its rule (and the rules it refers to) resolved in the embedded grammar
+                        is Embedded -> when (val ruleDepth = options.ruleDepth[item.embeddedGoalName.value] ?: curDepth) {
+                            0 -> listOf(textFor(item, options))
+                            else -> {
+                                val embeddedGrammar = item.embeddedGrammarReference.resolved
+                                val embeddedRule = embeddedGrammar?.findAllResolvedGrammarRule(item.embeddedGoalName)
+                                when {
+                                    null == embeddedGrammar || null == embeddedRule || embeddedRule.isLeaf -> listOf(textFor(item, options))
+                                    else -> expandItem(ruleDepth - 1, embeddedRule.rhs, options, embeddedGrammar).map { Expansion(it.ruleItem, it.name ?: item.embeddedGoalName.value, it.list) }
+                                }
+                            }
+                        }
                         // a depth given for the rule (options.ruleDepth) is used instead of the current depth
                         is NonTerminal -> when (val ruleDepth = options.ruleDepth[item.ruleReference.value] ?: curDepth) {
                             0 -> listOf(textFor(item, options))

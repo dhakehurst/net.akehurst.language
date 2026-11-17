@@ -445,6 +445,9 @@ internal class ParseGraph(
         return ifEqual(newReasonList)
     }
 
+    // TODO: possibly remove dynamic priority (and collecting childrenPriorities) to save time; priorities of children
+    //  can not decide well without looking at the whole tree. Kept for choice and list nodes for now (2026-11-16):
+    //  without it test_leftRecursive aa/aaa never terminate and test_n_P_Im gives nested trees, so it needs a replacement first.
     private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: ( reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         val newReasonList = reasonList+MergeReason.DYNAMIC_PRIORITY
         val extList = existingParent.dynamicPriority

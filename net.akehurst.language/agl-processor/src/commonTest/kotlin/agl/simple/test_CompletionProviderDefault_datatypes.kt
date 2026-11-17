@@ -468,9 +468,7 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             // completes the typed word 'Int', from its start
                             CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"),
-                            // 'Int' is complete, what can come next
-                            CompletionItem(CompletionItemKind.REFERRED, "Datatype", "A"),
-                            CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"),
+                            // 'Int' is complete, what can come next (no references, a property name 'ID' refers to nothing)
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <typeReference>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeArgumentList> >"),
                             CompletionItem(CompletionItemKind.LITERAL, "'<'", "<"),

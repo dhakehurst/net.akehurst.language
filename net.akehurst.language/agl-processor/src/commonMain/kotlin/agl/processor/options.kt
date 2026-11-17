@@ -84,7 +84,9 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
     override var showOptionalItems: Boolean = true,
     override var provideValuesForPatternTerminals: Boolean = false,
     override val other: Map<String, Any> = mutableMapOf(),
-    override var ruleDepth: Map<String, Int> = emptyMap()
+    override var ruleDepth: Map<String, Int> = emptyMap(),
+    override var sentenceAsm: Any? = null,
+    override var sentenceLocationMap: LocationMap? = null
 ) : CompletionProviderOptions<ContextType> {
     override fun clone() = CompletionProviderOptionsDefault<ContextType>(
         sentenceContext = this.sentenceContext,
@@ -93,7 +95,9 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
         showOptionalItems = this.showOptionalItems,
         provideValuesForPatternTerminals = this.provideValuesForPatternTerminals,
         other = other,
-        ruleDepth = this.ruleDepth
+        ruleDepth = this.ruleDepth,
+        sentenceAsm = this.sentenceAsm,
+        sentenceLocationMap = this.sentenceLocationMap
     )
 }
 
