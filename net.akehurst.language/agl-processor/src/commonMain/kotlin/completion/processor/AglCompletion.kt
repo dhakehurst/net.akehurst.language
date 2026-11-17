@@ -42,6 +42,7 @@ import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
+import net.akehurst.language.types.api.PropertyCharacteristic.*
 
 /**
  * The AGL completion language: customises the completion items offered for a language.
@@ -118,8 +119,13 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace $NAMESPACE_NAME
-            // TODO
+        namespace $NAMESPACE_NAME.completion.api
+          references {
+            in CompletionRule {
+              property forItem refers-to GrammarRule
+              property context refers-to GrammarRule
+            }
+          }
     """.trimIndent()
 
     override val styleString: String = """
@@ -182,7 +188,15 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
     }
 
     override val typesDomain: TypesDomain by lazy {
-        typesDomain(NAME, true, AglBase.typesDomain.namespace) { }
+        typesDomain(NAME, true, AglBase.typesDomain.namespace) {
+            //TODO: the other types of the completion domain, currently only what completion (of completion definitions) needs
+            namespace("net.akehurst.language.completion.api", listOf("std", "net.akehurst.language.base.api")) {
+                interface_("CompletionRule") {
+                    propertyOf(setOf(VAL, REF, STR), "context", "String", true)
+                    propertyOf(setOf(VAL, REF, STR), "forItem", "String", false)
+                }
+            }
+        }
     }
 
     override val asmTransformDomain: AsmTransformDomain by lazy {
@@ -193,7 +207,14 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
         ) {
             namespace(NAMESPACE_NAME) {
                 ruleSet(NAME) {
-                    //TODO
+                    //TODO: the other rules, currently only what completion (of completion definitions) needs
+                    importTypes("net.akehurst.language.completion.api")
+                    createObject("completionRule", "CompletionRule") {
+                        /* custom SyntaxAnalyser, the assignments say which property the leaves give a value to (used for completion) */
+                        assignment("context", 0, "child[0]")
+                        assignment("forItem", 1, "child[1]")
+                    }
+                    transRule("context", "String", "child[1]")
                 }
             }
         }
@@ -201,7 +222,13 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            // GrammarRule is the type of the rules in a context from a grammar (contextFromGrammar)
+            declarationsFor("net.akehurst.language.completion.api") {
+                reference("CompletionRule") {
+                    property("forItem", listOf("GrammarRule"), null)
+                    property("context", listOf("GrammarRule"), null)
+                }
+            }
         }
     }
 

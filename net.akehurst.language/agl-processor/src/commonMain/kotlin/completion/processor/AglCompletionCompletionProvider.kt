@@ -17,11 +17,30 @@
 package net.akehurst.language.completion.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
+import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionProviderOptions
+import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.completion.api.AglCompletionDomain
 
+/**
+ * The default items, where a grammar rule name is expected (the rule a completion rule is for, and its 'in' context)
+ * the rules of the grammar in the sentence context (e.g. contextFromGrammar), from the references definition of AglCompletion.
+ */
 class AglCompletionCompletionProvider : CompletionProviderAbstract<AglCompletionDomain, SentenceContext>() {
 
-    //TODO
+    companion object {
+        private val transformRuleSet by lazy {
+            AglCompletion.asmTransformDomain.findDefinitionByQualifiedNameOrNull(AglCompletion.defaultTargetGrammar.qualifiedName)
+                ?: error("Internal error: transform rule set for '${AglCompletion.defaultTargetGrammar.qualifiedName}' not found")
+        }
+    }
+
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
+        val items = nextExpected.flatMap { spine ->
+            provideDefaultWithReferencesForSpine(spine, options, options.sentenceContext, transformRuleSet, AglCompletion.typesDomain, AglCompletion.crossReferenceDomain)
+        }
+        return defaultSortAndFilter(items)
+    }
 
 }
