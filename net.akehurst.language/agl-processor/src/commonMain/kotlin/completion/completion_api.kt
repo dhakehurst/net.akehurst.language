@@ -21,6 +21,7 @@ import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.base.api.Definition
 import net.akehurst.language.base.api.Domain
 import net.akehurst.language.base.api.Namespace
+import net.akehurst.language.expressions.api.Expression
 
 /**
  * The definitions (written in the AGL completion language) that customise the completion items offered for a language.
@@ -45,14 +46,17 @@ interface CompletionSet : CompletionDefinition {
 }
 
 /**
- * `in <context> <forItem> -> <action>`
+ * `in <context> <forItem> -> <action>`, where forItem is a rule name or a literal, e.g. `'{'`
  */
 interface CompletionRule {
     /** name of a rule that must enclose the position (at any level), null if the rule applies anywhere */
     val context: String?
 
-    /** name of the grammar rule (or leaf) that is expected next */
+    /** name of the grammar rule (or leaf) that is expected next, or the text of the literal when [forLiteral] */
     val forItem: String
+
+    /** true when [forItem] is a literal (quoted in the completion language): the rule is for every expected literal with that text */
+    val forLiteral: Boolean
 
     val action: CompletionAction
 }
@@ -72,11 +76,15 @@ interface CompletionActionReplace : CompletionAction {
 /** leave out the generated items for the rule */
 interface CompletionActionHide : CompletionAction
 
-/** change the generated items for the rule, a null value keeps the generated value */
+/**
+ * change the generated items for the rule, a null value keeps the generated value.
+ * The values are expressions, see [CompletionItemDefinition].
+ * In them `$self` is the generated item (kind, label, text, description), and `$expected` and `$rules` are as for an item.
+ */
 interface CompletionActionDecorate : CompletionAction {
-    val label: String?
-    val text: String?
-    val description: String?
+    val label: Expression?
+    val text: Expression?
+    val description: Expression?
 }
 
 /** expand the rule to [depth] levels of rule references, instead of the depth given in the options */
@@ -84,9 +92,19 @@ interface CompletionActionDepth : CompletionAction {
     val depth: Int
 }
 
+/**
+ * The values are expressions, evaluated each time the items are provided, they must give a String.
+ * In them
+ * - `$expected` is the name of the rule (or the text of the literal) the item is for (the forItem of the completion rule)
+ * - `$rules` is the list of the names of the rules that enclose the position, innermost first
+ */
 interface CompletionItemDefinition {
     val kind: CompletionItemKind
-    val label: String
-    val text: String
-    val description: String
+
+    /** null for the same as the text */
+    val label: Expression?
+    val text: Expression
+
+    /** null for no description */
+    val description: Expression?
 }

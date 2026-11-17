@@ -27,12 +27,13 @@ suspend fun DatastoreConfiguration.withSecretsResolved(registry: SecretSourceReg
         }
     }
     return when (this) {
-        is DatastoreConfigurationDefault -> DatastoreConfigurationDefault(providerIdentity, resolved, parameterSet)
+        is DatastoreConfigurationDefault -> DatastoreConfigurationDefault(providerIdentity, resolved, parameterSet, location)
         else -> {
             val original = this
             object : DatastoreConfiguration {
                 override val providerIdentity = original.providerIdentity
                 override val argument = resolved
+                override val location = original.location
                 override fun isSensitive(parameterIdentity: String) = original.isSensitive(parameterIdentity)
                 override fun defaultValueOf(parameterIdentity: String) = original.defaultValueOf(parameterIdentity)
                 override fun toString(): String = original.toString()

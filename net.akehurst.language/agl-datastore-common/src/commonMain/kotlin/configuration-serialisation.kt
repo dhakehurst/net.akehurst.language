@@ -15,6 +15,7 @@ import net.akehurst.datastore.api.DatastoreCompositionIdentity
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreConnection
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DatastoreLocation
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.api.DatastoreProviderRegistry
 import net.akehurst.datastore.api.DsParameterSet
@@ -28,7 +29,7 @@ import net.akehurst.language.types.asm.StdLibDefault
  * One document holds a composition and, optionally, the access configuration of each of its parts:
  * ```
  * { "composition": { "id": "doors-reqs", "name": "DOORS requirements", "description": "...",
- *                    "part": [ {provider, id, configuration}, ... ], "connection": [ ... ] },
+ *                    "part": [ {provider, id, location, configuration}, ... ], "connection": [ ... ] },
  *   "access": [ {id, configuration}, ... ] }
  * ```
  * The composition's `id` is required and must be valid (DatastoreCompositionIdentity.isValid); `name` and `description` default to "".
@@ -117,7 +118,7 @@ object DatastoreConfigurationJson {
             check(dsCfg.providerIdentity == providerId) {
                 "Part '${dsId.value}': configuration is for provider '${dsCfg.providerIdentity.value}', not '${providerId.value}'"
             }
-            PartDto(providerId.value, dsId.value, toDto("datastore '${dsId.value}'", dsCfg))
+            PartDto(providerId.value, dsId.value, dsCfg.location.name, toDto("datastore '${dsId.value}'", dsCfg))
         },
         connection = cfg.connection.map { toDto(it) }
     )
@@ -148,7 +149,9 @@ object DatastoreConfigurationJson {
         dto.part.forEach { p ->
             check(part.keys.none { it.second.value == p.id }) { "Datastore '${p.id}' is defined more than once" }
             val providerId = DatastoreProviderIdentity(p.provider)
-            part[Pair(providerId, DatastoreIdentity(p.id))] = fromDto("datastore '${p.id}'", providerId, p.configuration, registry, false)
+            val location = DatastoreLocation.entries.firstOrNull { it.name == p.location }
+                ?: error("Datastore '${p.id}': location '${p.location}' is not one of ${DatastoreLocation.entries.joinToString()}")
+            part[Pair(providerId, DatastoreIdentity(p.id))] = fromDto("datastore '${p.id}'", providerId, p.configuration, registry, false, location)
         }
         val ids = part.keys.map { it.second.value }.toSet()
         val connection = dto.connection.map { c ->
@@ -170,7 +173,8 @@ object DatastoreConfigurationJson {
         providerId: DatastoreProviderIdentity,
         argument: Map<String, Any>,
         registry: DatastoreProviderRegistry,
-        access: Boolean
+        access: Boolean,
+        location: DatastoreLocation = DatastoreLocation.ANY,
     ): DatastoreConfiguration {
         val provider = registry.getOrNull(providerId)
             ?: error("Cannot load $what: provider '${providerId.value}' is not registered")
@@ -178,7 +182,7 @@ object DatastoreConfigurationJson {
         val converted = argument.mapValues { (id, value) -> convert(what, providerId, parameterSet, access, id, value) }
         val errors = DatastoreConfigurationValidator.validate(parameterSet, converted)
         check(errors.isEmpty()) { "Cannot load $what (provider '${providerId.value}'):\n  ${errors.joinToString("\n  ")}" }
-        return DatastoreConfigurationDefault(providerId, converted, parameterSet)
+        return DatastoreConfigurationDefault(providerId, converted, parameterSet, location)
     }
 
     /** JSON numbers do not say Integer or Real, so the parameter's type in the schema decides */
@@ -216,10 +220,13 @@ internal data class CompositionDto(
     val connection: List<ConnectionDto> = emptyList()
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 internal data class PartDto(
     val provider: String,
     val id: String,
+    // DatastoreLocation; always written, so a saved document shows that it can be given
+    @EncodeDefault val location: String = "ANY",
     val configuration: Map<String, @Contextual Any>
 )
 

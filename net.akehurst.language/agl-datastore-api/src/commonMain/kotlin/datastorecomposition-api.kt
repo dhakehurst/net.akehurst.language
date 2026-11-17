@@ -78,6 +78,17 @@ interface DatastoreCompositionConfiguration {
 
     val part: Map<Pair<DatastoreProviderIdentity,DatastoreIdentity>, DatastoreConfiguration>
     val connection: List<DatastoreConnection>
+
+    /**
+     * the platforms that the providers of all parts support (the intersection of their supportedPlatforms).
+     * A part whose provider is not registered in 'registry' supports no platform.
+     */
+    fun supportedPlatforms(registry: DatastoreProviderRegistry): Set<DatastorePlatform> =
+        part.keys.fold(DatastorePlatform.ALL) { acc, (providerId, _) -> acc intersect (registry.getOrNull(providerId)?.supportedPlatforms ?: emptySet()) }
+
+    /** true if every part can be used here, by an application running as 'role' (DatastoreProviderRegistry.canRunHere) */
+    fun canRunHere(registry: DatastoreProviderRegistry, role: DatastoreRole): Boolean =
+        part.values.all { registry.canRunHere(it, role) }
 }
 
 interface AccessCompositionConfiguration {

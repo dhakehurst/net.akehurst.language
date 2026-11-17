@@ -84,16 +84,16 @@ class test_AglTextDatastore_itemTypes {
         DatastoreProviderRegistryDefault.GLOBAL.register(AglTextProvider())
     }
 
-    private fun config(itemTypes: List<String>?, crossReference: Boolean = true): DatastoreConfiguration =
+    private fun config(itemTypes: List<String>?, crossReference: Boolean = true, crossReferenceText: String = crossReferenceStr): DatastoreConfiguration =
         datastoreConfiguration(AglTextProvider.IDENTITY) {
             argument(AglTextProvider.CONFIG_GRAMMAR_STR, grammarStr)
             argument(AglTextProvider.CONFIG_FORMAT_STR, formatStr)
-            if (crossReference) argument(AglTextProvider.CONFIG_CROSS_REFERENCE_STR, crossReferenceStr)
+            if (crossReference) argument(AglTextProvider.CONFIG_CROSS_REFERENCE_STR, crossReferenceText)
             itemTypes?.let { argument(AglTextProvider.CONFIG_ITEM_TYPES, it) }
         }
 
-    private suspend fun sut(itemTypes: List<String>?, crossReference: Boolean = true): Datastore =
-        AglTextProvider().provide(DatastoreIdentity("txt"), config(itemTypes, crossReference)).also { it.open() }
+    private suspend fun sut(itemTypes: List<String>?, crossReference: Boolean = true, crossReferenceText: String = crossReferenceStr): Datastore =
+        AglTextProvider().provide(DatastoreIdentity("txt"), config(itemTypes, crossReference, crossReferenceText)).also { it.open() }
 
     private suspend fun unitItem(sut: Datastore, id: String, text: String): DataItem =
         DataItemDefault(null, DataItemIdentity(id), sut.accessorMutator().toTypedObject(ParsableUnit(text), StdLibDefault.AnyType), ItemTypesTestProvenance)
@@ -186,6 +186,37 @@ class test_AglTextDatastore_itemTypes {
 
     @Test
     fun clashing_identifying_values_get_a_suffix() = runTest {
+        // the same id twice in one scope is a semantic error (and a unit with errors gives no element items),
+        // so the two R1 are in different scopes: each section is a scope
+        val sut = sut(
+            listOf("Requirement"),
+            crossReferenceText = """
+                namespace test.Reqs
+                    identify Requirement by id
+                    scope Section {
+                        identify Requirement by id
+                    }
+            """.trimIndent()
+        )
+        val text = """
+            module d {
+              section 'one' {
+                requirement R1 'first'
+              }
+              section 'two' {
+                requirement R1 'second'
+              }
+            }
+        """.trimIndent()
+        val actual = read(sut, "d" to text)
+
+        assertTrue(actual[0].issues.errors.isEmpty(), actual[0].issues.toString())
+        assertEquals(listOf("d", "d/Requirement:R1", "d/Requirement:R1~1"), ids(actual))
+        assertEquals("'second'", textOf(actual[2]))
+    }
+
+    @Test
+    fun same_identifying_value_twice_in_one_scope_is_an_error_and_gives_no_element_items() = runTest {
         val sut = sut(listOf("Requirement"))
         val text = """
             module d {
@@ -195,9 +226,8 @@ class test_AglTextDatastore_itemTypes {
         """.trimIndent()
         val actual = read(sut, "d" to text)
 
-        assertTrue(actual[0].issues.errors.isEmpty(), actual[0].issues.toString())
-        assertEquals(listOf("d", "d/Requirement:R1", "d/Requirement:R1~1"), ids(actual))
-        assertEquals("'second'", textOf(actual[2]))
+        assertTrue(actual[0].issues.errors.any { it.message.contains("already exists in scope") }, actual[0].issues.toString())
+        assertEquals(listOf("d"), ids(actual))
     }
 
     @Test

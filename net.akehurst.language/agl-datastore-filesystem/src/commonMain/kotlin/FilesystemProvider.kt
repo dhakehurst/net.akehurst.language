@@ -3,6 +3,7 @@ package net.akehurst.datastore.filesystem
 import net.akehurst.datastore.api.Datastore
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
+import net.akehurst.datastore.api.DatastorePlatform
 import net.akehurst.datastore.api.DatastoreProvider
 import net.akehurst.datastore.api.DatastoreProviderIdentity
 import net.akehurst.datastore.common.datastoreProviderSchema
@@ -34,8 +35,13 @@ open class FilesystemProvider : DatastoreProvider {
     }
 
     /** override to provide a custom datastore, e.g. a subclass that overrides provenanceFor */
-    override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore =
-        FilesystemDatastore(datastoreIdentity, configuration)
+    /** the JS and WasmJs filesystems use the browser's File System Access API, so not Node */
+    override val supportedPlatforms: Set<DatastorePlatform> = setOf(DatastorePlatform.JVM, DatastorePlatform.JS_BROWSER, DatastorePlatform.WASM_JS_BROWSER)
+
+    override fun provide(datastoreIdentity: DatastoreIdentity, configuration: DatastoreConfiguration): Datastore {
+        checkSupportedOnCurrentPlatform()
+        return FilesystemDatastore(datastoreIdentity, configuration)
+    }
 
 }
 

@@ -24,6 +24,7 @@ class DatastoreProviderRegistryDefault() : DatastoreProviderRegistry {
 
     override fun provide(providerIdentity: DatastoreProviderIdentity, datastoreIdentity: DatastoreIdentity, datastoreConfiguration: DatastoreConfiguration): Datastore {
         val prov = _provider[providerIdentity] ?: error("Provider with identity '${providerIdentity.value}' not found.'")
+        prov.checkSupportedOnCurrentPlatform()
         return prov.provide(datastoreIdentity, datastoreConfiguration)
     }
 }

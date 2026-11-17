@@ -1,6 +1,7 @@
 package net.akehurst.datastore.common
 
 import net.akehurst.datastore.api.DatastoreConfiguration
+import net.akehurst.datastore.api.DatastoreLocation
 import net.akehurst.datastore.api.DsConfigParameterChoice
 import net.akehurst.datastore.api.DsConfigParameterDefinition
 import net.akehurst.datastore.api.DsConfigParameterGroup
@@ -45,6 +46,9 @@ class DatastoreConfigurationBuilder(
     private val provider = _registry.getOrNull(_providerIdentity) ?: error("Provider not found: '${_providerIdentity.value}'")
     val _argument= mutableMapOf<String, Any>()
 
+    /** where the datastore may be used (DatastoreConfiguration.location); only for a datastore configuration, not an access configuration */
+    var location: DatastoreLocation = DatastoreLocation.ANY
+
     fun argument(key: String, value: Any) {
         if (_access) {
             check(provider.schema.access.getParameterOrNull(key) != null) { "'$key' is not an access parameter of provider '${_providerIdentity.value}'" }
@@ -68,7 +72,8 @@ class DatastoreConfigurationBuilder(
         check(errors.isEmpty()) {
             "Invalid ${if (_access) "access" else "datastore"} configuration for provider '${_providerIdentity.value}':\n  ${errors.joinToString("\n  ")}"
         }
-        return DatastoreConfigurationDefault(_providerIdentity, _argument.toMap(), parameterSet)
+        check(!_access || location == DatastoreLocation.ANY) { "Invalid access configuration for provider '${_providerIdentity.value}': location is set in the datastore configuration, not the access configuration" }
+        return DatastoreConfigurationDefault(_providerIdentity, _argument.toMap(), parameterSet, location)
     }
 }
 
@@ -77,6 +82,7 @@ class DatastoreConfigurationDefault(
     override val argument: Map<String, Any>,
     /** the parameters this configuration was built against */
     val parameterSet: DsParameterSet,
+    override val location: DatastoreLocation = DatastoreLocation.ANY,
 ) : DatastoreConfiguration {
 
     companion object {
@@ -90,7 +96,7 @@ class DatastoreConfigurationDefault(
         parameterSet.getParameterOrNull(parameterIdentity)?.defaultValue
 
     override fun toString(): String =
-        "DatastoreConfiguration(${providerIdentity.value}, ${argument.entries.joinToString(prefix = "{", postfix = "}") { (k, v) -> "$k=${if (isSensitive(k)) MASK else v}" }})"
+        "DatastoreConfiguration(${providerIdentity.value}, ${if (location == DatastoreLocation.ANY) "" else "location=$location, "}${argument.entries.joinToString(prefix = "{", postfix = "}") { (k, v) -> "$k=${if (isSensitive(k)) MASK else v}" }})"
 }
 
 object DatastoreConfigurationValidator {

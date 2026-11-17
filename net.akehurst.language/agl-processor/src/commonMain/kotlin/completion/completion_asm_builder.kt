@@ -23,6 +23,9 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.completion.api.*
 import net.akehurst.language.completion.asm.*
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.asm.LiteralExpressionDefault
+import net.akehurst.language.types.asm.StdLibDefault
 
 @DslMarker
 annotation class CompletionDomainDslMarker
@@ -75,28 +78,35 @@ class CompletionSetBuilder(
 ) {
     private val _rules = mutableListOf<CompletionRule>()
 
+    // forLiteral: forItem is the text of a literal, as `'<forItem>'` in the completion language
+
     /** `[in <context>] <forItem> -> add [ items ]` */
-    fun add(forItem: String, context: String? = null, init: CompletionItemsBuilder.() -> Unit) {
+    fun add(forItem: String, context: String? = null, forLiteral: Boolean = false, init: CompletionItemsBuilder.() -> Unit) {
         val b = CompletionItemsBuilder()
         b.init()
-        _rules.add(CompletionRuleDefault(context, forItem, CompletionActionAddDefault(b.build())))
+        _rules.add(CompletionRuleDefault(context, forItem, CompletionActionAddDefault(b.build()), forLiteral))
     }
 
     /** `[in <context>] <forItem> -> replace [ items ]` */
-    fun replace(forItem: String, context: String? = null, init: CompletionItemsBuilder.() -> Unit) {
+    fun replace(forItem: String, context: String? = null, forLiteral: Boolean = false, init: CompletionItemsBuilder.() -> Unit) {
         val b = CompletionItemsBuilder()
         b.init()
-        _rules.add(CompletionRuleDefault(context, forItem, CompletionActionReplaceDefault(b.build())))
+        _rules.add(CompletionRuleDefault(context, forItem, CompletionActionReplaceDefault(b.build()), forLiteral))
     }
 
     /** `[in <context>] <forItem> -> hide` */
-    fun hide(forItem: String, context: String? = null) {
-        _rules.add(CompletionRuleDefault(context, forItem, CompletionActionHideDefault))
+    fun hide(forItem: String, context: String? = null, forLiteral: Boolean = false) {
+        _rules.add(CompletionRuleDefault(context, forItem, CompletionActionHideDefault, forLiteral))
     }
 
-    /** `[in <context>] <forItem> -> decorate { .. }`, a null value keeps the generated value */
-    fun decorate(forItem: String, context: String? = null, label: String? = null, text: String? = null, description: String? = null) {
-        _rules.add(CompletionRuleDefault(context, forItem, CompletionActionDecorateDefault(label, text, description)))
+    /** `[in <context>] <forItem> -> decorate { .. }` with literal string values, a null value keeps the generated value */
+    fun decorate(forItem: String, context: String? = null, label: String? = null, text: String? = null, description: String? = null, forLiteral: Boolean = false) {
+        decorateExpr(forItem, context, label?.let { stringLiteral(it) }, text?.let { stringLiteral(it) }, description?.let { stringLiteral(it) }, forLiteral)
+    }
+
+    /** `[in <context>] <forItem> -> decorate { .. }` with expression values, a null value keeps the generated value */
+    fun decorateExpr(forItem: String, context: String? = null, label: Expression? = null, text: Expression? = null, description: Expression? = null, forLiteral: Boolean = false) {
+        _rules.add(CompletionRuleDefault(context, forItem, CompletionActionDecorateDefault(label, text, description), forLiteral))
     }
 
     /** `[in <context>] <forItem> -> depth <depth>` */
@@ -111,10 +121,17 @@ class CompletionSetBuilder(
 class CompletionItemsBuilder {
     private val _items = mutableListOf<CompletionItemDefinition>()
 
-    /** a label defaults to the text */
-    fun item(text: String, label: String = text, description: String = "", kind: CompletionItemKind = CompletionItemKind.SEGMENT) {
+    /** an item with literal string values, a null label is the same as the text, a null description is no description */
+    fun item(text: String, label: String? = null, description: String? = null, kind: CompletionItemKind = CompletionItemKind.SEGMENT) {
+        itemExpr(stringLiteral(text), label?.let { stringLiteral(it) }, description?.let { stringLiteral(it) }, kind)
+    }
+
+    /** an item with expression values */
+    fun itemExpr(text: Expression, label: Expression? = null, description: Expression? = null, kind: CompletionItemKind = CompletionItemKind.SEGMENT) {
         _items.add(CompletionItemDefinitionDefault(kind, label, text, description))
     }
 
     fun build(): List<CompletionItemDefinition> = _items
 }
+
+private fun stringLiteral(value: String): Expression = LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName, value)
