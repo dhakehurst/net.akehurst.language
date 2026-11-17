@@ -477,13 +477,14 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val wordCompletions = byPosition.keys.filter { it < pos }.sorted().flatMap { wordStart ->
                     val prefix = sentence.substring(wordStart, pos)
                     val spines = byPosition[wordStart]!!.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
-                    completionProvider!!.provide(spines, opts.completionProvider)
+                    completionProvider!!.provide(spines, optionsWithOwnSentence(sentence, wordStart, spines, opts).completionProvider)
                         .filter {
                             when (it.kind) {
                                 CompletionItemKind.LITERAL -> prefix != it.text && it.text.startsWith(prefix) //do not include if terminal already complete
                                 CompletionItemKind.PATTERN -> false //TODO: try a match for patterns
                                 CompletionItemKind.SEGMENT -> false
-                                CompletionItemKind.REFERRED -> false //TODO: should be able to complete these!
+                                // a name in the context that starts with the typed word (not already complete)
+                                CompletionItemKind.REFERRED -> prefix != it.text && it.text.startsWith(prefix)
                             }
                         }
                         .onEach { it.offeredPosition = wordStart }
