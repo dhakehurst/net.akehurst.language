@@ -1,7 +1,13 @@
 package net.akehurst.datastore.generic.jdbc
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import net.akehurst.kotlinx.issues.api.IssueKind
+import net.akehurst.kotlinx.issues.ram.IssueDefault
+import net.akehurst.kotlinx.issues.ram.IssueHolder
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -12,6 +18,7 @@ import net.akehurst.datastore.api.DataItemProvenance
 import net.akehurst.datastore.api.DatastoreConfiguration
 import net.akehurst.datastore.api.DatastoreIdentity
 import net.akehurst.datastore.api.DatastoreObjectTyping
+import net.akehurst.datastore.common.DataItemDefault
 import net.akehurst.datastore.common.DatastoreAbstract
 import net.akehurst.datastore.common.withSecretsResolved
 import net.akehurst.kotlinx.secure.storage.SecretSourceRegistry
@@ -19,6 +26,7 @@ import net.akehurst.kotlinx.secure.storage.SecretSourceRegistryDefault
 import net.akehurst.kotlinx.text.toRegexFromGlob
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
 import java.sql.Connection
 import java.sql.DriverManager
@@ -100,6 +108,8 @@ open class JdbcDatastore(
     companion object {
         /** the namespace of the types if the database gives neither a schema nor a catalog */
         const val DEFAULT_NAMESPACE = "jdbc"
+
+        private val TABLE_LINE = Regex("(\\S+)(?:\\s+[Ww][Hh][Ee][Rr][Ee]\\s+(.+))?", RegexOption.DOT_MATCHES_ALL)
     }
 
     private val _connectionMutex = Mutex()
@@ -308,13 +318,108 @@ open class JdbcDatastore(
 
     // --- read / write ---
 
-    override suspend fun doRead(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
-        TODO("read: waiting for the read semantics")
+    /** a table to read, and the SQL condition its rows must meet (null: all rows) */
+    data class JdbcTableAccess(val table: JdbcTable, val filter: String?)
+
+    /**
+     * the tables of access.tables, in order, each with its filter. An entry is a Pair(table name, filter or null),
+     * or a String 'TABLE' or 'TABLE WHERE <condition>' (WHERE in any case).
+     * A name is matched exactly, else ignoring case if that is unique.
+     */
+    protected suspend fun accessTables(accessConfiguration: DatastoreConfiguration): List<JdbcTableAccess> {
+        val schema = schema()
+        val joinTables = associations().joinTables.map { it.name }.toSet()
+        val entries = (accessConfiguration.valueOf(JdbcProvider.ACCESS_TABLES) as List<*>?) ?: emptyList<Any?>()
+        return entries.mapNotNull { entry ->
+            val (name, filter) = when (entry) {
+                null -> return@mapNotNull null
+                is Pair<*, *> -> Pair(entry.first.toString().trim(), entry.second?.toString()?.trim())
+                else -> {
+                    val line = entry.toString().trim()
+                    if (line.isEmpty()) return@mapNotNull null
+                    val m = TABLE_LINE.matchEntire(line)
+                        ?: error("${JdbcProvider.ACCESS_TABLES}: '$line' is not 'TABLE' or 'TABLE WHERE <condition>'")
+                    Pair(m.groupValues[1], m.groups[2]?.value?.trim())
+                }
+            }
+            val t = schema.tableOrNull(name) ?: run {
+                val found = schema.tables.filter { it.name.equals(name, ignoreCase = true) }
+                when (found.size) {
+                    1 -> found.first()
+                    0 -> error("${JdbcProvider.ACCESS_TABLES}: there is no table '$name' among the tables of this datastore")
+                    else -> error("${JdbcProvider.ACCESS_TABLES}: more than one table is named '$name' ignoring case (${found.joinToString { it.name }}), give the exact name")
+                }
+            }
+            require(t.name !in joinTables) { "${JdbcProvider.ACCESS_TABLES}: '${t.name}' is a join table, which has no type (it is a many-to-many association)" }
+            JdbcTableAccess(t, filter?.takeIf { it.isNotEmpty() })
+        }
     }
 
-    override suspend fun doWrite(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
-        TODO("write: not yet specified")
+    /**
+     * the identity of a row's item: '<TABLE>:<primary key values, ','-separated>',
+     * or '<TABLE>#<index of the row in this read of the table>' if the table has no primary key
+     */
+    protected open fun identityOf(row: JdbcRow, index: Long): DataItemIdentity = when {
+        row.table.primaryKey.isEmpty() -> DataItemIdentity("${row.table.name}#$index")
+        else -> DataItemIdentity("${row.table.name}:${row.key.joinToString(",") { keyText(it) }}")
     }
+
+    private fun keyText(v: Any?): String = when (v) {
+        null -> ""
+        is ByteArray -> v.joinToString("") { it.toUByte().toString(16).padStart(2, '0') }
+        else -> v.toString()
+    }
+
+    /**
+     * input: ignored (a JdbcDatastore is a source).
+     * output: for each table of access.tables, in order, one item per row (that meets the table's filter, if it has one),
+     * typed as the table's type (parent null). The filter is SQL, put in the query as given.
+     * Rows are fetched 'config.fetch-size' at a time; association ends can be navigated while the read is collected.
+     */
+    override suspend fun doRead(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
+        val tables = accessTables(accessConfiguration)
+        val fetchSize = (configuration.getAsLongOrNull(JdbcProvider.CONFIG_FETCH_SIZE) ?: JdbcProvider.DEFAULT_FETCH_SIZE).toInt().coerceAtLeast(1)
+        val schema = schema()
+        val am = accessorMutator()
+        return flow {
+            for ((t, filter) in tables) {
+                val where = filter?.let { " WHERE ($it)" } ?: ""
+                val sql = "SELECT ${t.columns.joinToString { schema.quote(it.name) }} FROM ${schema.sqlName(t)}$where"
+                val ps = withConnection { c -> c.prepareStatement(sql).also { it.fetchSize = fetchSize } }
+                try {
+                    val rs = withConnection { ps.executeQuery() }
+                    var index = 0L
+                    var more = true
+                    while (more) {
+                        // fetch a batch under the connection lock, emit it without the lock (navigation uses the connection)
+                        val batch = withConnection {
+                            val rows = mutableListOf<JdbcRow>()
+                            while (rows.size < fetchSize && rs.next()) rows.add(rowOf(t, rs))
+                            if (rows.size < fetchSize) more = false
+                            rows
+                        }
+                        for (row in batch) {
+                            emit(DataItemDefault(null, identityOf(row, index), am.toTypedObject(row, StdLibDefault.AnyType), provenanceFor(null, row)))
+                            index++
+                        }
+                    }
+                } finally {
+                    withContext(NonCancellable) { withConnection { ps.close() } }
+                }
+            }
+        }
+    }
+
+    /** Not supported yet: each item is output with an error issue added. */
+    override suspend fun doWrite(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> =
+        input.map { item ->
+            DataItemDefault(
+                item.parent, item.identity, item.data, item.provenance,
+                IssueHolder<DataItemIssueLocation>(
+                    item.issues.all.toList() + IssueDefault(IssueKind.ERROR, JdbcIssueLocation(null, null), "A JdbcDatastore cannot write yet.")
+                )
+            )
+        }
 
     override fun provenanceFor(input: DataItem?, source: Any?): DataItemProvenance = when (source) {
         is JdbcRow -> JdbcProvenance(identity, _schema?.schema, source.table.name, source.table.primaryKey.associateWith { source.values[it] })

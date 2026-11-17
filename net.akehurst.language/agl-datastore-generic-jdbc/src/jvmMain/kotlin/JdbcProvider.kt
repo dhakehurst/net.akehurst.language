@@ -28,6 +28,9 @@ open class JdbcProvider : DatastoreProvider {
         const val CONFIG_FETCH_SIZE = "config.fetch-size"
 
         const val DEFAULT_FETCH_SIZE = 500L
+
+        // --- access ---
+        const val ACCESS_TABLES = "access.tables"
     }
 
     override val identity: DatastoreProviderIdentity get() = IDENTITY
@@ -74,6 +77,10 @@ open class JdbcProvider : DatastoreProvider {
         }
 
         access {
+            parameter(ACCESS_TABLES, "Tables", optional = false) {
+                type("List")
+                description("The tables to read, one per line, in the order they are read. Each row is an item, typed as its table's type.")
+            }
         }
     }
 

@@ -11,7 +11,9 @@ import net.akehurst.language.types.api.DataType
 import net.akehurst.language.types.api.TypesDomain
 import java.sql.DriverManager
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.test.BeforeTest
 import kotlin.test.Test
+import net.akehurst.datastore.common.DatastoreProviderRegistryDefault
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -46,6 +48,11 @@ internal object TestDb {
 }
 
 class test_JdbcDatastore_types {
+
+    @BeforeTest
+    fun before() {
+        DatastoreProviderRegistryDefault.GLOBAL.register(JdbcProvider())
+    }
 
     private fun datastore(url: String, config: DatastoreConfigurationBuilder.() -> Unit = {}): Datastore {
         val cfg = datastoreConfiguration(JdbcProvider.IDENTITY) {
