@@ -1043,6 +1043,12 @@ class ReferenceResolverSimple(
         }
     }
 
+    /** the elements for the special values ('\$container', '\$owner', '\$root') of 'el', e.g. in an identifying expression */
+    fun specialValuesFor(el: AsmStructure): Map<String, AsmStructure?> {
+        recordContainersFor(el)
+        return mapOf(CONTAINER to containerOf(el), OWNER to ownerOf(el), ROOT to rootOf(el))
+    }
+
     /** the root element of the sentence of 'el' */
     private fun rootOf(el: AsmStructure): AsmStructure? {
         var c = el
