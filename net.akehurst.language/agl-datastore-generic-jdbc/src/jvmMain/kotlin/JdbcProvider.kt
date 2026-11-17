@@ -31,6 +31,11 @@ open class JdbcProvider : DatastoreProvider {
 
         // --- access ---
         const val ACCESS_TABLES = "access.tables"
+        const val ACCESS_WRITE_MODE = "access.write-mode"
+
+        const val WRITE_MODE_UPSERT = "upsert"
+        const val WRITE_MODE_INSERT = "insert"
+        const val WRITE_MODE_UPDATE = "update"
     }
 
     override val identity: DatastoreProviderIdentity get() = IDENTITY
@@ -77,9 +82,14 @@ open class JdbcProvider : DatastoreProvider {
         }
 
         access {
-            parameter(ACCESS_TABLES, "Tables", optional = false) {
+            parameter(ACCESS_TABLES, "Tables", optional = true) {
                 type("List")
-                description("The tables to read, one per line, in the order they are read. Each row is an item, typed as its table's type.")
+                description("The tables to read, one per line, in the order they are read: 'TABLE', or 'TABLE WHERE <SQL condition>'. Each row is an item, typed as its table's type. Not used by write.")
+            }
+            parameter(ACCESS_WRITE_MODE, "Write mode", optional = true) {
+                type("String")
+                default(WRITE_MODE_UPSERT)
+                description("How write stores a row: 'upsert' (update the row with its primary key, else insert it), 'insert' (an existing key is an error) or 'update' (a missing key is an error). Not used by read.")
             }
         }
     }

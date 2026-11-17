@@ -64,8 +64,19 @@ data class JdbcProvenance(
  */
 class JdbcRow(
     val table: JdbcTable,
-    val values: Map<String, Any?>,
+    values: Map<String, Any?>,
 ) {
+    private val _values = values.toMutableMap()
+
+    /** column name -> value */
+    val values: Map<String, Any?> get() = _values
+
+    /** sets the value of a column, e.g. before writing the row */
+    operator fun set(column: String, value: Any?) {
+        require(table.columns.any { it.name == column }) { "Table '${table.name}' has no column '$column'" }
+        _values[column] = value
+    }
+
     /** the primary key values, in key order; empty if the table has no primary key */
     val key: List<Any?> get() = table.primaryKey.map { values[it] }
 
@@ -198,8 +209,16 @@ open class JdbcDatastore(
             namespace(namespaceName) {
                 assocs.typedTables.forEach { t ->
                     data(t.name, JdbcRow::class) {
-                        t.columns.forEach { col ->
-                            propertyOfWithBinding<JdbcRow, Any?>(setOf(REF, VAL), col.name, col.stdType, isNullable = col.isNullable, accessor = { it.values[col.name] })
+                        // a new row: every column is a parameter, in column order; each parameter is also the column's property
+                        constructor_ {
+                            t.columns.forEach { col ->
+                                parameter<JdbcRow, Any?>(
+                                    setOf(REF, VAR), col.name, col.stdType, col.isNullable,
+                                    accessor = { it.values[col.name] },
+                                    mutator = { row, v -> row[col.name] = v }
+                                )
+                            }
+                            execution { args -> JdbcRow(t, t.columns.mapIndexed { i, col -> Pair(col.name, args.getOrNull(i)) }.toMap()) }
                         }
                     }
                 }
@@ -410,16 +429,111 @@ open class JdbcDatastore(
         }
     }
 
-    /** Not supported yet: each item is output with an error issue added. */
-    override suspend fun doWrite(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> =
-        input.map { item ->
+    // --- transaction: one database transaction ---
+
+    override suspend fun onBeginTransaction() {
+        withConnection { it.autoCommit = false }
+    }
+
+    override suspend fun onCommit() {
+        withConnection { c ->
+            try {
+                c.commit()
+            } finally {
+                c.autoCommit = true
+            }
+        }
+    }
+
+    override suspend fun onRollback() {
+        withConnection { c ->
+            try {
+                c.rollback()
+            } finally {
+                c.autoCommit = true
+            }
+        }
+    }
+
+    /**
+     * input: items whose data is a JdbcRow (read from this datastore, or created with its type's constructor).
+     * Each row is stored by its primary key as access.write-mode says (see store), in the open database transaction
+     * (applied on commit, undone on rollback).
+     * output: each item, with its provenance (a JdbcProvenance) and, if it could not be written, an error issue:
+     * the data is not a JdbcRow, its table is a view or has no primary key, or the database refused it (the message is the database's),
+     * or the write mode does not allow it (insert: the key exists; update: it does not).
+     */
+    override suspend fun doWrite(accessConfiguration: DatastoreConfiguration, input: Flow<DataItem>): Flow<DataItem> {
+        val mode = (accessConfiguration.getAsStringOrNull(JdbcProvider.ACCESS_WRITE_MODE) ?: JdbcProvider.WRITE_MODE_UPSERT).trim().lowercase()
+        require(mode in setOf(JdbcProvider.WRITE_MODE_UPSERT, JdbcProvider.WRITE_MODE_INSERT, JdbcProvider.WRITE_MODE_UPDATE)) {
+            "${JdbcProvider.ACCESS_WRITE_MODE}: '$mode' is not one of upsert, insert, update"
+        }
+        return input.map { item ->
+            val row = item.data.self as? JdbcRow
+            val error = when {
+                null == row -> "The data of a written item must be a row of a table of this datastore"
+                row.table.isView -> "'${row.table.name}' is a view; it cannot be written"
+                row.table.primaryKey.isEmpty() -> "'${row.table.name}' has no primary key; it cannot be written"
+                else -> try {
+                    store(row, mode)
+                } catch (e: java.sql.SQLException) {
+                    "'${row.table.name}' row ${row.key}: ${e.message ?: e::class.simpleName}"
+                }
+            }
             DataItemDefault(
-                item.parent, item.identity, item.data, item.provenance,
-                IssueHolder<DataItemIssueLocation>(
-                    item.issues.all.toList() + IssueDefault(IssueKind.ERROR, JdbcIssueLocation(null, null), "A JdbcDatastore cannot write yet.")
-                )
+                item.parent, item.identity, item.data, if (null == row) item.provenance else provenanceFor(item, row),
+                when (error) {
+                    null -> item.issues
+                    else -> IssueHolder<DataItemIssueLocation>(
+                        item.issues.all.toList() + IssueDefault(IssueKind.ERROR, JdbcIssueLocation(row?.table?.name, null), error)
+                    )
+                }
             )
         }
+    }
+
+    /**
+     * stores the row as 'mode' says: UPDATE of the row with row's primary key, and INSERT if there is none (upsert);
+     * only INSERT, refused if the key exists (insert); only UPDATE, refused if it does not (update).
+     * Returns null, or the reason the row was not stored.
+     */
+    protected open suspend fun store(row: JdbcRow, mode: String): String? {
+        val schema = schema()
+        val t = row.table
+        val nonKey = t.columns.map { it.name }.filter { it !in t.primaryKey }
+        val keyWhere = t.primaryKey.joinToString(" AND ") { "${schema.quote(it)} = ?" }
+        return withConnection { c ->
+            val existsSql = "SELECT 1 FROM ${schema.sqlName(t)} WHERE $keyWhere"
+            fun exists(): Boolean = c.prepareStatement(existsSql).use { ps ->
+                bind(ps, row.key)
+                ps.executeQuery().use { it.next() }
+            }
+            val updated = when {
+                mode == JdbcProvider.WRITE_MODE_INSERT -> if (exists()) return@withConnection "'${t.name}' already has a row with key ${row.key}; it is not written (write mode insert)" else false
+                nonKey.isEmpty() -> exists()
+                else -> {
+                    val sql = "UPDATE ${schema.sqlName(t)} SET ${nonKey.joinToString { "${schema.quote(it)} = ?" }} WHERE $keyWhere"
+                    c.prepareStatement(sql).use { ps ->
+                        bind(ps, nonKey.map { row.values[it] } + row.key)
+                        ps.executeUpdate() > 0
+                    }
+                }
+            }
+            when {
+                updated -> null
+                mode == JdbcProvider.WRITE_MODE_UPDATE -> "'${t.name}' has no row with key ${row.key}; it is not written (write mode update)"
+                else -> {
+                    val cols = t.columns.map { it.name }
+                    val sql = "INSERT INTO ${schema.sqlName(t)} (${cols.joinToString { schema.quote(it) }}) VALUES (${cols.joinToString { "?" }})"
+                    c.prepareStatement(sql).use { ps ->
+                        bind(ps, cols.map { row.values[it] })
+                        ps.executeUpdate()
+                    }
+                    null
+                }
+            }
+        }
+    }
 
     override fun provenanceFor(input: DataItem?, source: Any?): DataItemProvenance = when (source) {
         is JdbcRow -> JdbcProvenance(identity, _schema?.schema, source.table.name, source.table.primaryKey.associateWith { source.values[it] })
