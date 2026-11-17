@@ -30,7 +30,7 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
 /**
- * Checks that the rule names used in the completion rules (the expected item and the context) are grammar rules,
+ * Checks that the rule names used in the completion rules (the expected item, unless it is a literal, and the context) are grammar rules,
  * when the sentence context holds the grammar of the language.
  */
 class AglCompletionSemanticAnalyser : SemanticAnalyser<AglCompletionDomain, SentenceContext> {
@@ -57,7 +57,8 @@ class AglCompletionSemanticAnalyser : SemanticAnalyser<AglCompletionDomain, Sent
         val sentenceContext = options.sentenceContext
         if (null != sentenceContext) {
             asm.allCompletionRules.forEach { rule ->
-                checkRuleName(sentenceContext, rule, rule.forItem)
+                // a literal is not checked (it can be in any rule)
+                if (!rule.forLiteral) checkRuleName(sentenceContext, rule, rule.forItem)
                 rule.context?.let { checkRuleName(sentenceContext, rule, it) }
             }
         }

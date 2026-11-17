@@ -98,4 +98,27 @@ class test_Doc_Completion {
         val items2 = processor.expectedItemsAt("circle ", 7).items
         assertEquals(listOf("SEGMENT c1 c1", "PATTERN NAME <NAME>"), labels(items2))
     }
+
+    @Test
+    fun literals_and_expressions() {
+        // completion.md: "Literals and expressions"
+        val completion = """
+            namespace example
+            completion Shapes {
+                in square '{' -> add [ CompletionItem() { label := 'points' text := '{ <point> }' } ]
+                'r' -> decorate { label := 'radius' description := 'the radius of the ' + ${'$'}rules.first }
+            }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(SHAPES_GRAMMAR), completionStr = CompletionString(completion))
+        check(result.issues.errors.isEmpty()) { result.issues.toString() }
+        val processor = result.processor!!
+
+        val items = processor.expectedItemsAt("square s ", 9).items
+        assertEquals(listOf("SEGMENT points { <point> }", "LITERAL '{' {"), labels(items))
+
+        val items2 = processor.expectedItemsAt("circle c ", 9).items
+        val r = items2.single { it.text == "r" }
+        assertEquals("radius", r.label)
+        assertEquals("the radius of the circle", r.description)
+    }
 }

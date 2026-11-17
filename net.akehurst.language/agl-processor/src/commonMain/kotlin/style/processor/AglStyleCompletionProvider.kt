@@ -90,12 +90,9 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
         val itemType = styleTransformRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(ruleName)?.resolvedType
             // e.g. a rule from AglBase that has no transform rule in the style rule set
             ?: return CompletionProviderAbstract.provideDefaultForSpine(spine, options)
+        // the literals of selectorAndComposition, rule (tagRule, metaRule) and style, with their labels and the '{' snippet,
+        // are now in the AglStyle completion definition (completionString), so the functions for them below are not used
         return when (ruleName) {
-            GrammarRuleName("selectorAndComposition") -> selectorAndComposition(nextExpected, itemType, options.sentenceContext!!)
-            GrammarRuleName("rule"), GrammarRuleName("tagRule"), GrammarRuleName("metaRule") -> rule(nextExpected, itemType, options.sentenceContext!!)
-                ?: CompletionProviderAbstract.provideDefaultForSpine(spine, options)
-            GrammarRuleName("style") -> style(nextExpected, itemType, options.sentenceContext!!)
-                ?: CompletionProviderAbstract.provideDefaultForSpine(spine, options)
             else -> CompletionProviderAbstract.provideDefaultForSpine(spine, options)
         }
     }

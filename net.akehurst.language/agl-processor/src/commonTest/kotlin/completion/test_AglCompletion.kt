@@ -25,6 +25,8 @@ import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.completion.api.*
 import net.akehurst.language.completion.asm.AglCompletionDomainDefault
 import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.LiteralExpression
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -46,11 +48,14 @@ class test_AglCompletion {
 
         fun parse(completionStr: String) = AglCompletionDomainDefault.fromString(null, CompletionString(completionStr))
 
-        fun items(completionStr: String?, sentence: String, depth: Int = 0): List<CompletionItem> {
+        /** the value of a literal string expression, null for null */
+        fun str(exp: Expression?): String? = exp?.let { (it as LiteralExpression).value as String }
+
+        fun items(completionStr: String?, sentence: String, depth: Int = 0, path: List<Pair<Int, Int>> = emptyList()): List<CompletionItem> {
             val res = Agl.processorFromStringSimple(GrammarString(GRAMMAR), completionStr = completionStr?.let { CompletionString(it) })
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
-            val result = proc.expectedItemsAt(sentence, sentence.length, Agl.options { completionProvider { depth(depth) } })
+            val result = proc.expectedItemsAt(sentence, sentence.length, Agl.options { completionProvider { depth(depth); path(path) } })
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
             assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
             return result.items
@@ -93,21 +98,21 @@ $rules
         assertEquals("item", add.forItem)
         val addItem = (add.action as CompletionActionAdd).items.single()
         assertEquals(CompletionItemKind.SEGMENT, addItem.kind)
-        assertEquals("an A", addItem.label)
-        assertEquals("a <ID>", addItem.text)
-        assertEquals("the A", addItem.description)
+        assertEquals("an A", str(addItem.label))
+        assertEquals("a <ID>", str(addItem.text))
+        assertEquals("the A", str(addItem.description))
 
         val replace = rules[1]
         assertEquals("S", replace.context)
         val replaceItems = (replace.action as CompletionActionReplace).items
         assertEquals(listOf(CompletionItemKind.LITERAL, CompletionItemKind.SEGMENT), replaceItems.map { it.kind })
-        assertEquals(listOf("B", "a x"), replaceItems.map { it.label }) // label defaults to the text
+        assertEquals(listOf("B", null), replaceItems.map { str(it.label) }) // no label: the same as the text
 
         assertTrue(rules[2].action is CompletionActionHide)
         val decorate = rules[3].action as CompletionActionDecorate
-        assertEquals("bee", decorate.label)
+        assertEquals("bee", str(decorate.label))
         assertEquals(null, decorate.text)
-        assertEquals("a B", decorate.description)
+        assertEquals("a B", str(decorate.description))
         assertEquals(2, (rules[4].action as CompletionActionDepth).depth)
     }
 
@@ -130,7 +135,7 @@ $rules
         assertTrue(messages[1].startsWith("Unknown kind 'OTHER'"), messages[1])
         assertTrue(messages[2].startsWith("A CompletionItem needs a 'text'"), messages[2])
         assertTrue(messages[3].startsWith("Expected 'CompletionItem() { ... }'"), messages[3])
-        assertTrue(messages[4].startsWith("Value of 'label' must be a literal string"), messages[4])
+        assertTrue(messages[4].startsWith("Value of 'label' must be a String"), messages[4])
     }
 
     @Test
@@ -238,6 +243,180 @@ $rules
     }
 
     @Test
+    fun parse_literal_keys() {
+        val res = parse(
+            completion(
+                """
+                ';' -> decorate { label := 'end' }
+                in S 'a' -> hide
+                '\'' -> hide
+                item -> hide
+                """.trimIndent()
+            )
+        )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val rules = res.asm!!.allCompletionRules
+        assertEquals(listOf(";", "a", "'", "item"), rules.map { it.forItem })
+        assertEquals(listOf(true, true, true, false), rules.map { it.forLiteral })
+        assertEquals("in S 'a' -> hide", rules[1].toString())
+        assertEquals("'\\'' -> hide", rules[2].toString())
+    }
+
+    @Test
+    fun literal_decorate() {
+        val actual = items(completion("'a' -> decorate { label := 'letter a' description := 'starts an A' }"), "start ")
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "item", "<item>"),
+                CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+                CompletionItem(CompletionItemKind.LITERAL, "letter a", "a"),
+            ),
+            actual
+        )
+        assertEquals("starts an A", actual[2].description)
+    }
+
+    @Test
+    fun literal_hide() {
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "item", "<item>"),
+                CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+            ),
+            items(completion("'b' -> hide"), "start ")
+        )
+    }
+
+    @Test
+    fun literal_add_snippet_where_only_a_literal_is_expected() {
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "end", "; start <item>;"),
+                CompletionItem(CompletionItemKind.LITERAL, "';'", ";"),
+            ),
+            items(completion("';' -> add [ CompletionItem() { label := 'end' text := '; start <item>;' } ]"), "start a x ")
+        )
+    }
+
+    @Test
+    fun literal_replace() {
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "end", "; start <item>;"),
+            ),
+            items(completion("';' -> replace [ CompletionItem() { label := 'end' text := '; start <item>;' } ]"), "start a x ")
+        )
+    }
+
+    @Test
+    fun literal_context() {
+        assertItems(
+            emptyList(),
+            items(completion("in S ';' -> hide"), "start a x ")
+        )
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.LITERAL, "';'", ";"),
+            ),
+            items(completion("in B ';' -> hide"), "start a x ")
+        )
+    }
+
+    @Test
+    fun decorate_with_expressions() {
+        val actual = items(completion("item -> decorate { label := 'the ' + \$self.label description := \$expected + ' in ' + \$rules.first }"), "start ")
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "the item", "<item>"),
+                CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+            ),
+            actual
+        )
+        assertEquals("item in S", actual[0].description)
+    }
+
+    @Test
+    fun literal_decorate_with_expressions() {
+        val actual = items(completion("';' -> decorate { label := 'end of ' + \$rules.first description := \$self.text }"), "start a x ")
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.LITERAL, "end of S", ";"),
+            ),
+            actual
+        )
+        assertEquals(";", actual[0].description)
+    }
+
+    @Test
+    fun add_with_expressions() {
+        val actual = items(completion("item -> add [ CompletionItem() { text := \$expected + ' here' description := \$rules.first } ]"), "start ")
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "item", "<item>"),
+                CompletionItem(CompletionItemKind.SEGMENT, "item here", "item here"),
+                CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+            ),
+            actual
+        )
+        assertEquals("S", actual[1].description)
+    }
+
+    @Test
+    fun add_with_expression_that_is_not_a_string() {
+        // the text does not give a String, so the item is left out
+        assertItems(
+            items(null, "start "),
+            items(completion("item -> add [ CompletionItem() { text := \$rules } ]"), "start ")
+        )
+    }
+
+    @Test
+    fun path_mode_without_rules() {
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "A", "<A>"),
+                CompletionItem(CompletionItemKind.SEGMENT, "B", "<B>"),
+            ),
+            items(null, "start ", path = listOf(Pair(1, -1)))
+        )
+    }
+
+    @Test
+    fun path_mode_applies_rules() {
+        val actual = items(
+            completion(
+                """
+                B -> decorate { label := 'bee' description := 'a B' }
+                A -> hide
+                B -> add [ CompletionItem() { label := 'just b' text := 'b' } ]
+                """.trimIndent()
+            ),
+            "start ", path = listOf(Pair(1, -1))
+        )
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "bee", "<B>"),
+                CompletionItem(CompletionItemKind.SEGMENT, "just b", "b"),
+            ),
+            actual
+        )
+        assertEquals("a B", actual[0].description)
+    }
+
+    @Test
+    fun path_mode_applies_depth() {
+        assertItems(
+            listOf(
+                CompletionItem(CompletionItemKind.SEGMENT, "A", "a <ID>"),
+                CompletionItem(CompletionItemKind.SEGMENT, "B", "b"),
+            ),
+            items(completion("item -> depth 2"), "start ", path = listOf(Pair(1, -1)))
+        )
+    }
+
+    @Test
     fun builder_same_as_parsed() {
         val built = completionDomain("Test") {
             namespace("test") {
@@ -247,6 +426,8 @@ $rules
                     hide("ID")
                     decorate("B", label = "bee")
                     depth("item", 2)
+                    decorate("b", label = "bee", forLiteral = true)
+                    hide(";", context = "S", forLiteral = true)
                 }
             }
         }
@@ -258,6 +439,8 @@ $rules
                 ID -> hide
                 B -> decorate { label := 'bee' }
                 item -> depth 2
+                'b' -> decorate { label := 'bee' }
+                in S ';' -> hide
                 """.trimIndent()
             )
         )
