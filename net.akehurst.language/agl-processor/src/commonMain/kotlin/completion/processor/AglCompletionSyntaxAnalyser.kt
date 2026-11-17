@@ -57,6 +57,7 @@ internal class AglCompletionSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationA
         super.register(this::definition)
         super.register(this::completion)
         super.register(this::completionRule)
+        super.register(this::forItem)
         super.register(this::context)
         super.register(this::completionAction)
         super.register(this::add)
@@ -107,12 +108,22 @@ internal class AglCompletionSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationA
         return { ns -> CompletionSetDefault(ns, name, options, rules) }
     }
 
-    // completionRule = context? IDENTIFIER '->' completionAction ;
+    // completionRule = context? forItem '->' completionAction ;
     fun completionRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CompletionRule? {
         val context = children[0] as String?
-        val forItem = children[1] as String
+        val (forItem, forLiteral) = children[1] as Pair<String, Boolean>
         val action = children[3] as CompletionAction?
-        return action?.let { CompletionRuleDefault(context, forItem, it).also { setLocationFor(it, nodeInfo, sentence) } }
+        return action?.let { CompletionRuleDefault(context, forItem, it, forLiteral).also { setLocationFor(it, nodeInfo, sentence) } }
+    }
+
+    // forItem = IDENTIFIER | STRING ;
+    // (name, true) for a literal (its text, without the quotes)
+    fun forItem(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<String, Boolean> {
+        val str = children[0] as String
+        return when (nodeInfo.alt.option.asIndex) {
+            0 -> Pair(str, false)
+            else -> Pair(CompletionRuleDefault.unquoteLiteral(str), true)
+        }
     }
 
     // context = 'in' IDENTIFIER ;
@@ -144,7 +155,7 @@ internal class AglCompletionSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationA
     // decorate = 'decorate' propertyAssignmentBlock ;
     fun decorate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CompletionAction? {
         val assignments = children[1] as List<VariableAssignmentStatement>
-        val values = stringValuesFor(assignments, DECORATE_PROPERTIES, nodeInfo, sentence)
+        val values = expressionValuesFor(assignments, DECORATE_PROPERTIES, nodeInfo, sentence)
         return CompletionActionDecorateDefault(values["label"], values["text"], values["description"])
     }
 
@@ -156,10 +167,20 @@ internal class AglCompletionSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationA
         val location = sentence.locationForNode(nodeInfo.node)
         return when {
             exp is CreateObjectExpression && ITEM_TYPE_NAME == exp.possiblyQualifiedTypeName.simpleName.value -> {
-                val values = stringValuesFor(exp.propertyAssignments, ITEM_PROPERTIES, nodeInfo, sentence)
-                val kindName = values["kind"] ?: CompletionItemKind.SEGMENT.name
+                val values = expressionValuesFor(exp.propertyAssignments, ITEM_PROPERTIES, nodeInfo, sentence)
+                val kindExp = values["kind"]
+                val kindName = when (kindExp) {
+                    null -> CompletionItemKind.SEGMENT.name
+                    is LiteralExpression -> kindExp.value as String
+                    else -> null
+                }
                 val kind = CompletionItemKind.entries.firstOrNull { it.name == kindName }
                 when {
+                    null == kindName -> {
+                        issues.error(location, "Value of 'kind' must be a literal string, one of ${CompletionItemKind.entries.joinToString { it.name }}")
+                        null
+                    }
+
                     null == kind -> {
                         issues.error(location, "Unknown kind '$kindName', expected one of ${CompletionItemKind.entries.joinToString { it.name }}")
                         null
@@ -170,7 +191,7 @@ internal class AglCompletionSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationA
                         null
                     }
 
-                    else -> CompletionItemDefinitionDefault(kind, values["label"] ?: values["text"]!!, values["text"]!!, values["description"] ?: "")
+                    else -> CompletionItemDefinitionDefault(kind, values["label"], values["text"]!!, values["description"])
                 }
             }
 
@@ -181,18 +202,20 @@ internal class AglCompletionSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationA
         }
     }
 
-    /** the literal string value of each property assignment, an issue for any other property or value */
-    private fun stringValuesFor(assignments: List<VariableAssignmentStatement>, allowed: Set<String>, nodeInfo: SpptDataNodeInfo, sentence: Sentence): Map<String, String> {
+    /**
+     * the expression of each property assignment, an issue for any other property, or for a literal value that is not a String
+     * (other expressions are evaluated when items are provided, see CompletionProviderFromDomain)
+     */
+    private fun expressionValuesFor(assignments: List<VariableAssignmentStatement>, allowed: Set<String>, nodeInfo: SpptDataNodeInfo, sentence: Sentence): Map<String, Expression> {
         val location = sentence.locationForNode(nodeInfo.node)
-        val result = mutableMapOf<String, String>()
+        val result = mutableMapOf<String, Expression>()
         for (asg in assignments) {
             val name = asg.variable.name
             val rhs = asg.rhs
             when {
                 name !in allowed -> issues.error(location, "Unknown property '$name', expected one of ${allowed.joinToString()}")
-                rhs is LiteralExpression && rhs.value is String -> result[name] = rhs.value as String
-                //TODO: other expressions, e.g. evaluated against the sentence context
-                else -> issues.error(location, "Value of '$name' must be a literal string (other expressions are not yet supported)")
+                rhs is LiteralExpression && rhs.value !is String -> issues.error(location, "Value of '$name' must be a String")
+                else -> result[name] = rhs
             }
         }
         return result

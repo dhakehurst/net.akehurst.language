@@ -33,6 +33,7 @@ import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.completion.api.*
+import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
@@ -92,19 +93,40 @@ class CompletionSetDefault(
 class CompletionRuleDefault(
     override val context: String?,
     override val forItem: String,
-    override val action: CompletionAction
+    override val action: CompletionAction,
+    override val forLiteral: Boolean = false
 ) : CompletionRule {
+    companion object {
+        /** the literal [text] quoted as in the completion language, e.g. `'{'` */
+        fun quoteLiteral(text: String): String = "'" + text.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+        /** the text of a [quoted] literal, as written in the completion language */
+        fun unquoteLiteral(quoted: String): String {
+            val sb = StringBuilder()
+            var i = 1
+            while (i < quoted.length - 1) {
+                val c = quoted[i]
+                when {
+                    '\\' == c && i + 1 < quoted.length - 1 -> { sb.append(quoted[i + 1]); i += 2 }
+                    else -> { sb.append(c); i++ }
+                }
+            }
+            return sb.toString()
+        }
+    }
+
     fun asString(indent: Indent): String {
         val ctx = context?.let { "in $it " } ?: ""
+        val item = if (forLiteral) quoteLiteral(forItem) else forItem
         val act = when (action) {
             is CompletionActionAdd -> "add ${itemsAsString(action.items, indent)}"
             is CompletionActionReplace -> "replace ${itemsAsString(action.items, indent)}"
             is CompletionActionHide -> "hide"
             is CompletionActionDecorate -> {
                 val props = listOfNotNull(
-                    action.label?.let { "label := '$it'" },
-                    action.text?.let { "text := '$it'" },
-                    action.description?.let { "description := '$it'" },
+                    action.label?.let { "label := ${it.asString()}" },
+                    action.text?.let { "text := ${it.asString()}" },
+                    action.description?.let { "description := ${it.asString()}" },
                 )
                 "decorate { ${props.joinToString(" ")} }"
             }
@@ -112,7 +134,7 @@ class CompletionRuleDefault(
             is CompletionActionDepth -> "depth ${action.depth}"
             else -> error("Unsupported CompletionAction '${action::class.simpleName}'")
         }
-        return "$ctx$forItem -> $act"
+        return "$ctx$item -> $act"
     }
 
     private fun itemsAsString(items: List<CompletionItemDefinition>, indent: Indent): String {
@@ -130,25 +152,25 @@ class CompletionActionAddDefault(override val items: List<CompletionItemDefiniti
 class CompletionActionReplaceDefault(override val items: List<CompletionItemDefinition>) : CompletionActionReplace
 object CompletionActionHideDefault : CompletionActionHide
 class CompletionActionDecorateDefault(
-    override val label: String?,
-    override val text: String?,
-    override val description: String?
+    override val label: Expression?,
+    override val text: Expression?,
+    override val description: Expression?
 ) : CompletionActionDecorate
 
 class CompletionActionDepthDefault(override val depth: Int) : CompletionActionDepth
 
 data class CompletionItemDefinitionDefault(
     override val kind: CompletionItemKind,
-    override val label: String,
-    override val text: String,
-    override val description: String
+    override val label: Expression?,
+    override val text: Expression,
+    override val description: Expression?
 ) : CompletionItemDefinition {
     fun asString(): String {
         val props = listOfNotNull(
             if (CompletionItemKind.SEGMENT == kind) null else "kind := '${kind.name}'",
-            "label := '$label'",
-            "text := '$text'",
-            if (description.isEmpty()) null else "description := '$description'",
+            label?.let { "label := ${it.asString()}" },
+            "text := ${text.asString()}",
+            description?.let { "description := ${it.asString()}" },
         )
         return "CompletionItem() { ${props.joinToString(" ")} }"
     }

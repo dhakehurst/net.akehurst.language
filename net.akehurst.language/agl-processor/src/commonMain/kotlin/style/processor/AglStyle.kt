@@ -151,6 +151,24 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
             ]
             styleValue -> hide
             STRING -> hide
+            // the choice 'rule' does not enclose a position, so its alternatives are used as context
+            in tagRule '{' -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'rule' text := '{' },
+              CompletionItem() { label := 'rule' text := '{
+          <STYLE_ID>: <STYLE_VALUE>;
+        }' }
+            ]
+            in tagRule '}' -> decorate { label := 'rule' }
+            in metaRule '{' -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'rule' text := '{' },
+              CompletionItem() { label := 'rule' text := '{
+          <STYLE_ID>: <STYLE_VALUE>;
+        }' }
+            ]
+            in metaRule '}' -> decorate { label := 'rule' }
+            in style ':' -> decorate { label := 'style' }
+            in style ';' -> decorate { label := 'style' }
+            in selectorAndComposition ',' -> decorate { label := 'selectorAndComposition' }
           }
     """.trimIndent()
 
@@ -433,6 +451,20 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     }
                     hide("styleValue")
                     hide("STRING")
+                    // a choice (e.g. rule) is not an enclosing rule of a position, so its alternatives (tagRule, metaRule) are used
+                    replace("{", context = "tagRule", forLiteral = true) {
+                        item(kind = CompletionItemKind.LITERAL, label = "rule", text = "{")
+                        item(label = "rule", text = "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}")
+                    }
+                    decorate("}", context = "tagRule", label = "rule", forLiteral = true)
+                    replace("{", context = "metaRule", forLiteral = true) {
+                        item(kind = CompletionItemKind.LITERAL, label = "rule", text = "{")
+                        item(label = "rule", text = "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}")
+                    }
+                    decorate("}", context = "metaRule", label = "rule", forLiteral = true)
+                    decorate(":", context = "style", label = "style", forLiteral = true)
+                    decorate(";", context = "style", label = "style", forLiteral = true)
+                    decorate(",", context = "selectorAndComposition", label = "selectorAndComposition", forLiteral = true)
                 }
             }
         }
