@@ -56,6 +56,7 @@ data class CompletionItem(
     /**
      * edits to the sentence, other than inserting [text], to apply when this item is chosen,
      * e.g. an import for a name from another namespace (as LSP additionalTextEdits).
+     * TODO: future enhancement (David 2026-11-17, not now): make agl LSP compliant (completion items, edits, ...).
      * The positions are in the sentence as it is before any edit.
      */
     var additionalEdits: List<CompletionEdit> = emptyList()
