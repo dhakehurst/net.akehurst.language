@@ -48,7 +48,7 @@ abstract class test_SysML_v2_2026_09(
 ) {
 
     private val languageDir = File("../language-repository/languages/SysML/v2_2026-09")
-    private val grammarDir = File(languageDir, "grammars/$grammarName")
+    private val grammarDir = File(languageDir, "languages/$grammarName")
     private val grammarStr by lazy { File(grammarDir, "grammar.agl-grm").readText() }
     private val styleStr by lazy { File(grammarDir, "style.agl-sty").readText() }
 
@@ -172,7 +172,7 @@ class test_SysML_v2_2026_09_agl_references {
 
     private companion object {
         val languageDir = File("../language-repository/languages/SysML/v2_2026-09")
-        val grammarDir = File(languageDir, "grammars/agl")
+        val grammarDir = File(languageDir, "languages/agl")
 
         /** relative paths (from 'valid') of example files that are known to have reference errors (mostly implicit specializations, not supported yet) */
         val knownFailing = setOf(

@@ -33,7 +33,7 @@ import kotlin.test.*
 class test_KerML_agl_Singles {
 
     private companion object {
-        private val languagePathStr = "/KerML/v2_2026-09/grammars/agl"
+        private val languagePathStr = "/KerML/v2_2026-09/languages/agl"
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl-grm").readText()
 
         // with its references.agl-ref and style.agl-sty

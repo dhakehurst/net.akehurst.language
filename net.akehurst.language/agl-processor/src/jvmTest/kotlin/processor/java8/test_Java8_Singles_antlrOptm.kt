@@ -37,7 +37,7 @@ class test_Java8_Singles_antlrOptm {
 
     private companion object {
 
-        val antlrOptmProcessor: LanguageProcessor<Asm, SentenceContext> by lazy { createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl-grm") }
+        val antlrOptmProcessor: LanguageProcessor<Asm, SentenceContext> by lazy { createJava8Processor("/Java/version_8/languages/antlrOptm/grammar.agl-grm") }
 
         val proc = antlrOptmProcessor
 
