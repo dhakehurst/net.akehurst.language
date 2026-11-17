@@ -27,7 +27,9 @@ import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.MethodCall
 import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.expressions.asm.NavigationExpressionDefault
 import net.akehurst.language.reference.api.*
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
@@ -319,7 +321,7 @@ data class ReferenceDefinitionDefault(
             referenceExpressionList.isEmpty() -> sb.append(" }")
             else -> {
                 sb.append("\n")
-                sb.append(referenceExpressionList.joinToString(separator = "\n") { it.asString(indent.inc) })
+                sb.append(ReferenceExpressionPropertyDefault.listAsString(referenceExpressionList, indent.inc))
                 sb.append("\n${indent}}")
             }
         }
@@ -335,23 +337,67 @@ data class ReferenceExpressionPropertyDefault(
     override val fromNavigation: NavigationExpression?,
     override val condition: Expression? = null,
     override val fromElseNavigation: NavigationExpression? = null,
-    override val fromInherited: Boolean = false
+    override val fromInherited: Boolean = false,
+    override val whenOptionIndex: Int = -1
 ) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
+
+    override val referringPropertyPath: NavigationExpression by lazy {
+        val keep = referringPropertyNavigation.parts.dropLastWhile { it is MethodCall }
+        when (keep.size) {
+            referringPropertyNavigation.parts.size -> referringPropertyNavigation
+            else -> NavigationExpressionDefault(referringPropertyNavigation.start, keep)
+        }
+    }
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val rp = referringPropertyNavigation.asString(indent, emptyList())
+        val cn = when (condition) {
+            null -> ""
+            else -> " when " + condition.asString(indent, emptyList())
+        }
+        sb.append("${indent}property $rp ${targetAsString(indent)}$cn")
+        return sb.toString()
+    }
+
+    /** 'refers-to T from ...' */
+    fun targetAsString(indent: Indent): String {
         val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
         val fr = when (fromNavigation) {
             null -> ""
             else -> " from " + (if (fromInherited) "inherited " else "") + fromNavigation.asString(indent, emptyList()) + (fromElseNavigation?.let { " else " + it.asString(indent, emptyList()) } ?: "")
         }
-        val cn = when (condition) {
-            null -> ""
-            else -> " when " + condition.asString(indent, emptyList())
+        return "refers-to $rt$fr"
+    }
+
+    companion object {
+        /** the reference expressions as text, the options of a 'property p when { ... }' together */
+        fun listAsString(list: List<ReferenceExpression>, indent: Indent): String {
+            val lines = mutableListOf<String>()
+            var i = 0
+            while (i < list.size) {
+                val re = list[i]
+                if (re is ReferenceExpressionPropertyDefault && re.whenOptionIndex == 0) {
+                    val options = mutableListOf(re)
+                    while (i + 1 < list.size && (list[i + 1] as? ReferenceExpressionPropertyDefault)?.whenOptionIndex?.let { it > 0 } == true) {
+                        i++
+                        options.add(list[i] as ReferenceExpressionPropertyDefault)
+                    }
+                    val sb = StringBuilder()
+                    sb.append("${indent}property ${re.referringPropertyNavigation.asString(indent, emptyList())} when {\n")
+                    for (o in options) {
+                        val c = o.condition?.asString(indent.inc, emptyList()) ?: "else"
+                        sb.append("${indent.inc}$c -> ${o.targetAsString(indent.inc)}\n")
+                    }
+                    sb.append("${indent}}")
+                    lines.add(sb.toString())
+                } else {
+                    lines.add(re.asString(indent))
+                }
+                i++
+            }
+            return lines.joinToString(separator = "\n")
         }
-        sb.append("${indent}property $rp refers-to $rt$fr$cn")
-        return sb.toString()
     }
 
     /*    override fun isReference(propertyName: String): Boolean {
@@ -367,7 +413,8 @@ data class ReferenceExpressionPropertyDefault(
 data class ReferenceExpressionCollectionDefault(
     override val expression: Expression,
     override val ofType: PossiblyQualifiedName?,
-    override val referenceExpressionList: List<ReferenceExpressionAbstract>
+    override val referenceExpressionList: List<ReferenceExpressionAbstract>,
+    override val condition: Expression? = null
 ) : ReferenceExpressionAbstract(), ReferenceExpressionCollection {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
@@ -377,12 +424,16 @@ data class ReferenceExpressionCollectionDefault(
             null -> ""
             else -> " of-type " + ofType.value
         }
-        sb.append("${indent}forall $ex$ot {")
+        val cond = when (condition) {
+            null -> ""
+            else -> " when " + condition.asString(indent, emptyList())
+        }
+        sb.append("${indent}forall $ex$ot$cond {")
         when {
             referenceExpressionList.isEmpty() -> sb.append(" }")
             else -> {
                 sb.append("\n")
-                sb.append(referenceExpressionList.joinToString(separator = "\n") { it.asString(indent.inc) })
+                sb.append(ReferenceExpressionPropertyDefault.listAsString(referenceExpressionList, indent.inc))
                 sb.append("\n${indent}}")
             }
         }

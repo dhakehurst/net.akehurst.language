@@ -233,6 +233,13 @@ interface ReferenceExpressionProperty : ReferenceExpression {
     val referringPropertyNavigation: NavigationExpression
 
     /**
+     * the navigation to the property that becomes the reference: referringPropertyNavigation without its trailing method calls.
+     * The value looked up is that of the whole referringPropertyNavigation
+     * (e.g. 'property name.removeSurrounding("'") refers-to T': the value of name, without surrounding quotes, is looked up, and 'name' becomes the reference)
+     */
+    val referringPropertyPath: NavigationExpression
+
+    /**
      * type of the asm element referred to
      */
     val refersToTypeName: List<PossiblyQualifiedName>
@@ -251,14 +258,23 @@ interface ReferenceExpressionProperty : ReferenceExpression {
 
     /**
      * if not null, this reference expression applies only when the condition (evaluated on the referring element) is true.
-     * Of several reference expressions for the same property, the first that applies is used.
+     * The options of a 'property p when { c -> ... else -> ... }' are reference expressions for the same property, the first that applies is used.
      */
     val condition: Expression? get() = null
+
+    /** the position of this reference expression in the options of a 'property p when { ... }', -1 if it is not an option of one */
+    val whenOptionIndex: Int get() = -1
 }
 
 interface ReferenceExpressionCollection : ReferenceExpression {
     val expression: Expression
     val ofType: PossiblyQualifiedName?
     val referenceExpressionList: List<ReferenceExpression>
+
+    /**
+     * 'forall ... when c { ... }': the reference expressions are used only for the elements for which 'c' is true ('c' is evaluated on each element, after 'of-type').
+     * null if there is no condition
+     */
+    val condition: Expression? get() = null
 }
 

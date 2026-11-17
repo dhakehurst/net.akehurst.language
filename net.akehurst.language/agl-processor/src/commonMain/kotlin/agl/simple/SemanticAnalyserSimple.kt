@@ -82,10 +82,14 @@ class SemanticAnalyserSimple(
             crossReferenceDomain: CrossReferenceDomain,
             inScopeForTypeQualifiedName: QualifiedName,
             self: AsmStructure,
+            specialValuesFor: (AsmStructure) -> Map<String, AsmStructure?> = NO_SPECIAL_VALUES,
             onAmbiguous: ((message: String) -> Unit)? = null
         ): Any? {
-            return identifyingValuesInFor(interpreter, crossReferenceDomain, inScopeForTypeQualifiedName, self, onAmbiguous).firstOrNull()
+            return identifyingValuesInFor(interpreter, crossReferenceDomain, inScopeForTypeQualifiedName, self, specialValuesFor, onAmbiguous).firstOrNull()
         }
+
+        /** no special values ('\$owner', '\$container', '\$root') for an identifying expression */
+        val NO_SPECIAL_VALUES: (AsmStructure) -> Map<String, AsmStructure?> = { emptyMap() }
 
         /**
          * the identifying expressions ('identify T by a | b') for an element of type 'typeQualifiedName' in the scope created by an element of type 'scopeForTypeQualifiedName',
@@ -108,30 +112,43 @@ class SemanticAnalyserSimple(
         /**
          * the values of all identifying expressions ('identify T by a | b') of 'self' that have one, in order, without repeats.
          * The first is the element's name, the others are further names for it.
+         * 'specialValuesFor' gives the elements for the special values ('\$owner', '\$container', '\$root') of 'self'.
          */
         fun identifyingValuesInFor(
             interpreter: ExpressionsInterpreterOverTypedObject,
             crossReferenceDomain: CrossReferenceDomain,
             inScopeForTypeQualifiedName: QualifiedName,
             self: AsmStructure,
+            specialValuesFor: (AsmStructure) -> Map<String, AsmStructure?> = NO_SPECIAL_VALUES,
             onAmbiguous: ((message: String) -> Unit)? = null
         ): List<Any> {
             val exps = identifyingAlternativesFor(interpreter.typesDomain, crossReferenceDomain, inScopeForTypeQualifiedName, self.qualifiedTypeName, onAmbiguous)
             return when {
                 exps.size > 1 -> exps.mapNotNull { exp ->
                     // an alternative is often absent (e.g. no short name): no warnings (e.g. navigating $nothing) for an alternative that has no value
-                    interpreter.objectGraph.issues.dropIssuesRaisedIf(LanguageIssueKind.WARNING, { identifyingValueOf(interpreter, exp, self) }) { it == null }
+                    interpreter.objectGraph.issues.dropIssuesRaisedIf(LanguageIssueKind.WARNING, { identifyingValueOf(interpreter, exp, self, specialValuesFor) }) { it == null }
                 }.distinct()
 
-                else -> exps.mapNotNull { identifyingValueOf(interpreter, it, self) }.distinct()
+                else -> exps.mapNotNull { identifyingValueOf(interpreter, it, self, specialValuesFor) }.distinct()
             }
         }
 
-        private fun identifyingValueOf(interpreter: ExpressionsInterpreterOverTypedObject, exp: Expression?, self: AsmStructure): Any? = when (exp) {
+        private fun identifyingValueOf(
+            interpreter: ExpressionsInterpreterOverTypedObject,
+            exp: Expression?,
+            self: AsmStructure,
+            specialValuesFor: (AsmStructure) -> Map<String, AsmStructure?>
+        ): Any? = when (exp) {
             null -> null
             else -> {
                 val elType = interpreter.typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-                val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, elType)), exp).self
+                val specials = specialValuesFor(self).mapValues { (_, el) ->
+                    when (el) {
+                        null -> interpreter.objectGraph.nothing()
+                        else -> interpreter.objectGraph.typedAs(el, interpreter.typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType)
+                    }
+                }
+                val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, elType), specials), exp).self
                 when {
                     value is String -> value
                     value is AsmPrimitive && value.isStdString -> value.value as String
@@ -180,6 +197,9 @@ class SemanticAnalyserSimple(
     private val _interpreter by lazy {
         ExpressionsInterpreterOverTypedObject(_accessor)
     }
+
+    /** the elements for the special values ('\$owner', '\$container', '\$root') in identifying expressions, set by the phase that is running (scope creation or reference resolution) */
+    private var _specialValuesFor: (AsmStructure) -> Map<String, AsmStructure?> = NO_SPECIAL_VALUES
 
     override fun clear() {
         _resolvedReferences.clear()
@@ -293,7 +313,9 @@ class SemanticAnalyserSimple(
                 resFunc,
                 locationMap, _accessor
             )
+            _specialValuesFor = resolver::specialValuesFor
             asm.traverseDepthFirst(resolver)
+            _specialValuesFor = NO_SPECIAL_VALUES
             _resolvedReferences = resolver.resolvedReferences
         } else {
             _issues.info(null, "Scope for sentence with Identity '${sentenceId}' not found, so cannot resolve references.")
@@ -314,10 +336,12 @@ class SemanticAnalyserSimple(
                     options.ifItemAlreadyExistsInScopeIssueKind,
                     { scopeType: QualifiedName, el: AsmStructure -> identifyingValueInFor(scopeType, el) },
                     _locationMap, _issues,
-                    { scopeType: QualifiedName, el: AsmStructure -> identifyingValuesInFor(_interpreter, crossReferenceDomain, scopeType, el).drop(1) },
+                    { scopeType: QualifiedName, el: AsmStructure -> identifyingValuesInFor(_interpreter, crossReferenceDomain, scopeType, el, _specialValuesFor).drop(1) },
                     { el: AsmStructure, name: String -> _declared.add(Pair(el, name)) }
                 )
+                _specialValuesFor = scopeCreator::specialValuesFor
                 asm.traverseDepthFirst(scopeCreator)
+                _specialValuesFor = NO_SPECIAL_VALUES
             }
         }
     }
@@ -328,7 +352,7 @@ class SemanticAnalyserSimple(
     }
 
     private fun identifyingValueInFor(inScopeForTypeQualifiedName: QualifiedName, self: AsmStructure): Any? =
-        identifyingValueInFor(_interpreter, crossReferenceDomain, inScopeForTypeQualifiedName, self) { msg ->
+        identifyingValueInFor(_interpreter, crossReferenceDomain, inScopeForTypeQualifiedName, self, _specialValuesFor) { msg ->
             _issues.error(_locationMap[self], msg)
         }
 

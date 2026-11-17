@@ -44,10 +44,18 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 | `scope T { identify U by expr ... }` | an object of type `T` is a scope; the `U` objects inside it are identified there, not in the root scope |
 | `references { in T { ... } }` | the reference properties of type `T` |
 | `property p refers-to A\|B` | property `p` is a reference to an `A` or a `B` |
-| `forall list of-type T { ... }` | apply the inner lines to each element of `list` (optionally only those of type `T`) |
+| `property p.m(...) refers-to A` | the navigation may end with method calls: the value of the whole expression is looked up, and property `p` becomes the reference (e.g. `property name.removeSurrounding('\'') refers-to A`, where `'a'` and `a` are the same name; for a list of names `name.map({ n -> n.removeSurrounding('\'') })`) |
+| `forall list of-type T when c { ... }` | apply the inner lines to each element of `list` (optionally only those of type `T`, and only those for which `c` holds) |
 | `... from E` | start the lookup in the scope of element `E` (or of the element that reference `E` refers to) instead of the current scope |
 | `... from inherited E` | look the name up starting in each scope that element `E` inherits in turn (in the order the inheriting elements are in the sentence), going outwards from that scope; the first that gives a result is used. If none does, outwards from `E`, but never in `E`'s own members (e.g. a redefined feature: not the redefining feature itself) |
-| `... when expr` | use this line only when `expr` is true; the first line that holds wins |
+| `property p ... when expr` | use this line only when `expr` is true |
+| `property p when { c1 -> refers-to A from E1  c2 -> refers-to B  else -> refers-to C }` | property `p` refers to whatever the first option whose condition holds says; `else` (optional, must be last) applies when none holds |
+
+There is at most one `scope T { }` block and one `in T { }` block per type in a namespace,
+and a property appears at most once in a block (use `property p when { ... }` to choose between targets); otherwise it is an error.
+
+Open point (RV8): `when` is written differently in the references DSL (`... when c`, `property p when { c -> ... }`),
+in expressions (`when { c -> e  else -> e }`) and in m2m (`when { }`). Whether to make these consistent is still to be decided.
 
 Names are looked up in the current scope, then in the enclosing scopes.
 A reference never resolves to an object whose name is computed from that same reference (that would be circular),
@@ -91,4 +99,4 @@ and there is one warning for that rule.
 A complete worked example (packages, imports, specialization, redefinition, aliases, global names) is the test
 `agl-processor/src/commonTest/kotlin/agl/simple/test_ReferenceResolverSimple_imports.kt`;
 `inherit named`, `when` on imports and inheritance, and `$owner` are in `test_ReferenceResolverSimple_inheritNamed.kt`;
-`import-into-scope` is in `test_ReferenceResolverSimple_importIntoScope.kt`.
+`import-into-scope` is in `test_ReferenceResolverSimple_importIntoScope.kt`; method calls at the end of a referring navigation are in `test_ReferenceResolverSimple_referringValue.kt`.

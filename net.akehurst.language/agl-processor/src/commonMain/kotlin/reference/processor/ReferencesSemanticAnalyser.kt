@@ -340,7 +340,25 @@ class ReferencesSemanticAnalyser(
         else -> null
     }
 
+    /**
+     * a property has at most one 'property' line (or one 'property p when { ... }') in a block;
+     * a choice between targets is written with 'property p when { c -> refers-to ... else -> refers-to ... }'
+     */
+    private fun checkPropertyOnce(ref: ReferenceDefinitionDefault, list: List<ReferenceExpression>, where: String) {
+        list.filterIsInstance<ReferenceExpressionPropertyDefault>()
+            .filter { it.whenOptionIndex <= 0 } // one per line or per 'when { }' block
+            .groupBy { it.referringPropertyPath.asString() }
+            .filter { it.value.size > 1 }
+            .forEach { (prop, lines) ->
+                raiseError(
+                    lines[1],
+                    "For references in '${ref.inTypeName}'$where, property '$prop' has more than one 'property' line; use one 'property $prop when { <condition> -> refers-to ... else -> refers-to ... }'"
+                )
+            }
+    }
+
     private fun checkReferenceDefinition(crossReferenceDomain: CrossReferenceDomain, ref: ReferenceDefinitionDefault, importedNamespaces: List<TypesNamespace>) {
+        checkPropertyOnce(ref, ref.referenceExpressionList, "")
         val contextType = findReferredToType(ref.inTypeName, importedNamespaces)
         when {
             (null == contextType) -> {
@@ -379,6 +397,7 @@ class ReferencesSemanticAnalyser(
         refExpr: ReferenceExpressionCollectionDefault,
         importedNamespaces: List<TypesNamespace>
     ) {
+        checkPropertyOnce(ref, refExpr.referenceExpressionList, ", forall '${refExpr.expression}'")
         val ofType = refExpr.ofType?.let {
             val type = findReferredToType(it, importedNamespaces)
             when (type) {
@@ -427,6 +446,7 @@ class ReferencesSemanticAnalyser(
                         }
                     }
                 } ?: loopVarType
+                checkNavigations(refExpr.condition, filteredLoopVarType, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', when", refExpr)
                 for (re in refExpr.referenceExpressionList) {
                     checkReferenceExpression(crossReferenceDomain, filteredLoopVarType, ref, re, importedNamespaces)
                 }
@@ -456,7 +476,7 @@ class ReferencesSemanticAnalyser(
             }
         }
 
-        val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyNavigation, contextType.type())
+        val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyPath, contextType.type())
         when (prop) {
             null -> {
                 raiseError(

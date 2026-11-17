@@ -70,11 +70,32 @@ class ScopeCreator(
 
     private val addedInThisRun = mutableMapOf<Scope, MutableMap<String, MutableList<Pair<AsmStructure, QualifiedName>>>>()
 
+    /** the elements being walked (the top is the container of the next element) */
+    private val containerStack = mutableStackOf<AsmStructure>()
+
+    /** the element that owns each scope created in this run (the root scope is owned by the root element) */
+    private val ownerOfScope = mutableMapOf<Scope, AsmStructure>()
+
+    /** for each element walked: its container and the owner of the scope it is in */
+    private val containerOf = mutableMapOf<AsmStructure, AsmStructure?>()
+    private val ownerOf = mutableMapOf<AsmStructure, AsmStructure?>()
+
+    /**
+     * the elements for the special values in an identifying expression of 'el':
+     * '\$container' the element that contains 'el' in the ASM, '\$owner' the element that owns the scope 'el' is added to, '\$root' the root element.
+     */
+    fun specialValuesFor(el: AsmStructure): Map<String, AsmStructure?> = mapOf(
+        "\$container" to containerOf[el],
+        "\$owner" to ownerOf[el],
+        "\$root" to rootElement
+    )
+
     override  fun beforeRoot(root: Any) {
         // the root element owns the root scope of the sentence (it is not an item in any scope), so that a 'scope' block for its type applies (e.g. imports at file level)
         if (root is AsmStructure) {
             rootElement = root
             val rootScope = currentScope.peek()
+            ownerOfScope[rootScope] = root
             rootScope.ownerItem = context.createScopedItem.invoke(rootScope.scopePath, root, this.locationMap[root])
         }
     }
@@ -89,10 +110,14 @@ class ScopeCreator(
 
     override  fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         val scope = currentScope.peek()
+        containerOf[value] = if (containerStack.isEmpty) null else containerStack.peek()
+        ownerOf[value] = if (value === rootElement) null else ownerOfScope[scope]
 
         addToScope(scope, value)
         val chScope = createScope(scope, value)
+        if (chScope !== scope && !ownerOfScope.containsKey(chScope)) ownerOfScope[chScope] = value
         currentScope.push(chScope)
+        containerStack.push(value)
 
         value.syntaxAnalyserPath = chScope.scopePath.fold(AsmPathSimple.ROOT) { acc, it -> acc.plus(it) }
     }
@@ -101,6 +126,7 @@ class ScopeCreator(
 
     override  fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         currentScope.pop()
+        containerStack.pop()
     }
 
     override  fun beforeList(owningProperty: AsmStructureProperty?, value: Collection<*>) {}
