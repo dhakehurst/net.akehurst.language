@@ -270,6 +270,7 @@ class SyntaxAnalysisStream<AsmType : Any, AsmValueType : Any>(
         }
         for (l in locations) {
             syntaxAnalyser.locationMap.add(pathOf(l.cell), l.obj, sentence.locationForNode(l.node))
+            // TODO: also record property value locations (LocationMap.addPropertyLocation), as SyntaxAnalyserFromAsmTransformAbstract does, so semantic tags (style 'identify'/'refers-to') work with streaming
         }
     }
 }

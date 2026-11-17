@@ -59,3 +59,49 @@ So `$keyword { font-weight: bold; }` then `'circle' { foreground: red; }` makes 
 
 The declarations are CSS-like `name: value;` pairs; the editor decides which names it supports.
 `styles B : A { }` extends style set `A`.
+
+## Semantic selectors
+
+A selector can also name a type of the language, using what semantic analysis finds out about the sentence:
+
+| Selector | Matches |
+|---|---|
+| `type T` | every token of an element whose type is `T` or conforms to `T` |
+| `identify T` | the identifier that names an element of type `T` (or a subtype), as given by `identify T by ...` in the [references](references.md) |
+| `refers-to T` | an identifier that refers to an element of type `T` (or a subtype), i.e. a resolved reference |
+
+For the Shapes language with its [references](references.md#example):
+
+```agl
+namespace example
+styles Shapes {
+    identify Shape {
+        font-weight: bold;
+    }
+    refers-to Circle {
+        foreground: red;
+    }
+    type Connection {
+        font-style: italic;
+    }
+}
+```
+
+In `connect c to s` the `c` is red (it refers to a circle), every token of the connection is italic,
+and the names in `circle c` and `square s` are bold.
+
+A simple type name is found in the types namespace with the qualified name of the style set
+(`example.Shapes` for `namespace example styles Shapes`, where the types of `namespace example grammar Shapes` are),
+then in the namespaces imported with `import-types`, in order. A qualified name can always be used.
+A type that is not found is an error.
+
+```agl
+namespace other
+styles X {
+    import-types example.Shapes
+    refers-to Circle { foreground: red; }
+}
+```
+
+`type`, `identify` and `refers-to` on their own (no type name after them) are still rule names.
+The editor styles these tokens once semantic analysis of the sentence has finished.

@@ -1196,7 +1196,8 @@ class ReferenceResolverSimple(
                     source = source,
                     sourceLocation = srcLocation,
                     target = refersTo,
-                    targetLocation = tgtLocation
+                    targetLocation = tgtLocation,
+                    referringLocation = _locationMap.getPropertyLocation(source, referringProperty.name.value)
                 )
             )
         }

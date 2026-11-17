@@ -40,11 +40,15 @@ interface StyleSetReference {
 interface StyleSet : Definition<StyleSet> {
     override val namespace: StyleNamespace
     val extends: List<StyleSetReference>
+    /** 'import-types ns': namespaces of types that semantic selectors can name with a simple name */
+    val importTypes: List<Import>
     val rules : List<AglStyleRule>
     val metaRules: List<AglStyleMetaRule>
     val tagRules: List<AglStyleTagRule>
 
     val allRules: List<AglStyleRule>
+
+    fun addImportType(value: Import)
 }
 
 interface AglStyleRule : Formatable {
@@ -59,11 +63,30 @@ interface AglStyleTagRule : AglStyleRule {
     val selector: List<AglStyleSelector>
 }
 
-enum class AglStyleSelectorKind { SPECIAL, LITERAL, PATTERN, RULE_NAME }
+/**
+ * TYPE, IDENTIFY and REFERS_TO are semantic selectors ('type T', 'identify T', 'refers-to T'),
+ * their value is the semantic tag they match (see SemanticTag)
+ */
+enum class AglStyleSelectorKind { SPECIAL, LITERAL, PATTERN, RULE_NAME, TYPE, IDENTIFY, REFERS_TO }
 data class AglStyleSelector(
     val value: String,
     val kind: AglStyleSelectorKind
-)
+) {
+    /** for a semantic selector: the qualified name of its type, set by semantic analysis (the value keeps the name as written) */
+    var resolvedTypeName: QualifiedName? = null
+        private set
+
+    fun resolveTypeAs(qualifiedName: QualifiedName) {
+        resolvedTypeName = qualifiedName
+    }
+
+    /**
+     * what a token's tag must equal for this selector to match it:
+     * for a resolved semantic selector '<kind> <qualified type name>' (see SemanticTag), otherwise the value
+     */
+    val matchTag: String
+        get() = resolvedTypeName?.let { "${value.substringBefore(' ')} ${it.value}" } ?: value
+}
 
 data class AglStyleDeclaration(
     val name: String,
