@@ -41,13 +41,15 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 | Syntax | Meaning |
 |---|---|
 | `identify T by expr` | objects of type `T` are found by the value of `expr` (usually a property, e.g. `name`) |
-| `scope T { identify U by expr ... }` | an object of type `T` is a scope; the `U` objects inside it are identified there, not in the root scope |
+| `identify T by a \| b` | alternatives: the value of the first alternative that has a value (not `$nothing`) is the name of the object, the values of the others are more names for it (the same value is used once). There is no warning when an alternative is `$nothing` |
+| `scope T { identify U by expr ... }` | an object of type `T` is a scope; the `U` objects inside it are identified there, not in the root scope. In the block, the `identify` lines come first, then the `import`/`inherit` lines |
 | `references { in T { ... } }` | the reference properties of type `T` |
 | `property p refers-to A\|B` | property `p` is a reference to an `A` or a `B` |
 | `type-group N = A\|B` | a name for a list of type names, used as `refers-to N` (also with other names: `refers-to N\|C`); a group may use other groups. It is not a type: where it is used it stands for its list. Declared with the top-level `identify` lines (before the `scope` blocks), visible in that namespace only |
 | `property p.m(...) refers-to A` | the navigation may end with method calls: the value of the whole expression is looked up, and property `p` becomes the reference (e.g. `property name.removeSurrounding('\'') refers-to A`, where `'a'` and `a` are the same name; for a list of names `name.map({ n -> n.removeSurrounding('\'') })`) |
 | `forall list of-type T when c { ... }` | apply the inner lines to each element of `list` (optionally only those of type `T`, and only those for which `c` holds) |
 | `... from E` | start the lookup in the scope of element `E` (or of the element that reference `E` refers to) instead of the current scope |
+| `... from $previous.p else E` | in a `forall`, the first element has no previous element: it is looked up in the scope of what reference `E` (evaluated on the object of the `in` block) refers to. Without `else`, the first element uses the normal lookup. `else` is only allowed with `from $previous...` (otherwise it is an error) |
 | `... from inherited E` | look the name up starting in each scope that element `E` inherits in turn (in the order the inheriting elements are in the sentence), going outwards from that scope; the first that gives a result is used. If none does, outwards from `E`, but never in `E`'s own members (e.g. a redefined feature: not the redefining feature itself) |
 | `property p ... when expr` | use this line only when `expr` is true |
 | `property p when { c1 -> refers-to A from E1  c2 -> refers-to B  else -> refers-to C }` | property `p` refers to whatever the first option whose condition holds says; `else` (optional, must be last) applies when none holds |
@@ -86,6 +88,7 @@ These are written inside a `scope` block, on an `identify` line, or (`import-int
 |---|---|
 | `import forall nav members-of ref` | for each `nav`, the members of the scope that `ref` refers to are visible here |
 | `import forall nav element ref` | for each `nav`, only the object that `ref` refers to is visible here |
+| `import forall nav of-type T ...`, `inherit forall nav of-type T ...` | as above, only for the elements of `nav` that are of type `T` (or a subtype) |
 | `import members-of ref`, `inherit members-of ref` | without `forall`: the same as `forall $self` (`ref` is evaluated on the object that owns the scope) |
 | `import-into-scope T members-of ref` | (top level) each object of type `T` is an import of the scope it is in: the members of the scope that `ref` (evaluated on that object) refers to are visible there. For a language whose imports can be in many kinds of body (e.g. SysML imports in packages, part and action bodies), one line instead of an `import forall` in each scope |
 | `import-into-scope T element ref` | (top level) as above, only the object that `ref` refers to is visible |
