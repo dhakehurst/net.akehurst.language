@@ -155,7 +155,7 @@ class M2mPatternMatcher(
         }
         val res = options.map { opt ->
             opt.flatMap { it.alternatives }.merge()
-        }
+        }.filter { it.isMatch } // a repeated variable with different values is no match
         return res
     }
 
