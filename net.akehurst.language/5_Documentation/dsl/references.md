@@ -62,6 +62,7 @@ The value of the referring navigation is the name that is looked up.
 A String value is split on '.' into the parts of a qualified name (`a.b.c` is `c` in `b` in `a`).
 A List of Strings is used as the parts as it is (no split), so a language whose names may contain '.'
 can use a List property, or end the navigation with method calls that give a List.
+A referring property that is not set (e.g. an optional reference that the sentence does not give) has nothing to resolve and gives no error (see `test_ReferenceResolverSimple_unsetReference`).
 Names are looked up in the current scope, then in the enclosing scopes.
 A reference never resolves to an object whose name is computed from that same reference (that would be circular),
 e.g. with `identify Perform by target.name` and `in Perform { property target.name refers-to Action }`, in `perform tp` the reference `tp` skips the perform itself
