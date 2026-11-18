@@ -66,7 +66,7 @@ A property that refers to another element (see [references](references.md)) hold
 Reading it gives the element it refers to: `l.target` is the referred element, and `l.target.id` its `id`.
 Put `&` in front of the property name to get the reference itself: `l.&target` (or `&target` for a property of the current object).
 In a chain, `&` applies to the one property it is written in front of: `a.&b.c` reads `b` as a reference and then navigates to `c` of the element it refers to.
-An unresolved reference is a reference either way.
+Reading an unresolved reference without `&` gives `$nothing`; with `&` it gives the (unresolved) reference.
 
 The [references](references.md) and [format](format.md) processors work on the referring side, so they read the last property of their expressions with `&`
 (a reference is formatted as the text that refers to the element).

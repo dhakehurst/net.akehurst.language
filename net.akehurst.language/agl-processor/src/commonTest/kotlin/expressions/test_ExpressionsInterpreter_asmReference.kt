@@ -104,11 +104,16 @@ class test_ExpressionsInterpreter_asmReference {
     }
 
     @Test
-    fun unresolved_reference__stays_a_reference() {
+    fun unresolved_reference__is_nothing() {
         val res = processor.process("link satisfies SYS-7", Agl.options { semanticAnalysis { sentenceContext(contextAsmSimple()) } })
         val link = items(res.asm!!.root.first() as AsmStructure).first()
-        val (target, _) = eval(link, "target")
-        assertTrue(target.self is AsmReference, target.toString())
+        val (target, issues) = eval(link, "target")
+        assertTrue(target.isNothing, target.toString())
+        assertTrue(issues.all.isEmpty(), issues.toString())
+        // with '&' it is the (unresolved) reference
+        val (ref, _) = eval(link, "&target")
+        assertTrue(ref.self is AsmReference, ref.toString())
+        assertEquals(null, (ref.self as AsmReference).value)
     }
 
     @Test

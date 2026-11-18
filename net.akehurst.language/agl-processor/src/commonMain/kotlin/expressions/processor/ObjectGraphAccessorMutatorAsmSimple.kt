@@ -1045,9 +1045,9 @@ data class ObjectGraphEdgeSimple(
 
 /**
  * reading a reference property as a value gives the referred element when the reference is resolved,
- * an unresolved reference stays an AsmReference
+ * an unresolved reference gives Unit, which becomes \$nothing (the reference itself is read with '&')
  */
 internal fun Any.resolvedOrSelf(): Any = when (this) {
-    is AsmReference -> this.value ?: this
+    is AsmReference -> this.value ?: Unit
     else -> this
 }
