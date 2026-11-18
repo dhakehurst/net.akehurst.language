@@ -771,7 +771,9 @@ class ReferenceResolverSimple(
      */
     private fun inheritForallSources(inherits: List<ScopeImport>, ownerEl: AsmStructure): List<Triple<ScopeImport, List<AsmStructure>, Boolean>> {
         val sources = inherits.filter { null == it.named && !it.byPosition }.map { si -> Pair(si, importElementsOf(si, ownerEl)) }
-        val beingResolved = { src: AsmStructure -> _resolving.any { r -> isWithin(r, src) } }
+        // a source whose own reference is being resolved can not be used yet (cycle).
+        // When the source is the scope owner itself ('forall $self', or no 'forall'), every reference in its body is within it, so only its own references count
+        val beingResolved = { src: AsmStructure -> _resolving.any { r -> if (src === ownerEl) r === ownerEl else isWithin(r, src) } }
         val anyBeingResolved = sources.any { (_, srcs) -> srcs.any(beingResolved) }
         return sources.map { (si, srcs) -> Triple(si, srcs.filterNot(beingResolved), !anyBeingResolved) }
     }

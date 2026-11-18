@@ -63,11 +63,12 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 aliasFor = 'alias-for' rootOrNavigation ;
                 scopeImports = scopeImport* ;
                 scopeImport = importDefinition | inheritDefinition | inheritNamedDefinition | inheritByPositionDefinition ;
-                importDefinition = 'import' 'forall' rootOrNavigation ofType? importKind rootOrNavigation recursive? visibility? condition? ;
+                importDefinition = 'import' scopeForall? importKind rootOrNavigation recursive? visibility? condition? ;
+                scopeForall = 'forall' rootOrNavigation ofType? ;
                 importKind = 'members-of' | 'element' ;
                 importIntoScope = 'import-into-scope' possiblyQualifiedTypeReference importKind rootOrNavigation recursive? visibility? condition? ;
                 recursive = 'recursive' expression ;
-                inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation condition? ;
+                inheritDefinition = 'inherit' scopeForall? 'members-of' rootOrNavigation condition? ;
                 inheritNamedDefinition = 'inherit' 'named' namedPath condition? ;
                 inheritByPositionDefinition = 'inherit' 'by-position' condition? ;
                 namedPath = [namedSegment / '.']+ ;
@@ -231,8 +232,10 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         ref("inheritByPositionDefinition")
                     }
                     concatenation("importDefinition") {
-                        lit("import"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; ref("importKind"); ref("rootOrNavigation"); opt { ref("recursive") }; opt { ref("visibility") }; opt { ref("condition") }
+                        lit("import"); opt { ref("scopeForall") }; ref("importKind"); ref("rootOrNavigation"); opt { ref("recursive") }; opt { ref("visibility") }; opt { ref("condition") }
                     }
+                    // without 'forall' the import is for $self
+                    concatenation("scopeForall") { lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") } }
                     choice("importKind") {
                         lit("members-of")
                         lit("element")
@@ -242,7 +245,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     concatenation("recursive") { lit("recursive"); ref("expression") }
                     concatenation("inheritDefinition") {
-                        lit("inherit"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("members-of"); ref("rootOrNavigation"); opt { ref("condition") }
+                        lit("inherit"); opt { ref("scopeForall") }; lit("members-of"); ref("rootOrNavigation"); opt { ref("condition") }
                     }
                     concatenation("inheritNamedDefinition") {
                         lit("inherit"); lit("named"); ref("namedPath"); opt { ref("condition") }
@@ -586,8 +589,8 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     importTypes("net.akehurst.language.base.api", "net.akehurst.language.reference.asm")
                     createObject("scope", "ScopeDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("scopeForTypeName", 1, "child[1]") }
                     createObject("identifiable", "IdentifiableDefault") { /* custom SyntaxAnalyser */ assignment("typeName", 1, "child[1]") }
-                    createObject("importDefinition", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 3, "child[3]") }
-                    createObject("inheritDefinition", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 3, "child[3]") }
+                    // 'forall elements of-type T' of an import or inherit
+                    createObject("scopeForall", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 2, "child[2]") }
                     createObject("importIntoScope", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 1, "child[1]") }
                     createObject("referenceDefinition", "ReferenceDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("inTypeName", 1, "child[1]") }
                     createObject("propertyReferenceExpression", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }

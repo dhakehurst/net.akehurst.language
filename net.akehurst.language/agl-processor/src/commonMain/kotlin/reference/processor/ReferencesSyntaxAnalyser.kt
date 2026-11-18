@@ -49,6 +49,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::rootDeclarations)
         super.register(this::rootDeclaration)
         super.register(this::importIntoScope)
+        super.register(this::scopeForall)
         super.register(this::typeGroup)
         super.register(this::scopes)
         super.register(this::scope)
@@ -261,17 +262,20 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun scopeImport(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault =
         children[0] as ScopeImportDefault
 
-    // importDefinition = 'import' 'forall' rootOrNavigation ofType? importKind rootOrNavigation recursive? visibility? ;
+    // importDefinition = 'import' scopeForall? importKind rootOrNavigation recursive? visibility? condition? ;
     private fun importDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
-        val elements = children[2] as Expression
-        val ofType = children[3] as PossiblyQualifiedName?
-        val kind = children[4] as ScopeImportKind
-        val target = asNavigation(children[5] as Expression)
-        val recursive = children[6] as Expression?
-        val visibility = children[7] as Expression?
-        val condition = children[8] as Expression?
-        return ScopeImportDefault(kind, elements, ofType, target, recursive, visibility, condition)
+        val forall = children[1] as Pair<Expression, PossiblyQualifiedName?>?
+        val kind = children[2] as ScopeImportKind
+        val target = asNavigation(children[3] as Expression)
+        val recursive = children[4] as Expression?
+        val visibility = children[5] as Expression?
+        val condition = children[6] as Expression?
+        return ScopeImportDefault(kind, forall?.first ?: RootExpressionDefault.SELF, forall?.second, target, recursive, visibility, condition)
     }
+
+    // scopeForall = 'forall' rootOrNavigation ofType? ;
+    private fun scopeForall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Expression, PossiblyQualifiedName?> =
+        Pair(children[1] as Expression, children[2] as PossiblyQualifiedName?)
 
     // importIntoScope = 'import-into-scope' possiblyQualifiedTypeReference importKind rootOrNavigation recursive? visibility? condition? ;
     private fun importIntoScope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
@@ -295,13 +299,12 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun recursive(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[1] as Expression
 
-    // inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation condition? ;
+    // inheritDefinition = 'inherit' scopeForall? 'members-of' rootOrNavigation condition? ;
     private fun inheritDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
-        val elements = children[2] as Expression
-        val ofType = children[3] as PossiblyQualifiedName?
-        val target = asNavigation(children[5] as Expression)
-        val condition = children[6] as Expression?
-        return ScopeImportDefault(ScopeImportKind.INHERIT, elements, ofType, target, null, null, condition)
+        val forall = children[1] as Pair<Expression, PossiblyQualifiedName?>?
+        val target = asNavigation(children[3] as Expression)
+        val condition = children[4] as Expression?
+        return ScopeImportDefault(ScopeImportKind.INHERIT, forall?.first ?: RootExpressionDefault.SELF, forall?.second, target, null, null, condition)
     }
 
     // inheritNamedDefinition = 'inherit' 'named' namedPath condition? ;

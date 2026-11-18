@@ -30,6 +30,8 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.MethodCall
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.api.RootExpression
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.reference.api.*
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
@@ -306,7 +308,14 @@ data class ScopeImportDefault(
         return when {
             byPosition -> "${indent}inherit by-position$cn"
             intoScope -> "${indent}import-into-scope ${ofType?.value ?: ""} $what ${target.asString(indent, emptyList())}$rec$vis$cn"
-            null == named -> "${indent}$kw forall ${elements.asString(indent, emptyList())}$ot $what ${target.asString(indent, emptyList())}$rec$vis$cn"
+            null == named -> {
+                // 'forall $self' (with no of-type) is written without 'forall'
+                val fa = when {
+                    null == ofType && elements is RootExpression && (elements as RootExpression).name == RootExpressionDefault.SELF.name -> ""
+                    else -> " forall ${elements.asString(indent, emptyList())}$ot"
+                }
+                "${indent}$kw$fa $what ${target.asString(indent, emptyList())}$rec$vis$cn"
+            }
             else -> "${indent}$kw named ${named.joinToString(".") { n -> if (IDENTIFIER_REGEX.matches(n)) n else "'$n'" }}$cn"
         }
     }
