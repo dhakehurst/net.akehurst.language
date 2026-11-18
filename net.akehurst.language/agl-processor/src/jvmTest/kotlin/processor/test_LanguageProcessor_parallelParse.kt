@@ -38,7 +38,7 @@ import kotlin.test.assertTrue
 class test_LanguageProcessor_parallelParse {
 
     private companion object {
-        val SYSML_GRAMMAR by lazy { File("../language-repository/languages/SysML/v2_2026-09/languages/standard/grammar.agl-grm").readText() }
+        val SYSML_GRAMMAR by lazy { File("../language-repository/languages/SysML/v2.1_2026-09/languages/standard/grammar.agl-grm").readText() }
 
         val SENTENCES = listOf(
             "package Testsat {\n    part def Battery {\n        attribute capacity : Real = 42.5;\n    }\n}",

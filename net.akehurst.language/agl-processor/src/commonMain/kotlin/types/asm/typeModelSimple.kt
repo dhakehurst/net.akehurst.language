@@ -1429,7 +1429,9 @@ abstract class StructuredTypeSimpleAbstract : TypeDefinitionSimpleAbstract(), St
             check(max < Int.MAX_VALUE) { "Maximum index number for properties exceeded!" }
             max+1
         }
-        val pd = PropertyDeclarationStored(this, name, typeInstance, characteristics + PropertyCharacteristic.STORED, propIndex)
+        // a property given as DERIVED (e.g. from the builder, with an accessor) is not also STORED, 'str drv' is not valid in the types language
+        val chrs = if (characteristics.contains(PropertyCharacteristic.DERIVED)) characteristics else characteristics + PropertyCharacteristic.STORED
+        val pd = PropertyDeclarationStored(this, name, typeInstance, chrs, propIndex)
         pd.accessor = accessor
         pd.mutator = mutator
         this.addProperty(pd)

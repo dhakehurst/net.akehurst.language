@@ -33,11 +33,11 @@ import kotlin.test.*
 class test_KerML_agl_Singles {
 
     private companion object {
-        private val languagePathStr = "/KerML/v2_2026-09/languages/agl"
+        private val languagePathStr = "/KerML/v1.1_2026-09/languages/agl"
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl-grm").readText()
 
         // with its references.agl-ref and style.agl-sty
-        val processor: LanguageProcessor<Asm, SentenceContext> by lazy { KerML_v2_2026_09.processorWithReferences() }
+        val processor: LanguageProcessor<Asm, SentenceContext> by lazy { KerML_v1_1_2026_09.processorWithReferences() }
 
         fun test_process(sentence: String, context: SentenceContext, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
