@@ -55,7 +55,7 @@ import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
@@ -541,7 +541,7 @@ open class AglTextDatastore(
         val typesDomain = processor.typesDomain
         val crossReferenceDomain: CrossReferenceDomain? = _parsedConfig.definitions().crossReference?.let { processor.crossReferenceDomain }
         val interpreter = crossReferenceDomain?.let {
-            ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, it, IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS), p.locationMap()))
+            ExpressionsInterpreterOverTypedObjectCombined(objectGraphSimpleAsm(typesDomain, it, IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS), p.locationMap()))
         }
         val accessor = unitItem.data.accessor
         val sentence = SentenceDefault(p.unit.text, p.sentenceIdentity)

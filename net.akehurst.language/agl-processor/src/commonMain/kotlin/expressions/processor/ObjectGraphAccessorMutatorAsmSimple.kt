@@ -248,7 +248,7 @@ class ExternalGetterAsmSimple(
     val locationMap: LocationMap,
 ) : ExternalGetter {
 
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(typesDomain, issues, locationMap, this))
+    private val _interpreter = ExpressionsInterpreterOverTypedObjectCombined(ObjectGraphAccessorMutatorByReflection(typesDomain, issues, locationMap, this))
 
     override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
         val tp = when {

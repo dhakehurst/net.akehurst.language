@@ -27,6 +27,8 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
+// replaced by ExpressionsInterpreterOverTypedObjectCombined (evaluateStr / evaluateExpression)
+/*
 open class ExpressionsInterpreterOverTypedObject(
     val objectGraph: ObjectGraphAccessorMutator,
     val customFunctions: FunctionLib? = null
@@ -719,42 +721,4 @@ open class ExpressionsInterpreterOverTypedObject(
         }
     }
 }
-/**
- * The parameter name a lambda binds its argument to: the declared parameter, or 'it' if there is none.
- */
-//TODO: lambdas with more than one parameter (not used anywhere yet), only the first is bound
-internal fun lambdaParameterName(expression: LambdaExpression): String =
-    expression.variables.firstOrNull() ?: "it"
-
-/**
- * The comparison operators '<', '<=', '>', '>=' on Integer and Real values (an Integer is compared with a Real as a Real),
- * and on String values (lexicographic, as Kotlin String.compareTo).
- */
-internal fun evaluateComparisonOperator(objectGraph: ObjectGraphAccessorMutatorCommon, lhs: TypedObject, op: String, rhs: TypedObject): TypedObject {
-    val isNumber = { o: TypedObject -> o.type.conformsTo(StdLibDefault.Integer) || o.type.conformsTo(StdLibDefault.Real) }
-    val isString = { o: TypedObject -> o.type.conformsTo(StdLibDefault.String) }
-    return when {
-        (isNumber(lhs) && isNumber(rhs)) || (isString(lhs) && isString(rhs)) -> {
-            val lhsv = objectGraph.untyped(lhs)
-            val rhsv = objectGraph.untyped(rhs)
-            val cmp = when {
-                lhsv is String && rhsv is String -> lhsv.compareTo(rhsv)
-                lhsv is Long && rhsv is Long -> lhsv.compareTo(rhsv)
-                else -> (lhsv as Number).toDouble().compareTo((rhsv as Number).toDouble())
-            }
-            val res = when (op) {
-                "<" -> cmp < 0
-                "<=" -> cmp <= 0
-                ">" -> cmp > 0
-                ">=" -> cmp >= 0
-                else -> error("Not a comparison operator '$op'")
-            }
-            objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, res)
-        }
-
-        else -> {
-            objectGraph.issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
-            objectGraph.nothing()
-        }
-    }
-}
+*/

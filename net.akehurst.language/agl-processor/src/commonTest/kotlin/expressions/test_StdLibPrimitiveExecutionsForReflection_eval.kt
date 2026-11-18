@@ -48,7 +48,7 @@ class test_StdLibPrimitiveExecutionsForReflection_eval {
             val st = typesDomain.findByQualifiedNameOrNull(selfType.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = StdLibPrimitiveExecutionsForReflection(issues))
-            val interpreter = ExpressionsInterpreterOverTypedObject(og)
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(og)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertEquals(expected, og.untyped(actual))
         }

@@ -34,7 +34,7 @@ import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.FunctionCall
 import net.akehurst.language.expressions.api.LiteralExpression
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.agl.util.ReentrantLockCommon
 import net.akehurst.language.issues.ram.IssueHolder
@@ -46,7 +46,7 @@ import net.akehurst.language.types.asm.StdLibDefault
 class FormatterOverTypedObject(
     override val formatDomain: AglFormatDomain,
     objectGraph: ObjectGraphAccessorMutator
-) : ExpressionsInterpreterOverTypedObject(objectGraph), Formatter {
+) : ExpressionsInterpreterOverTypedObjectCombined(objectGraph), Formatter {
 
     companion object {
         const val EVC_FORMAT_SET_NAME = "§EVC_FORMAT_SET_NAME"

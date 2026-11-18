@@ -39,7 +39,7 @@ class test_StdLibPrimitiveExecutionsForAsmSimple_eval {
         fun test(typesDomain: TypesDomain, self: Any, pqn:String, expression: String, expected: Any) {
             val st = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn.asPossiblyQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault(), primitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple))
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault(), primitiveExecutor = StdLibPrimitiveExecutionsForAsmSimple))
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, actual.untyped)
         }

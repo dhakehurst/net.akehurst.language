@@ -26,7 +26,7 @@ import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -82,7 +82,7 @@ class AsmSimpleBuilder(
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _locationMap = LocationMapDefault() //TODO: what to use here
     private val _objectGraph = objectGraphSimpleAsm(_typesDomain, null,_issues,_locationMap)
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(_objectGraph)
+    private val _interpreter = ExpressionsInterpreterOverTypedObjectCombined(_objectGraph)
     private val _asm = AsmSimple(_objectGraph)
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple>()
     private val _identifyingValueInFor: (QualifiedName, AsmStructure) -> Any? = { inTypeName: QualifiedName, item: AsmStructure ->

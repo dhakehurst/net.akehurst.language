@@ -60,7 +60,7 @@ class test_ExpressionsInterpreter_ByReflection {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = executor)
-            val interpreter = ExpressionsInterpreterOverTypedObject(og)
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(og)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertTrue(interpreter.issues.errors.isEmpty(), interpreter.issues.toString())
             assertEquals(expected, og.untyped(actual))
@@ -70,7 +70,7 @@ class test_ExpressionsInterpreter_ByReflection {
             val st = typesDomain.findByQualifiedNameOrNull(selfTypeName.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = executor)
-            val interpreter = ExpressionsInterpreterOverTypedObject(og)
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(og)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertEquals(expected, og.untyped(actual))
             assertEquals(expectedIssues, interpreter.issues.all.toList())

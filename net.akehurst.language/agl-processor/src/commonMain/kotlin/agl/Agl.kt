@@ -33,7 +33,6 @@ import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.format.asm.FormatDomainDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
@@ -443,7 +442,7 @@ object Agl {
 
     /** like [executeExpression], with a full [EvaluationContext] (self and named values) */
     fun executeExpressionWithEvaluationContext(accessorMutator:ObjectGraphAccessorMutator, evc:EvaluationContext, expression:String): TypedObject {
-        val interpreter = ExpressionsInterpreterOverTypedObject(accessorMutator)
+        val interpreter = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
         val result = interpreter.evaluateStr(evc, expression)
         return result
     }

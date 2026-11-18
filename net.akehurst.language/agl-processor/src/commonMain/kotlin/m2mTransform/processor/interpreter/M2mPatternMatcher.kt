@@ -19,7 +19,7 @@ package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
 import net.akehurst.kotlinx.collections.topologicalSort
 import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.CollectionTemplate
 import net.akehurst.language.m2mTransform.api.M2mTransformRule
@@ -88,7 +88,7 @@ class M2mPatternMatcher(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator)
+                val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
                 val evc = EvaluationContext.of(variables)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = accessorMutator.equalTo(src, value)

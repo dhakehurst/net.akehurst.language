@@ -44,7 +44,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
         fun test(typesDomain: TypesDomain, self: Any, pqn:String, expression: String, expected: Any) {
             val st = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn.asPossiblyQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault()))
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault()))
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, actual.untyped, "Expected != Actual:\n$expected\n$actual")
         }
@@ -52,7 +52,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
         fun test_fail(typesDomain: TypesDomain, self: Any, pqn:String, expression: String, expected: List<LanguageIssue>) {
             val st = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn.asPossiblyQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault()))
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault()))
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(Unit, actual.untyped)
             assertEquals(expected, interpreter.issues.all.toList())

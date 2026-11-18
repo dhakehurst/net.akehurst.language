@@ -81,7 +81,7 @@ class ReferenceResolverSimple(
     private val scopeForElement = mutableMapOf<AsmStructure, Scope>()
     private val _issues = _accessor.issues
     /** the interpreter for expressions in references, with the special properties '.\$container' and '.\$owner' of every element */
-    private val _interpreter: ExpressionsInterpreterOverTypedObject = object : ExpressionsInterpreterOverTypedObject(_accessor) {
+    private val _interpreter: ExpressionsInterpreterOverTypedObjectCombined = object : ExpressionsInterpreterOverTypedObjectCombined(_accessor) {
         override fun evaluateSpecialProperty(obj: TypedObject, name: String): TypedObject? = when (name) {
             CONTAINER -> typedOf(structuresIn(obj).singleOrNull()?.let { containerOf(it) })
             OWNER -> typedOf(structuresIn(obj).singleOrNull()?.let { ownerOf(it) })

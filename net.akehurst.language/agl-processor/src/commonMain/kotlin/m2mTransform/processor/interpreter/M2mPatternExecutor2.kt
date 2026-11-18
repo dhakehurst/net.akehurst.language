@@ -6,7 +6,7 @@ import net.akehurst.language.agl.m2mTransform.processor.interpreter.ObjectTempla
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.asm.ExpressionExt.freeVariables
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.objectgraph.api.EvaluationContext
@@ -250,7 +250,7 @@ class M2mPatternExecutor2(
                 val vn = "$lhsFullName\$rhs"
                 val freeVars = expressionFreeVars
                 createStep("$vn := ${template.expression.asString()}", freeVars, listOf(vn)) { evc ->
-                    val value = ExpressionsInterpreterOverTypedObject(accessorMutator).evaluateExpression(evc, template.expression)
+                    val value = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator).evaluateExpression(evc, template.expression)
                     evc.setNamedValue(vn, value)
                 }
                 inputs.add(vn)
@@ -336,7 +336,7 @@ class M2mPatternExecutor2(
             val expressionVarName = "$lhsFullName\$rhs"
             val freeVars = expressionFreeVariableNames(template.expression)
             createStep("$expressionVarName := ${template.expression.asString()}", freeVars, listOf(expressionVarName)) { evc ->
-                val value = ExpressionsInterpreterOverTypedObject(accessorMutator).evaluateExpression(evc, template.expression)
+                val value = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator).evaluateExpression(evc, template.expression)
                 evc.setNamedValue(expressionVarName, value)
             }
 

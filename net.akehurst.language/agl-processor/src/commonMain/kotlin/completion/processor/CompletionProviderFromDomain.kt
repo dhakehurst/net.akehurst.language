@@ -28,7 +28,7 @@ import net.akehurst.language.grammar.api.Terminal
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.objectgraph.api.EvaluationContext
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -221,7 +221,7 @@ class CompletionProviderFromDomain<AsmType : Any, ContextType : Any>(
     private class ValueEvaluator(val enclosing: List<String>) {
         private val issues = IssueHolder(LanguageProcessorPhase.ALL)
         private val objectGraph = ObjectGraphAccessorMutatorByReflection(valuesTypesDomain, issues, LocationMapDefault())
-        private val interpreter = ExpressionsInterpreterOverTypedObject(objectGraph)
+        private val interpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraph)
         private val rules: TypedObject by lazy {
             objectGraph.createCollection(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), enclosing.map { str(it) })
         }

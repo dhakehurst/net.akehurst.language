@@ -59,7 +59,7 @@ class test_ExpressionsInterpreter_constructObject {
         val og = ObjectGraphAccessorMutatorByReflection(tm, issues, LocationMapDefault())
         val evc = EvaluationContext.of(emptyMap())
         val actual = when (mode) {
-            Mode.OLD -> ExpressionsInterpreterOverTypedObject(og).evaluateStr(evc, expression)
+            Mode.OLD -> ExpressionsInterpreterOverTypedObjectCombined(og).evaluateStr(evc, expression)
             Mode.SYNC -> ExpressionsInterpreterOverTypedObjectCombined(og).evaluateStr(evc, expression)
             Mode.SUSPEND -> ExpressionsInterpreterOverTypedObjectCombined(og).evaluateStrSuspend(evc, expression)
         }

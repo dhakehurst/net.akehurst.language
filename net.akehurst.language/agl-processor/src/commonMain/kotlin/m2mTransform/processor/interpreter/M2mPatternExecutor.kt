@@ -5,7 +5,7 @@ import net.akehurst.kotlinx.collections.transitveClosure
 import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.objectgraph.api.EvaluationContext
@@ -412,7 +412,7 @@ class M2mPatternExecutor(
      * returns value of expression evaluated in context of provided variables
      */
     private fun createFromExpression(evc: EvaluationContext, lhsType: TypeInstance, expression: Expression): TypedObject {
-        val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator)
+        val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
         return when (expression) {
             is CreateObjectExpression -> {
                 exprInterp.constructObject(evc, expression)

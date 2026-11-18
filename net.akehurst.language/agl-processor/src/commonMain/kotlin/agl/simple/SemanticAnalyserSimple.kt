@@ -78,7 +78,7 @@ class SemanticAnalyserSimple(
          * declarations are found by type conformance
          */
         fun identifyingValueInFor(
-            interpreter: ExpressionsInterpreterOverTypedObject,
+            interpreter: ExpressionsInterpreterOverTypedObjectCombined,
             crossReferenceDomain: CrossReferenceDomain,
             inScopeForTypeQualifiedName: QualifiedName,
             self: AsmStructure,
@@ -115,7 +115,7 @@ class SemanticAnalyserSimple(
          * 'specialValuesFor' gives the elements for the special values ('\$owner', '\$container', '\$root') of 'self'.
          */
         fun identifyingValuesInFor(
-            interpreter: ExpressionsInterpreterOverTypedObject,
+            interpreter: ExpressionsInterpreterOverTypedObjectCombined,
             crossReferenceDomain: CrossReferenceDomain,
             inScopeForTypeQualifiedName: QualifiedName,
             self: AsmStructure,
@@ -134,7 +134,7 @@ class SemanticAnalyserSimple(
         }
 
         private fun identifyingValueOf(
-            interpreter: ExpressionsInterpreterOverTypedObject,
+            interpreter: ExpressionsInterpreterOverTypedObjectCombined,
             exp: Expression?,
             self: AsmStructure,
             specialValuesFor: (AsmStructure) -> Map<String, AsmStructure?>
@@ -159,7 +159,7 @@ class SemanticAnalyserSimple(
             }
         }
 
-         fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject, crossReferenceDomain: CrossReferenceDomain, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
+         fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObjectCombined, crossReferenceDomain: CrossReferenceDomain, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
             return when {
                 //crossReferenceModel.isScopeDefinedFor(self.qualifiedTypeName).not() -> null
                 else -> {
@@ -195,7 +195,7 @@ class SemanticAnalyserSimple(
         objectGraphSimpleAsm(typesDomain, null, _issues, _locationMap)
     }
     private val _interpreter by lazy {
-        ExpressionsInterpreterOverTypedObject(_accessor)
+        ExpressionsInterpreterOverTypedObjectCombined(_accessor)
     }
 
     /** the elements for the special values ('\$owner', '\$container', '\$root') in identifying expressions, set by the phase that is running (scope creation or reference resolution) */

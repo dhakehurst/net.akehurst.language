@@ -621,6 +621,12 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         return result
     }
 
+    /**
+     * the value of a special property ('.\$name') of 'obj', given by the user of the interpreter (e.g. '.\$owner' in references),
+     * null if it is not a special property, then it is an ordinary property of 'obj'
+     */
+    protected open fun evaluateSpecialProperty(obj: TypedObject, name: String): TypedObject? = null
+
     private inline fun evaluateNavigationInternal(
         evc: EvaluationContext,
         expression: NavigationExpression,
@@ -633,7 +639,10 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         val start = eval(evc, st)
         val result = expression.parts.fold(start) { acc, it ->
             when (it) {
-                is PropertyCall -> evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), getProperty)
+                is PropertyCall -> when {
+                    it.propertyName.startsWith("\$") -> evaluateSpecialProperty(acc, it.propertyName) ?: evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), getProperty)
+                    else -> evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), getProperty)
+                }
                 is MethodCall -> evaluateMethodCallInternal(evc, acc, MethodName(it.methodName), it.arguments, eval, executeMethod)
                 is IndexOperation -> evaluateIndexOperationInternal(evc, acc, it.indices, eval)
                 else -> error("should not happen")
@@ -978,6 +987,46 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         propertyAssignments.forEach {
             val value = eval(evc, it.rhs)
             setProperty(self, it.variable.name, value)
+        }
+    }
+}
+
+/**
+ * The parameter name a lambda binds its argument to: the declared parameter, or 'it' if there is none.
+ */
+//TODO: lambdas with more than one parameter (not used anywhere yet), only the first is bound
+internal fun lambdaParameterName(expression: LambdaExpression): String =
+    expression.variables.firstOrNull() ?: "it"
+
+/**
+ * The comparison operators '<', '<=', '>', '>=' on Integer and Real values (an Integer is compared with a Real as a Real),
+ * and on String values (lexicographic, as Kotlin String.compareTo).
+ */
+internal fun evaluateComparisonOperator(objectGraph: ObjectGraphAccessorMutatorCommon, lhs: TypedObject, op: String, rhs: TypedObject): TypedObject {
+    val isNumber = { o: TypedObject -> o.type.conformsTo(StdLibDefault.Integer) || o.type.conformsTo(StdLibDefault.Real) }
+    val isString = { o: TypedObject -> o.type.conformsTo(StdLibDefault.String) }
+    return when {
+        (isNumber(lhs) && isNumber(rhs)) || (isString(lhs) && isString(rhs)) -> {
+            val lhsv = objectGraph.untyped(lhs)
+            val rhsv = objectGraph.untyped(rhs)
+            val cmp = when {
+                lhsv is String && rhsv is String -> lhsv.compareTo(rhsv)
+                lhsv is Long && rhsv is Long -> lhsv.compareTo(rhsv)
+                else -> (lhsv as Number).toDouble().compareTo((rhsv as Number).toDouble())
+            }
+            val res = when (op) {
+                "<" -> cmp < 0
+                "<=" -> cmp <= 0
+                ">" -> cmp > 0
+                ">=" -> cmp >= 0
+                else -> error("Not a comparison operator '$op'")
+            }
+            objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, res)
+        }
+
+        else -> {
+            objectGraph.issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+            objectGraph.nothing()
         }
     }
 }

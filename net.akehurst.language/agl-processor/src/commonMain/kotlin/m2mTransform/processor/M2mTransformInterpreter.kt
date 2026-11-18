@@ -27,7 +27,7 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.InfixExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.asm.ExpressionExt.freeVariables
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
@@ -834,7 +834,7 @@ class M2mTransformInterpreter(
             val mapping = rule.values.firstNotNullOfOrNull { vs ->
                 val srcValues = srcAlt.mapNotNull { (srcDomainRef, v) ->
                     val srcObjectGraph = m2mExecution.domainAccessorMutator[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
-                    val exprInterp = ExpressionsInterpreterOverTypedObject(srcObjectGraph)
+                    val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(srcObjectGraph)
                     val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[srcDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
@@ -849,7 +849,7 @@ class M2mTransformInterpreter(
                 if (srcValues.isEmpty()) {
                     null
                 } else {
-                    val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator)
+                    val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(m2mExecution.targetAccessorMutator)
                     val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[m2mExecution.targetDomainRef] ?: error("")
                     val value = exprInterp.evaluateExpression(evc, drExp)
@@ -928,7 +928,7 @@ class M2mTransformInterpreter(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator)
+                val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = accessorMutator.equalTo(lhs, value)
                 TemplateMatchResult(isMatch, emptyMap())
@@ -1023,7 +1023,7 @@ class M2mTransformInterpreter(
                 val found = findAppliedRecord(m2mExecution, rule, source) ?: run {
                     // as QVT, a rule in 'when' that was not yet applied for these values is applied first
                     if (m2mExecution.rulesAppliedForWhen.add(rule)) {
-                        val ruleArguments = when_.ruleArguments.entries.associate { Pair(it.key.value, ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator).evaluateExpression(evc, it.value)) }
+                        val ruleArguments = when_.ruleArguments.entries.associate { Pair(it.key.value, ExpressionsInterpreterOverTypedObjectCombined(m2mExecution.targetAccessorMutator).evaluateExpression(evc, it.value)) }
                         executeRule(m2mExecution, rule, source, ruleArguments)
                         m2mExecution.rulesAppliedForWhen.remove(rule)
                         findAppliedRecord(m2mExecution, rule, source)
@@ -1044,7 +1044,7 @@ class M2mTransformInterpreter(
                             findAppliedRecord(m2mExecution, rule, el) ?: run {
                                 // as QVT, a rule in 'when' that was not yet applied for these values is applied first
                                 if (m2mExecution.rulesAppliedForWhen.add(rule)) {
-                                    val ruleArguments = when_.ruleArguments.entries.associate { Pair(it.key.value, ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator).evaluateExpression(evc, it.value)) }
+                                    val ruleArguments = when_.ruleArguments.entries.associate { Pair(it.key.value, ExpressionsInterpreterOverTypedObjectCombined(m2mExecution.targetAccessorMutator).evaluateExpression(evc, it.value)) }
                                     executeRule(m2mExecution, rule, el, ruleArguments)
                                     m2mExecution.rulesAppliedForWhen.remove(rule)
                                     findAppliedRecord(m2mExecution, rule, el)
@@ -1060,7 +1060,7 @@ class M2mTransformInterpreter(
             }
             else -> {
                 val srcOg = m2mExecution.domainAccessorMutator.entries.filterNot { it.key == m2mExecution.targetDomainRef }.first().value //should never be null!
-                val exprInterp = ExpressionsInterpreterOverTypedObject(srcOg) //FIXME: which og to use? all might be needed!
+                val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(srcOg) //FIXME: which og to use? all might be needed!
                 //val evc = EvaluationContext.of(matchedVariables)
                 val res = exprInterp.evaluateExpression(evc, when_)
                 val v: Boolean = when {
@@ -1088,7 +1088,7 @@ class M2mTransformInterpreter(
             val argExpr = domainArguments[domainRef]
             if (argExpr != null) {
                 val og = m2mExecution.domainAccessorMutator[domainRef] ?: error("ObjectGraph not found for domain $domainRef")
-                val exprInterp = ExpressionsInterpreterOverTypedObject(og)
+                val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(og)
                 val resolvedArg = exprInterp.evaluateExpression(callerEvc, argExpr)
 
                 val localParamName = signature.variable.name.value
@@ -1356,7 +1356,7 @@ class M2mTransformInterpreter(
 //        matchedVariables: Map<String, TypedObject>,
     ): EvaluationContext {
         val ruleArguments = where.ruleArguments.entries.associate {
-            val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator)
+            val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(m2mExecution.targetAccessorMutator)
             val value = exprInterp.evaluateExpression(evc, it.value)
             Pair(it.key.value, value)
         }
@@ -1532,7 +1532,7 @@ class M2mTransformInterpreter(
                 }
             } else {
                 val og = m2mExecution.domainAccessorMutator[domainRef] ?: error("Domain Reference '${domainRef.value}' not found.")
-                val exprInterp = ExpressionsInterpreterOverTypedObject(og)
+                val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(og)
                 val res = exprInterp.evaluateExpression(evc, expr)
                 Pair(domainRef, listOf(res))
             }
@@ -1548,7 +1548,7 @@ class M2mTransformInterpreter(
     ): Map<DomainReference, List<TypedObject>> {
         return (arguments - m2mExecution.targetDomainRef).mapValues { (k, v) ->
             val og = m2mExecution.domainAccessorMutator[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-            val exprInterp = ExpressionsInterpreterOverTypedObject(og)
+            val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(og)
             //val evc = EvaluationContext.of(matchedVariables)
             val res = exprInterp.evaluateExpression(evc, v)
             listOf(res)
@@ -1568,7 +1568,7 @@ class M2mTransformInterpreter(
         }.associate { it }
         return argsValues.mapValues { (k, v) ->
             val og = m2mExecution.domainAccessorMutator[k] ?: error("Cannot find ObjectGraph for domain reference '${k.value}'.")
-            val exprInterp = ExpressionsInterpreterOverTypedObject(og)
+            val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(og)
             val evc = EvaluationContext.of(matchedVariables)
             val res = exprInterp.evaluateExpression(evc, v)
             listOf(res)
@@ -1608,7 +1608,7 @@ class M2mTransformInterpreter(
         lhsType: TypeInstance,
         expression: Expression
     ): TypedObject {
-        val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator)
+        val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(m2mExecution.targetAccessorMutator)
         return when (expression) {
             is CreateObjectExpression -> {
                 //val evc = EvaluationContext.of(variables)
@@ -1734,7 +1734,7 @@ class M2mTransformInterpreter(
         evc: EvaluationContext,
         expression: Expression
     ) {
-        val exprInterp = ExpressionsInterpreterOverTypedObject(m2mExecution.targetAccessorMutator)
+        val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(m2mExecution.targetAccessorMutator)
         when (expression) {
             is CreateObjectExpression -> {
                 exprInterp.propertyAssignmentBlock(evc, obj, expression.propertyAssignments)

@@ -58,7 +58,7 @@ class test_Expressions_docsBugs {
 
     private fun eval(expression: String): Any? {
         val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-        val interpreter = ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(tm, null, issues, LocationMapDefault()))
+        val interpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraphSimpleAsm(tm, null, issues, LocationMapDefault()))
         val st = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull("ns.Test".asPossiblyQualifiedName)!!.type()
         val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
         assertEquals(emptyList(), issues.all.toList(), expression)
@@ -129,7 +129,7 @@ class test_Expressions_docsBugs {
     @Test
     fun unknown_property_on_String_is_nothing() {
         val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-        val interpreter = ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(tm, null, issues, LocationMapDefault()))
+        val interpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraphSimpleAsm(tm, null, issues, LocationMapDefault()))
         val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, StdLibDefault.AnyType)), "'abc'.foo")
         assertEquals(Unit, actual.untyped)
         assertEquals(1, issues.warnings.size, issues.toString())
