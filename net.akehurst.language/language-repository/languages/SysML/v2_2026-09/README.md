@@ -32,3 +32,7 @@ They are licensed under the Eclipse Public License v2.0, see [LICENSE-valid-EPL-
 The license and this README are not in `valid/`, because every file in `valid/` is parsed as a SysML sentence by the tests.
 
 The other files in this folder are licensed under the Apache License, Version 2.0, as the rest of this repository.
+
+## Specification issues
+
+Issues found in the specification, and differences to the Pilot Implementation, are recorded in [SPEC_ISSUES.md](SPEC_ISSUES.md).
