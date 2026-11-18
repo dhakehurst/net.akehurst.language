@@ -44,6 +44,7 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 | `'text'`, `12`, `1.5`, `true` | literals |
 | `name`, `$self` | a property of the current object, the current object |
 | `a.b`, `a.m(x)`, `a[i]` | property, method call, index |
+| `a.&b`, `&b` | property `b` read as a reference, see [References](#references) |
 | `list.size`, `.isEmpty`, `.first`, `.last`, `.get(i)`, `.map(f)`, `.filter(f)` | list properties and methods |
 | `+ - * / %`, `== != < <= > >=`, `and or xor` | infix operators, Kotlin precedence (tightest first): `* / %`, `+ -`, `< <= > >=`, `== !=`, `and`, `xor`, `or` |
 | `c ? a : b` | `a` if `c` is true, else `b` |
@@ -58,5 +59,17 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 
 Special names: `$self` (current object), `$nothing`; in [asm-transform](asm-transform.md) also `child`, `children`,
 `$matchedText`, `$alternative`; in [references](references.md) also `$container`, `$owner`, `$root`, `$previous`; in [format](format.md) `$EOL`.
+
+## References
+
+A property that refers to another element (see [references](references.md)) holds a reference.
+Reading it gives the element it refers to: `l.target` is the referred element, and `l.target.id` its `id`.
+Put `&` in front of the property name to get the reference itself: `l.&target` (or `&target` for a property of the current object).
+In a chain, `&` applies to the one property it is written in front of: `a.&b.c` reads `b` as a reference and then navigates to `c` of the element it refers to.
+Reading an unresolved reference without `&` gives `$nothing`; with `&` it gives the (unresolved) reference.
+
+The [references](references.md) and [format](format.md) processors work on the referring side, so they read the last property of their expressions with `&`
+(a reference is formatted as the text that refers to the element).
+The examples are tested in `agl-processor/src/commonTest/kotlin/expressions/test_ExpressionsInterpreter_asmReference.kt`.
 
 A file can define functions: `fun name(p: Type): Type = expression`.

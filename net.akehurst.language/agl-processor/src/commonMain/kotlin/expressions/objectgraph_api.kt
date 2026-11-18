@@ -230,6 +230,12 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
      */
     fun getProperty(tobj: TypedObject, propertyName: String): TypedObject
 
+    /**
+     * as [getProperty], but a reference property gives the reference itself, not the element it refers to ('.&name' in expressions).
+     * An object graph without references gives the same value as [getProperty].
+     */
+    fun getPropertyAsReference(tobj: TypedObject, propertyName: String): TypedObject = getProperty(tobj, propertyName)
+
     fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
 
     fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject)
@@ -237,6 +243,7 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
     suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject
     suspend fun createStructureValueSuspend(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject
     suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject
+    suspend fun getPropertyAsReferenceSuspend(tobj: TypedObject, propertyName: String): TypedObject = getPropertyAsReference(tobj, propertyName)
     suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject)
     suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
     suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject

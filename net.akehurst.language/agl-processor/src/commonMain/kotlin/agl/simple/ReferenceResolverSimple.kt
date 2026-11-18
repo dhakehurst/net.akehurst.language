@@ -33,6 +33,8 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.asm.PropertyCallDefault
+import net.akehurst.language.expressions.asm.withLastStepAsReference
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.issues.ram.IssueHolder
@@ -304,8 +306,8 @@ class ReferenceResolverSimple(
         val selfTyped = _interpreter.objectGraph.typedAs(self, elType)
         val path = refExpr.referringPropertyPath
         val trailing = refExpr.referringPropertyNavigation.parts.drop(path.parts.size)
-        if (trailing.isEmpty()) return _interpreter.evaluateExpression(EvaluationContext.ofSelf(selfTyped), refExpr.referringPropertyNavigation).self
-        val pathValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(selfTyped), path)
+        if (trailing.isEmpty()) return evaluateReferring(EvaluationContext.ofSelf(selfTyped), refExpr.referringPropertyNavigation).self
+        val pathValue = evaluateReferring(EvaluationContext.ofSelf(selfTyped), path)
         val pv = pathValue.self
         return when (pv) {
             is AsmReference -> {
@@ -313,7 +315,7 @@ class ReferenceResolverSimple(
                 val (owner, propName) = when {
                     path.parts.isEmpty() -> Pair(selfTyped, (path.start as RootExpression).name)
                     else -> Pair(
-                        _interpreter.evaluateExpression(EvaluationContext.ofSelf(selfTyped), NavigationExpressionDefault(path.start, path.parts.dropLast(1))),
+                        evaluateReferring(EvaluationContext.ofSelf(selfTyped), NavigationExpressionDefault(path.start, path.parts.dropLast(1))),
                         (path.parts.last() as PropertyCall).propertyName
                     )
                 }
@@ -326,9 +328,9 @@ class ReferenceResolverSimple(
                     )
                     else -> _interpreter.objectGraph.typedAs(pv.reference, StdLibDefault.String)
                 }
-                _interpreter.evaluateExpression(EvaluationContext.ofSelf(raw), NavigationExpressionDefault(RootExpressionDefault.SELF, trailing)).self
+                evaluateReferring(EvaluationContext.ofSelf(raw), NavigationExpressionDefault(RootExpressionDefault.SELF, trailing)).self
             }
-            else -> _interpreter.evaluateExpression(EvaluationContext.ofSelf(selfTyped), refExpr.referringPropertyNavigation).self
+            else -> evaluateReferring(EvaluationContext.ofSelf(selfTyped), refExpr.referringPropertyNavigation).self
         }
     }
 
@@ -1157,6 +1159,13 @@ class ReferenceResolverSimple(
      * '\$owner' is the element that owns the scope 'self' is in, '\$root' is the root element of the sentence of 'self'.
      * '.\$container' and '.\$owner' are also properties of every element.
      */
+    /**
+     * the resolver works on the referring side: the last property read of an expression gives a reference itself ('&'),
+     * not the element it refers to (reading a reference property without '&' gives the element)
+     */
+    private fun evaluateReferring(evc: EvaluationContext, expr: Expression): TypedObject =
+        _interpreter.evaluateExpression(evc, expr.withLastStepAsReference())
+
     private fun evaluate(expr: Expression?, self: AsmStructure): Any? = when (expr) {
         null -> null
         else -> {
@@ -1168,7 +1177,7 @@ class ReferenceResolverSimple(
                     ROOT to typedOf(rootOf(self))
                 )
             )
-            val v = _interpreter.evaluateExpression(evc, expr).self
+            val v = evaluateReferring(evc, expr).self
             when (v) {
                 is AsmPrimitive -> v.value
                 else -> v
@@ -1213,7 +1222,7 @@ class ReferenceResolverSimple(
     }
 
     private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, sentenceContext: ReferenceExpressionContext, self: Any, type: TypeInstance) {
-         val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, type)), refExpr.expression)
+         val coll = evaluateReferring(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, type)), refExpr.expression)
         val obj = coll.untyped
         val isCollection = obj is List<*> || obj is AsmList
         // 'forall' over a single value (not a collection) : the value is the only element
@@ -1264,7 +1273,7 @@ class ReferenceResolverSimple(
         val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure
         return when (elStr) {
             null -> {
-                val v = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(el, elType)), cond).self
+                val v = evaluateReferring(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(el, elType)), cond).self
                 v == true || (v is AsmPrimitive && v.value == true)
             }
             else -> evaluate(cond, elStr) == true
@@ -1340,7 +1349,7 @@ class ReferenceResolverSimple(
                 val selfType = type
                 val front = NavigationExpressionDefault(this.start, this.parts.dropLast(1))
                 val evc = EvaluationContext(null, mapOf(RootExpressionDefault.SELF.name to _interpreter.objectGraph.typedAs(root, selfType)))
-                val v = _interpreter.evaluateExpression(evc, front).self
+                val v = evaluateReferring(evc, front).self
                 val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {
                     is AsmStructure -> {

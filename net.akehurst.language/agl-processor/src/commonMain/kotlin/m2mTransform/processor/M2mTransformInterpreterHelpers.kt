@@ -205,7 +205,7 @@ object M2mTransformInterpreterHelpers {
     fun <OT : Any> List<TemplateMatchAlternatives>.cartesianProduct(): TemplateMatchAlternatives {
         val lists = this.map { it.alternatives }
         val cp = lists.cartesianProduct()
-        val alts = cp.map { it.merge() }
+        val alts = cp.map { it.merge() }.filter { it.isMatch }
         return TemplateMatchAlternatives(alts)
     }
 

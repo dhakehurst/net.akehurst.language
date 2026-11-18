@@ -118,10 +118,10 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         evaluateFunctionCallInternal(evc, expression, { c, x -> evaluateExpression(c, x) }) { f, a, r -> objectGraph.callFunction(f, a, r) }
 
     private fun evaluateRootExpression(evc: EvaluationContext, expression: RootExpression): TypedObject =
-        evaluateRootExpressionInternal(evc, expression) { o, n -> o.getProperty(n) }
+        evaluateRootExpressionInternal(evc, expression) { o, n, r -> if (r) objectGraph.getPropertyAsReference(o, n) else o.getProperty(n) }
 
     private fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject =
-        evaluateNavigationInternal(evc, expression, { c, x -> evaluateExpression(c, x) }, { o, n -> o.getProperty(n) }) { o, n, a -> o.executeMethod(n, a) }
+        evaluateNavigationInternal(evc, expression, { c, x -> evaluateExpression(c, x) }, { o, n, r -> if (r) objectGraph.getPropertyAsReference(o, n) else o.getProperty(n) }) { o, n, a -> o.executeMethod(n, a) }
 
     private fun evaluateTernaryCondition(evc: EvaluationContext, expression: TernaryConditionExpression): TypedObject =
         evaluateTernaryConditionInternal(evc, expression) { c, x -> evaluateExpression(c, x) }
@@ -215,10 +215,10 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         evaluateFunctionCallInternal(evc, expression, { c, x -> evaluateExpressionSuspend(c, x) }) { f, a, r -> objectGraph.callFunctionSuspend(f, a, r) }
 
     private suspend fun evaluateRootExpressionSuspend(evc: EvaluationContext, expression: RootExpression): TypedObject =
-        evaluateRootExpressionInternal(evc, expression) { o, n -> o.getPropertySuspend(n) }
+        evaluateRootExpressionInternal(evc, expression) { o, n, r -> if (r) objectGraph.getPropertyAsReferenceSuspend(o, n) else o.getPropertySuspend(n) }
 
     private suspend fun evaluateNavigationSuspend(evc: EvaluationContext, expression: NavigationExpression): TypedObject =
-        evaluateNavigationInternal(evc, expression, { c, x -> evaluateExpressionSuspend(c, x) }, { o, n -> o.getPropertySuspend(n) }) { o, n, a -> o.executeMethodSuspend(n, a) }
+        evaluateNavigationInternal(evc, expression, { c, x -> evaluateExpressionSuspend(c, x) }, { o, n, r -> if (r) objectGraph.getPropertyAsReferenceSuspend(o, n) else o.getPropertySuspend(n) }) { o, n, a -> o.executeMethodSuspend(n, a) }
 
     private suspend fun evaluateTernaryConditionSuspend(evc: EvaluationContext, expression: TernaryConditionExpression): TypedObject =
         evaluateTernaryConditionInternal(evc, expression) { c, x -> evaluateExpressionSuspend(c, x) }
@@ -574,7 +574,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     private inline fun evaluateRootExpressionInternal(
         evc: EvaluationContext,
         expression: RootExpression,
-        getProperty: (obj: TypedObject, name: String) -> TypedObject
+        getProperty: (obj: TypedObject, name: String, asReference: Boolean) -> TypedObject
     ): TypedObject {
         return when {
             expression.isNothing -> objectGraph.nothing()
@@ -588,12 +588,12 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
                 // special value: the name must exist as a property of the self which must be a tuple
                 val name = expression.name
                 evc.getOrInParent(name)
-                    ?: evc.self?.let { evaluatePropertyNameInternal(it, PropertyName(name), getProperty) }
+                    ?: evc.self?.let { evaluatePropertyNameInternal(it, PropertyName(name), expression.asReference, getProperty) }
                     ?: error($$"Evaluation Context does not contain special value '$$name' and there is no '$self' object with that property name")
             }
 
             else -> evc.getOrInParent(expression.name)
-                ?: evc.self?.let { evaluatePropertyNameInternal(it, PropertyName(expression.name), getProperty) }
+                ?: evc.self?.let { evaluatePropertyNameInternal(it, PropertyName(expression.name), expression.asReference, getProperty) }
                 ?: let {
                     issues.warn(null, $$"Evaluation Context does not contain root expression '$${expression.name}' and there is no '$self' object with that property name, using value '$nothing'")
                     objectGraph.nothing()
@@ -632,7 +632,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         evc: EvaluationContext,
         expression: NavigationExpression,
         eval: (evc: EvaluationContext, expression: Expression) -> TypedObject,
-        getProperty: (obj: TypedObject, name: String) -> TypedObject,
+        getProperty: (obj: TypedObject, name: String, asReference: Boolean) -> TypedObject,
         executeMethod: (obj: TypedObject, name: String, args: List<TypedObject>) -> TypedObject
     ): TypedObject {
         // start should be a RootExpression or LiteralExpression
@@ -641,8 +641,8 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         val result = expression.parts.fold(start) { acc, it ->
             when (it) {
                 is PropertyCall -> when {
-                    it.propertyName.startsWith("\$") -> evaluateSpecialProperty(acc, it.propertyName) ?: evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), getProperty)
-                    else -> evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), getProperty)
+                    it.propertyName.startsWith("\$") -> evaluateSpecialProperty(acc, it.propertyName) ?: evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), it.asReference, getProperty)
+                    else -> evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), it.asReference, getProperty)
                 }
                 is MethodCall -> evaluateMethodCallInternal(evc, acc, MethodName(it.methodName), it.arguments, eval, executeMethod)
                 is IndexOperation -> evaluateIndexOperationInternal(evc, acc, it.indices, eval)
@@ -655,7 +655,8 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     private inline fun evaluatePropertyNameInternal(
         obj: TypedObject,
         propertyName: PropertyName,
-        getProperty: (obj: TypedObject, name: String) -> TypedObject
+        asReference: Boolean,
+        getProperty: (obj: TypedObject, name: String, asReference: Boolean) -> TypedObject
     ): TypedObject {
         return when {
             objectGraph.isNothing(obj) -> {
@@ -664,7 +665,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                getProperty(obj, propertyName.value)
+                getProperty(obj, propertyName.value, asReference)
             }
         }
     }

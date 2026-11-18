@@ -75,7 +75,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
               | group
               | block
               ;
-            rootExpression = propertyReference ;
+            rootExpression = '&'? propertyReference ;
             literalExpression = literal ;
             
             navigationExpression = navigationRoot navigationPart+ ;
@@ -121,7 +121,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             
             group = '(' expression ')' ;
             
-            propertyCall = '.' propertyReference ;
+            propertyCall = '.' '&'? propertyReference ;
             methodCall = '.' methodReference '(' argumentList ')' ;
             argumentList = [expression / ',']* ;
             
@@ -266,7 +266,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("block")
                     }
                     concatenation("rootExpression") {
-                        ref("propertyReference")
+                        opt { lit("&") }; ref("propertyReference")
                     }
                     concatenation("literalExpression") { ref("literal") }
                     concatenation("navigationExpression") {
@@ -340,7 +340,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     concatenation("typeTest") { ref("expression"); lit("is"); ref("typeReference") }
                     concatenation("group") { lit("("); ref("expression"); lit(")") }
                     concatenation("propertyCall") {
-                        lit("."); ref("propertyReference")
+                        lit("."); opt { lit("&") }; ref("propertyReference")
                     }
                     concatenation("methodCall") {
                         lit("."); ref("methodReference")
