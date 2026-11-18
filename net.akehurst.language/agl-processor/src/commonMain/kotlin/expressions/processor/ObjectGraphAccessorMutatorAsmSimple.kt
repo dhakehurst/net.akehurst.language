@@ -302,7 +302,7 @@ class ExternalGetterAsmSimple(
                 val v = obj.getPropertyOrNull(PropertyValueName(propertyName))
                 when (v) {
                     is AsmStructure -> v
-                    is AsmReference -> v
+                    is AsmReference -> v.resolvedOrSelf()
                     else -> v?.raw
                 }
             }
@@ -310,7 +310,7 @@ class ExternalGetterAsmSimple(
                 val v = it.property[PropertyValueName(propertyName)]?.value
                 when (v) {
                     is AsmStructure -> v
-                    is AsmReference -> v
+                    is AsmReference -> v.resolvedOrSelf()
                     else -> v?.raw
                 }
             }
@@ -838,7 +838,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             null -> when {
                 asmValue is AsmStructure -> {
                     val pv = asmValue.property[PropertyValueName(propertyName)]
-                    pv?.let { toTypedObject(it.value, StdLibDefault.AnyType) } ?: nothing()
+                    pv?.let { toTypedObject(it.value.resolvedOrSelf(), StdLibDefault.AnyType) } ?: nothing()
                 }
 
                 else -> {
@@ -878,12 +878,12 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
                 is PropertyDeclarationStored -> when (asmValue) {
                     is AsmStructure -> {
                         val pv = asmValue.property[PropertyValueName(propertyName)]
-                        pv?.let { toTypedObject(pv.value, propRes.typeInstance) } ?: nothing()
+                        pv?.let { toTypedObject(pv.value.resolvedOrSelf(), propRes.typeInstance) } ?: nothing()
                     }
 
                     is AsmReference -> asmValue.value?.let {
                         val v = it.property[PropertyValueName(propertyName)]?.value
-                        toTypedObject(v, propRes.typeInstance)
+                        toTypedObject(v?.resolvedOrSelf(), propRes.typeInstance)
                     } ?: nothing()
                     else -> error("Cannot evaluate property '${propertyName}' on object of type '${tobj::class.simpleName}'")
                 }
@@ -1043,3 +1043,11 @@ data class ObjectGraphEdgeSimple(
     override val property: PropertyDeclaration
 ) : ObjectGraphEdge
 
+/**
+ * reading a reference property as a value gives the referred element when the reference is resolved,
+ * an unresolved reference stays an AsmReference
+ */
+internal fun Any.resolvedOrSelf(): Any = when (this) {
+    is AsmReference -> this.value ?: this
+    else -> this
+}

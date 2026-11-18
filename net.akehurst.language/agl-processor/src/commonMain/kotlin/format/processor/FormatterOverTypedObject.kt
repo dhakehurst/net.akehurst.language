@@ -16,6 +16,7 @@
 
 package net.akehurst.language.format.processor
 
+import net.akehurst.language.expressions.asm.withLastStepAsReference
 import net.akehurst.kotlinx.collections.lazyMap
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
@@ -575,7 +576,8 @@ class FormatterOverTypedObject(
                 when (self) {
                     null -> objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, "")
                     else -> {
-                        self.getProperty(name)
+                        // a reference is formatted as the text that refers, not as the element it refers to
+                        objectGraph.getPropertyAsReference(self, name)
                     }
                 }
             }
@@ -585,7 +587,8 @@ class FormatterOverTypedObject(
     fun formatEvaluateExpression(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, expression: Expression): TypedObject {
         val typedFsm = objectGraph.toTypedObject(formatSetName.value, StdLibDefault.String)
         val newEvc = evc.child(mapOf(EVC_FORMAT_SET_NAME to typedFsm))
-        return evaluateExpression(newEvc, expression)
+        // a reference is formatted as the text that refers, so the last property read gives the reference itself ('&')
+        return evaluateExpression(newEvc, expression.withLastStepAsReference())
     }
 
     // --- override Expression Interpreter ---
