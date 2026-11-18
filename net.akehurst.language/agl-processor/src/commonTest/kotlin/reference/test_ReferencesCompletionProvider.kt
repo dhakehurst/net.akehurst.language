@@ -136,6 +136,19 @@ class test_ReferencesCompletionProvider {
         ))
     }
 
+    // 'forall x of-type' of an import in a scope
+    @Test
+    fun import_forall_of_type() {
+        val sentence = "namespace my.lang\n  scope Person {\n    import forall x of-type "
+        test(sentence, listOf(
+            "REFERRED TypeDefinition 'Person' (my.lang.Person)",
+            "REFERRED TypeDefinition 'Company' (my.lang.Company)",
+            "REFERRED TypeDefinition 'Thing' (other.ns.Thing) +edit@17'\\nimport other.ns'",
+            "REFERRED TypeDefinition 'Gadget' (other.ns2.Gadget) +edit@17'\\nimport other.ns2'",
+            "REFERRED TypeDefinition 'other.ns2.Company' (other.ns2.Company)",
+        ))
+    }
+
     @Test
     fun no_context() {
         val sentence = "namespace my.lang\n  scope "

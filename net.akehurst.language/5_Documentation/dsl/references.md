@@ -86,6 +86,7 @@ These are written inside a `scope` block, on an `identify` line, or (`import-int
 |---|---|
 | `import forall nav members-of ref` | for each `nav`, the members of the scope that `ref` refers to are visible here |
 | `import forall nav element ref` | for each `nav`, only the object that `ref` refers to is visible here |
+| `import members-of ref`, `inherit members-of ref` | without `forall`: the same as `forall $self` (`ref` is evaluated on the object that owns the scope) |
 | `import-into-scope T members-of ref` | (top level) each object of type `T` is an import of the scope it is in: the members of the scope that `ref` (evaluated on that object) refers to are visible there. For a language whose imports can be in many kinds of body (e.g. SysML imports in packages, part and action bodies), one line instead of an `import forall` in each scope |
 | `import-into-scope T element ref` | (top level) as above, only the object that `ref` refers to is visible |
 | `... recursive expr` | also import what the imported scope imports, while `expr` holds |
