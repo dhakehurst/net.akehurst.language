@@ -34,3 +34,15 @@ and the same in `CruiseControl2`. With the Pilot behaviour `vehicle_b` resolves 
 The example model seems to rely on the Pilot behaviour.
 
 **AGL.** Not decided yet (open question q47a).
+
+## 2. `new` is used as a keyword in KerML but is not reserved
+
+**Specification.** KerML 1.1 uses `'new'` as a keyword in the expression grammar
+(`bnf/KerML-textual-bnf.kebnf`: `'new' ownedRelationship += InstantiatedTypeMember`), but `new` is not in the list of
+reserved words (KerML 8.2.2.6, and `RESERVED_KEYWORD` in `KerML-textual-bnf.kebnf`). The SysML 2.1 `RESERVED_KEYWORD`
+list does include `'new'`.
+
+**Issue.** In KerML, `new` can be used as a name, which makes `new T(...)` ambiguous with a name `new` followed by other
+text. The KerML list seems to be missing `new`, as in SysML.
+
+**AGL.** The KerML grammars use `#scanner: Classic`, which scans every literal of the grammar as a keyword, so `new` cannot be used as a name (as in SysML).
