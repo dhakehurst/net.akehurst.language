@@ -564,12 +564,16 @@ class ReferenceResolverSimple(
         val importsIntoScope = importsIntoScopeOf(ownerEl)
         if (scopeImports.isEmpty() && importsIntoScope.isEmpty()) return emptyList()
         val inheritAccess = if (access == Access.OUTSIDE) Access.OUTSIDE else Access.SUBTYPE
-        // 'inherit forall ...' first, then 'inherit named ...'
+        // 'inherit forall ...' first, then 'inherit by-position', then 'inherit named ...'
         val inherits = scopeImports.filter { it.kind == ScopeImportKind.INHERIT }
         val inherited = inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) ->
             srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.flatMap { t -> scopeOfElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
         }.distinct().let { hideOverridden(it) }
         if (inherited.isNotEmpty()) return inherited
+        val inheritedByPosition = inherits.filter { it.byPosition }.flatMap { si ->
+            byPositionScopesOf(si, s).flatMap { localResolve(it, name, inheritAccess, visited) }
+        }.distinct()
+        if (inheritedByPosition.isNotEmpty()) return inheritedByPosition
         val inheritedNamed = inherits.filter { null != it.named }.flatMap { si ->
             namedTargetsOf(si, ownerEl).flatMap { t -> scopeOfAnyElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
         }.distinct()
@@ -739,6 +743,7 @@ class ReferenceResolverSimple(
         val ownerEl = ownerElementOf(s) ?: return emptyList()
         val inherits = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName).filter { it.kind == ScopeImportKind.INHERIT }
         return inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) -> srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.mapNotNull { scopeOfElement(it) } } +
+                inherits.filter { it.byPosition }.flatMap { si -> byPositionScopesOf(si, s) } +
                 inherits.filter { null != it.named }.flatMap { si -> namedTargetsOf(si, ownerEl).mapNotNull { scopeOfAnyElement(it) } }
     }
 
@@ -753,8 +758,9 @@ class ReferenceResolverSimple(
             .flatMap { (si, srcs, resolveNow) -> srcs.map { src -> Pair(src, targetsOf(si, src, s, resolveNow).mapNotNull { scopeOfElement(it) }) } }
             .sortedBy { (src, _) -> _locationMap[src]?.position ?: Int.MAX_VALUE } // stable, so without a position the rule order is kept
             .flatMap { it.second }
+        val fromByPosition = inherits.filter { it.byPosition }.flatMap { si -> byPositionScopesOf(si, s) }
         val fromNamed = inherits.filter { null != it.named }.flatMap { si -> namedTargetsOf(si, ownerEl).mapNotNull { scopeOfAnyElement(it) } }
-        return (fromForall + fromNamed).distinct()
+        return (fromForall + fromByPosition + fromNamed).distinct()
     }
 
     /**
@@ -764,7 +770,7 @@ class ReferenceResolverSimple(
      * as they could need what is not resolved yet (e.g. 'ref p : T :> p.q', 'q' needs the typing 'T'); the tree walk resolves them later.
      */
     private fun inheritForallSources(inherits: List<ScopeImport>, ownerEl: AsmStructure): List<Triple<ScopeImport, List<AsmStructure>, Boolean>> {
-        val sources = inherits.filter { null == it.named }.map { si -> Pair(si, importElementsOf(si, ownerEl)) }
+        val sources = inherits.filter { null == it.named && !it.byPosition }.map { si -> Pair(si, importElementsOf(si, ownerEl)) }
         // a source whose own reference is being resolved can not be used yet (cycle).
         // When the source is the scope owner itself ('forall $self', or no 'forall'), every reference in its body is within it, so only its own references count
         val beingResolved = { src: AsmStructure -> _resolving.any { r -> if (src === ownerEl) r === ownerEl else isWithin(r, src) } }
@@ -781,6 +787,31 @@ class ReferenceResolverSimple(
         }
         return false
     }
+
+    /**
+     * 'inherit by-position' for scope 's' (the scope of element X): X is the i-th of the items counted (those for which the condition holds) in the scope that X is in;
+     * the result is the scope of the i-th item counted in each scope that the owner of that scope inherits, in the order of 'from inherited'
+     */
+    private fun byPositionScopesOf(si: ScopeImport, s: Scope): List<Scope> {
+        val x = ownerElementOf(s) ?: return emptyList()
+        if (!isCountedBy(si, x)) return emptyList()
+        val scopeOfX = ownerScopeOf(s) ?: return emptyList()
+        val i = countedItemsOf(si, scopeOfX).indexOfFirst { it === x }
+        if (i < 0) return emptyList()
+        return inheritedScopesInSentenceOrderOf(scopeOfX)
+            .mapNotNull { g -> countedItemsOf(si, g).getOrNull(i)?.let { scopeOfAnyElement(it) } }
+            .filter { it !== s }
+            .distinct()
+    }
+
+    private fun isCountedBy(si: ScopeImport, el: AsmStructure): Boolean = null == si.condition || evaluate(si.condition, el) == true
+
+    /** the elements owned by scope 'sc' that 'inherit by-position' counts, in sentence order */
+    private fun countedItemsOf(si: ScopeImport, sc: Scope): List<AsmStructure> =
+        sc.items.values.flatMap { byType -> byType.values.mapNotNull { elementOf(it.second) } }
+            .distinct()
+            .filter { isCountedBy(si, it) }
+            .sortedBy { _locationMap[it]?.position ?: Int.MAX_VALUE }
 
     /** the elements found by the qualified name of an 'inherit named', if its condition holds for 'ownerEl', per rule */
     private val _namedTargets = mutableMapOf<ScopeImport, List<AsmStructure>>()

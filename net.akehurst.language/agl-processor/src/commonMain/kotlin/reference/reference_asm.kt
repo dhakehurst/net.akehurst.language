@@ -288,7 +288,8 @@ data class ScopeImportDefault(
     override val visibility: Expression? = null,
     override val condition: Expression? = null,
     override val named: List<String>? = null,
-    override val intoScope: Boolean = false
+    override val intoScope: Boolean = false,
+    override val byPosition: Boolean = false
 ) : ScopeImport {
     override fun asString(indent: Indent, imports: List<Import>): String {
         val kw = when (kind) {
@@ -305,6 +306,7 @@ data class ScopeImportDefault(
         val vis = visibility?.let { " visibility ${it.asString(indent, emptyList())}" } ?: ""
         val cn = condition?.let { " when ${it.asString(indent, emptyList())}" } ?: ""
         return when {
+            byPosition -> "${indent}inherit by-position$cn"
             intoScope -> "${indent}import-into-scope ${ofType?.value ?: ""} $what ${target.asString(indent, emptyList())}$rec$vis$cn"
             null == named -> {
                 // 'forall $self' (with no of-type) is written without 'forall'
