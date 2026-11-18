@@ -93,6 +93,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::propertyTemplateBlock)
         super.register(this::propertyTemplate)
         super.register(this::collectionTemplate)
+        super.register(this::collectionSeparator)
+        super.register(this::collectionGap)
 
         super.register(this::testUnit)
         super.register(this::testNamespace)
@@ -466,14 +468,36 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return PropertyTemplateDefault(SimpleName(id), rhs)
     }
 
-    // collectionTemplate = (variableName ':')? '[' ('...')? [propertyPatternRhs / ',']* ']' ;
+    // collectionTemplate = ( variableName ':' )? '[' collectionGap? [propertyTemplateRhs / collectionSeparator]* collectionGap? ']' ;
     private fun collectionTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionTemplate {
         val variableName = (children[0] as? List<Any>)?.getOrNull(0) as? String
-        val isSubset = children[2] != null
-        val els = (children[3] as List<Any>).toSeparatedList<Any, PropertyTemplateRhs, String>()
-        return CollectionTemplateDefault(isSubset, els.items).apply {
+        val leading = children[2] as CollectionTemplateGap?
+        val itemsAndSeparators = children[3] as List<Any>
+        val trailing = children[4] as CollectionTemplateGap?
+        // even positions are members, odd positions are separators (',' or a gap)
+        val members = itemsAndSeparators.filterIndexed { i, _ -> 0 == i % 2 }.map { it as PropertyTemplateRhs }
+        val separators = itemsAndSeparators.filterIndexed { i, _ -> 1 == i % 2 }
+        val gaps = List(members.size + 1) { i ->
+            when {
+                members.isEmpty() -> leading ?: trailing // '[...]' : one gap, before or after nothing
+                0 == i -> leading
+                members.size == i -> trailing
+                else -> separators[i - 1] as? CollectionTemplateGap
+            }
+        }
+        return CollectionTemplateDefault(members, gaps).apply {
             variableName?.let { setIdentifierValue(SimpleName(variableName)) }
         }
+    }
+
+    // collectionSeparator = ',' | collectionGap ;
+    private fun collectionSeparator(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Any =
+        children[0] as Any
+
+    // collectionGap = ( variableName ':' )? '...' ;
+    private fun collectionGap(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionTemplateGap {
+        val variableName = (children[0] as? List<Any>)?.getOrNull(0) as? String
+        return CollectionTemplateGapDefault(variableName?.let { SimpleName(it) })
     }
 
     // testUnit = option* import* testNamespace* ;

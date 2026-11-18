@@ -130,7 +130,7 @@ class test_m2mTransform_noCrash {
     @Test
     fun MT10_collection_property_without_value_is_no_match() = runTest {
         // circles have no 'point' value, only the square matches
-        val rules = "top mapping A { domain s sh:Shape { name == n  point == [ ... p:Point { number == x } ] } domain d l:String := n + x }"
+        val rules = "top mapping A { domain s sh:Shape { name == n  point == [ ... p:Point { number == x } ... ] } domain d l:String := n + x }"
         val res = transform(header(rules))
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         assertEquals(listOf("'s1'", "'s3'"), res.targets.map { it.untyped.asString().trim() })

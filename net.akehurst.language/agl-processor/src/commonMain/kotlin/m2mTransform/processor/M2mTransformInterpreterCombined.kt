@@ -32,6 +32,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.RESULT
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.cartesianProduct
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.collectionTemplateMatches
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.domainArgumentNames
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.ruleArgumentNames
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
@@ -148,12 +149,12 @@ class M2mTransformInterpreterCombined(
         matchVariablesFromObjectTemplateInternal(m2mExecution, evc, objectTemplate, accessorMutator, src, { o, n -> o.getProperty(n) }) { x, e, og, s, rhs -> matchVariablesFromRhs(x, e, og, s, rhs) }
 
     fun matchVariablesFromCollectionTemplate(m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, src: TypedObject): TemplateMatchAlternatives =
-        matchVariablesFromCollectionTemplateInternal(m2mExecution, evc, collectionTemplate, accessorMutator, src) { x, e, t, og, els -> matchVariablesFromCollectionTemplateToElementsIn(x, e, t, og, els) }
+        matchVariablesFromCollectionTemplateInternal(m2mExecution, evc, collectionTemplate, accessorMutator, src) { x, e, t, og, ct, els -> matchVariablesFromCollectionTemplateToElementsIn(x, e, t, og, ct, els) }
 
     // get the different alternative combinations of objects from elements that (cover) match the defined templates
     // Set(  List(element-match per template)  )
-    fun matchVariablesFromCollectionTemplateToElementsIn(m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, elements: List<TypedObject>): List<TemplateMatchResult> =
-        matchVariablesFromCollectionTemplateToElementsInInternal(m2mExecution, evc, collectionTemplate, accessorMutator, elements) { x, e, og, s, rhs -> matchVariablesFromRhs(x, e, og, s, rhs) }
+    fun matchVariablesFromCollectionTemplateToElementsIn(m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, collectionType: TypeInstance, elements: List<TypedObject>): List<TemplateMatchResult> =
+        matchVariablesFromCollectionTemplateToElementsInInternal(m2mExecution, evc, collectionTemplate, accessorMutator, collectionType, elements) { x, e, og, s, rhs -> matchVariablesFromRhs(x, e, og, s, rhs) }
 
     fun executeWhen(m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, when_: Expression, evc: EvaluationContext): Pair<Boolean, EvaluationContext> =
         executeWhenInternal(m2mExecution, owningRule, when_, evc, { x, r, a, e -> getSource(x, r, a, e) }, { x, r, s, a -> executeRule(x, r, s, a) }) { og, e, ex -> evaluate(og, e, ex) }
@@ -224,7 +225,7 @@ class M2mTransformInterpreterCombined(
         createFromCollectionTemplateInternal(
             m2mExecution, evc, lhsType, collectionTemplate,
             { x, e, t, r -> createFromRhs(x, e, t, r) }
-        ) { x, e, t, og, els -> matchVariablesFromCollectionTemplateToElementsIn(x, e, t, og, els) }
+        ) { x, e, t, og, ct, els -> matchVariablesFromCollectionTemplateToElementsIn(x, e, t, og, ct, els) }
 
     fun setPropertiesFromRhs(m2mExecution: M2mTransformExecution, obj: TypedObject, evc: EvaluationContext, rhs: PropertyTemplateRhs): Unit =
         setPropertiesFromRhsInternal(
@@ -315,10 +316,10 @@ class M2mTransformInterpreterCombined(
         matchVariablesFromObjectTemplateInternal(m2mExecution, evc, objectTemplate, accessorMutator, src, { o, n -> o.getPropertySuspend(n) }) { x, e, og, s, rhs -> matchVariablesFromRhsSuspend(x, e, og, s, rhs) }
 
     suspend fun matchVariablesFromCollectionTemplateSuspend(m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, src: TypedObject): TemplateMatchAlternatives =
-        matchVariablesFromCollectionTemplateInternal(m2mExecution, evc, collectionTemplate, accessorMutator, src) { x, e, t, og, els -> matchVariablesFromCollectionTemplateToElementsInSuspend(x, e, t, og, els) }
+        matchVariablesFromCollectionTemplateInternal(m2mExecution, evc, collectionTemplate, accessorMutator, src) { x, e, t, og, ct, els -> matchVariablesFromCollectionTemplateToElementsInSuspend(x, e, t, og, ct, els) }
 
-    suspend fun matchVariablesFromCollectionTemplateToElementsInSuspend(m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, elements: List<TypedObject>): List<TemplateMatchResult> =
-        matchVariablesFromCollectionTemplateToElementsInInternal(m2mExecution, evc, collectionTemplate, accessorMutator, elements) { x, e, og, s, rhs -> matchVariablesFromRhsSuspend(x, e, og, s, rhs) }
+    suspend fun matchVariablesFromCollectionTemplateToElementsInSuspend(m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, collectionType: TypeInstance, elements: List<TypedObject>): List<TemplateMatchResult> =
+        matchVariablesFromCollectionTemplateToElementsInInternal(m2mExecution, evc, collectionTemplate, accessorMutator, collectionType, elements) { x, e, og, s, rhs -> matchVariablesFromRhsSuspend(x, e, og, s, rhs) }
 
     suspend fun executeWhenSuspend(m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, when_: Expression, evc: EvaluationContext): Pair<Boolean, EvaluationContext> =
         executeWhenInternal(m2mExecution, owningRule, when_, evc, { x, r, a, e -> getSourceSuspend(x, r, a, e) }, { x, r, s, a -> executeRuleSuspend(x, r, s, a) }) { og, e, ex -> evaluateSuspend(og, e, ex) }
@@ -389,7 +390,7 @@ class M2mTransformInterpreterCombined(
         createFromCollectionTemplateInternal(
             m2mExecution, evc, lhsType, collectionTemplate,
             { x, e, t, r -> createFromRhsSuspend(x, e, t, r) }
-        ) { x, e, t, og, els -> matchVariablesFromCollectionTemplateToElementsInSuspend(x, e, t, og, els) }
+        ) { x, e, t, og, ct, els -> matchVariablesFromCollectionTemplateToElementsInSuspend(x, e, t, og, ct, els) }
 
     suspend fun setPropertiesFromRhsSuspend(m2mExecution: M2mTransformExecution, obj: TypedObject, evc: EvaluationContext, rhs: PropertyTemplateRhs): Unit =
         setPropertiesFromRhsInternal(
@@ -979,17 +980,16 @@ class M2mTransformInterpreterCombined(
         collectionTemplate: CollectionTemplate,
         accessorMutator: ObjectGraphAccessorMutator,
         src: TypedObject,
-        matchVariablesFromCollectionTemplateToElementsIn: (m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, elements: List<TypedObject>) -> List<TemplateMatchResult>
+        matchVariablesFromCollectionTemplateToElementsIn: (m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, collectionType: TypeInstance, elements: List<TypedObject>) -> List<TemplateMatchResult>
     ): TemplateMatchAlternatives {
         val result = when {
             src.type.isCollection -> {
-                // TODO: maybe a faster way to do it if NOT isSubset!
                 val elements = mutableListOf<TypedObject>()
                 accessorMutator.forEachIndexed(src) { idx, el -> elements.add(el) } //TODO: find a way not to 'collect' the list
                 when {
                     // without '...' the collection must match exactly, a different size is no match
                     collectionTemplate.isSubset.not() && elements.size != collectionTemplate.elements.size -> emptyList()
-                    else -> matchVariablesFromCollectionTemplateToElementsIn(m2mExecution, evc, collectionTemplate, accessorMutator, elements)
+                    else -> matchVariablesFromCollectionTemplateToElementsIn(m2mExecution, evc, collectionTemplate, accessorMutator, src.type, elements)
                 }
             }
 
@@ -999,23 +999,43 @@ class M2mTransformInterpreterCombined(
         return TemplateMatchAlternatives(result)
     }
 
+    /**
+     * all the ways the members of the template match the elements, each member a different element (as QVT Relations).
+     * A List or OrderedSet keeps the order of the members, and elements not matched by a member must be in a gap ('...') at that position.
+     * Any other collection is unordered: elements not matched by a member must be covered by a gap anywhere.
+     * A named gap ('name:...') is bound to a collection (of the same type) of the elements in it.
+     */
     private inline fun matchVariablesFromCollectionTemplateToElementsInInternal(
         m2mExecution: M2mTransformExecution,
         evc: EvaluationContext,
         collectionTemplate: CollectionTemplate,
         accessorMutator: ObjectGraphAccessorMutator,
+        collectionType: TypeInstance,
         elements: List<TypedObject>,
         matchVariablesFromRhs: (m2mExecution: M2mTransformExecution, evc: EvaluationContext, accessorMutator: ObjectGraphAccessorMutator, src: TypedObject, rhs: PropertyTemplateRhs) -> TemplateMatchAlternatives
     ): List<TemplateMatchResult> {
-        val options = findCoveringSubsets2(
-            cover = collectionTemplate.elements,
-            bySubsetsOf = elements
-        ) { tp, el ->
-            val mr = matchVariablesFromRhs(m2mExecution, evc, accessorMutator, el, tp)
-            Pair(mr.alternatives.isNotEmpty(), mr)
+        val members = collectionTemplate.elements
+        val gaps = collectionTemplate.gaps
+        val rd = collectionType.resolvedDefinition
+        val ordered = rd == StdLibDefault.List || rd == StdLibDefault.OrderedSet || rd.conformsTo(StdLibDefault.List) || rd.conformsTo(StdLibDefault.OrderedSet)
+        val namedGapIndices = gaps.indices.filter { null != gaps[it]?.name }
+        if (ordered.not() && namedGapIndices.size > 1) {
+            m2mExecution.errorIssue("A template on an unordered collection (${rd.name.value}) can name at most one gap, found ${namedGapIndices.size}.")
+            return emptyList()
         }
-        val res = options.map { opt ->
-            opt.flatMap { it.alternatives }.merge()
+        // alternatives of member i matching element k
+        val memberMatches = members.map { tp -> elements.map { el -> matchVariablesFromRhs(m2mExecution, evc, accessorMutator, el, tp).alternatives } }
+        val leftoverGapIndex = namedGapIndices.firstOrNull() ?: gaps.indices.firstOrNull { null != gaps[it] }
+        val matches = collectionTemplateMatches(members.size, elements.size, ordered, gaps.map { null != it }, leftoverGapIndex, memberMatches)
+        val res = matches.map { cm ->
+            val gapVars = cm.gapElements.mapIndexedNotNull { i, els ->
+                val name = gaps[i]?.name
+                when {
+                    null == name || null == els -> null
+                    else -> TemplateMatchResult(true, mapOf(name.value to accessorMutator.createCollection(collectionType, els.map { elements[it] })))
+                }
+            }
+            (cm.memberResults + gapVars).merge()
         }.filter { it.isMatch } // a repeated variable with different values is no match
         return res
     }
@@ -1561,7 +1581,7 @@ class M2mTransformInterpreterCombined(
         lhsType: TypeInstance,
         collectionTemplate: CollectionTemplate,
         createFromRhs: (m2mExecution: M2mTransformExecution, evc: EvaluationContext, lhsType: TypeInstance, rhs: PropertyTemplateRhs) -> Pair<TypedObject, Map<String, TypedObject>>,
-        matchVariablesFromCollectionTemplateToElementsIn: (m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, elements: List<TypedObject>) -> List<TemplateMatchResult>
+        matchVariablesFromCollectionTemplateToElementsIn: (m2mExecution: M2mTransformExecution, evc: EvaluationContext, collectionTemplate: CollectionTemplate, accessorMutator: ObjectGraphAccessorMutator, collectionType: TypeInstance, elements: List<TypedObject>) -> List<TemplateMatchResult>
     ): Pair<TypedObject, Map<String, TypedObject>> {
         //collection may already have been created, (via when/where/etc) and be a captured variable
         val existing = collectionTemplate.identifier?.let { evc.getOrInParent(it.value) }
@@ -1583,7 +1603,7 @@ class M2mTransformInterpreterCombined(
                 // try to match template elements against existing collection elements, if not matched then create them.
                 val elements = mutableListOf<TypedObject>()
                 m2mExecution.targetAccessorMutator.forEachIndexed(existing) { idx, el -> elements.add(el) } //TODO: find a way not to 'collect' the list
-                val matches = matchVariablesFromCollectionTemplateToElementsIn(m2mExecution, evc, collectionTemplate, m2mExecution.targetAccessorMutator, elements)
+                val matches = matchVariablesFromCollectionTemplateToElementsIn(m2mExecution, evc, collectionTemplate, m2mExecution.targetAccessorMutator, existing.type, elements)
 
                 when {
                     matches.isEmpty() -> {

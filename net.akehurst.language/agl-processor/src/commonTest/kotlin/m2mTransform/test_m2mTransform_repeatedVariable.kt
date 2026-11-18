@@ -90,7 +90,7 @@ class test_m2mTransform_repeatedVariable {
         }
 
         // x is used twice in one object template
-        const val RULE_SAME_OBJECT = "top mapping SamePoint { domain s sq:Square { name == n  point == [ ... p:Point { number == x  number2 == x } ] } domain d l:String := n + x }"
+        const val RULE_SAME_OBJECT = "top mapping SamePoint { domain s sq:Square { name == n  point == [ ... p:Point { number == x  number2 == x } ... ] } domain d l:String := n + x }"
 
         // x is used in two element templates of one collection template
         const val RULE_TWO_ELEMENTS = "top mapping SameNumber { domain s sq:Square { name == n  point == [ p:Point { number == x }, q:Point { number2 == x } ] } domain d l:String := n + x }"
