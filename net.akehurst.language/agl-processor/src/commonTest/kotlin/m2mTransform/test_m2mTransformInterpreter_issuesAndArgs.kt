@@ -103,10 +103,8 @@ class test_m2mTransformInterpreter_issuesAndArgs {
         val source = mapOf(d1 to listOf(str(og1, input)))
         val tgt = m2m.allTransformRuleSet.first()
         return when (mode) {
-            Mode.OLD -> {
-                val i = (interp as? M2mTransformInterpreter) ?: M2mTransformInterpreter(m2m, ogs, issues)
-                Pair(i, i.transform(tgt, d2, args, source))
-            }
+            // old M2mTransformInterpreter is commented out, replaced by M2mTransformInterpreterCombined
+            Mode.OLD -> error("old M2mTransformInterpreter is commented out")
 
             Mode.SYNC -> {
                 val i = (interp as? M2mTransformInterpreterCombined) ?: M2mTransformInterpreterCombined(m2m, ogs, issues)
@@ -138,8 +136,28 @@ class test_m2mTransformInterpreter_issuesAndArgs {
         assertTrue(res2.issues.isEmpty(), res2.issues.toString())
     }
 
+    private suspend fun sameIssueAgainIsInResult(mode: Mode) {
+        // MT16: an issue equal to one of an earlier transform on the same accessor-mutators is part of the later result too
+        val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+        val ogs = ogs(issues)
+        val (_, res1) = run(mode, ogs, issues, "Any", null, m2mWithWarning)
+        assertTrue(res1.issues.isNotEmpty(), "expected an issue from the first transform")
+        val (_, res2) = run(mode, ogs, issues, "Any", null, m2mWithWarning)
+        assertEquals(res1.issues.all, res2.issues.all)
+        // the holders still hold the issues raised before
+        val held = issues.all + ogs.values.flatMap { it.issues.all }
+        assertTrue(held.containsAll(res1.issues.all), held.toString())
+    }
+
     @Test
-    fun ruleArgumentWithoutWhen_old() = runTest { ruleArgumentWithoutWhen(Mode.OLD) }
+    fun sameIssueAgainIsInResult_combined() = runTest { sameIssueAgainIsInResult(Mode.SYNC) }
+
+    @Test
+    fun sameIssueAgainIsInResult_combinedSuspend() = runTest { sameIssueAgainIsInResult(Mode.SUSPEND) }
+
+    // old M2mTransformInterpreter is commented out
+    //@Test
+    //fun ruleArgumentWithoutWhen_old() = runTest { ruleArgumentWithoutWhen(Mode.OLD) }
 
     @Test
     fun ruleArgumentWithoutWhen_combined() = runTest { ruleArgumentWithoutWhen(Mode.SYNC) }
@@ -147,8 +165,9 @@ class test_m2mTransformInterpreter_issuesAndArgs {
     @Test
     fun ruleArgumentWithoutWhen_combinedSuspend() = runTest { ruleArgumentWithoutWhen(Mode.SUSPEND) }
 
-    @Test
-    fun issuesOfEarlierTransformNotInResult_old() = runTest { issuesOfEarlierTransformNotInResult(Mode.OLD) }
+    // old M2mTransformInterpreter is commented out
+    //@Test
+    //fun issuesOfEarlierTransformNotInResult_old() = runTest { issuesOfEarlierTransformNotInResult(Mode.OLD) }
 
     @Test
     fun issuesOfEarlierTransformNotInResult_combined() = runTest { issuesOfEarlierTransformNotInResult(Mode.SYNC) }

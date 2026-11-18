@@ -33,6 +33,7 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
+import net.akehurst.language.m2mTransformTest.api.M2mTransformTestDomain
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.types.api.TypesDomain
@@ -123,6 +124,7 @@ interface AglLanguages {
     val crossReferenceLanguageIdentity: LanguageIdentity
     val asmTransformLanguageIdentity: LanguageIdentity
     val m2mTransformLanguageIdentity: LanguageIdentity
+    val m2mTransformTestLanguageIdentity: LanguageIdentity
     val styleLanguageIdentity: LanguageIdentity
     val formatLanguageIdentity: LanguageIdentity
     val completionLanguageIdentity: LanguageIdentity
@@ -169,6 +171,12 @@ interface AglLanguages {
      * }
      */
     val m2mTransform: LanguageDefinition<M2mTransformDomain, SentenceContext>
+
+    /**
+     * Semantic Analysis requires a context containing the transforms that are tested.
+     * E.g. contextFromM2mTransformDomain(m2mTransformDomain)
+     */
+    val m2mTransformTest: LanguageDefinition<M2mTransformTestDomain, SentenceContext>
     val style: LanguageDefinition<AglStyleDomain, SentenceContext>
     val format: LanguageDefinition<AglFormatDomain, SentenceContext>
 

@@ -53,80 +53,69 @@ object M2mTransform : LanguageObjectAbstract<M2mTransformDomain, SentenceContext
 
     override val extends by lazy { listOf(AglBase) }
 
+    // must give the same grammar as grammarDomain, which is the one used (test_M2mTransformGrammarString)
     override val grammarString: String = """
 namespace $NAMESPACE_NAME
 
 grammar $NAME : Base {
-    override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
-    transform = 'transform' IDENTIFIER '(' domainParams ')' extends? '{' option* typeImport* transformRule* '} ;
-    domainParams = [parameterDefinition / ',']2+ ;
-    parameterDefinition = IDENTIFIER ':' DOMAIN_NAME ;
-    extends = ':' [possiblyQualifiedName / ',']+ ;
-    option = 'option' IDENTIFIER '=' expression ;
-    typeImport = 'import-types' possiblyQualifiedName ;
-    
-    transformRule = abstractRule | relationRule | mappingRule | tableRule ;
-    abstractRule = 'abstract' 'top'? 'rule' ruleName ruleParameters? extends? '{' domainSignature* '}' ;
-    relationRule = 'top'? 'relation' ruleName ruleParameters? extends? '{' pivot* domainTemplate{2+} when? where? '}' ;
-    mappingRule = 'top'? 'mapping' ruleName ruleParameters? extends? '{' domainTemplate+ domainAssignment when? where? '}' ;
-    tableRule = 'top'? 'table' ruleName ruleParameters? extends? '{' unnamedDomainSignature{2+} values+ when? where? '}' ;
-    ruleParameters = '(' [variableDefinition / ',']+ ')' ;
-    
-    pivot = 'pivot' variableDefinition ;
-    domainSignature = 'domain' domainReference variableDefinition ;
-    unnamedDomainSignature = 'domain' domainReference ':' typeReference ;
-    domainTemplate = domainSignature domainTemplateRhs ;
-    domainTemplateRhs = domainPrimitiveRhs | domainObjectRhs ;
-    domainPrimitiveRhs = '==' expression ;
-    domainObjectRhs = propertyTemplateBlock ;
-    domainAssignment = domainSignature ':=' expression ;
-    variableDefinition = variableName ':' typeReference ;
-    values = 'values' [expression / 'to']2+ ;
-
-    typeReference = Expressions::typeReference ;
-    expression = Expressions::expression ;
-    
-    when = 'when' '{' whenExpression '}' ;
-    whenExpression = expression | relationHolds | relationHoldsForAll | mappingHolds | mappingHoldsForAll ;
-    relationHolds = 'related' ruleCall ;
-    relationHoldsForAll = 'related' 'all' ruleCall ; 
-    mappingHolds = 'mapped' ruleCall ;
-    mappingHoldsForAll = 'mapped' 'all' ruleCall ;
-    
-    where = 'where' '{' whereExpression+ '}' ;
-    whereExpression = callRelation | callRelationForAll | callMapping | callMappingForAll ;
-    callRelation = 'relate' ruleCall ;
-    callRelationForAll = 'relate' 'all' ruleCall ;
-    callMapping = 'map' ruleCall ;
-    callMappingForAll = 'map' 'all' ruleCall ;
-
-    ruleCall = ruleName arguments? '{' argAssignment* '}' ;
-    arguments = '(' [argAssignment / ',']+ ')' ;
-    argAssignment = variableName ':=' expression ;
-
-    propertyTemplateRhs =  objectTemplate | collectionTemplate | expression ;
-    objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
-    propertyTemplateBlock = '{' propertyTemplate*  '}';
-    propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
-    collectionTemplate = (variableName ':')? '[' ('...')? [propertyTemplateRhs / ',' ]* ']' ;
-
-    leaf DOMAIN_NAME := IDENTIFIER ;
-    leaf domainReference := IDENTIFIER ;
-    leaf ruleName := IDENTIFIER ;
-    leaf propertyReference := IDENTIFIER ;
-    leaf variableName := IDENTIFIER ;
-    
-    testUnit = option* import* testNamespace* ;
-    testNamespace = 'namespace' possiblyQualifiedName option* import* transformTest* ;
-    transformTest = 'transform-test' IDENTIFIER '(' domainParams ')' '{'
-       testCase*
-    '}' ;
-    testCase = 'test-case' IDENTIFIER '{'
-      testDomain*
-    '}' ;
-    testDomain = 'domain' IDENTIFIER ':=' expression ;
+  override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
+  transform = 'transform' IDENTIFIER '(' domainParams ')' extends? '{' option* typeImport* transformRule* '}' ;
+  domainParams = [parameterDefinition / ','] 2+ ;
+  parameterDefinition = IDENTIFIER ':' DOMAIN_NAME ;
+  leaf DOMAIN_NAME = IDENTIFIER ;
+  extends = ':' [possiblyQualifiedName / ',']+ ;
+  typeImport = 'import-types' possiblyQualifiedName ;
+  transformRule = abstractRule | relationRule | mappingRule | tableRule ;
+  abstractRule = 'abstract' 'top'? 'rule' ruleName ruleParameters? extends? '{' domainSignature* '}' ;
+  relationRule = 'top'? 'relation' ruleName ruleParameters? extends? '{' pivot* domainTemplate 2+ when? where? '}' ;
+  mappingRule = 'top'? 'mapping' ruleName ruleParameters? extends? '{' domainTemplate+ domainAssignment when? where? '}' ;
+  tableRule = 'top'? 'table' ruleName ruleParameters? extends? '{' unnamedDomainSignature 2+ values+ when? where? '}' ;
+  ruleParameters = '(' [variableDefinition / ',']+ ')' ;
+  pivot = 'pivot' variableDefinition ;
+  domainPrimitive = 'primitive' 'domain' variableDefinition ;
+  domainSignature = 'domain' domainReference variableDefinition ;
+  unnamedDomainSignature = 'domain' domainReference ':' typeReference ;
+  domainTemplate = domainSignature domainTemplateRhs ;
+  domainTemplateRhs = domainPrimitiveRhs | domainObjectRhs ;
+  domainPrimitiveRhs = '==' expression ;
+  domainObjectRhs = propertyTemplateBlock ;
+  domainAssignment = domainSignature ':=' expression ;
+  variableDefinition = variableName ':' typeReference ;
+  values = 'values' [expression / 'to'] 2+ ;
+  typeReference = Expressions::typeReference ;
+  expression = Expressions::expression ;
+  when = 'when' '{' whenExpression '}' ;
+  whenExpression = relationHolds | relationHoldsForAll | mappingHolds | mappingHoldsForAll | expression ;
+  relationHolds = 'related' ruleCall ;
+  relationHoldsForAll = 'related' 'all' ruleCall ;
+  mappingHolds = 'mapped' ruleCall ;
+  mappingHoldsForAll = 'mapped' 'all' ruleCall ;
+  where = 'where' '{' whereExpression+ '}' ;
+  whereExpression = callRelationForAll | callRelation | callMappingForAll | callMapping ;
+  callRelation = 'relate' ruleCall ;
+  callRelationForAll = 'relate' 'all' ruleCall ;
+  callMapping = 'map' ruleCall ;
+  callMappingForAll = 'map' 'all' ruleCall ;
+  ruleCall = ruleName arguments? '{' argAssignment+ '}' ;
+  arguments = '(' [argAssignment / ',']+ ')' ;
+  argAssignment = variableName ':=' expression ;
+  propertyTemplateRhs = objectTemplate | collectionTemplate | expression ;
+  objectTemplate = ( variableName ':' )? typeReference propertyTemplateBlock ;
+  propertyTemplateBlock = '{' propertyTemplate* '}' ;
+  propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
+  collectionTemplate = ( variableName ':' )? '[' '...'? [propertyTemplateRhs / ',']* ']' ;
+  leaf domainReference = IDENTIFIER ;
+  leaf ruleName = IDENTIFIER ;
+  leaf propertyReference = IDENTIFIER ;
+  leaf variableName = IDENTIFIER ;
+  testUnit = option* import* testNamespace* ;
+  testNamespace = 'namespace' possiblyQualifiedName option* import* transformTest* ;
+  transformTest = 'transform-test' IDENTIFIER '(' domainParams ')' '{' testCase* '}' ;
+  testCase = 'test-case' IDENTIFIER '{' testDomain 2+ '}' ;
+  testDomain = 'domain' IDENTIFIER ':=' expression ;
 }
     """
+
 
     override val typesString: String = """
         namespace $NAMESPACE_NAME

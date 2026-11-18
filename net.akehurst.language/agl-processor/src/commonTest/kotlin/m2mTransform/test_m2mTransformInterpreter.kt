@@ -2483,7 +2483,7 @@ class test_m2mTransformInterpreter {
                 val cdr = suite.crossReferenceDomains[k]
                 Pair(v.name, objectGraphSimpleAsm(v, null,issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
-            val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
+            val interpreter = M2mTransformInterpreterCombined(m2m, ogs, issues)
 
             val source:Map<DomainReference, List<TypedObject>> = case.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")

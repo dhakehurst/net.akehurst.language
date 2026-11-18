@@ -30,10 +30,10 @@ import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTyp
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.RESULT
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.cartesianProduct
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.domainArgumentNames
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.ruleArgumentNames
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.RESULT
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.cartesianProduct
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.domainArgumentNames
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.ruleArgumentNames
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -64,7 +64,7 @@ class M2mTransformInterpreterCombined(
 
     companion object {
         /**
-         * Same as M2mTransformInterpreter.findCoveringSubsets2, but inline so that 'matches' may suspend.
+         * Same as M2mTransformInterpreterHelpers.findCoveringSubsets2, but inline so that 'matches' may suspend.
          */
         inline fun <T, B, R> findCoveringSubsets2(
             cover: Collection<T>,
@@ -433,7 +433,6 @@ class M2mTransformInterpreterCombined(
 
         // Assuming your where AST contains a list of relation calls (e.g. `mapped StringConvert`)
         for (call in rule.where) { // <-- Replace with your AST property
-            val whereRule = call.resolved!!
             val whereTargetArgName = (call.domainArguments[m2mExecution.targetDomainRef] as? RootExpression)?.name
             // Determine direction strictly by checking if the variable is already bound in our environment context
             val isWhereTargetAlreadyBound = whereTargetArgName != null && varsAfterWhen.getOrInParent(whereTargetArgName) != null
@@ -650,7 +649,11 @@ class M2mTransformInterpreterCombined(
         return when (alts.size) {
             0 -> null
             1 -> alts.first()[m2mExecution.targetDomainRef]
-            else -> TODO("handle multiple matches from where")
+            else -> {
+                //TODO: handle multiple matches from where
+                m2mExecution.errorIssue("Rule '${record.rule.name.value}' has ${alts.size} results for the same source values, cannot choose one.")
+                null
+            }
         }
     }
 
@@ -668,9 +671,14 @@ class M2mTransformInterpreterCombined(
         val domainAccessorMutator = targetTransform.domainParameters.entries.associate { (k, v) ->
             Pair(k, domainAccessorMutatorByDomainName[v] ?: error("Domain ObjectGraph not found for domain $k"))
         }
-        // issues raised before this call (earlier transforms on the same interpreter or accessor-mutators) are not part of this result
+        // issues raised before this call (earlier transforms on the same interpreter or accessor-mutators) are not part of this result.
+        // The holders are sets, an issue equal to an earlier one would not be stored again, so they are emptied for this call
+        // and the earlier issues are put back at the end (MT16).
+        //TODO: two transforms running at the same time on the same interpreter or accessor-mutator mix up each other's issues
         val issuesBefore = issues.all.toSet()
         val accessorIssuesBefore = domainAccessorMutatorByDomainName.mapValues { (_, am) -> am.issues.all.toSet() }
+        issues.clear()
+        domainAccessorMutatorByDomainName.values.forEach { it.issues.clear() }
         val m2mExecution = M2mTransformExecution(targetTransform, targetDomainRef, domainAccessorMutator, issues)
         m2mExecution.evaluationStep("Executing transform rule set '${targetTransform.qualifiedName}' with target domain '${targetDomainRef.value}'.")
         when {
@@ -680,11 +688,11 @@ class M2mTransformInterpreterCombined(
             }
         }
         val allIssues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-        allIssues.addAll(issues.all.filter { it !in issuesBefore })
-        domainAccessorMutatorByDomainName.forEach { (dn, am) ->
-            val before = accessorIssuesBefore[dn] ?: emptySet()
-            allIssues.addAll(am.issues.all.filter { it !in before })
-        }
+        // first collect from every holder, then put back (a holder can be shared by the interpreter and accessor-mutators)
+        allIssues.addAll(issues.all)
+        domainAccessorMutatorByDomainName.values.forEach { am -> allIssues.addAll(am.issues.all) }
+        issues.addAll(issuesBefore)
+        domainAccessorMutatorByDomainName.forEach { (dn, am) -> am.issues.addAll(accessorIssuesBefore[dn] ?: emptySet()) }
         return M2MTransformResult(allIssues, m2mExecution.records, targetDomainRef)
     }
 
@@ -976,14 +984,15 @@ class M2mTransformInterpreterCombined(
                 // TODO: maybe a faster way to do it if NOT isSubset!
                 val elements = mutableListOf<TypedObject>()
                 accessorMutator.forEachIndexed(src) { idx, el -> elements.add(el) } //TODO: find a way not to 'collect' the list
-                if (collectionTemplate.isSubset.not() && elements.size != collectionTemplate.elements.size) {
-                    // TODO: should return a no match not error!
-                    error("Collection size does not match template size: ${elements.size} != ${collectionTemplate.elements.size} ")
+                when {
+                    // without '...' the collection must match exactly, a different size is no match
+                    collectionTemplate.isSubset.not() && elements.size != collectionTemplate.elements.size -> emptyList()
+                    else -> matchVariablesFromCollectionTemplateToElementsIn(m2mExecution, evc, collectionTemplate, accessorMutator, elements)
                 }
-                matchVariablesFromCollectionTemplateToElementsIn(m2mExecution, evc, collectionTemplate, accessorMutator, elements)
             }
 
-            else -> error("src is not a collection")
+            // as for an object template: no value ($nothing), or a value that is not a collection, is no match
+            else -> emptyList()
         }
         return TemplateMatchAlternatives(result)
     }
@@ -1070,7 +1079,10 @@ class M2mTransformInterpreterCombined(
                         srcOg.valueOf(res) as Boolean
                     }
 
-                    else -> TODO()
+                    else -> {
+                        m2mExecution.errorIssue("In 'when' clause of rule '${owningRule.name.value}', the expression '${when_.asString()}' must give a Boolean, not a '${res.type.qualifiedTypeName.value}'.")
+                        false
+                    }
                 }
                 Pair(v, evc)
             }
@@ -1163,8 +1175,19 @@ class M2mTransformInterpreterCombined(
 
             // 2. Evaluate internal 'where' clauses
             val wherePassed = rule.where.all { rw ->
-                val childWhereRule = rw.resolved!! as M2MTransformRelation
-                checkRelation(m2mExecution, childWhereRule, rw.domainArguments, altEvc).first
+                when (val childWhereRule = rw.resolved) {
+                    is M2MTransformRelation -> checkRelation(m2mExecution, childWhereRule, rw.domainArguments, altEvc).first
+                    null -> {
+                        m2mExecution.errorIssue("In 'where' clause of rule '${rule.name.value}', rule '${rw.ruleName.value}' is unresolved in '${m2mExecution.targetTransform.name.value}'.")
+                        false
+                    }
+
+                    else -> {
+                        //TODO: checking a 'where' that calls a mapping (or table) is not yet supported
+                        m2mExecution.errorIssue("In 'where' clause of relation '${rule.name.value}', checking the call to rule '${rw.ruleName.value}' is not supported, only calls to relations can be checked.")
+                        false
+                    }
+                }
             }
 
             wherePassed

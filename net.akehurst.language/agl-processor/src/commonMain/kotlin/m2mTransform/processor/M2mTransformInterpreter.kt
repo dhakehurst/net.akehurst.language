@@ -27,7 +27,6 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.InfixExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.asm.ExpressionExt.freeVariables
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
@@ -215,6 +214,8 @@ class M2mTransformExecution(
 }
 
 //TODO: combine with suspending version
+// replaced by M2mTransformInterpreterCombined (transform and transformSuspend); helpers moved to M2mTransformInterpreterHelpers
+/*
 class M2mTransformInterpreter(
     val m2m: M2mTransformDomain,
     val domainAccessorMutatorByDomainName: Map<SimpleName, ObjectGraphAccessorMutator>,
@@ -1816,3 +1817,4 @@ class M2mTransformInterpreter(
     }
 
 }
+*/
