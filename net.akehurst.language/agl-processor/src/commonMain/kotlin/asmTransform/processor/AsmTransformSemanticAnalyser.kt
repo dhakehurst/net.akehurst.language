@@ -436,6 +436,12 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         return null != existing && existing !is DataType
     }
 
+    /** qualified name if the type resolves, else the name as written plus a note (qualifiedTypeName throws for a type that does not resolve) */
+    private fun displayName(ti: TypeInstance): String = when (ti.resolvedDefinitionOrNull) {
+        null -> "${ti.typeName.value} (not resolved)"
+        else -> ti.qualifiedTypeName.value
+    } + if (ti.isNullable) "?" else ""
+
     private fun createMissingTypes(trs: AsmTransformRuleSet) {
         when {
             trs.options.createTypes -> {
@@ -494,7 +500,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                                         // }
                                         else -> _issues.error(
                                             null,
-                                            "Trying to create missing property '${propName}: ${propType.qualifiedTypeName}', '${t.qualifiedName}' already contains incompatible property '${existingProp.name}: ${existingProp.typeInstance.qualifiedTypeName}'."
+                                            "Trying to create missing property '${propName}: ${displayName(propType)}', '${t.qualifiedName}' already contains incompatible property '${existingProp.name}: ${displayName(existingProp.typeInstance)}'."
                                         )
                                     }
                                 }
