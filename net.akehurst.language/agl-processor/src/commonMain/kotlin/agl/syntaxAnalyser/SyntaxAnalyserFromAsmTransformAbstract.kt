@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 //import net.akehurst.language.asm.simple.*
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -651,8 +652,13 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             if (self.hasIdentity.not() && deferParseIdentity.not()) self.setIdentity(AsmStructureParseIdentity((sentence as? SentenceAbstract)?.identity, self.qualifiedTypeName, self.parsePath))
             //self.setProperty(AsmTransformInterpreter.MATCHED_TEXT.asValueName, asmMatchedText, self.property.size)
         }
+        // keep the kind of each issue (e.g. a warning for navigating \$nothing stays a warning)
         _trf.issues.forEach {
-            super.issues.error(null, "Error evaluating transformation rule '${it.message}':\n${tr.asString()}")
+            when (it.kind) {
+                LanguageIssueKind.ERROR -> super.issues.error(null, "Error evaluating transformation rule '${it.message}':\n${tr.asString()}")
+                LanguageIssueKind.WARNING -> super.issues.warn(null, "Warning evaluating transformation rule '${it.message}':\n${tr.asString()}")
+                else -> super.issues.info(null, "Evaluating transformation rule '${it.message}':\n${tr.asString()}")
+            }
         }
         return asm
     }

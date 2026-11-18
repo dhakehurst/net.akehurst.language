@@ -438,6 +438,35 @@ class test_ProvidedTransform {
                     }
                 }
             }
+            testData("a warning when evaluating a transformation rule is a warning, not an error") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a? 'x' ;
+                        leaf a = 'a' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: tuple { v := child[0].child[0].child }
+                      }
+                """.trimIndent()
+                )
+                // 'x': child[0].child[0] is $nothing, getting 'child' on it gives a warning and $nothing
+                sentencePass("x") {
+                    expectedAsm {
+                        tuple {
+                            propertyNothing("v")
+                        }
+                    }
+                }
+            }
         }
     }
 
