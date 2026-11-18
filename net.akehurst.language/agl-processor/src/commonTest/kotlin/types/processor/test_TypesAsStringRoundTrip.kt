@@ -68,6 +68,21 @@ class test_TypesAsStringRoundTrip {
     }
 
     @Test
+    fun derived_property_from_builder() {
+        // a property built as DERIVED (e.g. with an accessor) is not also STORED: 'str drv' is not valid in the types language
+        val types = typesDomain("Test", true) {
+            namespace("test") {
+                data("A") {
+                    propertyOf(setOf(VAL, DER), "d", "String")
+                    propertyOf(setOf(VAR, CMP, STR), "s", "String")
+                }
+            }
+        }
+        val text = assertRoundTrip(types)
+        assertTrue(text.contains("val drv d: String"), text)
+    }
+
+    @Test
     fun names_that_are_not_identifiers_or_are_keywords() {
         val types = typesDomain("Test", true) {
             namespace("test") {
