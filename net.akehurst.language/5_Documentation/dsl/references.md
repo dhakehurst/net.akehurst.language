@@ -57,6 +57,10 @@ and a property appears at most once in a block (use `property p when { ... }` to
 Open point (RV8): `when` is written differently in the references DSL (`... when c`, `property p when { c -> ... }`),
 in expressions (`when { c -> e  else -> e }`) and in m2m (`when { }`). Whether to make these consistent is still to be decided.
 
+The value of the referring navigation is the name that is looked up.
+A String value is split on '.' into the parts of a qualified name (`a.b.c` is `c` in `b` in `a`).
+A List of Strings is used as the parts as it is (no split), so a language whose names may contain '.'
+can use a List property, or end the navigation with method calls that give a List.
 Names are looked up in the current scope, then in the enclosing scopes.
 A reference never resolves to an object whose name is computed from that same reference (that would be circular),
 e.g. with `identify Perform by target.name` and `in Perform { property target.name refers-to Action }`, in `perform tp` the reference `tp` skips the perform itself
