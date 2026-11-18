@@ -46,7 +46,7 @@ class test_ReferencesSemanticAnalyser_forall {
             """.trimIndent()
         )
 
-        // 'Unit.anything' has the type Any
+        // 'Unit.anything' has the type Any, 'Unit.things' is a list of an interface type
         val typesStr = TypesString(
             """
             namespace test.Test
@@ -54,8 +54,13 @@ class test_ReferencesSemanticAnalyser_forall {
               data Unit {
                 cmp item: List<Item>
                 cmp anything: Any
+                cmp things: List<Thing>
               }
               data Item {
+                cmp str id: String
+              }
+              interface Thing
+              data Named : Thing {
                 cmp str id: String
               }
             """.trimIndent()
@@ -116,5 +121,18 @@ class test_ReferencesSemanticAnalyser_forall {
     fun forall_of_type_not_found__error() {
         val (errors, _) = check(refs("forall item of-type Nope { property id refers-to Item }"))
         assertEquals(listOf("For references in 'Unit', forall 'item', the of-type 'Nope' is not found"), errors)
+    }
+
+    @Test
+    fun forall_of_type_subtype_of_interface_element_type() {
+        val (errors, _) = check(refs("forall things of-type Named { property id refers-to Item }"))
+        assertEquals(emptyList(), errors)
+    }
+
+    @Test
+    fun forall_of_type_not_subtype_of_interface_element_type__error() {
+        val (errors, _) = check(refs("forall things of-type Item { property id refers-to Item }"))
+        // (followed by the error that 'id' is not a property of 'Thing', the loop variable type then)
+        assertEquals("The of-type 'Item' is not a subtype of the loop variable type 'Thing'", errors.firstOrNull(), errors.toString())
     }
 }

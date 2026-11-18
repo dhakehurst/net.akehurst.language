@@ -28,7 +28,8 @@ import kotlin.test.assertTrue
 
 /**
  * A referring property that is not set (an optional reference the sentence does not give) has nothing to resolve:
- * it gives no error. The name of a reference is put by the asm-transform into the (typed) reference property itself.
+ * it gives no error, also when its declared type is not nullable (as in a metamodel, where the property is mandatory but the
+ * sentence gives its value in another way). The name of a reference is put by the asm-transform into the (typed) reference property itself.
  */
 class test_ReferenceResolverSimple_unsetReference {
 
@@ -50,7 +51,7 @@ class test_ReferenceResolverSimple_unsetReference {
             """
             namespace test.Test
               data Unit { cmp var items: List<Def> }
-              data Def { var name: String?  ref var general: Def? }
+              data Def { var name: String?  ref var general: Def }
             """.trimIndent()
         )
         val transformStr = AsmTransformString(
