@@ -46,8 +46,8 @@ namespace net.akehurst.language.kerML
 
         NAME: child[0].removeSurrounding('\'') as String
         Identification: tuple {
-            declaredShortName := child[0].child[0].child[1]
-            declaredName := child[1].child[0]
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1] else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0] else -> $nothing }
         }
         RelationshipBody: tuple {
             ownedRelatedElement := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelatedElement }) else -> children.filter({ y -> false }) }
@@ -60,8 +60,8 @@ namespace net.akehurst.language.kerML
         OwnedRelatedElement: child[0] as Any
         Dependency: Dependency(_identity := $path) {
             ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[8].ownedRelationship
-            declaredShortName := child[2].child[0].child[0].child[0].declaredShortName
-            declaredName := child[2].child[0].child[0].child[0].declaredName
+            declaredShortName := when { when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> (when { child[2].child[0].child[0] != $nothing -> (child[2].child[0].child[0].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> (when { child[2].child[0].child[0] != $nothing -> (child[2].child[0].child[0].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].child[0].child[0].declaredName else -> $nothing }
             client := children.filter({ y -> y == child[3] and y != $nothing }) + child[4].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
             supplier := children.filter({ y -> y == child[6] and y != $nothing }) + child[7].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
             ownedRelatedElement := child[8].ownedRelatedElement
@@ -74,21 +74,21 @@ namespace net.akehurst.language.kerML
         }
         AnnotatingElement: child[0] as Any
         Comment: Comment(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
-            ownedRelationship := child[0].child[0].child[2].child[0].children.filter({ y -> y == child[0].child[0].child[2].child[0].child[1] and y != $nothing }) + when { child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) }
-            locale := child[1].child[0].child[1]
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
+            ownedRelationship := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[2] != $nothing -> (child[0].child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].child[2].child[0].children.filter({ y -> y == child[0].child[0].child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[2] != $nothing -> (child[0].child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> when { child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) } else -> children.filter({ y -> false }) }
+            locale := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1] else -> $nothing }
             body := child[2]
         }
         Documentation: Documentation(_identity := $path) {
             declaredShortName := child[1].declaredShortName
             declaredName := child[1].declaredName
-            locale := child[2].child[0].child[1]
+            locale := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0].child[1] else -> $nothing }
             body := child[3]
         }
         TextualRepresentation: TextualRepresentation(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             language := child[2]
             body := child[3]
         }
@@ -111,7 +111,7 @@ namespace net.akehurst.language.kerML
             ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         MemberPrefix: Membership(_identity := $path) {
-            visibility := child[0].child[0]
+            visibility := when { child[0] != $nothing -> child[0] else -> $nothing }
         }
         NamespaceMember: child[0] as Any
         NonFeatureMember: OwningMembership(_identity := $path) {
@@ -124,8 +124,8 @@ namespace net.akehurst.language.kerML
         }
         AliasMember: Membership(_identity := $path) {
             visibility := child[0].visibility
-            memberShortName := child[2].child[0].child[1]
-            memberName := child[3].child[0]
+            memberShortName := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0].child[1] else -> $nothing }
+            memberName := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0] else -> $nothing }
             memberElement := child[5]
             ownedRelatedElement := child[6].ownedRelatedElement
             ownedRelationship := child[6].ownedRelationship
@@ -136,7 +136,7 @@ namespace net.akehurst.language.kerML
                 importedMembership := child[3].importedMembership
                 isRecursive := child[3].isRecursive
                 visibility := child[0]
-                isImportAll := (child[2].child[0] != $nothing)
+                isImportAll := (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false })
                 ownedRelatedElement := child[4].ownedRelatedElement
                 ownedRelationship := child[4].ownedRelationship
             }
@@ -144,7 +144,7 @@ namespace net.akehurst.language.kerML
                 importedNamespace := child[3].importedNamespace
                 isRecursive := child[3].isRecursive
                 visibility := child[0]
-                isImportAll := (child[2].child[0] != $nothing)
+                isImportAll := (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false })
                 ownedRelatedElement := child[4].ownedRelatedElement
                 ownedRelationship := child[4].ownedRelationship
             }
@@ -153,11 +153,12 @@ namespace net.akehurst.language.kerML
         ImportDeclaration: child[0] as Any
         MembershipImport: MembershipImport(_identity := $path) {
             importedMembership := child[0]
-            isRecursive := (child[1].child[0].child[1] != $nothing)
+            isRecursive := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].child[1] != $nothing) else -> $nothing }
+            ownedRelatedElement := children.filter({ y -> false })
         }
         NamespaceImport: NamespaceImport(_identity := $path) {
             importedNamespace := when { $alternative == 0 -> child[0] else -> $nothing }
-            isRecursive := when { $alternative == 0 -> (child[3].child[0].child[1] != $nothing) else -> $nothing }
+            isRecursive := when { when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> (child[3].child[0].child[1] != $nothing) else -> $nothing }
             ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         FilterPackage: Package(_identity := $path) {
@@ -177,14 +178,14 @@ namespace net.akehurst.language.kerML
             declaredName := child[2].declaredName
         }
         TypePrefix: Type(_identity := $path) {
-            isAbstract := (child[0].child[0] != $nothing)
+            isAbstract := (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })
             ownedRelationship := child[1].children.map({ x1 -> x1 })
         }
         TypeDeclaration: Type(_identity := $path) {
-            isSufficient := (child[0].child[0] != $nothing)
+            isSufficient := (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })
             declaredShortName := child[1].declaredShortName
             declaredName := child[1].declaredName
-            ownedRelationship := child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) + child[3].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } }) + child[4].children.flatMap({ x1 -> x1.ownedRelationship })
+            ownedRelationship := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[3].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } }) + child[4].children.flatMap({ x1 -> x1.ownedRelationship })
         }
         SpecializationPart: Type(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
@@ -212,8 +213,8 @@ namespace net.akehurst.language.kerML
             ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         Specialization: Specialization(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             specific := child[2].specific
             ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
             general := child[4].general
@@ -229,8 +230,8 @@ namespace net.akehurst.language.kerML
             ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         Conjugation: Conjugation(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             conjugatedType := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
             ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
             originalType := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
@@ -241,8 +242,8 @@ namespace net.akehurst.language.kerML
             ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         Disjoining: Disjoining(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             typeDisjoined := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
             ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
             disjoiningType := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
@@ -281,17 +282,17 @@ namespace net.akehurst.language.kerML
             declaredName := child[2].declaredName
         }
         ClassifierDeclaration: Classifier(_identity := $path) {
-            isSufficient := (child[0].child[0] != $nothing)
+            isSufficient := (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })
             declaredShortName := child[1].declaredShortName
             declaredName := child[1].declaredName
-            ownedRelationship := child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) + when { child[3].child[0].$alternative == 0 -> when { child[3].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[3].child[0].$alternative == 1 -> when { child[3].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].children.flatMap({ x1 -> x1.ownedRelationship })
+            ownedRelationship := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> (child[3].child[0].$alternative == 0) else -> false } -> when { child[3].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> (child[3].child[0].$alternative == 1) else -> false } -> when { child[3].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].children.flatMap({ x1 -> x1.ownedRelationship })
         }
         SuperclassingPart: Classifier(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
         }
         Subclassification: Subclassification(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             subclassifier := child[2]
             superclassifier := child[4]
             ownedRelatedElement := child[5].ownedRelatedElement
@@ -301,38 +302,38 @@ namespace net.akehurst.language.kerML
             superclassifier := child[0]
         }
         Feature: Feature(_identity := $path) {
-            isEnd := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].isEnd  child[0].$alternative == 0 -> child[0].child[0].isEnd else -> $nothing }
-            ownedRelationship := when { child[0].$alternative == 0 -> child[0].child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { child[0].$alternative == 0 and child[0].child[1].$alternative == 1 -> child[0].child[1].children.filter({ y -> y == child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[0].$alternative == 0 -> when { child[0].child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[0].$alternative == 1 -> child[0].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } + child[2].ownedRelationship
-            direction := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].direction  child[0].$alternative == 0 -> child[0].child[0].direction else -> $nothing }
-            isDerived := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isDerived  child[0].$alternative == 0 -> child[0].child[0].isDerived else -> $nothing }
-            isAbstract := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isAbstract  child[0].$alternative == 0 -> child[0].child[0].isAbstract else -> $nothing }
-            isComposite := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isComposite  child[0].$alternative == 0 -> child[0].child[0].isComposite else -> $nothing }
-            isPortion := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isPortion  child[0].$alternative == 0 -> child[0].child[0].isPortion else -> $nothing }
-            isVariable := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isVariable  child[0].$alternative == 0 -> child[0].child[0].isVariable else -> $nothing }
-            isConstant := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isConstant  child[0].$alternative == 0 -> child[0].child[0].isConstant else -> $nothing }
-            isSufficient := when { child[0].$alternative == 1 -> child[0].child[1].isSufficient  child[0].$alternative == 0 -> child[0].child[2].child[0].isSufficient else -> $nothing }
-            declaredShortName := when { child[0].$alternative == 1 -> child[0].child[1].declaredShortName  child[0].$alternative == 0 -> child[0].child[2].child[0].declaredShortName else -> $nothing }
-            declaredName := when { child[0].$alternative == 1 -> child[0].child[1].declaredName  child[0].$alternative == 0 -> child[0].child[2].child[0].declaredName else -> $nothing }
-            isOrdered := when { child[0].$alternative == 1 -> child[0].child[1].isOrdered  child[0].$alternative == 0 -> child[0].child[2].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[0].$alternative == 1 -> child[0].child[1].isUnique  child[0].$alternative == 0 -> child[0].child[2].child[0].isUnique else -> $nothing }
+            isEnd := when { when { child[0].$alternative == 1 -> (child[0].child[0].$alternative == 0) else -> false } -> child[0].child[0].child[0].isEnd  child[0].$alternative == 0 -> child[0].child[0].isEnd else -> $nothing }
+            ownedRelationship := when { child[0].$alternative == 0 -> child[0].child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { when { child[0].$alternative == 0 -> (child[0].child[1].$alternative == 1) else -> false } -> child[0].child[1].children.filter({ y -> y == child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[0].$alternative == 0 -> (when { child[0].child[2] != $nothing -> (child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> when { child[0].child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[0].$alternative == 1 -> child[0].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[2].ownedRelationship
+            direction := when { when { child[0].$alternative == 1 -> (child[0].child[0].$alternative == 1) else -> false } -> child[0].child[0].child[0].direction  child[0].$alternative == 0 -> child[0].child[0].direction else -> $nothing }
+            isDerived := when { when { child[0].$alternative == 1 -> (child[0].child[0].$alternative == 1) else -> false } -> child[0].child[0].child[0].isDerived  child[0].$alternative == 0 -> child[0].child[0].isDerived else -> $nothing }
+            isAbstract := when { when { child[0].$alternative == 1 -> (child[0].child[0].$alternative == 1) else -> false } -> child[0].child[0].child[0].isAbstract  child[0].$alternative == 0 -> child[0].child[0].isAbstract else -> $nothing }
+            isComposite := when { when { child[0].$alternative == 1 -> (child[0].child[0].$alternative == 1) else -> false } -> child[0].child[0].child[0].isComposite  child[0].$alternative == 0 -> child[0].child[0].isComposite else -> $nothing }
+            isPortion := when { when { child[0].$alternative == 1 -> (child[0].child[0].$alternative == 1) else -> false } -> child[0].child[0].child[0].isPortion  child[0].$alternative == 0 -> child[0].child[0].isPortion else -> $nothing }
+            isVariable := when { when { child[0].$alternative == 1 -> (child[0].child[0].$alternative == 1) else -> false } -> child[0].child[0].child[0].isVariable  child[0].$alternative == 0 -> child[0].child[0].isVariable else -> $nothing }
+            isConstant := when { when { child[0].$alternative == 1 -> (child[0].child[0].$alternative == 1) else -> false } -> child[0].child[0].child[0].isConstant  child[0].$alternative == 0 -> child[0].child[0].isConstant else -> $nothing }
+            isSufficient := when { child[0].$alternative == 1 -> child[0].child[1].isSufficient  when { child[0].$alternative == 0 -> (when { child[0].child[2] != $nothing -> (child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[2].child[0].isSufficient else -> $nothing }
+            declaredShortName := when { child[0].$alternative == 1 -> child[0].child[1].declaredShortName  when { child[0].$alternative == 0 -> (when { child[0].child[2] != $nothing -> (child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[2].child[0].declaredShortName else -> $nothing }
+            declaredName := when { child[0].$alternative == 1 -> child[0].child[1].declaredName  when { child[0].$alternative == 0 -> (when { child[0].child[2] != $nothing -> (child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[2].child[0].declaredName else -> $nothing }
+            isOrdered := when { child[0].$alternative == 1 -> child[0].child[1].isOrdered  when { child[0].$alternative == 0 -> (when { child[0].child[2] != $nothing -> (child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[2].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[0].$alternative == 1 -> child[0].child[1].isUnique  when { child[0].$alternative == 0 -> (when { child[0].child[2] != $nothing -> (child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[2].child[0].isUnique else -> $nothing }
         }
         EndFeaturePrefix: Feature(_identity := $path) {
-            isConstant := (child[0].child[0] != $nothing)
-            isVariable := true
+            isConstant := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (child[0].child[0] != $nothing) else -> $nothing }
+            isVariable := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> true else -> $nothing }
             isEnd := (child[1] != $nothing)
         }
         BasicFeaturePrefix: Feature(_identity := $path) {
-            direction := child[0].child[0]
-            isDerived := (child[1].child[0] != $nothing)
-            isAbstract := (child[2].child[0] != $nothing)
-            isComposite := when { child[3].child[0].$alternative == 0 -> (child[3].child[0].child[0] != $nothing) else -> $nothing }
-            isPortion := when { child[3].child[0].$alternative == 1 -> (child[3].child[0].child[0] != $nothing) else -> $nothing }
-            isVariable := when { child[4].child[0].$alternative == 1 -> true  child[4].child[0].$alternative == 0 -> (child[4].child[0].child[0] != $nothing) else -> $nothing }
-            isConstant := when { child[4].child[0].$alternative == 1 -> (child[4].child[0].child[0] != $nothing) else -> $nothing }
+            direction := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0] else -> $nothing }
+            isDerived := (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false })
+            isAbstract := (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false })
+            isComposite := when { when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> (child[3].child[0].$alternative == 0) else -> false } -> (child[3].child[0].child[0] != $nothing) else -> $nothing }
+            isPortion := when { when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> (child[3].child[0].$alternative == 1) else -> false } -> (child[3].child[0].child[0] != $nothing) else -> $nothing }
+            isVariable := when { when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> (child[4].child[0].$alternative == 1) else -> false } -> true  when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> (child[4].child[0].$alternative == 0) else -> false } -> (child[4].child[0].child[0] != $nothing) else -> $nothing }
+            isConstant := when { when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> (child[4].child[0].$alternative == 1) else -> false } -> (child[4].child[0].child[0] != $nothing) else -> $nothing }
         }
         FeaturePrefix: tuple {
             isEnd := when { child[0].$alternative == 0 -> child[0].child[0].isEnd else -> $nothing }
-            ownedRelationship := when { child[0].$alternative == 0 -> child[0].child[1].children.filter({ y -> y == child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[1].children.map({ x1 -> x1 })
+            ownedRelationship := when { when { child[0].$alternative == 0 -> (when { child[0].child[1] != $nothing -> (child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[1].children.filter({ y -> y == child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[1].children.map({ x1 -> x1 })
             direction := when { child[0].$alternative == 1 -> child[0].child[0].direction else -> $nothing }
             isDerived := when { child[0].$alternative == 1 -> child[0].child[0].isDerived else -> $nothing }
             isAbstract := when { child[0].$alternative == 1 -> child[0].child[0].isAbstract else -> $nothing }
@@ -360,16 +361,16 @@ namespace net.akehurst.language.kerML
             isUnique := child[1].isUnique
         }
         FeatureDeclaration: Feature(_identity := $path) {
-            isSufficient := (child[0].child[0] != $nothing)
+            isSufficient := (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })
             declaredShortName := when { child[1].$alternative == 0 -> child[1].child[0].declaredShortName else -> $nothing }
             declaredName := when { child[1].$alternative == 0 -> child[1].child[0].declaredName else -> $nothing }
-            ownedRelationship := when { child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> when { child[1].child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 1 -> when { child[1].child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].$alternative == 2 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) } + child[2].children.flatMap({ x1 -> x1.ownedRelationship }) + child[2].children.flatMap({ x1 -> x1.ownedTypeFeaturing })
-            isOrdered := when { child[1].$alternative == 1 -> child[1].child[0].isOrdered  child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> child[1].child[1].child[0].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[1].$alternative == 1 -> child[1].child[0].isUnique  child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> child[1].child[1].child[0].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { when { child[1].$alternative == 0 -> (when { when { child[1].child[1] != $nothing -> (child[1].child[1].child[0] != $nothing) else -> false } -> (child[1].child[1].child[0].$alternative == 0) else -> false }) else -> false } -> when { child[1].child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[1].$alternative == 0 -> (when { when { child[1].child[1] != $nothing -> (child[1].child[1].child[0] != $nothing) else -> false } -> (child[1].child[1].child[0].$alternative == 1) else -> false }) else -> false } -> when { child[1].child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].$alternative == 2 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) } + child[2].children.flatMap({ x1 -> x1.ownedRelationship })
+            isOrdered := when { child[1].$alternative == 1 -> child[1].child[0].isOrdered  when { child[1].$alternative == 0 -> (when { when { child[1].child[1] != $nothing -> (child[1].child[1].child[0] != $nothing) else -> false } -> (child[1].child[1].child[0].$alternative == 0) else -> false }) else -> false } -> child[1].child[1].child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[1].$alternative == 1 -> child[1].child[0].isUnique  when { child[1].$alternative == 0 -> (when { when { child[1].child[1] != $nothing -> (child[1].child[1].child[0] != $nothing) else -> false } -> (child[1].child[1].child[0].$alternative == 0) else -> false }) else -> false } -> child[1].child[1].child[0].child[0].isUnique else -> $nothing }
         }
         FeatureIdentification: Feature(_identity := $path) {
             declaredShortName := when { $alternative == 0 -> child[1] else -> $nothing }
-            declaredName := when { $alternative == 1 -> child[0]  $alternative == 0 -> child[3].child[0] else -> $nothing }
+            declaredName := when { $alternative == 1 -> child[0]  when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[0] else -> $nothing }
         }
         FeatureRelationshipPart: (when { $alternative == 1 -> child[0]  $alternative == 2 -> child[0]  $alternative == 3 -> child[0] else -> Feature(_identity := $path) {
             ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) }
@@ -384,14 +385,14 @@ namespace net.akehurst.language.kerML
             ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + child[3].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
         }
         FeatureSpecializationPart: Feature(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 -> child[0].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { $alternative == 1 -> child[0].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[0].isOrdered  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[0].isUnique  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         MultiplicityPart: Feature(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 and child[1].$alternative == 1 -> (child[1].child[1].child[0] != $nothing)  $alternative == 1 and child[1].$alternative == 0 -> (child[1].child[0] != $nothing) else -> $nothing }
-            isUnique := when { $alternative == 1 and child[1].$alternative == 1 -> false  $alternative == 1 and child[1].$alternative == 0 -> false else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            isOrdered := when { when { $alternative == 1 -> (child[1].$alternative == 1) else -> false } -> (when { child[1].child[1] != $nothing -> (child[1].child[1].child[0] != $nothing) else -> false })  when { $alternative == 1 -> (child[1].$alternative == 0) else -> false } -> (child[1].child[0] != $nothing) else -> $nothing }
+            isUnique := when { when { $alternative == 1 -> (child[1].$alternative == 1) else -> false } -> false  when { $alternative == 1 -> (when { child[1].$alternative == 0 -> (when { child[1].child[1] != $nothing -> (child[1].child[1].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> false else -> $nothing }
         }
         FeatureSpecialization: child[0] as Any
         Typings: Feature(_identity := $path) {
@@ -419,8 +420,8 @@ namespace net.akehurst.language.kerML
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
         }
         FeatureTyping: FeatureTyping(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             typedFeature := child[2]
             general := child[4].general
             ownedRelatedElement := child[4].ownedRelatedElement + child[5].ownedRelatedElement
@@ -431,8 +432,8 @@ namespace net.akehurst.language.kerML
             ownedRelatedElement := child[0].ownedRelatedElement
         }
         Subsetting: Subsetting(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             specific := child[2].specific
             ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
             general := child[4].general
@@ -451,8 +452,8 @@ namespace net.akehurst.language.kerML
             ownedRelatedElement := child[0].ownedRelatedElement
         }
         Redefinition: Redefinition(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             specific := child[2].specific
             ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
             general := child[4].general
@@ -470,8 +471,8 @@ namespace net.akehurst.language.kerML
             chainingFeature := child[0]
         }
         FeatureInverting: FeatureInverting(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].child[0].declaredShortName
-            declaredName := child[0].child[0].child[1].child[0].declaredName
+            declaredShortName := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[1] != $nothing -> (child[0].child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].child[1].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[1] != $nothing -> (child[0].child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].child[1].child[0].declaredName else -> $nothing }
             featureInverted := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
             ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
             invertingFeature := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
@@ -482,8 +483,8 @@ namespace net.akehurst.language.kerML
             ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         TypeFeaturing: TypeFeaturing(_identity := $path) {
-            declaredShortName := child[1].child[0].child[0].declaredShortName
-            declaredName := child[1].child[0].child[0].declaredName
+            declaredShortName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0].declaredName else -> $nothing }
             featureOfType := child[2]
             featuringType := child[4]
             ownedRelatedElement := child[5].ownedRelatedElement
@@ -529,7 +530,7 @@ namespace net.akehurst.language.kerML
         }
         Connector: Connector(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> when { child[2].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 0 -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> child[2].child[0].ownedRelationship else -> children.filter({ y -> false }) } + child[3].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { when { child[2].$alternative == 0 -> (when { child[2].child[0] != $nothing -> (child[2].child[0].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> child[2].child[0].ownedRelationship else -> children.filter({ y -> false }) } + child[3].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -537,35 +538,35 @@ namespace net.akehurst.language.kerML
             isPortion := child[0].isPortion
             isVariable := child[0].isVariable
             isConstant := child[0].isConstant
-            isSufficient := when { child[2].$alternative == 1 -> child[2].child[0].isSufficient  child[2].$alternative == 0 -> child[2].child[0].child[0].isSufficient else -> $nothing }
-            declaredShortName := when { child[2].$alternative == 1 -> child[2].child[0].declaredShortName  child[2].$alternative == 0 -> child[2].child[0].child[0].declaredShortName else -> $nothing }
-            declaredName := when { child[2].$alternative == 1 -> child[2].child[0].declaredName  child[2].$alternative == 0 -> child[2].child[0].child[0].declaredName else -> $nothing }
-            isOrdered := when { child[2].$alternative == 1 -> child[2].child[0].isOrdered  child[2].$alternative == 0 -> child[2].child[0].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[2].$alternative == 1 -> child[2].child[0].isUnique  child[2].$alternative == 0 -> child[2].child[0].child[0].isUnique else -> $nothing }
+            isSufficient := when { child[2].$alternative == 1 -> child[2].child[0].isSufficient  when { child[2].$alternative == 0 -> (when { child[2].child[0] != $nothing -> (child[2].child[0].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].child[0].isSufficient else -> $nothing }
+            declaredShortName := when { child[2].$alternative == 1 -> child[2].child[0].declaredShortName  when { child[2].$alternative == 0 -> (when { child[2].child[0] != $nothing -> (child[2].child[0].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { child[2].$alternative == 1 -> child[2].child[0].declaredName  when { child[2].$alternative == 0 -> (when { child[2].child[0] != $nothing -> (child[2].child[0].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].child[0].declaredName else -> $nothing }
+            isOrdered := when { child[2].$alternative == 1 -> child[2].child[0].isOrdered  when { child[2].$alternative == 0 -> (when { child[2].child[0] != $nothing -> (child[2].child[0].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[2].$alternative == 1 -> child[2].child[0].isUnique  when { child[2].$alternative == 0 -> (when { child[2].child[0] != $nothing -> (child[2].child[0].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].child[0].isUnique else -> $nothing }
         }
         ConnectorDeclaration: child[0] as Any
         BinaryConnectorDeclaration: Connector(_identity := $path) {
-            isSufficient := when { child[0].child[0].$alternative == 1 -> (child[0].child[0].child[0] != $nothing)  child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isSufficient else -> $nothing }
-            declaredShortName := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].declaredShortName else -> $nothing }
-            declaredName := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].declaredName else -> $nothing }
-            ownedRelationship := when { child[0].child[0].$alternative == 0 -> when { child[0].child[0].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
-            isOrdered := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isUnique else -> $nothing }
+            isSufficient := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (child[0].child[0].$alternative == 1) else -> false } -> (child[0].child[0].child[0] != $nothing)  when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].$alternative == 0 -> (when { child[0].child[0].child[0] != $nothing -> (child[0].child[0].child[0].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[0].child[0].child[0].child[0].isSufficient else -> $nothing }
+            declaredShortName := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].$alternative == 0 -> (when { child[0].child[0].child[0] != $nothing -> (child[0].child[0].child[0].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[0].child[0].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].$alternative == 0 -> (when { child[0].child[0].child[0] != $nothing -> (child[0].child[0].child[0].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[0].child[0].child[0].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].$alternative == 0 -> (when { child[0].child[0].child[0] != $nothing -> (child[0].child[0].child[0].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> when { child[0].child[0].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
+            isOrdered := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].$alternative == 0 -> (when { child[0].child[0].child[0] != $nothing -> (child[0].child[0].child[0].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[0].child[0].child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].$alternative == 0 -> (when { child[0].child[0].child[0] != $nothing -> (child[0].child[0].child[0].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[0].child[0].child[0].child[0].isUnique else -> $nothing }
         }
         NaryConnectorDeclaration: Connector(_identity := $path) {
-            isSufficient := child[0].child[0].isSufficient
-            declaredShortName := child[0].child[0].declaredShortName
-            declaredName := child[0].child[0].declaredName
-            ownedRelationship := when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[4] and y != $nothing }) + child[5].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-            isOrdered := child[0].child[0].isOrdered
-            isUnique := child[0].child[0].isUnique
+            isSufficient := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isSufficient else -> $nothing }
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[4] and y != $nothing }) + child[5].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+            isOrdered := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isUnique else -> $nothing }
         }
         ConnectorEndMember: EndFeatureMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         ConnectorEnd: Feature(_identity := $path) {
-            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-            declaredName := child[1].child[0].child[0]
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0] else -> $nothing }
         }
         OwnedCrossMultiplicityMember: OwningMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
@@ -590,10 +591,10 @@ namespace net.akehurst.language.kerML
             isUnique := child[2].isUnique
         }
         BindingConnectorDeclaration: BindingConnector(_identity := $path) {
-            isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
+            isSufficient := when { $alternative == 1 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })  $alternative == 0 -> child[0].isSufficient else -> $nothing }
             declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
         }
@@ -614,10 +615,10 @@ namespace net.akehurst.language.kerML
             isUnique := child[2].isUnique
         }
         SuccessionDeclaration: Succession(_identity := $path) {
-            isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
+            isSufficient := when { $alternative == 1 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })  $alternative == 0 -> child[0].isSufficient else -> $nothing }
             declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
         }
@@ -630,7 +631,7 @@ namespace net.akehurst.language.kerML
         }
         Step: Step(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -651,8 +652,9 @@ namespace net.akehurst.language.kerML
             declaredShortName := child[2].declaredShortName
             declaredName := child[2].declaredName
         }
+        FunctionBody: (when { $alternative == 1 -> child[1] else -> Type(_identity := $path) { ownedRelationship := children.filter({ y -> false }) } }) as Any
         FunctionBodyPart: Type(_identity := $path) {
-            ownedRelationship := child[0].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.children.filter({ y -> y == x1.child[0] and y != $nothing }) else -> children.filter({ y -> false }) } }) + child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing })
+            ownedRelationship := child[0].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.children.filter({ y -> y == x1.child[0] and y != $nothing }) else -> children.filter({ y -> false }) } }) + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         ReturnFeatureMember: ReturnParameterMembership(_identity := $path) {
             visibility := child[0].visibility
@@ -664,7 +666,7 @@ namespace net.akehurst.language.kerML
         }
         Expression: Expression(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -687,7 +689,7 @@ namespace net.akehurst.language.kerML
         }
         BooleanExpression: BooleanExpression(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -703,7 +705,7 @@ namespace net.akehurst.language.kerML
         }
         Invariant: Invariant(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } + child[5].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[5].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -711,12 +713,12 @@ namespace net.akehurst.language.kerML
             isPortion := child[0].isPortion
             isVariable := child[0].isVariable
             isConstant := child[0].isConstant
-            isNegated := when { child[2].child[0].$alternative == 1 -> (child[2].child[0].child[0] != $nothing) else -> $nothing }
-            isSufficient := child[3].child[0].isSufficient
-            declaredShortName := child[3].child[0].declaredShortName
-            declaredName := child[3].child[0].declaredName
-            isOrdered := child[3].child[0].isOrdered
-            isUnique := child[3].child[0].isUnique
+            isNegated := when { when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> (child[2].child[0].$alternative == 1) else -> false } -> (child[2].child[0].child[0] != $nothing) else -> $nothing }
+            isSufficient := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].isSufficient else -> $nothing }
+            declaredShortName := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].declaredName else -> $nothing }
+            isOrdered := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].isUnique else -> $nothing }
         }
         OwnedExpressionReferenceMember: FeatureMembership(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
@@ -745,7 +747,7 @@ namespace net.akehurst.language.kerML
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
         }
         ClassificationExpression: OperatorExpression(_identity := $path) {
-            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
             operator := when { child[1].$alternative == 1 -> child[1].child[0]  child[1].$alternative == 0 -> child[1].child[0] else -> $nothing }
         }
         CastOperator: child[0] as String
@@ -913,7 +915,7 @@ namespace net.akehurst.language.kerML
         } }) as Any
         InstantiatedTypeReference: child[0] as Any
         ArgumentList: Feature(_identity := $path) {
-            ownedRelationship := when { child[1].child[0].$alternative == 0 -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 1 -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
+            ownedRelationship := when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].$alternative == 0) else -> false } -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].$alternative == 1) else -> false } -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
         }
         PositionalArgumentList: Feature(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
@@ -991,10 +993,10 @@ namespace net.akehurst.language.kerML
             isUnique := child[3].isUnique
         }
         FlowDeclaration: Flow(_identity := $path) {
-            isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
+            isSufficient := when { $alternative == 1 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })  $alternative == 0 -> child[0].isSufficient else -> $nothing }
             declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
         }
@@ -1004,20 +1006,20 @@ namespace net.akehurst.language.kerML
         PayloadFeature: PayloadFeature(_identity := $path) {
             declaredShortName := when { $alternative == 1 -> child[0].declaredShortName  $alternative == 0 -> child[0].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 1 -> child[0].declaredName  $alternative == 0 -> child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 2 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 3 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[1].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[1].isUnique else -> $nothing }
         }
         PayloadFeatureSpecializationPart: Feature(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 -> child[0].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { $alternative == 1 -> child[0].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[0].isOrdered  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[0].isUnique  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         FlowEndMember: EndFeatureMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         FlowEnd: FlowEnd(_identity := $path) {
-            ownedRelationship := child[0].child[0].children.filter({ y -> y == child[0].child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[1] and y != $nothing })
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].children.filter({ y -> y == child[0].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[1] and y != $nothing })
         }
         FlowFeatureMember: FeatureMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
@@ -1032,7 +1034,7 @@ namespace net.akehurst.language.kerML
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
         }
         FeatureValue: FeatureValue(_identity := $path) {
-            isInitial := when { child[0].$alternative == 2 and child[0].child[1].child[0].$alternative == 1 -> (child[0].child[1].child[0].child[0] != $nothing)  child[0].$alternative == 1 -> (child[0].child[0] != $nothing) else -> $nothing }
+            isInitial := when { when { child[0].$alternative == 2 -> (when { when { child[0].child[1] != $nothing -> (child[0].child[1].child[0] != $nothing) else -> false } -> (child[0].child[1].child[0].$alternative == 1) else -> false }) else -> false } -> (child[0].child[1].child[0].child[0] != $nothing)  child[0].$alternative == 1 -> (child[0].child[0] != $nothing) else -> $nothing }
             isDefault := when { child[0].$alternative == 2 -> (child[0].child[0] != $nothing) else -> $nothing }
             ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
         }
@@ -1052,7 +1054,7 @@ namespace net.akehurst.language.kerML
         }
         OwnedMultiplicityRange: child[0] as Any
         MultiplicityBounds: MultiplicityRange(_identity := $path) {
-            ownedRelationship := child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+            ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
         }
         MultiplicityExpressionMember: OwningMembership(_identity := $path) {
             ownedRelatedElement := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing })
@@ -1074,13 +1076,13 @@ namespace net.akehurst.language.kerML
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
         }
         MetadataFeature: MetadataFeature(_identity := $path) {
-            ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship + child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) + when { child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) } + child[4].ownedRelationship
+            ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             declaredShortName := child[2].declaredShortName
             declaredName := child[2].declaredName
         }
         MetadataFeatureDeclaration: MetadataFeature(_identity := $path) {
-            declaredShortName := child[0].child[0].child[0].declaredShortName
-            declaredName := child[0].child[0].child[0].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[0].declaredName else -> $nothing }
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
         }
         MetadataBody: Feature(_identity := $path) {
@@ -1091,9 +1093,9 @@ namespace net.akehurst.language.kerML
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         MetadataBodyFeature: Feature(_identity := $path) {
-            ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } + child[5].ownedRelationship
-            isOrdered := child[3].child[0].isOrdered
-            isUnique := child[3].child[0].isUnique
+            ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[5].ownedRelationship
+            isOrdered := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].isUnique else -> $nothing }
         }
         Package: Package(_identity := $path) {
             ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship
@@ -1101,7 +1103,7 @@ namespace net.akehurst.language.kerML
             declaredName := child[1].declaredName
         }
         LibraryPackage: LibraryPackage(_identity := $path) {
-            isStandard := (child[0].child[0] != $nothing)
+            isStandard := (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })
             ownedRelationship := child[2].children.map({ x1 -> x1 }) + child[4].ownedRelationship
             declaredShortName := child[3].declaredShortName
             declaredName := child[3].declaredName

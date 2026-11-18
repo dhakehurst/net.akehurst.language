@@ -76,7 +76,7 @@ namespace net.akehurst.language.sysML
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
         }
         ClassificationExpression: OperatorExpression(_identity := $path) {
-            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
             operator := when { child[1].$alternative == 1 -> child[1].child[0]  child[1].$alternative == 0 -> child[1].child[0] else -> $nothing }
         }
         CastOperator: child[0] as String
@@ -238,7 +238,7 @@ namespace net.akehurst.language.sysML
         } }) as Any
         InstantiatedTypeReference: child[0] as Any
         ArgumentList: Feature(_identity := $path) {
-            ownedRelationship := when { child[1].child[0].$alternative == 0 -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 1 -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
+            ownedRelationship := when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].$alternative == 0) else -> false } -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].$alternative == 1) else -> false } -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
         }
         PositionalArgumentList: Feature(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
@@ -324,8 +324,8 @@ namespace net.akehurst.language.sysML
         import-types SysML.Systems.Views
 
         Identification: tuple {
-            declaredShortName := child[0].child[0].child[1]
-            declaredName := child[1].child[0]
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1] else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0] else -> $nothing }
         }
         RelationshipBody: tuple {
             ownedRelationship := when { $alternative == 1 -> child[1].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) }
@@ -345,21 +345,21 @@ namespace net.akehurst.language.sysML
         }
         AnnotatingElement: child[0] as Any
         Comment: Comment(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
-            ownedRelationship := child[0].child[0].child[2].child[0].children.filter({ y -> y == child[0].child[0].child[2].child[0].child[1] and y != $nothing }) + when { child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) }
-            locale := child[1].child[0].child[1]
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
+            ownedRelationship := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[2] != $nothing -> (child[0].child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].child[2].child[0].children.filter({ y -> y == child[0].child[0].child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[2] != $nothing -> (child[0].child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> when { child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) } else -> children.filter({ y -> false }) }
+            locale := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1] else -> $nothing }
             body := child[2]
         }
         Documentation: Documentation(_identity := $path) {
             declaredShortName := child[1].declaredShortName
             declaredName := child[1].declaredName
-            locale := child[2].child[0].child[1]
+            locale := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0].child[1] else -> $nothing }
             body := child[3]
         }
         TextualRepresentation: TextualRepresentation(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
             language := child[2]
             body := child[3]
         }
@@ -367,12 +367,12 @@ namespace net.akehurst.language.sysML
             ownedRelationship := children.flatMap({ x1 -> x1.ownedRelationship })
         }
         MemberPrefix: Membership(_identity := $path) {
-            visibility := child[0].child[0]
+            visibility := when { child[0] != $nothing -> child[0] else -> $nothing }
         }
         AliasMember: Membership(_identity := $path) {
             visibility := child[0].visibility
-            memberShortName := child[2].child[0].child[1]
-            memberName := child[3].child[0]
+            memberShortName := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0].child[1] else -> $nothing }
+            memberName := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0] else -> $nothing }
             memberElement := child[5]
             ownedRelationship := child[6].ownedRelationship
         }
@@ -380,16 +380,16 @@ namespace net.akehurst.language.sysML
             child[3] is MembershipImport -> MembershipImport(_identity := $path) {
                 importedMembership := child[3].importedMembership
                 isRecursive := child[3].isRecursive
-                visibility := child[0].child[0]
-                isImportAll := (child[2].child[0] != $nothing)
+                visibility := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0] else -> $nothing }
+                isImportAll := (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false })
                 ownedRelationship := child[4].ownedRelationship
             }
             child[3] is NamespaceImport -> NamespaceImport(_identity := $path) {
                 importedNamespace := child[3].importedNamespace
                 isRecursive := child[3].isRecursive
                 ownedRelatedElement := child[3].ownedRelatedElement
-                visibility := child[0].child[0]
-                isImportAll := (child[2].child[0] != $nothing)
+                visibility := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0] else -> $nothing }
+                isImportAll := (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false })
                 ownedRelationship := child[4].ownedRelationship
             }
             else -> $nothing
@@ -397,11 +397,12 @@ namespace net.akehurst.language.sysML
         ImportDeclaration: child[0] as Any
         MembershipImport: MembershipImport(_identity := $path) {
             importedMembership := child[0]
-            isRecursive := (child[1].child[0].child[1] != $nothing)
+            isRecursive := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].child[1] != $nothing) else -> $nothing }
+            ownedRelatedElement := children.filter({ y -> false })
         }
         NamespaceImport: NamespaceImport(_identity := $path) {
             importedNamespace := when { $alternative == 0 -> child[0] else -> $nothing }
-            isRecursive := when { $alternative == 0 -> (child[3].child[0].child[1] != $nothing) else -> $nothing }
+            isRecursive := when { when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> (child[3].child[0].child[1] != $nothing) else -> $nothing }
             ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         FilterPackage: Package(_identity := $path) {
@@ -430,14 +431,14 @@ namespace net.akehurst.language.sysML
             isUnique := child[1].isUnique
         }
         FeatureSpecializationPart: Feature(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 -> child[0].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { $alternative == 1 -> child[0].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[0].isOrdered  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[0].isUnique  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         MultiplicityPart: Feature(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 and child[1].$alternative == 1 -> (child[1].child[1].child[0] != $nothing)  $alternative == 1 and child[1].$alternative == 0 -> (child[1].child[0] != $nothing) else -> $nothing }
-            isUnique := when { $alternative == 1 and child[1].$alternative == 1 -> false  $alternative == 1 and child[1].$alternative == 0 -> false else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            isOrdered := when { when { $alternative == 1 -> (child[1].$alternative == 1) else -> false } -> (when { child[1].child[1] != $nothing -> (child[1].child[1].child[0] != $nothing) else -> false })  when { $alternative == 1 -> (child[1].$alternative == 0) else -> false } -> (child[1].child[0] != $nothing) else -> $nothing }
+            isUnique := when { when { $alternative == 1 -> (child[1].$alternative == 1) else -> false } -> false  when { $alternative == 1 -> (when { child[1].$alternative == 0 -> (when { child[1].child[1] != $nothing -> (child[1].child[1].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> false else -> $nothing }
         }
         FeatureSpecialization: child[0] as Any
         Typings: Feature(_identity := $path) {
@@ -495,8 +496,8 @@ namespace net.akehurst.language.sysML
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         ConnectorEnd: ReferenceUsage(_identity := $path) {
-            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-            declaredName := child[1].child[0].child[0]
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0] else -> $nothing }
         }
         OwnedCrossMultiplicityMember: OwningMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
@@ -505,7 +506,7 @@ namespace net.akehurst.language.sysML
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
         }
         ResultExpressionMember: ResultExpressionMembership(_identity := $path) {
-            visibility := child[0].child[0].visibility
+            visibility := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].visibility else -> $nothing }
             ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
         }
         ArgumentMember: ParameterMembership(_identity := $path) {
@@ -539,27 +540,27 @@ namespace net.akehurst.language.sysML
         FlowDeclaration: FlowUsage(_identity := $path) {
             declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[2] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[2] and y != $nothing }) else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
         }
         PayloadFeature: Feature(_identity := $path) {
-            declaredShortName := when { $alternative == 0 -> child[0].child[0].declaredShortName else -> $nothing }
-            declaredName := when { $alternative == 0 -> child[0].child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) }
+            declaredShortName := when { when { $alternative == 0 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { $alternative == 0 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[1].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[1].isUnique else -> $nothing }
         }
         PayloadFeatureSpecializationPart: Feature(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 -> child[0].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { $alternative == 1 -> child[0].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[0].isOrdered  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[0].isUnique  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         FlowEndMember: EndFeatureMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         FlowEnd: FlowEnd(_identity := $path) {
-            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[1] and y != $nothing })
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[1] and y != $nothing })
         }
         FlowFeatureMember: FeatureMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
@@ -574,12 +575,12 @@ namespace net.akehurst.language.sysML
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
         }
         FeatureValue: FeatureValue(_identity := $path) {
-            isInitial := when { child[0].$alternative == 2 and child[0].child[1].child[0].$alternative == 1 -> (child[0].child[1].child[0].child[0] != $nothing)  child[0].$alternative == 1 -> (child[0].child[0] != $nothing) else -> $nothing }
+            isInitial := when { when { child[0].$alternative == 2 -> (when { when { child[0].child[1] != $nothing -> (child[0].child[1].child[0] != $nothing) else -> false } -> (child[0].child[1].child[0].$alternative == 1) else -> false }) else -> false } -> (child[0].child[1].child[0].child[0] != $nothing)  child[0].$alternative == 1 -> (child[0].child[0] != $nothing) else -> $nothing }
             isDefault := when { child[0].$alternative == 2 -> (child[0].child[0] != $nothing) else -> $nothing }
             ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
         }
         MultiplicityRange: MultiplicityRange(_identity := $path) {
-            ownedRelationship := child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+            ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
         }
         OwnedMultiplicity: OwningMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
@@ -603,7 +604,7 @@ namespace net.akehurst.language.sysML
             declaredName := child[1].declaredName
         }
         LibraryPackage: LibraryPackage(_identity := $path) {
-            isStandard := (child[0].child[0] != $nothing)
+            isStandard := (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })
             ownedRelationship := child[2].children.map({ x1 -> x1 }) + child[4].ownedRelationship
             declaredShortName := child[3].declaredShortName
             declaredName := child[3].declaredName
@@ -620,8 +621,8 @@ namespace net.akehurst.language.sysML
             ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
         }
         DependencyDeclaration: tuple {
-            declaredShortName := child[0].child[0].child[0].declaredShortName
-            declaredName := child[0].child[0].child[0].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[0].declaredName else -> $nothing }
             client := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
             supplier := children.filter({ y -> y == child[4] and y != $nothing }) + child[5].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
         }
@@ -659,8 +660,8 @@ namespace net.akehurst.language.sysML
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
         }
         DefinitionPrefix: Definition(_identity := $path) {
-            isAbstract := child[0].child[0].isAbstract
-            isVariation := child[0].child[0].isVariation
+            isAbstract := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isAbstract else -> $nothing }
+            isVariation := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isVariation else -> $nothing }
             ownedRelationship := child[1].children.flatMap({ x1 -> x1.ownedRelationship })
         }
         Definition: Definition(_identity := $path) {
@@ -671,13 +672,13 @@ namespace net.akehurst.language.sysML
         DefinitionDeclaration: Definition(_identity := $path) {
             declaredShortName := child[0].declaredShortName
             declaredName := child[0].declaredName
-            ownedRelationship := when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship }
+            ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
         }
         DefinitionBody: Type(_identity := $path) {
             ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
         }
         DefinitionBodyItem: Type(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 4 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 3 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 4 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         DefinitionMember: OwningMembership(_identity := $path) {
             visibility := child[0].visibility
@@ -704,11 +705,11 @@ namespace net.akehurst.language.sysML
             ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
         }
         RefPrefix: Usage(_identity := $path) {
-            direction := child[0].child[0]
-            isDerived := (child[1].child[0] != $nothing)
-            isAbstract := when { child[2].child[0].$alternative == 0 -> (child[2].child[0].child[0] != $nothing) else -> $nothing }
-            isVariation := when { child[2].child[0].$alternative == 1 -> (child[2].child[0].child[0] != $nothing) else -> $nothing }
-            isConstant := (child[3].child[0] != $nothing)
+            direction := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0] else -> $nothing }
+            isDerived := (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false })
+            isAbstract := when { when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> (child[2].child[0].$alternative == 0) else -> false } -> (child[2].child[0].child[0] != $nothing) else -> $nothing }
+            isVariation := when { when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> (child[2].child[0].$alternative == 1) else -> false } -> (child[2].child[0].child[0] != $nothing) else -> $nothing }
+            isConstant := (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false })
         }
         BasicUsagePrefix: Usage(_identity := $path) {
             direction := child[0].direction
@@ -716,11 +717,19 @@ namespace net.akehurst.language.sysML
             isAbstract := child[0].isAbstract
             isVariation := child[0].isVariation
             isConstant := child[0].isConstant
-            isReference := (child[1].child[0] != $nothing)
+            isReference := (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false })
+            isEnd := $nothing
+            ownedRelationship := children.filter({ y -> false })
         }
         EndUsagePrefix: Usage(_identity := $path) {
             isEnd := (child[0] != $nothing)
-            ownedRelationship := child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing })
+            ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            direction := $nothing
+            isAbstract := $nothing
+            isConstant := $nothing
+            isDerived := $nothing
+            isReference := $nothing
+            isVariation := $nothing
         }
         UsageExtensionKeyword: Usage(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
@@ -746,18 +755,18 @@ namespace net.akehurst.language.sysML
         UsageDeclaration: Usage(_identity := $path) {
             declaredShortName := child[0].declaredShortName
             declaredName := child[0].declaredName
-            ownedRelationship := when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship }
-            isOrdered := child[1].child[0].isOrdered
-            isUnique := child[1].child[0].isUnique
+            ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
+            isOrdered := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         UsageCompletion: Usage(_identity := $path) {
-            ownedRelationship := when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } + child[1].ownedRelationship
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[1].ownedRelationship
         }
         UsageBody: Usage(_identity := $path) {
             ownedRelationship := child[0].ownedRelationship
         }
         DefaultReferenceUsage: ReferenceUsage(_identity := $path) {
-            isEnd := (child[0].child[0] != $nothing)
+            isEnd := (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })
             direction := child[1].direction
             isDerived := child[1].isDerived
             isAbstract := child[1].isAbstract
@@ -848,10 +857,10 @@ namespace net.akehurst.language.sysML
             isUnique := child[2].isUnique
         }
         OccurrenceDefinitionPrefix: OccurrenceDefinition(_identity := $path) {
-            isAbstract := child[0].child[0].isAbstract
-            isVariation := child[0].child[0].isVariation
-            isIndividual := (child[1].child[0].child[0] != $nothing)
-            ownedRelationship := child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) + child[2].children.flatMap({ x1 -> x1.ownedRelationship })
+            isAbstract := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isAbstract else -> $nothing }
+            isVariation := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isVariation else -> $nothing }
+            isIndividual := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].child[0] != $nothing) else -> $nothing }
+            ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + child[2].children.flatMap({ x1 -> x1.ownedRelationship })
         }
         OccurrenceDefinition: OccurrenceDefinition(_identity := $path) {
             isAbstract := child[0].isAbstract
@@ -862,8 +871,8 @@ namespace net.akehurst.language.sysML
             declaredName := child[3].declaredName
         }
         IndividualDefinition: OccurrenceDefinition(_identity := $path) {
-            isAbstract := child[0].child[0].isAbstract
-            isVariation := child[0].child[0].isVariation
+            isAbstract := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isAbstract else -> $nothing }
+            isVariation := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isVariation else -> $nothing }
             isIndividual := (child[1] != $nothing)
             ownedRelationship := child[2].children.flatMap({ x1 -> x1.ownedRelationship }) + child[4].ownedRelationship + children.filter({ y -> y == child[5] and y != $nothing })
             declaredShortName := child[4].declaredShortName
@@ -882,9 +891,9 @@ namespace net.akehurst.language.sysML
             isVariation := when { child[0].$alternative == 1 -> child[0].child[0].isVariation else -> $nothing }
             isConstant := when { child[0].$alternative == 1 -> child[0].child[0].isConstant else -> $nothing }
             isReference := when { child[0].$alternative == 1 -> child[0].child[0].isReference else -> $nothing }
-            isIndividual := when { child[0].$alternative == 1 -> (child[0].child[1].child[0] != $nothing) else -> $nothing }
-            portionKind := when { child[0].$alternative == 1 -> child[0].child[2].child[0] else -> $nothing }
-            isPortion := when { child[0].$alternative == 1 -> true else -> $nothing }
+            isIndividual := when { child[0].$alternative == 1 -> (when { child[0].child[1] != $nothing -> (child[0].child[1].child[0] != $nothing) else -> false }) else -> $nothing }
+            portionKind := when { when { child[0].$alternative == 1 -> (when { child[0].child[2] != $nothing -> (child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[2].child[0] else -> $nothing }
+            isPortion := when { when { child[0].$alternative == 1 -> (when { child[0].child[2] != $nothing -> (child[0].child[2].child[0] != $nothing) else -> false }) else -> false } -> true else -> $nothing }
         }
         OccurrenceUsage: OccurrenceUsage(_identity := $path) {
             isEnd := child[0].isEnd
@@ -922,7 +931,7 @@ namespace net.akehurst.language.sysML
             isVariation := child[0].isVariation
             isConstant := child[0].isConstant
             isReference := child[0].isReference
-            isIndividual := (child[1].child[0] != $nothing)
+            isIndividual := (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false })
             portionKind := child[2]
             ownedRelationship := child[3].children.flatMap({ x1 -> x1.ownedRelationship }) + child[4].ownedRelationship
             declaredShortName := child[4].declaredShortName
@@ -933,7 +942,7 @@ namespace net.akehurst.language.sysML
         }
         EventOccurrenceUsage: EventOccurrenceUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[2].$alternative == 0 -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[3].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[2].$alternative == 1 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[3].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -941,10 +950,10 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            isOrdered := when { child[2].$alternative == 1 -> child[2].child[1].child[0].isOrdered  child[2].$alternative == 0 -> child[2].child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[2].$alternative == 1 -> child[2].child[1].child[0].isUnique  child[2].$alternative == 0 -> child[2].child[1].child[0].isUnique else -> $nothing }
-            declaredShortName := when { child[2].$alternative == 1 -> child[2].child[1].child[0].declaredShortName else -> $nothing }
-            declaredName := when { child[2].$alternative == 1 -> child[2].child[1].child[0].declaredName else -> $nothing }
+            isOrdered := when { when { child[2].$alternative == 1 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].isOrdered  when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[2].$alternative == 1 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].isUnique  when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].isUnique else -> $nothing }
+            declaredShortName := when { when { child[2].$alternative == 1 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[2].$alternative == 1 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].declaredName else -> $nothing }
         }
         SourceSuccessionMember: FeatureMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
@@ -956,7 +965,7 @@ namespace net.akehurst.language.sysML
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         SourceEnd: ReferenceUsage(_identity := $path) {
-            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing })
+            ownedRelationship := when { child[0] != $nothing -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         ItemDefinition: ItemDefinition(_identity := $path) {
             isAbstract := child[0].isAbstract
@@ -1046,7 +1055,7 @@ namespace net.akehurst.language.sysML
         }
         ConnectionUsage: ConnectionUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[1].$alternative == 0 -> child[1].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].$alternative == 0 -> when { child[1].child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 0 -> when { child[1].child[3].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[3].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].child[1].ownedRelationship else -> children.filter({ y -> false }) } + child[2].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { child[1].$alternative == 0 -> child[1].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { when { child[1].$alternative == 0 -> (when { child[1].child[2] != $nothing -> (child[1].child[2].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[1].$alternative == 0 -> (when { child[1].child[3] != $nothing -> (child[1].child[3].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[3].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[3].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].child[1].ownedRelationship else -> children.filter({ y -> false }) } + child[2].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -1068,31 +1077,31 @@ namespace net.akehurst.language.sysML
         }
         BindingConnectorAsUsage: BindingConnectorAsUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].ownedRelationship } + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing }) + child[6].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing }) + child[6].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
             isVariation := child[0].isVariation
             isConstant := child[0].isConstant
             isReference := child[0].isReference
-            declaredShortName := child[1].child[0].child[1].declaredShortName
-            declaredName := child[1].child[0].child[1].declaredName
-            isOrdered := child[1].child[0].child[1].isOrdered
-            isUnique := child[1].child[0].child[1].isUnique
+            declaredShortName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1].declaredName else -> $nothing }
+            isOrdered := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1].isOrdered else -> $nothing }
+            isUnique := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1].isUnique else -> $nothing }
         }
         SuccessionAsUsage: SuccessionAsUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].ownedRelationship } + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing }) + child[6].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing }) + child[6].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
             isVariation := child[0].isVariation
             isConstant := child[0].isConstant
             isReference := child[0].isReference
-            declaredShortName := child[1].child[0].child[1].declaredShortName
-            declaredName := child[1].child[0].child[1].declaredName
-            isOrdered := child[1].child[0].child[1].isOrdered
-            isUnique := child[1].child[0].child[1].isUnique
+            declaredShortName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1].declaredName else -> $nothing }
+            isOrdered := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1].isOrdered else -> $nothing }
+            isUnique := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[1].isUnique else -> $nothing }
         }
         InterfaceDefinition: InterfaceDefinition(_identity := $path) {
             isAbstract := child[0].isAbstract
@@ -1106,7 +1115,7 @@ namespace net.akehurst.language.sysML
             ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
         }
         InterfaceBodyItem: Type(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 4 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 3 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 4 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         InterfaceNonOccurrenceUsageMember: FeatureMembership(_identity := $path) {
             visibility := child[0].visibility
@@ -1144,23 +1153,31 @@ namespace net.akehurst.language.sysML
         InterfaceUsageDeclaration: (when { $alternative == 1 -> child[0] else -> InterfaceUsage(_identity := $path) {
             declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[2].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
         } }) as Any
         InterfacePart: child[0] as Any
         BinaryInterfacePart: InterfaceUsage(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+            declaredName := $nothing
+            declaredShortName := $nothing
+            isOrdered := $nothing
+            isUnique := $nothing
         }
         NaryInterfacePart: InterfaceUsage(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + child[4].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+            declaredName := $nothing
+            declaredShortName := $nothing
+            isOrdered := $nothing
+            isUnique := $nothing
         }
         InterfaceEndMember: EndFeatureMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         InterfaceEnd: PortUsage(_identity := $path) {
-            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-            declaredName := child[1].child[0].child[0]
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0] else -> $nothing }
         }
         AllocationDefinition: AllocationDefinition(_identity := $path) {
             isAbstract := child[0].isAbstract
@@ -1188,7 +1205,7 @@ namespace net.akehurst.language.sysML
         AllocationUsageDeclaration: AllocationUsage(_identity := $path) {
             declaredShortName := when { $alternative == 0 -> child[1].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 0 -> child[1].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[2].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[1].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[1].isUnique else -> $nothing }
         }
@@ -1218,7 +1235,7 @@ namespace net.akehurst.language.sysML
         MessageDeclaration: FlowUsage(_identity := $path) {
             declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[2] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[2] and y != $nothing }) else -> children.filter({ y -> false }) }
             isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
             isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
         }
@@ -1287,10 +1304,10 @@ namespace net.akehurst.language.sysML
             ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
         }
         ActionBodyItem: (when { $alternative == 0 -> child[0] else -> Type(_identity := $path) {
-            ownedRelationship := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> child[2].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) } + when { when { $alternative == 2 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> child[2].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         } }) as Any
         NonBehaviorBodyItem: tuple {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 4 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 4 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 5 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         ActionBehaviorMember: child[0] as Any
         InitialNodeMember: Membership(_identity := $path) {
@@ -1328,7 +1345,7 @@ namespace net.akehurst.language.sysML
         ActionUsageDeclaration: ActionUsage(_identity := $path) {
             declaredShortName := child[0].declaredShortName
             declaredName := child[0].declaredName
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship }
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
             isOrdered := child[0].isOrdered
             isUnique := child[0].isUnique
         }
@@ -1348,23 +1365,23 @@ namespace net.akehurst.language.sysML
             declaredName := child[2].declaredName
         }
         PerformActionUsageDeclaration: PerformActionUsage(_identity := $path) {
-            ownedRelationship := when { child[0].$alternative == 0 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[0].$alternative == 0 -> when { child[0].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[0].$alternative == 1 -> child[0].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship }
-            isOrdered := when { child[0].$alternative == 1 -> child[0].child[1].isOrdered  child[0].$alternative == 0 -> child[0].child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[0].$alternative == 1 -> child[0].child[1].isUnique  child[0].$alternative == 0 -> child[0].child[1].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { child[0].$alternative == 0 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[0].$alternative == 0 -> (when { child[0].child[1] != $nothing -> (child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[0].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[0].$alternative == 1 -> child[0].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
+            isOrdered := when { child[0].$alternative == 1 -> child[0].child[1].isOrdered  when { child[0].$alternative == 0 -> (when { child[0].child[1] != $nothing -> (child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[0].$alternative == 1 -> child[0].child[1].isUnique  when { child[0].$alternative == 0 -> (when { child[0].child[1] != $nothing -> (child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[1].child[0].isUnique else -> $nothing }
             declaredShortName := when { child[0].$alternative == 1 -> child[0].child[1].declaredShortName else -> $nothing }
             declaredName := when { child[0].$alternative == 1 -> child[0].child[1].declaredName else -> $nothing }
         }
         ActionNode: child[0] as Any
         ActionNodeUsageDeclaration: ActionUsage(_identity := $path) {
-            declaredShortName := child[1].child[0].declaredShortName
-            declaredName := child[1].child[0].declaredName
-            ownedRelationship := when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship }
-            isOrdered := child[1].child[0].isOrdered
-            isUnique := child[1].child[0].isUnique
+            declaredShortName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
+            isOrdered := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         ActionNodePrefix: ActionUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship }
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -1372,10 +1389,10 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            declaredShortName := child[1].child[0].declaredShortName
-            declaredName := child[1].child[0].declaredName
-            isOrdered := child[1].child[0].isOrdered
-            isUnique := child[1].child[0].isUnique
+            declaredShortName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].declaredName else -> $nothing }
+            isOrdered := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         ControlNode: child[0] as Any
         ControlNodePrefix: OccurrenceUsage(_identity := $path) {
@@ -1384,9 +1401,9 @@ namespace net.akehurst.language.sysML
             isAbstract := child[0].isAbstract
             isVariation := child[0].isVariation
             isConstant := child[0].isConstant
-            isIndividual := (child[1].child[0] != $nothing)
-            portionKind := child[2].child[0]
-            isPortion := true
+            isIndividual := (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false })
+            portionKind := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0] else -> $nothing }
+            isPortion := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> true else -> $nothing }
             ownedRelationship := child[3].children.flatMap({ x1 -> x1.ownedRelationship })
         }
         MergeNode: MergeNode(_identity := $path) {
@@ -1461,14 +1478,14 @@ namespace net.akehurst.language.sysML
             isUnique := child[1].isUnique
         }
         AcceptNodeDeclaration: AcceptActionUsage(_identity := $path) {
-            declaredShortName := child[0].child[0].declaredShortName
-            declaredName := child[0].child[0].declaredName
-            ownedRelationship := when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } + child[2].ownedRelationship
-            isOrdered := child[0].child[0].isOrdered
-            isUnique := child[0].child[0].isUnique
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[2].ownedRelationship
+            isOrdered := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isUnique else -> $nothing }
         }
         AcceptParameterPart: AcceptActionUsage(_identity := $path) {
-            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing })
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         PayloadParameterMember: ParameterMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
@@ -1476,9 +1493,9 @@ namespace net.akehurst.language.sysML
         PayloadParameter: ReferenceUsage(_identity := $path) {
             declaredShortName := when { $alternative == 1 -> child[0].declaredShortName  $alternative == 0 -> child[0].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 1 -> child[0].declaredName  $alternative == 0 -> child[0].declaredName else -> $nothing }
-            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].ownedRelationship else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 -> child[1].child[0].isOrdered  $alternative == 0 -> child[0].isOrdered else -> $nothing }
-            isUnique := when { $alternative == 1 -> child[1].child[0].isUnique  $alternative == 0 -> child[0].isUnique else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].ownedRelationship else -> children.filter({ y -> false }) }
+            isOrdered := when { when { $alternative == 1 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isOrdered  $alternative == 0 -> child[0].isOrdered else -> $nothing }
+            isUnique := when { when { $alternative == 1 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isUnique  $alternative == 0 -> child[0].isUnique else -> $nothing }
         }
         TriggerValuePart: Feature(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
@@ -1492,7 +1509,7 @@ namespace net.akehurst.language.sysML
         }
         SendNode: SendActionUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } + when { child[3].child[0].$alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[3].child[0].$alternative == 0 -> when { child[3].child[0].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[3].child[0].$alternative == 1 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[3].child[0].$alternative == 1 -> when { child[3].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> (child[3].child[0].$alternative == 0) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> (when { child[3].child[0].$alternative == 0 -> (when { child[3].child[0].child[1] != $nothing -> (child[3].child[0].child[1].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> when { child[3].child[0].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> (child[3].child[0].$alternative == 1) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> (child[3].child[0].$alternative == 1) else -> false } -> when { child[3].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -1500,20 +1517,20 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            declaredShortName := child[1].child[0].declaredShortName
-            declaredName := child[1].child[0].declaredName
-            isOrdered := child[1].child[0].isOrdered
-            isUnique := child[1].child[0].isUnique
+            declaredShortName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].declaredName else -> $nothing }
+            isOrdered := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         SendNodeDeclaration: SendActionUsage(_identity := $path) {
-            declaredShortName := child[0].child[0].declaredShortName
-            declaredName := child[0].child[0].declaredName
-            ownedRelationship := when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } + children.filter({ y -> y == child[2] and y != $nothing }) + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship }
-            isOrdered := child[0].child[0].isOrdered
-            isUnique := child[0].child[0].isUnique
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing }) + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
+            isOrdered := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isUnique else -> $nothing }
         }
         SenderReceiverPart: SendActionUsage(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[2] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[2] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         NodeParameterMember: ParameterMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
@@ -1544,24 +1561,24 @@ namespace net.akehurst.language.sysML
             isUnique := child[1].isUnique
         }
         AssignmentNodeDeclaration: ActionUsage(_identity := $path) {
-            declaredShortName := child[0].child[0].declaredShortName
-            declaredName := child[0].child[0].declaredName
-            ownedRelationship := when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing })
-            isOrdered := child[0].child[0].isOrdered
-            isUnique := child[0].child[0].isUnique
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing })
+            isOrdered := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isUnique else -> $nothing }
         }
         AssignmentTargetMember: ParameterMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         AssignmentTargetParameter: ReferenceUsage(_identity := $path) {
-            ownedRelationship := child[0].child[0].children.filter({ y -> y == child[0].child[0].child[0] and y != $nothing })
+            ownedRelationship := when { child[0] != $nothing -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         AssignmentTargetBinding: FeatureValue(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         TerminateNode: TerminateActionUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } + child[3].children.filter({ y -> y == child[3].child[0] and y != $nothing }) + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].children.filter({ y -> y == child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -1569,14 +1586,14 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            declaredShortName := child[1].child[0].declaredShortName
-            declaredName := child[1].child[0].declaredName
-            isOrdered := child[1].child[0].isOrdered
-            isUnique := child[1].child[0].isUnique
+            declaredShortName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].declaredName else -> $nothing }
+            isOrdered := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].isUnique else -> $nothing }
         }
         IfNode: IfActionUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + child[4].child[0].child[1].children.filter({ y -> y == child[4].child[0].child[1].child[0] and y != $nothing })
+            ownedRelationship := child[0].ownedRelationship + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> child[4].child[0].child[1].children.filter({ y -> y == child[4].child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -1596,18 +1613,18 @@ namespace net.akehurst.language.sysML
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         ActionBodyParameter: ActionUsage(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].child[0].declaredShortName
-            declaredName := child[0].child[0].child[1].child[0].declaredName
-            ownedRelationship := when { child[0].child[0].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[1].child[0].ownedRelationship } + child[2].children.flatMap({ x1 -> x1.ownedRelationship })
-            isOrdered := child[0].child[0].child[1].child[0].isOrdered
-            isUnique := child[0].child[0].child[1].child[0].isUnique
+            declaredShortName := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[1] != $nothing -> (child[0].child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].child[1].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[1] != $nothing -> (child[0].child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].child[1].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[1] != $nothing -> (child[0].child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[0].child[0].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[2].children.flatMap({ x1 -> x1.ownedRelationship })
+            isOrdered := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[1] != $nothing -> (child[0].child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> (when { child[0].child[0].child[1] != $nothing -> (child[0].child[0].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[0].child[0].child[1].child[0].isUnique else -> $nothing }
         }
         IfNodeParameterMember: ParameterMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         WhileLoopNode: WhileLoopActionUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing }) + child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing })
+            ownedRelationship := child[0].ownedRelationship + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing }) + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) }
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -1658,11 +1675,11 @@ namespace net.akehurst.language.sysML
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
         }
         GuardedSuccession: TransitionUsage(_identity := $path) {
-            declaredShortName := child[0].child[0].child[1].declaredShortName
-            declaredName := child[0].child[0].child[1].declaredName
-            ownedRelationship := when { child[0].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[1].ownedRelationship } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing }) + child[6].ownedRelationship
-            isOrdered := child[0].child[0].child[1].isOrdered
-            isUnique := child[0].child[0].child[1].isUnique
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].declaredName else -> $nothing }
+            ownedRelationship := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> when { child[0].child[0].child[1].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[1].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing }) + child[6].ownedRelationship
+            isOrdered := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].isOrdered else -> $nothing }
+            isUnique := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[1].isUnique else -> $nothing }
         }
         StateDefinition: StateDefinition(_identity := $path) {
             isAbstract := child[0].isAbstract
@@ -1674,11 +1691,11 @@ namespace net.akehurst.language.sysML
             isParallel := child[4].isParallel
         }
         StateDefBody: StateDefinition(_identity := $path) {
-            isParallel := when { $alternative == 1 -> (child[0].child[0] != $nothing) else -> $nothing }
+            isParallel := when { $alternative == 1 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> $nothing }
             ownedRelationship := when { $alternative == 1 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
         }
         StateBodyItem: (when { $alternative == 0 -> child[0] else -> Type(_identity := $path) {
-            ownedRelationship := when { $alternative == 1 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> child[1].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) } + when { $alternative == 4 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { when { $alternative == 1 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> false } -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> child[1].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) } + when { $alternative == 4 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 5 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         } }) as Any
         EntryActionMember: StateSubactionMembership(_identity := $path) {
             visibility := child[0].visibility
@@ -1754,12 +1771,12 @@ namespace net.akehurst.language.sysML
             isParallel := child[3].isParallel
         }
         StateUsageBody: StateUsage(_identity := $path) {
-            isParallel := when { $alternative == 1 -> (child[0].child[0] != $nothing) else -> $nothing }
+            isParallel := when { $alternative == 1 -> (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false }) else -> $nothing }
             ownedRelationship := when { $alternative == 1 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
         }
         ExhibitStateUsage: ExhibitStateUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[2].$alternative == 0 -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> child[2].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> child[2].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -1767,21 +1784,21 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            isOrdered := when { child[2].$alternative == 1 -> child[2].child[1].isOrdered  child[2].$alternative == 0 -> child[2].child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[2].$alternative == 1 -> child[2].child[1].isUnique  child[2].$alternative == 0 -> child[2].child[1].child[0].isUnique else -> $nothing }
+            isOrdered := when { child[2].$alternative == 1 -> child[2].child[1].isOrdered  when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[2].$alternative == 1 -> child[2].child[1].isUnique  when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].isUnique else -> $nothing }
             declaredShortName := when { child[2].$alternative == 1 -> child[2].child[1].declaredShortName else -> $nothing }
             declaredName := when { child[2].$alternative == 1 -> child[2].child[1].declaredName else -> $nothing }
             isParallel := child[4].isParallel
         }
         TransitionUsage: TransitionUsage(_identity := $path) {
-            declaredShortName := child[1].child[0].child[0].declaredShortName
-            declaredName := child[1].child[0].child[0].declaredName
-            ownedRelationship := when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + child[4].child[0].children.filter({ y -> y == child[4].child[0].child[0] and y != $nothing }) + child[4].child[0].children.filter({ y -> y == child[4].child[0].child[1] and y != $nothing }) + child[5].children.filter({ y -> y == child[5].child[0] and y != $nothing }) + child[6].children.filter({ y -> y == child[6].child[0] and y != $nothing }) + children.filter({ y -> y == child[8] and y != $nothing }) + child[9].ownedRelationship
-            isOrdered := child[1].child[0].child[0].isOrdered
-            isUnique := child[1].child[0].child[0].isUnique
+            declaredShortName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> child[4].child[0].children.filter({ y -> y == child[4].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> child[4].child[0].children.filter({ y -> y == child[4].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[5] != $nothing -> (child[5].child[0] != $nothing) else -> false } -> child[5].children.filter({ y -> y == child[5].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[6] != $nothing -> (child[6].child[0] != $nothing) else -> false } -> child[6].children.filter({ y -> y == child[6].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[8] and y != $nothing }) + child[9].ownedRelationship
+            isOrdered := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].child[0].isUnique else -> $nothing }
         }
         TargetTransitionUsage: TransitionUsage(_identity := $path) {
-            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + when { child[1].child[0].$alternative == 0 -> child[1].child[0].child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 0 -> child[1].child[0].child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 0 -> child[1].child[0].child[2].children.filter({ y -> y == child[1].child[0].child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 0 -> child[1].child[0].child[3].children.filter({ y -> y == child[1].child[0].child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 1 -> child[1].child[0].child[2].children.filter({ y -> y == child[1].child[0].child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 1 -> child[1].child[0].child[3].children.filter({ y -> y == child[1].child[0].child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 2 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 2 -> child[1].child[0].child[1].children.filter({ y -> y == child[1].child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[3] and y != $nothing }) + child[4].ownedRelationship
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (when { child[1].child[0].$alternative == 0 -> (when { child[1].child[0].child[1] != $nothing -> (child[1].child[0].child[1].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[1].child[0].child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (when { child[1].child[0].$alternative == 0 -> (when { child[1].child[0].child[1] != $nothing -> (child[1].child[0].child[1].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[1].child[0].child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (when { child[1].child[0].$alternative == 0 -> (when { child[1].child[0].child[2] != $nothing -> (child[1].child[0].child[2].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[1].child[0].child[2].children.filter({ y -> y == child[1].child[0].child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (when { child[1].child[0].$alternative == 0 -> (when { child[1].child[0].child[3] != $nothing -> (child[1].child[0].child[3].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[1].child[0].child[3].children.filter({ y -> y == child[1].child[0].child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].$alternative == 1) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].$alternative == 1) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (when { child[1].child[0].$alternative == 1 -> (when { child[1].child[0].child[2] != $nothing -> (child[1].child[0].child[2].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[1].child[0].child[2].children.filter({ y -> y == child[1].child[0].child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (when { child[1].child[0].$alternative == 1 -> (when { child[1].child[0].child[3] != $nothing -> (child[1].child[0].child[3].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[1].child[0].child[3].children.filter({ y -> y == child[1].child[0].child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (child[1].child[0].$alternative == 2) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> (when { child[1].child[0].$alternative == 2 -> (when { child[1].child[0].child[1] != $nothing -> (child[1].child[0].child[1].child[0] != $nothing) else -> false }) else -> false }) else -> false } -> child[1].child[0].child[1].children.filter({ y -> y == child[1].child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[3] and y != $nothing }) + child[4].ownedRelationship
         }
         TriggerActionMember: TransitionFeatureMembership(_identity := $path) {
             kind := 'trigger'
@@ -1798,7 +1815,7 @@ namespace net.akehurst.language.sysML
         }
         EffectBehaviorUsage: child[0] as Any
         TransitionPerformActionUsage: PerformActionUsage(_identity := $path) {
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) }
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) } else -> children.filter({ y -> false }) }
             isOrdered := child[0].isOrdered
             isUnique := child[0].isUnique
             declaredShortName := child[0].declaredShortName
@@ -1807,21 +1824,21 @@ namespace net.akehurst.language.sysML
         TransitionAcceptActionUsage: AcceptActionUsage(_identity := $path) {
             declaredShortName := child[0].declaredShortName
             declaredName := child[0].declaredName
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) }
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) } else -> children.filter({ y -> false }) }
             isOrdered := child[0].isOrdered
             isUnique := child[0].isUnique
         }
         TransitionSendActionUsage: SendActionUsage(_identity := $path) {
             declaredShortName := child[0].declaredShortName
             declaredName := child[0].declaredName
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) }
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) } else -> children.filter({ y -> false }) }
             isOrdered := child[0].isOrdered
             isUnique := child[0].isUnique
         }
         TransitionAssignmentActionUsage: AssignmentActionUsage(_identity := $path) {
             declaredShortName := child[0].declaredShortName
             declaredName := child[0].declaredName
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) }
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[1].children.flatMap({ x1 -> x1.ownedRelationship }) } else -> children.filter({ y -> false }) }
             isOrdered := child[0].isOrdered
             isUnique := child[0].isUnique
         }
@@ -1857,14 +1874,15 @@ namespace net.akehurst.language.sysML
             isOrdered := child[2].isOrdered
             isUnique := child[2].isUnique
         }
+        CalculationBody: (when { $alternative == 1 -> child[1] else -> Type(_identity := $path) { ownedRelationship := children.filter({ y -> false }) } }) as Any
         CalculationBodyPart: Type(_identity := $path) {
-            ownedRelationship := child[0].children.flatMap({ x1 -> x1.ownedRelationship }) + child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing })
+            ownedRelationship := child[0].children.flatMap({ x1 -> x1.ownedRelationship }) + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         CalculationBodyItem: (when { $alternative == 0 -> child[0] else -> Type(_identity := $path) {
             ownedRelationship := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         } }) as Any
         ReturnParameterMember: ReturnParameterMembership(_identity := $path) {
-            visibility := child[0].child[0].visibility
+            visibility := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].visibility else -> $nothing }
             ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
         }
         ConstraintDefinition: ConstraintDefinition(_identity := $path) {
@@ -1892,7 +1910,7 @@ namespace net.akehurst.language.sysML
         }
         AssertConstraintUsage: AssertConstraintUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[3].$alternative == 0 -> child[3].children.filter({ y -> y == child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[3].$alternative == 0 -> when { child[3].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[3].$alternative == 1 -> child[3].child[1].ownedRelationship else -> children.filter({ y -> false }) } + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { child[3].$alternative == 0 -> child[3].children.filter({ y -> y == child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[3].$alternative == 0 -> (when { child[3].child[1] != $nothing -> (child[3].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[3].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[3].$alternative == 1 -> child[3].child[1].ownedRelationship else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -1900,16 +1918,16 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            isNegated := (child[2].child[0] != $nothing)
-            isOrdered := when { child[3].$alternative == 1 -> child[3].child[1].isOrdered  child[3].$alternative == 0 -> child[3].child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[3].$alternative == 1 -> child[3].child[1].isUnique  child[3].$alternative == 0 -> child[3].child[1].child[0].isUnique else -> $nothing }
+            isNegated := (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false })
+            isOrdered := when { child[3].$alternative == 1 -> child[3].child[1].isOrdered  when { child[3].$alternative == 0 -> (when { child[3].child[1] != $nothing -> (child[3].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[3].$alternative == 1 -> child[3].child[1].isUnique  when { child[3].$alternative == 0 -> (when { child[3].child[1] != $nothing -> (child[3].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[3].child[1].child[0].isUnique else -> $nothing }
             declaredShortName := when { child[3].$alternative == 1 -> child[3].child[1].declaredShortName else -> $nothing }
             declaredName := when { child[3].$alternative == 1 -> child[3].child[1].declaredName else -> $nothing }
         }
         ConstraintUsageDeclaration: ConstraintUsage(_identity := $path) {
             declaredShortName := child[0].declaredShortName
             declaredName := child[0].declaredName
-            ownedRelationship := child[0].ownedRelationship + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship }
+            ownedRelationship := child[0].ownedRelationship + when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
             isOrdered := child[0].isOrdered
             isUnique := child[0].isUnique
         }
@@ -1939,7 +1957,7 @@ namespace net.akehurst.language.sysML
             isUnique := child[2].isUnique
         }
         RequirementConstraintMember: RequirementConstraintMembership(_identity := $path) {
-            visibility := child[0].child[0].visibility
+            visibility := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].visibility else -> $nothing }
             kind := child[1].kind
             ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
         }
@@ -1947,20 +1965,20 @@ namespace net.akehurst.language.sysML
             kind := when { $alternative == 1 -> 'requirement'  $alternative == 0 -> 'assumption' else -> $nothing }
         }
         RequirementConstraintUsage: ConstraintUsage(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 and child[0].$alternative == 0 -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 and child[0].$alternative == 1 -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].ownedRelationship else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 -> child[1].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { $alternative == 1 -> child[1].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (child[0].$alternative == 0) else -> false } -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (child[0].$alternative == 1) else -> false } -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].ownedRelationship else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[1].isOrdered  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[1].isUnique  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isUnique else -> $nothing }
             declaredShortName := when { $alternative == 1 -> child[1].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 1 -> child[1].declaredName else -> $nothing }
         }
         FramedConcernMember: FramedConcernMembership(_identity := $path) {
-            visibility := child[0].child[0].visibility
+            visibility := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].visibility else -> $nothing }
             ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
         }
         FramedConcernUsage: ConcernUsage(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 and child[0].$alternative == 0 -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 and child[0].$alternative == 1 -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].ownedRelationship else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 -> child[1].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { $alternative == 1 -> child[1].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (child[0].$alternative == 0) else -> false } -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (child[0].$alternative == 1) else -> false } -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].ownedRelationship else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[1].isOrdered  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[1].isUnique  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isUnique else -> $nothing }
             declaredShortName := when { $alternative == 1 -> child[1].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 1 -> child[1].declaredName else -> $nothing }
         }
@@ -2003,7 +2021,7 @@ namespace net.akehurst.language.sysML
         }
         SatisfyRequirementUsage: SatisfyRequirementUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[4].$alternative == 0 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 0 -> when { child[4].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { child[5].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[5].child[0].ownedRelationship } + child[6].child[0].children.filter({ y -> y == child[6].child[0].child[1] and y != $nothing }) + child[7].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { child[4].$alternative == 0 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[4].$alternative == 0 -> (when { child[4].child[1] != $nothing -> (child[4].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[4].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { when { child[5] != $nothing -> (child[5].child[0] != $nothing) else -> false } -> when { child[5].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[5].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[6] != $nothing -> (child[6].child[0] != $nothing) else -> false } -> child[6].child[0].children.filter({ y -> y == child[6].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + child[7].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -2011,9 +2029,9 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            isNegated := (child[2].child[0] != $nothing)
-            isOrdered := when { child[4].$alternative == 1 -> child[4].child[1].isOrdered  child[4].$alternative == 0 -> child[4].child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[4].$alternative == 1 -> child[4].child[1].isUnique  child[4].$alternative == 0 -> child[4].child[1].child[0].isUnique else -> $nothing }
+            isNegated := (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false })
+            isOrdered := when { child[4].$alternative == 1 -> child[4].child[1].isOrdered  when { child[4].$alternative == 0 -> (when { child[4].child[1] != $nothing -> (child[4].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[4].child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[4].$alternative == 1 -> child[4].child[1].isUnique  when { child[4].$alternative == 0 -> (when { child[4].child[1] != $nothing -> (child[4].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[4].child[1].child[0].isUnique else -> $nothing }
             declaredShortName := when { child[4].$alternative == 1 -> child[4].child[1].declaredShortName else -> $nothing }
             declaredName := when { child[4].$alternative == 1 -> child[4].child[1].declaredName else -> $nothing }
         }
@@ -2076,7 +2094,7 @@ namespace net.akehurst.language.sysML
             isUnique := child[2].isUnique
         }
         CaseBody: Type(_identity := $path) {
-            ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false }) else -> false } -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
         }
         CaseBodyItem: (when { $alternative == 0 -> child[0] else -> Type(_identity := $path) {
             ownedRelationship := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
@@ -2144,7 +2162,7 @@ namespace net.akehurst.language.sysML
             ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
         }
         RequirementVerificationUsage: RequirementUsage(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 and child[0].$alternative == 0 -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 and child[0].$alternative == 1 -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].ownedRelationship else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (child[0].$alternative == 0) else -> false } -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (child[0].$alternative == 1) else -> false } -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[2].ownedRelationship else -> children.filter({ y -> false }) }
             declaredShortName := when { $alternative == 1 -> child[1].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 1 -> child[1].declaredName else -> $nothing }
             isOrdered := when { $alternative == 1 -> child[1].isOrdered else -> $nothing }
@@ -2175,7 +2193,7 @@ namespace net.akehurst.language.sysML
         }
         IncludeUseCaseUsage: IncludeUseCaseUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[2].$alternative == 0 -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> child[2].child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> child[2].child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -2183,8 +2201,8 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            isOrdered := when { child[2].$alternative == 1 -> child[2].child[2].isOrdered  child[2].$alternative == 0 -> child[2].child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { child[2].$alternative == 1 -> child[2].child[2].isUnique  child[2].$alternative == 0 -> child[2].child[1].child[0].isUnique else -> $nothing }
+            isOrdered := when { child[2].$alternative == 1 -> child[2].child[2].isOrdered  when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[2].$alternative == 1 -> child[2].child[2].isUnique  when { child[2].$alternative == 0 -> (when { child[2].child[1] != $nothing -> (child[2].child[1].child[0] != $nothing) else -> false }) else -> false } -> child[2].child[1].child[0].isUnique else -> $nothing }
             declaredShortName := when { child[2].$alternative == 1 -> child[2].child[2].declaredShortName else -> $nothing }
             declaredName := when { child[2].$alternative == 1 -> child[2].child[2].declaredName else -> $nothing }
         }
@@ -2207,15 +2225,15 @@ namespace net.akehurst.language.sysML
             ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
         }
         ViewRenderingUsage: RenderingUsage(_identity := $path) {
-            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 and child[0].$alternative == 0 -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 and child[0].$alternative == 1 -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) }
-            isOrdered := when { $alternative == 1 -> child[1].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-            isUnique := when { $alternative == 1 -> child[1].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].ownedRelationship else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (child[0].$alternative == 0) else -> false } -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { when { $alternative == 1 -> (child[0].$alternative == 1) else -> false } -> child[0].child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[1].isOrdered  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[1].isUnique  when { $alternative == 0 -> (when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false }) else -> false } -> child[1].child[0].isUnique else -> $nothing }
             declaredShortName := when { $alternative == 1 -> child[1].declaredShortName else -> $nothing }
             declaredName := when { $alternative == 1 -> child[1].declaredName else -> $nothing }
         }
         ViewUsage: ViewUsage(_identity := $path) {
             isEnd := child[0].isEnd
-            ownedRelationship := child[0].ownedRelationship + when { child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].ownedRelationship } + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            ownedRelationship := child[0].ownedRelationship + when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> when { child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             direction := child[0].direction
             isDerived := child[0].isDerived
             isAbstract := child[0].isAbstract
@@ -2223,10 +2241,10 @@ namespace net.akehurst.language.sysML
             isConstant := child[0].isConstant
             isReference := child[0].isReference
             isIndividual := child[0].isIndividual
-            declaredShortName := child[2].child[0].declaredShortName
-            declaredName := child[2].child[0].declaredName
-            isOrdered := child[2].child[0].isOrdered
-            isUnique := child[2].child[0].isUnique
+            declaredShortName := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0].declaredName else -> $nothing }
+            isOrdered := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false } -> child[2].child[0].isUnique else -> $nothing }
         }
         ViewBody: ViewUsage(_identity := $path) {
             ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
@@ -2304,7 +2322,7 @@ namespace net.akehurst.language.sysML
             isUnique := child[2].isUnique
         }
         MetadataDefinition: MetadataDefinition(_identity := $path) {
-            isAbstract := (child[0].child[0] != $nothing)
+            isAbstract := (when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false })
             ownedRelationship := child[1].children.flatMap({ x1 -> x1.ownedRelationship }) + child[4].ownedRelationship
             declaredShortName := child[4].declaredShortName
             declaredName := child[4].declaredName
@@ -2313,26 +2331,26 @@ namespace net.akehurst.language.sysML
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
         }
         MetadataUsage: MetadataUsage(_identity := $path) {
-            ownedRelationship := child[0].children.flatMap({ x1 -> x1.ownedRelationship }) + child[2].ownedRelationship + child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) + when { child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) } + child[4].ownedRelationship
+            ownedRelationship := child[0].children.flatMap({ x1 -> x1.ownedRelationship }) + child[2].ownedRelationship + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) } else -> children.filter({ y -> false }) } + child[4].ownedRelationship
             declaredShortName := child[2].declaredShortName
             declaredName := child[2].declaredName
         }
         MetadataUsageDeclaration: MetadataUsage(_identity := $path) {
-            declaredShortName := child[0].child[0].child[0].declaredShortName
-            declaredName := child[0].child[0].child[0].declaredName
+            declaredShortName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].child[0].declaredName else -> $nothing }
             ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
         }
         MetadataBodyUsageMember: FeatureMembership(_identity := $path) {
             ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         MetadataBodyUsage: ReferenceUsage(_identity := $path) {
-            ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } + child[5].ownedRelationship
-            isOrdered := child[3].child[0].isOrdered
-            isUnique := child[3].child[0].isUnique
+            ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { when { child[4] != $nothing -> (child[4].child[0] != $nothing) else -> false } -> when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[5].ownedRelationship
+            isOrdered := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].isOrdered else -> $nothing }
+            isUnique := when { when { child[3] != $nothing -> (child[3].child[0] != $nothing) else -> false } -> child[3].child[0].isUnique else -> $nothing }
         }
         ExtendedDefinition: Definition(_identity := $path) {
-            isAbstract := child[0].child[0].isAbstract
-            isVariation := child[0].child[0].isVariation
+            isAbstract := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isAbstract else -> $nothing }
+            isVariation := when { when { child[0] != $nothing -> (child[0].child[0] != $nothing) else -> false } -> child[0].child[0].isVariation else -> $nothing }
             ownedRelationship := child[1].children.flatMap({ x1 -> x1.ownedRelationship }) + child[3].ownedRelationship
             declaredShortName := child[3].declaredShortName
             declaredName := child[3].declaredName
