@@ -284,4 +284,28 @@ class test_ProvidedTransform_docsBugs {
         assertEquals(1, processed.allIssues.errors.size, processed.allIssues.toString())
         assertTrue(processed.allIssues.errors.first().message.contains("Cannot create an object of type 'example.Shapes.Circle', it is not a data type or value type"))
     }
+
+    @Test
+    fun create_missing_types__incompatible_provided_property_is_an_error_issue() {
+        // the types string has no 'import std', so neither type resolves; the message must not throw
+        val types = """
+            namespace example.Shapes
+              data Radius { number: Integer }
+        """.trimIndent()
+        val transform = """
+            #create-missing-types
+            namespace example
+            asm-transform Shapes {
+                #override-default-transform
+                radius: Radius() { number := child[1] as String }
+            }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(GRAMMAR), typeStr = TypesString(types), transformStr = AsmTransformString(transform))
+        val proc = result.processor!!
+        proc.transformDomain // build it
+        assertEquals(
+            listOf("Trying to create missing property 'number: String (not resolved)', 'example.Shapes.Radius' already contains incompatible property 'number: Integer (not resolved)'."),
+            proc.allIssues.errors.map { it.message }
+        )
+    }
 }
