@@ -50,6 +50,11 @@ Also in SysML v2.1 (see [../v2.1_2026-09/SPEC_ISSUES.md](../v2.1_2026-09/SPEC_IS
 `FeatureMembership` has no property `memberFeature`, and it is an `OwningMembership`, whose member element is owned,
 while `first x` refers to an existing feature `x`. Also in SysML v2.1.
 
+**Pilot Implementation.** `InitialNodeMember returns SysML::Membership : MemberPrefix 'first' memberElement = [SysML::Feature|QualifiedName] RelationshipBody`,
+i.e. a (non-owning) `Membership` whose `memberElement` is the referenced feature.
+
+**AGL.** The metamodel transform (`languages/std-metamodel`) follows the Pilot Implementation: a `Membership` with `memberElement` set to the name.
+
 ## 5. `FeatureInverting` never assigns `invertingFeature` when it is a feature chain
 
 **Specification.** KerML 8.2.4.3.6 (`bnf/KerML-textual-bnf.kebnf`):
