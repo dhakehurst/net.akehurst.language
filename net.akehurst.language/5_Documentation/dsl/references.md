@@ -44,6 +44,7 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 | `scope T { identify U by expr ... }` | an object of type `T` is a scope; the `U` objects inside it are identified there, not in the root scope |
 | `references { in T { ... } }` | the reference properties of type `T` |
 | `property p refers-to A\|B` | property `p` is a reference to an `A` or a `B` |
+| `type-group N = A\|B` | a name for a list of type names, used as `refers-to N` (also with other names: `refers-to N\|C`); a group may use other groups. It is not a type: where it is used it stands for its list. Declared with the top-level `identify` lines (before the `scope` blocks), visible in that namespace only |
 | `property p.m(...) refers-to A` | the navigation may end with method calls: the value of the whole expression is looked up, and property `p` becomes the reference (e.g. `property name.removeSurrounding('\'') refers-to A`, where `'a'` and `a` are the same name; for a list of names `name.map({ n -> n.removeSurrounding('\'') })`) |
 | `forall list of-type T when c { ... }` | apply the inner lines to each element of `list` (optionally only those of type `T`, and only those for which `c` holds) |
 | `... from E` | start the lookup in the scope of element `E` (or of the element that reference `E` refers to) instead of the current scope |
