@@ -233,6 +233,9 @@ class ReferenceResolverSimple(
         // 'property' navigation 'refers-to' typeReferences from? ;
         //check referred to item exists
         // resolve reference & convert property value to reference
+        // an unset referring property (e.g. an optional reference that the sentence does not give) has nothing to resolve: no error
+        val valueOfReferringProperty = referringValueOf(self, _accessor.typeFor(self, StdLibDefault.AnyType), refExpr)
+        if (null == valueOfReferringProperty || Unit == valueOfReferringProperty || valueOfReferringProperty is AsmNothing) return
         val fromNav = refExpr.fromNavigation
         val isFromPrevious = null != fromNav && fromNav.start is RootExpression && (fromNav.start as RootExpression).name == SCOPE_PREVIOUS
         // 'from \$previous...' : resolve in the scope of the target of the reference reached from the previous element of the 'forall'
