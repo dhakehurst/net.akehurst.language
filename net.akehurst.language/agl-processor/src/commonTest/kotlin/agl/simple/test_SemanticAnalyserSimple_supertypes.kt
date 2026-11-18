@@ -202,7 +202,8 @@ class test_SemanticAnalyserSimple_supertypes {
     }
 
     @Test
-    fun identify_supertype_must_own_property() {
+    fun identify_supertype_by_property_of_subtypes() {
+        // Decl has no 'id' of its own, its subtypes Pkg and Cls have one (David 2026-11-18: allowed)
         val (_, td) = lookup("namespace test.Test")
         val result = Agl.registry.agl.crossReference.processor!!.process(
             """
@@ -211,7 +212,20 @@ class test_SemanticAnalyserSimple_supertypes {
             """.trimIndent(),
             Agl.options { semanticAnalysis { sentenceContext(contextFromTypesDomain(td)) } }
         )
-        assertTrue(result.allIssues.errors.any { it.message.contains("'id' not found for identifying property of 'Decl'") }, result.allIssues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
+    }
+
+    @Test
+    fun identify_supertype_by_property_of_no_subtype() {
+        val (_, td) = lookup("namespace test.Test")
+        val result = Agl.registry.agl.crossReference.processor!!.process(
+            """
+            namespace test.Test
+                identify Decl by nope
+            """.trimIndent(),
+            Agl.options { semanticAnalysis { sentenceContext(contextFromTypesDomain(td)) } }
+        )
+        assertTrue(result.allIssues.errors.any { it.message.contains("'nope' not found for identifying property of 'Decl'") }, result.allIssues.toString())
     }
 
     @Test

@@ -56,6 +56,9 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 
 There is at most one `scope T { }` block and one `in T { }` block per type in a namespace,
 and a property appears at most once in a block (use `property p when { ... }` to choose between targets); otherwise it is an error.
+A property used for a type `T` (in `identify T`, a `scope T { }` block or an `in T { }` block) must be a property of `T`, of a supertype,
+or of at least one subtype of `T`, otherwise it is an error. For example, for a grammar choice `ext = sub | sub2`, `identify Ext by id`
+is allowed when `Sub` or `Sub2` has an `id`.
 
 Open point (RV8): `when` is written differently in the references DSL (`... when c`, `property p when { c -> ... }`),
 in expressions (`when { c -> e  else -> e }`) and in m2m (`when { }`). Whether to make these consistent is still to be decided.

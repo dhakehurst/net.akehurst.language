@@ -281,8 +281,8 @@ class ReferencesSemanticAnalyser(
      * the properties navigated to in 'expr' (evaluated on an element of type 'selfType') that do not exist, as messages.
      * Only navigations are checked (also those in infix, group, ternary and when expressions);
      * a navigation is checked up to the first part that is not a property, or a special value ('\$owner', '\$container', '\$root', '\$previous').
-     * The first property must be a property of 'selfType' (or a supertype). A later property may also be a property of a subtype of the type before it
-     * (e.g. of an alternative of a grammar choice, whose supertype has no properties); the check stops there.
+     * Each property must be a property of the type before it (for the first: 'selfType'), of a supertype of it, or of a subtype of it
+     * (e.g. of an alternative of a grammar choice, whose supertype has no properties); for a subtype the check stops there.
      */
     private fun missingProperties(expr: Expression?, selfType: TypeDefinition): List<String> = when (expr) {
         null -> emptyList()
@@ -306,7 +306,11 @@ class ReferencesSemanticAnalyser(
         var type: TypeInstance = when {
             start.isSelf -> selfType.type()
             selfType !is StructuredType -> return null
-            else -> propertyTypeOrNull(selfType.type(), start.name) ?: return "'${whole.asString()}': type '${selfType.name}' has no property '${start.name}'"
+            else -> propertyTypeOrNull(selfType.type(), start.name) ?: return when {
+                // the element may be of a subtype that has the property (e.g. an alternative of a grammar choice); the check stops
+                allSubtypesOf(selfType).any { null != propertyTypeOrNull(it.type(), start.name) } -> null
+                else -> "'${whole.asString()}': type '${selfType.name}' has no property '${start.name}'"
+            }
         }
         for (part in parts) {
             val pn = (part as? PropertyCall)?.propertyName ?: return null
@@ -478,9 +482,11 @@ class ReferencesSemanticAnalyser(
             }
         }
 
-        val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyPath, contextType.type())
-        when (prop) {
-            null -> {
+        // the property of the type, else (e.g. the type of a grammar choice, whose alternatives have the property) of each subtype that has it
+        val props = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyPath, contextType.type())?.let { listOf(it) }
+            ?: allSubtypesOf(contextType).mapNotNull { _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyPath, it.type()) }.distinct()
+        when {
+            props.isEmpty() -> {
                 raiseError(
                     ReferencesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),
                     "For references in '${ref.inTypeName}' referring property '${refExpr.referringPropertyNavigation}' not found"
@@ -489,7 +495,9 @@ class ReferencesSemanticAnalyser(
 
             else -> {
                 val qualifiedTypeNames = refExpr.refersToTypeName.mapNotNull { findReferredToType(it, importedNamespaces)?.qualifiedName }
-                (crossReferenceDomain as CrossReferenceDomainDefault).addRecordReferenceForProperty(prop.owner.qualifiedName, prop.name.value, qualifiedTypeNames)
+                props.forEach { prop ->
+                    (crossReferenceDomain as CrossReferenceDomainDefault).addRecordReferenceForProperty(prop.owner.qualifiedName, prop.name.value, qualifiedTypeNames)
+                }
             }
         }
     }
