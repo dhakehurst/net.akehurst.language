@@ -15,7 +15,7 @@
  */
 
 // SysML references (identify, scope, references) for the 'agl' SysML grammar.
-// The SysML processor is built on the KerML processor (KerML/v2_2026-09, grammar 'agl'): its types domain is the base of the SysML types
+// The SysML processor is built on the KerML processor (KerML/v1.1_2026-09, grammar 'agl'): its types domain is the base of the SysML types
 // and the KerML references are merged into these, so the KerML model libraries (.kerml) are processed by the KerML processor.
 // So each 'refers-to' also lists the KerML element types.
 
