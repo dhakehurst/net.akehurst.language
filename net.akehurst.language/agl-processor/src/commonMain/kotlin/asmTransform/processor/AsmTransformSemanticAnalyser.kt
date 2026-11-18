@@ -313,6 +313,12 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
     private fun findOrCloneFromDefaultTypeForTransformRule(typePqn: PossiblyQualifiedName, trs: AsmTransformRuleSet, trr: AsmTransformationRule): TypeDefinition {
         val grmDecl = transformFromGrammar.value.typesDomain?.findFirstDefinitionByPossiblyQualifiedNameOrNull(typePqn)
         grmDecl?.let { cloneSupertypesFromDefault(it) }
+        val provided = grmDecl?.let { providedTypeOfOtherKind(it) }
+        if (null != provided) {
+            // the provided type is used as the type of the rule (David U20 A)
+            (provided.namespace as? GrammarTypesNamespace)?.setTypeForGrammarRule(trr.grammarRuleName, provided.type())
+            return provided
+        }
         val clonedTypeDeclOrCreated = grmDecl?.findInOrCloneTo(_typesDomain) ?: let {
             // need a grammarTypeNamespace
             val gtns = findOrCreateGrammarTypeNamespace(trs.qualifiedName)
@@ -333,6 +339,20 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
     }
 
     /**
+     * a type with the qualified name of the default type 'grmDecl' is already in the types (e.g. provided in a types string),
+     * but it is a different kind of type (e.g. an interface where the default type is a data type).
+     * The provided type is then used for the rule (David U20 A), an error is given only if an object of it must be created.
+     */
+    private fun providedTypeOfOtherKind(grmDecl: TypeDefinition): TypeDefinition? {
+        val existing = _typesDomain.findNamespaceOrNull(grmDecl.namespace.qualifiedName)?.findOwnedTypeNamed(grmDecl.name)
+        return when {
+            null == existing -> null
+            grmDecl is DataType && existing !is DataType -> existing
+            else -> null
+        }
+    }
+
+    /**
      * the supertypes of a type from the default transform must also exist,
      * even if the rule that created them was overridden (e.g. a choice rule whose type is rewritten)
      */
@@ -340,7 +360,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         grmDecl.supertypes.forEach { st ->
             st.resolvedDefinitionOrNull?.let { stDecl ->
                 cloneSupertypesFromDefault(stDecl)
-                stDecl.findInOrCloneTo(_typesDomain)
+                when (providedTypeOfOtherKind(stDecl)) {
+                    null -> stDecl.findInOrCloneTo(_typesDomain)
+                    else -> Unit // the provided type is used (David U20 A)
+                }
             }
         }
     }

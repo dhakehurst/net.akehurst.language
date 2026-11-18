@@ -218,4 +218,70 @@ class test_ProvidedTransform_docsBugs {
             proc.allIssues.errors.map { it.message }
         )
     }
+
+    @Test
+    fun create_missing_types__provided_interface_is_the_type_of_a_choice_rule() {
+        // the default type of rule 'item' would be a data type, the provided interface is used instead (David U20 A)
+        val types = """
+            namespace example.Shapes
+              interface Item { }
+        """.trimIndent()
+        val transform = """
+            #override-default-transform
+            #create-missing-types
+            namespace example
+            asm-transform Shapes {
+                unit: Unit() { items := children }
+            }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(GRAMMAR), typeStr = TypesString(types), transformStr = AsmTransformString(transform))
+        val proc = result.processor!!
+        proc.transformDomain // build it
+        assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
+        val processed = proc.process(SENTENCE)
+        assertTrue(processed.allIssues.errors.isEmpty(), processed.allIssues.toString())
+        val ns = proc.typesDomain.findNamespaceOrNull(net.akehurst.language.base.api.QualifiedName("example.Shapes"))!!
+        assertTrue(ns.findOwnedTypeNamed(net.akehurst.language.base.api.SimpleName("Item")) is net.akehurst.language.types.api.InterfaceType)
+        val expected = """
+            :Unit {
+              items = [
+                :Circle {
+                  name = 'c'
+                  radius = :Radius {
+                    number = '5'
+                  }
+                }
+                :Connection {
+                  name = 'c'
+                  name2 = 'c'
+                }
+              ]
+            }
+        """.trimIndent()
+        assertEquals(expected, processed.asm!!.asString().trim())
+    }
+
+    @Test
+    fun create_missing_types__provided_interface_for_a_rule_that_creates_an_object_is_an_error_issue() {
+        // rule 'circle' (default transform) creates an object, but the provided type 'Circle' is an interface
+        val types = """
+            namespace example.Shapes
+              interface Circle { }
+        """.trimIndent()
+        val transform = """
+            #override-default-transform
+            #create-missing-types
+            namespace example
+            asm-transform Shapes {
+                unit: Unit() { items := children }
+            }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(GRAMMAR), typeStr = TypesString(types), transformStr = AsmTransformString(transform))
+        val proc = result.processor!!
+        proc.transformDomain // build it
+        assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
+        val processed = proc.process(SENTENCE)
+        assertEquals(1, processed.allIssues.errors.size, processed.allIssues.toString())
+        assertTrue(processed.allIssues.errors.first().message.contains("Cannot create an object of type 'example.Shapes.Circle', it is not a data type or value type"))
+    }
 }
