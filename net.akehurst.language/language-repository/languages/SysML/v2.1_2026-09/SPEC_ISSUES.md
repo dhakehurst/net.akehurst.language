@@ -46,3 +46,21 @@ list does include `'new'`.
 text. The KerML list seems to be missing `new`, as in SysML.
 
 **AGL.** The KerML grammars use `#scanner: Classic`, which scans every literal of the grammar as a keyword, so `new` cannot be used as a name (as in SysML).
+
+## 3. The OMG metamodel XMI does not mark composite properties
+
+**Specification.** The machine-readable abstract syntax published by the OMG,
+`https://www.omg.org/spec/KerML/20250201/KerML.xmi` and `https://www.omg.org/spec/SysML/20250201/SysML.xmi`
+(KerML 1.0 / SysML 2.0; no 1.1 / 2.1 files are published yet), has no `aggregation="composite"` on any property.
+The property descriptions in the specification documents (e.g. KerML 1.1 8.3.2.1, `ownedRelationship : Relationship [0..*] {subsets relationship, ordered}`)
+do not say whether a property is composite either.
+
+**Pilot Implementation.** Its UML model (`org.omg.sysml/model/SysML_xmi.uml`, at tags 2026-04 and 2026-09.1) marks 43 properties
+as composite, for example `Element::ownedRelationship`, `Relationship::ownedRelatedElement`, `Namespace::ownedMembership`
+and `OwningMembership::ownedMemberElement`.
+
+**Issue.** Apart from this, the Pilot model and the OMG XMI give the same classes, generalizations and properties
+(compared after converting both to agl types). Ownership (containment) is central to the KerML abstract syntax
+(owned relationships and owned related elements), so the normative XMI should state it.
+
+**AGL.** The metamodel types for agl are generated from the Pilot model, so these properties are composite.
