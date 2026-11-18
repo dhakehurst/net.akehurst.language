@@ -107,3 +107,16 @@ The metamodel has no `ResultParameterMembership`; the metaclass for a result par
 element of the metaclass with the rule's name, but the metamodel has `LiteralRational` (value : Real), not `LiteralReal`.
 
 (Entries 6 to 9 were found by the generator of the asm-transform from the BNF to the metamodel, in the SysML v2.0 work; they are the same in 2.1.)
+
+## 10. `OwnedReferenceSubsetting` adds `referenceFeature`, which is not a property
+
+**Specification.** `bnf/SysML-textual-bnf.kebnf` (SysML 2.1 8.2.2.6.5): `OwnedReferenceSubsetting : ReferenceSubsetting =
+referencedFeature = [QualifiedName] | referencedFeature = OwnedFeatureChain { ownedRelatedElement += referenceFeature }`.
+The property is `referencedFeature`; `referenceFeature` does not exist (the KerML rule has `referencedFeature`).
+
+## 11. `ConjugatedPortTyping` assigns `originalPortDefinition`, which `ConjugatedPortTyping` does not have
+
+**Specification.** `bnf/SysML-textual-bnf.kebnf` (SysML 2.1 8.2.2.12): `ConjugatedPortTyping : ConjugatedPortTyping = '~' originalPortDefinition = ~[QualifiedName]`.
+`ConjugatedPortTyping` has `conjugatedPortDefinition` (stored) and `portDefinition` (derived); `originalPortDefinition`
+is a property of `PortConjugation` and `ConjugatedPortDefinition`. Since `~[QualifiedName]` resolves to the conjugated port
+definition (BNF Note 2), the assignment seems meant to be `conjugatedPortDefinition = ~[QualifiedName]`.
