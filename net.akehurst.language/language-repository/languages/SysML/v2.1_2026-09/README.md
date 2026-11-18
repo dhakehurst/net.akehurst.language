@@ -1,4 +1,4 @@
-# SysML v2, release 2026-09
+# SysML v2.1 (Beta 2), release 2026-09
 
 The SysML v2 textual notation from the [SysML v2 Release](https://github.com/Systems-Modeling/SysML-v2-Release)
 2026-09.1 (SysML v2.1 Beta 2, KerML v1.1 Beta 2).
@@ -15,10 +15,10 @@ Two variants of the language, each in `languages/<variant>` with its grammar and
 
 ## KerML
 
-SysML is built on KerML ([../../KerML/v2_2026-09](../../KerML/v2_2026-09)). To resolve references, the SysML processor
+SysML is built on KerML ([../../KerML/v1.1_2026-09](../../KerML/v1.1_2026-09)). To resolve references, the SysML processor
 uses the types of the KerML processor (grammar `agl`) as its base types, and the KerML references are merged into the SysML references.
 The KerML model libraries (`.kerml`) are processed by the KerML processor, the SysML model libraries (`valid/library`) by the SysML processor,
-into the same context (see the test `test_SysML_v2_2026_09_agl_references`).
+into the same context (see the test `test_SysML_v2_1_2026_09_agl_references`).
 
 ## valid
 

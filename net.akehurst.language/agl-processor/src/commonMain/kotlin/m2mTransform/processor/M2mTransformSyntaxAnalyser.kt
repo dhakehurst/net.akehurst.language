@@ -132,7 +132,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     private fun transform(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (M2mTransformNamespace) -> M2mTransformRuleSet {
         val name = SimpleName(children[1] as String)
         val domParams = children[3] as List<Pair<String, SimpleName>>
-        val extends = children[5] as List<PossiblyQualifiedName>? ?: emptyList()
+        // 'extends' gives rule references, a transform extends other transforms, so only the names are used
+        val extends = (children[5] as List<M2mTransformRuleReference>?)?.map { it.nameOrQName } ?: emptyList()
         val options = children[7] as List<Pair<String, String>>
         val typeImports = children[8] as List<Import>
         val rules = children[9] as List<M2mTransformRule>
@@ -247,7 +248,11 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val sigDomains = children[6] as List<DomainSignature>
         val values = children[7] as List<List<Expression>>
         val whenExpression = children[8] as Expression?
-        val whereExpression = children[9] as Expression?
+        val whereExpression = children[9] as List<RuleWhere>?
+        //TODO: 'when' and 'where' for a table rule
+        if (null != whenExpression || null != whereExpression) {
+            issues.error(locationForNode(sentence, nodeInfo.node), "'when' and 'where' are not supported in table rule '${name.value}'.")
+        }
         return M2MTransformTableDefault(isTop, name).also { rel ->
             (rel.parameters as MutableList).addAll(parameters)
             (rel.extends as MutableList).addAll(extends)

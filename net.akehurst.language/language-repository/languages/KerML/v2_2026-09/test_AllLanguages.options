@@ -1,2 +1,0 @@
-// options for test_AllLanguages for this language version, see TestOptions in test_AllLanguages.kt
-skip: agl-ref // references need the standard library and other example files in the context, tested in agl-processor test_KerML_v2_2026_09

@@ -158,7 +158,7 @@ class test_Doc_M2mTransform {
 
     @Test
     fun transform_test_and_import_types_parse() {
-        // m2m-transform.md: "Other parts" - parsed only, nothing runs them yet
+        // old transform-test rules of the m2m grammar (goal testUnit), kept until the M2mTransformTest language is in use
         val proc = Agl.registry.agl.m2mTransform.processor!!
         val test = """
             namespace example
@@ -174,6 +174,14 @@ class test_Doc_M2mTransform {
         val withImport = "namespace example\ntransform ShapesToDrawing(s:Shapes, d:Drawing) {\n  import-types drawing\n}"
         val r2 = proc.parse(withImport)
         assertTrue(r2.issues.errors.isEmpty(), r2.issues.toString())
+    }
+
+    @Test
+    fun transform_option_parses() {
+        // m2m-transform.md: "Other parts" - options use the option syntax of all agl DSLs (MT23)
+        val proc = Agl.registry.agl.m2mTransform.processor!!
+        val res = proc.parse("namespace example\ntransform ShapesToDrawing(s:Shapes, d:Drawing) {\n  #name : value\n  import-types drawing\n}")
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
     @Test

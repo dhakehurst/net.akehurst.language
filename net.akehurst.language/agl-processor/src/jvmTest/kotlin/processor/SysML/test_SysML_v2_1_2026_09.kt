@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor.SysML
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.processor.KerML.KerML_v2_2026_09
+import net.akehurst.language.agl.processor.KerML.KerML_v1_1_2026_09
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
@@ -39,7 +39,7 @@ import kotlin.test.assertTrue
  * Tests the SysML v2 2026-09 grammars with the example models of the SysML v2 Release (in 'valid')
  * and with some invalid sentences (in 'invalid').
  */
-abstract class test_SysML_v2_2026_09(
+abstract class test_SysML_v2_1_2026_09(
     grammarName: String,
     /** relative paths (from 'valid') of example files that are known not to parse */
     private val knownFailing: Set<String>,
@@ -47,7 +47,7 @@ abstract class test_SysML_v2_2026_09(
     private val scannerKind: ScannerKind? = null
 ) {
 
-    private val languageDir = File("../language-repository/languages/SysML/v2_2026-09")
+    private val languageDir = File("../language-repository/languages/SysML/v2.1_2026-09")
     private val grammarDir = File(languageDir, "languages/$grammarName")
     private val grammarStr by lazy { File(grammarDir, "grammar.agl-grm").readText() }
     private val styleStr by lazy { File(grammarDir, "style.agl-sty").readText() }
@@ -144,34 +144,34 @@ abstract class test_SysML_v2_2026_09(
 
 // the grammars set '#scanner: Classic', because SysML reserves its keywords (KerML 8.2.2.6):
 // with the Classic scanner a literal beats a name of the same length
-class test_SysML_v2_2026_09_standard : test_SysML_v2_2026_09("standard", emptySet()) {
+class test_SysML_v2_1_2026_09_standard : test_SysML_v2_1_2026_09("standard", emptySet()) {
     @Test
     fun keywords_reserved() = assertKeywordsReserved()
 }
 
-class test_SysML_v2_2026_09_agl : test_SysML_v2_2026_09("agl", emptySet()) {
+class test_SysML_v2_1_2026_09_agl : test_SysML_v2_1_2026_09("agl", emptySet()) {
     @Test
     fun keywords_reserved() = assertKeywordsReserved()
 }
 
 // the grammars also work with the OnDemand scanner, but then keywords can be used as names
-class test_SysML_v2_2026_09_standard_OnDemand : test_SysML_v2_2026_09("standard", emptySet(), ScannerKind.OnDemand)
+class test_SysML_v2_1_2026_09_standard_OnDemand : test_SysML_v2_1_2026_09("standard", emptySet(), ScannerKind.OnDemand)
 
-class test_SysML_v2_2026_09_agl_OnDemand : test_SysML_v2_2026_09("agl", emptySet(), ScannerKind.OnDemand)
+class test_SysML_v2_1_2026_09_agl_OnDemand : test_SysML_v2_1_2026_09("agl", emptySet(), ScannerKind.OnDemand)
 
 /**
  * Tests the references of the 'agl' grammar.
  *
- * SysML is built on KerML: the SysML processor uses the types domain of the KerML processor (KerML/v2_2026-09, grammar 'agl') as its base types,
+ * SysML is built on KerML: the SysML processor uses the types domain of the KerML processor (KerML/v1.1_2026-09, grammar 'agl') as its base types,
  * and its references are merged with the KerML references, so that the KerML model libraries (.kerml), processed by the KerML processor,
  * are found from SysML.
  *
  * TODO(David): (q29b) an agl feature for a language definition to import the types and references of another language, instead of this configuration code.
  */
-class test_SysML_v2_2026_09_agl_references {
+class test_SysML_v2_1_2026_09_agl_references {
 
     private companion object {
-        val languageDir = File("../language-repository/languages/SysML/v2_2026-09")
+        val languageDir = File("../language-repository/languages/SysML/v2.1_2026-09")
         val grammarDir = File(languageDir, "languages/agl")
 
         /** relative paths (from 'valid') of example files that are known to have reference errors (mostly implicit specializations, not supported yet) */
@@ -213,7 +213,7 @@ class test_SysML_v2_2026_09_agl_references {
         )
     }
 
-    private val kermlProcessor = KerML_v2_2026_09.processorWithReferences()
+    private val kermlProcessor = KerML_v1_1_2026_09.processorWithReferences()
 
     private val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
         val referenceStr = CrossReferenceString(File(grammarDir, "references.agl-ref").readText())
@@ -237,10 +237,10 @@ class test_SysML_v2_2026_09_agl_references {
     /** the KerML model libraries processed by the KerML processor, then the SysML model libraries ('valid/library') */
     private fun libraryContext(): SentenceContext {
         val ctx = contextAsmSimple()
-        assertEquals(emptyList(), KerML_v2_2026_09.processLibrary(kermlProcessor, ctx))
-        val sysmlLib = KerML_v2_2026_09.sentenceFiles(File(languageDir, "valid/library"), "sysml")
+        assertEquals(emptyList(), KerML_v1_1_2026_09.processLibrary(kermlProcessor, ctx))
+        val sysmlLib = KerML_v1_1_2026_09.sentenceFiles(File(languageDir, "valid/library"), "sysml")
         assertTrue(sysmlLib.isNotEmpty(), "library files not found in '${languageDir.absolutePath}'")
-        assertEquals(emptyList(), KerML_v2_2026_09.processFiles(processor, sysmlLib, ctx, false))
+        assertEquals(emptyList(), KerML_v1_1_2026_09.processFiles(processor, sysmlLib, ctx, false))
         return ctx
     }
 
@@ -260,9 +260,9 @@ class test_SysML_v2_2026_09_agl_references {
     fun references_examples() {
         val libCtx = libraryContext()
         val validDir = File(languageDir, "valid")
-        val files = listOf("examples", "training", "validation").flatMap { KerML_v2_2026_09.sentenceFiles(File(validDir, it), "sysml") }
+        val files = listOf("examples", "training", "validation").flatMap { KerML_v1_1_2026_09.sentenceFiles(File(validDir, it), "sysml") }
         assertTrue(files.size > 200, "example files not found in '${validDir.absolutePath}'")
-        val failed = KerML_v2_2026_09.filesWithReferenceErrors(processor, files, libCtx, validDir)
+        val failed = KerML_v1_1_2026_09.filesWithReferenceErrors(processor, files, libCtx, validDir)
         val unexpectedFailures = failed - knownFailing
         val unexpectedPasses = knownFailing - failed
         assertTrue(unexpectedFailures.isEmpty(), "${unexpectedFailures.size} examples have reference errors:\n${unexpectedFailures.joinToString("\n") { "\"$it\"," }}")

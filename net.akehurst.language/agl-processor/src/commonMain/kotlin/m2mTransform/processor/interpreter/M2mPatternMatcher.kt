@@ -27,8 +27,8 @@ import net.akehurst.language.m2mTransform.api.ObjectTemplate
 import net.akehurst.language.m2mTransform.api.PropertyTemplateExpression
 import net.akehurst.language.m2mTransform.api.PropertyTemplateRhs
 import net.akehurst.language.m2mTransform.processor.M2mTransformExecution
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.cartesianProduct
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.findCoveringSubsets2
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.cartesianProduct
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.findCoveringSubsets2
 import net.akehurst.language.m2mTransform.processor.TemplateMatchAlternatives
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge

@@ -33,7 +33,7 @@ import kotlin.test.assertTrue
  * Tests the KerML 2026-09 grammars with the example models and the KerML model libraries of the SysML v2 Release (in 'valid')
  * and with some invalid sentences (in 'invalid').
  */
-abstract class test_KerML_v2_2026_09(
+abstract class test_KerML_v1_1_2026_09(
     grammarName: String,
     /** relative paths (from 'valid') of example files that are known not to parse */
     private val knownFailing: Set<String>,
@@ -41,7 +41,7 @@ abstract class test_KerML_v2_2026_09(
     private val scannerKind: ScannerKind? = null
 ) {
 
-    private val languageDir = File("../language-repository/languages/KerML/v2_2026-09")
+    private val languageDir = File("../language-repository/languages/KerML/v1.1_2026-09")
     private val grammarDir = File(languageDir, "languages/$grammarName")
     private val grammarStr by lazy { File(grammarDir, "grammar.agl-grm").readText() }
     private val styleStr by lazy { File(grammarDir, "style.agl-sty").readText() }
@@ -138,26 +138,26 @@ abstract class test_KerML_v2_2026_09(
 
 // the grammars set '#scanner: Classic', because KerML reserves its keywords (KerML 8.2.2.6):
 // with the Classic scanner a literal beats a name of the same length
-class test_KerML_v2_2026_09_standard : test_KerML_v2_2026_09("standard", emptySet()) {
+class test_KerML_v1_1_2026_09_standard : test_KerML_v1_1_2026_09("standard", emptySet()) {
     @Test
     fun keywords_reserved() = assertKeywordsReserved()
 }
 
-class test_KerML_v2_2026_09_agl : test_KerML_v2_2026_09("agl", emptySet()) {
+class test_KerML_v1_1_2026_09_agl : test_KerML_v1_1_2026_09("agl", emptySet()) {
     @Test
     fun keywords_reserved() = assertKeywordsReserved()
 }
 
 // the grammars also work with the OnDemand scanner, but then keywords can be used as names
-class test_KerML_v2_2026_09_standard_OnDemand : test_KerML_v2_2026_09("standard", emptySet(), ScannerKind.OnDemand)
+class test_KerML_v1_1_2026_09_standard_OnDemand : test_KerML_v1_1_2026_09("standard", emptySet(), ScannerKind.OnDemand)
 
-class test_KerML_v2_2026_09_agl_OnDemand : test_KerML_v2_2026_09("agl", emptySet(), ScannerKind.OnDemand)
+class test_KerML_v1_1_2026_09_agl_OnDemand : test_KerML_v1_1_2026_09("agl", emptySet(), ScannerKind.OnDemand)
 
 /**
  * Tests the references of the 'agl' grammar: the example models are processed with references checked,
  * in a context holding the KerML model libraries and the files of the same folder that an example uses.
  */
-class test_KerML_v2_2026_09_agl_references {
+class test_KerML_v1_1_2026_09_agl_references {
 
     private companion object {
         /** relative paths (from 'valid') of example files that are known to have reference errors (mostly implicit specializations, not supported yet) */
@@ -183,7 +183,7 @@ class test_KerML_v2_2026_09_agl_references {
         )
     }
 
-    private val processor = KerML_v2_2026_09.processorWithReferences()
+    private val processor = KerML_v1_1_2026_09.processorWithReferences()
 
     /** the references definition is checked when the processor first uses it; it must have no errors (they are also in every process result) */
     @Test
@@ -195,18 +195,18 @@ class test_KerML_v2_2026_09_agl_references {
     @Test
     fun process_library() {
         val ctx = net.akehurst.language.agl.simple.contextAsmSimple()
-        val errors = KerML_v2_2026_09.processLibrary(processor, ctx)
+        val errors = KerML_v1_1_2026_09.processLibrary(processor, ctx)
         assertEquals(emptyList(), errors)
     }
 
     @Test
     fun references_examples() {
         val libCtx = net.akehurst.language.agl.simple.contextAsmSimple()
-        KerML_v2_2026_09.processLibrary(processor, libCtx)
-        val validDir = File(KerML_v2_2026_09.languageDir, "valid")
-        val files = KerML_v2_2026_09.sentenceFiles(File(validDir, "examples"), "kerml")
+        KerML_v1_1_2026_09.processLibrary(processor, libCtx)
+        val validDir = File(KerML_v1_1_2026_09.languageDir, "valid")
+        val files = KerML_v1_1_2026_09.sentenceFiles(File(validDir, "examples"), "kerml")
         assertTrue(files.size > 50, "example files not found in '${validDir.absolutePath}'")
-        val failed = KerML_v2_2026_09.filesWithReferenceErrors(processor, files, libCtx, validDir)
+        val failed = KerML_v1_1_2026_09.filesWithReferenceErrors(processor, files, libCtx, validDir)
         val unexpectedFailures = failed - knownFailing
         val unexpectedPasses = knownFailing - failed
         assertTrue(unexpectedFailures.isEmpty(), "${unexpectedFailures.size} examples have reference errors:\n${unexpectedFailures.joinToString("\n") { "\"$it\"," }}")

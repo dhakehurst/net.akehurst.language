@@ -183,6 +183,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
           }
         """.trimIndent()
 
+    // TODO: a formatter for the references language is still to be written (separate work, David 2026-11-18):
+    //  a real formatString/formatDomain in the current format DSL. Until then asString gives the text (it round-trips).
+    //  'formatterStr' at the end of this file is an old sketch in an earlier syntax.
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}.reference.api
           // TODO
