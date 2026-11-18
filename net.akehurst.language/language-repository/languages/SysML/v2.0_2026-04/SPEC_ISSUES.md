@@ -35,3 +35,58 @@ SysML v2.1 adds `new` to the SysML `RESERVED_KEYWORD` (KerML v1.1 still does not
 
 **AGL.** The grammars use the Classic scanner, which reserves every literal of the grammar, so `new` is reserved
 (as in SysML v2.1).
+
+## 3. `superClassifier` is not a property of Subclassification
+
+**Specification.** SysML 8.2.2.6.5 (`bnf/SysML-textual-bnf.kebnf`):
+`OwnedSubclassification : Subclassification = superClassifier = [QualifiedName]`.
+The metaclass `Subclassification` has the property `superclassifier` (lower case `c`), as in the KerML BNF.
+Also in SysML v2.1 (see [../v2.1_2026-09/SPEC_ISSUES.md](../v2.1_2026-09/SPEC_ISSUES.md)).
+
+## 4. `InitialNodeMember` assigns `memberFeature`, which `FeatureMembership` does not have
+
+**Specification.** SysML 8.2.2.17.1 (`bnf/SysML-textual-bnf.kebnf`):
+`InitialNodeMember : FeatureMembership = MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody`.
+`FeatureMembership` has no property `memberFeature`, and it is an `OwningMembership`, whose member element is owned,
+while `first x` refers to an existing feature `x`. Also in SysML v2.1.
+
+## 5. `FeatureInverting` never assigns `invertingFeature` when it is a feature chain
+
+**Specification.** KerML 8.2.4.3.6 (`bnf/KerML-textual-bnf.kebnf`):
+
+    ( invertingFeature = [QualifiedName]
+    | ownedRelatedElement += OwnedFeatureChain
+      { ownedRelatedElement += invertingFeature }
+    )
+
+The second option adds the chain to `ownedRelatedElement` and then adds `invertingFeature`, which is not set, again.
+It should be as the `featureInverted` part just before it:
+`invertingFeature = OwnedFeatureChain { ownedRelatedElement += invertingFeature }`. Also in KerML v1.1.
+
+**AGL.** The metamodel transform (`languages/std-metamodel`) uses the corrected rule. A reference property holds a name,
+not an object, so only `ownedRelatedElement` holds the chain.
+
+## 6. `OwnedExpressionMember` assigns `ownedFeatureMember`, which does not exist
+
+**Specification.** KerML 8.2.5.8.1 (`bnf/KerML-textual-bnf.kebnf`):
+`OwnedExpressionMember : FeatureMembership = ownedFeatureMember = OwnedExpression`.
+`FeatureMembership` has no property `ownedFeatureMember`; every other such rule assigns `ownedMemberFeature`. Also in KerML v1.1.
+
+**AGL.** The metamodel transform uses `ownedMemberFeature = OwnedExpression`.
+
+## 7. `TypeResultMember` is typed by `ResultParameterMembership`, which is not a metaclass
+
+**Specification.** KerML 8.2.5.8.1 (`bnf/KerML-textual-bnf.kebnf`):
+`TypeResultMember : ResultParameterMembership = ownedMemberFeature = TypeReference`.
+There is no metaclass `ResultParameterMembership`; the metaclass for a result parameter is `ReturnParameterMembership`
+(as used by `ReturnFeatureMember` and `EmptyResultMember`). Also in KerML v1.1.
+
+**AGL.** The metamodel transform creates a `ReturnParameterMembership`.
+
+## 8. `LiteralReal` has no type, and there is no metaclass `LiteralReal`
+
+**Specification.** KerML 8.2.5.8.4 (`bnf/KerML-textual-bnf.kebnf`): `LiteralReal = value = RealValue`.
+A rule with no declared type creates an element of the metaclass with the rule's name, but there is no metaclass
+`LiteralReal`; the metaclass for real literals is `LiteralRational`. Also in KerML v1.1.
+
+**AGL.** The metamodel transform creates a `LiteralRational`.

@@ -289,8 +289,9 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                 }
             }
 
-            expr is CreateTupleExpression -> exprTypeResolver.typeFor(expr, StdLibDefault.AnyType)
-            expr is CastExpression -> exprTypeResolver.typeFor(expr, StdLibDefault.AnyType)
+            // self is the parse node of the rule (as for the property assignments of a created object), so 'children', 'child', '\$alternative' can be used
+            expr is CreateTupleExpression -> exprTypeResolver.typeFor(expr, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
+            expr is CastExpression -> exprTypeResolver.typeFor(expr, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
             else -> unsupportedRuleExpression(trr)
         }
         return exprType
