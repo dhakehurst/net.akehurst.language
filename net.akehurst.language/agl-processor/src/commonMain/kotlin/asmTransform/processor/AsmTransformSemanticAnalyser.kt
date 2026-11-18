@@ -407,6 +407,12 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         }
     }
 
+    /** a type with the name of the created object exists in the namespace, but it is not a data type (e.g. an interface), so no object of it can be created */
+    private fun isNotDataType(ns: GrammarTypesNamespace, expr: CreateObjectExpression): Boolean {
+        val existing = ns.findOwnedTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
+        return null != existing && existing !is DataType
+    }
+
     private fun createMissingTypes(trs: AsmTransformRuleSet) {
         when {
             trs.options.createTypes -> {
@@ -414,6 +420,15 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     val expr = trr.expression
                     val exprPqn = when {
                         trr.isResolved -> trr.resolvedType.qualifiedTypeName
+                        expr is CreateObjectExpression && isNotDataType(findOrCreateGrammarTypeNamespace(trs.qualifiedName), expr) -> {
+                            val existing = findOrCreateGrammarTypeNamespace(trs.qualifiedName).findOwnedTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
+                            _issues.error(
+                                null,
+                                "Cannot create an object of '${expr.possiblyQualifiedTypeName.value}' (in the transformation rule for '${trr.grammarRuleName.value}'): ${if (existing is InterfaceType) "it is an interface" else "it is not a data type"}"
+                            )
+                            null
+                        }
+
                         expr is CreateObjectExpression -> {
                             val gtns = findOrCreateGrammarTypeNamespace(trs.qualifiedName)
                             val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)

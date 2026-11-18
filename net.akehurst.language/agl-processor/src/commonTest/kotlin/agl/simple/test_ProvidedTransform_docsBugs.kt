@@ -194,4 +194,28 @@ class test_ProvidedTransform_docsBugs {
         """.trimIndent()
         assertEquals(expected, processed.asm!!.asString().trim())
     }
+
+    @Test
+    fun create_missing_types__object_of_an_interface_is_an_error_issue() {
+        // the types string declares an interface with the name of the object the transform creates
+        val types = """
+            namespace example.Shapes
+              interface Shape { name: String }
+        """.trimIndent()
+        val transform = """
+            #override-default-transform
+            #create-missing-types
+            namespace example
+            asm-transform Shapes {
+                circle: Shape() { name := child[1] }
+            }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(GRAMMAR), typeStr = TypesString(types), transformStr = AsmTransformString(transform))
+        val proc = result.processor!!
+        proc.transformDomain // build it
+        assertEquals(
+            listOf("Cannot create an object of 'Shape' (in the transformation rule for 'circle'): it is an interface"),
+            proc.allIssues.errors.map { it.message }
+        )
+    }
 }
