@@ -975,7 +975,10 @@ internal class RuntimeParserAgl(
                             }
                         }
                     }
-                    val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
+                    // allowEOTAfterSkip: accept the real end of the text, see matchedLookahead
+                    // (in an embedded parser possibleEndOfText is the outer lookahead, it does not contain the real end of text)
+                    val atEnd = growArgs.allowEOTAfterSkip && this.graph.scanner.isEnd(sentence, head.nextInputPositionAfterSkip)
+                    val hasLh = atEnd || lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
                     if (growArgs.noLookahead || hasLh) {
                         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
                         this.graph.growNextChild(
@@ -1325,6 +1328,11 @@ internal class RuntimeParserAgl(
                         //val match = embeddedParser.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
                         val match = embeddedParser.graph.treeData.complete
                         if (match.root != null) {
+                            // for expectedAt (allowEOTAfterSkip): the embedded text could also continue,
+                            // keep what the embedded parser expected, at the position it expected it
+                            if (parseArgs.allowEOTAfterSkip) {
+                                recordSucceededEmbeddedExpectations(parseArgs, head, transition, embeddedParser.failedReasons)
+                            }
                             val embeddedS0 = embeddedParser.stateSet.startState
                             val ni = match.root?.nextInputPosition!! // will always have value if root not null
                             //TODO: parse skipNodes
@@ -1441,6 +1449,23 @@ internal class RuntimeParserAgl(
                 else -> emptyMap()
             }
             failedReasonsAdd(FailedParseReasonLookahead(this.isSkipParser, failedAtPosition, head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
+        }
+    }
+
+    /**
+     * the embedded parse succeeded, but (for expectedAt) what it expected at its furthest position is also expected,
+     * recorded at that position, so it is kept together with the failures of this parser at the same position
+     */
+    private fun recordSucceededEmbeddedExpectations(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, failedEmbeddedReasons: Map<Int, MutableList<FailedParseReason>>) {
+        if (parseArgs.reportErrors) {
+            val pos = failedEmbeddedReasons.keys.maxOrNull()
+            if (null != pos) {
+                val gssSnapshot = when {
+                    parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
+                    else -> emptyMap()
+                }
+                failedReasonsAdd(FailedParseReasonEmbedded(this.isSkipParser, pos, head, transition, gssSnapshot, failedEmbeddedReasons[pos]!!))
+            }
         }
     }
 
