@@ -743,6 +743,7 @@ class M2mTransformInterpreterCombined(
                             null -> m2mExecution.errorIssue("No expression found for target domain ref '$${m2mExecution.targetDomainRef.value}' of rule '${rule.name}'.")
                             else -> {
                                 val allVars = alt.values.merge()
+                                if (allVars.isMatch.not()) return@map Unit // a variable shared by domains has different values: no match
                                 val evcForWhen = EvaluationContext.of(ruleArguments + allVars.matchedVariables)
                                 if (isAlreadyApplied(m2mExecution, rule, allVars)) return@map Unit
                                 val whenResult = rule.when_?.let {
@@ -811,6 +812,7 @@ class M2mTransformInterpreterCombined(
                     altSources.isEmpty() -> emptyList<Unit>() //no match for this rule - a valid situation
                     else -> altSources.map { alt ->
                         val allVars = alt.values.merge()
+                        if (allVars.isMatch.not()) return@map Unit // a variable shared by domains has different values: no match
                         if (isAlreadyApplied(m2mExecution, rule, allVars)) return@map Unit
                         val evcForWhen = EvaluationContext.of(ruleArguments + allVars.matchedVariables)
                         val whenResult = rule.when_?.let { executeWhen(m2mExecution, rule, it, evcForWhen) }
@@ -1014,7 +1016,7 @@ class M2mTransformInterpreterCombined(
         }
         val res = options.map { opt ->
             opt.flatMap { it.alternatives }.merge()
-        }
+        }.filter { it.isMatch } // a repeated variable with different values is no match
         return res
     }
 

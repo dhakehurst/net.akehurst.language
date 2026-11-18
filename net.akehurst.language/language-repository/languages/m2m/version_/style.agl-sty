@@ -1,18 +1,21 @@
-$keyword {
-    foreground: darkred;
-    font-weight: bold;
-}
+namespace net.akehurst.language.m2m
 
-COMMENT_MULTI_LINE, COMMENT_SINGLE_LINE {
-    foreground: grey;
-    font-style: italic;
-}
+styles Transformation {
+    $keyword {
+        foreground: darkred;
+        font-weight: bold;
+    }
 
-REF {
-    foreground: green;
-    font-style: italic;
-}
+    COMMENT_MULTI_LINE, COMMENT_SINGLE_LINE {
+        foreground: grey;
+        font-style: italic;
+    }
 
-type {
-    foreground: blue;
-}
+    REF {
+        foreground: green;
+        font-style: italic;
+    }
+
+    type {
+        foreground: blue;
+    }}

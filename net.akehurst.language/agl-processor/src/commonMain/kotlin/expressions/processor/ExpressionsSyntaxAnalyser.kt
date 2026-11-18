@@ -143,10 +143,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
-    // root = propertyReference ;
+    // rootExpression = '&'? propertyReference ;
     private fun rootExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression {
-        val v = children[0] as String
+        val asReference = null != children[0]
+        val v = children[1] as String
         return when {
+            asReference -> RootExpressionDefault(v, true)
             v.startsWith("\$") -> when (v) {
                 RootExpressionDefault.NOTHING.name -> RootExpressionDefault.NOTHING
                 RootExpressionDefault.SELF.name -> RootExpressionDefault.SELF
@@ -308,10 +310,11 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return GroupExpressionDefault(expression)
     }
 
-    // propertyCall = '.' propertyReference ;
+    // propertyCall = '.' '&'? propertyReference ;
     private fun propertyCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCall {
-        val id = children[1] as String
-        return PropertyCallDefault(id)
+        val asReference = null != children[1]
+        val id = children[2] as String
+        return PropertyCallDefault(id, asReference)
     }
 
     // methodCall = '.' methodReference '(' argumentList ')'  ;

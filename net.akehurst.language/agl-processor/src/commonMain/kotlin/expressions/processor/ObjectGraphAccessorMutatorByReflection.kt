@@ -493,7 +493,7 @@ class ExternalGetterByReflection(
                 val v = obj.getPropertyOrNull(PropertyValueName(propertyName))
                 when (v) {
                     is AsmStructure -> v
-                    is AsmReference -> v
+                    is AsmReference -> v.resolvedOrSelf()
                     else -> v?.raw
                 }
             }
@@ -502,7 +502,7 @@ class ExternalGetterByReflection(
                 val v = it.property[PropertyValueName(propertyName)]?.value
                 when (v) {
                     is AsmStructure -> v
-                    is AsmReference -> v
+                    is AsmReference -> v.resolvedOrSelf()
                     else -> v?.raw
                 }
             }
@@ -686,6 +686,19 @@ constructor(
             decl.accessor?.invoke(obj)
         }
 
+    override fun getPropertyAsReference(tobj: TypedObject, propertyName: String): TypedObject {
+        val obj = untyped(tobj)
+        val v = when (obj) {
+            is AsmStructure -> obj.getPropertyOrNull(PropertyValueName(propertyName))
+            is AsmReference -> obj.value?.getPropertyOrNull(PropertyValueName(propertyName))
+            else -> null
+        }
+        return when (v) {
+            is AsmReference -> toTypedObject(v, tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.AnyType)
+            else -> getProperty(tobj, propertyName)
+        }
+    }
+
     override fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject) =
         setPropertyInternal(tobj, propertyName, value, { o, n, r, v ->
             externalGetter.setProperty(o, n, r, v)
@@ -804,7 +817,7 @@ constructor(
                     is AsmStructure -> {
                         val propType = tobj.type.typeArguments.firstOrNull { ta -> ta is TypeArgumentNamed && ta.name.value == propertyName }?.type ?: StdLibDefault.AnyType
                         val pv = obj.getPropertyOrNull(PropertyValueName(propertyName))
-                        pv?.let { toTypedObject(it, propType) }
+                        pv?.let { toTypedObject(it.resolvedOrSelf(), propType) }
                             ?: issueErrorReturnNothing(null, "Property '$propertyName' on Tuple not found, using value \$nothing.")
                     }
 

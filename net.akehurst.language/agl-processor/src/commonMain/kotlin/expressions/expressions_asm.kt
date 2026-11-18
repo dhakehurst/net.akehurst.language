@@ -241,7 +241,8 @@ class OnExpressionDefault(
 }
 
 data class RootExpressionDefault(
-    override val name: String
+    override val name: String,
+    override val asReference: Boolean = false
 ) : ExpressionAbstract(), RootExpression {
     companion object {
         val NOTHING = RootExpressionDefault("\$nothing")
@@ -252,11 +253,11 @@ data class RootExpressionDefault(
     override val isNothing: Boolean get() = NOTHING == this
     override val isSelf: Boolean get() = SELF == this
 
-    override fun toString(): String = name
+    override fun toString(): String = if (asReference) "&$name" else name
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
         !is RootExpressionDefault -> false
-        else -> other.name == this.name
+        else -> other.name == this.name && other.asReference == this.asReference
     }
 }
 
@@ -293,17 +294,19 @@ data class NavigationExpressionDefault(
 }
 
 data class PropertyCallDefault(
-    override val propertyName: String
+    override val propertyName: String,
+    override val asReference: Boolean = false
 ) : PropertyCall {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append(".")
+        if (asReference) sb.append("&")
         sb.append(propertyName)
         return sb.toString()
     }
 
-    override fun toString(): String = ".$propertyName"
+    override fun toString(): String = if (asReference) ".&$propertyName" else ".$propertyName"
 }
 
 data class MethodCallDefault(
@@ -580,4 +583,28 @@ object ExpressionExt {
             is WhenExpression -> this.options.flatMap { it.condition.freeVariables + it.expression.freeVariables } + this.elseOption.expression.freeVariables
             else -> error("Unsupported Expression subtype ${this::class.simpleName}")
         }
+}
+
+/**
+ * the same expression, where the last property read gives a reference itself ('&name' or '.&name'), not the element it refers to.
+ * Used by processors that work on the referring side of references (e.g. reference resolution, formatting).
+ */
+fun Expression.withLastStepAsReference(): Expression = when (this) {
+    is RootExpression -> when {
+        this.name.startsWith("\$") || this.asReference -> this
+        else -> RootExpressionDefault(this.name, true)
+    }
+
+    is NavigationExpression -> {
+        val last = this.parts.lastOrNull()
+        when {
+            null == last -> NavigationExpressionDefault(this.start.withLastStepAsReference(), this.parts)
+            last is PropertyCall && last.propertyName.startsWith("\$").not() && last.asReference.not() ->
+                NavigationExpressionDefault(this.start, this.parts.dropLast(1) + PropertyCallDefault(last.propertyName, true))
+
+            else -> this
+        }
+    }
+
+    else -> this
 }

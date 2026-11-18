@@ -393,6 +393,51 @@ class test_ProvidedTransform {
                     }
                 }
             }
+            testData("tuple rule uses the parse node: \$alternative, child, children") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a | b c ;
+                        leaf a = 'a' ;
+                        leaf b = 'b' ;
+                        leaf c = 'c' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: tuple {
+                          alt := §alternative
+                          first := child[0]
+                          last := children.last
+                        }
+                      }
+                """.replace("§", "$").trimIndent()
+                )
+                sentencePass("a") {
+                    expectedAsm {
+                        tuple {
+                            propertyInteger("alt", 0)
+                            propertyString("first", "a")
+                            propertyString("last", "a")
+                        }
+                    }
+                }
+                sentencePass("bc") {
+                    expectedAsm {
+                        tuple {
+                            propertyInteger("alt", 1)
+                            propertyString("first", "b")
+                            propertyString("last", "c")
+                        }
+                    }
+                }
+            }
         }
     }
 
