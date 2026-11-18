@@ -80,6 +80,15 @@ class test_AsmTransformCompletionProvider {
     }
 
     @Test
+    fun grammarRuleName_after_expressionRule() {
+        val sentence = "namespace test\n  asm-transform Test {\n    B : child[0]\n    "
+        test(sentence, listOf(
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "B"),
+        ))
+    }
+
+    @Test
     fun typeName_in_modifyRule() {
         val sentence = "namespace test\n  asm-transform Test {\n    S : { "
         val actual = aglProc.expectedItemsAt(sentence, sentence.length, Agl.options {
