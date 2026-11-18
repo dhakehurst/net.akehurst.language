@@ -52,7 +52,8 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 override namespace = 'namespace' possiblyQualifiedName import* declarations ;
                 declarations = rootDeclarations scopes references? ;
                 rootDeclarations = rootDeclaration* ;
-                rootDeclaration = identifiable | importIntoScope ;
+                rootDeclaration = typeGroup | identifiable | importIntoScope ;
+                typeGroup = 'type-group' IDENTIFIER '=' typeReferences ;
                 scopes = scope* ;
                 scope = 'scope' possiblyQualifiedTypeReference '{' identifiables scopeImports '}' ;
                 identifiables = identifiable* ;
@@ -106,6 +107,10 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 cmp scopeDefinition
                 cmp references
                 cmp options
+                cmp typeGroups
+            }
+            interface TypeGroup {
+                cmp typeNames
             }
             
             interface ScopeDefinition {
@@ -202,9 +207,11 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     list("rootDeclarations", 0, -1) { ref("rootDeclaration") }
                     choice("rootDeclaration") {
+                        ref("typeGroup")
                         ref("identifiable")
                         ref("importIntoScope")
                     }
+                    concatenation("typeGroup") { lit("type-group"); ref("IDENTIFIER"); lit("="); ref("typeReferences") }
                     list("scopes", 0, -1) { ref("scope") }
                     concatenation("scope") {
                         lit("scope"); ref("possiblyQualifiedTypeReference"); lit("{"); ref("identifiables"); ref("scopeImports"); lit("}")
@@ -369,8 +376,18 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
                     propertyOf(setOf(VAL, CMP, STR), "aliasFor", "NavigationExpression", true)
                 }
+                interface_("TypeGroup") {
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "typeNames", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
+                }
                 interface_("DeclarationsForNamespace") {
                     supertype("Definition"){ ref("DeclarationsForNamespace") }
+                    propertyOf(setOf(VAL, CMP, STR), "typeGroups", "Map", false){
+                        typeArgument("SimpleName")
+                        typeArgument("TypeGroup")
+                    }
                     propertyOf(setOf(VAR, CMP, STR), "references", "List", false){
                         typeArgument("ReferenceDefinition")
                     }
@@ -432,7 +449,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     supertype("ReferenceExpressionProperty")
                     constructor_ {
                         parameter(setOf(), "referringPropertyNavigation", "NavigationExpression")
-                        parameter(setOf(), "refersToTypeName", "List")
+                        parameter(setOf(), "refersToTypeNameAsWritten", "List")
                         parameter(setOf(), "fromNavigation", "NavigationExpression")
                         parameter(setOf(), "condition", "Expression")
                         parameter(setOf(), "fromElseNavigation", "NavigationExpression")
@@ -446,6 +463,12 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     propertyOf(setOf(VAL, CMP, STR), "fromElseNavigation", "NavigationExpression", true)
                     propertyOf(setOf(VAL, CMP, STR), "referringPropertyNavigation", "NavigationExpression", false)
                     propertyOf(setOf(VAR, REF, STR), "refersToTypeName", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "refersToTypeNameAsWritten", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
+                    propertyOf(setOf(VAR, CMP, STR), "refersToTypeNameExpanded", "List", true){
                         typeArgument("PossiblyQualifiedName")
                     }
                 }
@@ -497,6 +520,17 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     propertyOf(setOf(VAL, CMP, STR), "typeName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
                 }
+                data("TypeGroupDefault") {
+                    supertype("TypeGroup")
+                    constructor_ {
+                        parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "typeNames", "List")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "typeNames", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
+                }
                 data("DeclarationsForNamespaceDefault") {
                     supertype("DeclarationsForNamespace")
                     supertype("DefinitionAbstract"){ ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
@@ -513,6 +547,10 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     propertyOf(setOf(VAR, CMP, STR), "scopeDefinition", "Map", false){
                         typeArgument("PossiblyQualifiedName")
                         typeArgument("ScopeDefinition")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "typeGroups", "Map", false){
+                        typeArgument("SimpleName")
+                        typeArgument("TypeGroup")
                     }
                 }
                 data("CrossReferenceNamespaceDefault") {

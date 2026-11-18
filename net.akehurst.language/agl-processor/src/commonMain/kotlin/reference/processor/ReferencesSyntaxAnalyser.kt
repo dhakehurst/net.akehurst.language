@@ -22,6 +22,8 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
+import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.expressions.api.Expression
@@ -47,6 +49,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::rootDeclarations)
         super.register(this::rootDeclaration)
         super.register(this::importIntoScope)
+        super.register(this::typeGroup)
         super.register(this::scopes)
         super.register(this::scope)
         super.register(this::identifiables)
@@ -124,6 +127,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val rootDeclarations = children[0] as List<Any>
         val rootIdentifiables = rootDeclarations.filterIsInstance<IdentifiableDefault>()
         val importsIntoScope = rootDeclarations.filterIsInstance<ScopeImportDefault>()
+        val typeGroups = rootDeclarations.filterIsInstance<TypeGroupDefault>()
         val scopes = children[1] as List<ScopeDefinitionDefault>
         val referencesOpt = children[2] as List<ReferenceDefinitionDefault>?
         return { ns ->
@@ -148,8 +152,50 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
                 }
                 decl.references.addAll(referencesOpt)
             }
+            typeGroups.forEach {
+                if (decl.typeGroups.containsKey(it.name)) {
+                    issues.error(locationMap[it], "There is more than one 'type-group ${it.name.value}' in namespace '${ns.qualifiedName.value}'", null)
+                }
+                decl.typeGroups[it.name] = it
+            }
+            expandTypeGroups(decl)
             decl.also { setLocationFor(it,nodeInfo,sentence) }
         }
+    }
+
+    // typeGroup = 'type-group' IDENTIFIER '=' typeReferences ;
+    private fun typeGroup(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeGroupDefault =
+        TypeGroupDefault(SimpleName(children[1] as String), children[3] as List<PossiblyQualifiedName>).also { setLocationFor(it, nodeInfo, sentence) }
+
+    /** replace the 'type-group' names in each 'refers-to' by the group's list (a group may use other groups) */
+    private fun expandTypeGroups(decl: DeclarationsForNamespaceDefault) {
+        if (decl.typeGroups.isEmpty()) return
+        val expanded = mutableMapOf<SimpleName, List<PossiblyQualifiedName>>()
+        fun expand(names: List<PossiblyQualifiedName>, visiting: List<SimpleName>): List<PossiblyQualifiedName> = names.flatMap { n ->
+            val grp = decl.typeGroups[SimpleName(n.value)]
+            when {
+                null == grp -> listOf(n)
+                grp.name in visiting -> {
+                    issues.error(locationMap[grp], "'type-group ${grp.name.value}' uses itself: ${(visiting + grp.name).joinToString(" -> ") { it.value }}", null)
+                    emptyList()
+                }
+                else -> expanded.getOrPut(grp.name) { expand(grp.typeNames, visiting + grp.name) }
+            }
+        }.distinct()
+        decl.typeGroups.values.forEach { expand(listOf(it.name.value.asPossiblyQualifiedName), emptyList()) }
+        fun visit(list: List<ReferenceExpression>) {
+            list.forEach { re ->
+                when (re) {
+                    is ReferenceExpressionPropertyDefault -> {
+                        val e = expand(re.refersToTypeNameAsWritten, emptyList())
+                        if (e != re.refersToTypeNameAsWritten) re.refersToTypeNameExpanded = e
+                    }
+                    is ReferenceExpressionCollectionDefault -> visit(re.referenceExpressionList)
+                    else -> Unit
+                }
+            }
+        }
+        decl.references.forEach { visit(it.referenceExpressionList) }
     }
 
     // rootDeclarations = rootDeclaration* ;

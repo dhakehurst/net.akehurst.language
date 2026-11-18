@@ -44,6 +44,7 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 | `scope T { identify U by expr ... }` | an object of type `T` is a scope; the `U` objects inside it are identified there, not in the root scope |
 | `references { in T { ... } }` | the reference properties of type `T` |
 | `property p refers-to A\|B` | property `p` is a reference to an `A` or a `B` |
+| `type-group N = A\|B` | a name for a list of type names, used as `refers-to N` (also with other names: `refers-to N\|C`); a group may use other groups. It is not a type: where it is used it stands for its list. Declared with the top-level `identify` lines (before the `scope` blocks), visible in that namespace only |
 | `property p.m(...) refers-to A` | the navigation may end with method calls: the value of the whole expression is looked up, and property `p` becomes the reference (e.g. `property name.removeSurrounding('\'') refers-to A`, where `'a'` and `a` are the same name; for a list of names `name.map({ n -> n.removeSurrounding('\'') })`) |
 | `forall list of-type T when c { ... }` | apply the inner lines to each element of `list` (optionally only those of type `T`, and only those for which `c` holds) |
 | `... from E` | start the lookup in the scope of element `E` (or of the element that reference `E` refers to) instead of the current scope |
@@ -57,6 +58,10 @@ and a property appears at most once in a block (use `property p when { ... }` to
 Open point (RV8): `when` is written differently in the references DSL (`... when c`, `property p when { c -> ... }`),
 in expressions (`when { c -> e  else -> e }`) and in m2m (`when { }`). Whether to make these consistent is still to be decided.
 
+The value of the referring navigation is the name that is looked up.
+A String value is split on '.' into the parts of a qualified name (`a.b.c` is `c` in `b` in `a`).
+A List of Strings is used as the parts as it is (no split), so a language whose names may contain '.'
+can use a List property, or end the navigation with method calls that give a List.
 Names are looked up in the current scope, then in the enclosing scopes.
 A reference never resolves to an object whose name is computed from that same reference (that would be circular),
 e.g. with `identify Perform by target.name` and `in Perform { property target.name refers-to Action }`, in `perform tp` the reference `tp` skips the perform itself

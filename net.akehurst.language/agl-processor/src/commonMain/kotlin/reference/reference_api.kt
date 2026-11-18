@@ -97,6 +97,12 @@ interface CrossReferenceNamespace : Namespace<DeclarationsForNamespace> {
     val declarationsForNamespace: DeclarationsForNamespace
 }
 
+/** 'type-group name = A | B | ...' */
+interface TypeGroup {
+    val name: SimpleName
+    val typeNames: List<PossiblyQualifiedName>
+}
+
 interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
 
     val importedNamespaces: List<Import>
@@ -106,6 +112,12 @@ interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
      */
     val scopeDefinition: Map<PossiblyQualifiedName, ScopeDefinition>
     val references: List<ReferenceDefinition>
+
+    /**
+     * 'type-group N = A | B | ...': a name for a list of type names, used in 'refers-to'.
+     * It is not a type: where it is used it stands for its list.
+     */
+    val typeGroups: Map<SimpleName, TypeGroup> get() = emptyMap()
 
     val isEmpty: Boolean
 

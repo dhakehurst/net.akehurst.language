@@ -178,6 +178,7 @@ data class DeclarationsForNamespaceDefault(
 
     override val scopeDefinition = mutableMapOf<PossiblyQualifiedName, ScopeDefinition>()
     override val references = mutableListOf<ReferenceDefinition>()
+    override val typeGroups = linkedMapOf<SimpleName, TypeGroupDefault>()
 
     init {
         namespace.addDefinition(this)
@@ -215,6 +216,7 @@ data class DeclarationsForNamespaceDefault(
      */
     override fun asString(indent: Indent, imports: List<Import>): String {
         val lines = mutableListOf<String>()
+        typeGroups.values.forEach { lines.add(it.asString(indent)) }
         // identifiables of the root scope are written at the top level
         scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.let { root ->
             root.identifiables.forEach { lines.add(it.asString(indent)) }
@@ -230,6 +232,13 @@ data class DeclarationsForNamespaceDefault(
         }
         return lines.joinToString(separator = "\n").removePrefix(indent.value)
     }
+}
+
+data class TypeGroupDefault(
+    override val name: SimpleName,
+    override val typeNames: List<PossiblyQualifiedName>
+) : TypeGroup {
+    fun asString(indent: Indent): String = "${indent}type-group ${name.value} = " + typeNames.joinToString(separator = " | ") { it.value }
 }
 
 data class ScopeDefinitionDefault(
@@ -335,13 +344,20 @@ abstract class ReferenceExpressionAbstract : ReferenceExpression
 
 data class ReferenceExpressionPropertyDefault(
     override val referringPropertyNavigation: NavigationExpression,
-    override val refersToTypeName: List<PossiblyQualifiedName>,
+    /** the type names as written, may include 'type-group' names */
+    val refersToTypeNameAsWritten: List<PossiblyQualifiedName>,
     override val fromNavigation: NavigationExpression?,
     override val condition: Expression? = null,
     override val fromElseNavigation: NavigationExpression? = null,
     override val fromInherited: Boolean = false,
     override val whenOptionIndex: Int = -1
 ) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
+
+    /** set when the 'type-group' names are expanded (by the syntax analyser, once the namespace is complete) */
+    var refersToTypeNameExpanded: List<PossiblyQualifiedName>? = null
+
+    /** the type names, 'type-group' names replaced by their lists */
+    override val refersToTypeName: List<PossiblyQualifiedName> get() = refersToTypeNameExpanded ?: refersToTypeNameAsWritten
 
     override val referringPropertyPath: NavigationExpression by lazy {
         val keep = referringPropertyNavigation.parts.dropLastWhile { it is MethodCall }
@@ -364,7 +380,7 @@ data class ReferenceExpressionPropertyDefault(
 
     /** 'refers-to T from ...' */
     fun targetAsString(indent: Indent): String {
-        val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
+        val rt = refersToTypeNameAsWritten.joinToString(separator = " | ") { it.value }
         val fr = when (fromNavigation) {
             null -> ""
             else -> " from " + (if (fromInherited) "inherited " else "") + fromNavigation.asString(indent, emptyList()) + (fromElseNavigation?.let { " else " + it.asString(indent, emptyList()) } ?: "")
