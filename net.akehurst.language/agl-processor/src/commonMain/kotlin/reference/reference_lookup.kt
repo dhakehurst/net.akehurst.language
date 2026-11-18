@@ -71,7 +71,8 @@ val TypeDefinition.isReferableType: Boolean
  * Declared type names are resolved once against the TypesDomain, see findCrossReferenceTypeOrNull.
  *
  * A declaration for type T applies to every element whose type conforms to T (T itself, a supertype, or a union type that contains it).
- * The nearest declaration wins (the type itself has distance 0, a direct supertype or union 1, and so on).
+ * The nearest declaration wins (the type itself has distance 0, a direct supertype or union 1, and so on),
+ * except the 'import'/'inherit' lines of scope blocks: those of all the blocks that apply are combined, nearest first.
  * Different declarations at the same distance are ambiguous.
  */
 class CrossReferenceLookup(
@@ -173,15 +174,16 @@ class CrossReferenceLookup(
         }
 
     /**
-     * the 'import' and 'inherit' declarations of the nearest scope definitions for the type (see class comment)
+     * the 'import' and 'inherit' declarations of the scope definitions for the type and its supertypes, nearest first
      */
     fun scopeImportsFor(typeQualifiedName: QualifiedName): List<ScopeImport> = _scopeImportsCache.getOrPut(typeQualifiedName) {
         val type = typesDomain.findByQualifiedNameOrNull(typeQualifiedName)
         when (type) {
             null -> emptyList()
             else -> {
+                // the lines of all scope blocks for the type and its supertypes, nearest first (a line in several blocks counts once)
                 val candidates = _scopes.mapNotNull { sc -> distance(type, sc.type)?.let { Candidate(listOf(it), sc.definition) } }
-                nearest(candidates).flatMap { it.scopeImports }
+                candidates.sortedBy { it.key.first() }.flatMap { it.item.scopeImports }.distinctBy { it.asString() }
             }
         }
     }

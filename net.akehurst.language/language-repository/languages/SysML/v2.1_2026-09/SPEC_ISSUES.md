@@ -46,3 +46,39 @@ list does include `'new'`.
 text. The KerML list seems to be missing `new`, as in SysML.
 
 **AGL.** The KerML grammars use `#scanner: Classic`, which scans every literal of the grammar as a keyword, so `new` cannot be used as a name (as in SysML).
+
+## 3. The OMG metamodel XMI does not mark composite properties
+
+**Specification.** The machine-readable abstract syntax published by the OMG,
+`https://www.omg.org/spec/KerML/20250201/KerML.xmi` and `https://www.omg.org/spec/SysML/20250201/SysML.xmi`
+(KerML 1.0 / SysML 2.0; no 1.1 / 2.1 files are published yet), has no `aggregation="composite"` on any property.
+The property descriptions in the specification documents (e.g. KerML 1.1 8.3.2.1, `ownedRelationship : Relationship [0..*] {subsets relationship, ordered}`)
+do not say whether a property is composite either.
+
+**Pilot Implementation.** Its UML model (`org.omg.sysml/model/SysML_xmi.uml`, at tags 2026-04 and 2026-09.1) marks 43 properties
+as composite, for example `Element::ownedRelationship`, `Relationship::ownedRelatedElement`, `Namespace::ownedMembership`
+and `OwningMembership::ownedMemberElement`.
+
+**Issue.** Apart from this, the Pilot model and the OMG XMI give the same classes, generalizations and properties
+(compared after converting both to agl types). Ownership (containment) is central to the KerML abstract syntax
+(owned relationships and owned related elements), so the normative XMI should state it.
+
+**AGL.** The metamodel types for agl are generated from the Pilot model, so these properties are composite.
+
+## 4. `superClassifier` is not a property of Subclassification
+
+**Specification.** SysML 2.1 8.2.2.6.5 (and `bnf/SysML-textual-bnf.kebnf`):
+`OwnedSubclassification : Subclassification = superClassifier = [QualifiedName]`.
+The metaclass `Subclassification` has the property `superclassifier` (lower case `c`), as in the KerML BNF.
+
+**Pilot Implementation.** `superclassifier = [SysML::Classifier | QualifiedName]`.
+
+## 5. `InitialNodeMember` assigns `memberFeature`, which `FeatureMembership` does not have
+
+**Specification.** SysML 2.1 8.2.2.17.1 (and `bnf/SysML-textual-bnf.kebnf`):
+`InitialNodeMember : FeatureMembership = MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody`.
+`FeatureMembership` has no property `memberFeature`, and it is an `OwningMembership`, whose member element is owned,
+while `first x` refers to an existing feature `x`.
+
+**Pilot Implementation.** `InitialNodeMember returns SysML::Membership : MemberPrefix 'first' memberElement = [SysML::Feature|QualifiedName] RelationshipBody`,
+i.e. a (non-owning) `Membership` whose `memberElement` is the referenced feature.
