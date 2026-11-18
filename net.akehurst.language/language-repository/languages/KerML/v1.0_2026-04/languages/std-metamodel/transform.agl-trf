@@ -1,1117 +1,1120 @@
 namespace net.akehurst.language.kerML
-asm-transform KerMLv1_0 {
-    #override-default-transform
-    import-types KerML.Core.Classifiers
-    import-types KerML.Core.Features
-    import-types KerML.Core.Types
-    import-types KerML.Kernel.Associations
-    import-types KerML.Kernel.Behaviors
-    import-types KerML.Kernel.Classes
-    import-types KerML.Kernel.Connectors
-    import-types KerML.Kernel.DataTypes
-    import-types KerML.Kernel.Expressions
-    import-types KerML.Kernel.FeatureValues
-    import-types KerML.Kernel.Functions
-    import-types KerML.Kernel.Interactions
-    import-types KerML.Kernel.Metadata
-    import-types KerML.Kernel.Multiplicities
-    import-types KerML.Kernel.Packages
-    import-types KerML.Kernel.Structures
-    import-types KerML.Root.Annotations
-    import-types KerML.Root.Dependencies
-    import-types KerML.Root.Elements
-    import-types KerML.Root.Namespaces
-    import-types SysML.Systems.Actions
-    import-types SysML.Systems.Allocations
-    import-types SysML.Systems.AnalysisCases
-    import-types SysML.Systems.Attributes
-    import-types SysML.Systems.Calculations
-    import-types SysML.Systems.Cases
-    import-types SysML.Systems.Connections
-    import-types SysML.Systems.Constraints
-    import-types SysML.Systems.DefinitionAndUsage
-    import-types SysML.Systems.Enumerations
-    import-types SysML.Systems.Flows
-    import-types SysML.Systems.Interfaces
-    import-types SysML.Systems.Items
-    import-types SysML.Systems.Metadata
-    import-types SysML.Systems.Occurrences
-    import-types SysML.Systems.Parts
-    import-types SysML.Systems.Ports
-    import-types SysML.Systems.Requirements
-    import-types SysML.Systems.States
-    import-types SysML.Systems.UseCases
-    import-types SysML.Systems.VerificationCases
-    import-types SysML.Systems.Views
+    asm-transform KerMLv1_0 {
+        #override-default-transform
+        import-types KerML.Core.Classifiers
+        import-types KerML.Core.Features
+        import-types KerML.Core.Types
+        import-types KerML.Kernel.Associations
+        import-types KerML.Kernel.Behaviors
+        import-types KerML.Kernel.Classes
+        import-types KerML.Kernel.Connectors
+        import-types KerML.Kernel.DataTypes
+        import-types KerML.Kernel.Expressions
+        import-types KerML.Kernel.FeatureValues
+        import-types KerML.Kernel.Functions
+        import-types KerML.Kernel.Interactions
+        import-types KerML.Kernel.Metadata
+        import-types KerML.Kernel.Multiplicities
+        import-types KerML.Kernel.Packages
+        import-types KerML.Kernel.Structures
+        import-types KerML.Root.Annotations
+        import-types KerML.Root.Dependencies
+        import-types KerML.Root.Elements
+        import-types KerML.Root.Namespaces
+        import-types SysML.Systems.Actions
+        import-types SysML.Systems.Allocations
+        import-types SysML.Systems.AnalysisCases
+        import-types SysML.Systems.Attributes
+        import-types SysML.Systems.Calculations
+        import-types SysML.Systems.Cases
+        import-types SysML.Systems.Connections
+        import-types SysML.Systems.Constraints
+        import-types SysML.Systems.DefinitionAndUsage
+        import-types SysML.Systems.Enumerations
+        import-types SysML.Systems.Flows
+        import-types SysML.Systems.Interfaces
+        import-types SysML.Systems.Items
+        import-types SysML.Systems.Metadata
+        import-types SysML.Systems.Occurrences
+        import-types SysML.Systems.Parts
+        import-types SysML.Systems.Ports
+        import-types SysML.Systems.Requirements
+        import-types SysML.Systems.States
+        import-types SysML.Systems.UseCases
+        import-types SysML.Systems.VerificationCases
+        import-types SysML.Systems.Views
 
-    NAME: child[0].removeSurrounding('\'') as String
-    Identification: tuple {
-        declaredShortName := child[0].child[0].child[1]
-        declaredName := child[1].child[0]
-    }
-    RelationshipBody: tuple {
-        ownedRelatedElement := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelatedElement }) else -> children.filter({ y -> false }) }
-        ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-    }
-    RelationshipOwnedElement: tuple {
-        ownedRelatedElement := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-        ownedRelationship := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    OwnedRelatedElement: child[0] as Any
-    Dependency: Dependency(_identity := $path) {
-        ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[8].ownedRelationship
-        declaredShortName := child[2].child[0].child[0].child[0].declaredShortName
-        declaredName := child[2].child[0].child[0].child[0].declaredName
-        client := children.filter({ y -> y == child[3] and y != $nothing }) + child[4].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-        supplier := children.filter({ y -> y == child[6] and y != $nothing }) + child[7].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-        ownedRelatedElement := child[8].ownedRelatedElement
-    }
-    Annotation: Annotation(_identity := $path) {
-        annotatedElement := child[0]
-    }
-    OwnedAnnotation: Annotation(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    AnnotatingElement: child[0] as Any
-    Comment: Comment(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        ownedRelationship := child[0].child[0].child[2].child[0].children.filter({ y -> y == child[0].child[0].child[2].child[0].child[1] and y != $nothing }) + when { child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) }
-        locale := child[1].child[0].child[1]
-        body := child[2]
-    }
-    Documentation: Documentation(_identity := $path) {
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-        locale := child[2].child[0].child[1]
-        body := child[3]
-    }
-    TextualRepresentation: TextualRepresentation(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        language := child[2]
-        body := child[3]
-    }
-    RootNamespace: Namespace(_identity := $path) {
-        ownedRelationship := children.flatMap({ x1 -> x1.ownedRelationship })
-    }
-    Namespace: Namespace(_identity := $path) {
-        ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-    }
-    NamespaceDeclaration: Namespace(_identity := $path) {
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-    }
-    NamespaceBody: Namespace(_identity := $path) {
-        ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-    }
-    NamespaceBodyElement: Namespace(_identity := $path) {
-        ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    MemberPrefix: Membership(_identity := $path) {
-        visibility := child[0].child[0]
-    }
-    NamespaceMember: child[0] as Any
-    NonFeatureMember: OwningMembership(_identity := $path) {
-        visibility := child[0].visibility
-        ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    NamespaceFeatureMember: OwningMembership(_identity := $path) {
-        visibility := child[0].visibility
-        ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    AliasMember: Membership(_identity := $path) {
-        visibility := child[0].visibility
-        memberShortName := child[2].child[0].child[1]
-        memberName := child[3].child[0]
-        memberElement := child[5]
-        ownedRelatedElement := child[6].ownedRelatedElement
-        ownedRelationship := child[6].ownedRelationship
-    }
-    QualifiedName: (child[1].children.map({ x1 -> x1.child[0] }) + children.filter({ y -> y == child[2] })) as Any
-    Import: (when {
-        child[3] is MembershipImport -> MembershipImport(_identity := $path) {
-            importedMembership := child[3].importedMembership
-            isRecursive := child[3].isRecursive
-            visibility := child[0]
-            isImportAll := (child[2].child[0] != $nothing)
-            ownedRelatedElement := child[4].ownedRelatedElement
-            ownedRelationship := child[4].ownedRelationship
+        NAME: child[0].removeSurrounding('\'') as String
+        Identification: tuple {
+            declaredShortName := child[0].child[0].child[1]
+            declaredName := child[1].child[0]
         }
-        child[3] is NamespaceImport -> NamespaceImport(_identity := $path) {
-            importedNamespace := child[3].importedNamespace
-            isRecursive := child[3].isRecursive
-            visibility := child[0]
-            isImportAll := (child[2].child[0] != $nothing)
-            ownedRelatedElement := child[4].ownedRelatedElement
-            ownedRelationship := child[4].ownedRelationship
+        RelationshipBody: tuple {
+            ownedRelatedElement := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelatedElement }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
         }
-        else -> $nothing
-    }) as Any
-    ImportDeclaration: child[0] as Any
-    MembershipImport: MembershipImport(_identity := $path) {
-        importedMembership := child[0]
-        isRecursive := (child[1].child[0].child[1] != $nothing)
+        RelationshipOwnedElement: tuple {
+            ownedRelatedElement := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            ownedRelationship := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        OwnedRelatedElement: child[0] as Any
+        Dependency: Dependency(_identity := $path) {
+            ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[8].ownedRelationship
+            declaredShortName := child[2].child[0].child[0].child[0].declaredShortName
+            declaredName := child[2].child[0].child[0].child[0].declaredName
+            client := children.filter({ y -> y == child[3] and y != $nothing }) + child[4].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+            supplier := children.filter({ y -> y == child[6] and y != $nothing }) + child[7].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+            ownedRelatedElement := child[8].ownedRelatedElement
+        }
+        Annotation: Annotation(_identity := $path) {
+            annotatedElement := child[0]
+        }
+        OwnedAnnotation: Annotation(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        AnnotatingElement: child[0] as Any
+        Comment: Comment(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            ownedRelationship := child[0].child[0].child[2].child[0].children.filter({ y -> y == child[0].child[0].child[2].child[0].child[1] and y != $nothing }) + when { child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[2].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) }
+            locale := child[1].child[0].child[1]
+            body := child[2]
+        }
+        Documentation: Documentation(_identity := $path) {
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+            locale := child[2].child[0].child[1]
+            body := child[3]
+        }
+        TextualRepresentation: TextualRepresentation(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            language := child[2]
+            body := child[3]
+        }
+        RootNamespace: Namespace(_identity := $path) {
+            ownedRelationship := children.flatMap({ x1 -> x1.ownedRelationship })
+        }
+        Namespace: Namespace(_identity := $path) {
+            ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+        }
+        NamespaceDeclaration: Namespace(_identity := $path) {
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+        }
+        NamespaceBody: Namespace(_identity := $path) {
+            ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
+        }
+        NamespaceBodyElement: Namespace(_identity := $path) {
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        MemberPrefix: Membership(_identity := $path) {
+            visibility := child[0].child[0]
+        }
+        NamespaceMember: child[0] as Any
+        NonFeatureMember: OwningMembership(_identity := $path) {
+            visibility := child[0].visibility
+            ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        NamespaceFeatureMember: OwningMembership(_identity := $path) {
+            visibility := child[0].visibility
+            ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        AliasMember: Membership(_identity := $path) {
+            visibility := child[0].visibility
+            memberShortName := child[2].child[0].child[1]
+            memberName := child[3].child[0]
+            memberElement := child[5]
+            ownedRelatedElement := child[6].ownedRelatedElement
+            ownedRelationship := child[6].ownedRelationship
+        }
+        QualifiedName: (child[1].children.map({ x1 -> x1.child[0] }) + children.filter({ y -> y == child[2] })) as Any
+        Import: (when {
+            child[3] is MembershipImport -> MembershipImport(_identity := $path) {
+                importedMembership := child[3].importedMembership
+                isRecursive := child[3].isRecursive
+                visibility := child[0]
+                isImportAll := (child[2].child[0] != $nothing)
+                ownedRelatedElement := child[4].ownedRelatedElement
+                ownedRelationship := child[4].ownedRelationship
+            }
+            child[3] is NamespaceImport -> NamespaceImport(_identity := $path) {
+                importedNamespace := child[3].importedNamespace
+                isRecursive := child[3].isRecursive
+                visibility := child[0]
+                isImportAll := (child[2].child[0] != $nothing)
+                ownedRelatedElement := child[4].ownedRelatedElement
+                ownedRelationship := child[4].ownedRelationship
+            }
+            else -> $nothing
+        }) as Any
+        ImportDeclaration: child[0] as Any
+        MembershipImport: MembershipImport(_identity := $path) {
+            importedMembership := child[0]
+            isRecursive := (child[1].child[0].child[1] != $nothing)
+        }
+        NamespaceImport: NamespaceImport(_identity := $path) {
+            importedNamespace := when { $alternative == 0 -> child[0] else -> $nothing }
+            isRecursive := when { $alternative == 0 -> (child[3].child[0].child[1] != $nothing) else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        FilterPackage: Package(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1 })
+        }
+        FilterPackageMember: ElementFilterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        MemberElement: child[0] as Any
+        NonFeatureElement: child[0] as Any
+        FeatureElement: child[0] as Any
+        Type: Type(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        TypePrefix: Type(_identity := $path) {
+            isAbstract := (child[0].child[0] != $nothing)
+            ownedRelationship := child[1].children.map({ x1 -> x1 })
+        }
+        TypeDeclaration: Type(_identity := $path) {
+            isSufficient := (child[0].child[0] != $nothing)
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+            ownedRelationship := child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) + child[3].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } }) + child[4].children.flatMap({ x1 -> x1.ownedRelationship })
+        }
+        SpecializationPart: Type(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        ConjugationPart: Type(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        TypeRelationshipPart: child[0] as Any
+        DisjoiningPart: Type(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + child[3].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        UnioningPart: Type(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        IntersectingPart: Type(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        DifferencingPart: Type(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        TypeBody: Type(_identity := $path) {
+            ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
+        }
+        TypeBodyElement: Type(_identity := $path) {
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        Specialization: Specialization(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            specific := child[2].specific
+            ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
+            general := child[4].general
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedSpecialization: child[0] as Any
+        SpecificType: Specialization(_identity := $path) {
+            specific := when { $alternative == 0 -> child[0] else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        GeneralType: Specialization(_identity := $path) {
+            general := when { $alternative == 0 -> child[0] else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        Conjugation: Conjugation(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            conjugatedType := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
+            ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
+            originalType := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedConjugation: Conjugation(_identity := $path) {
+            originalType := when { $alternative == 0 -> child[0] else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        Disjoining: Disjoining(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            typeDisjoined := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
+            ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
+            disjoiningType := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedDisjoining: Disjoining(_identity := $path) {
+            disjoiningType := when { $alternative == 0 -> child[0] else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        Unioning: Unioning(_identity := $path) {
+            unioningType := when { $alternative == 0 -> child[0] else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        Intersecting: Intersecting(_identity := $path) {
+            intersectingType := when { $alternative == 0 -> child[0] else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        Differencing: Differencing(_identity := $path) {
+            differencingType := when { $alternative == 0 -> child[0] else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        FeatureMember: child[0] as Any
+        TypeFeatureMember: OwningMembership(_identity := $path) {
+            visibility := child[0].visibility
+            ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        OwnedFeatureMember: FeatureMembership(_identity := $path) {
+            visibility := child[0].visibility
+            ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        Classifier: Classifier(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        ClassifierDeclaration: Classifier(_identity := $path) {
+            isSufficient := (child[0].child[0] != $nothing)
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+            ownedRelationship := child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) + when { child[3].child[0].$alternative == 0 -> when { child[3].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[3].child[0].$alternative == 1 -> when { child[3].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].children.flatMap({ x1 -> x1.ownedRelationship })
+        }
+        SuperclassingPart: Classifier(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        Subclassification: Subclassification(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            subclassifier := child[2]
+            superclassifier := child[4]
+            ownedRelatedElement := child[5].ownedRelatedElement
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedSubclassification: Subclassification(_identity := $path) {
+            superclassifier := child[0]
+        }
+        Feature: Feature(_identity := $path) {
+            isEnd := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].isEnd  child[0].$alternative == 0 -> child[0].child[0].isEnd else -> $nothing }
+            ownedRelationship := when { child[0].$alternative == 0 -> child[0].child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { child[0].$alternative == 0 and child[0].child[1].$alternative == 1 -> child[0].child[1].children.filter({ y -> y == child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[0].$alternative == 0 -> when { child[0].child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[0].$alternative == 1 -> child[0].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } + child[2].ownedRelationship
+            direction := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].direction  child[0].$alternative == 0 -> child[0].child[0].direction else -> $nothing }
+            isDerived := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isDerived  child[0].$alternative == 0 -> child[0].child[0].isDerived else -> $nothing }
+            isAbstract := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isAbstract  child[0].$alternative == 0 -> child[0].child[0].isAbstract else -> $nothing }
+            isComposite := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isComposite  child[0].$alternative == 0 -> child[0].child[0].isComposite else -> $nothing }
+            isPortion := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isPortion  child[0].$alternative == 0 -> child[0].child[0].isPortion else -> $nothing }
+            isVariable := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isVariable  child[0].$alternative == 0 -> child[0].child[0].isVariable else -> $nothing }
+            isConstant := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isConstant  child[0].$alternative == 0 -> child[0].child[0].isConstant else -> $nothing }
+            isSufficient := when { child[0].$alternative == 1 -> child[0].child[1].isSufficient  child[0].$alternative == 0 -> child[0].child[2].child[0].isSufficient else -> $nothing }
+            declaredShortName := when { child[0].$alternative == 1 -> child[0].child[1].declaredShortName  child[0].$alternative == 0 -> child[0].child[2].child[0].declaredShortName else -> $nothing }
+            declaredName := when { child[0].$alternative == 1 -> child[0].child[1].declaredName  child[0].$alternative == 0 -> child[0].child[2].child[0].declaredName else -> $nothing }
+            isOrdered := when { child[0].$alternative == 1 -> child[0].child[1].isOrdered  child[0].$alternative == 0 -> child[0].child[2].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[0].$alternative == 1 -> child[0].child[1].isUnique  child[0].$alternative == 0 -> child[0].child[2].child[0].isUnique else -> $nothing }
+        }
+        EndFeaturePrefix: Feature(_identity := $path) {
+            isConstant := (child[0].child[0] != $nothing)
+            isVariable := true
+            isEnd := (child[1] != $nothing)
+        }
+        BasicFeaturePrefix: Feature(_identity := $path) {
+            direction := child[0].child[0]
+            isDerived := (child[1].child[0] != $nothing)
+            isAbstract := (child[2].child[0] != $nothing)
+            isComposite := when { child[3].child[0].$alternative == 0 -> (child[3].child[0].child[0] != $nothing) else -> $nothing }
+            isPortion := when { child[3].child[0].$alternative == 1 -> (child[3].child[0].child[0] != $nothing) else -> $nothing }
+            isVariable := when { child[4].child[0].$alternative == 1 -> true  child[4].child[0].$alternative == 0 -> (child[4].child[0].child[0] != $nothing) else -> $nothing }
+            isConstant := when { child[4].child[0].$alternative == 1 -> (child[4].child[0].child[0] != $nothing) else -> $nothing }
+        }
+        FeaturePrefix: tuple {
+            isEnd := when { child[0].$alternative == 0 -> child[0].child[0].isEnd else -> $nothing }
+            ownedRelationship := when { child[0].$alternative == 0 -> child[0].child[1].children.filter({ y -> y == child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[1].children.map({ x1 -> x1 })
+            direction := when { child[0].$alternative == 1 -> child[0].child[0].direction else -> $nothing }
+            isDerived := when { child[0].$alternative == 1 -> child[0].child[0].isDerived else -> $nothing }
+            isAbstract := when { child[0].$alternative == 1 -> child[0].child[0].isAbstract else -> $nothing }
+            isComposite := when { child[0].$alternative == 1 -> child[0].child[0].isComposite else -> $nothing }
+            isPortion := when { child[0].$alternative == 1 -> child[0].child[0].isPortion else -> $nothing }
+            isVariable := when { child[0].$alternative == 1 -> child[0].child[0].isVariable else -> $nothing }
+            isConstant := when { child[0].$alternative == 1 -> child[0].child[0].isConstant else -> $nothing }
+        }
+        OwnedCrossFeatureMember: OwningMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        OwnedCrossFeature: Feature(_identity := $path) {
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := child[1].isSufficient
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+            ownedRelationship := child[1].ownedRelationship
+            isOrdered := child[1].isOrdered
+            isUnique := child[1].isUnique
+        }
+        FeatureDeclaration: Feature(_identity := $path) {
+            isSufficient := (child[0].child[0] != $nothing)
+            declaredShortName := when { child[1].$alternative == 0 -> child[1].child[0].declaredShortName else -> $nothing }
+            declaredName := when { child[1].$alternative == 0 -> child[1].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> when { child[1].child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 1 -> when { child[1].child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].$alternative == 2 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) } + child[2].children.flatMap({ x1 -> x1.ownedRelationship }) + child[2].children.flatMap({ x1 -> x1.ownedTypeFeaturing })
+            isOrdered := when { child[1].$alternative == 1 -> child[1].child[0].isOrdered  child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> child[1].child[1].child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[1].$alternative == 1 -> child[1].child[0].isUnique  child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> child[1].child[1].child[0].child[0].isUnique else -> $nothing }
+        }
+        FeatureIdentification: Feature(_identity := $path) {
+            declaredShortName := when { $alternative == 0 -> child[1] else -> $nothing }
+            declaredName := when { $alternative == 1 -> child[0]  $alternative == 0 -> child[3].child[0] else -> $nothing }
+        }
+        FeatureRelationshipPart: (when { $alternative == 1 -> child[0]  $alternative == 2 -> child[0]  $alternative == 3 -> child[0] else -> Feature(_identity := $path) {
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) }
+        } }) as Any
+        ChainingPart: Feature(_identity := $path) {
+            ownedRelationship := when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) }
+        }
+        InvertingPart: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        TypeFeaturingPart: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + child[3].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        FeatureSpecializationPart: Feature(_identity := $path) {
+            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[0].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[0].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+        }
+        MultiplicityPart: Feature(_identity := $path) {
+            ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 and child[1].$alternative == 1 -> (child[1].child[1].child[0] != $nothing)  $alternative == 1 and child[1].$alternative == 0 -> (child[1].child[0] != $nothing) else -> $nothing }
+            isUnique := when { $alternative == 1 and child[1].$alternative == 1 -> false  $alternative == 1 and child[1].$alternative == 0 -> false else -> $nothing }
+        }
+        FeatureSpecialization: child[0] as Any
+        Typings: Feature(_identity := $path) {
+            ownedRelationship := child[0].ownedRelationship + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        TypedBy: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        Subsettings: Feature(_identity := $path) {
+            ownedRelationship := child[0].ownedRelationship + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        Subsets: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        References: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        Crosses: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        Redefinitions: Feature(_identity := $path) {
+            ownedRelationship := child[0].ownedRelationship + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        Redefines: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        FeatureTyping: FeatureTyping(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            typedFeature := child[2]
+            general := child[4].general
+            ownedRelatedElement := child[4].ownedRelatedElement + child[5].ownedRelatedElement
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedFeatureTyping: FeatureTyping(_identity := $path) {
+            general := child[0].general
+            ownedRelatedElement := child[0].ownedRelatedElement
+        }
+        Subsetting: Subsetting(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            specific := child[2].specific
+            ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
+            general := child[4].general
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedSubsetting: Subsetting(_identity := $path) {
+            general := child[0].general
+            ownedRelatedElement := child[0].ownedRelatedElement
+        }
+        OwnedReferenceSubsetting: ReferenceSubsetting(_identity := $path) {
+            general := child[0].general
+            ownedRelatedElement := child[0].ownedRelatedElement
+        }
+        OwnedCrossSubsetting: CrossSubsetting(_identity := $path) {
+            general := child[0].general
+            ownedRelatedElement := child[0].ownedRelatedElement
+        }
+        Redefinition: Redefinition(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].declaredShortName
+            declaredName := child[0].child[0].child[1].declaredName
+            specific := child[2].specific
+            ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
+            general := child[4].general
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedRedefinition: Redefinition(_identity := $path) {
+            general := child[0].general
+            ownedRelatedElement := child[0].ownedRelatedElement
+        }
+        OwnedFeatureChain: child[0] as Any
+        FeatureChain: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        OwnedFeatureChaining: FeatureChaining(_identity := $path) {
+            chainingFeature := child[0]
+        }
+        FeatureInverting: FeatureInverting(_identity := $path) {
+            declaredShortName := child[0].child[0].child[1].child[0].declaredShortName
+            declaredName := child[0].child[0].child[1].child[0].declaredName
+            featureInverted := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
+            ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
+            invertingFeature := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedFeatureInverting: FeatureInverting(_identity := $path) {
+            invertingFeature := when { $alternative == 0 -> child[0] else -> $nothing }
+            ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+        }
+        TypeFeaturing: TypeFeaturing(_identity := $path) {
+            declaredShortName := child[1].child[0].child[0].declaredShortName
+            declaredName := child[1].child[0].child[0].declaredName
+            featureOfType := child[2]
+            featuringType := child[4]
+            ownedRelatedElement := child[5].ownedRelatedElement
+            ownedRelationship := child[5].ownedRelationship
+        }
+        OwnedTypeFeaturing: TypeFeaturing(_identity := $path) {
+            featuringType := child[0]
+        }
+        DataType: DataType(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        Class: Class(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        Structure: Structure(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        Association: Association(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        AssociationStructure: AssociationStructure(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[3].ownedRelationship + child[4].ownedRelationship
+            isSufficient := child[3].isSufficient
+            declaredShortName := child[3].declaredShortName
+            declaredName := child[3].declaredName
+        }
+        Connector: Connector(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> when { child[2].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 0 -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> child[2].child[0].ownedRelationship else -> children.filter({ y -> false }) } + child[3].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := when { child[2].$alternative == 1 -> child[2].child[0].isSufficient  child[2].$alternative == 0 -> child[2].child[0].child[0].isSufficient else -> $nothing }
+            declaredShortName := when { child[2].$alternative == 1 -> child[2].child[0].declaredShortName  child[2].$alternative == 0 -> child[2].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { child[2].$alternative == 1 -> child[2].child[0].declaredName  child[2].$alternative == 0 -> child[2].child[0].child[0].declaredName else -> $nothing }
+            isOrdered := when { child[2].$alternative == 1 -> child[2].child[0].isOrdered  child[2].$alternative == 0 -> child[2].child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[2].$alternative == 1 -> child[2].child[0].isUnique  child[2].$alternative == 0 -> child[2].child[0].child[0].isUnique else -> $nothing }
+        }
+        ConnectorDeclaration: child[0] as Any
+        BinaryConnectorDeclaration: Connector(_identity := $path) {
+            isSufficient := when { child[0].child[0].$alternative == 1 -> (child[0].child[0].child[0] != $nothing)  child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isSufficient else -> $nothing }
+            declaredShortName := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].declaredShortName else -> $nothing }
+            declaredName := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].declaredName else -> $nothing }
+            ownedRelationship := when { child[0].child[0].$alternative == 0 -> when { child[0].child[0].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
+            isOrdered := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isOrdered else -> $nothing }
+            isUnique := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isUnique else -> $nothing }
+        }
+        NaryConnectorDeclaration: Connector(_identity := $path) {
+            isSufficient := child[0].child[0].isSufficient
+            declaredShortName := child[0].child[0].declaredShortName
+            declaredName := child[0].child[0].declaredName
+            ownedRelationship := when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[4] and y != $nothing }) + child[5].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+            isOrdered := child[0].child[0].isOrdered
+            isUnique := child[0].child[0].isUnique
+        }
+        ConnectorEndMember: EndFeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ConnectorEnd: Feature(_identity := $path) {
+            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+            declaredName := child[1].child[0].child[0]
+        }
+        OwnedCrossMultiplicityMember: OwningMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        OwnedCrossMultiplicity: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        BindingConnector: BindingConnector(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+            isOrdered := child[2].isOrdered
+            isUnique := child[2].isUnique
+        }
+        BindingConnectorDeclaration: BindingConnector(_identity := $path) {
+            isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
+            declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
+            declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
+        }
+        Succession: Succession(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+            isOrdered := child[2].isOrdered
+            isUnique := child[2].isUnique
+        }
+        SuccessionDeclaration: Succession(_identity := $path) {
+            isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
+            declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
+            declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
+        }
+        Behavior: Behavior(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        Step: Step(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+            isOrdered := child[2].isOrdered
+            isUnique := child[2].isUnique
+        }
+        Function: Function(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        FunctionBodyPart: Type(_identity := $path) {
+            ownedRelationship := child[0].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.children.filter({ y -> y == x1.child[0] and y != $nothing }) else -> children.filter({ y -> false }) } }) + child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing })
+        }
+        ReturnFeatureMember: ReturnParameterMembership(_identity := $path) {
+            visibility := child[0].visibility
+            ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        ResultExpressionMember: ResultExpressionMembership(_identity := $path) {
+            visibility := child[0].visibility
+            ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        Expression: Expression(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+            isOrdered := child[2].isOrdered
+            isUnique := child[2].isUnique
+        }
+        Predicate: Predicate(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        BooleanExpression: BooleanExpression(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+            isOrdered := child[2].isOrdered
+            isUnique := child[2].isUnique
+        }
+        Invariant: Invariant(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } + child[5].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isNegated := when { child[2].child[0].$alternative == 1 -> (child[2].child[0].child[0] != $nothing) else -> $nothing }
+            isSufficient := child[3].child[0].isSufficient
+            declaredShortName := child[3].child[0].declaredShortName
+            declaredName := child[3].child[0].declaredName
+            isOrdered := child[3].child[0].isOrdered
+            isUnique := child[3].child[0].isUnique
+        }
+        OwnedExpressionReferenceMember: FeatureMembership(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        OwnedExpressionReference: FeatureReferenceExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        OwnedExpressionMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        OwnedExpression: child[0] as Any
+        ConditionalExpression: OperatorExpression(_identity := $path) {
+            operator := child[0]
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing }) + children.filter({ y -> y == child[6] and y != $nothing })
+        }
+        ConditionalBinaryOperatorExpression: OperatorExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
+            operator := child[1]
+        }
+        BinaryOperatorExpression: OperatorExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
+            operator := child[1]
+        }
+        UnaryOperatorExpression: OperatorExpression(_identity := $path) {
+            operator := child[0]
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        ClassificationExpression: OperatorExpression(_identity := $path) {
+            ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
+            operator := when { child[1].$alternative == 1 -> child[1].child[0]  child[1].$alternative == 0 -> child[1].child[0] else -> $nothing }
+        }
+        CastOperator: child[0] as String
+        MetaclassificationExpression: OperatorExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
+            operator := when { child[1].$alternative == 1 -> child[1].child[0]  child[1].$alternative == 0 -> child[1].child[0] else -> $nothing }
+        }
+        ArgumentMember: ParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        Argument: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ArgumentValue: FeatureValue(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ArgumentExpressionMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ArgumentExpression: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ArgumentExpressionValue: FeatureValue(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        MetadataArgumentMember: ParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        MetadataArgument: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        MetadataValue: FeatureValue(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        MetadataReference: MetadataAccessExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        MetaclassificationTestOperator: child[0] as String
+        MetaCastOperator: child[0] as String
+        ExtentExpression: OperatorExpression(_identity := $path) {
+            operator := child[0]
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        TypeReferenceMember: ParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        TypeResultMember: ReturnParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        TypeReference: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ReferenceTyping: FeatureTyping(_identity := $path) {
+            type := child[0]
+        }
+        EmptyResultMember: ReturnParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        EmptyFeature: Feature(_identity := $path) { }
+        PrimaryExpression: child[0] as Any
+        PrimaryArgumentValue: FeatureValue(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        PrimaryArgument: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        PrimaryArgumentMember: ParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        NonFeatureChainPrimaryExpression: child[0] as Any
+        NonFeatureChainPrimaryArgumentValue: FeatureValue(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        NonFeatureChainPrimaryArgument: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        NonFeatureChainPrimaryArgumentMember: ParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        BracketExpression: OperatorExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+            operator := child[1]
+        }
+        IndexExpression: IndexExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
+        }
+        SequenceExpression: child[1] as Any
+        SequenceExpressionList: child[0] as Any
+        SequenceOperatorExpression: OperatorExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+            operator := child[1]
+        }
+        SequenceExpressionListMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FeatureChainExpression: FeatureChainExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        CollectExpression: CollectExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        SelectExpression: SelectExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        FunctionOperationExpression: InvocationExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing }) + when { child[3].$alternative == 0 -> child[3].children.filter({ y -> y == child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[3].$alternative == 1 -> child[3].children.filter({ y -> y == child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[3].$alternative == 2 -> child[3].child[0].ownedRelationship else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[4] and y != $nothing })
+        }
+        BodyArgumentMember: ParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        BodyArgument: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        BodyArgumentValue: FeatureValue(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FunctionReferenceArgumentMember: ParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FunctionReferenceArgument: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FunctionReferenceArgumentValue: FeatureValue(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FunctionReferenceExpression: FeatureReferenceExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FunctionReferenceMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FunctionReference: Expression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FeatureChainMember: child[0] as Any
+        OwnedFeatureChainMember: OwningMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        BaseExpression: child[0] as Any
+        FeatureReferenceExpression: FeatureReferenceExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        FeatureReferenceMember: Membership(_identity := $path) {
+            memberElement := child[0]
+        }
+        FeatureReference: child[0] as Any
+        MetadataAccessExpression: MetadataAccessExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ElementReferenceMember: Membership(_identity := $path) {
+            memberElement := child[0]
+        }
+        InvocationExpression: InvocationExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].ownedRelationship + children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        ConstructorExpression: ConstructorExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        ConstructorResultMember: ReturnParameterMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ConstructorResult: child[0] as Any
+        InstantiatedTypeMember: (when { $alternative == 1 -> child[0] else -> Membership(_identity := $path) {
+            memberElement := when { $alternative == 0 -> child[0] else -> $nothing }
+        } }) as Any
+        InstantiatedTypeReference: child[0] as Any
+        ArgumentList: Feature(_identity := $path) {
+            ownedRelationship := when { child[1].child[0].$alternative == 0 -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 1 -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
+        }
+        PositionalArgumentList: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        NamedArgumentList: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
+        }
+        NamedArgumentMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        NamedArgument: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        ParameterRedefinition: Redefinition(_identity := $path) {
+            redefinedFeature := child[0]
+        }
+        BodyExpression: FeatureReferenceExpression(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ExpressionBodyMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        ExpressionBody: Expression(_identity := $path) {
+            ownedRelationship := child[1].ownedRelationship
+        }
+        LiteralExpression: child[0] as Any
+        LiteralBoolean: LiteralBoolean(_identity := $path) {
+            value := child[0]
+        }
+        LiteralString: LiteralString(_identity := $path) {
+            value := child[0]
+        }
+        LiteralInteger: LiteralInteger(_identity := $path) { value := child[0].toInteger() }
+        LiteralReal: LiteralRational(_identity := $path) {
+            value := child[0]
+        }
+        RealValue: $matchedText.toReal() as Real
+        Interaction: Interaction(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        Flow: Flow(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+            isOrdered := child[2].isOrdered
+            isUnique := child[2].isUnique
+        }
+        SuccessionFlow: SuccessionFlow(_identity := $path) {
+            isEnd := child[0].isEnd
+            ownedRelationship := child[0].ownedRelationship + child[3].ownedRelationship + child[4].ownedRelationship
+            direction := child[0].direction
+            isDerived := child[0].isDerived
+            isAbstract := child[0].isAbstract
+            isComposite := child[0].isComposite
+            isPortion := child[0].isPortion
+            isVariable := child[0].isVariable
+            isConstant := child[0].isConstant
+            isSufficient := child[3].isSufficient
+            declaredShortName := child[3].declaredShortName
+            declaredName := child[3].declaredName
+            isOrdered := child[3].isOrdered
+            isUnique := child[3].isUnique
+        }
+        FlowDeclaration: Flow(_identity := $path) {
+            isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
+            declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
+            declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
+        }
+        PayloadFeatureMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := child[0]
+        }
+        PayloadFeature: PayloadFeature(_identity := $path) {
+            declaredShortName := when { $alternative == 1 -> child[0].declaredShortName  $alternative == 0 -> child[0].declaredShortName else -> $nothing }
+            declaredName := when { $alternative == 1 -> child[0].declaredName  $alternative == 0 -> child[0].declaredName else -> $nothing }
+            ownedRelationship := when { $alternative == 0 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 0 -> child[1].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 0 -> child[1].isUnique else -> $nothing }
+        }
+        PayloadFeatureSpecializationPart: Feature(_identity := $path) {
+            ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
+            isOrdered := when { $alternative == 1 -> child[0].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
+            isUnique := when { $alternative == 1 -> child[0].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
+        }
+        FlowEndMember: EndFeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FlowEnd: FlowEnd(_identity := $path) {
+            ownedRelationship := child[0].child[0].children.filter({ y -> y == child[0].child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        FlowFeatureMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FlowFeature: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FlowFeatureRedefinition: Redefinition(_identity := $path) {
+            redefinedFeature := child[0]
+        }
+        ValuePart: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        FeatureValue: FeatureValue(_identity := $path) {
+            isInitial := when { child[0].$alternative == 2 and child[0].child[1].child[0].$alternative == 1 -> (child[0].child[1].child[0].child[0] != $nothing)  child[0].$alternative == 1 -> (child[0].child[0] != $nothing) else -> $nothing }
+            isDefault := when { child[0].$alternative == 2 -> (child[0].child[0] != $nothing) else -> $nothing }
+            ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        Multiplicity: child[0] as Any
+        MultiplicitySubset: Multiplicity(_identity := $path) {
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+            ownedRelationship := child[2].ownedRelationship + child[3].ownedRelationship
+        }
+        MultiplicityRange: MultiplicityRange(_identity := $path) {
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+            ownedRelationship := child[2].ownedRelationship + child[3].ownedRelationship
+        }
+        OwnedMultiplicity: OwningMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        OwnedMultiplicityRange: child[0] as Any
+        MultiplicityBounds: MultiplicityRange(_identity := $path) {
+            ownedRelationship := child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
+        }
+        MultiplicityExpressionMember: OwningMembership(_identity := $path) {
+            ownedRelatedElement := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing })
+        }
+        Metaclass: Metaclass(_identity := $path) {
+            isAbstract := child[0].isAbstract
+            ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
+            isSufficient := child[2].isSufficient
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        PrefixMetadataAnnotation: Annotation(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        PrefixMetadataMember: OwningMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        PrefixMetadataFeature: MetadataFeature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        MetadataFeature: MetadataFeature(_identity := $path) {
+            ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship + child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) + when { child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) } + child[4].ownedRelationship
+            declaredShortName := child[2].declaredShortName
+            declaredName := child[2].declaredName
+        }
+        MetadataFeatureDeclaration: MetadataFeature(_identity := $path) {
+            declaredShortName := child[0].child[0].child[0].declaredShortName
+            declaredName := child[0].child[0].child[0].declaredName
+            ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
+        }
+        MetadataBody: Feature(_identity := $path) {
+            ownedRelationship := when { $alternative == 1 -> child[1].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) }
+        }
+        MetadataBodyElement: child[0] as Any
+        MetadataBodyFeatureMember: FeatureMembership(_identity := $path) {
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
+        }
+        MetadataBodyFeature: Feature(_identity := $path) {
+            ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } + child[5].ownedRelationship
+            isOrdered := child[3].child[0].isOrdered
+            isUnique := child[3].child[0].isUnique
+        }
+        Package: Package(_identity := $path) {
+            ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+        }
+        LibraryPackage: LibraryPackage(_identity := $path) {
+            isStandard := (child[0].child[0] != $nothing)
+            ownedRelationship := child[2].children.map({ x1 -> x1 }) + child[4].ownedRelationship
+            declaredShortName := child[3].declaredShortName
+            declaredName := child[3].declaredName
+        }
+        PackageDeclaration: Package(_identity := $path) {
+            declaredShortName := child[1].declaredShortName
+            declaredName := child[1].declaredName
+        }
+        PackageBody: Package(_identity := $path) {
+            ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.children.filter({ y -> y == x1.child[0] and y != $nothing }) else -> children.filter({ y -> false }) } }) else -> children.filter({ y -> false }) }
+        }
+        ElementFilterMember: ElementFilterMembership(_identity := $path) {
+            visibility := child[0].visibility
+            ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
+        }
     }
-    NamespaceImport: NamespaceImport(_identity := $path) {
-        importedNamespace := when { $alternative == 0 -> child[0] else -> $nothing }
-        isRecursive := when { $alternative == 0 -> (child[3].child[0].child[1] != $nothing) else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    FilterPackage: Package(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1 })
-    }
-    FilterPackageMember: ElementFilterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    MemberElement: child[0] as Any
-    NonFeatureElement: child[0] as Any
-    FeatureElement: child[0] as Any
-    Type: Type(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    TypePrefix: Type(_identity := $path) {
-        isAbstract := (child[0].child[0] != $nothing)
-        ownedRelationship := child[1].children.map({ x1 -> x1 })
-    }
-    TypeDeclaration: Type(_identity := $path) {
-        isSufficient := (child[0].child[0] != $nothing)
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-        ownedRelationship := child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) + child[3].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } }) + child[4].children.flatMap({ x1 -> x1.ownedRelationship })
-    }
-    SpecializationPart: Type(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    ConjugationPart: Type(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    TypeRelationshipPart: child[0] as Any
-    DisjoiningPart: Type(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + child[3].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    UnioningPart: Type(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    IntersectingPart: Type(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    DifferencingPart: Type(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    TypeBody: Type(_identity := $path) {
-        ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-    }
-    TypeBodyElement: Type(_identity := $path) {
-        ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    Specialization: Specialization(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        specific := child[2].specific
-        ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
-        general := child[4].general
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedSpecialization: child[0] as Any
-    SpecificType: Specialization(_identity := $path) {
-        specific := when { $alternative == 0 -> child[0] else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    GeneralType: Specialization(_identity := $path) {
-        general := when { $alternative == 0 -> child[0] else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    Conjugation: Conjugation(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        conjugatedType := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
-        ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
-        originalType := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedConjugation: Conjugation(_identity := $path) {
-        originalType := when { $alternative == 0 -> child[0] else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    Disjoining: Disjoining(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        typeDisjoined := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
-        ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
-        disjoiningType := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedDisjoining: Disjoining(_identity := $path) {
-        disjoiningType := when { $alternative == 0 -> child[0] else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    Unioning: Unioning(_identity := $path) {
-        unioningType := when { $alternative == 0 -> child[0] else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    Intersecting: Intersecting(_identity := $path) {
-        intersectingType := when { $alternative == 0 -> child[0] else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    Differencing: Differencing(_identity := $path) {
-        differencingType := when { $alternative == 0 -> child[0] else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    FeatureMember: child[0] as Any
-    TypeFeatureMember: OwningMembership(_identity := $path) {
-        visibility := child[0].visibility
-        ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    OwnedFeatureMember: FeatureMembership(_identity := $path) {
-        visibility := child[0].visibility
-        ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    Classifier: Classifier(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    ClassifierDeclaration: Classifier(_identity := $path) {
-        isSufficient := (child[0].child[0] != $nothing)
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-        ownedRelationship := child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) + when { child[3].child[0].$alternative == 0 -> when { child[3].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[3].child[0].$alternative == 1 -> when { child[3].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + child[4].children.flatMap({ x1 -> x1.ownedRelationship })
-    }
-    SuperclassingPart: Classifier(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    Subclassification: Subclassification(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        subclassifier := child[2]
-        superclassifier := child[4]
-        ownedRelatedElement := child[5].ownedRelatedElement
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedSubclassification: Subclassification(_identity := $path) {
-        superclassifier := child[0]
-    }
-    Feature: Feature(_identity := $path) {
-        isEnd := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].isEnd  child[0].$alternative == 0 -> child[0].child[0].isEnd else -> $nothing }
-        ownedRelationship := when { child[0].$alternative == 0 -> child[0].child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { child[0].$alternative == 0 and child[0].child[1].$alternative == 1 -> child[0].child[1].children.filter({ y -> y == child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[0].$alternative == 0 -> when { child[0].child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[0].$alternative == 1 -> child[0].child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } + child[2].ownedRelationship
-        direction := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].direction  child[0].$alternative == 0 -> child[0].child[0].direction else -> $nothing }
-        isDerived := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isDerived  child[0].$alternative == 0 -> child[0].child[0].isDerived else -> $nothing }
-        isAbstract := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isAbstract  child[0].$alternative == 0 -> child[0].child[0].isAbstract else -> $nothing }
-        isComposite := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isComposite  child[0].$alternative == 0 -> child[0].child[0].isComposite else -> $nothing }
-        isPortion := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isPortion  child[0].$alternative == 0 -> child[0].child[0].isPortion else -> $nothing }
-        isVariable := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isVariable  child[0].$alternative == 0 -> child[0].child[0].isVariable else -> $nothing }
-        isConstant := when { child[0].$alternative == 1 and child[0].child[0].$alternative == 1 -> child[0].child[0].child[0].isConstant  child[0].$alternative == 0 -> child[0].child[0].isConstant else -> $nothing }
-        isSufficient := when { child[0].$alternative == 1 -> child[0].child[1].isSufficient  child[0].$alternative == 0 -> child[0].child[2].child[0].isSufficient else -> $nothing }
-        declaredShortName := when { child[0].$alternative == 1 -> child[0].child[1].declaredShortName  child[0].$alternative == 0 -> child[0].child[2].child[0].declaredShortName else -> $nothing }
-        declaredName := when { child[0].$alternative == 1 -> child[0].child[1].declaredName  child[0].$alternative == 0 -> child[0].child[2].child[0].declaredName else -> $nothing }
-        isOrdered := when { child[0].$alternative == 1 -> child[0].child[1].isOrdered  child[0].$alternative == 0 -> child[0].child[2].child[0].isOrdered else -> $nothing }
-        isUnique := when { child[0].$alternative == 1 -> child[0].child[1].isUnique  child[0].$alternative == 0 -> child[0].child[2].child[0].isUnique else -> $nothing }
-    }
-    EndFeaturePrefix: Feature(_identity := $path) {
-        isConstant := (child[0].child[0] != $nothing)
-        isVariable := true
-        isEnd := (child[1] != $nothing)
-    }
-    BasicFeaturePrefix: Feature(_identity := $path) {
-        direction := child[0].child[0]
-        isDerived := (child[1].child[0] != $nothing)
-        isAbstract := (child[2].child[0] != $nothing)
-        isComposite := when { child[3].child[0].$alternative == 0 -> (child[3].child[0].child[0] != $nothing) else -> $nothing }
-        isPortion := when { child[3].child[0].$alternative == 1 -> (child[3].child[0].child[0] != $nothing) else -> $nothing }
-        isVariable := when { child[4].child[0].$alternative == 1 -> true  child[4].child[0].$alternative == 0 -> (child[4].child[0].child[0] != $nothing) else -> $nothing }
-        isConstant := when { child[4].child[0].$alternative == 1 -> (child[4].child[0].child[0] != $nothing) else -> $nothing }
-    }
-    FeaturePrefix: tuple {
-        isEnd := when { child[0].$alternative == 0 -> child[0].child[0].isEnd else -> $nothing }
-        ownedRelationship := when { child[0].$alternative == 0 -> child[0].child[1].children.filter({ y -> y == child[0].child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[1].children.map({ x1 -> x1 })
-        direction := when { child[0].$alternative == 1 -> child[0].child[0].direction else -> $nothing }
-        isDerived := when { child[0].$alternative == 1 -> child[0].child[0].isDerived else -> $nothing }
-        isAbstract := when { child[0].$alternative == 1 -> child[0].child[0].isAbstract else -> $nothing }
-        isComposite := when { child[0].$alternative == 1 -> child[0].child[0].isComposite else -> $nothing }
-        isPortion := when { child[0].$alternative == 1 -> child[0].child[0].isPortion else -> $nothing }
-        isVariable := when { child[0].$alternative == 1 -> child[0].child[0].isVariable else -> $nothing }
-        isConstant := when { child[0].$alternative == 1 -> child[0].child[0].isConstant else -> $nothing }
-    }
-    OwnedCrossFeatureMember: OwningMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    OwnedCrossFeature: Feature(_identity := $path) {
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := child[1].isSufficient
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-        ownedRelationship := child[1].ownedRelationship
-        isOrdered := child[1].isOrdered
-        isUnique := child[1].isUnique
-    }
-    FeatureDeclaration: Feature(_identity := $path) {
-        isSufficient := (child[0].child[0] != $nothing)
-        declaredShortName := when { child[1].$alternative == 0 -> child[1].child[0].declaredShortName else -> $nothing }
-        declaredName := when { child[1].$alternative == 0 -> child[1].child[0].declaredName else -> $nothing }
-        ownedRelationship := when { child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> when { child[1].child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 1 -> when { child[1].child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { child[1].$alternative == 2 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) } + child[2].children.flatMap({ x1 -> x1.ownedRelationship }) + child[2].children.flatMap({ x1 -> x1.ownedTypeFeaturing })
-        isOrdered := when { child[1].$alternative == 1 -> child[1].child[0].isOrdered  child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> child[1].child[1].child[0].child[0].isOrdered else -> $nothing }
-        isUnique := when { child[1].$alternative == 1 -> child[1].child[0].isUnique  child[1].$alternative == 0 and child[1].child[1].child[0].$alternative == 0 -> child[1].child[1].child[0].child[0].isUnique else -> $nothing }
-    }
-    FeatureIdentification: Feature(_identity := $path) {
-        declaredShortName := when { $alternative == 0 -> child[1] else -> $nothing }
-        declaredName := when { $alternative == 1 -> child[0]  $alternative == 0 -> child[3].child[0] else -> $nothing }
-    }
-    FeatureRelationshipPart: (when { $alternative == 1 -> child[0]  $alternative == 2 -> child[0]  $alternative == 3 -> child[0] else -> Feature(_identity := $path) {
-        ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) }
-    } }) as Any
-    ChainingPart: Feature(_identity := $path) {
-        ownedRelationship := when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].child[0].ownedRelationship else -> children.filter({ y -> false }) }
-    }
-    InvertingPart: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    TypeFeaturingPart: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + child[3].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    FeatureSpecializationPart: Feature(_identity := $path) {
-        ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-        isOrdered := when { $alternative == 1 -> child[0].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-        isUnique := when { $alternative == 1 -> child[0].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
-    }
-    MultiplicityPart: Feature(_identity := $path) {
-        ownedRelationship := when { $alternative == 0 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-        isOrdered := when { $alternative == 1 and child[1].$alternative == 1 -> (child[1].child[1].child[0] != $nothing)  $alternative == 1 and child[1].$alternative == 0 -> (child[1].child[0] != $nothing) else -> $nothing }
-        isUnique := when { $alternative == 1 and child[1].$alternative == 1 -> false  $alternative == 1 and child[1].$alternative == 0 -> false else -> $nothing }
-    }
-    FeatureSpecialization: child[0] as Any
-    Typings: Feature(_identity := $path) {
-        ownedRelationship := child[0].ownedRelationship + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    TypedBy: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    Subsettings: Feature(_identity := $path) {
-        ownedRelationship := child[0].ownedRelationship + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    Subsets: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    References: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    Crosses: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    Redefinitions: Feature(_identity := $path) {
-        ownedRelationship := child[0].ownedRelationship + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    Redefines: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    FeatureTyping: FeatureTyping(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        typedFeature := child[2]
-        general := child[4].general
-        ownedRelatedElement := child[4].ownedRelatedElement + child[5].ownedRelatedElement
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedFeatureTyping: FeatureTyping(_identity := $path) {
-        general := child[0].general
-        ownedRelatedElement := child[0].ownedRelatedElement
-    }
-    Subsetting: Subsetting(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        specific := child[2].specific
-        ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
-        general := child[4].general
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedSubsetting: Subsetting(_identity := $path) {
-        general := child[0].general
-        ownedRelatedElement := child[0].ownedRelatedElement
-    }
-    OwnedReferenceSubsetting: ReferenceSubsetting(_identity := $path) {
-        general := child[0].general
-        ownedRelatedElement := child[0].ownedRelatedElement
-    }
-    OwnedCrossSubsetting: CrossSubsetting(_identity := $path) {
-        general := child[0].general
-        ownedRelatedElement := child[0].ownedRelatedElement
-    }
-    Redefinition: Redefinition(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].declaredShortName
-        declaredName := child[0].child[0].child[1].declaredName
-        specific := child[2].specific
-        ownedRelatedElement := child[2].ownedRelatedElement + child[4].ownedRelatedElement + child[5].ownedRelatedElement
-        general := child[4].general
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedRedefinition: Redefinition(_identity := $path) {
-        general := child[0].general
-        ownedRelatedElement := child[0].ownedRelatedElement
-    }
-    OwnedFeatureChain: child[0] as Any
-    FeatureChain: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    OwnedFeatureChaining: FeatureChaining(_identity := $path) {
-        chainingFeature := child[0]
-    }
-    FeatureInverting: FeatureInverting(_identity := $path) {
-        declaredShortName := child[0].child[0].child[1].child[0].declaredShortName
-        declaredName := child[0].child[0].child[1].child[0].declaredName
-        featureInverted := when { child[2].$alternative == 0 -> child[2].child[0] else -> $nothing }
-        ownedRelatedElement := when { child[2].$alternative == 1 -> child[2].children.filter({ y -> y == child[2].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[4].$alternative == 1 -> child[4].children.filter({ y -> y == child[4].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + child[5].ownedRelatedElement
-        invertingFeature := when { child[4].$alternative == 0 -> child[4].child[0] else -> $nothing }
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedFeatureInverting: FeatureInverting(_identity := $path) {
-        invertingFeature := when { $alternative == 0 -> child[0] else -> $nothing }
-        ownedRelatedElement := when { $alternative == 1 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-    }
-    TypeFeaturing: TypeFeaturing(_identity := $path) {
-        declaredShortName := child[1].child[0].child[0].declaredShortName
-        declaredName := child[1].child[0].child[0].declaredName
-        featureOfType := child[2]
-        featuringType := child[4]
-        ownedRelatedElement := child[5].ownedRelatedElement
-        ownedRelationship := child[5].ownedRelationship
-    }
-    OwnedTypeFeaturing: TypeFeaturing(_identity := $path) {
-        featuringType := child[0]
-    }
-    DataType: DataType(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    Class: Class(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    Structure: Structure(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    Association: Association(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    AssociationStructure: AssociationStructure(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[3].ownedRelationship + child[4].ownedRelationship
-        isSufficient := child[3].isSufficient
-        declaredShortName := child[3].declaredShortName
-        declaredName := child[3].declaredName
-    }
-    Connector: Connector(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + when { child[2].$alternative == 0 -> when { child[2].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 0 -> when { child[2].child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[2].$alternative == 1 -> child[2].child[0].ownedRelationship else -> children.filter({ y -> false }) } + child[3].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := when { child[2].$alternative == 1 -> child[2].child[0].isSufficient  child[2].$alternative == 0 -> child[2].child[0].child[0].isSufficient else -> $nothing }
-        declaredShortName := when { child[2].$alternative == 1 -> child[2].child[0].declaredShortName  child[2].$alternative == 0 -> child[2].child[0].child[0].declaredShortName else -> $nothing }
-        declaredName := when { child[2].$alternative == 1 -> child[2].child[0].declaredName  child[2].$alternative == 0 -> child[2].child[0].child[0].declaredName else -> $nothing }
-        isOrdered := when { child[2].$alternative == 1 -> child[2].child[0].isOrdered  child[2].$alternative == 0 -> child[2].child[0].child[0].isOrdered else -> $nothing }
-        isUnique := when { child[2].$alternative == 1 -> child[2].child[0].isUnique  child[2].$alternative == 0 -> child[2].child[0].child[0].isUnique else -> $nothing }
-    }
-    ConnectorDeclaration: child[0] as Any
-    BinaryConnectorDeclaration: Connector(_identity := $path) {
-        isSufficient := when { child[0].child[0].$alternative == 1 -> (child[0].child[0].child[0] != $nothing)  child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isSufficient else -> $nothing }
-        declaredShortName := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].declaredShortName else -> $nothing }
-        declaredName := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].declaredName else -> $nothing }
-        ownedRelationship := when { child[0].child[0].$alternative == 0 -> when { child[0].child[0].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
-        isOrdered := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isOrdered else -> $nothing }
-        isUnique := when { child[0].child[0].$alternative == 0 -> child[0].child[0].child[0].child[0].isUnique else -> $nothing }
-    }
-    NaryConnectorDeclaration: Connector(_identity := $path) {
-        isSufficient := child[0].child[0].isSufficient
-        declaredShortName := child[0].child[0].declaredShortName
-        declaredName := child[0].child[0].declaredName
-        ownedRelationship := when { child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[0].child[0].ownedRelationship } + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[4] and y != $nothing }) + child[5].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-        isOrdered := child[0].child[0].isOrdered
-        isUnique := child[0].child[0].isUnique
-    }
-    ConnectorEndMember: EndFeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ConnectorEnd: Feature(_identity := $path) {
-        ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-        declaredName := child[1].child[0].child[0]
-    }
-    OwnedCrossMultiplicityMember: OwningMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    OwnedCrossMultiplicity: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    BindingConnector: BindingConnector(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-        isOrdered := child[2].isOrdered
-        isUnique := child[2].isUnique
-    }
-    BindingConnectorDeclaration: BindingConnector(_identity := $path) {
-        isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
-        declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
-        declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-        ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
-        isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
-        isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
-    }
-    Succession: Succession(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-        isOrdered := child[2].isOrdered
-        isUnique := child[2].isUnique
-    }
-    SuccessionDeclaration: Succession(_identity := $path) {
-        isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
-        declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
-        declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-        ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
-        isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
-        isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
-    }
-    Behavior: Behavior(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    Step: Step(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-        isOrdered := child[2].isOrdered
-        isUnique := child[2].isUnique
-    }
-    Function: Function(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    FunctionBodyPart: Type(_identity := $path) {
-        ownedRelationship := child[0].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.children.filter({ y -> y == x1.child[0] and y != $nothing }) else -> children.filter({ y -> false }) } }) + child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing })
-    }
-    ReturnFeatureMember: ReturnParameterMembership(_identity := $path) {
-        visibility := child[0].visibility
-        ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    ResultExpressionMember: ResultExpressionMembership(_identity := $path) {
-        visibility := child[0].visibility
-        ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    Expression: Expression(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-        isOrdered := child[2].isOrdered
-        isUnique := child[2].isUnique
-    }
-    Predicate: Predicate(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    BooleanExpression: BooleanExpression(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + child[4].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-        isOrdered := child[2].isOrdered
-        isUnique := child[2].isUnique
-    }
-    Invariant: Invariant(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } + child[5].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isNegated := when { child[2].child[0].$alternative == 1 -> (child[2].child[0].child[0] != $nothing) else -> $nothing }
-        isSufficient := child[3].child[0].isSufficient
-        declaredShortName := child[3].child[0].declaredShortName
-        declaredName := child[3].child[0].declaredName
-        isOrdered := child[3].child[0].isOrdered
-        isUnique := child[3].child[0].isUnique
-    }
-    OwnedExpressionReferenceMember: FeatureMembership(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    OwnedExpressionReference: FeatureReferenceExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    OwnedExpressionMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    OwnedExpression: child[0] as Any
-    ConditionalExpression: OperatorExpression(_identity := $path) {
-        operator := child[0]
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing }) + children.filter({ y -> y == child[5] and y != $nothing }) + children.filter({ y -> y == child[6] and y != $nothing })
-    }
-    ConditionalBinaryOperatorExpression: OperatorExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
-        operator := child[1]
-    }
-    BinaryOperatorExpression: OperatorExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
-        operator := child[1]
-    }
-    UnaryOperatorExpression: OperatorExpression(_identity := $path) {
-        operator := child[0]
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    ClassificationExpression: OperatorExpression(_identity := $path) {
-        ownedRelationship := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing }) + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
-        operator := when { child[1].$alternative == 1 -> child[1].child[0]  child[1].$alternative == 0 -> child[1].child[0] else -> $nothing }
-    }
-    MetaclassificationExpression: OperatorExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + when { child[1].$alternative == 0 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[1].$alternative == 1 -> child[1].children.filter({ y -> y == child[1].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
-        operator := when { child[1].$alternative == 1 -> child[1].child[0]  child[1].$alternative == 0 -> child[1].child[0] else -> $nothing }
-    }
-    ArgumentMember: ParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    Argument: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ArgumentValue: FeatureValue(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ArgumentExpressionMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ArgumentExpression: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ArgumentExpressionValue: FeatureValue(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    MetadataArgumentMember: ParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    MetadataArgument: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    MetadataValue: FeatureValue(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    MetadataReference: MetadataAccessExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ExtentExpression: OperatorExpression(_identity := $path) {
-        operator := child[0]
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    TypeReferenceMember: ParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    TypeResultMember: ReturnParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    TypeReference: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ReferenceTyping: FeatureTyping(_identity := $path) {
-        type := child[0]
-    }
-    EmptyResultMember: ReturnParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    PrimaryExpression: child[0] as Any
-    PrimaryArgumentValue: FeatureValue(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    PrimaryArgument: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    PrimaryArgumentMember: ParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    NonFeatureChainPrimaryExpression: child[0] as Any
-    NonFeatureChainPrimaryArgumentValue: FeatureValue(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    NonFeatureChainPrimaryArgument: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    NonFeatureChainPrimaryArgumentMember: ParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    BracketExpression: OperatorExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-        operator := child[1]
-    }
-    IndexExpression: IndexExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[3] and y != $nothing })
-    }
-    SequenceExpression: child[1] as Any
-    SequenceExpressionList: child[0] as Any
-    SequenceOperatorExpression: OperatorExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-        operator := child[1]
-    }
-    SequenceExpressionListMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FeatureChainExpression: FeatureChainExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    CollectExpression: CollectExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    SelectExpression: SelectExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    FunctionOperationExpression: InvocationExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing }) + when { child[3].$alternative == 0 -> child[3].children.filter({ y -> y == child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[3].$alternative == 1 -> child[3].children.filter({ y -> y == child[3].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { child[3].$alternative == 2 -> child[3].child[0].ownedRelationship else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[4] and y != $nothing })
-    }
-    BodyArgumentMember: ParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    BodyArgument: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    BodyArgumentValue: FeatureValue(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FunctionReferenceArgumentMember: ParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FunctionReferenceArgument: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FunctionReferenceArgumentValue: FeatureValue(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FunctionReferenceExpression: FeatureReferenceExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FunctionReferenceMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FunctionReference: Expression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FeatureChainMember: child[0] as Any
-    OwnedFeatureChainMember: OwningMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    BaseExpression: child[0] as Any
-    FeatureReferenceExpression: FeatureReferenceExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    FeatureReferenceMember: Membership(_identity := $path) {
-        memberElement := child[0]
-    }
-    FeatureReference: child[0] as Any
-    MetadataAccessExpression: MetadataAccessExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ElementReferenceMember: Membership(_identity := $path) {
-        memberElement := child[0]
-    }
-    InvocationExpression: InvocationExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].ownedRelationship + children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    ConstructorExpression: ConstructorExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    ConstructorResultMember: ReturnParameterMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ConstructorResult: child[0] as Any
-    InstantiatedTypeMember: (when { $alternative == 1 -> child[0] else -> Membership(_identity := $path) {
-        memberElement := when { $alternative == 0 -> child[0] else -> $nothing }
-    } }) as Any
-    InstantiatedTypeReference: child[0] as Any
-    ArgumentList: Feature(_identity := $path) {
-        ownedRelationship := when { child[1].child[0].$alternative == 0 -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { child[1].child[0].$alternative == 1 -> when { child[1].child[0].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].child[0].ownedRelationship } else -> children.filter({ y -> false }) }
-    }
-    PositionalArgumentList: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    NamedArgumentList: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
-    }
-    NamedArgumentMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    NamedArgument: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    ParameterRedefinition: Redefinition(_identity := $path) {
-        redefinedFeature := child[0]
-    }
-    BodyExpression: FeatureReferenceExpression(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ExpressionBodyMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    ExpressionBody: Expression(_identity := $path) {
-        ownedRelationship := child[1].ownedRelationship
-    }
-    LiteralExpression: child[0] as Any
-    LiteralBoolean: LiteralBoolean(_identity := $path) {
-        value := child[0]
-    }
-    LiteralString: LiteralString(_identity := $path) {
-        value := child[0]
-    }
-    LiteralInteger: LiteralInteger(_identity := $path) {
-        value := child[0]
-    }
-    LiteralReal: LiteralRational(_identity := $path) {
-        value := child[0]
-    }
-    Interaction: Interaction(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    Flow: Flow(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-        isOrdered := child[2].isOrdered
-        isUnique := child[2].isUnique
-    }
-    SuccessionFlow: SuccessionFlow(_identity := $path) {
-        isEnd := child[0].isEnd
-        ownedRelationship := child[0].ownedRelationship + child[3].ownedRelationship + child[4].ownedRelationship
-        direction := child[0].direction
-        isDerived := child[0].isDerived
-        isAbstract := child[0].isAbstract
-        isComposite := child[0].isComposite
-        isPortion := child[0].isPortion
-        isVariable := child[0].isVariable
-        isConstant := child[0].isConstant
-        isSufficient := child[3].isSufficient
-        declaredShortName := child[3].declaredShortName
-        declaredName := child[3].declaredName
-        isOrdered := child[3].isOrdered
-        isUnique := child[3].isUnique
-    }
-    FlowDeclaration: Flow(_identity := $path) {
-        isSufficient := when { $alternative == 1 -> (child[0].child[0] != $nothing)  $alternative == 0 -> child[0].isSufficient else -> $nothing }
-        declaredShortName := when { $alternative == 0 -> child[0].declaredShortName else -> $nothing }
-        declaredName := when { $alternative == 0 -> child[0].declaredName else -> $nothing }
-        ownedRelationship := when { $alternative == 0 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].child[0].children.filter({ y -> y == child[2].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[3].child[0].children.filter({ y -> y == child[3].child[0].child[3] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[1] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> children.filter({ y -> y == child[3] and y != $nothing }) else -> children.filter({ y -> false }) }
-        isOrdered := when { $alternative == 0 -> child[0].isOrdered else -> $nothing }
-        isUnique := when { $alternative == 0 -> child[0].isUnique else -> $nothing }
-    }
-    PayloadFeatureMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := child[0]
-    }
-    PayloadFeature: PayloadFeature(_identity := $path) {
-        declaredShortName := when { $alternative == 1 -> child[0].declaredShortName  $alternative == 0 -> child[0].declaredShortName else -> $nothing }
-        declaredName := when { $alternative == 1 -> child[0].declaredName  $alternative == 0 -> child[0].declaredName else -> $nothing }
-        ownedRelationship := when { $alternative == 0 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[2].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[2].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 2 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 2 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> children.filter({ y -> y == child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + when { $alternative == 3 -> child[1].children.filter({ y -> y == child[1].child[0] and y != $nothing }) else -> children.filter({ y -> false }) }
-        isOrdered := when { $alternative == 0 -> child[1].isOrdered else -> $nothing }
-        isUnique := when { $alternative == 0 -> child[1].isUnique else -> $nothing }
-    }
-    PayloadFeatureSpecializationPart: Feature(_identity := $path) {
-        ownedRelationship := when { $alternative == 0 -> child[0].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 0 -> when { child[1].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[1].child[0].ownedRelationship } else -> children.filter({ y -> false }) } + when { $alternative == 0 -> child[2].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { $alternative == 1 -> child[1].children.flatMap({ x1 -> x1.ownedRelationship }) else -> children.filter({ y -> false }) }
-        isOrdered := when { $alternative == 1 -> child[0].isOrdered  $alternative == 0 -> child[1].child[0].isOrdered else -> $nothing }
-        isUnique := when { $alternative == 1 -> child[0].isUnique  $alternative == 0 -> child[1].child[0].isUnique else -> $nothing }
-    }
-    FlowEndMember: EndFeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FlowEnd: FlowEnd(_identity := $path) {
-        ownedRelationship := child[0].child[0].children.filter({ y -> y == child[0].child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    FlowFeatureMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FlowFeature: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FlowFeatureRedefinition: Redefinition(_identity := $path) {
-        redefinedFeature := child[0]
-    }
-    ValuePart: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    FeatureValue: FeatureValue(_identity := $path) {
-        isInitial := when { child[0].$alternative == 2 and child[0].child[1].child[0].$alternative == 1 -> (child[0].child[1].child[0].child[0] != $nothing)  child[0].$alternative == 1 -> (child[0].child[0] != $nothing) else -> $nothing }
-        isDefault := when { child[0].$alternative == 2 -> (child[0].child[0] != $nothing) else -> $nothing }
-        ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    Multiplicity: child[0] as Any
-    MultiplicitySubset: Multiplicity(_identity := $path) {
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-        ownedRelationship := child[2].ownedRelationship + child[3].ownedRelationship
-    }
-    MultiplicityRange: MultiplicityRange(_identity := $path) {
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-        ownedRelationship := child[2].ownedRelationship + child[3].ownedRelationship
-    }
-    OwnedMultiplicity: OwningMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    OwnedMultiplicityRange: child[0] as Any
-    MultiplicityBounds: MultiplicityRange(_identity := $path) {
-        ownedRelationship := child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) + children.filter({ y -> y == child[2] and y != $nothing })
-    }
-    MultiplicityExpressionMember: OwningMembership(_identity := $path) {
-        ownedRelatedElement := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing })
-    }
-    Metaclass: Metaclass(_identity := $path) {
-        isAbstract := child[0].isAbstract
-        ownedRelationship := child[0].ownedRelationship + child[2].ownedRelationship + child[3].ownedRelationship
-        isSufficient := child[2].isSufficient
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    PrefixMetadataAnnotation: Annotation(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    PrefixMetadataMember: OwningMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    PrefixMetadataFeature: MetadataFeature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    MetadataFeature: MetadataFeature(_identity := $path) {
-        ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship + child[3].child[0].children.filter({ y -> y == child[3].child[0].child[1] and y != $nothing }) + when { child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].child[2].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing }) } + child[4].ownedRelationship
-        declaredShortName := child[2].declaredShortName
-        declaredName := child[2].declaredName
-    }
-    MetadataFeatureDeclaration: MetadataFeature(_identity := $path) {
-        declaredShortName := child[0].child[0].child[0].declaredShortName
-        declaredName := child[0].child[0].child[0].declaredName
-        ownedRelationship := children.filter({ y -> y == child[1] and y != $nothing })
-    }
-    MetadataBody: Feature(_identity := $path) {
-        ownedRelationship := when { $alternative == 1 -> child[1].children.map({ x1 -> x1 }) else -> children.filter({ y -> false }) }
-    }
-    MetadataBodyElement: child[0] as Any
-    MetadataBodyFeatureMember: FeatureMembership(_identity := $path) {
-        ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
-    }
-    MetadataBodyFeature: Feature(_identity := $path) {
-        ownedRelationship := children.filter({ y -> y == child[2] and y != $nothing }) + when { child[3].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[3].child[0].ownedRelationship } + when { child[4].child[0].ownedRelationship == $nothing -> children.filter({ y -> false }) else -> child[4].child[0].ownedRelationship } + child[5].ownedRelationship
-        isOrdered := child[3].child[0].isOrdered
-        isUnique := child[3].child[0].isUnique
-    }
-    Package: Package(_identity := $path) {
-        ownedRelationship := child[0].children.map({ x1 -> x1 }) + child[2].ownedRelationship
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-    }
-    LibraryPackage: LibraryPackage(_identity := $path) {
-        isStandard := (child[0].child[0] != $nothing)
-        ownedRelationship := child[2].children.map({ x1 -> x1 }) + child[4].ownedRelationship
-        declaredShortName := child[3].declaredShortName
-        declaredName := child[3].declaredName
-    }
-    PackageDeclaration: Package(_identity := $path) {
-        declaredShortName := child[1].declaredShortName
-        declaredName := child[1].declaredName
-    }
-    PackageBody: Package(_identity := $path) {
-        ownedRelationship := when { $alternative == 1 -> child[1].children.flatMap({ x1 -> when { x1.$alternative == 0 -> x1.child[0].ownedRelationship else -> children.filter({ y -> false }) } + when { x1.$alternative == 1 -> x1.children.filter({ y -> y == x1.child[0] and y != $nothing }) else -> children.filter({ y -> false }) } }) else -> children.filter({ y -> false }) }
-    }
-    ElementFilterMember: ElementFilterMembership(_identity := $path) {
-        visibility := child[0].visibility
-        ownedRelatedElement := children.filter({ y -> y == child[2] and y != $nothing })
-    }
-}

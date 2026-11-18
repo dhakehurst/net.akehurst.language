@@ -394,6 +394,8 @@ private suspend fun fetchTestData(): List<TestData> {
 lateinit var tests: List<TestData>
 
 class test_AllLanguages : FunSpec({
+    // the 'parse' and 'process' contexts each run every sentence of every language (several SysML variants), more than the default 10 minutes
+    timeout = 60 * 60 * 1000L
     beforeSpec {
         println("Start Spec")
         tests = fetchTestData()
