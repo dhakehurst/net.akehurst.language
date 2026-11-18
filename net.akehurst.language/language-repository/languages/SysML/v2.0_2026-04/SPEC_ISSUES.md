@@ -90,3 +90,27 @@ A rule with no declared type creates an element of the metaclass with the rule's
 `LiteralReal`; the metaclass for real literals is `LiteralRational`. Also in KerML v1.1.
 
 **AGL.** The metamodel transform creates a `LiteralRational`.
+
+## 9. `OwnedReferenceSubsetting` adds `referenceFeature`, which is not set
+
+**Specification.** SysML 8.2.2.6.5 (`bnf/SysML-textual-bnf.kebnf`):
+
+    OwnedReferenceSubsetting : ReferenceSubsetting =
+          referencedFeature = [QualifiedName]
+        | referencedFeature = OwnedFeatureChain
+          { ownedRelatedElement += referenceFeature }
+
+`referenceFeature` is not assigned (and is not a property of `ReferenceSubsetting`); it should be `referencedFeature`,
+as in `FlowEndSubsetting`. Also in SysML v2.1.
+
+**AGL.** The metamodel transform (`languages/std-metamodel`) adds the chain (`referencedFeature`) to `ownedRelatedElement`.
+
+## 10. `ConjugatedPortTyping` assigns `originalPortDefinition`, which it does not have
+
+**Specification.** SysML 8.2.2.12 (`bnf/SysML-textual-bnf.kebnf`):
+`ConjugatedPortTyping : ConjugatedPortTyping = '~' originalPortDefinition = ~[QualifiedName]`.
+`ConjugatedPortTyping` has no property `originalPortDefinition`; its (stored) property is `conjugatedPortDefinition`
+(and the derived `portDefinition`). Note 2 of the BNF says `~[QualifiedName]` resolves to the conjugated port definition,
+so the property is `conjugatedPortDefinition`. Also in SysML v2.1.
+
+**AGL.** The metamodel transform sets `conjugatedPortDefinition` to the name; the references resolve it as given in Note 2.
