@@ -27,3 +27,7 @@ They are licensed under the Eclipse Public License v2.0, see [LICENSE-valid-EPL-
 The license and this README are not in `valid/`, because every file in `valid/` is parsed as a KerML sentence by the tests.
 
 The other files in this folder are licensed under the Apache License, Version 2.0, as the rest of this repository.
+
+## Specification issues
+
+Issues found in the KerML specification are recorded, together with the SysML ones, in [../../SysML/v2_2026-09/SPEC_ISSUES.md](../../SysML/v2_2026-09/SPEC_ISSUES.md).
