@@ -1,4 +1,4 @@
-# KerML, release 2026-09
+# KerML v1.1 (Beta 2), release 2026-09
 
 The KerML textual notation from the [SysML v2 Release](https://github.com/Systems-Modeling/SysML-v2-Release)
 2026-09.1 (KerML v1.1 Beta 2).
@@ -30,4 +30,4 @@ The other files in this folder are licensed under the Apache License, Version 2.
 
 ## Specification issues
 
-Issues found in the KerML specification are recorded, together with the SysML ones, in [../../SysML/v2_2026-09/SPEC_ISSUES.md](../../SysML/v2_2026-09/SPEC_ISSUES.md).
+Issues found in the KerML specification are recorded, together with the SysML ones, in [../../SysML/v2.1_2026-09/SPEC_ISSUES.md](../../SysML/v2.1_2026-09/SPEC_ISSUES.md).

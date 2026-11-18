@@ -31,9 +31,9 @@ import kotlin.test.assertTrue
  * The KerML 2026-09 language ('agl' grammar, with references) from the language-repository,
  * also used as the base of the SysML 2026-09 language.
  */
-object KerML_v2_2026_09 {
+object KerML_v1_1_2026_09 {
 
-    val languageDir = File("../language-repository/languages/KerML/v2_2026-09")
+    val languageDir = File("../language-repository/languages/KerML/v1.1_2026-09")
     val grammarDir = File(languageDir, "languages/agl")
 
     /** a new processor for the 'agl' grammar with its style and references (each call creates a new one, as a SysML processor adds its types to it) */

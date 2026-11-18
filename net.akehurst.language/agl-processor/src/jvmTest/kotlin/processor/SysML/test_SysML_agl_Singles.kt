@@ -34,7 +34,7 @@ import kotlin.test.*
 class test_SysML_agl_Singles {
 
     private companion object {
-        private val languagePathStr = "/SysML/v2_2026-09/languages/agl"
+        private val languagePathStr = "/SysML/v2.1_2026-09/languages/agl"
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl-grm").readText()
 
         val processor: LanguageProcessor<Asm, SentenceContext> by lazy {
@@ -56,7 +56,7 @@ class test_SysML_agl_Singles {
                     sentenceContext(context)
                 }
             })
-            // only errors: the processor has no references (with references SysML needs the KerML base, see test_SysML_v2_2026_09_agl_references),
+            // only errors: the processor has no references (with references SysML needs the KerML base, see test_SysML_v2_1_2026_09_agl_references),
             // so there is a warning 'Empty CrossReferenceDomain'
             assertEquals(expIssues, result.allIssues.errors.toSet(), result.allIssues.toString())
         }
@@ -187,7 +187,7 @@ class test_SysML_agl_Singles {
         test_process(sentence, contextAsmSimple(), emptySet())
     }
 
-    @Ignore // TODO: needs the processor with references, which SysML builds on the KerML processor (see test_SysML_v2_2026_09_agl_references)
+    @Ignore // TODO: needs the processor with references, which SysML builds on the KerML processor (see test_SysML_v2_1_2026_09_agl_references)
     @Test
     fun semanticAnalysis_RootNamespace_name_clash() {
         val sentence = """
