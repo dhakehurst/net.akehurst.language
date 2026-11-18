@@ -97,6 +97,9 @@ These are written inside a `scope` block, on an `identify` line, or (`import-int
 | `identify T by expr visibility v` | `v` gives the visibility: `'private'`, `'protected'`, anything else is public |
 | `identify T by expr alias-for ref` | the name is another name for the object that `ref` refers to |
 
+A `scope T { }` block also applies to the subtypes of `T`. An element gets the `import` and `inherit` lines of the blocks
+for its type and for each of its supertypes, nearest type first; a nearer block does not replace the lines of a farther one.
+
 Private items are visible only inside their scope, protected items also in scopes that inherit it,
 and only public items are visible through an import.
 Lookup order is: owned items, then inherited (`inherit forall`, then `inherit by-position`, then `inherit named`), then imported.
