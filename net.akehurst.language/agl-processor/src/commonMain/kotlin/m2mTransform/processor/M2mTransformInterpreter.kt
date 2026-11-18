@@ -75,7 +75,7 @@ data class TemplateMatchAlternatives(
 
     fun withVariable(name: String, value: TypedObject): TemplateMatchAlternatives {
         return TemplateMatchAlternatives(
-            this.alternatives.map { it.withVariable(name, value) }
+            this.alternatives.map { it.withVariable(name, value) }.filter { it.isMatch }
         )
     }
 }
@@ -93,14 +93,28 @@ data class TemplateMatchResult(
         return this.matchedVariables[name]
     }
 
-    fun withVariable(name: String, value: TypedObject): TemplateMatchResult =
-        TemplateMatchResult(
-            this.isMatch,
-            matchedVariables + Pair(name, value)
-        )
+    /**
+     * as QVT Relations: every occurrence of a variable denotes the same value.
+     * If the variable is already bound to a different value, the result is no match.
+     */
+    fun withVariable(name: String, value: TypedObject): TemplateMatchResult {
+        val existing = matchedVariables[name]
+        return when {
+            null == existing -> TemplateMatchResult(this.isMatch, matchedVariables + Pair(name, value))
+            existing == value -> this
+            else -> TemplateMatchResult(false, matchedVariables)
+        }
+    }
 
+    /**
+     * as QVT Relations: a variable bound in both results must have equal values, else the merged result is no match.
+     */
     fun merge(other: TemplateMatchResult): TemplateMatchResult {
-        return TemplateMatchResult(this.isMatch && other.isMatch, this.matchedVariables + other.matchedVariables)
+        val sameValues = other.matchedVariables.all { (name, value) ->
+            val existing = this.matchedVariables[name]
+            null == existing || existing == value
+        }
+        return TemplateMatchResult(this.isMatch && other.isMatch && sameValues, this.matchedVariables + other.matchedVariables)
     }
 }
 

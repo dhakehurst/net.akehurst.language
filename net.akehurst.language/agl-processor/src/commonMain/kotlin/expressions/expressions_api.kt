@@ -64,6 +64,9 @@ interface Expression : Formatable {
 
 interface RootExpression : Expression {
     val name: String
+
+    /** '&name': the value is read as a reference (not the element it refers to), see [PropertyCall.asReference] */
+    val asReference: Boolean get() = false
     val isNothing: Boolean
     val isSelf: Boolean
 }
@@ -104,6 +107,12 @@ interface NavigationPart : Formatable {
 
 interface PropertyCall : NavigationPart {
     val propertyName: String
+
+    /**
+     * '.&name': a reference property is read as the reference itself,
+     * without '&' a resolved reference gives the element it refers to
+     */
+    val asReference: Boolean get() = false
 }
 
 interface MethodCall : NavigationPart {

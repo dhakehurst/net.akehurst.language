@@ -82,3 +82,41 @@ while `first x` refers to an existing feature `x`.
 
 **Pilot Implementation.** `InitialNodeMember returns SysML::Membership : MemberPrefix 'first' memberElement = [SysML::Feature|QualifiedName] RelationshipBody`,
 i.e. a (non-owning) `Membership` whose `memberElement` is the referenced feature.
+
+## 6. FeatureInverting: the inverting feature chain is assigned to the wrong property
+
+**Specification.** `bnf/KerML-textual-bnf.kebnf`, rule `FeatureInverting` (KerML 1.1 8.2.4.3):
+`( invertingFeature = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain { ownedRelatedElement += invertingFeature } )`.
+The first alternative for `featureInverted` is written `featureInverted = OwnedFeatureChain { ownedRelatedElement += featureInverted }`,
+so for consistency the second should be `invertingFeature = OwnedFeatureChain { ownedRelatedElement += invertingFeature }`.
+As written, the chain is added to `ownedRelatedElement` and then `invertingFeature` (not set) is added again.
+
+## 7. `OwnedExpressionMember` assigns `ownedFeatureMember`, which is not a property
+
+**Specification.** `bnf/KerML-textual-bnf.kebnf`: `OwnedExpressionMember : FeatureMembership = ownedFeatureMember = OwnedExpression`.
+`FeatureMembership` has `ownedMemberFeature`, not `ownedFeatureMember`.
+
+## 8. `TypeResultMember : ResultParameterMembership`: no such metaclass
+
+**Specification.** `bnf/KerML-textual-bnf.kebnf`: `TypeResultMember : ResultParameterMembership = ownedMemberFeature = TypeReference`.
+The metamodel has no `ResultParameterMembership`; the metaclass for a result parameter is `ReturnParameterMembership`.
+
+## 9. Rule `LiteralReal` creates a `LiteralReal`, but the metaclass is `LiteralRational`
+
+**Specification.** `bnf/KerML-textual-bnf.kebnf`: `LiteralReal = value = RealValue`. A rule without `: Metaclass` creates an
+element of the metaclass with the rule's name, but the metamodel has `LiteralRational` (value : Real), not `LiteralReal`.
+
+(Entries 6 to 9 were found by the generator of the asm-transform from the BNF to the metamodel, in the SysML v2.0 work; they are the same in 2.1.)
+
+## 10. `OwnedReferenceSubsetting` adds `referenceFeature`, which is not a property
+
+**Specification.** `bnf/SysML-textual-bnf.kebnf` (SysML 2.1 8.2.2.6.5): `OwnedReferenceSubsetting : ReferenceSubsetting =
+referencedFeature = [QualifiedName] | referencedFeature = OwnedFeatureChain { ownedRelatedElement += referenceFeature }`.
+The property is `referencedFeature`; `referenceFeature` does not exist (the KerML rule has `referencedFeature`).
+
+## 11. `ConjugatedPortTyping` assigns `originalPortDefinition`, which `ConjugatedPortTyping` does not have
+
+**Specification.** `bnf/SysML-textual-bnf.kebnf` (SysML 2.1 8.2.2.12): `ConjugatedPortTyping : ConjugatedPortTyping = '~' originalPortDefinition = ~[QualifiedName]`.
+`ConjugatedPortTyping` has `conjugatedPortDefinition` (stored) and `portDefinition` (derived); `originalPortDefinition`
+is a property of `PortConjugation` and `ConjugatedPortDefinition`. Since `~[QualifiedName]` resolves to the conjugated port
+definition (BNF Note 2), the assignment seems meant to be `conjugatedPortDefinition = ~[QualifiedName]`.

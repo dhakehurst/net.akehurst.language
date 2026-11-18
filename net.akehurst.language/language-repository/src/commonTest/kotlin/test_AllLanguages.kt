@@ -99,9 +99,21 @@ data class SentenceData(
 // one processor per grammar file and target grammar, building a processor for every sentence is too slow
 private val processorResults = mutableMapOf<Pair<String, String?>, LanguageProcessorResult<Asm, SentenceContext>>()
 
-suspend fun processorResultFor(testData: TestData): LanguageProcessorResult<Asm, SentenceContext> {
-    val key = Pair(testData.grammar.name, testData.sentence.targetGrammarName)
-    val grammar = testData.grammar
+/** a language definition and the grammar to build the processor for (null for the default grammar) */
+@IsStableType
+data class DefinitionData(
+    val grammar: GrammarData,
+    val targetGrammarName: String?
+) {
+    override fun toString(): String = "${grammar.name}${targetGrammarName?.let { " - $it" } ?: ""}"
+}
+
+suspend fun processorResultFor(testData: TestData): LanguageProcessorResult<Asm, SentenceContext> =
+    processorResultFor(DefinitionData(testData.grammar, testData.sentence.targetGrammarName))
+
+suspend fun processorResultFor(definition: DefinitionData): LanguageProcessorResult<Asm, SentenceContext> {
+    val key = Pair(definition.grammar.name, definition.targetGrammarName)
+    val grammar = definition.grammar
     return processorResults[key] ?: Agl.processorFromStringSimple(
         grammarDefinitionStr = grammar.grammarStr(),
         typeStr = grammar.definitionStr("agl-typ")?.let { TypesString(it) },
@@ -111,7 +123,7 @@ suspend fun processorResultFor(testData: TestData): LanguageProcessorResult<Asm,
         formatterStr = grammar.definitionStr("agl-fmt")?.let { FormatString(it) },
         completionStr = grammar.definitionStr("agl-cpl")?.let { CompletionString(it) },
         configurationBase = Agl.configuration(Agl.configurationSimple()) {
-            testData.sentence.targetGrammarName?.let { targetGrammarName(it) }
+            definition.targetGrammarName?.let { targetGrammarName(it) }
         }
     ).also { processorResults[key] = it }
 }
@@ -400,6 +412,28 @@ class test_AllLanguages : FunSpec({
         println("Start Spec")
         tests = fetchTestData()
         println(tests)
+    }
+    // errors in the definition files are reported once per definition here, process gives them again for every sentence
+    context("definitions") {
+        withData(tests.map { DefinitionData(it.grammar, it.sentence.targetGrammarName) }.distinct()) { definition ->
+            val aglRes = processorResultFor(definition)
+            assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
+            val processor = aglRes.processor!!
+            // the definitions are created lazily, create them all so that their issues are collected
+            processor.transformDomain
+            processor.crossReferenceDomain
+            processor.syntaxAnalyser
+            processor.semanticAnalyser
+            processor.formatDomain
+            processor.completionDomain
+            processor.completionProvider
+            val styleIssues = when (definition.grammar.definitionStr("agl-sty")) {
+                null -> emptyList() // no style file, the default style resolver is not used here
+                else -> processor.configuration.styleResolver?.invoke(processor)?.allIssues?.errors?.map { it.copy(message = "In the style definition of the language: ${it.message}") } ?: emptyList()
+            }
+            val errors = processor.allIssues.errors + styleIssues
+            assertTrue(errors.isEmpty(), errors.joinToString("\n"))
+        }
     }
     context("parse") {
         withData(tests) { testData ->
