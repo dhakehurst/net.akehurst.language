@@ -64,3 +64,21 @@ and `OwningMembership::ownedMemberElement`.
 (owned relationships and owned related elements), so the normative XMI should state it.
 
 **AGL.** The metamodel types for agl are generated from the Pilot model, so these properties are composite.
+
+## 4. `superClassifier` is not a property of Subclassification
+
+**Specification.** SysML 2.1 8.2.2.6.5 (and `bnf/SysML-textual-bnf.kebnf`):
+`OwnedSubclassification : Subclassification = superClassifier = [QualifiedName]`.
+The metaclass `Subclassification` has the property `superclassifier` (lower case `c`), as in the KerML BNF.
+
+**Pilot Implementation.** `superclassifier = [SysML::Classifier | QualifiedName]`.
+
+## 5. `InitialNodeMember` assigns `memberFeature`, which `FeatureMembership` does not have
+
+**Specification.** SysML 2.1 8.2.2.17.1 (and `bnf/SysML-textual-bnf.kebnf`):
+`InitialNodeMember : FeatureMembership = MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody`.
+`FeatureMembership` has no property `memberFeature`, and it is an `OwningMembership`, whose member element is owned,
+while `first x` refers to an existing feature `x`.
+
+**Pilot Implementation.** `InitialNodeMember returns SysML::Membership : MemberPrefix 'first' memberElement = [SysML::Feature|QualifiedName] RelationshipBody`,
+i.e. a (non-owning) `Membership` whose `memberElement` is the referenced feature.
