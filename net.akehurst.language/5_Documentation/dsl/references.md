@@ -91,17 +91,18 @@ These are written inside a `scope` block, on an `identify` line, or (`import-int
 | `... recursive expr` | also import what the imported scope imports, while `expr` holds |
 | `inherit forall nav members-of ref` | inherit the members of the scope that `ref` refers to (for example a supertype) |
 | `inherit named a.b.c` | inherit the members of the element with qualified name `a.b.c`, looked up from the root scopes of the context (for example a library element every element of the type specializes); a name that is not an identifier is quoted: `'my lib'.b` |
+| `inherit by-position when expr` | the owner of the scope (X) inherits the members of the element at the same position as X in each scope that the owner of X inherits (in the order of `from inherited`). The items counted are those of a scope for which `expr` holds (evaluated on each item, of any type), in sentence order; X takes part only if `expr` holds for X. For example SysML/KerML parameters: a parameter redefines the parameter at the same position of each general of its owner |
 | `... when expr` | (on any `import` or `inherit`) use it only when `expr` holds; for `forall` it is evaluated on each element, for `named` on the object that owns the scope |
 | `identify T by expr visibility v` | `v` gives the visibility: `'private'`, `'protected'`, anything else is public |
 | `identify T by expr alias-for ref` | the name is another name for the object that `ref` refers to |
 
 Private items are visible only inside their scope, protected items also in scopes that inherit it,
 and only public items are visible through an import.
-Lookup order is: owned items, then inherited (`inherit forall` before `inherit named`), then imported.
+Lookup order is: owned items, then inherited (`inherit forall`, then `inherit by-position`, then `inherit named`), then imported.
 If the element of an `inherit named` is not in the context (e.g. the library is not loaded), nothing is inherited from it
 and there is one warning for that rule.
 
 A complete worked example (packages, imports, specialization, redefinition, aliases, global names) is the test
 `agl-processor/src/commonTest/kotlin/agl/simple/test_ReferenceResolverSimple_imports.kt`;
-`inherit named`, `when` on imports and inheritance, and `$owner` are in `test_ReferenceResolverSimple_inheritNamed.kt`;
+`inherit named`, `when` on imports and inheritance, and `$owner` are in `test_ReferenceResolverSimple_inheritNamed.kt`; `inherit by-position` in `test_ReferenceResolverSimple_inheritByPosition.kt`;
 `import-into-scope` is in `test_ReferenceResolverSimple_importIntoScope.kt`; method calls at the end of a referring navigation are in `test_ReferenceResolverSimple_referringValue.kt`.

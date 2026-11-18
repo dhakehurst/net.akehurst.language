@@ -221,7 +221,9 @@ class ReferencesSemanticAnalyser(
                 si.kind == ScopeImportKind.INHERIT -> "In scope for type '${scopeDef.scopeForTypeName}', inherit"
                 else -> "In scope for type '${scopeDef.scopeForTypeName}', import"
             }
-            if (null == si.named) {
+            if (si.byPosition) {
+                // the condition is evaluated on items of any type (the parameters of different kinds of element), so it is not type-checked against one type
+            } else if (null == si.named) {
                 // the type of each selected element: the of-type, else the (element) type of 'elements' evaluated on the scope owner
                 val elementType: TypeDefinition? = when {
                     si.intoScope -> ofType

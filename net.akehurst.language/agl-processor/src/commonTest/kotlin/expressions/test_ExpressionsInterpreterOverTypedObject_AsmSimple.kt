@@ -80,6 +80,18 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
     }
 
     @Test
+    fun not_equal__different_types_is_the_negation_of_equal() {
+        val tm = typesDomain("test", true) { namespace("ns") { data("Test") { } } }
+        // values of different types are never equal, so '!=' is true ($nothing has its own type)
+        test(tm, Unit, "Nothing", $$"'out' == $nothing", false)
+        test(tm, Unit, "Nothing", $$"'out' != $nothing", true)
+        test(tm, Unit, "Nothing", $$"$nothing != $nothing", false)
+        test(tm, Unit, "Nothing", "'a' != 1", true)
+        test(tm, Unit, "Nothing", "'a' != 'a'", false)
+        test(tm, Unit, "Nothing", "'a' != 'b'", true)
+    }
+
+    @Test
     fun primitive_string() {
         val expression = $$"'Hello World!'"
         val tm = typesDomain("test", true) {

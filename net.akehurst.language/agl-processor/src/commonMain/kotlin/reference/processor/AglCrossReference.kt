@@ -62,13 +62,14 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 visibility = 'visibility' expression ;
                 aliasFor = 'alias-for' rootOrNavigation ;
                 scopeImports = scopeImport* ;
-                scopeImport = importDefinition | inheritDefinition | inheritNamedDefinition ;
+                scopeImport = importDefinition | inheritDefinition | inheritNamedDefinition | inheritByPositionDefinition ;
                 importDefinition = 'import' 'forall' rootOrNavigation ofType? importKind rootOrNavigation recursive? visibility? condition? ;
                 importKind = 'members-of' | 'element' ;
                 importIntoScope = 'import-into-scope' possiblyQualifiedTypeReference importKind rootOrNavigation recursive? visibility? condition? ;
                 recursive = 'recursive' expression ;
                 inheritDefinition = 'inherit' 'forall' rootOrNavigation ofType? 'members-of' rootOrNavigation condition? ;
                 inheritNamedDefinition = 'inherit' 'named' namedPath condition? ;
+                inheritByPositionDefinition = 'inherit' 'by-position' condition? ;
                 namedPath = [namedSegment / '.']+ ;
                 namedSegment = IDENTIFIER | STRING ;
             
@@ -227,6 +228,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         ref("importDefinition")
                         ref("inheritDefinition")
                         ref("inheritNamedDefinition")
+                        ref("inheritByPositionDefinition")
                     }
                     concatenation("importDefinition") {
                         lit("import"); lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; ref("importKind"); ref("rootOrNavigation"); opt { ref("recursive") }; opt { ref("visibility") }; opt { ref("condition") }
@@ -244,6 +246,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     concatenation("inheritNamedDefinition") {
                         lit("inherit"); lit("named"); ref("namedPath"); opt { ref("condition") }
+                    }
+                    concatenation("inheritByPositionDefinition") {
+                        lit("inherit"); lit("by-position"); opt { ref("condition") }
                     }
                     separatedList("namedPath", 1, -1) { ref("namedSegment"); lit(".") }
                     choice("namedSegment") {
@@ -328,6 +333,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("String")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "intoScope", "Boolean", false)
+                    propertyOf(setOf(VAL, CMP, STR), "byPosition", "Boolean", false)
                 }
                 interface_("ReferenceExpressionProperty") {
                     supertype("ReferenceExpression")
@@ -423,6 +429,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         parameter(setOf(), "condition", "Expression")
                         parameter(setOf(), "named", "List")
                         parameter(setOf(), "intoScope", "Boolean")
+                        parameter(setOf(), "byPosition", "Boolean")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "kind", "ScopeImportKind", false)
                     propertyOf(setOf(VAL, CMP, STR), "elements", "Expression", false)
@@ -435,6 +442,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("String")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "intoScope", "Boolean", false)
+                    propertyOf(setOf(VAL, CMP, STR), "byPosition", "Boolean", false)
                 }
                 data("ReferenceExpressionPropertyDefault") {
                     supertype("ReferenceExpressionAbstract")
