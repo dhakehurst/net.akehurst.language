@@ -398,7 +398,8 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                 }
             }
 
-            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
+            // values of different types are not equal (the negation of '==')
+            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
         }
 
         // arithmetic

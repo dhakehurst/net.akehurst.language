@@ -61,6 +61,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::recursive)
         super.register(this::inheritDefinition)
         super.register(this::inheritNamedDefinition)
+        super.register(this::inheritByPositionDefinition)
         super.register(this::namedPath)
         super.register(this::namedSegment)
         super.register(this::fromInherited)
@@ -263,6 +264,13 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val condition = children[3] as Expression?
         val nothing = NavigationExpressionDefault(RootExpressionDefault.NOTHING, emptyList())
         return ScopeImportDefault(ScopeImportKind.INHERIT, RootExpressionDefault.NOTHING, null, nothing, null, null, condition, named)
+    }
+
+    // inheritByPositionDefinition = 'inherit' 'by-position' condition? ;
+    private fun inheritByPositionDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
+        val condition = children[2] as Expression?
+        val nothing = NavigationExpressionDefault(RootExpressionDefault.NOTHING, emptyList())
+        return ScopeImportDefault(ScopeImportKind.INHERIT, RootExpressionDefault.NOTHING, null, nothing, null, null, condition, byPosition = true)
     }
 
     // namedPath = [namedSegment / '.']+ ;

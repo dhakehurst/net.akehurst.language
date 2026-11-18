@@ -191,6 +191,7 @@ enum class ScopeImportKind {
  * 'import-into-scope' ofType ('members-of' | 'element') target recursive? visibility? ('when' condition)?   (top-level)
  * 'inherit' 'forall' elements ofType? 'members-of' target ('when' condition)?
  * 'inherit' 'named' a.b.c ('when' condition)?
+ * 'inherit' 'by-position' ('when' condition)?
  *
  * 'elements' is evaluated on the element that owns the scope, 'target' (a reference property) and the other expressions on each of the resulting elements.
  * For 'inherit named', 'named' is the qualified name of the inherited element (looked up from the root scopes of the context)
@@ -220,6 +221,15 @@ interface ScopeImport : Formatable {
      * 'target' and the other expressions are evaluated on that element ('elements' is '\$self').
      */
     val intoScope: Boolean get() = false
+
+    /**
+     * 'inherit by-position': the element that owns the scope (X) inherits the members of the element at the same position as X in each scope
+     * that the owner of X (the element whose scope X is in) inherits.
+     * The items counted are those for which the condition holds (all items if there is none), in sentence order;
+     * X takes part only if the condition holds for X ('elements' and 'target' are not used).
+     * E.g. (SysML/KerML) a parameter redefines the parameter at the same position of each general of its owning type.
+     */
+    val byPosition: Boolean get() = false
 }
 
 interface ReferenceExpression  : Formatable {
