@@ -1,0 +1,2 @@
+// options for test_AllLanguages for this language version, see TestOptions in test_AllLanguages.kt
+skip: agl-ref // TODO: crossReferences.agl-ref is in an old syntax of the references DSL, it needs converting to the current syntax

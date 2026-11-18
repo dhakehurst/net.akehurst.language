@@ -34,7 +34,7 @@ import kotlin.test.*
 class test_SysML_agl_Singles {
 
     private companion object {
-        private val languagePathStr = "/SysML/v2_2026-09/grammars/agl"
+        private val languagePathStr = "/SysML/v2_2026-09/languages/agl"
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl-grm").readText()
 
         val processor: LanguageProcessor<Asm, SentenceContext> by lazy {

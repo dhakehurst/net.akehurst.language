@@ -3,7 +3,9 @@
 The SysML v2 textual notation from the [SysML v2 Release](https://github.com/Systems-Modeling/SysML-v2-Release)
 2026-09.1 (SysML v2.1 Beta 2, KerML v1.1 Beta 2).
 
-## grammars
+## languages
+
+Two variants of the language, each in `languages/<variant>` with its grammar and other definition files:
 
 - `standard` - converted from the specification BNF (`bnf/SysML-textual-bnf.kebnf` and `bnf/KerML-textual-bnf.kebnf`).
   Rule names and structure are as in the specification. Changes to the specification BNF are marked `// AGL:` in the grammar.
