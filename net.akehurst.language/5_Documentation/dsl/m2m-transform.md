@@ -212,16 +212,5 @@ A collection can be named, `point == ps:[ ... ]`.
   }
   ```
 * `import-types ns` (first in the transform, after any options) imports the types used in the transform; `import ns` (in the namespace) imports other transforms.
-* `option name = expression` sets a transform option. No options are defined yet.
-* `transform-test` writes tests for a transform: each `test-case` gives an object for each domain.
-  AGL parses them but does not run them yet.
-
-  ```
-  namespace example
-  transform-test ShapesToDrawingTest(s:Shapes, d:Drawing) {
-    test-case OneCircle {
-      domain s := Circle() { name := 'c' }
-      domain d := Disc() { label := 'c' }
-    }
-  }
-  ```
+* `#name : value` sets a transform option (the option syntax of all agl DSLs). No options are defined yet.
+* Tests of a transform are written in their own language, see [m2m-transform-test](m2m-transform-test.md).

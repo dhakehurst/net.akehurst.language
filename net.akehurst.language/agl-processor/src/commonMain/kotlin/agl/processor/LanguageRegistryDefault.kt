@@ -39,6 +39,8 @@ import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.*
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.m2mTransform.processor.M2mTransform
+import net.akehurst.language.m2mTransformTest.api.M2mTransformTestDomain
+import net.akehurst.language.m2mTransformTest.processor.M2mTransformTest
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.DeclarationsForNamespace
 import net.akehurst.language.reference.processor.AglCrossReference
@@ -164,6 +166,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val crossReferenceLanguageIdentity: LanguageIdentity get() = AglCrossReference.identity
         override val asmTransformLanguageIdentity: LanguageIdentity get() = AsmTransform.identity
         override val m2mTransformLanguageIdentity: LanguageIdentity get() = M2mTransform.identity
+        override val m2mTransformTestLanguageIdentity: LanguageIdentity get() = M2mTransformTest.identity
         override val styleLanguageIdentity: LanguageIdentity get() = AglStyle.identity
         override val formatLanguageIdentity: LanguageIdentity get() = AglFormat.identity
         override val completionLanguageIdentity: LanguageIdentity get() = AglCompletion.identity
@@ -198,6 +201,13 @@ class LanguageRegistryDefault : LanguageRegistry {
             expressions // ensure expressions is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(M2mTransform)
         }
+
+        override val m2mTransformTest: LanguageDefinition<M2mTransformTestDomain, SentenceContext> by lazy {
+            base //ensure base is instantiated
+            expressions // ensure expressions is instantiated
+            m2mTransform // ensure m2mTransform is instantiated
+            this@LanguageRegistryDefault.registerFromLanguageObject(M2mTransformTest)
+        }
         override val crossReference: LanguageDefinition<CrossReferenceDomain, SentenceContext> by lazy {
             base //ensure base is instantiated
             expressions // ensure expressions is instantiated
@@ -230,6 +240,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         agl.asmTransform
         agl.crossReference
         agl.m2mTransform
+        agl.m2mTransformTest
         agl.format
         agl.style
         agl.completion

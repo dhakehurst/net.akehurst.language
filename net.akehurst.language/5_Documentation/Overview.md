@@ -76,6 +76,7 @@ Each part of a language definition is written in a small DSL, and each DSL is it
 | format | [format.md](dsl/format.md) | ASM to text |
 | expressions | [expressions.md](dsl/expressions.md) | expressions used inside the other DSLs |
 | m2m-transform | [m2m-transform.md](dsl/m2m-transform.md) | model to model transformation |
+| m2m-transform-test | [m2m-transform-test.md](dsl/m2m-transform-test.md) | tests of m2m transforms |
 
 Patterns in grammars use Kotlin `Regex` syntax, see [agl-regex](../agl-regex/README.md).
 
