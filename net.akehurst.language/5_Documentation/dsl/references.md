@@ -45,6 +45,7 @@ In the ASM, a resolved reference prints as `source = &{'c' : Circle}`.
 | `scope T { identify U by expr ... }` | an object of type `T` is a scope; the `U` objects inside it are identified there, not in the root scope. In the block, the `identify` lines come first, then the `import`/`inherit` lines |
 | `references { in T { ... } }` | the reference properties of type `T` |
 | `property p refers-to A\|B` | property `p` is a reference to an `A` or a `B` |
+| `property p refers-to I` (an interface) | property `p` is a reference to an object of any type that implements `I` (e.g. a metamodel's abstract class `Element`); a target type is a data type, an interface, or a union of those (see `test_ReferenceResolverSimple_refersToInterface`) |
 | `type-group N = A\|B` | a name for a list of type names, used as `refers-to N` (also with other names: `refers-to N\|C`); a group may use other groups. It is not a type: where it is used it stands for its list. Declared with the top-level `identify` lines (before the `scope` blocks), visible in that namespace only |
 | `property p.m(...) refers-to A` | the navigation may end with method calls: the value of the whole expression is looked up, and property `p` becomes the reference (e.g. `property name.removeSurrounding('\'') refers-to A`, where `'a'` and `a` are the same name; for a list of names `name.map({ n -> n.removeSurrounding('\'') })`) |
 | `forall list of-type T when c { ... }` | apply the inner lines to each element of `list` (optionally only those of type `T`, and only those for which `c` holds) |

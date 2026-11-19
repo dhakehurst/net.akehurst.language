@@ -157,7 +157,7 @@ class test_ReferenceResolverSimple_stdTypeNames {
                 """.trimIndent()
             )
         )
-        assertEquals(listOf("For references in 'List', referred to type 'std.Collection' is not a data type"), errs)
+        assertEquals(listOf("For references in 'List', referred to type 'std.Collection' is not a data type or interface"), errs)
     }
 
     @Test
@@ -173,7 +173,7 @@ class test_ReferenceResolverSimple_stdTypeNames {
                 """.trimIndent()
             )
         )
-        assertEquals(listOf("For references in 'List', referred to type 'String' is not a data type"), errs)
+        assertEquals(listOf("For references in 'List', referred to type 'String' is not a data type or interface"), errs)
     }
 
     @Test
