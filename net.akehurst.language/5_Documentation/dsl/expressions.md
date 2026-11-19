@@ -57,6 +57,10 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 | `{ x := e ... expr }` | block with local variables |
 | `$nothing` | no value |
 
+A property that is not set reads as `$nothing` if it is nullable, and as an empty collection if its type is a collection
+(`List`, `Set`, `OrderedSet`, `Map`), e.g. a metamodel property of multiplicity 0..* that the sentence gives no elements for
+(see `test_ReferenceResolverSimple_unsetCollection`); reading any other unset property is an error.
+
 Special names: `$self` (current object), `$nothing`; in [asm-transform](asm-transform.md) also `child`, `children`,
 `$matchedText`, `$alternative`; in [references](references.md) also `$container`, `$owner`, `$root`, `$previous`; in [format](format.md) `$EOL`.
 

@@ -168,7 +168,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun typeGroup(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeGroupDefault =
         TypeGroupDefault(SimpleName(children[1] as String), children[3] as List<PossiblyQualifiedName>).also { setLocationFor(it, nodeInfo, sentence) }
 
-    /** replace the 'type-group' names in each 'refers-to' by the group's list (a group may use other groups) */
+    /** replace the 'type-group' names in each 'refers-to' and 'of-type' by the group's list (a group may use other groups) */
     private fun expandTypeGroups(decl: DeclarationsForNamespaceDefault) {
         if (decl.typeGroups.isEmpty()) return
         val expanded = mutableMapOf<SimpleName, List<PossiblyQualifiedName>>()
@@ -191,12 +191,22 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
                         val e = expand(re.refersToTypeNameAsWritten, emptyList())
                         if (e != re.refersToTypeNameAsWritten) re.refersToTypeNameExpanded = e
                     }
-                    is ReferenceExpressionCollectionDefault -> visit(re.referenceExpressionList)
+                    is ReferenceExpressionCollectionDefault -> {
+                        val e = expand(re.ofTypeAsWritten, emptyList())
+                        if (e != re.ofTypeAsWritten) re.ofTypeExpanded = e
+                        visit(re.referenceExpressionList)
+                    }
                     else -> Unit
                 }
             }
         }
         decl.references.forEach { visit(it.referenceExpressionList) }
+        decl.scopeDefinition.values.forEach { sd ->
+            sd.scopeImports.filterIsInstance<ScopeImportDefault>().forEach { si ->
+                val e = expand(si.ofTypeAsWritten, emptyList())
+                if (e != si.ofTypeAsWritten) si.ofTypeExpanded = e
+            }
+        }
     }
 
     // rootDeclarations = rootDeclaration* ;
@@ -264,18 +274,18 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // importDefinition = 'import' scopeForall? importKind rootOrNavigation recursive? visibility? condition? ;
     private fun importDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
-        val forall = children[1] as Pair<Expression, PossiblyQualifiedName?>?
+        val forall = children[1] as Pair<Expression, List<PossiblyQualifiedName>>?
         val kind = children[2] as ScopeImportKind
         val target = asNavigation(children[3] as Expression)
         val recursive = children[4] as Expression?
         val visibility = children[5] as Expression?
         val condition = children[6] as Expression?
-        return ScopeImportDefault(kind, forall?.first ?: RootExpressionDefault.SELF, forall?.second, target, recursive, visibility, condition)
+        return ScopeImportDefault(kind, forall?.first ?: RootExpressionDefault.SELF, forall?.second ?: emptyList(), target, recursive, visibility, condition)
     }
 
     // scopeForall = 'forall' rootOrNavigation ofType? ;
-    private fun scopeForall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Expression, PossiblyQualifiedName?> =
-        Pair(children[1] as Expression, children[2] as PossiblyQualifiedName?)
+    private fun scopeForall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Expression, List<PossiblyQualifiedName>> =
+        Pair(children[1] as Expression, (children[2] as List<PossiblyQualifiedName>?) ?: emptyList())
 
     // importIntoScope = 'import-into-scope' possiblyQualifiedTypeReference importKind rootOrNavigation recursive? visibility? condition? ;
     private fun importIntoScope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
@@ -285,7 +295,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val recursive = children[4] as Expression?
         val visibility = children[5] as Expression?
         val condition = children[6] as Expression?
-        return ScopeImportDefault(kind, RootExpressionDefault.SELF, ofType, target, recursive, visibility, condition, intoScope = true)
+        return ScopeImportDefault(kind, RootExpressionDefault.SELF, listOf(ofType), target, recursive, visibility, condition, intoScope = true)
     }
 
     // importKind = 'members-of' | 'element' ;
@@ -301,10 +311,10 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // inheritDefinition = 'inherit' scopeForall? 'members-of' rootOrNavigation condition? ;
     private fun inheritDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
-        val forall = children[1] as Pair<Expression, PossiblyQualifiedName?>?
+        val forall = children[1] as Pair<Expression, List<PossiblyQualifiedName>>?
         val target = asNavigation(children[3] as Expression)
         val condition = children[4] as Expression?
-        return ScopeImportDefault(ScopeImportKind.INHERIT, forall?.first ?: RootExpressionDefault.SELF, forall?.second, target, null, null, condition)
+        return ScopeImportDefault(ScopeImportKind.INHERIT, forall?.first ?: RootExpressionDefault.SELF, forall?.second ?: emptyList(), target, null, null, condition)
     }
 
     // inheritNamedDefinition = 'inherit' 'named' namedPath condition? ;
@@ -312,14 +322,14 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val named = children[2] as List<String>
         val condition = children[3] as Expression?
         val nothing = NavigationExpressionDefault(RootExpressionDefault.NOTHING, emptyList())
-        return ScopeImportDefault(ScopeImportKind.INHERIT, RootExpressionDefault.NOTHING, null, nothing, null, null, condition, named)
+        return ScopeImportDefault(ScopeImportKind.INHERIT, RootExpressionDefault.NOTHING, emptyList(), nothing, null, null, condition, named)
     }
 
     // inheritByPositionDefinition = 'inherit' 'by-position' condition? ;
     private fun inheritByPositionDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeImportDefault {
         val condition = children[2] as Expression?
         val nothing = NavigationExpressionDefault(RootExpressionDefault.NOTHING, emptyList())
-        return ScopeImportDefault(ScopeImportKind.INHERIT, RootExpressionDefault.NOTHING, null, nothing, null, null, condition, byPosition = true)
+        return ScopeImportDefault(ScopeImportKind.INHERIT, RootExpressionDefault.NOTHING, emptyList(), nothing, null, null, condition, byPosition = true)
     }
 
     // namedPath = [namedSegment / '.']+ ;
@@ -451,15 +461,15 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     // collectionReferenceExpression = 'forall' rootOrNavigation ofType? condition? '{' referenceExpressionList '}' ;
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionCollectionDefault {
         val rootOrNavigation = children[1] as Expression
-        val ofType = children[2] as PossiblyQualifiedName?
+        val ofType = (children[2] as List<PossiblyQualifiedName>?) ?: emptyList()
         val condition = children[3] as Expression?
         val referenceExpression = children[5] as List<ReferenceExpressionAbstract>
         return ReferenceExpressionCollectionDefault(rootOrNavigation, ofType, referenceExpression, condition)
     }
 
-    // ofType = 'of-type' possiblyQualifiedTypeReference ;
-    private fun ofType(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
-        children[1] as PossiblyQualifiedName
+    // ofType = 'of-type' typeReferences ;
+    private fun ofType(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<PossiblyQualifiedName> =
+        children[1] as List<PossiblyQualifiedName>
 
     //rootOrNavigation = root | navigation ;
     private fun rootOrNavigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =

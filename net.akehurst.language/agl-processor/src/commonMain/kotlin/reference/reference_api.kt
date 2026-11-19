@@ -212,7 +212,9 @@ enum class ScopeImportKind {
 interface ScopeImport : Formatable {
     val kind: ScopeImportKind
     val elements: Expression
-    val ofType: PossiblyQualifiedName?
+
+    /** 'of-type A | B': only the elements that conform to one of these types (type-group names are expanded); empty: all elements */
+    val ofType: List<PossiblyQualifiedName>
     val target: NavigationExpression
 
     /** if it evaluates to true, the items of nested scopes are also visible */
@@ -290,7 +292,9 @@ interface ReferenceExpressionProperty : ReferenceExpression {
 
 interface ReferenceExpressionCollection : ReferenceExpression {
     val expression: Expression
-    val ofType: PossiblyQualifiedName?
+
+    /** 'of-type A | B': only the elements that conform to one of these types (type-group names are expanded); empty: all elements */
+    val ofType: List<PossiblyQualifiedName>
     val referenceExpressionList: List<ReferenceExpression>
 
     /**

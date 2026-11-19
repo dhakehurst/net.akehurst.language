@@ -1,0 +1,2758 @@
+namespace KerML.Core.Classifiers
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Classifier : Type {
+    constructor(ref val str _identity: Any)
+    drv ownedSubclassification: Set<Subclassification>
+  }
+  data Subclassification : Specialization {
+    constructor(ref val str _identity: Any)
+    ref var str superclassifier: Classifier
+    ref var str subclassifier: Classifier
+    drv owningClassifier: Classifier?
+  }
+namespace KerML.Core.Features
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data CrossSubsetting : Subsetting {
+    constructor(ref val str _identity: Any)
+    ref var str crossedFeature: Feature
+    drv crossingFeature: Feature
+  }
+  data EndFeatureMembership : FeatureMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedMemberFeature: Feature
+  }
+  data Feature : Type {
+    constructor(ref val str _identity: Any)
+    drv owningType: Type?
+    cmp var str isUnique: Boolean?
+    cmp var str isOrdered: Boolean?
+    drv type: OrderedSet<Type>
+    drv ownedRedefinition: Set<Redefinition>
+    drv ownedSubsetting: Set<Subsetting>
+    drv owningFeatureMembership: FeatureMembership?
+    cmp var str isComposite: Boolean?
+    cmp var str isEnd: Boolean?
+    drv endOwningType: Type?
+    drv ownedTyping: OrderedSet<FeatureTyping>
+    drv featuringType: OrderedSet<Type>
+    drv ownedTypeFeaturing: OrderedSet<TypeFeaturing>
+    cmp var str isDerived: Boolean?
+    drv chainingFeature: List<Feature>
+    drv ownedFeatureInverting: Set<FeatureInverting>
+    drv ownedFeatureChaining: OrderedSet<FeatureChaining>
+    cmp var str isPortion: Boolean?
+    cmp var str isVariable: Boolean?
+    cmp var str isConstant: Boolean?
+    drv ownedReferenceSubsetting: ReferenceSubsetting?
+    drv featureTarget: Feature
+    drv crossFeature: Feature?
+    cmp var str direction: FeatureDirectionKind?
+    drv ownedCrossSubsetting: CrossSubsetting?
+  }
+  data FeatureChaining : Relationship {
+    constructor(ref val str _identity: Any)
+    ref var str chainingFeature: Feature
+    drv featureChained: Feature
+  }
+  data FeatureInverting : Relationship {
+    constructor(ref val str _identity: Any)
+    ref var str featureInverted: Feature
+    ref var str invertingFeature: Feature
+    drv owningFeature: Feature?
+  }
+  data FeatureTyping : Specialization {
+    constructor(ref val str _identity: Any)
+    ref var str typedFeature: Feature
+    ref var str type: Type
+    drv owningFeature: Feature?
+  }
+  data Redefinition : Subsetting {
+    constructor(ref val str _identity: Any)
+    ref var str redefiningFeature: Feature
+    ref var str redefinedFeature: Feature
+  }
+  data ReferenceSubsetting : Subsetting {
+    constructor(ref val str _identity: Any)
+    ref var str referencedFeature: Feature
+    drv referencingFeature: Feature
+  }
+  data Subsetting : Specialization {
+    constructor(ref val str _identity: Any)
+    ref var str subsettedFeature: Feature
+    ref var str subsettingFeature: Feature
+    drv owningFeature: Feature?
+  }
+  data TypeFeaturing : Relationship {
+    constructor(ref val str _identity: Any)
+    ref var str featureOfType: Feature
+    ref var str featuringType: Type
+    drv owningFeatureOfType: Feature?
+  }
+namespace KerML.Core.Types
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Conjugation : Relationship {
+    constructor(ref val str _identity: Any)
+    ref var str originalType: Type
+    ref var str conjugatedType: Type
+    drv owningType: Type?
+  }
+  data Differencing : Relationship {
+    constructor(ref val str _identity: Any)
+    drv typeDifferenced: Type
+    ref var str differencingType: Type
+  }
+  data Disjoining : Relationship {
+    constructor(ref val str _identity: Any)
+    ref var str typeDisjoined: Type
+    ref var str disjoiningType: Type
+    drv owningType: Type?
+  }
+  enum FeatureDirectionKind { in, inout, out }
+  data FeatureMembership : OwningMembership {
+    constructor(ref val str _identity: Any)
+    drv owningType: Type
+    drv ownedMemberFeature: Feature
+  }
+  data Intersecting : Relationship {
+    constructor(ref val str _identity: Any)
+    drv typeIntersected: Type
+    ref var str intersectingType: Type
+  }
+  data Multiplicity : Feature {
+    constructor(ref val str _identity: Any)
+  }
+  data Specialization : Relationship {
+    constructor(ref val str _identity: Any)
+    drv owningType: Type?
+    ref var str general: Type
+    ref var str specific: Type
+  }
+  data Type : Namespace {
+    constructor(ref val str _identity: Any)
+    drv ownedSpecialization: OrderedSet<Specialization>
+    drv ownedFeatureMembership: OrderedSet<FeatureMembership>
+    drv feature: OrderedSet<Feature>
+    drv ownedFeature: OrderedSet<Feature>
+    drv input: OrderedSet<Feature>
+    drv output: OrderedSet<Feature>
+    cmp var str isAbstract: Boolean?
+    drv inheritedMembership: OrderedSet<Membership>
+    drv endFeature: OrderedSet<Feature>
+    drv ownedEndFeature: OrderedSet<Feature>
+    cmp var str isSufficient: Boolean?
+    drv ownedConjugator: Conjugation?
+    drv isConjugated: Boolean?
+    drv inheritedFeature: OrderedSet<Feature>
+    drv multiplicity: Multiplicity?
+    drv unioningType: OrderedSet<Type>
+    drv ownedIntersecting: OrderedSet<Intersecting>
+    drv intersectingType: OrderedSet<Type>
+    drv ownedUnioning: OrderedSet<Unioning>
+    drv ownedDisjoining: Set<Disjoining>
+    drv featureMembership: OrderedSet<FeatureMembership>
+    drv differencingType: OrderedSet<Type>
+    drv ownedDifferencing: OrderedSet<Differencing>
+    drv directedFeature: OrderedSet<Feature>
+  }
+  data Unioning : Relationship {
+    constructor(ref val str _identity: Any)
+    drv typeUnioned: Type
+    ref var str unioningType: Type
+  }
+namespace KerML.Kernel.Associations
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Association : Classifier, Relationship {
+    constructor(ref val str _identity: Any)
+    drv relatedType: List<Type>
+    drv sourceType: Type?
+    drv targetType: Set<Type>
+    drv associationEnd: Set<Feature>
+  }
+  data AssociationStructure : Association, Structure {
+    constructor(ref val str _identity: Any)
+  }
+namespace KerML.Kernel.Behaviors
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Behavior : Class {
+    constructor(ref val str _identity: Any)
+    drv step: Set<Step>
+    drv parameter: OrderedSet<Feature>
+  }
+  data ParameterMembership : FeatureMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedMemberParameter: Feature
+  }
+  data Step : Feature {
+    constructor(ref val str _identity: Any)
+    drv behavior: OrderedSet<Behavior>
+    drv parameter: OrderedSet<Feature>
+  }
+namespace KerML.Kernel.Classes
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Class : Classifier {
+    constructor(ref val str _identity: Any)
+  }
+namespace KerML.Kernel.Connectors
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data BindingConnector : Connector {
+    constructor(ref val str _identity: Any)
+  }
+  data Connector : Feature, Relationship {
+    constructor(ref val str _identity: Any)
+    drv relatedFeature: List<Feature>
+    drv association: OrderedSet<Association>
+    drv connectorEnd: OrderedSet<Feature>
+    drv sourceFeature: Feature?
+    drv targetFeature: OrderedSet<Feature>
+    drv defaultFeaturingType: Type?
+  }
+  data Succession : Connector {
+    constructor(ref val str _identity: Any)
+  }
+namespace KerML.Kernel.DataTypes
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data DataType : Classifier {
+    constructor(ref val str _identity: Any)
+  }
+namespace KerML.Kernel.Expressions
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data CollectExpression : OperatorExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str operator: String?
+  }
+  data ConstructorExpression : InstantiationExpression {
+    constructor(ref val str _identity: Any)
+  }
+  data FeatureChainExpression : OperatorExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str operator: String?
+    drv targetFeature: Feature
+  }
+  data FeatureReferenceExpression : Expression {
+    constructor(ref val str _identity: Any)
+    drv referent: Feature
+  }
+  data IndexExpression : OperatorExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str operator: String?
+  }
+  interface InstantiationExpression : Expression {
+    drv argument: OrderedSet<Expression>
+    drv instantiatedType: Type
+  }
+  data InvocationExpression : InstantiationExpression {
+    constructor(ref val str _identity: Any)
+  }
+  data LiteralBoolean : LiteralExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str value: Boolean?
+  }
+  data LiteralExpression : Expression {
+    constructor(ref val str _identity: Any)
+  }
+  data LiteralInfinity : LiteralExpression {
+    constructor(ref val str _identity: Any)
+  }
+  data LiteralInteger : LiteralExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str value: Integer?
+  }
+  data LiteralRational : LiteralExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str value: Real?
+  }
+  data LiteralString : LiteralExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str value: String?
+  }
+  data MetadataAccessExpression : Expression {
+    constructor(ref val str _identity: Any)
+    drv referencedElement: Element
+  }
+  data NullExpression : Expression {
+    constructor(ref val str _identity: Any)
+  }
+  data OperatorExpression : InvocationExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str operator: String?
+  }
+  data SelectExpression : OperatorExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str operator: String?
+  }
+namespace KerML.Kernel.FeatureValues
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data FeatureValue : OwningMembership {
+    constructor(ref val str _identity: Any)
+    drv featureWithValue: Feature
+    drv value: Expression
+    cmp var str isInitial: Boolean?
+    cmp var str isDefault: Boolean?
+  }
+namespace KerML.Kernel.Functions
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data BooleanExpression : Expression {
+    constructor(ref val str _identity: Any)
+    drv predicate: Predicate?
+  }
+  data Expression : Step {
+    constructor(ref val str _identity: Any)
+    drv function: Function?
+    drv result: Feature
+    drv isModelLevelEvaluable: Boolean?
+  }
+  data Function : Behavior {
+    constructor(ref val str _identity: Any)
+    drv expression: Set<Expression>
+    drv result: Feature
+    drv isModelLevelEvaluable: Boolean?
+  }
+  data Invariant : BooleanExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str isNegated: Boolean?
+  }
+  data Predicate : Function {
+    constructor(ref val str _identity: Any)
+  }
+  data ResultExpressionMembership : FeatureMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedResultExpression: Expression
+  }
+  data ReturnParameterMembership : ParameterMembership {
+    constructor(ref val str _identity: Any)
+  }
+namespace KerML.Kernel.Interactions
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Flow : Connector, Step {
+    constructor(ref val str _identity: Any)
+    drv payloadType: List<Classifier>
+    drv targetInputFeature: Feature?
+    drv sourceOutputFeature: Feature?
+    drv flowEnd: OrderedSet<FlowEnd>
+    drv payloadFeature: PayloadFeature?
+    drv interaction: OrderedSet<Interaction>
+  }
+  data FlowEnd : Feature {
+    constructor(ref val str _identity: Any)
+  }
+  data Interaction : Behavior, Association {
+    constructor(ref val str _identity: Any)
+  }
+  data PayloadFeature : Feature {
+    constructor(ref val str _identity: Any)
+  }
+  data SuccessionFlow : Succession, Flow {
+    constructor(ref val str _identity: Any)
+  }
+namespace KerML.Kernel.Metadata
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Metaclass : Structure {
+    constructor(ref val str _identity: Any)
+  }
+  data MetadataFeature : AnnotatingElement, Feature {
+    constructor(ref val str _identity: Any)
+    drv metaclass: Metaclass?
+  }
+namespace KerML.Kernel.Multiplicities
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data MultiplicityRange : Multiplicity {
+    constructor(ref val str _identity: Any)
+    drv lowerBound: Expression?
+    drv upperBound: Expression
+    drv bound: OrderedSet<Expression>
+  }
+namespace KerML.Kernel.Packages
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data ElementFilterMembership : OwningMembership {
+    constructor(ref val str _identity: Any)
+    drv condition: Expression
+  }
+  data LibraryPackage : Package {
+    constructor(ref val str _identity: Any)
+    cmp var str isStandard: Boolean?
+  }
+  data Package : Namespace {
+    constructor(ref val str _identity: Any)
+    drv filterCondition: OrderedSet<Expression>
+  }
+namespace KerML.Kernel.Structures
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Structure : Class {
+    constructor(ref val str _identity: Any)
+  }
+namespace KerML.Root.Annotations
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data AnnotatingElement : Element {
+    constructor(ref val str _identity: Any)
+    drv annotatedElement: OrderedSet<Element>
+    drv ownedAnnotatingRelationship: OrderedSet<Annotation>
+    drv owningAnnotatingRelationship: Annotation?
+    drv annotation: OrderedSet<Annotation>
+  }
+  data Annotation : Relationship {
+    constructor(ref val str _identity: Any)
+    drv annotatingElement: AnnotatingElement
+    ref var str annotatedElement: Element
+    drv owningAnnotatedElement: Element?
+    drv owningAnnotatingElement: AnnotatingElement?
+    drv ownedAnnotatingElement: AnnotatingElement?
+  }
+  data Comment : AnnotatingElement {
+    constructor(ref val str _identity: Any)
+    cmp var str locale: String?
+    cmp var str body: String?
+  }
+  data Documentation : Comment {
+    constructor(ref val str _identity: Any)
+    drv documentedElement: Element
+  }
+  data TextualRepresentation : AnnotatingElement {
+    constructor(ref val str _identity: Any)
+    cmp var str language: String?
+    drv representedElement: Element
+    cmp var str body: String?
+  }
+namespace KerML.Root.Dependencies
+  import std
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Dependency : Relationship {
+    constructor(ref val str _identity: Any)
+    ref var str client: OrderedSet<Element>
+    ref var str supplier: OrderedSet<Element>
+  }
+namespace KerML.Root.Elements
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  interface Element {
+    drv owningMembership: OwningMembership?
+    ref var str owningRelationship: Relationship?
+    drv owningNamespace: Namespace?
+    cmp var str elementId: String?
+    cmp var str ownedRelationship: OrderedSet<Relationship>
+    drv owner: Element?
+    drv ownedElement: OrderedSet<Element>
+    drv documentation: OrderedSet<Documentation>
+    drv ownedAnnotation: OrderedSet<Annotation>
+    drv textualRepresentation: OrderedSet<TextualRepresentation>
+    cmp var str aliasIds: OrderedSet<String>
+    cmp var str declaredShortName: String?
+    cmp var str declaredName: String?
+    drv shortName: String?
+    drv name: String?
+    drv qualifiedName: String?
+    cmp var str isImpliedIncluded: Boolean?
+    drv isLibraryElement: Boolean?
+  }
+  interface Relationship : Element {
+    drv relatedElement: List<Element>
+    ref var str target: OrderedSet<Element>
+    ref var str source: OrderedSet<Element>
+    ref var str owningRelatedElement: Element?
+    cmp var str ownedRelatedElement: OrderedSet<Element>
+    cmp var str isImplied: Boolean?
+  }
+namespace KerML.Root.Namespaces
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  interface Import : Relationship {
+    drv importOwningNamespace: Namespace
+    cmp var str visibility: VisibilityKind?
+    cmp var str isRecursive: Boolean?
+    cmp var str isImportAll: Boolean?
+    drv importedElement: Element
+  }
+  data Membership : Relationship {
+    constructor(ref val str _identity: Any)
+    drv memberElementId: String?
+    drv membershipOwningNamespace: Namespace
+    cmp var str memberShortName: String?
+    ref var str memberElement: Element
+    cmp var str memberName: String?
+    cmp var str visibility: VisibilityKind?
+  }
+  data MembershipImport : Import {
+    constructor(ref val str _identity: Any)
+    ref var str importedMembership: Membership
+  }
+  data Namespace : Element {
+    constructor(ref val str _identity: Any)
+    drv membership: OrderedSet<Membership>
+    drv ownedImport: OrderedSet<Import>
+    drv member: OrderedSet<Element>
+    drv ownedMember: OrderedSet<Element>
+    drv ownedMembership: OrderedSet<Membership>
+    drv importedMembership: OrderedSet<Membership>
+  }
+  data NamespaceImport : Import {
+    constructor(ref val str _identity: Any)
+    ref var str importedNamespace: Namespace
+  }
+  data OwningMembership : Membership {
+    constructor(ref val str _identity: Any)
+    drv ownedMemberElement: Element
+    drv ownedMemberElementId: String?
+    drv ownedMemberShortName: String?
+    drv ownedMemberName: String?
+  }
+  enum VisibilityKind { private, protected, public }
+namespace SysML.Systems.Actions
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data AcceptActionUsage : ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv receiverArgument: Expression?
+    drv payloadParameter: ReferenceUsage
+    drv payloadArgument: Expression?
+  }
+  data ActionDefinition : Behavior, OccurrenceDefinition {
+    constructor(ref val str _identity: Any)
+    drv action: OrderedSet<ActionUsage>
+  }
+  data ActionUsage : Step, OccurrenceUsage {
+    constructor(ref val str _identity: Any)
+    drv actionDefinition: OrderedSet<Behavior>
+  }
+  data AssignmentActionUsage : ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv targetArgument: Expression?
+    drv valueExpression: Expression?
+    drv referent: Feature
+  }
+  interface ControlNode : ActionUsage {
+  }
+  data DecisionNode : ControlNode {
+    constructor(ref val str _identity: Any)
+  }
+  data ForLoopActionUsage : LoopActionUsage {
+    constructor(ref val str _identity: Any)
+    drv seqArgument: Expression
+    drv loopVariable: ReferenceUsage
+  }
+  data ForkNode : ControlNode {
+    constructor(ref val str _identity: Any)
+  }
+  data IfActionUsage : ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv elseAction: ActionUsage?
+    drv thenAction: ActionUsage
+    drv ifArgument: Expression
+  }
+  data JoinNode : ControlNode {
+    constructor(ref val str _identity: Any)
+  }
+  interface LoopActionUsage : ActionUsage {
+    drv bodyAction: ActionUsage
+  }
+  data MergeNode : ControlNode {
+    constructor(ref val str _identity: Any)
+  }
+  data PerformActionUsage : ActionUsage, EventOccurrenceUsage {
+    constructor(ref val str _identity: Any)
+    drv performedAction: ActionUsage
+  }
+  data SendActionUsage : ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv receiverArgument: Expression?
+    drv payloadArgument: Expression?
+    drv senderArgument: Expression?
+  }
+  data TerminateActionUsage : ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv terminatedOccurrenceArgument: Expression?
+  }
+  data TriggerInvocationExpression : InvocationExpression {
+    constructor(ref val str _identity: Any)
+    cmp var str kind: TriggerKind?
+  }
+  enum TriggerKind { when, at, after }
+  data WhileLoopActionUsage : LoopActionUsage {
+    constructor(ref val str _identity: Any)
+    drv whileArgument: Expression
+    drv untilArgument: Expression?
+  }
+namespace SysML.Systems.Allocations
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data AllocationDefinition : ConnectionDefinition {
+    constructor(ref val str _identity: Any)
+    drv allocation: OrderedSet<AllocationUsage>
+  }
+  data AllocationUsage : ConnectionUsage {
+    constructor(ref val str _identity: Any)
+    drv allocationDefinition: OrderedSet<AllocationDefinition>
+  }
+namespace SysML.Systems.AnalysisCases
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data AnalysisCaseDefinition : CaseDefinition {
+    constructor(ref val str _identity: Any)
+    drv resultExpression: Expression?
+  }
+  data AnalysisCaseUsage : CaseUsage {
+    constructor(ref val str _identity: Any)
+    drv analysisCaseDefinition: AnalysisCaseDefinition?
+    drv resultExpression: Expression?
+  }
+namespace SysML.Systems.Attributes
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data AttributeDefinition : DataType, Definition {
+    constructor(ref val str _identity: Any)
+  }
+  data AttributeUsage : Usage {
+    constructor(ref val str _identity: Any)
+    drv attributeDefinition: OrderedSet<DataType>
+    drv isReference: Boolean?
+  }
+namespace SysML.Systems.Calculations
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data CalculationDefinition : Function, ActionDefinition {
+    constructor(ref val str _identity: Any)
+    drv calculation: OrderedSet<CalculationUsage>
+  }
+  data CalculationUsage : Expression, ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv calculationDefinition: Function?
+  }
+namespace SysML.Systems.Cases
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data CaseDefinition : CalculationDefinition {
+    constructor(ref val str _identity: Any)
+    drv objectiveRequirement: RequirementUsage?
+    drv subjectParameter: Usage
+    drv actorParameter: OrderedSet<PartUsage>
+  }
+  data CaseUsage : CalculationUsage {
+    constructor(ref val str _identity: Any)
+    drv objectiveRequirement: RequirementUsage?
+    drv caseDefinition: CaseDefinition?
+    drv subjectParameter: Usage
+    drv actorParameter: OrderedSet<PartUsage>
+  }
+  data ObjectiveMembership : FeatureMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedObjectiveRequirement: RequirementUsage
+  }
+namespace SysML.Systems.Connections
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data BindingConnectorAsUsage : BindingConnector, ConnectorAsUsage {
+    constructor(ref val str _identity: Any)
+  }
+  data ConnectionDefinition : AssociationStructure, PartDefinition {
+    constructor(ref val str _identity: Any)
+    drv connectionEnd: OrderedSet<Usage>
+    cmp var str isSufficient: Boolean?
+  }
+  data ConnectionUsage : ConnectorAsUsage, PartUsage {
+    constructor(ref val str _identity: Any)
+    drv connectionDefinition: OrderedSet<AssociationStructure>
+  }
+  interface ConnectorAsUsage : Usage, Connector {
+  }
+  data SuccessionAsUsage : ConnectorAsUsage, Succession {
+    constructor(ref val str _identity: Any)
+  }
+namespace SysML.Systems.Constraints
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data AssertConstraintUsage : ConstraintUsage, Invariant {
+    constructor(ref val str _identity: Any)
+    drv assertedConstraint: ConstraintUsage
+  }
+  data ConstraintDefinition : OccurrenceDefinition, Predicate {
+    constructor(ref val str _identity: Any)
+  }
+  data ConstraintUsage : BooleanExpression, OccurrenceUsage {
+    constructor(ref val str _identity: Any)
+    drv constraintDefinition: Predicate?
+  }
+namespace SysML.Systems.DefinitionAndUsage
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data Definition : Classifier {
+    constructor(ref val str _identity: Any)
+    cmp var str isVariation: Boolean?
+    drv variant: Set<Usage>
+    drv variantMembership: Set<VariantMembership>
+    drv usage: OrderedSet<Usage>
+    drv directedUsage: OrderedSet<Usage>
+    drv ownedUsage: OrderedSet<Usage>
+    drv ownedReference: OrderedSet<ReferenceUsage>
+    drv ownedAttribute: OrderedSet<AttributeUsage>
+    drv ownedEnumeration: OrderedSet<EnumerationUsage>
+    drv ownedOccurrence: OrderedSet<OccurrenceUsage>
+    drv ownedItem: OrderedSet<ItemUsage>
+    drv ownedPart: OrderedSet<PartUsage>
+    drv ownedPort: OrderedSet<PortUsage>
+    drv ownedConnection: OrderedSet<ConnectorAsUsage>
+    drv ownedFlow: Set<FlowUsage>
+    drv ownedInterface: OrderedSet<InterfaceUsage>
+    drv ownedAllocation: OrderedSet<AllocationUsage>
+    drv ownedAction: OrderedSet<ActionUsage>
+    drv ownedState: OrderedSet<StateUsage>
+    drv ownedTransition: Set<TransitionUsage>
+    drv ownedCalculation: OrderedSet<CalculationUsage>
+    drv ownedConstraint: OrderedSet<ConstraintUsage>
+    drv ownedRequirement: OrderedSet<RequirementUsage>
+    drv ownedConcern: Set<ConcernUsage>
+    drv ownedCase: OrderedSet<CaseUsage>
+    drv ownedAnalysisCase: OrderedSet<AnalysisCaseUsage>
+    drv ownedVerificationCase: OrderedSet<VerificationCaseUsage>
+    drv ownedUseCase: OrderedSet<UseCaseUsage>
+    drv ownedView: OrderedSet<ViewUsage>
+    drv ownedViewpoint: OrderedSet<ViewpointUsage>
+    drv ownedRendering: OrderedSet<RenderingUsage>
+    drv ownedMetadata: OrderedSet<MetadataUsage>
+  }
+  data ReferenceUsage : Usage {
+    constructor(ref val str _identity: Any)
+    drv isReference: Boolean?
+  }
+  data Usage : Feature {
+    constructor(ref val str _identity: Any)
+    drv mayTimeVary: Boolean?
+    drv isReference: Boolean?
+    drv variant: Set<Usage>
+    drv variantMembership: Set<VariantMembership>
+    drv owningDefinition: Definition?
+    drv owningUsage: Usage?
+    drv definition: OrderedSet<Classifier>
+    drv usage: OrderedSet<Usage>
+    drv directedUsage: OrderedSet<Usage>
+    drv nestedUsage: OrderedSet<Usage>
+    drv nestedReference: OrderedSet<ReferenceUsage>
+    drv nestedAttribute: OrderedSet<AttributeUsage>
+    drv nestedEnumeration: OrderedSet<EnumerationUsage>
+    drv nestedOccurrence: OrderedSet<OccurrenceUsage>
+    drv nestedItem: OrderedSet<ItemUsage>
+    drv nestedPart: OrderedSet<PartUsage>
+    drv nestedPort: OrderedSet<PortUsage>
+    drv nestedConnection: OrderedSet<ConnectorAsUsage>
+    drv nestedFlow: Set<FlowUsage>
+    drv nestedInterface: OrderedSet<InterfaceUsage>
+    drv nestedAllocation: OrderedSet<AllocationUsage>
+    drv nestedAction: OrderedSet<ActionUsage>
+    drv nestedState: OrderedSet<StateUsage>
+    drv nestedTransition: Set<TransitionUsage>
+    drv nestedCalculation: OrderedSet<CalculationUsage>
+    drv nestedConstraint: OrderedSet<ConstraintUsage>
+    drv nestedRequirement: OrderedSet<RequirementUsage>
+    drv nestedConcern: Set<ConcernUsage>
+    drv nestedCase: OrderedSet<CaseUsage>
+    drv nestedAnalysisCase: OrderedSet<AnalysisCaseUsage>
+    drv nestedVerificationCase: OrderedSet<VerificationCaseUsage>
+    drv nestedUseCase: OrderedSet<UseCaseUsage>
+    drv nestedView: OrderedSet<ViewUsage>
+    drv nestedViewpoint: OrderedSet<ViewpointUsage>
+    drv nestedRendering: OrderedSet<RenderingUsage>
+    drv nestedMetadata: OrderedSet<MetadataUsage>
+    cmp var str isVariation: Boolean?
+  }
+  data VariantMembership : OwningMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedVariantUsage: Usage
+  }
+namespace SysML.Systems.Enumerations
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data EnumerationDefinition : AttributeDefinition {
+    constructor(ref val str _identity: Any)
+    drv enumeratedValue: OrderedSet<EnumerationUsage>
+    cmp var str isVariation: Boolean?
+  }
+  data EnumerationUsage : AttributeUsage {
+    constructor(ref val str _identity: Any)
+    drv enumerationDefinition: EnumerationDefinition
+  }
+namespace SysML.Systems.Flows
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  data FlowDefinition : Interaction, ActionDefinition {
+    constructor(ref val str _identity: Any)
+    drv flowEnd: Set<Usage>
+  }
+  data FlowUsage : ConnectorAsUsage, Flow, ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv flowDefinition: OrderedSet<Interaction>
+  }
+  data SuccessionFlowUsage : SuccessionFlow, FlowUsage {
+    constructor(ref val str _identity: Any)
+  }
+namespace SysML.Systems.Interfaces
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data InterfaceDefinition : ConnectionDefinition {
+    constructor(ref val str _identity: Any)
+    drv interfaceEnd: OrderedSet<PortUsage>
+  }
+  data InterfaceUsage : ConnectionUsage {
+    constructor(ref val str _identity: Any)
+    drv interfaceDefinition: Set<InterfaceDefinition>
+  }
+namespace SysML.Systems.Items
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data ItemDefinition : Structure, OccurrenceDefinition {
+    constructor(ref val str _identity: Any)
+  }
+  data ItemUsage : OccurrenceUsage {
+    constructor(ref val str _identity: Any)
+    drv itemDefinition: OrderedSet<Structure>
+  }
+namespace SysML.Systems.Metadata
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Flows
+  data MetadataDefinition : ItemDefinition, Metaclass {
+    constructor(ref val str _identity: Any)
+  }
+  data MetadataUsage : ItemUsage, MetadataFeature {
+    constructor(ref val str _identity: Any)
+    drv metadataDefinition: Metaclass?
+  }
+namespace SysML.Systems.Occurrences
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data EventOccurrenceUsage : OccurrenceUsage {
+    constructor(ref val str _identity: Any)
+    drv eventOccurrence: OccurrenceUsage
+    drv isReference: Boolean?
+  }
+  data OccurrenceDefinition : Definition, Class {
+    constructor(ref val str _identity: Any)
+    cmp var str isIndividual: Boolean?
+  }
+  data OccurrenceUsage : Usage {
+    constructor(ref val str _identity: Any)
+    drv occurrenceDefinition: OrderedSet<Class>
+    drv individualDefinition: OccurrenceDefinition?
+    cmp var str isIndividual: Boolean?
+    cmp var str portionKind: PortionKind?
+  }
+  enum PortionKind { timeslice, snapshot }
+namespace SysML.Systems.Parts
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data PartDefinition : ItemDefinition {
+    constructor(ref val str _identity: Any)
+  }
+  data PartUsage : ItemUsage {
+    constructor(ref val str _identity: Any)
+    drv partDefinition: OrderedSet<PartDefinition>
+  }
+namespace SysML.Systems.Ports
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data ConjugatedPortDefinition : PortDefinition {
+    constructor(ref val str _identity: Any)
+    drv originalPortDefinition: PortDefinition
+    drv ownedPortConjugator: PortConjugation
+  }
+  data ConjugatedPortTyping : FeatureTyping {
+    constructor(ref val str _identity: Any)
+    drv portDefinition: PortDefinition
+    ref var str conjugatedPortDefinition: ConjugatedPortDefinition
+  }
+  data PortConjugation : Conjugation {
+    constructor(ref val str _identity: Any)
+    ref var str originalPortDefinition: PortDefinition
+    drv conjugatedPortDefinition: ConjugatedPortDefinition
+  }
+  data PortDefinition : OccurrenceDefinition, Structure {
+    constructor(ref val str _identity: Any)
+    drv conjugatedPortDefinition: ConjugatedPortDefinition?
+  }
+  data PortUsage : OccurrenceUsage {
+    constructor(ref val str _identity: Any)
+    drv portDefinition: OrderedSet<PortDefinition>
+  }
+namespace SysML.Systems.Requirements
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data ActorMembership : ParameterMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedActorParameter: PartUsage
+  }
+  data ConcernDefinition : RequirementDefinition {
+    constructor(ref val str _identity: Any)
+  }
+  data ConcernUsage : RequirementUsage {
+    constructor(ref val str _identity: Any)
+    drv concernDefinition: ConcernDefinition?
+  }
+  data FramedConcernMembership : RequirementConstraintMembership {
+    constructor(ref val str _identity: Any)
+    cmp var str kind: RequirementConstraintKind?
+    drv ownedConcern: ConcernUsage
+    drv referencedConcern: ConcernUsage
+  }
+  enum RequirementConstraintKind { assumption, requirement }
+  data RequirementConstraintMembership : FeatureMembership {
+    constructor(ref val str _identity: Any)
+    cmp var str kind: RequirementConstraintKind?
+    drv ownedConstraint: ConstraintUsage
+    drv referencedConstraint: ConstraintUsage
+  }
+  data RequirementDefinition : ConstraintDefinition {
+    constructor(ref val str _identity: Any)
+    cmp var str reqId: String?
+    drv text: Set<String>
+    drv subjectParameter: Usage
+    drv actorParameter: OrderedSet<PartUsage>
+    drv stakeholderParameter: OrderedSet<PartUsage>
+    drv assumedConstraint: OrderedSet<ConstraintUsage>
+    drv requiredConstraint: OrderedSet<ConstraintUsage>
+    drv framedConcern: OrderedSet<ConcernUsage>
+  }
+  data RequirementUsage : ConstraintUsage {
+    constructor(ref val str _identity: Any)
+    drv requirementDefinition: RequirementDefinition?
+    cmp var str reqId: String?
+    drv text: Set<String>
+    drv requiredConstraint: OrderedSet<ConstraintUsage>
+    drv assumedConstraint: OrderedSet<ConstraintUsage>
+    drv subjectParameter: Usage
+    drv framedConcern: OrderedSet<ConcernUsage>
+    drv actorParameter: OrderedSet<PartUsage>
+    drv stakeholderParameter: OrderedSet<PartUsage>
+  }
+  data SatisfyRequirementUsage : RequirementUsage, AssertConstraintUsage {
+    constructor(ref val str _identity: Any)
+    drv satisfiedRequirement: RequirementUsage
+    drv satisfyingFeature: Feature
+  }
+  data StakeholderMembership : ParameterMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedStakeholderParameter: PartUsage
+  }
+  data SubjectMembership : ParameterMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedSubjectParameter: Usage
+  }
+namespace SysML.Systems.States
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data ExhibitStateUsage : StateUsage, PerformActionUsage {
+    constructor(ref val str _identity: Any)
+    drv exhibitedState: StateUsage
+  }
+  data StateDefinition : ActionDefinition {
+    constructor(ref val str _identity: Any)
+    drv state: OrderedSet<StateUsage>
+    drv entryAction: ActionUsage?
+    drv doAction: ActionUsage?
+    drv exitAction: ActionUsage?
+    cmp var str isParallel: Boolean?
+  }
+  enum StateSubactionKind { entry, do, exit }
+  data StateSubactionMembership : FeatureMembership {
+    constructor(ref val str _identity: Any)
+    cmp var str kind: StateSubactionKind?
+    drv action: ActionUsage
+  }
+  data StateUsage : ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv stateDefinition: OrderedSet<Behavior>
+    drv entryAction: ActionUsage?
+    drv doAction: ActionUsage?
+    drv exitAction: ActionUsage?
+    cmp var str isParallel: Boolean?
+  }
+  enum TransitionFeatureKind { trigger, guard, effect }
+  data TransitionFeatureMembership : FeatureMembership {
+    constructor(ref val str _identity: Any)
+    cmp var str kind: TransitionFeatureKind?
+    drv transitionFeature: Step
+  }
+  data TransitionUsage : ActionUsage {
+    constructor(ref val str _identity: Any)
+    drv source: ActionUsage
+    drv target: ActionUsage
+    drv triggerAction: Set<AcceptActionUsage>
+    drv guardExpression: Set<Expression>
+    drv effectAction: Set<ActionUsage>
+    drv succession: Succession
+  }
+namespace SysML.Systems.UseCases
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data IncludeUseCaseUsage : UseCaseUsage, PerformActionUsage {
+    constructor(ref val str _identity: Any)
+    drv useCaseIncluded: UseCaseUsage
+  }
+  data UseCaseDefinition : CaseDefinition {
+    constructor(ref val str _identity: Any)
+    drv includedUseCase: OrderedSet<UseCaseUsage>
+  }
+  data UseCaseUsage : CaseUsage {
+    constructor(ref val str _identity: Any)
+    drv useCaseDefinition: UseCaseDefinition?
+    drv includedUseCase: OrderedSet<UseCaseUsage>
+  }
+namespace SysML.Systems.VerificationCases
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.Views
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  data RequirementVerificationMembership : RequirementConstraintMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedRequirement: RequirementUsage
+    cmp var str kind: RequirementConstraintKind?
+    drv verifiedRequirement: RequirementUsage
+  }
+  data VerificationCaseDefinition : CaseDefinition {
+    constructor(ref val str _identity: Any)
+    drv verifiedRequirement: OrderedSet<RequirementUsage>
+  }
+  data VerificationCaseUsage : CaseUsage {
+    constructor(ref val str _identity: Any)
+    drv verificationCaseDefinition: VerificationCaseDefinition?
+    drv verifiedRequirement: OrderedSet<RequirementUsage>
+  }
+namespace SysML.Systems.Views
+  import std
+  import KerML.Root.Dependencies
+  import KerML.Root.Annotations
+  import KerML.Root.Namespaces
+  import KerML.Root.Elements
+  import KerML.Core.Types
+  import KerML.Core.Classifiers
+  import KerML.Core.Features
+  import KerML.Kernel.Interactions
+  import KerML.Kernel.Packages
+  import KerML.Kernel.Classes
+  import KerML.Kernel.Expressions
+  import KerML.Kernel.Structures
+  import KerML.Kernel.Functions
+  import KerML.Kernel.Multiplicities
+  import KerML.Kernel.Behaviors
+  import KerML.Kernel.Metadata
+  import KerML.Kernel.DataTypes
+  import KerML.Kernel.Associations
+  import KerML.Kernel.FeatureValues
+  import KerML.Kernel.Connectors
+  import SysML.Systems.Ports
+  import SysML.Systems.Attributes
+  import SysML.Systems.Actions
+  import SysML.Systems.DefinitionAndUsage
+  import SysML.Systems.Parts
+  import SysML.Systems.Interfaces
+  import SysML.Systems.States
+  import SysML.Systems.Constraints
+  import SysML.Systems.Requirements
+  import SysML.Systems.Calculations
+  import SysML.Systems.Connections
+  import SysML.Systems.Cases
+  import SysML.Systems.AnalysisCases
+  import SysML.Systems.Items
+  import SysML.Systems.VerificationCases
+  import SysML.Systems.Enumerations
+  import SysML.Systems.Allocations
+  import SysML.Systems.Occurrences
+  import SysML.Systems.UseCases
+  import SysML.Systems.Metadata
+  import SysML.Systems.Flows
+  interface Expose : Import {
+    cmp var str visibility: VisibilityKind?
+    cmp var str isImportAll: Boolean?
+  }
+  data MembershipExpose : MembershipImport, Expose {
+    constructor(ref val str _identity: Any)
+  }
+  data NamespaceExpose : Expose, NamespaceImport {
+    constructor(ref val str _identity: Any)
+  }
+  data RenderingDefinition : PartDefinition {
+    constructor(ref val str _identity: Any)
+    drv rendering: OrderedSet<RenderingUsage>
+  }
+  data RenderingUsage : PartUsage {
+    constructor(ref val str _identity: Any)
+    drv renderingDefinition: RenderingDefinition?
+  }
+  data ViewDefinition : PartDefinition {
+    constructor(ref val str _identity: Any)
+    drv view: OrderedSet<ViewUsage>
+    drv satisfiedViewpoint: OrderedSet<ViewpointUsage>
+    drv viewRendering: RenderingUsage?
+    drv viewCondition: OrderedSet<Expression>
+  }
+  data ViewRenderingMembership : FeatureMembership {
+    constructor(ref val str _identity: Any)
+    drv ownedRendering: RenderingUsage
+    drv referencedRendering: RenderingUsage
+  }
+  data ViewUsage : PartUsage {
+    constructor(ref val str _identity: Any)
+    drv viewDefinition: ViewDefinition?
+    drv satisfiedViewpoint: OrderedSet<ViewpointUsage>
+    drv exposedElement: OrderedSet<Element>
+    drv viewRendering: RenderingUsage?
+    drv viewCondition: OrderedSet<Expression>
+  }
+  data ViewpointDefinition : RequirementDefinition {
+    constructor(ref val str _identity: Any)
+    drv viewpointStakeholder: OrderedSet<PartUsage>
+  }
+  data ViewpointUsage : RequirementUsage {
+    constructor(ref val str _identity: Any)
+    drv viewpointDefinition: ViewpointDefinition?
+    drv viewpointStakeholder: OrderedSet<PartUsage>
+  }
