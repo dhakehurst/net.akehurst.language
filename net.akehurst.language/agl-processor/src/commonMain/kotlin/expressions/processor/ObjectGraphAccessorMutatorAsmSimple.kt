@@ -303,6 +303,7 @@ class ExternalGetterAsmSimple(
                 when (v) {
                     is AsmStructure -> v
                     is AsmReference -> v.resolvedOrSelf()
+                    is AsmList -> v.referredOrRaw()
                     else -> v?.raw
                 }
             }
@@ -311,6 +312,7 @@ class ExternalGetterAsmSimple(
                 when (v) {
                     is AsmStructure -> v
                     is AsmReference -> v.resolvedOrSelf()
+                    is AsmList -> v.referredOrRaw()
                     else -> v?.raw
                 }
             }
@@ -1050,4 +1052,14 @@ data class ObjectGraphEdgeSimple(
 internal fun Any.resolvedOrSelf(): Any = when (this) {
     is AsmReference -> this.value ?: Unit
     else -> this
+}
+
+/**
+ * reading a list that holds references gives the referred elements, an unresolved reference is left out
+ * (the list of references itself is read with '&')
+ */
+internal fun AsmList.referredOrRaw(): Any = when {
+    this is AsmListSeparated -> this.raw
+    this.elements.any { it is AsmReference } -> this.elements.mapNotNull { el -> if (el is AsmReference) el.value else el.raw }
+    else -> this.raw
 }
