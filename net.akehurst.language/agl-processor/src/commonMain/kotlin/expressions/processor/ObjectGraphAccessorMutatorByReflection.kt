@@ -21,6 +21,8 @@ import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmList
+import net.akehurst.language.asm.api.AsmListSeparated
 import net.akehurst.language.asm.api.AsmReference
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.api.AsmValue
@@ -494,6 +496,7 @@ class ExternalGetterByReflection(
                 when (v) {
                     is AsmStructure -> v
                     is AsmReference -> v.resolvedOrSelf()
+                    is AsmList -> v.referredOrRaw()
                     else -> v?.raw
                 }
             }
@@ -503,6 +506,7 @@ class ExternalGetterByReflection(
                 when (v) {
                     is AsmStructure -> v
                     is AsmReference -> v.resolvedOrSelf()
+                    is AsmList -> v.referredOrRaw()
                     else -> v?.raw
                 }
             }
@@ -693,8 +697,13 @@ constructor(
             is AsmReference -> obj.value?.getPropertyOrNull(PropertyValueName(propertyName))
             else -> null
         }
-        return when (v) {
-            is AsmReference -> toTypedObject(v, tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.AnyType)
+        return when {
+            v is AsmReference -> toTypedObject(v, tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.AnyType)
+            // a list that holds references: the references themselves
+            v is AsmList && v !is AsmListSeparated && v.elements.any { it is AsmReference } -> {
+                val listType = tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+                createCollection(listType, v.elements.map { toTypedObject(it, listType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType) })
+            }
             else -> getProperty(tobj, propertyName)
         }
     }

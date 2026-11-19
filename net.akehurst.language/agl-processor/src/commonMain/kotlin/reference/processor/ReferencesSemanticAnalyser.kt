@@ -132,7 +132,7 @@ class ReferencesSemanticAnalyser(
             when (re) {
                 is ReferenceExpressionPropertyDefault -> checkReferredToTypeNames(ref, re, importedNamespaces)
                 is ReferenceExpressionCollectionDefault -> {
-                    re.ofType?.let {
+                    re.ofType.forEach {
                         if (null == findReferredToType(it, importedNamespaces)) {
                             raiseError(it, "For references in '${ref.inTypeName}', forall '${re.expression}', the of-type '$it' is not found")
                         }
@@ -206,7 +206,8 @@ class ReferencesSemanticAnalyser(
         // the type of the element that owns the scope, null for the root scope (any root element)
         val ownerType = if (isRoot) null else findReferredToType(scopeDef.scopeForTypeName, importedNamespaces)
         scopeDef.scopeImports.forEach { si ->
-            val ofType = si.ofType?.let {
+            // the of-types that are found (each one not found is an error)
+            val ofTypes = si.ofType.mapNotNull {
                 val t = findReferredToType(it, importedNamespaces)
                 if (null == t) {
                     when {
@@ -217,29 +218,29 @@ class ReferencesSemanticAnalyser(
                 t
             }
             val what = when {
-                si.intoScope -> "For 'import-into-scope ${si.ofType?.value}'"
+                si.intoScope -> "For 'import-into-scope ${si.ofType.joinToString(" | ") { it.value }}'"
                 si.kind == ScopeImportKind.INHERIT -> "In scope for type '${scopeDef.scopeForTypeName}', inherit"
                 else -> "In scope for type '${scopeDef.scopeForTypeName}', import"
             }
             if (si.byPosition) {
                 // the condition is evaluated on items of any type (the parameters of different kinds of element), so it is not type-checked against one type
             } else if (null == si.named) {
-                // the type of each selected element: the of-type, else the (element) type of 'elements' evaluated on the scope owner
-                val elementType: TypeDefinition? = when {
-                    si.intoScope -> ofType
-                    null != ofType -> {
+                // the types of the selected elements: the of-types (each is checked), else the (element) type of 'elements' evaluated on the scope owner
+                val elementTypes: List<TypeDefinition> = when {
+                    si.intoScope -> ofTypes
+                    si.ofType.isNotEmpty() -> {
                         if (null != ownerType) checkNavigations(si.elements, ownerType, "$what, forall", si)
-                        ofType
+                        ofTypes
                     }
 
                     null != ownerType -> {
                         checkNavigations(si.elements, ownerType, "$what, forall", si)
-                        elementTypeOf(si.elements, ownerType)
+                        listOfNotNull(elementTypeOf(si.elements, ownerType))
                     }
 
-                    else -> null
+                    else -> emptyList()
                 }
-                if (null != elementType) {
+                for (elementType in elementTypes) {
                     checkNavigations(si.target, elementType, what, si)
                     checkNavigations(si.recursive, elementType, "$what, recursive", si)
                     checkNavigations(si.visibility, elementType, "$what, visibility", si)
@@ -405,7 +406,7 @@ class ReferencesSemanticAnalyser(
         importedNamespaces: List<TypesNamespace>
     ) {
         checkPropertyOnce(ref, refExpr.referenceExpressionList, ", forall '${refExpr.expression}'")
-        val ofType = refExpr.ofType?.let {
+        val ofTypes = refExpr.ofType.map {
             val type = findReferredToType(it, importedNamespaces)
             when (type) {
                 null -> raiseError(it, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', the of-type '$it' is not found")
@@ -434,7 +435,7 @@ class ReferencesSemanticAnalyser(
             )
 
             // of-type not found, error already reported
-            null != refExpr.ofType && null == ofType -> Unit
+            ofTypes.any { null == it } -> Unit
 
             else -> {
                 // 'forall' over a single value (not a collection) : the loop variable has the type of the value
@@ -442,7 +443,8 @@ class ReferencesSemanticAnalyser(
                     is CollectionType -> collTypeInstance.typeArguments[0].type.resolvedDefinition
                     else -> collType
                 }
-                val filteredLoopVarType = ofType?.let {
+                // the inner lines are checked for each of-type (an element of any of them is selected)
+                val filteredLoopVarTypes = ofTypes.filterNotNull().mapNotNull { ofType ->
                     when {
                         // the loop variable type may be a data type or an interface (e.g. a metamodel's abstract classes), allSuperTypes is the transitive closure
                         (loopVarType is DataType || loopVarType is InterfaceType) && ofType is StructuredType && (ofType == loopVarType || ofType.allSuperTypes.any { it.resolvedDefinition == loopVarType }) -> ofType //no error
@@ -452,10 +454,12 @@ class ReferencesSemanticAnalyser(
                             null
                         }
                     }
-                } ?: loopVarType
-                checkNavigations(refExpr.condition, filteredLoopVarType, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', when", refExpr)
-                for (re in refExpr.referenceExpressionList) {
-                    checkReferenceExpression(crossReferenceDomain, filteredLoopVarType, ref, re, importedNamespaces)
+                }.ifEmpty { listOf(loopVarType) }
+                for (filteredLoopVarType in filteredLoopVarTypes) {
+                    checkNavigations(refExpr.condition, filteredLoopVarType, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', when", refExpr)
+                    for (re in refExpr.referenceExpressionList) {
+                        checkReferenceExpression(crossReferenceDomain, filteredLoopVarType, ref, re, importedNamespaces)
+                    }
                 }
             }
         }
