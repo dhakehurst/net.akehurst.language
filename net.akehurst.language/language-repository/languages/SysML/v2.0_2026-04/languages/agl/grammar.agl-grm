@@ -71,6 +71,9 @@ grammar Base {
 
 // KerML 8.2.5.8 Expressions
 // Operator precedence (KerML Table 6) is given by the preference rule, lowest precedence first.
+// TODO(David): write the binary operator expressions in AGL style, one list rule '[OwnedExpression / BINARY_OPERATOR]2+' with the precedence
+//  applied by the analyser, instead of one rule per operator group (agl parses lists faster than nested rules, and it is more readable).
+//  The asm-transform onto the metamodel then needs a way to build the nested OperatorExpressions from the list.
 grammar Expressions : Base {
 
     OwnedExpression
