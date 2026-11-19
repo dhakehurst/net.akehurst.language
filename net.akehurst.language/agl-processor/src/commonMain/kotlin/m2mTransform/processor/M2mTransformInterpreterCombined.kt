@@ -22,6 +22,7 @@ import net.akehurst.language.agl.m2mTransform.processor.interpreter.ExecutionSte
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecutorCombined
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.CreateObjectExpression
+import net.akehurst.language.expressions.asm.ExpressionExt.freeVariables
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.InfixExpression
 import net.akehurst.language.expressions.api.RootExpression
@@ -35,6 +36,9 @@ import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpe
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.collectionTemplateMatches
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.domainArgumentNames
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.ruleArgumentNames
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.MappingStep
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.MappingStepKind
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.orderMappingSteps
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -753,32 +757,71 @@ class M2mTransformInterpreterCombined(
                                 if (whenResult.first) {
                                     markApplied(m2mExecution, rule, allVars)
                                     val varsAfterWhen = whenResult.second// + allVars.matchedVariables
-                                    // construct
                                     val tgtExpr = rule.expression[m2mExecution.targetDomainRef]
                                         ?: error("No expression found for target domain '${m2mExecution.targetDomainRef.value}'") // should never happen
-                                    val lhsType = rule.domainSignature[m2mExecution.targetDomainRef]?.variable?.type
+                                    val lhsVar = rule.domainSignature[m2mExecution.targetDomainRef]?.variable
                                         ?: error("No domainSignature found for target domain '${m2mExecution.targetDomainRef.value}'") // should never happen
-                                    val tgtObj = createFromExpression(m2mExecution, varsAfterWhen, lhsType, tgtExpr)
-                                    val mapping = rule.domainSignature.entries.associate { (dr, ds) ->
-                                        val v = when (dr) {
-                                            m2mExecution.targetDomainRef -> tgtObj
-                                            else -> varsAfterWhen.getOrInParent(ds.variable.name.value)
-                                                ?: error("No variable found for '${ds.variable.name.value}' of domain '$dr'.") // should never be error!
-                                        }
-                                        Pair(dr, v)
+                                    val lhsType = lhsVar.type ?: error("No domainSignature found for target domain '${m2mExecution.targetDomainRef.value}'") // should never happen
+                                    val tgtName = lhsVar.name.value
+                                    // the steps are done in the order their variables need (as for a relation):
+                                    // create the target, record the mapping, each 'where' call, set the target's '{ ... }' properties
+                                    val createInputs = when (tgtExpr) {
+                                        is CreateObjectExpression -> tgtExpr.constructorArguments.flatMap { it.freeVariables }
+                                        else -> tgtExpr.freeVariables
                                     }
-                                    m2mExecution.addRecord(rule, mapping)
+                                    val steps = mutableListOf(
+                                        MappingStep(MappingStepKind.CREATE, null, createInputs.toSet() - tgtName, setOf(tgtName)),
+                                        MappingStep(MappingStepKind.RECORD, null, setOf(tgtName), emptySet())
+                                    )
+                                    rule.where.forEach { call ->
+                                        val whereTargetArgName = (call.domainArguments[m2mExecution.targetDomainRef] as? RootExpression)?.name
+                                        val isBound = whereTargetArgName != null && varsAfterWhen.getOrInParent(whereTargetArgName) != null
+                                        val outputs = if (isBound || whereTargetArgName == null) emptySet() else setOf(whereTargetArgName)
+                                        val inputs = (call.ruleArgumentNames + call.domainArgumentNames).toSet() - outputs
+                                        steps.add(MappingStep(MappingStepKind.WHERE, call, inputs, outputs))
+                                    }
+                                    if (tgtExpr is CreateObjectExpression) {
+                                        val setInputs = tgtExpr.propertyAssignments.flatMap { it.freeVariables }.toSet() + tgtName
+                                        steps.add(MappingStep(MappingStepKind.SET_PROPERTIES, null, setInputs, emptySet()))
+                                    }
+                                    val (orderedSteps, cyclicSteps) = orderMappingSteps(steps)
+                                    if (cyclicSteps.isNotEmpty()) {
+                                        m2mExecution.errorIssue(
+                                            "In mapping '${rule.name.value}' the target and the 'where' clause need each other's variables, the steps cannot be ordered: ${cyclicSteps.joinToString(separator = "; ")}"
+                                        )
+                                        return@map Unit
+                                    }
+                                    var evc = varsAfterWhen.child()
+                                    var tgtObj: TypedObject? = null
+                                    for (step in orderedSteps) {
+                                        when (step.kind) {
+                                            MappingStepKind.CREATE -> {
+                                                val obj = createFromExpression(m2mExecution, evc, lhsType, tgtExpr)
+                                                tgtObj = obj
+                                                evc.setNamedValue(tgtName, obj)
+                                            }
 
-                                    // where
-                                    val varsAfterWhere = when {
-                                        rule.where.isEmpty() -> varsAfterWhen
-                                        else -> rule.where.fold(varsAfterWhen) { acc, it ->
-                                            executeWhere(m2mExecution, rule, it, acc)
+                                            MappingStepKind.RECORD -> {
+                                                val mapping = rule.domainSignature.entries.associate { (dr, ds) ->
+                                                    val v = when (dr) {
+                                                        m2mExecution.targetDomainRef -> tgtObj ?: error("Target not created before recording mapping '${rule.name.value}'") // should never happen, CREATE is before RECORD
+                                                        else -> evc.getOrInParent(ds.variable.name.value)
+                                                            ?: error("No variable found for '${ds.variable.name.value}' of domain '$dr'.") // should never be error!
+                                                    }
+                                                    Pair(dr, v)
+                                                }
+                                                m2mExecution.addRecord(rule, mapping)
+                                            }
+
+                                            MappingStepKind.WHERE -> evc = executeWhere(m2mExecution, rule, step.where!!, evc)
+
+                                            MappingStepKind.SET_PROPERTIES -> setPropertiesFromExpression(
+                                                m2mExecution,
+                                                tgtObj ?: error("Target not created before setting properties of mapping '${rule.name.value}'"), // should never happen, CREATE is before SET_PROPERTIES
+                                                evc, tgtExpr
+                                            )
                                         }
                                     }
-
-                                    // setProperties
-                                    setPropertiesFromExpression(m2mExecution, tgtObj, varsAfterWhere, tgtExpr)
 
                                 } else {
                                     m2mExecution.infoIssue("when clause evaluated to false for target domain ref '${m2mExecution.targetDomainRef.value}' of rule '${rule.name}'.")

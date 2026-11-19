@@ -339,6 +339,56 @@ object M2mTransformInterpreterHelpers {
         return result
     }
 
+    /** what a step of a mapping execution does, see [MappingStep] */
+    enum class MappingStepKind { CREATE, RECORD, WHERE, SET_PROPERTIES }
+
+    /**
+     * a step of a mapping execution: create the target, record the mapping, one 'where' call, or set the target's '{ ... }' properties.
+     * inputs are the variables it needs, outputs the variables it binds.
+     */
+    class MappingStep(val kind: MappingStepKind, val where: RuleWhere?, val inputs: Set<String>, val outputs: Set<String>) {
+        val description: String get() = when (kind) {
+            MappingStepKind.WHERE -> "where call ${where?.ruleName?.value ?: ""}"
+            else -> kind.name.lowercase().replace('_', ' ')
+        }
+
+        override fun toString(): String = "$inputs -> $description -> $outputs"
+    }
+
+    /**
+     * the steps in an order where a step that binds a variable comes before every step that needs it.
+     * Stable: a step only moves ahead of an earlier one when that earlier one is waiting for a variable.
+     * Returns (ordered steps, steps in a cycle); the second is empty when there is no cycle.
+     */
+    fun orderMappingSteps(steps: List<MappingStep>): Pair<List<MappingStep>, List<MappingStep>> {
+        val n = steps.size
+        val dependents = List(n) { mutableListOf<Int>() }
+        val unmet = IntArray(n)
+        for (i in 0 until n) {
+            for (j in 0 until n) {
+                if (i != j && steps[j].outputs.any { steps[i].inputs.contains(it) }) {
+                    dependents[j].add(i)
+                    unmet[i]++
+                }
+            }
+        }
+        val ready = (0 until n).filter { unmet[it] == 0 }.toMutableList()
+        val ordered = mutableListOf<MappingStep>()
+        while (ready.isNotEmpty()) {
+            val j = ready.removeAt(0)
+            ordered.add(steps[j])
+            for (i in dependents[j]) {
+                unmet[i]--
+                if (unmet[i] == 0) {
+                    val pos = ready.binarySearch(i)
+                    ready.add(-(pos + 1), i)
+                }
+            }
+        }
+        val cyclic = (0 until n).filter { unmet[it] > 0 }.map { steps[it] }
+        return Pair(ordered, cyclic)
+    }
+
     val RuleWhere.domainArgumentNames: List<String> get() = this.domainArguments.flatMap { (_, v) -> v.freeVariables } //TODO: does not handle RuleWhen freeVars !
     val RuleCall.ruleArgumentNames: List<String> get() = this.ruleArguments.flatMap { (_, v) -> v.freeVariables } //TODO: does not handle RuleWhen freeVars !
 }

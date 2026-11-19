@@ -161,6 +161,8 @@ mapping CircleToDisc(prefix:String) {
 
 Result: one `Drawing` with the discs `disc-c` and `disc-d`. Items that are not a `Circle` are skipped.
 
+The target and the `where` calls are done in the order their variables need, in a mapping as in a relation. A `where` call runs before a target expression that uses the variable it binds (`domain d l:String := x  where { map Up { s := n  d := x } }`), and after the target is created when it uses the target (`map Up { s := disc.label  d := x }`). The `{ ... }` properties of a constructor are set once the variables they use are bound. If the target and a `where` call each need a variable the other binds, that is an error.
+
 A rule is applied at most once for the same variable binding, so a `top` rule that is also called from `where` or `when` gives no duplicate targets.
 
 ## Abstract rules

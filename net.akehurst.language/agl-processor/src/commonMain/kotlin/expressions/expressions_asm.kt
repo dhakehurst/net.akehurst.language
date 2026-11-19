@@ -579,6 +579,7 @@ object ExpressionExt {
             is StatementBlockExpression -> this.assignment.flatMap { it.freeVariables } + this.expression.freeVariables
             is TernaryConditionExpression -> this.condition.freeVariables + this.trueExpression.freeVariables + this.falseExpression.freeVariables
             is TypeTestExpression -> this.expression.freeVariables
+            is VariableAssignmentStatement -> this.rhs.freeVariables
             is WithExpression -> this.withContext.freeVariables + this.expression.freeVariables
             is WhenExpression -> this.options.flatMap { it.condition.freeVariables + it.expression.freeVariables } + this.elseOption.expression.freeVariables
             else -> error("Unsupported Expression subtype ${this::class.simpleName}")
