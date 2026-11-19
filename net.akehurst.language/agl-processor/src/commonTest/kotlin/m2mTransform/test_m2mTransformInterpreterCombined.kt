@@ -944,6 +944,7 @@ class test_m2mTransformInterpreterCombined {
                                  a1:Attribute {
                                    name == 'a1'
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String := X + ' contains a1'
@@ -1016,6 +1017,7 @@ class test_m2mTransformInterpreterCombined {
                                  Attribute {
                                    name == Y
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String := X + ' contains ' + Y
@@ -1164,6 +1166,7 @@ class test_m2mTransformInterpreterCombined {
                                  a1:Attribute {
                                    name == 'a1'
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String == X + ' contains a1'
@@ -1236,6 +1239,7 @@ class test_m2mTransformInterpreterCombined {
                                  Attribute {
                                    name == Y
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String == X + ' contains ' + Y

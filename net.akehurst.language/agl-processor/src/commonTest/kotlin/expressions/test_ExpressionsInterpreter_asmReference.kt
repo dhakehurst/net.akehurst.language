@@ -148,4 +148,40 @@ class test_ExpressionsInterpreter_asmReference {
             assertEquals(text, (sa.asm as net.akehurst.language.expressions.api.Expression).asString(net.akehurst.kotlinx.utils.Indent(), emptyList()))
         }
     }
+
+    @Test
+    fun list_of_references__gives_referred_elements() {
+        // a list property that holds references (e.g. created by a transform)
+        val res = processor.process("req A req B link satisfies A", Agl.options { semanticAnalysis { sentenceContext(contextAsmSimple()) } })
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val (a, b, link) = items(res.asm!!.root.first() as AsmStructure)
+        val refs = net.akehurst.language.asm.simple.AsmListSimple(
+            listOf(
+                net.akehurst.language.asm.simple.AsmReferenceSimple("A", a),
+                net.akehurst.language.asm.simple.AsmReferenceSimple("X", null),
+                net.akehurst.language.asm.simple.AsmReferenceSimple("B", b)
+            )
+        )
+        link.setProperty(PropertyValueName("targets"), refs, 3)
+
+        // without '&': the referred elements, the unresolved 'X' is left out
+        val (targets, issues) = eval(link, "targets")
+        assertTrue(issues.errors.isEmpty(), issues.toString())
+        val els = ((targets.self as? List<*>) ?: (targets.self as net.akehurst.language.asm.api.AsmList).elements)
+            .map { (it as? net.akehurst.language.objectgraph.api.TypedObject)?.self ?: it }
+        assertEquals(2, els.size, els.toString())
+        assertSame(a, els[0])
+        assertSame(b, els[1])
+
+        val (firstId, issues2) = eval(link, "targets.first.id")
+        assertTrue(issues2.errors.isEmpty(), issues2.toString())
+        assertEquals("A", firstId.self)
+
+        // with '&': the references
+        val (refsRead, issues3) = eval(link, "&targets")
+        assertTrue(issues3.errors.isEmpty(), issues3.toString())
+        val rs = (refsRead.self as? List<*>) ?: (refsRead.self as net.akehurst.language.asm.api.AsmList).elements
+        assertEquals(3, rs.size, rs.toString())
+        assertTrue(rs.all { (it as? net.akehurst.language.objectgraph.api.TypedObject)?.self is AsmReference || it is AsmReference }, rs.toString())
+    }
 }

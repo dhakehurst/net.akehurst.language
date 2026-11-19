@@ -89,7 +89,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 fromInherited = 'inherited' ;
                 fromElse = 'else' rootOrNavigation ;
                 collectionReferenceExpression = 'forall' rootOrNavigation ofType? condition? '{' referenceExpressionList '}' ;
-                ofType = 'of-type' possiblyQualifiedTypeReference ;
+                ofType = 'of-type' typeReferences ;
                 
                 rootOrNavigation = rootExpression | navigationExpression ;
                 
@@ -298,7 +298,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     concatenation("collectionReferenceExpression") {
                         lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; opt { ref("condition") }; lit("{"); ref("referenceExpressionList"); lit("}")
                     }
-                    concatenation("ofType") { lit("of-type"); ref("possiblyQualifiedTypeReference") }
+                    concatenation("ofType") { lit("of-type"); ref("typeReferences") }
                     choice("rootOrNavigation") {
                         ref("rootExpression")
                         ref("navigationExpression")
@@ -330,7 +330,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     supertype("Formatable")
                     propertyOf(setOf(VAL, CMP, STR), "kind", "ScopeImportKind", false)
                     propertyOf(setOf(VAL, CMP, STR), "elements", "Expression", false)
-                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", true)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
                     propertyOf(setOf(VAL, CMP, STR), "target", "NavigationExpression", false)
                     propertyOf(setOf(VAL, CMP, STR), "recursive", "Expression", true)
                     propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
@@ -356,7 +358,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 interface_("ReferenceExpressionCollection") {
                     supertype("ReferenceExpression")
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
-                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", true)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
                     propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
                     propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpression")
@@ -428,7 +432,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     constructor_ {
                         parameter(setOf(), "kind", "ScopeImportKind")
                         parameter(setOf(), "elements", "Expression")
-                        parameter(setOf(), "ofType", "PossiblyQualifiedName")
+                        parameter(setOf(), "ofTypeAsWritten", "List")
                         parameter(setOf(), "target", "NavigationExpression")
                         parameter(setOf(), "recursive", "Expression")
                         parameter(setOf(), "visibility", "Expression")
@@ -439,7 +443,9 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     propertyOf(setOf(VAL, CMP, STR), "kind", "ScopeImportKind", false)
                     propertyOf(setOf(VAL, CMP, STR), "elements", "Expression", false)
-                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", true)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
                     propertyOf(setOf(VAL, CMP, STR), "target", "NavigationExpression", false)
                     propertyOf(setOf(VAL, CMP, STR), "recursive", "Expression", true)
                     propertyOf(setOf(VAL, CMP, STR), "visibility", "Expression", true)
@@ -483,13 +489,15 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     supertype("ReferenceExpressionCollection")
                     constructor_ {
                         parameter(setOf(), "expression", "Expression")
-                        parameter(setOf(), "ofType", "PossiblyQualifiedName")
+                        parameter(setOf(), "ofTypeAsWritten", "List")
                         parameter(setOf(), "referenceExpressionList", "List")
                         parameter(setOf(), "condition", "Expression")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", true)
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
-                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", true)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "List", false){
+                        typeArgument("PossiblyQualifiedName")
+                    }
                     propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpressionAbstract")
                     }
@@ -600,7 +608,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     createObject("propertyWhenOption", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
                     createObject("propertyWhenElse", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
                     createObject("collectionReferenceExpression", "ReferenceExpressionCollectionDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 2, "child[2]") }
-                    transRule("ofType", "PossiblyQualifiedName", "child[1]")
+                    transToListOf("ofType", "PossiblyQualifiedName", "child[1]")
                     transToListOf("typeReferences", "PossiblyQualifiedName", "children")
                     transRule("possiblyQualifiedTypeReference", "PossiblyQualifiedName", "child[0]")
                     transRule("possiblyQualifiedName", "PossiblyQualifiedName", "children")

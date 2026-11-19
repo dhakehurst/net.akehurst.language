@@ -112,10 +112,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Base.things
     }
     scope net.akehurst.language.kerML.Behaviors.Step {
@@ -125,10 +123,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Performances.performances
     }
     scope net.akehurst.language.kerML.Behaviors.Expression {
@@ -138,10 +134,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Performances.evaluations
     }
     scope net.akehurst.language.kerML.Behaviors.BooleanExpression {
@@ -151,10 +145,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Performances.booleanEvaluations
     }
     scope net.akehurst.language.kerML.Behaviors.Invariant {
@@ -164,10 +156,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Performances.trueEvaluations
     }
     scope net.akehurst.language.kerML.Connectors.Connector {
@@ -177,20 +167,16 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall connectorKind.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
         inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
         inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall connectorKind.binaryConnectorPrefix.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Links.links
     }
     scope net.akehurst.language.kerML.Connectors.BindingConnector {
@@ -200,10 +186,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall bindingConnectorDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
     }
     scope net.akehurst.language.kerML.Connectors.Succession {
         inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
@@ -212,10 +196,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall successionDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
     }
     scope net.akehurst.language.kerML.Interactions.Flow {
         inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Typings members-of typedBy.generalType.name
@@ -224,10 +206,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Transfers.transfers
     }
     scope net.akehurst.language.kerML.Interactions.SuccessionFlow {
@@ -237,10 +217,8 @@ namespace net.akehurst.language.kerML.KerMLv1_0
         inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Subsettings members-of subsets.generalType.name
         inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
         inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Redefinitions members-of redefines.generalType.name
-        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References members-of generalType.name
-        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
-        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureIdentifiedSpecialization.featureSpecialization of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
+        inherit forall flowDeclaration.featureDeclaration.featureDeclarationKind.featureSpecializationPart of-type net.akehurst.language.kerML.Features.References | net.akehurst.language.kerML.Features.Crosses members-of generalType.name
         inherit named Transfers.flowTransfersBefore
     }
     scope net.akehurst.language.kerML.Types.MultiplicityRange { }

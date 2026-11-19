@@ -282,7 +282,8 @@ data class IdentifiableDefault(
 data class ScopeImportDefault(
     override val kind: ScopeImportKind,
     override val elements: Expression,
-    override val ofType: PossiblyQualifiedName?,
+    /** the 'of-type' names as written (may contain type-group names) */
+    val ofTypeAsWritten: List<PossiblyQualifiedName>,
     override val target: NavigationExpression,
     override val recursive: Expression? = null,
     override val visibility: Expression? = null,
@@ -291,6 +292,10 @@ data class ScopeImportDefault(
     override val intoScope: Boolean = false,
     override val byPosition: Boolean = false
 ) : ScopeImport {
+    /** 'ofTypeAsWritten' with the type-group names replaced by their types, null if it has none */
+    var ofTypeExpanded: List<PossiblyQualifiedName>? = null
+    override val ofType: List<PossiblyQualifiedName> get() = ofTypeExpanded ?: ofTypeAsWritten
+
     override fun asString(indent: Indent, imports: List<Import>): String {
         val kw = when (kind) {
             ScopeImportKind.IMPORT_MEMBERS -> "import"
@@ -301,17 +306,17 @@ data class ScopeImportDefault(
             ScopeImportKind.IMPORT_ELEMENT -> "element"
             else -> "members-of"
         }
-        val ot = ofType?.let { " of-type ${it.value}" } ?: ""
+        val ot = if (ofTypeAsWritten.isEmpty()) "" else " of-type " + ofTypeAsWritten.joinToString(" | ") { it.value }
         val rec = recursive?.let { " recursive ${it.asString(indent, emptyList())}" } ?: ""
         val vis = visibility?.let { " visibility ${it.asString(indent, emptyList())}" } ?: ""
         val cn = condition?.let { " when ${it.asString(indent, emptyList())}" } ?: ""
         return when {
             byPosition -> "${indent}inherit by-position$cn"
-            intoScope -> "${indent}import-into-scope ${ofType?.value ?: ""} $what ${target.asString(indent, emptyList())}$rec$vis$cn"
+            intoScope -> "${indent}import-into-scope ${ofTypeAsWritten.joinToString(" | ") { it.value }} $what ${target.asString(indent, emptyList())}$rec$vis$cn"
             null == named -> {
                 // 'forall $self' (with no of-type) is written without 'forall'
                 val fa = when {
-                    null == ofType && elements is RootExpression && (elements as RootExpression).name == RootExpressionDefault.SELF.name -> ""
+                    ofTypeAsWritten.isEmpty() && elements is RootExpression && (elements as RootExpression).name == RootExpressionDefault.SELF.name -> ""
                     else -> " forall ${elements.asString(indent, emptyList())}$ot"
                 }
                 "${indent}$kw$fa $what ${target.asString(indent, emptyList())}$rec$vis$cn"
@@ -439,17 +444,22 @@ data class ReferenceExpressionPropertyDefault(
 
 data class ReferenceExpressionCollectionDefault(
     override val expression: Expression,
-    override val ofType: PossiblyQualifiedName?,
+    /** the 'of-type' names as written (may contain type-group names) */
+    val ofTypeAsWritten: List<PossiblyQualifiedName>,
     override val referenceExpressionList: List<ReferenceExpressionAbstract>,
     override val condition: Expression? = null
 ) : ReferenceExpressionAbstract(), ReferenceExpressionCollection {
 
+    /** 'ofTypeAsWritten' with the type-group names replaced by their types, null if it has none */
+    var ofTypeExpanded: List<PossiblyQualifiedName>? = null
+    override val ofType: List<PossiblyQualifiedName> get() = ofTypeExpanded ?: ofTypeAsWritten
+
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val ex = expression.asString(indent, emptyList())
-        val ot = when (ofType) {
-            null -> ""
-            else -> " of-type " + ofType.value
+        val ot = when {
+            ofTypeAsWritten.isEmpty() -> ""
+            else -> " of-type " + ofTypeAsWritten.joinToString(" | ") { it.value }
         }
         val cond = when (condition) {
             null -> ""

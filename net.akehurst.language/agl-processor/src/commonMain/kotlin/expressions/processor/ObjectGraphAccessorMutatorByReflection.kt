@@ -21,6 +21,8 @@ import net.akehurst.kotlinx.collections.OrderedSet
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.asm.api.AsmList
+import net.akehurst.language.asm.api.AsmListSeparated
 import net.akehurst.language.asm.api.AsmReference
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.api.AsmValue
@@ -494,6 +496,7 @@ class ExternalGetterByReflection(
                 when (v) {
                     is AsmStructure -> v
                     is AsmReference -> v.resolvedOrSelf()
+                    is AsmList -> v.referredOrRaw()
                     else -> v?.raw
                 }
             }
@@ -503,6 +506,7 @@ class ExternalGetterByReflection(
                 when (v) {
                     is AsmStructure -> v
                     is AsmReference -> v.resolvedOrSelf()
+                    is AsmList -> v.referredOrRaw()
                     else -> v?.raw
                 }
             }
@@ -693,8 +697,13 @@ constructor(
             is AsmReference -> obj.value?.getPropertyOrNull(PropertyValueName(propertyName))
             else -> null
         }
-        return when (v) {
-            is AsmReference -> toTypedObject(v, tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.AnyType)
+        return when {
+            v is AsmReference -> toTypedObject(v, tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.AnyType)
+            // a list that holds references: the references themselves
+            v is AsmList && v !is AsmListSeparated && v.elements.any { it is AsmReference } -> {
+                val listType = tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+                createCollection(listType, v.elements.map { toTypedObject(it, listType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType) })
+            }
             else -> getProperty(tobj, propertyName)
         }
     }
@@ -852,22 +861,13 @@ constructor(
                             (null != propResOriginal.accessor) -> {
                                 val value = propertyExecution(obj, propResOriginal)
                                 value?.let { toTypedObject(value, propRes.typeInstance) }
-                                    ?: when {
-                                        propResOriginal.typeInstance.isNullable -> nothing()
-                                        else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing.")
-                                    }
+                                    ?: unsetPropertyValue(obj, propertyName, propRes, propResOriginal)
                             }
 
                             (null != propResOriginal.accessorSuspend) -> {
                                 val value = propertyExecution(obj, propResOriginal)
                                 value?.let { toTypedObject(value, propRes.typeInstance) }
-                                    ?: when {
-                                        propResOriginal.typeInstance.isNullable -> nothing()
-                                        else -> issueErrorReturnNothing(
-                                            null,
-                                            "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing."
-                                        )
-                                    }
+                                    ?: unsetPropertyValue(obj, propertyName, propRes, propResOriginal)
                             }
 
                             else -> {
@@ -877,13 +877,7 @@ constructor(
                                     null -> {
                                         val value = externalPropertyAccessor(obj, propertyName) //externalGetter.getProperty(obj, propertyName)
                                         value?.let { toTypedObject(value, propRes.typeInstance) }
-                                            ?: when {
-                                                propResOriginal.typeInstance.isNullable -> nothing()
-                                                else -> issueErrorReturnNothing(
-                                                    null,
-                                                    "Executing property '$propertyName' on '${if(obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing."
-                                                )
-                                            }
+                                            ?: unsetPropertyValue(obj, propertyName, propRes, propResOriginal)
                                     }
 
                                     else -> toTypedObject(execResult.value, propRes.typeInstance)
@@ -894,6 +888,26 @@ constructor(
                 }
                     }
             }
+        }
+    }
+
+    /**
+     * The value of a property that is not set: \$nothing if the property is nullable, an empty collection if its type is a collection
+     * (a collection property, e.g. of multiplicity 0..* in a metamodel, that is not set has no elements), otherwise an error.
+     * The empty collection is made as a value set by an asm-transform is (a list, also for a Set or OrderedSet property), so that it
+     * is used in the same way.
+     */
+    private fun unsetPropertyValue(obj: Any, propertyName: String, propRes: PropertyDeclaration, propResOriginal: PropertyDeclaration): TypedObject {
+        val type = propRes.typeInstance
+        return when {
+            propResOriginal.typeInstance.isNullable -> nothing()
+            type.resolvedDefinitionOrNull is CollectionType -> when (type.qualifiedTypeName) {
+                StdLibDefault.Map.qualifiedName -> toTypedObject(emptyMap<Any, Any>(), type)
+                StdLibDefault.ListSeparated.qualifiedName -> toTypedObject(emptyList<Any>().toSeparatedList<Any, Any, Any>(), type)
+                else -> toTypedObject(emptyList<Any>(), type)
+            }
+
+            else -> issueErrorReturnNothing(null, "Executing property '$propertyName' on '${if (obj is AsmStructure) obj.typeName.value else obj::class.simpleName}' results in null, using value \$nothing.")
         }
     }
 

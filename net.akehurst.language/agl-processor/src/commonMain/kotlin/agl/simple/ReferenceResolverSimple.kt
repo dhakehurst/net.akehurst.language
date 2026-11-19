@@ -1025,12 +1025,14 @@ class ReferenceResolverSimple(
     private fun importElementsOf(si: ScopeImport, ownerEl: AsmStructure): List<AsmStructure> =
         structuresIn(evaluate(si.elements, ownerEl)).filter { el -> isSelectedBy(si, el) }
 
-    /** 'el' conforms to the 'of-type' of the import/inherit declaration (if it has one), and its condition (if any) holds for 'el' */
+    /** 'el' conforms to one of the 'of-type' types of the import/inherit declaration (if it has any), and its condition (if any) holds for 'el' */
     private fun isSelectedBy(si: ScopeImport, el: AsmStructure): Boolean {
-        val ofType = si.ofType?.let { crossReferenceDomain.findTypeNamedIn(typesDomain, si, it) }
-        val conforms = when (ofType) {
-            null -> true
-            else -> typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)?.conformsTo(ofType) ?: false
+        val conforms = when {
+            si.ofType.isEmpty() -> true
+            else -> {
+                val elType = typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)
+                null != elType && si.ofType.any { tn -> crossReferenceDomain.findTypeNamedIn(typesDomain, si, tn)?.let { elType.conformsTo(it) } ?: false }
+            }
         }
         return conforms && (null == si.condition || evaluate(si.condition, el) == true)
     }
@@ -1043,7 +1045,7 @@ class ReferenceResolverSimple(
      */
     private fun importsIntoScopeOf(ownerEl: AsmStructure): List<Pair<ScopeImport, AsmStructure>> {
         // (a declaration whose type is not found selects nothing; the semantic analysis of the references reports it)
-        val intos = crossReferenceDomain.importsIntoScope(typesDomain).filter { si -> si.ofType?.let { crossReferenceDomain.findTypeNamedIn(typesDomain, si, it) } != null }
+        val intos = crossReferenceDomain.importsIntoScope(typesDomain).filter { si -> si.ofType.any { crossReferenceDomain.findTypeNamedIn(typesDomain, si, it) != null } }
         if (intos.isEmpty()) return emptyList()
         return _importsIntoScopeOf.getOrPut(ownerEl) {
             val result = mutableListOf<Pair<ScopeImport, AsmStructure>>()
@@ -1273,8 +1275,8 @@ class ReferenceResolverSimple(
             // the type of the element itself, the collection's element type may be a supertype or union of it
             val elActualType = el.actualType(elType)
             val selected = when {
-                null == refExpr.ofType -> true
-                else -> elActualType.conformsToType(refExpr, refExpr.ofType) // else el is filtered out by the 'ofType'
+                refExpr.ofType.isEmpty() -> true
+                else -> refExpr.ofType.any { elActualType.conformsToType(refExpr, it) } // else el is filtered out by the 'of-type'
             }
             if (selected && forallConditionHolds(refExpr, el, elActualType)) {
                 val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure

@@ -57,6 +57,10 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 | `{ x := e ... expr }` | block with local variables |
 | `$nothing` | no value |
 
+A property that is not set reads as `$nothing` if it is nullable, and as an empty collection if its type is a collection
+(`List`, `Set`, `OrderedSet`, `Map`), e.g. a metamodel property of multiplicity 0..* that the sentence gives no elements for
+(see `test_ReferenceResolverSimple_unsetCollection`); reading any other unset property is an error.
+
 Special names: `$self` (current object), `$nothing`; in [asm-transform](asm-transform.md) also `child`, `children`,
 `$matchedText`, `$alternative`; in [references](references.md) also `$container`, `$owner`, `$root`, `$previous`; in [format](format.md) `$EOL`.
 
@@ -67,6 +71,7 @@ Reading it gives the element it refers to: `l.target` is the referred element, a
 Put `&` in front of the property name to get the reference itself: `l.&target` (or `&target` for a property of the current object).
 In a chain, `&` applies to the one property it is written in front of: `a.&b.c` reads `b` as a reference and then navigates to `c` of the element it refers to.
 Reading an unresolved reference without `&` gives `$nothing`; with `&` it gives the (unresolved) reference.
+A list that holds references (e.g. one created by a transform) gives the referred elements, without the unresolved ones; with `&` it gives the list of references.
 
 The [references](references.md) and [format](format.md) processors work on the referring side, so they read the last property of their expressions with `&`
 (a reference is formatted as the text that refers to the element).
