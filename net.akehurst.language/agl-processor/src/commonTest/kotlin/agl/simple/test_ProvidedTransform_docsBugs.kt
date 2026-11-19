@@ -308,4 +308,54 @@ class test_ProvidedTransform_docsBugs {
             proc.allIssues.errors.map { it.message }
         )
     }
+
+    @Test
+    fun create_missing_types__cast_to_provided_interface_that_is_not_a_rule_type() {
+        // no grammar rule has a default type 'Shape', the provided interface is used as it is (David U20 A)
+        val types = """
+            namespace example.Shapes
+              interface Shape { }
+        """.trimIndent()
+        val transform = """
+            #create-missing-types
+            namespace example
+            asm-transform Shapes {
+                #override-default-transform
+                item: child[0] as Shape
+            }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(GRAMMAR), typeStr = TypesString(types), transformStr = AsmTransformString(transform))
+        val proc = result.processor!!
+        proc.transformDomain // build it
+        assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
+        val ns = proc.typesDomain.findNamespaceOrNull(net.akehurst.language.base.api.QualifiedName("example.Shapes"))!!
+        assertTrue(ns.findOwnedTypeNamed(net.akehurst.language.base.api.SimpleName("Shape")) is net.akehurst.language.types.api.InterfaceType)
+    }
+
+    @Test
+    fun references_path_through_a_type_that_does_not_resolve_is_an_error_issue() {
+        // 'Info' is not defined (e.g. a missing import), the references check must not throw
+        val types = """
+            namespace example.Shapes
+              data Connection { name: Info  name2: Info }
+        """.trimIndent()
+        val references = """
+            namespace example.Shapes
+                identify Circle by name
+                references {
+                    in Connection {
+                        property name.text refers-to Circle
+                    }
+                }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(
+            GrammarString(GRAMMAR),
+            typeStr = TypesString(types),
+            referenceStr = net.akehurst.language.api.processor.CrossReferenceString(references)
+        )
+        val proc = result.processor!!
+        proc.crossReferenceDomain // build it
+        val messages = proc.allIssues.errors.map { it.message }
+        assertTrue(messages.any { it.contains("Cannot resolve type 'Info' in namespace 'example.Shapes', is an import needed?") }, messages.toString())
+    }
 }

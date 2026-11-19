@@ -114,12 +114,22 @@ class ExpressionTypeResolver(
         var acc = pd?.typeInstance
         val r = expr.parts.forEach {
             pd = when (it) {
-                is PropertyCall -> acc?.allResolvedProperty?.get(PropertyName(it.propertyName))
+                is PropertyCall -> acc?.let { ti -> resolvedOrIssue(ti) }?.allResolvedProperty?.get(PropertyName(it.propertyName))
                 else -> null //everything must be property calls
             }
             acc = pd?.typeInstance
         }
         return pd
+    }
+
+    /** the type, or null with an error issue if it does not resolve (e.g. a missing import) */
+    private fun resolvedOrIssue(ti: TypeInstance): TypeInstance? = when (ti.resolvedDefinitionOrNull) {
+        null -> {
+            issues.error(null, "Cannot resolve type '${ti.typeName.value}' in namespace '${ti.namespace.qualifiedName.value}', is an import needed?")
+            null
+        }
+
+        else -> ti
     }
 
     fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance =

@@ -19,6 +19,8 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.processor.AsmTransformString
+import net.akehurst.language.api.processor.TypesString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.StyleString
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -42,6 +44,23 @@ object KerML_v1_1_2026_09 {
             GrammarString(File(grammarDir, "grammar.agl-grm").readText()),
             referenceStr = CrossReferenceString(File(grammarDir, "references.agl-ref").readText()),
             styleStr = StyleString(File(grammarDir, "style.agl-sty").readText()),
+        )
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        return res.processor!!
+    }
+
+    /**
+     * a new processor for the 'std-metamodel' variant: the 'standard' grammar with an asm-transform onto the KerML 1.1 / SysML 2.1
+     * metamodel types, and the references written against the metaclasses
+     */
+    fun processorStdMetamodelWithReferences(): LanguageProcessor<Asm, SentenceContext> {
+        val dir = File(languageDir, "languages/std-metamodel")
+        val res = Agl.processorFromStringSimple(
+            GrammarString(File(dir, "grammar.agl-grm").readText()),
+            typeStr = TypesString(File(dir, "types.agl-typ").readText()),
+            transformStr = AsmTransformString(File(dir, "transform.agl-trf").readText()),
+            referenceStr = CrossReferenceString(File(dir, "references.agl-ref").readText()),
+            styleStr = StyleString(File(dir, "style.agl-sty").readText()),
         )
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         return res.processor!!

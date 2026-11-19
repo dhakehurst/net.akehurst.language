@@ -303,6 +303,8 @@ abstract class TypeInstanceAbstract() : TypeInstance {
 
     override val allResolvedProperty: Map<PropertyName, PropertyDeclarationResolved>
         get() {
+            // a type that does not resolve (e.g. a missing import) has no propertys, the user of them reports the issue
+            if (null == resolvedDefinitionOrNull) return emptyMap()
             val typeArgMap = createTypeArgMap()
             val superProps = resolvedDefinition.supertypes.map {
                 val resIt = it.resolved(typeArgMap)
@@ -317,6 +319,8 @@ abstract class TypeInstanceAbstract() : TypeInstance {
 
     override val allResolvedMethod: Map<MethodName, MethodDefinitionResolved>
         get() {
+            // a type that does not resolve (e.g. a missing import) has no methods, the user of them reports the issue
+            if (null == resolvedDefinitionOrNull) return emptyMap()
             val typeArgMap = createTypeArgMap()
             val superProps = resolvedDefinition.supertypes.map {
                 val resIt = it.resolved(typeArgMap)
