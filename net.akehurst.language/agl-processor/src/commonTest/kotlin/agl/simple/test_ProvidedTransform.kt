@@ -467,6 +467,64 @@ class test_ProvidedTransform {
                     }
                 }
             }
+            testData("List(...) function call in a transformation rule") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a b ;
+                        leaf a = 'a' ;
+                        leaf b = 'b' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: tuple { l := List(child[0], child[1], 'k') }
+                      }
+                """.trimIndent()
+                )
+                sentencePass("ab") {
+                    expectedAsm {
+                        tuple {
+                            propertyListOfString("l", listOf("a", "b", "k"))
+                        }
+                    }
+                }
+            }
+            testData("List(...) function call in an object property assignment") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a b ;
+                        leaf a = 'a' ;
+                        leaf b = 'b' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: S() { l := List(child[0], child[1], 'k') }
+                      }
+                """.trimIndent()
+                )
+                sentencePass("ab") {
+                    expectedAsm {
+                        element("S") {
+                            propertyListOfString("l", listOf("a", "b", "k"))
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -4,6 +4,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdFunctionLib
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
@@ -37,6 +38,7 @@ class ExpressionTypeResolver(
         is InfixExpression -> this.typeOfInfixExpressionFor(self)
         is CastExpression -> this.typeOfCastExpressionFor(self)
         is GroupExpression -> this.typeOfGroupExpressionFor(self)
+        is FunctionCall -> this.typeOfFunctionCallFor(self)
         else -> error("Subtype of Expression not handled in 'typeOfExpressionFor' : '${this::class.simpleName}'")
 
     }
@@ -195,6 +197,34 @@ class ExpressionTypeResolver(
 
     fun GroupExpression.typeOfGroupExpressionFor(self: TypeInstance): TypeInstance =
         this.expression.typeOfExpressionFor(self)
+
+    /**
+     * List(a, b, ...) and Set(a, b, ...) are a List/Set of the common supertype of the argument types (Any if there are no arguments),
+     * Pair(a, b) is a Pair of the argument types, other functions have their declared return type.
+     * A function that is not in the std function library is given by the user of the interpreter, so its type is Any.
+     */
+    fun FunctionCall.typeOfFunctionCallFor(self: TypeInstance): TypeInstance {
+        val argTypes = this.arguments.map { it.typeOfExpressionFor(self) }
+        fun elementType(): TypeInstance {
+            // a '\$nothing' argument does not contribute to the element type, unless all arguments are '\$nothing'
+            val notNothing = argTypes.filter { it != StdLibDefault.NothingType }
+            return when {
+                argTypes.isEmpty() -> StdLibDefault.AnyType
+                else -> commonSuperTypeOf(notNothing.ifEmpty { argTypes })
+            }
+        }
+        val funcName = this.possiblyQualifiedName.value
+        return when (funcName) {
+            "List" -> StdLibDefault.List.type(listOf(elementType().asTypeArgument))
+            "Set" -> StdLibDefault.Set.type(listOf(elementType().asTypeArgument))
+            "Pair" -> when (argTypes.size) {
+                2 -> StdLibDefault.Pair.type(listOf(argTypes[0].asTypeArgument, argTypes[1].asTypeArgument))
+                else -> StdLibDefault.Pair.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
+            }
+            else -> StdFunctionLib.findFirstFunctionNamed(funcName)?.returnTypeReference?.typeOfTypeReference()
+                ?: StdLibDefault.AnyType
+        }
+    }
 
     fun TypeReference.typeOfTypeReference(): TypeInstance {
         //val td = typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedName) ?: StdLibDefault.NothingType.resolvedDeclaration
