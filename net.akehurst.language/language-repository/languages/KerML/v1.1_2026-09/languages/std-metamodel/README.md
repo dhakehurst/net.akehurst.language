@@ -16,4 +16,7 @@ Mapping choices:
   `FeatureValue.value`, `ElementFilterMembership.condition`) adds the value to `ownedRelatedElement`; `ownedTypeFeaturing` to `ownedRelationship`;
 - an unassigned call to a rule whose type is a supertype of the caller's type sets properties of the caller's object.
 
-There are no references for these types yet.
+`references.agl-ref`: the references (name resolution of KerML 8.2.3.5) written against the metaclasses: identification by
+`declaredName` / `declaredShortName` (and the effective name of a redefining feature), the scopes of namespaces (imports) and types
+(inherited memberships, also of the implicit specializations of the Semantic Library), and the local namespace of each kind of
+relationship. What is not (yet) as the spec says is marked `OPEN` in the file.
