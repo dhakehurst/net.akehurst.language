@@ -331,4 +331,31 @@ class test_ProvidedTransform_docsBugs {
         val ns = proc.typesDomain.findNamespaceOrNull(net.akehurst.language.base.api.QualifiedName("example.Shapes"))!!
         assertTrue(ns.findOwnedTypeNamed(net.akehurst.language.base.api.SimpleName("Shape")) is net.akehurst.language.types.api.InterfaceType)
     }
+
+    @Test
+    fun references_path_through_a_type_that_does_not_resolve_is_an_error_issue() {
+        // 'Info' is not defined (e.g. a missing import), the references check must not throw
+        val types = """
+            namespace example.Shapes
+              data Connection { name: Info  name2: Info }
+        """.trimIndent()
+        val references = """
+            namespace example.Shapes
+                identify Circle by name
+                references {
+                    in Connection {
+                        property name.text refers-to Circle
+                    }
+                }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(
+            GrammarString(GRAMMAR),
+            typeStr = TypesString(types),
+            referenceStr = net.akehurst.language.api.processor.CrossReferenceString(references)
+        )
+        val proc = result.processor!!
+        proc.crossReferenceDomain // build it
+        val messages = proc.allIssues.errors.map { it.message }
+        assertTrue(messages.any { it.contains("Cannot resolve type 'Info' in namespace 'example.Shapes', is an import needed?") }, messages.toString())
+    }
 }
