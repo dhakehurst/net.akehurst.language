@@ -22,6 +22,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.reference.api.*
 import net.akehurst.language.types.api.DataType
+import net.akehurst.language.types.api.InterfaceType
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.api.TypesNamespace
@@ -56,11 +57,13 @@ fun TypesDomain.findCrossReferenceTypeOrNull(typesNamespace: TypesNamespace?, im
     }
 
 /**
- * true if objects of the type can be referred to ('refers-to'): a data type, or a union type of which every alternative is a data type
+ * true if objects of the type can be referred to ('refers-to'): a data type, an interface type (the targets are the objects
+ * whose type conforms to it, e.g. a metamodel's abstract class), or a union type of which every alternative is referable
  */
 val TypeDefinition.isReferableType: Boolean
     get() = when (this) {
         is DataType -> true
+        is InterfaceType -> true
         is UnionType -> this.alternatives.all { it.resolvedDefinition.isReferableType }
         else -> false
     }

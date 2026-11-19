@@ -251,7 +251,7 @@ class CollectionTemplateBuilder internal constructor(
         _elements.add(b.build())
     }
 
-    fun build() = CollectionTemplateDefault(_isSubset, _elements).also { tplt ->
+    fun build() = CollectionTemplateDefault.of(_isSubset, _elements).also { tplt ->
         tplt.identifier = _targetName?.let { SimpleName(it) }
     }
 }

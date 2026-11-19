@@ -148,7 +148,7 @@ class ReferencesSemanticAnalyser(
             val referredTo = findReferredToType(n, importedNamespaces)
             when {
                 null == referredTo -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' not found")
-                referredTo.isReferableType.not() -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' is not a data type")
+                referredTo.isReferableType.not() -> raiseError(n, "For references in '${ref.inTypeName}', referred to type '$n' is not a data type or interface")
                 else -> Unit //OK
             }
         }

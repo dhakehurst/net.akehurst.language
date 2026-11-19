@@ -103,7 +103,9 @@ grammar $NAME : Base {
   objectTemplate = ( variableName ':' )? typeReference propertyTemplateBlock ;
   propertyTemplateBlock = '{' propertyTemplate* '}' ;
   propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
-  collectionTemplate = ( variableName ':' )? '[' '...'? [propertyTemplateRhs / ',']* ']' ;
+  collectionTemplate = ( variableName ':' )? '[' collectionGap? [propertyTemplateRhs / collectionSeparator]* collectionGap? ']' ;
+  collectionSeparator = ',' | collectionGap ;
+  collectionGap = ( variableName ':' )? '...' ;
   leaf domainReference = IDENTIFIER ;
   leaf ruleName = IDENTIFIER ;
   leaf propertyReference = IDENTIFIER ;
@@ -281,8 +283,13 @@ grammar $NAME : Base {
                     concatenation("propertyTemplateBlock") { lit("{"); lst(0, -1) { ref("propertyTemplate") }; lit("}") }
                     concatenation("propertyTemplate") { ref("propertyReference"); lit("=="); ref("propertyTemplateRhs") }
                     concatenation("collectionTemplate") {
-                        opt { grp { ref("variableName"); lit(":") } }; lit("["); opt { lit("...") }; spLst(0, -1) { ref("propertyTemplateRhs"); lit(",") }; lit("]")
+                        opt { grp { ref("variableName"); lit(":") } }; lit("["); opt { ref("collectionGap") }; spLst(0, -1) { ref("propertyTemplateRhs"); ref("collectionSeparator") }; opt { ref("collectionGap") }; lit("]")
                     }
+                    choice("collectionSeparator") {
+                        lit(",")
+                        ref("collectionGap")
+                    }
+                    concatenation("collectionGap") { opt { grp { ref("variableName"); lit(":") } }; lit("...") }
 
                     concatenation("domainReference", isLeaf = true) { ref("IDENTIFIER") }
                     concatenation("ruleName", isLeaf = true) { ref("IDENTIFIER") }

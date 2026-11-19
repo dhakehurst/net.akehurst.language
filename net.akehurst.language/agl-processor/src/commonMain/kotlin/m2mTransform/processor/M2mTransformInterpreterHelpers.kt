@@ -28,6 +28,85 @@ import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companio
 object M2mTransformInterpreterHelpers {
     const val RESULT = "§result"
 
+    /** one way the members of a collection template match the elements of a collection: a result per member, the element indices in each gap (null if no gap) */
+    data class CollectionMatch<R>(val memberResults: List<R>, val gapElements: List<List<Int>?>)
+
+    /**
+     * all ways that 'memberCount' member templates match 'elementCount' elements, each member a different element.
+     * matches[i][k] are the results of member i matching element k (empty if it does not match).
+     * ordered: members match in order, and elements between them are only allowed where gapPresent is true (gapPresent[i] is the gap before member i, gapPresent[memberCount] after the last).
+     * unordered: elements not matched by a member are allowed only if there is a gap, they are put in the gap at leftoverGapIndex.
+     */
+    fun <R> collectionTemplateMatches(
+        memberCount: Int,
+        elementCount: Int,
+        ordered: Boolean,
+        gapPresent: List<Boolean>,
+        leftoverGapIndex: Int?,
+        matches: List<List<List<R>>>
+    ): List<CollectionMatch<R>> {
+        val result = mutableListOf<CollectionMatch<R>>()
+        val chosen = ArrayList<R>(memberCount)
+        if (ordered) {
+            val gapEls = MutableList<List<Int>?>(memberCount + 1) { null }
+            fun next(i: Int, j: Int) {
+                if (i == memberCount) {
+                    when {
+                        gapPresent[i] -> {
+                            gapEls[i] = (j until elementCount).toList()
+                            result.add(CollectionMatch(chosen.toList(), gapEls.toList()))
+                        }
+
+                        j == elementCount -> result.add(CollectionMatch(chosen.toList(), gapEls.toList()))
+                    }
+                } else {
+                    val last = if (gapPresent[i]) elementCount - 1 else minOf(j, elementCount - 1)
+                    for (k in j..last) {
+                        gapEls[i] = if (gapPresent[i]) (j until k).toList() else null
+                        for (r in matches[i][k]) {
+                            chosen.add(r)
+                            next(i + 1, k + 1)
+                            chosen.removeAt(chosen.size - 1)
+                        }
+                    }
+                    gapEls[i] = null
+                }
+            }
+            next(0, 0)
+        } else {
+            val used = BooleanArray(elementCount)
+            fun next(i: Int) {
+                if (i == memberCount) {
+                    val leftover = (0 until elementCount).filter { used[it].not() }
+                    when {
+                        leftover.isEmpty() -> result.add(CollectionMatch(chosen.toList(), gapPresent.map { if (it) emptyList<Int>() else null }))
+                        null != leftoverGapIndex -> result.add(CollectionMatch(chosen.toList(), gapPresent.mapIndexed { gi, p ->
+                            when {
+                                gi == leftoverGapIndex -> leftover
+                                p -> emptyList()
+                                else -> null
+                            }
+                        }))
+                        // elements not matched and no gap: no match
+                    }
+                } else {
+                    for (k in 0 until elementCount) {
+                        if (used[k]) continue
+                        used[k] = true
+                        for (r in matches[i][k]) {
+                            chosen.add(r)
+                            next(i + 1)
+                            chosen.removeAt(chosen.size - 1)
+                        }
+                        used[k] = false
+                    }
+                }
+            }
+            next(0)
+        }
+        return result
+    }
+
     data class CoverOption<B, R>(val b: B, val r: R)
 
     /**

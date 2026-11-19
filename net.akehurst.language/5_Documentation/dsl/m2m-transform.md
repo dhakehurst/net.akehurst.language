@@ -187,18 +187,46 @@ Result: `'circle c'`, `'circle d'`, `'square s'`.
 
 ## Collection templates
 
-`prop == [ ... ]` matches a collection. `...` means "and other elements"; each element that matches the
-template gives a separate match:
+`prop == [ ... ]` matches a collection. The members of the template are separated by `,`.
+`...` is a gap: zero or more elements that no member matches. A gap can be anywhere, and takes the place of the `,`.
+Each member matches a different element, and each way the members match gives a separate match:
 
 ```
 top mapping SquarePoint {
-  domain s sq:Square { name == n  point == [ ... p:Point { number == x } ] }
+  domain s sq:Square { name == n  point == [ ... p:Point { number == x } ... ] }
   domain d l:String := n + ' has x=' + x
 }
 ```
 
-Result: `'s has x=1'` and `'s has x=3'`. Without `...`, the collection must match exactly.
-A collection can be named, `point == ps:[ ... ]`.
+Result: `'s has x=1'` and `'s has x=3'`.
+
+The elements of a `List` (or `OrderedSet`) are matched in order, and other elements are allowed only where a gap is written:
+
+| Template | Matches |
+|---|---|
+| `[p, q]` | exactly two elements, `p` then `q` |
+| `[p ...]` | `p` is the first element |
+| `[... p]` | `p` is the last element |
+| `[... p ...]` | `p` is any element |
+| `[p ... q]` | `p` is the first and `q` the last element |
+
+A `Set` or other collection has no order: the position of a gap does not matter, and without a gap every element must be matched by a member.
+In a bag (a collection that can hold the same value twice) each occurrence is a separate element.
+
+A gap can be named, `name:...`: the name is bound to a collection (of the same type) of the elements in the gap,
+e.g. `point == [ p:Point { number == x } rest:... ]` binds `rest` to the points after the first.
+A template on an unordered collection can name at most one gap.
+A member that is only a variable matches any one element, e.g. `[p, x ...]` is "`p` then at least one more element".
+The whole collection can be named too, `point == ps:[ ... ]`.
+
+### Differences from QVT Relations
+
+* QVT names the collection type in the template (`Set(T) { a, b ++ rest }`); here the kind of collection comes from the property type.
+  So a `List` cannot be matched as a set (members in any order); write two templates, or name a gap and use `when`.
+  An explicit kind, e.g. `set[...]`, could be added later.
+* QVT has one rest variable, after the members (`++ rest`), and on a sequence the members match the head of the sequence.
+  Here gaps can be anywhere, and there can be several.
+* QVT's `_` (any element, ignored) is written as a variable that is not used, or as a gap.
 
 ## Other parts
 

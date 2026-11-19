@@ -391,10 +391,30 @@ data class ObjectTemplateDefault(
     }
 }
 
+data class CollectionTemplateGapDefault(
+    override val name: SimpleName?
+) : CollectionTemplateGap {
+    override fun toString(): String = name?.let { "${it.value}:..." } ?: "..."
+}
+
 data class CollectionTemplateDefault(
-    override val isSubset: Boolean,
-    override val elements: List<PropertyTemplateRhs>
+    override val elements: List<PropertyTemplateRhs>,
+    override val gaps: List<CollectionTemplateGap?>
 ) : CollectionTemplate {
+    companion object {
+        /** without gaps (isSubset false), or with one unnamed gap before the members (isSubset true) */
+        fun of(isSubset: Boolean, elements: List<PropertyTemplateRhs>) = CollectionTemplateDefault(
+            elements,
+            List(elements.size + 1) { i -> if (isSubset && 0 == i) CollectionTemplateGapDefault(null) else null }
+        )
+    }
+
+    init {
+        check(gaps.size == elements.size + 1) { "gaps must have one more entry than elements" }
+    }
+
+    override val isSubset: Boolean get() = gaps.any { null != it }
+
     override var identifier: SimpleName? = null
     override fun setIdentifierValue(value: SimpleName) {
         this.identifier = value
@@ -407,13 +427,18 @@ data class CollectionTemplateDefault(
     override fun asString(indent: Indent): String {
         val id = identifier?.let { "${it.value}:" } ?: ""
         val elIndent = indent.inc
-        val elems = elements.joinToString(separator = "\n") { el -> "$elIndent${el.asString(elIndent)}" }
+        // a gap takes the place of the ',' between members
+        val lines = mutableListOf<String>()
+        for (i in 0..elements.size) {
+            gaps[i]?.let { lines.add("$elIndent$it") }
+            if (i < elements.size) {
+                val needsComma = i + 1 < elements.size && null == gaps[i + 1]
+                lines.add("$elIndent${elements[i].asString(elIndent)}" + if (needsComma) "," else "")
+            }
+        }
         return when {
-            elements.isEmpty() -> "$id[ ]"
-            else -> """$id[
-            $elems
-            $indent]
-            """.trimIndent()
+            lines.isEmpty() -> "$id[ ]"
+            else -> "$id[\n" + lines.joinToString(separator = "\n") + "\n$indent]"
         }
     }
 }
