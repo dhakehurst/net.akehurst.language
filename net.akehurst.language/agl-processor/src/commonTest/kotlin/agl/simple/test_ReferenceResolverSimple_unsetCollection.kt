@@ -70,7 +70,7 @@ class test_ReferenceResolverSimple_unsetCollection {
             namespace test.Test
               identify Def by name
               references {
-                in Def { property general refers-to Def when (tags.size == 0) and (marks.size == 0) }
+                in Def { property general refers-to Def when (tags.size == 0) and (marks.size == 0) and (marks.filter({ x -> true }).size == 0) and (ordered.filter({ x -> true }).size == 0) }
               }
             """.trimIndent()
         )
