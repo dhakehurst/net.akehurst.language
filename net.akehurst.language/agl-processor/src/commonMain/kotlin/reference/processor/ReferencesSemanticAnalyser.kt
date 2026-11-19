@@ -315,7 +315,8 @@ class ReferencesSemanticAnalyser(
         for (part in parts) {
             val pn = (part as? PropertyCall)?.propertyName ?: return null
             if (pn.startsWith("\$")) return null
-            val td = type.resolvedDefinition
+            // a type that cannot be resolved (e.g. 'List' in a types namespace that does not import std) is not checked further
+            val td = type.resolvedDefinitionOrNull
             if (td !is StructuredType) return null
             type = propertyTypeOrNull(type, pn) ?: return when {
                 // the value may be of a subtype that has the property; its type is not known here, so the check stops
