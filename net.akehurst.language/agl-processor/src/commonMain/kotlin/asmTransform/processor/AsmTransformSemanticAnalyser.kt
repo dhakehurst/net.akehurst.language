@@ -322,7 +322,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         val clonedTypeDeclOrCreated = grmDecl?.findInOrCloneTo(_typesDomain) ?: let {
             // need a grammarTypeNamespace
             val gtns = findOrCreateGrammarTypeNamespace(trs.qualifiedName)
-            val t = gtns.findOwnedOrCreateDataTypeNamed(typePqn.simpleName)
+            // a provided type of another kind (e.g. an interface) is used as it is (David U20 A),
+            // an error is given only if an object of it must be created
+            val t = gtns.findOwnedTypeNamed(typePqn.simpleName)?.takeIf { it !is DataType }
+                ?: gtns.findOwnedOrCreateDataTypeNamed(typePqn.simpleName)
             // no need to setTypeForGrammarRule, it is done later
             // gtns.setTypeForGrammarRule(trr.grammarRuleName, t.type())
             t
