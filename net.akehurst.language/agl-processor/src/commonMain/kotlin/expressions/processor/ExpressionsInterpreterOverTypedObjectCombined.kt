@@ -917,14 +917,14 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     ): TypedObject {
         val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
         return when (typeDef) {
-            null -> error("Type not found ${expression.possiblyQualifiedTypeName}")
+            null -> issueErrorReturnNothing(expression, "Type not found ${expression.possiblyQualifiedTypeName}")
             is DataType, is ValueType -> {
                 val args = expression.constructorArguments.map { eval(evc, it.rhs) }
                 val constructorArgs = constructorArgumentsFor(typeDef, expression.constructorArguments.map { it.variable.name }, args)
                 createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
             }
 
-            else -> error("Cannot create an object of type '${typeDef.qualifiedName.value}'")
+            else -> issueErrorReturnNothing(expression, "Cannot create an object of type '${typeDef.qualifiedName.value}', it is not a data type or value type")
         }
     }
 
@@ -986,9 +986,12 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         eval: (evc: EvaluationContext, expression: Expression) -> TypedObject,
         setProperty: (obj: TypedObject, name: String, value: TypedObject) -> Unit
     ) {
-        propertyAssignments.forEach {
-            val value = eval(evc, it.rhs)
-            setProperty(self, it.variable.name, value)
+        when {
+            objectGraph.isNothing(self) -> Unit // no object was created (an error issue is given), so no properties to set
+            else -> propertyAssignments.forEach {
+                val value = eval(evc, it.rhs)
+                setProperty(self, it.variable.name, value)
+            }
         }
     }
 }

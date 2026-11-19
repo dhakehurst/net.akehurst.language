@@ -50,6 +50,11 @@ Also in SysML v2.1 (see [../v2.1_2026-09/SPEC_ISSUES.md](../v2.1_2026-09/SPEC_IS
 `FeatureMembership` has no property `memberFeature`, and it is an `OwningMembership`, whose member element is owned,
 while `first x` refers to an existing feature `x`. Also in SysML v2.1.
 
+**Pilot Implementation.** `InitialNodeMember returns SysML::Membership : MemberPrefix 'first' memberElement = [SysML::Feature|QualifiedName] RelationshipBody`,
+i.e. a (non-owning) `Membership` whose `memberElement` is the referenced feature.
+
+**AGL.** The metamodel transform (`languages/std-metamodel`) follows the Pilot Implementation: a `Membership` with `memberElement` set to the name.
+
 ## 5. `FeatureInverting` never assigns `invertingFeature` when it is a feature chain
 
 **Specification.** KerML 8.2.4.3.6 (`bnf/KerML-textual-bnf.kebnf`):
@@ -90,3 +95,27 @@ A rule with no declared type creates an element of the metaclass with the rule's
 `LiteralReal`; the metaclass for real literals is `LiteralRational`. Also in KerML v1.1.
 
 **AGL.** The metamodel transform creates a `LiteralRational`.
+
+## 9. `OwnedReferenceSubsetting` adds `referenceFeature`, which is not set
+
+**Specification.** SysML 8.2.2.6.5 (`bnf/SysML-textual-bnf.kebnf`):
+
+    OwnedReferenceSubsetting : ReferenceSubsetting =
+          referencedFeature = [QualifiedName]
+        | referencedFeature = OwnedFeatureChain
+          { ownedRelatedElement += referenceFeature }
+
+`referenceFeature` is not assigned (and is not a property of `ReferenceSubsetting`); it should be `referencedFeature`,
+as in `FlowEndSubsetting`. Also in SysML v2.1.
+
+**AGL.** The metamodel transform (`languages/std-metamodel`) adds the chain (`referencedFeature`) to `ownedRelatedElement`.
+
+## 10. `ConjugatedPortTyping` assigns `originalPortDefinition`, which it does not have
+
+**Specification.** SysML 8.2.2.12 (`bnf/SysML-textual-bnf.kebnf`):
+`ConjugatedPortTyping : ConjugatedPortTyping = '~' originalPortDefinition = ~[QualifiedName]`.
+`ConjugatedPortTyping` has no property `originalPortDefinition`; its (stored) property is `conjugatedPortDefinition`
+(and the derived `portDefinition`). Note 2 of the BNF says `~[QualifiedName]` resolves to the conjugated port definition,
+so the property is `conjugatedPortDefinition`. Also in SysML v2.1.
+
+**AGL.** The metamodel transform sets `conjugatedPortDefinition` to the name; the references resolve it as given in Note 2.

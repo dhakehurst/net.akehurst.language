@@ -362,7 +362,8 @@ abstract class TypeInstanceAbstract() : TypeInstance {
         this == StdLibDefault.NothingType -> other.isNullable
         other == StdLibDefault.NothingType -> false
         other == StdLibDefault.AnyType -> true
-        this.resolvedDefinition.conformsTo(other.resolvedDefinition).not() -> false
+        // an unresolvable type (e.g. from an incomplete types definition) conforms to nothing (other than Any, above)
+        this.resolvedDefinitionOrNull.let { d -> null == d || other.resolvedDefinitionOrNull.let { o -> null == o || d.conformsTo(o).not() } } -> false
         this.typeArguments.size != other.typeArguments.size -> false
         else -> {
             var result = true
@@ -1081,8 +1082,9 @@ abstract class TypeDefinitionSimpleAbstract(
         other == StdLibDefault.NothingType.resolvedDefinition -> false
         other == StdLibDefault.AnyType.resolvedDefinition -> true
         other == this -> true
-        other is UnionType -> other.alternatives.any { this.conformsTo(it.resolvedDefinition) }
-        else -> this.supertypes.any { it.resolvedDefinition.conformsTo(other) }
+        // unresolvable alternatives/supertypes (e.g. from an incomplete types definition) are ignored
+        other is UnionType -> other.alternatives.any { alt -> alt.resolvedDefinitionOrNull?.let { this.conformsTo(it) } ?: false }
+        else -> this.supertypes.any { st -> st.resolvedDefinitionOrNull?.conformsTo(other) ?: false }
     }
 
     override fun getOwnedPropertyByIndexOrNull(i: Int): PropertyDeclaration? = propertyByIndex[i]
@@ -1377,7 +1379,7 @@ class UnionTypeSimple(
         other is UnionType && this.alternatives == other.alternatives -> true
         // a union conforms to a type when each of its alternatives does
         this.alternatives.isEmpty() -> false
-        else -> this.alternatives.all { it.resolvedDefinition.conformsTo(other) }
+        else -> this.alternatives.all { alt -> alt.resolvedDefinitionOrNull?.conformsTo(other) ?: false } // an unresolvable alternative conforms to nothing
     }
 
     override fun findInOrCloneTo(other: TypesDomain): UnionType =

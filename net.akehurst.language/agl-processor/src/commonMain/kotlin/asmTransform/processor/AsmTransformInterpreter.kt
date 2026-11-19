@@ -125,7 +125,8 @@ class AsmTransformInterpreter(
         }*/
     }
 
-    val issues get() = IssueHolder(LanguageProcessorPhase.INTERPRET)
+    // the issues of evaluating the transformation rules (were a new, always empty holder on each access, so errors were lost)
+    val issues get() = exprInterpreter.issues
     val exprInterpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraph)
 
     fun clear() {
