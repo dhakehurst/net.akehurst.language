@@ -184,8 +184,22 @@ interface ObjectTemplate : PropertyTemplateRhs {
 }
 
 interface CollectionTemplate : PropertyTemplateRhs {
+    /** true if the template has a gap ('...') anywhere */
     val isSubset: Boolean
+
+    /** the member templates, in the order written */
     val elements: List<PropertyTemplateRhs>
+
+    /**
+     * the gap ('...' or 'name:...') before each member, and after the last one: size is elements.size + 1, null where there is no gap.
+     * A gap matches zero or more elements that are not matched by a member.
+     */
+    val gaps: List<CollectionTemplateGap?>
+}
+
+/** '...' (name is null) or 'name:...' in a collection template */
+interface CollectionTemplateGap {
+    val name: SimpleName?
 }
 
 interface PropertyTemplate {

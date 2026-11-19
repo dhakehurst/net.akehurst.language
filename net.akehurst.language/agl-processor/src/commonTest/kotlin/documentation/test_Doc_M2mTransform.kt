@@ -358,12 +358,45 @@ class test_Doc_M2mTransform {
         val actual = transform(
             """
             top mapping SquarePoint {
-              domain s sq:Square { name == n  point == [ ... p:Point { number == x } ] }
+              domain s sq:Square { name == n  point == [ ... p:Point { number == x } ... ] }
               domain d l:String := n + ' has x=' + x
             }
             """
         )
         assertEquals(listOf("'s has x=1'", "'s has x=3'"), actual)
+    }
+
+    @Test
+    fun collection_templates_order() {
+        // m2m-transform.md: "Collection templates" (table: the square has the points (1 2) and (3 4))
+        fun xs(points: String) = transform(
+            """
+            top mapping SquarePoint {
+              domain s sq:Square { name == n  point == $points }
+              domain d l:String := n + ' has ' + x
+            }
+            """
+        )
+        assertEquals(listOf("'s has 1'"), xs("[ p:Point { number == x } ... ]"))
+        assertEquals(listOf("'s has 3'"), xs("[ ... p:Point { number == x } ]"))
+        assertEquals(listOf("'s has 1'", "'s has 3'"), xs("[ ... p:Point { number == x } ... ]"))
+        assertEquals(emptyList(), xs("[ p:Point { number == x } ]")) // two points, one member, no gap
+        assertEquals(listOf("'s has 1'"), xs("[ p:Point { number == x }, q:Point { number == y } ]"))
+        assertEquals(listOf("'s has 3'"), xs("[ q:Point { number == y } ... p:Point { number == x } ]"))
+    }
+
+    @Test
+    fun collection_templates_named_gap() {
+        // m2m-transform.md: "Collection templates" (named gap)
+        val actual = transform(
+            """
+            top mapping SquarePoint {
+              domain s sq:Square { name == n  point == [ p:Point { number == x } rest:... ] }
+              domain d l:String := n + ' has ' + x + ' then ' + rest.first.number
+            }
+            """
+        )
+        assertEquals(listOf("'s has 1 then 3'"), actual)
     }
 
     @Test
