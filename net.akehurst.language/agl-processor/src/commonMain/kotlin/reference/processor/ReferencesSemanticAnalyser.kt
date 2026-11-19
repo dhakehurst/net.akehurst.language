@@ -443,8 +443,8 @@ class ReferencesSemanticAnalyser(
                 }
                 val filteredLoopVarType = ofType?.let {
                     when {
-                        //TODO: needs a conforms to to check transitive closure of supertypes
-                        loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.resolvedDefinition == loopVarType } -> ofType //no error
+                        // the loop variable type may be a data type or an interface (e.g. a metamodel's abstract classes), allSuperTypes is the transitive closure
+                        (loopVarType is DataType || loopVarType is InterfaceType) && ofType is StructuredType && (ofType == loopVarType || ofType.allSuperTypes.any { it.resolvedDefinition == loopVarType }) -> ofType //no error
                         loopVarType is UnionType && loopVarType.alternatives.any { it.resolvedDefinition == ofType } -> ofType
                         else -> {
                             raiseError(ref, "The of-type '${ofType.name}' is not a subtype of the loop variable type '${loopVarType.name}'")
