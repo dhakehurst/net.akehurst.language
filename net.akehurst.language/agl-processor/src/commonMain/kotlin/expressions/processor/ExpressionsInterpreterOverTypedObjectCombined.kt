@@ -139,7 +139,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     // the body of the lambda is captured by createLambdaValue, so it cannot share an inline body
     private fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValue { it ->
-            val newEvc = evc.child(mapOf(lambdaParameterName(expression) to it))
+            val newEvc = evc.child(lambdaBindings(expression, it))
             evaluateExpression(newEvc, expression.expression)
         }
         return lambda
@@ -236,7 +236,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     // the body of the lambda is captured by createLambdaValueSuspend, so it cannot share an inline body
     private suspend fun evaluateLambdaSuspend(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValueSuspend { it ->
-            val newEvc = evc.child(mapOf(lambdaParameterName(expression) to it))
+            val newEvc = evc.child(lambdaBindings(expression, it))
             evaluateExpressionSuspend(newEvc, expression.expression)
         }
         return lambda
@@ -1022,9 +1022,23 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
 /**
  * The parameter name a lambda binds its argument to: the declared parameter, or 'it' if there is none.
  */
-//TODO: lambdas with more than one parameter (not used anywhere yet), only the first is bound
 internal fun lambdaParameterName(expression: LambdaExpression): String =
     expression.variables.firstOrNull() ?: "it"
+
+/**
+ * The values a lambda binds its parameters to. A lambda with one parameter (or none, 'it') binds it to its argument.
+ * A lambda with more than one parameter, e.g. '{ el, acc -> ... }' as given to List.foldRight, is invoked with one argument,
+ * the list of the values of its parameters, in order.
+ */
+internal fun lambdaBindings(expression: LambdaExpression, arg: TypedObject): Map<String, TypedObject> = when {
+    expression.variables.size <= 1 -> mapOf(lambdaParameterName(expression) to arg)
+    else -> {
+        val values = mutableListOf<TypedObject>()
+        arg.forEachIndexed { _, v -> values.add(v) }
+        check(values.size == expression.variables.size) { "Lambda with parameters ${expression.variables} is given ${values.size} values" }
+        expression.variables.zip(values).toMap()
+    }
+}
 
 /**
  * The comparison operators '<', '<=', '>', '>=' on Integer and Real values (an Integer is compared with a Real as a Real),

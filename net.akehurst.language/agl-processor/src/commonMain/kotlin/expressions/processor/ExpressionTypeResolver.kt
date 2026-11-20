@@ -70,7 +70,6 @@ class ExpressionTypeResolver(
     fun NavigationExpression.typeOfNavigationExpressionFor(self: TypeInstance): TypeInstance {
         val st = this.start
         val start = when (st) {
-            is LiteralExpression -> TODO()
             is RootExpression -> when {
                 st.isNothing -> StdLibDefault.NothingType
                 st.isSelf -> self
@@ -79,7 +78,8 @@ class ExpressionTypeResolver(
                 }
             }
 
-            else -> error("type of Navigation.start not handled")
+            // e.g. a literal, '(when { ... }).p', 'List(...).size', 'T() { ... }.p'
+            else -> st.typeOfExpressionFor(self)
         }
         val r = this.parts.fold(start) { acc, it ->
             when (acc) {
@@ -110,7 +110,8 @@ class ExpressionTypeResolver(
                 }
             }
 
-            else -> error("type of Navigation.start not handled")
+            // the start is not a property (e.g. '(when { ... }).p'): no declaration
+            else -> null
         }
         var acc = pd?.typeInstance
         expr.parts.forEach {

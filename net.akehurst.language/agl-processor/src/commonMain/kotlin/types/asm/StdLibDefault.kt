@@ -615,6 +615,28 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                         }
                     }
                 }
+                methodPrimitive("foldRight", "Any", true) {
+                    description("Accumulates a value starting with 'initial', applying the lambda '{ element, acc -> ... }' to each element (from the last to the first) and the value accumulated so far, as Kotlin List.foldRight.")
+                    parameter("initial", "Any")
+                    parameter("lambda", "Lambda") // a lambda with two parameters: the element and the accumulated value
+                    executionTyped { self, args -> List_foldRightTyped(methodName, self, args) { l, el, acc -> l.invokeTyped(typedList(self, AnyType, listOf(el, acc))) } }
+                    executionTypedSuspend { self, args -> List_foldRightTyped(methodName, self, args) { l, el, acc -> l.invokeTypedSuspend(typedList(self, AnyType, listOf(el, acc))) } }
+                    execution { self, args ->
+                        check(2 == args.size) { "Method '${methodName}' takes 2 arguments (initial value, lambda) got ${args.size} arguments." }
+                        check(args[1] is Function1<*, *>) { "Method '${methodName}' second argument must be a lambda, got '${args[1]?.let { it::class.simpleName }}'." }
+                        val lambda = args[1] as (Any?) -> Any?
+                        // the lambda's two parameters are given as one list of the two values
+                        (self as List<Any?>).foldRight(args[0]) { el, acc -> lambda.invoke(listOf(el, acc)) }
+                    }
+                    executionSuspend { self, args ->
+                        check(2 == args.size) { "Method '${methodName}' takes 2 arguments (initial value, lambda) got ${args.size} arguments." }
+                        check(args[1] is Function2<*, *, *>) { "Method '${methodName}' second argument must be a lambda, got '${args[1]?.let { it::class.simpleName }}'." }
+                        val lambda = args[1] as suspend (Any?) -> Any?
+                        var acc = args[0]
+                        for (el in (self as List<Any?>).asReversed()) acc = lambda.invoke(listOf(el, acc))
+                        acc
+                    }
+                }
             }
             collection(ListSeparated_typeName.value, listOf("E", "I", "S"), net.akehurst.kotlinx.collections.ListSeparated::class) {
                 supertype("List") { ref("E") }
@@ -845,6 +867,14 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             }
         }
         return typedList(self, elementTypeOf(self), result)
+    }
+
+    private inline fun List_foldRightTyped(methodName: String, self: TypedObject, args: List<TypedObject>, invoke: (TypedLambda, TypedObject, TypedObject) -> TypedObject): TypedObject {
+        check(2 == args.size) { "Method '${methodName}' takes 2 arguments (initial value, lambda) got ${args.size} arguments." }
+        val lambda = typedLambdaArgument(methodName, listOf(args[1]))
+        var acc = args[0]
+        for (el in typedElements(self).asReversed()) acc = invoke(lambda, el, acc)
+        return acc
     }
 
     private fun Collection_otherArgument(methodName: String, args: List<*>): Collection<*> {

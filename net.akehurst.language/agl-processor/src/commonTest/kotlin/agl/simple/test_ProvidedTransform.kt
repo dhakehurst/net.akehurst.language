@@ -525,6 +525,36 @@ class test_ProvidedTransform {
                     }
                 }
             }
+            testData("navigation that starts from a when expression") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = A ;
+                        A = a ;
+                        leaf a = 'a' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: S() { w := (when { child[0] != ${'$'}nothing -> child[0] else -> ${'$'}nothing }).v }
+                        A: A() { v := child[0] }
+                      }
+                """.trimIndent()
+                )
+                sentencePass("a") {
+                    expectedAsm {
+                        element("S") {
+                            propertyString("w", "a")
+                        }
+                    }
+                }
+            }
         }
     }
 
