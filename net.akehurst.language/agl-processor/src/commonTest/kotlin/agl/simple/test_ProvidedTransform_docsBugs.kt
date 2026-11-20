@@ -358,4 +358,22 @@ class test_ProvidedTransform_docsBugs {
         val messages = proc.allIssues.errors.map { it.message }
         assertTrue(messages.any { it.contains("Cannot resolve type 'Info' in namespace 'example.Shapes', is an import needed?") }, messages.toString())
     }
+
+    @Test
+    fun process_with_missing_transformation_rules_gives_issues_not_an_exception() {
+        // without '#override-default-transform' the rules not written are missing (error issues), process must still end gracefully
+        val transform = """
+            #create-missing-types
+            namespace example
+            asm-transform Shapes {
+                connection: Connection() { name := child[1] }
+            }
+        """.trimIndent()
+        val result = Agl.processorFromStringSimple(GrammarString(GRAMMAR), transformStr = AsmTransformString(transform))
+        val proc = result.processor!!
+        val processed = proc.process(SENTENCE)
+        val messages = processed.allIssues.errors.map { it.message }
+        assertTrue(messages.any { it.contains("No transformation rule for grammar rule 'unit'") }, messages.toString())
+        assertTrue(messages.any { it.contains("No transformation rule found for grammar rule 'unit'") }, messages.toString())
+    }
 }

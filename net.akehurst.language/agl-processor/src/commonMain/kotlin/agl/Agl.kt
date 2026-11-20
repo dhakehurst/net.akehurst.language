@@ -479,6 +479,7 @@ object Agl {
      * @param ruleArguments values for rule parameters
      * @param targetDomainReference the domain to create
      * @param transformName the transform in [m2m] to run, a simple or qualified name; null runs the first transform in [m2m]
+     * @return the result; if the transform text has errors, they are its issues and the transform is not run
      */
     fun transform(
         m2m: M2mTransformString,
@@ -501,11 +502,14 @@ object Agl {
                 }
             }
         )
-        val m2m = res.let {
-            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
-            it.asm!!
-        }
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        // errors in the transform text are returned in the result, the transform is not run (MT8)
+        val m2m = res.asm
+        if (res.allIssues.errors.isNotEmpty() || null == m2m) {
+            issueHolder.addAll(res.allIssues.all)
+            if (null == m2m && res.allIssues.errors.isEmpty()) issueHolder.error(null, "The transform text gave no transform.")
+            return M2MTransformResult(issueHolder, emptyMap(), targetDomainReference)
+        }
         val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder)
         val tgtTransform = selectTransform(m2m, transformName)
             ?: return M2MTransformResult(
@@ -538,11 +542,14 @@ object Agl {
                 }
             }
         )
-        val m2m = res.let {
-            check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
-            it.asm!!
-        }
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        // errors in the transform text are returned in the result, the transform is not run (MT8)
+        val m2m = res.asm
+        if (res.allIssues.errors.isNotEmpty() || null == m2m) {
+            issueHolder.addAll(res.allIssues.all)
+            if (null == m2m && res.allIssues.errors.isEmpty()) issueHolder.error(null, "The transform text gave no transform.")
+            return M2MTransformResult(issueHolder, emptyMap(), targetDomainReference)
+        }
         val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder)
         val tgtTransform = selectTransform(m2m, transformName)
             ?: return M2MTransformResult(

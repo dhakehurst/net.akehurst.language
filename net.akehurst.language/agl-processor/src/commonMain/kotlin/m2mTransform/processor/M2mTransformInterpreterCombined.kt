@@ -515,7 +515,7 @@ class M2mTransformInterpreterCombined(
         val recordMapping = ExecutionStepCombined("Record Mapping", mappedVars + tgtName, emptyList(), { evc ->
             val tgtValue = evc.getOrInParent(tgtName) ?: error("Target value '$tgtName' not found in evaluation context.")
             val mapping = srcs + Pair(m2mExecution.targetDomainRef, tgtValue)
-            m2mExecution.addRecord(rule, mapping)
+            m2mExecution.addRecord(rule, mapping, parameterArguments(rule) { varsAfterWhen.getOrInParent(it) })
         })
         val initVars = varsAfterWhen.namedValues.keys + whereSteps.flatMap { it.outputs }.toSet()
         val initExes = listOf(recordMapping) + whereSteps
@@ -560,9 +560,14 @@ class M2mTransformInterpreterCombined(
      * the record of 'rule' whose source values are the given ones, i.e. 'rule' was applied for them (as QVT 'when'),
      * null if 'rule' was not applied for them
      */
-    private fun findAppliedRecord(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>): Map<DomainReference, TypedObject>? {
+    private fun findAppliedRecord(
+        m2mExecution: M2mTransformExecution,
+        rule: M2mTransformRule,
+        source: Map<DomainReference, List<TypedObject>>,
+        arguments: Map<String, TypedObject>? = null // null: any arguments
+    ): Map<DomainReference, TypedObject>? {
         val rec = m2mExecution.records[rule] ?: return null
-        return rec.alternatives.firstOrNull { mapping ->
+        return rec.alternatives.filterIndexed { i, _ -> null == arguments || sameBinding(rec.arguments[i], arguments) }.firstOrNull { mapping ->
             mapping.entries.all { (dr, v) ->
                 when (dr) {
                     m2mExecution.targetDomainRef -> true // do not match it
@@ -601,15 +606,23 @@ class M2mTransformInterpreterCombined(
     /**
      * true if 'rule' was already applied for the variables bound in 'matched' (as QVT, a rule is applied at most once for the same binding)
      */
-    private fun isAlreadyApplied(m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, matched: TemplateMatchResult): Boolean =
-        m2mExecution.appliedBindings[rule]?.any { b -> sameBinding(b, matched.matchedVariables) } ?: false
+    private fun isAlreadyApplied(m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, matched: TemplateMatchResult, arguments: Map<String, TypedObject>): Boolean =
+        m2mExecution.appliedBindings[rule]?.any { b -> sameBinding(b, bindingKey(matched, arguments)) } ?: false
 
-    private fun markApplied(m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, matched: TemplateMatchResult) {
-        m2mExecution.appliedBindings.getOrPut(rule) { mutableListOf() }.add(matched.matchedVariables)
+    private fun markApplied(m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, matched: TemplateMatchResult, arguments: Map<String, TypedObject>) {
+        m2mExecution.appliedBindings.getOrPut(rule) { mutableListOf() }.add(bindingKey(matched, arguments))
     }
 
     private fun sameBinding(a: Map<String, TypedObject>, b: Map<String, TypedObject>): Boolean =
         a.keys == b.keys && a.all { (k, v) -> v.accessor.equalTo(v, b[k]!!) }
+
+    /** the values of the parameters of 'rule' (MT13: results are kept per rule arguments) */
+    private inline fun parameterArguments(rule: M2mTransformRule, value: (String) -> TypedObject?): Map<String, TypedObject> =
+        rule.parameters.mapNotNull { p -> value(p.name.value)?.let { Pair(p.name.value, it) } }.toMap()
+
+    /** the variables bound by a match plus the rule's parameter values, as a key for 'applied at most once' */
+    private fun bindingKey(matched: TemplateMatchResult, arguments: Map<String, TypedObject>): Map<String, TypedObject> =
+        matched.matchedVariables + arguments.mapKeys { "§arg ${it.key}" }
 
     /**
      * for 'related all' / 'mapped all': element i of each collection argument (as for 'map all' in a 'where' clause),
@@ -677,8 +690,8 @@ class M2mTransformInterpreterCombined(
         }
     }
 
-    fun findMatchInMappingRecord(m2mExecution: M2mTransformExecution, record: MappingRecord, source: Map<DomainReference, List<TypedObject>>): TypedObject? {
-        val alts = record.alternatives.filter { rec ->
+    fun findMatchInMappingRecord(m2mExecution: M2mTransformExecution, record: MappingRecord, source: Map<DomainReference, List<TypedObject>>, arguments: Map<String, TypedObject> = emptyMap()): TypedObject? {
+        val alts = record.alternatives.filterIndexed { i, _ -> sameBinding(record.arguments[i], arguments) }.filter { rec ->
             source.all { (k, v) ->
                 val alt = rec[k]!!
                 v.any { alt.accessor.equalTo(alt, it) }
@@ -771,9 +784,14 @@ class M2mTransformInterpreterCombined(
                             executeRule(m2mExecution, winner, single, ruleArguments)
                             // the winner's results are also results of 'rule' (e.g. for 'where map Rule' and 'mapped Rule')
                             val known = m2mExecution.records[rule]?.alternatives ?: emptyList()
-                            m2mExecution.records[winner]?.bySource(combination.mapValues { listOf(it.value) })
-                                ?.filter { alt -> known.none { it === alt } }
-                                ?.forEach { m2mExecution.addRecord(rule, it) }
+                            val winnerArgs = parameterArguments(winner) { ruleArguments[it] }
+                            m2mExecution.records[winner]?.let { rec ->
+                                val srcOnly = combination.mapValues { listOf(it.value) }
+                                rec.alternatives.forEachIndexed { i, alt ->
+                                    val isForThis = sameBinding(rec.arguments[i], winnerArgs) && rec.bySourceMatches(alt, srcOnly)
+                                    if (isForThis && known.none { it === alt }) m2mExecution.addRecord(rule, alt, parameterArguments(rule) { ruleArguments[it] })
+                                }
+                            }
                         }
                     }
                 }
@@ -859,12 +877,12 @@ class M2mTransformInterpreterCombined(
                                 val allVars = alt.values.merge()
                                 if (allVars.isMatch.not()) return@map Unit // a variable shared by domains has different values: no match
                                 val evcForWhen = EvaluationContext.of(ruleArguments + allVars.matchedVariables)
-                                if (isAlreadyApplied(m2mExecution, rule, allVars)) return@map Unit
+                                if (isAlreadyApplied(m2mExecution, rule, allVars, parameterArguments(rule) { ruleArguments[it] })) return@map Unit
                                 val whenResult = rule.when_?.let {
                                     executeWhen(m2mExecution, rule, it, evcForWhen)
                                 } ?: Pair(true, evcForWhen)
                                 if (whenResult.first) {
-                                    markApplied(m2mExecution, rule, allVars)
+                                    markApplied(m2mExecution, rule, allVars, parameterArguments(rule) { ruleArguments[it] })
                                     val varsAfterWhen = whenResult.second// + allVars.matchedVariables
                                     val tgtExpr = rule.expression[m2mExecution.targetDomainRef]
                                         ?: error("No expression found for target domain '${m2mExecution.targetDomainRef.value}'") // should never happen
@@ -919,7 +937,7 @@ class M2mTransformInterpreterCombined(
                                                     }
                                                     Pair(dr, v)
                                                 }
-                                                m2mExecution.addRecord(rule, mapping)
+                                                m2mExecution.addRecord(rule, mapping, parameterArguments(rule) { ruleArguments[it] })
                                             }
 
                                             MappingStepKind.WHERE -> evc = executeWhere(m2mExecution, rule, step.where!!, evc)
@@ -966,13 +984,13 @@ class M2mTransformInterpreterCombined(
                     else -> altSources.map { alt ->
                         val allVars = alt.values.merge()
                         if (allVars.isMatch.not()) return@map Unit // a variable shared by domains has different values: no match
-                        if (isAlreadyApplied(m2mExecution, rule, allVars)) return@map Unit
+                        if (isAlreadyApplied(m2mExecution, rule, allVars, parameterArguments(rule) { ruleArguments[it] })) return@map Unit
                         val evcForWhen = EvaluationContext.of(ruleArguments + allVars.matchedVariables)
                         val whenResult = rule.when_?.let { executeWhen(m2mExecution, rule, it, evcForWhen) }
                             ?: Pair(true, evcForWhen)
 
                         if (whenResult.first) {
-                            markApplied(m2mExecution, rule, allVars)
+                            markApplied(m2mExecution, rule, allVars, parameterArguments(rule) { ruleArguments[it] })
                             val whereClauseSteps = compileRelationWhereClause(m2mExecution, rule, whenResult.second)
                             executeRelationMainBody(m2mExecution, rule, alt, whenResult.second, whereClauseSteps)
                         } else {
@@ -1018,7 +1036,7 @@ class M2mTransformInterpreterCombined(
                 }
             }?.toMap()
             mapping?.let {
-                m2mExecution.addRecord(rule, mapping)
+                m2mExecution.addRecord(rule, mapping, parameterArguments(rule) { ruleArguments[it] })
             }
         }
     }
@@ -1206,13 +1224,14 @@ class M2mTransformInterpreterCombined(
             is RuleWhenRelationHolds, is RuleWhenMappingHolds -> m2mExecution.ruleFor(when_)?.let { rule ->
                 // as QVT: a rule in 'when' is a precondition, it holds if the rule was applied with these source values
                 val source = getSource(m2mExecution, rule, when_.domainArguments, evc)
-                val found = findAppliedRecord(m2mExecution, rule, source) ?: run {
+                val ruleArguments = when_.ruleArguments.entries.associate { Pair(it.key.value, evaluate(m2mExecution.targetAccessorMutator, evc, it.value)) }
+                val args = parameterArguments(rule) { ruleArguments[it] }
+                val found = findAppliedRecord(m2mExecution, rule, source, args) ?: run {
                     // as QVT, a rule in 'when' that was not yet applied for these values is applied first
                     if (m2mExecution.rulesAppliedForWhen.add(rule)) {
-                        val ruleArguments = when_.ruleArguments.entries.associate { Pair(it.key.value, evaluate(m2mExecution.targetAccessorMutator, evc, it.value)) }
                         executeRule(m2mExecution, rule, source, ruleArguments)
                         m2mExecution.rulesAppliedForWhen.remove(rule)
-                        findAppliedRecord(m2mExecution, rule, source)
+                        findAppliedRecord(m2mExecution, rule, source, args)
                     } else null
                 }
                 found?.let { Pair(true, bindWhenTarget(m2mExecution, owningRule, when_, found[m2mExecution.targetDomainRef], evc)) } ?: Pair(false, evc)
@@ -1226,14 +1245,15 @@ class M2mTransformInterpreterCombined(
                 when (val elements = sourceElementsForAll(m2mExecution, owningRule, when_, source)) {
                     null -> Pair(false, evc)
                     else -> {
+                        val ruleArguments = when_.ruleArguments.entries.associate { Pair(it.key.value, evaluate(m2mExecution.targetAccessorMutator, evc, it.value)) }
+                        val args = parameterArguments(rule) { ruleArguments[it] }
                         val found = elements.map { el ->
-                            findAppliedRecord(m2mExecution, rule, el) ?: run {
+                            findAppliedRecord(m2mExecution, rule, el, args) ?: run {
                                 // as QVT, a rule in 'when' that was not yet applied for these values is applied first
                                 if (m2mExecution.rulesAppliedForWhen.add(rule)) {
-                                    val ruleArguments = when_.ruleArguments.entries.associate { Pair(it.key.value, evaluate(m2mExecution.targetAccessorMutator, evc, it.value)) }
                                     executeRule(m2mExecution, rule, el, ruleArguments)
                                     m2mExecution.rulesAppliedForWhen.remove(rule)
-                                    findAppliedRecord(m2mExecution, rule, el)
+                                    findAppliedRecord(m2mExecution, rule, el, args)
                                 } else null
                             }
                         }
@@ -1561,16 +1581,16 @@ class M2mTransformInterpreterCombined(
             null == mappingRecord -> {
                 executeRule(m2mExecution, rule, source, ruleArguments)
                 mappingRecord = m2mExecution.records[rule]
-                mappingRecord?.let { findMatchInMappingRecord(m2mExecution, mappingRecord, source) }
+                mappingRecord?.let { findMatchInMappingRecord(m2mExecution, mappingRecord, source, parameterArguments(rule) { ruleArguments[it] }) }
             }
 
             else -> {
-                val matchFromExisting = findMatchInMappingRecord(m2mExecution, mappingRecord, source)
+                val matchFromExisting = findMatchInMappingRecord(m2mExecution, mappingRecord, source, parameterArguments(rule) { ruleArguments[it] })
                 when {
                     null == matchFromExisting -> {
                         executeRule(m2mExecution, rule, source, ruleArguments)
                         mappingRecord = m2mExecution.records[rule]
-                        mappingRecord?.let { findMatchInMappingRecord(m2mExecution, mappingRecord, source) }
+                        mappingRecord?.let { findMatchInMappingRecord(m2mExecution, mappingRecord, source, parameterArguments(rule) { ruleArguments[it] }) }
                     }
 
                     else -> matchFromExisting
