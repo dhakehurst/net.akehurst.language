@@ -113,7 +113,7 @@ class test_m2mTransform_ruleOverride {
         const val RULES = """
             top mapping AnyToTarget {
                 domain s o:Any {}
-                domain d t:Disc := Disc(label := 'any') {}
+                domain d t:Disc := Disc(label := o.${'$'}type.name) {}
             }
             top mapping CircleToTarget : AnyToTarget {
                 domain s o:Circle { name == n }
@@ -126,10 +126,10 @@ class test_m2mTransform_ruleOverride {
     fun generic_and_specialised_mapping() = runTest {
         val res = transformSuspend(SENTENCE, header(RULES))
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-        assertEquals(listOf("'Circle c'", "'any'"), res.targets.map { (it.self as AsmStructure).getProperty(PropertyValueName("label")).asString().trim() }.sorted())
+        assertEquals(listOf("'Circle c'", "'Square'"), res.targets.map { (it.self as AsmStructure).getProperty(PropertyValueName("label")).asString().trim() }.sorted())
         val resSync = transform(SENTENCE, header(RULES))
         assertTrue(resSync.issues.errors.isEmpty(), resSync.issues.toString())
-        assertEquals(listOf("'Circle c'", "'any'"), resSync.targets.map { (it.self as AsmStructure).getProperty(PropertyValueName("label")).asString().trim() }.sorted())
+        assertEquals(listOf("'Circle c'", "'Square'"), resSync.targets.map { (it.self as AsmStructure).getProperty(PropertyValueName("label")).asString().trim() }.sorted())
     }
 
     @Test
@@ -158,7 +158,7 @@ class test_m2mTransform_ruleOverride {
         val rules = RULES.replace("top mapping CircleToTarget", "mapping CircleToTarget")
         val res = transformSuspend(SENTENCE, header(rules))
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-        assertEquals(listOf("'Circle c'", "'any'"), labels(res.targets).sorted())
+        assertEquals(listOf("'Circle c'", "'Square'"), labels(res.targets).sorted())
     }
 
     @Test
