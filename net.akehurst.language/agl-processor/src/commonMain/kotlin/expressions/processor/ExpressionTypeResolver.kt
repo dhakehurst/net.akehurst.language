@@ -113,12 +113,20 @@ class ExpressionTypeResolver(
             else -> error("type of Navigation.start not handled")
         }
         var acc = pd?.typeInstance
-        val r = expr.parts.forEach {
-            pd = when (it) {
-                is PropertyCall -> acc?.let { ti -> resolvedOrIssue(ti) }?.allResolvedProperty?.get(PropertyName(it.propertyName))
-                else -> null //everything must be property calls
+        expr.parts.forEach {
+            when (it) {
+                is PropertyCall -> {
+                    pd = acc?.let { ti -> resolvedOrIssue(ti) }?.allResolvedProperty?.get(PropertyName(it.propertyName))
+                    acc = pd?.typeInstance
+                }
+                // an index into a collection (e.g. 'a.b[0].c'): the element type, the last property stays the collection property
+                is IndexOperation -> acc = acc?.typeArguments?.firstOrNull()?.type
+                else -> {
+                    //everything else must be property calls or index operations
+                    pd = null
+                    acc = null
+                }
             }
-            acc = pd?.typeInstance
         }
         return pd
     }
