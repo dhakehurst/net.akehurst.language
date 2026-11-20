@@ -31,6 +31,9 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.m2mTransform.api.M2mTransformDomain
+import net.akehurst.language.m2mTransform.api.M2mTransformRuleSet
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
@@ -460,14 +463,22 @@ object Agl {
         return result
     }
 
+    /** the transform named 'name' (qualified, or simple), or the first transform when 'name' is null */
+    private fun selectTransform(m2m: M2mTransformDomain, name: PossiblyQualifiedName?): M2mTransformRuleSet? = when (name) {
+        null -> m2m.allTransformRuleSet.firstOrNull()
+        is QualifiedName -> m2m.allTransformRuleSet.firstOrNull { it.qualifiedName == name }
+        else -> m2m.allTransformRuleSet.firstOrNull { it.name.value == name.value }
+    }
+
     /**
-     * Run a model-to-model transform (m2m-transform DSL). The first transform in [m2m] is used.
+     * Run a model-to-model transform (m2m-transform DSL).
      *
      * @param typeDomains the types of each domain parameter of the transform
      * @param accessorMutators how to access the objects of each types domain, keyed by the types domain name
      * @param domains the input objects of each source domain
      * @param ruleArguments values for rule parameters
      * @param targetDomainReference the domain to create
+     * @param transformName the transform in [m2m] to run, a simple or qualified name; null runs the first transform in [m2m]
      */
     fun transform(
         m2m: M2mTransformString,
@@ -475,7 +486,8 @@ object Agl {
         accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
         domains: Map<DomainReference, List<TypedObject>>,
         ruleArguments: Map<String, TypedObject>,
-        targetDomainReference: DomainReference
+        targetDomainReference: DomainReference,
+        transformName: PossiblyQualifiedName? = null
     ): M2MTransformResult {
         val sentenceContext = SentenceContextAny()
         typeDomains.forEach { (k, v) ->
@@ -495,7 +507,11 @@ object Agl {
         }
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
         val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder)
-        val tgtTransform = m2m.allTransformRuleSet.first() //TODO: allow caller to choose
+        val tgtTransform = selectTransform(m2m, transformName)
+            ?: return M2MTransformResult(
+                issueHolder.also { it.error(null, "Transform '${transformName?.value}' not found.") },
+                emptyMap(), targetDomainReference
+            )
         val transResult = interpreter.transform(tgtTransform, targetDomainReference, ruleArguments, domains)
         return transResult
     }
@@ -507,7 +523,8 @@ object Agl {
         accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
         domains: Map<DomainReference, List<TypedObject>>,
         ruleArguments: Map<String, TypedObject>,
-        targetDomainReference: DomainReference
+        targetDomainReference: DomainReference,
+        transformName: PossiblyQualifiedName? = null
     ): M2MTransformResult {
         val sentenceContext = SentenceContextAny()
         typeDomains.forEach { (k, v) ->
@@ -527,7 +544,11 @@ object Agl {
         }
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
         val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder)
-        val tgtTransform = m2m.allTransformRuleSet.first() //TODO: allow caller to choose
+        val tgtTransform = selectTransform(m2m, transformName)
+            ?: return M2MTransformResult(
+                issueHolder.also { it.error(null, "Transform '${transformName?.value}' not found.") },
+                emptyMap(), targetDomainReference
+            )
         val transResult = interpreter.transformSuspend(tgtTransform, targetDomainReference, ruleArguments, domains)
         return transResult
     }

@@ -71,6 +71,8 @@ result.issues
 
 `Agl.transformSuspend` does the same, and uses the suspending functions of the accessors (`getPropertySuspend`, ...).
 
+The first transform in the text is run. To run another one, pass its name: `transformName = "MyLabels".asPossiblyQualifiedName` (a simple or qualified name). If no transform has that name, the result has an error issue and no targets.
+
 ## Mapping and relation
 
 A `mapping` goes one way: it creates the target with `:=`.

@@ -35,6 +35,7 @@ import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesDomainSimple
 import kotlin.test.Test
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterCombined
 import kotlin.test.assertEquals
@@ -192,5 +193,40 @@ class test_m2mTransform_transformExtends {
     fun extends_cycle_is_error() {
         val res = process("transform A(s:Shapes, d:Drawing) : B { }\ntransform B(s:Shapes, d:Drawing) : A { }")
         assertTrue(res.allIssues.errors.any { it.message == "Transform 'A' extends itself (directly or through other transforms)." }, res.allIssues.toString())
+    }
+
+    private fun aglTransform(text: String, name: String?) = run {
+        val ogS = objectGraphSimpleAsm(shapes, null, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
+        val ogD = objectGraphSimpleAsm(drawing, null, IssueHolder(LanguageProcessorPhase.INTERPRET), LocationMapDefault())
+        @Suppress("UNCHECKED_CAST")
+        val items = ((shapesProcessor.process(SENTENCE).asm!!.root.first() as AsmStructure).getProperty(PropertyValueName("item")) as List<Any>)
+            .map { ogS.toTypedObject(it, StdLibDefault.AnyType) }
+        Agl.transform(
+            M2mTransformString("namespace example\n" + text),
+            typeDomains = mapOf(DomainReference("s") to shapes, DomainReference("d") to drawing),
+            accessorMutators = mapOf(shapes.name to ogS, drawing.name to ogD),
+            domains = mapOf(DomainReference("s") to items),
+            ruleArguments = emptyMap(),
+            targetDomainReference = DomainReference("d"),
+            transformName = name?.asPossiblyQualifiedName
+        )
+    }
+
+    @Test
+    fun agl_transform_by_name() {
+        val text = BASE + """
+            transform Derived(s:Shapes, d:Drawing) : Base {
+                override mapping Label {
+                    domain s o:Any {}
+                    domain d l:String := 'derived'
+                }
+            }
+        """
+        val labels = { r: net.akehurst.language.m2mTransform.processor.M2MTransformResult -> r.targets.map { (it.self as AsmStructure).getProperty(PropertyValueName("label")).asString().trim() } }
+        assertEquals(listOf("'item'", "'item'"), labels(aglTransform(text, null)))
+        assertEquals(listOf("'derived'", "'derived'"), labels(aglTransform(text, "Derived")))
+        assertEquals(listOf("'derived'", "'derived'"), labels(aglTransform(text, "example.Derived")))
+        val notFound = aglTransform(text, "Nope")
+        assertTrue(notFound.issues.errors.any { it.message == "Transform 'Nope' not found." }, notFound.issues.toString())
     }
 }
