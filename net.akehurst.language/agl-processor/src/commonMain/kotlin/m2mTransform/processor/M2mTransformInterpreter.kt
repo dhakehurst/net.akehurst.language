@@ -126,7 +126,12 @@ data class MappingRecord(
     /**
      * multiple source objects (or combinations of sources) could be matched by each top rule
      */
-    val alternatives: List<Map<DomainReference, TypedObject>>
+    val alternatives: List<Map<DomainReference, TypedObject>>,
+    /**
+     * for each alternative, the values of the rule's parameters it was applied with (MT13: a rule called with other
+     * arguments for the same source has another result)
+     */
+    val arguments: List<Map<String, TypedObject>> = alternatives.map { emptyMap() }
 ) {
     companion object {
         fun EMPTY(rule: M2mTransformRule) = MappingRecord(rule, emptyList())
@@ -135,8 +140,15 @@ data class MappingRecord(
 
     fun merge(other: MappingRecord): MappingRecord {
         check(rule == other.rule) { "Can only merge MappingRecord if rules are the same." }
-        return MappingRecord(rule, alternatives + other.alternatives)
+        return MappingRecord(rule, alternatives + other.alternatives, arguments + other.arguments)
     }
+
+    /** true if alternative 'rec' has one of the given values for each domain in 'source' */
+    fun bySourceMatches(rec: Map<DomainReference, TypedObject>, source: Map<DomainReference, List<TypedObject>>): Boolean =
+        source.all { (k, v) ->
+            val alt = rec[k]
+            null != alt && v.any { alt.accessor.equalTo(alt, it) }
+        }
 
     fun bySource(source: Map<DomainReference, List<TypedObject>>): List<Map<DomainReference, TypedObject>> {
         return alternatives.filter { rec ->
@@ -198,12 +210,13 @@ class M2mTransformExecution(
         }
     }
 
-    fun addRecord(rule: M2mTransformRule, mapping: Map<DomainReference, TypedObject>) {
+    /** 'arguments' are the values of the rule's parameters the rule was applied with */
+    fun addRecord(rule: M2mTransformRule, mapping: Map<DomainReference, TypedObject>, arguments: Map<String, TypedObject> = emptyMap()) {
         val rec = records[rule]
         if (null == rec) {
-            (records as MutableMap)[rule] = MappingRecord(rule, listOf(mapping))
+            (records as MutableMap)[rule] = MappingRecord(rule, listOf(mapping), listOf(arguments))
         } else {
-            (records as MutableMap)[rule] = rec.merge(MappingRecord(rule, listOf(mapping)))
+            (records as MutableMap)[rule] = rec.merge(MappingRecord(rule, listOf(mapping), listOf(arguments)))
         }
     }
 
