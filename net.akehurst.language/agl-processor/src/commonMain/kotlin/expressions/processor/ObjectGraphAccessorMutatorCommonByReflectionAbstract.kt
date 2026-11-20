@@ -151,6 +151,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             is TypedObject -> untyped(possiblyTypedObject as TypedObject)
             is ListSeparated<*,*,*> -> possiblyTypedObject.map { untypedAny(it) }.toSeparatedList()
             is List<*> -> possiblyTypedObject.map { untypedAny(it) }
+            is OrderedSet<*> -> possiblyTypedObject.map { untypedAny(it) }.toOrderedSet()
             is Set<*> -> possiblyTypedObject.map { untypedAny(it) }.toSet()
             is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
             else -> possiblyTypedObject
@@ -297,6 +298,12 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
                 typedAs(list.toSeparatedList(), StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)))
             }
 
+            StdLibDefault.OrderedSet.qualifiedName -> {
+                val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
+                val type = StdLibDefault.OrderedSet.type(listOf(elType.asTypeArgument))
+                typedAs(collection.toOrderedSet(), type)
+            }
+
             StdLibDefault.Set.qualifiedName -> {
                 val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
                 val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
@@ -319,6 +326,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             StdLibDefault.List.qualifiedName -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.ListSeparated.qualifiedName -> StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.Set.qualifiedName -> StdLibDefault.Set.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.OrderedSet.qualifiedName -> StdLibDefault.OrderedSet.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.Map.qualifiedName -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
             else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
         }

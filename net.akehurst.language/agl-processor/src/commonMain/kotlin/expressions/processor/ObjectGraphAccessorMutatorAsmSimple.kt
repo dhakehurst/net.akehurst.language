@@ -513,6 +513,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             is Array<*> -> toTypedCollection(obj.toList(), StdLibDefault.List, ifNotFound) { it.toList() }
             //TODO: special array types IntArray, LongArray, etc
             is List<*> -> toTypedCollection(obj, StdLibDefault.List, ifNotFound) { it.toList() }
+            is OrderedSet<*> -> toTypedCollection(obj.toList(), StdLibDefault.OrderedSet, ifNotFound) { it.toOrderedSet() }
             is Set<*> -> toTypedCollection(obj, StdLibDefault.Set, ifNotFound) { it.toSet() }
 
             is Map<*, *> -> {
@@ -547,6 +548,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             null -> Unit
             is TypedObject -> untyped(possiblyTypedObject as TypedObject)
             is List<*> -> possiblyTypedObject.map { untypedAny(it) }
+            is OrderedSet<*> -> possiblyTypedObject.map { untypedAny(it) }.toOrderedSet()
             is Set<*> -> possiblyTypedObject.map { untypedAny(it) }.toSet()
             is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
             is AsmPrimitive -> possiblyTypedObject.value
@@ -665,6 +667,12 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
                 typedAs(AsmListSeparatedSimple(collection.map { it.self as AsmValue }.toSeparatedList()), type)
             }
 
+            StdLibDefault.OrderedSet.qualifiedName -> {
+                val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
+                val type = StdLibDefault.OrderedSet.type(listOf(elType.asTypeArgument))
+                typedAs(collection.toOrderedSet(), type)
+            }
+
             StdLibDefault.Set.qualifiedName -> {
                 val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
                 val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
@@ -699,6 +707,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             StdLibDefault.List.qualifiedName -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.ListSeparated.qualifiedName -> StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.Set.qualifiedName -> StdLibDefault.Set.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.OrderedSet.qualifiedName -> StdLibDefault.OrderedSet.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.Map.qualifiedName -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
             else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
         }
