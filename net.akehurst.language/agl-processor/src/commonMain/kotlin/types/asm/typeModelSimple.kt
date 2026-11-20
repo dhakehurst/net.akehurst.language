@@ -822,9 +822,13 @@ abstract class TypesNamespaceAbstract(
             }
 
             is SimpleName -> {
+                // own types, then the imported namespaces in order, except that 'std' is searched last
+                // (as in TypesDomain.findFirstDefinitionByNameOrNull), so an imported language type (e.g. KerML 'Type')
+                // is found before a 'std' type with the same name
                 val tn = qualifiedOrImportedTypeName
+                val (stdImports, otherImports) = import.partition { it.asQualifiedName == StdLibDefault.qualifiedName }
                 findOwnedTypeNamed(tn)
-                    ?: import.firstNotNullOfOrNull {
+                    ?: (otherImports + stdImports).firstNotNullOfOrNull {
                         val tns = _importedNamespaces[it.asQualifiedName]
                         //    ?: error("namespace '$it' not resolved in namespace '$qualifiedName', have you called resolveImports() on the TypeModel and does it contain the required namespace?")
                         (tns as TypesNamespace?)?.findOwnedTypeNamed(tn)
