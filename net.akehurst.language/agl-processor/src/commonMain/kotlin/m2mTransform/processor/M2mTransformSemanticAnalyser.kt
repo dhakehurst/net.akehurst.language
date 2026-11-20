@@ -26,6 +26,10 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
+import net.akehurst.language.m2mTransform.api.M2mTransformRuleSet
+import net.akehurst.language.m2mTransform.api.DomainReference
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.m2mTransform.api.M2mTransformPatternRule
 import net.akehurst.language.m2mTransform.api.RuleCall
 import net.akehurst.language.types.api.TypesDomain
@@ -48,6 +52,9 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
         when {
             null == sentenceContext -> _issues.warn(null, "No sentence context provided, either provide one or switch off Semantic Analysis.")
             else -> {
+                // transform extends: resolve first, the rules of a transform include the inherited ones (allRule)
+                asm.allTransformRuleSet.forEach { def -> resolveTransformExtends(asm, def) }
+                asm.allTransformRuleSet.forEach { def -> checkTransformExtends(def) }
                 asm.allTransformRuleSet.forEach { def ->
                     def.domainParameters.entries.forEach { (k, v) ->
                         val td = (sentenceContext.findItemsNamedConformingTo(v.value) { true }).firstOrNull()?.item
@@ -60,7 +67,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                     def.rule.forEach { (k, v) ->
                         // resolve extends references
                         v.extends.forEach { e ->
-                            def.rule[e.nameOrQName.simpleName]?.let { //TODO: support qnames !
+                            def.allRule[e.nameOrQName.simpleName]?.let { //TODO: support qnames !
                                 e.resolveAs(it)
                             }
                         }
@@ -87,10 +94,10 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                                 }
 
                                 when (val wn = v.when_) {
-                                    is RuleCall -> def.rule[wn.ruleName]?.let { wn.resolveAs(it) }
+                                    is RuleCall -> def.allRule[wn.ruleName]?.let { wn.resolveAs(it) }
                                 }
                                 v.where.forEach { w ->
-                                    def.rule[w.ruleName]?.let { w.resolveAs(it) }
+                                    def.allRule[w.ruleName]?.let { w.resolveAs(it) }
                                 }
                             }
                         }
@@ -101,4 +108,57 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
 
         return SemanticAnalysisResultDefault(emptyList(), _issues)
     }
+
+    /** a transform named in 'extends' is looked up by qualified name, or by simple name in the same namespace first */
+    private fun resolveTransformExtends(asm: M2mTransformDomain, def: M2mTransformRuleSet) {
+        def.extends.forEach { ref ->
+            val name = ref.nameOrQName
+            val all = asm.allTransformRuleSet
+            val found = when (name) {
+                is QualifiedName -> all.firstOrNull { it.qualifiedName == name }
+                else -> all.firstOrNull { it.namespace === def.namespace && it.name.value == name.value }
+                    ?: all.firstOrNull { it.name.value == name.value }
+            }
+            when (found) {
+                null -> _issues.error(null, "Transform '${name.value}' extended by transform '${def.name.value}' not found.")
+                else -> ref.resolveAs(found)
+            }
+        }
+    }
+
+    private fun checkTransformExtends(def: M2mTransformRuleSet) {
+        val supers = def.extends.mapNotNull { it.resolved }
+        if (extendsTransitively(def, def, mutableListOf())) {
+            _issues.error(null, "Transform '${def.name.value}' extends itself (directly or through other transforms).")
+            return
+        }
+        supers.forEach { sup ->
+            if (sup.domainParameters != def.domainParameters) {
+                val fmt = { m: Map<DomainReference, SimpleName> -> m.entries.joinToString { "${it.key.value}:${it.value.value}" } }
+                _issues.error(null, "Transform '${def.name.value}' extends '${sup.name.value}', but their domains differ: (${fmt(def.domainParameters)}) and (${fmt(sup.domainParameters)}).")
+            }
+        }
+        val inherited = supers.flatMap { it.allRule.keys }.toSet()
+        def.rule.values.forEach { r ->
+            when {
+                r.isOverride && r.name !in inherited ->
+                    _issues.error(null, "Rule '${r.name.value}' in transform '${def.name.value}' is marked 'override', but no rule named '${r.name.value}' is inherited.")
+
+                r.isOverride.not() && r.name in inherited ->
+                    _issues.error(null, "Rule '${r.name.value}' in transform '${def.name.value}' replaces an inherited rule with the same name, it must be marked 'override'.")
+            }
+        }
+    }
+
+    private fun extendsTransitively(def: M2mTransformRuleSet, target: M2mTransformRuleSet, visited: MutableList<M2mTransformRuleSet>): Boolean =
+        def.extends.mapNotNull { it.resolved }.any { sup ->
+            when {
+                sup === target -> true
+                visited.any { it === sup } -> false
+                else -> {
+                    visited.add(sup)
+                    extendsTransitively(sup, target, visited)
+                }
+            }
+        }
 }

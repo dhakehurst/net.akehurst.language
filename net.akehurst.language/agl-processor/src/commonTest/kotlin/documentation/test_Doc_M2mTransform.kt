@@ -371,6 +371,46 @@ class test_Doc_M2mTransform {
     }
 
     @Test
+    fun extending_transforms() {
+        // m2m-transform.md: "Extending transforms"
+        val text = """
+            namespace example
+            transform Labels(s:Shapes, d:Drawing) {
+              top mapping ItemLabel {
+                domain s o:Any {}
+                domain d l:String := 'item ' + k
+                where { map Kind { s := o  d := k } }
+              }
+              mapping Kind {
+                domain s o:Any {}
+                domain d k:String := 'shape'
+              }
+            }
+            transform MyLabels(s:Shapes, d:Drawing) : Labels {
+              override mapping Kind {
+                domain s o:Any {}
+                domain d k:String := o.${'$'}type.name
+              }
+            }
+        """.trimIndent()
+        val context = SentenceContextAny()
+        context.addToScope(null, listOf(shapes.name.value), net.akehurst.language.base.api.QualifiedName("TypesDomain"), null, shapes)
+        context.addToScope(null, listOf(drawing.name.value), net.akehurst.language.base.api.QualifiedName("TypesDomain"), null, drawing)
+        val res = Agl.registry.agl.m2mTransform.processor!!.process(text, options = Agl.options { semanticAnalysis { sentenceContext(context) } })
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val m2m = res.asm!!
+        fun run(name: String): List<String> {
+            val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+            val interpreter = net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterCombined(m2m, mapOf(shapes.name to ogS, drawing.name to ogD), issues)
+            val result = interpreter.transform(m2m.allTransformRuleSet.first { it.name.value == name }, DomainReference("d"), emptyMap(), mapOf(DomainReference("s") to items))
+            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            return result.targets.map { it.untyped.asString().trim() }
+        }
+        assertEquals(listOf("'item Circle'", "'item Square'", "'item Circle'", "'item Connection'"), run("MyLabels"))
+        assertEquals(listOf("'item shape'", "'item shape'", "'item shape'", "'item shape'"), run("Labels"))
+    }
+
+    @Test
     fun collection_templates() {
         // m2m-transform.md: "Collection templates"
         val actual = transform(

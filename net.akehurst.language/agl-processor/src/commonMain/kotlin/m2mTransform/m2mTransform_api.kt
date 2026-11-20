@@ -77,8 +77,17 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
      */
     val importTypes: List<Import>
 
+    /** the top rules of [allRule] */
     val topRule: List<M2mTransformRule>
+
+    /** the rules defined in this transform */
     val rule: Map<SimpleName, M2mTransformRule>
+
+    /**
+     * the rules of this transform and the rules it inherits from the transforms it extends;
+     * a rule of this transform replaces an inherited rule with the same name (it is marked 'override')
+     */
+    val allRule: Map<SimpleName, M2mTransformRule>
 
     fun addImportType(value: Import)
     fun setRule(rule: M2mTransformRule)
@@ -97,6 +106,9 @@ interface M2mTransformRuleReference {
 
 interface M2mTransformRule {
     val isTop: Boolean
+
+    /** true if marked 'override': it replaces a rule with the same name inherited from an extended transform */
+    val isOverride: Boolean
     val name: SimpleName
     val parameters: List<VariableDefinition>
     val extends: List<M2mTransformRuleReference>

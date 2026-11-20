@@ -677,6 +677,9 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
             interface_(Property_typeName.value, PropertyDeclaration::class) {
                 propertyPrimitive<PropertyDeclaration, String>("name", "String", false, "Name of the property.", accessor = { self -> self.name.value })
                 propertyPrimitive<PropertyDeclaration, TypeInstance>("type", Type_typeName.value, false, "Type of the property.", accessor = { self -> self.typeInstance })
+                //TODO: future enhancement (David 2026-11-20): 'owner' of a property inherited from a generic type has no type arguments
+                // (e.g. 'List', not 'List<Item>'), as PropertyDeclaration.owner is a TypeDefinition. To fix, a Property value would carry
+                // the type it was read from, and 'owner' would be the matching (resolved) supertype of that type.
                 propertyPrimitive<PropertyDeclaration, TypeInstance>(
                     "owner", Type_typeName.value, false, "The type that declares the property (without type arguments).",
                     accessor = { self -> ((self as? PropertyDeclarationResolved)?.original?.owner ?: self.owner).type() }
