@@ -16,6 +16,8 @@
 
 package net.akehurst.language.format.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
@@ -104,8 +106,12 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace ${NAMESPACE_NAME}
-            // TODO
+        namespace net.akehurst.language.expressions.asm
+          references {
+            in TypeReferenceDefault {
+              property possiblyQualifiedName refers-to TypeDefinition
+            }
+          }
     """.trimIndent()
 
     override val styleString: String = """
@@ -117,6 +123,11 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
           // TODO
     """.trimIndent()
 
@@ -197,7 +208,8 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
     """
 
     override val typesDomain: TypesDomain by lazy {
-        typesDomain(NAME, true, AglBase.typesDomain.namespace) { }
+        //TODO: the types of the format domain; the expressions types are used for completion (TypeReferenceDefault)
+        typesDomain(NAME, true, AglExpressions.typesDomain.namespace) { }
     }
 
     override val asmTransformDomain: AsmTransformDomain by lazy {
@@ -208,7 +220,11 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
         ) {
             namespace(NAMESPACE_NAME) {
                 ruleSet(NAME) {
-                    //TODO
+                    //TODO: the other rules, currently only what completion (of format definitions) needs:
+                    // the assignment says which property a type name gives a value to
+                    importTypes("net.akehurst.language.base.api", "net.akehurst.language.expressions.asm")
+                    createObject("typeReference", "TypeReferenceDefault") { /* custom SyntaxAnalyser */ assignment("possiblyQualifiedName", 0, "child[0]") }
+                    transRule("possiblyQualifiedName", "PossiblyQualifiedName", "children")
                 }
             }
         }
@@ -216,7 +232,10 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            // TypeDefinition is the type of the types in a context from a types domain (contextFromTypesDomain)
+            declarationsFor("net.akehurst.language.expressions.asm") {
+                reference("TypeReferenceDefault") { property("possiblyQualifiedName", listOf("TypeDefinition"), null) }
+            }
         }
     }
 
@@ -237,6 +256,11 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
     override val formatDomain by lazy {
         formatDomain(AglStyle.NAME) {
 //            TODO("not implemented")
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

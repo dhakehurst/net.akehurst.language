@@ -22,6 +22,19 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsGoal
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.base.api.Domain
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.scope.api.ItemInScope
+import net.akehurst.language.scope.api.Scope
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.expressions.api.CreateObjectExpression
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.api.ReferenceExpressionProperty
+import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.parser.api.RuntimeSpine
@@ -63,7 +76,8 @@ internal class SpineNodeDefault(
 
 internal class SpineDefault(
     private val runtimeSpine: RuntimeSpine,
-    val mapToGrammar: (Int, Int) -> RuleItem?
+    val mapToGrammar: (Int, Int) -> RuleItem?,
+    override val targetGrammar: Grammar? = null
 ) : Spine {
 
     override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> by lazy {
@@ -136,50 +150,386 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         ?: list.first()
                 }
             }
+            // stable sort, so items with the same kind and label stay in expansion order
             val sorted = filtered.sortedWith(
                 compareByDescending(CompletionItem::kind)
                     .thenBy(CompletionItem::label)
-                    .thenByDescending({ it.text.length })
-                    .thenByDescending(CompletionItem::text)
             )
             return sorted
         }
 
-        fun expansionToCompletionItem(expansions: List<Expansion>): List<CompletionItem> = expansions.mapIndexed { idx, exp ->
-            val label = exp.name ?: "???"
-            val text = exp.list//.joinToString(separator = " ") { textFor(it) }
-            CompletionItem(CompletionItemKind.SEGMENT, label, text).also {
-                it.id = idx
+        /**
+         * the namespace the completion position is in, the namespaces it imports, and where an import is inserted
+         */
+        data class VisibleNamespaces(
+            val own: String,
+            val imports: List<String>,
+            /** position to insert an import, null if not known */
+            val importPosition: Int?
+        ) {
+            val all: Set<String> get() = setOf(own) + imports
+        }
+
+        /**
+         * the [VisibleNamespaces] from the ASM of the sentence (when it is a [Domain]): its last namespace (the one that holds the completion position).
+         * An import is inserted after the last import of that namespace, else after its name.
+         */
+        fun visibleNamespacesOf(sentenceAsm: Any?, sentenceLocationMap: LocationMap?): VisibleNamespaces? {
+            val ns = (sentenceAsm as? Domain<*, *>)?.namespace?.lastOrNull() ?: return null
+            val lastImport = ns.import.lastOrNull()
+            val loc = when {
+                null == sentenceLocationMap -> null
+                null != lastImport -> sentenceLocationMap[lastImport]
+                else -> sentenceLocationMap[ns.qualifiedName] ?: sentenceLocationMap[SimpleName(ns.qualifiedName.value)]
+            }
+            return VisibleNamespaces(ns.qualifiedName.value, ns.import.map { it.value }, loc?.let { it.position + it.length })
+        }
+
+        /**
+         * the items in the scopes of the [sentenceContext] (nested scopes too) that conform, each with the path of its scope
+         */
+        fun allItemsConformingTo(sentenceContext: SentenceContext, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<Pair<List<String>, ItemInScope>> {
+            val res = mutableListOf<Pair<List<String>, ItemInScope>>()
+            fun walk(path: List<String>, scope: Scope) {
+                scope.findItemsConformingTo(conformsToFunc).forEach { res.add(Pair(path, it)) }
+                scope.childScopes.forEach { (id, child) -> walk(path + id, child) }
+            }
+            sentenceContext.scopeForSentence.values.forEach { walk(emptyList(), it) }
+            return res
+        }
+
+        /**
+         * the item offered for a referred to element found at [path] (CR1, David 2026-11-17):
+         * - an element in the root scope: its name
+         * - otherwise (e.g. a type, the path is its namespace) the simple name, with the qualified name as the description;
+         *   if its namespace is not visible, the simple name and an additional edit that inserts the import;
+         *   the qualified name if the simple name clashes (another found element with the same name is visible),
+         *   or when the import position is not known
+         * - with no [visible] namespaces (no ASM of the sentence), the simple name, the qualified name if another found element has the same name
+         */
+        fun completionItemForReferred(path: List<String>, item: ItemInScope, found: List<Pair<List<String>, ItemInScope>>, visible: VisibleNamespaces?): CompletionItem {
+            val label = item.qualifiedTypeName.last.value
+            val name = item.referableName
+            return when {
+                path.isEmpty() -> CompletionItem(CompletionItemKind.REFERRED, label, name)
+                else -> {
+                    val ns = path.joinToString(".")
+                    val qualified = "$ns.$name"
+                    val sameNameNs = found.filter { (p, it) -> p.isNotEmpty() && it.referableName == name && p.joinToString(".") != ns }.map { it.first.joinToString(".") }
+                    var edits = emptyList<CompletionEdit>()
+                    val text = when {
+                        null == visible -> if (sameNameNs.isEmpty()) name else qualified
+                        sameNameNs.any { it in visible.all } -> qualified
+                        ns in visible.all -> name
+                        null == visible.importPosition -> qualified
+                        else -> {
+                            edits = listOf(CompletionEdit(visible.importPosition, "\nimport $ns"))
+                            name
+                        }
+                    }
+                    CompletionItem(CompletionItemKind.REFERRED, label, text).also {
+                        it.description = qualified
+                        it.additionalEdits = edits
+                    }
+                }
+            }
+        }
+
+        /**
+         * The key used by [provideReferencesForSpine] for a leaf item expected next:
+         * the name of the leaf rule, or the id of a literal terminal.
+         */
+        fun referenceKeyFor(tangible: TangibleItem): String = when {
+            tangible.owningRule.isLeaf -> tangible.owningRule.name.value
+            tangible is Terminal -> tangible.id
+            tangible is NonTerminal -> tangible.ruleReference.value
+            else -> tangible.toString()
+        }
+
+        /**
+         * Items that refer to elements in the [sentenceContext], for the leaf items expected next in the [spine].
+         *
+         * - the property a leaf item gives a value to comes from the asm-transform rule of the grammar rule that holds the leaf:
+         *   its assignment for the child number of the leaf.
+         *   When that rule's transform rule does not create an object (e.g. `context = 'in' IDENTIFIER` transformed to a String),
+         *   the value is the value of the rule, so the assignment of the rule that holds it (for its child number) is used, and so on outwards
+         *   (rules from the grammar, and rules of the spine). A rule with no transform rule stops the search.
+         * - what that property refers to comes from the [crossReferenceDomain] ('property <p> refers-to <T>'),
+         *   or, when given in an enclosing type (a navigation 'a.p', or a 'forall'), from the reference recorded for the owner of the last property
+         * - an element of the context is offered when its type conforms to a referred to type (both types in the [typesDomain]),
+         *   otherwise when its type name is the referred to name (a simple name matches the last part of the type name)
+         * - an element is offered for a leaf only when its name matches the leaf (pattern or literal value), so it is valid there
+         *
+         * - items in nested scopes are found too (e.g. the types of a context from a types domain), the path of the scope is their namespace,
+         *   see [completionItemForReferred] for the text inserted for them (CR1)
+         *
+         * The key of the result is [referenceKeyFor] the leaf, only leaves with at least one item are in the result.
+         */
+        fun provideReferencesForSpine(
+            spine: Spine,
+            sentenceContext: SentenceContext,
+            transformRuleSet: AsmTransformRuleSet,
+            typesDomain: TypesDomain,
+            crossReferenceDomain: CrossReferenceDomain,
+            sentenceAsm: Any? = null,
+            sentenceLocationMap: LocationMap? = null
+        ): Map<String, List<CompletionItem>> {
+            val result = linkedMapOf<String, MutableList<CompletionItem>>()
+            val visited = mutableSetOf<GrammarRule>()
+            val visible = visibleNamespacesOf(sentenceAsm, sentenceLocationMap)
+
+            fun matchesType(itemTypeName: QualifiedName, refersTo: PossiblyQualifiedName): Boolean {
+                val refType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(refersTo)
+                val itemType = typesDomain.findByQualifiedNameOrNull(itemTypeName)
+                return when {
+                    null != refType && null != itemType -> itemType.conformsTo(refType)
+                    refersTo is QualifiedName -> refersTo == itemTypeName
+                    else -> refersTo.simpleName == itemTypeName.last
+                }
+            }
+
+            fun matchesLeaf(text: String, leaf: Terminal): Boolean = when {
+                leaf.isPattern -> runCatching { Regex(leaf.unescapedValue.value).matches(text) }.getOrDefault(true)
+                else -> leaf.unescapedValue.value == text
+            }
+
+            // path: (rule, child number in that rule), innermost first
+            fun lookup(path: List<Pair<GrammarRule, Int>>, leafKey: String, leaf: Terminal) {
+                var found: Pair<CreateObjectExpression, Int>? = null
+                var ownerTypeName: QualifiedName? = null
+                for ((rule, childNumber) in path) {
+                    val tr = transformRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(rule.name) ?: return
+                    val expr = tr.expression
+                    if (expr is CreateObjectExpression) {
+                        found = Pair(expr, childNumber)
+                        ownerTypeName = tr.resolvedType.resolvedDefinition.qualifiedName
+                        break
+                    }
+                }
+                val (expr, childNumber) = found ?: return
+                val propertyName = expr.propertyAssignments.firstOrNull { it.lhsGrammarRuleIndex == childNumber }?.variable?.name ?: return
+                val owner = ownerTypeName ?: return
+                val refersTo = crossReferenceDomain.referencesFor(typesDomain, owner)
+                    .flatMap { it.candidates }
+                    .filterIsInstance<ReferenceExpressionProperty>()
+                    .filter { it.referringPropertyPath.asString() == propertyName }
+                    .flatMap { it.refersToTypeName }
+                    // a reference given in an enclosing type (e.g. 'property tableRef.ref' or in a 'forall'),
+                    // recorded for the type that owns the last property of the navigation
+                    .ifEmpty { crossReferenceDomain.referenceForProperty(owner, propertyName) }
+                if (refersTo.isEmpty()) return
+                val referred = allItemsConformingTo(sentenceContext) { itemTypeName -> refersTo.any { matchesType(itemTypeName, it) } }
+                    .filter { matchesLeaf(it.second.referableName, leaf) }
+                val items = referred.map { (scopePath, it) -> completionItemForReferred(scopePath, it, referred, visible) }
+                if (items.isNotEmpty()) result.getOrPut(leafKey) { mutableListOf() }.addAll(items)
+            }
+
+            fun canBeEmpty(item: RuleItem): Boolean = when (item) {
+                is OptionalItem -> true
+                is ListOfItems -> 0 == item.min
+                else -> false
+            }
+
+            lateinit var walkRhs: (List<Pair<GrammarRule, Int>>, GrammarRule, RuleItem) -> Unit
+            // outer: the rules (and child numbers) that hold 'rule', innermost first
+            fun walkItem(outer: List<Pair<GrammarRule, Int>>, rule: GrammarRule, childNumber: Int, item: RuleItem) {
+                val path = listOf(Pair(rule, childNumber)) + outer
+                when (item) {
+                    is Terminal -> if (item.isLiteral) lookup(path, item.id, item)
+                    is NonTerminal -> {
+                        val ref = referencedRuleFor(item, spine.targetGrammar)
+                        when {
+                            ref.isLeaf -> lookup(path, ref.name.value, ref.compressedLeaf)
+                            visited.add(ref) -> walkRhs(path, ref, ref.rhs)
+                            else -> Unit
+                        }
+                    }
+
+                    is OptionalItem -> walkItem(outer, rule, childNumber, item.item)
+                    is ListOfItems -> walkItem(outer, rule, childNumber, item.item)
+                    is Choice, is Concatenation -> walkRhs(outer, rule, item)
+                    else -> Unit // e.g. a group is a child of its own
+                }
+            }
+            walkRhs = { outer, rule, rhs ->
+                when (rhs) {
+                    is Choice -> rhs.alternative.forEach { walkRhs(outer, rule, it) }
+                    is Concatenation -> for ((idx, it) in rhs.items.withIndex()) {
+                        walkItem(outer, rule, idx, it)
+                        if (canBeEmpty(it).not()) break
+                    }
+
+                    else -> walkItem(outer, rule, 0, rhs)
+                }
+            }
+
+            // the rules of the spine (innermost first) with the child number expected next,
+            // nodes for pseudo rules (optional, list, group) are left out, the node of the rule that holds them gives the child number
+            val spineNodes = spine.elements.mapNotNull { node ->
+                when {
+                    node is SpineNodeAbstract && node.ruleItem !== node.rule.rhs -> null
+                    else -> Pair(node.rule, node.nextChildNumber)
+                }
+            }
+
+            fun nullable(item: RuleItem): Boolean = when (item) {
+                is OptionalItem -> true
+                is ListOfItems -> 0 == item.min
+                is EmptyRule -> true
+                else -> false
+            }
+
+            // (child number, item) for the children of the rule that can be first
+            fun firstChildren(rhs: RuleItem): List<Pair<Int, RuleItem>> = when (rhs) {
+                is Choice -> rhs.alternative.flatMap { firstChildren(it) }
+                is Concatenation -> {
+                    val res = mutableListOf<Pair<Int, RuleItem>>()
+                    for ((idx, it) in rhs.items.withIndex()) {
+                        res.add(Pair(idx, it))
+                        if (nullable(it).not()) break
+                    }
+                    res
+                }
+
+                else -> listOf(Pair(0, rhs))
+            }
+
+            // the non-terminals that can be first in the item
+            fun firstNonTerminals(item: RuleItem): List<NonTerminal> = when (item) {
+                is NonTerminal -> listOf(item)
+                is OptionalItem -> firstNonTerminals(item.item)
+                is ListOfItems -> firstNonTerminals(item.item)
+                is Group -> firstNonTerminals(item.groupedContent)
+                is Choice, is Concatenation -> firstChildren(item).flatMap { firstNonTerminals(it.second) }
+                else -> emptyList()
+            }
+
+            // the items that are the child 'childNumber' of the rhs
+            fun itemsAt(rhs: RuleItem, childNumber: Int): List<RuleItem> = when (rhs) {
+                is Choice -> rhs.alternative.flatMap { itemsAt(it, childNumber) }
+                is Concatenation -> listOfNotNull(rhs.items.getOrNull(childNumber))
+                else -> if (0 == childNumber) listOf(rhs) else emptyList()
+            }
+
+            // A rule whose first child is being parsed is not (yet) in the spine (left corner),
+            // these are the chains of such rules (innermost first, with the child number) from the item down to the target rule
+            fun chainsTo(item: RuleItem, target: GrammarRule, done: MutableSet<GrammarRule>): List<List<Pair<GrammarRule, Int>>> =
+                firstNonTerminals(item).flatMap { nt ->
+                    val ref = referencedRuleFor(nt, spine.targetGrammar)
+                    when {
+                        ref == target -> listOf(emptyList())
+                        ref.isLeaf -> emptyList()
+                        done.add(ref) -> firstChildren(ref.rhs).flatMap { (k, child) -> chainsTo(child, target, done).map { it + Pair(ref, k) } }
+                        else -> emptyList()
+                    }
+                }
+
+            // the paths (innermost first) of rules and child numbers from the innermost spine node outwards
+            var paths: List<List<Pair<GrammarRule, Int>>> = listOfNotNull(spineNodes.firstOrNull()?.let { listOf(it) })
+            // lookup uses a path only up to the first rule that creates an object or has no transform rule, so the paths stop there
+            fun stops(rule: GrammarRule): Boolean = transformRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(rule.name)
+                .let { null == it || it.expression is CreateObjectExpression }
+            for (i in 1 until spineNodes.size) {
+                if (paths.all { p -> p.any { stops(it.first) } }) break
+                val inner = spineNodes[i - 1].first
+                val outer = spineNodes[i]
+                val chains = itemsAt(outer.first.rhs, outer.second).flatMap { chainsTo(it, inner, mutableSetOf()) }.ifEmpty { listOf(emptyList()) }
+                paths = paths.flatMap { p -> chains.map { c -> p + c + outer } }
+            }
+
+            for (path in paths) {
+                val first = path.first()
+                visited.clear()
+                spine.expectedNextRuleItems.forEach { walkItem(path.drop(1), first.first, first.second, it) }
+            }
+            return result
+        }
+
+        /**
+         * The default items for the [spine] ([provideDefaultForSpine]) together with the items from [provideReferencesForSpine]:
+         * the default PATTERN and LITERAL items for a leaf that has referred to items are left out (they are replaced by the referred to items).
+         * With no [sentenceContext], only the default items.
+         */
+        fun <ContextType : Any> provideDefaultWithReferencesForSpine(
+            spine: Spine,
+            options: CompletionProviderOptions<ContextType>,
+            sentenceContext: SentenceContext?,
+            transformRuleSet: AsmTransformRuleSet,
+            typesDomain: TypesDomain,
+            crossReferenceDomain: CrossReferenceDomain
+        ): List<CompletionItem> {
+            val default = provideDefaultForSpine(spine, options)
+            return when (sentenceContext) {
+                null -> default
+                else -> {
+                    val refs = provideReferencesForSpine(spine, sentenceContext, transformRuleSet, typesDomain, crossReferenceDomain, options.sentenceAsm, options.sentenceLocationMap)
+                    // a segment that is only the placeholder of such a leaf (e.g. '<IDENTIFIER>') is left out too
+                    val placeholders = refs.keys.map { "<$it>" }.toSet()
+                    refs.values.flatten() + default.filter { item ->
+                        val d = item.detail
+                        val replaced = when (item.kind) {
+                            CompletionItemKind.PATTERN, CompletionItemKind.LITERAL -> d is TangibleItem && referenceKeyFor(d) in refs.keys
+                            CompletionItemKind.SEGMENT -> item.text in placeholders
+                            else -> false
+                        }
+                        replaced.not()
+                    }
+                }
+            }
+        }
+
+        // id is the index in [expansions] (used by CompletionProviderOptions.path), empty segments are not offered
+        fun expansionToCompletionItem(expansions: List<Expansion>): List<CompletionItem> = expansions.mapIndexedNotNull { idx, exp ->
+            when {
+                exp.list.isBlank() -> null
+                else -> {
+                    val label = exp.name ?: "???"
+                    val text = exp.list//.joinToString(separator = " ") { textFor(it) }
+                    CompletionItem(CompletionItemKind.SEGMENT, label, text).also {
+                        it.id = idx
+                    }
+                }
             }
         }.toSet().toList()
 
+        /**
+         * the rule referred to by [item].
+         * Resolved in [targetGrammar] when the rule owning [item] is from it, or from a grammar it extends, so that overridden rules are used.
+         * Otherwise (e.g. no target grammar, or an embedded grammar), resolved in the grammar owning [item].
+         */
+        fun referencedRuleFor(item: NonTerminal, targetGrammar: Grammar?): GrammarRule {
+            val owningGrammar = item.owningRule.grammar
+            val tg = targetGrammar?.takeIf { it == owningGrammar || it.allExtendsResolved.contains(owningGrammar) }
+            return tg?.let { item.referencedRuleOrNull(it) } ?: item.referencedRule(owningGrammar)
+        }
+
         fun <ContextType : Any> provideDefaultForSpine(spine: Spine, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
-            val exps = provideForRuleItems(spine.expectedNextRuleItems, options)
-            val cis = expansionToCompletionItem(exps) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal, options)
+            val exps = provideForRuleItems(spine.expectedNextRuleItems, options, spine.targetGrammar)
+            val cis = expansionToCompletionItem(exps) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal, options, spine.targetGrammar)
             return cis
         }
 
         fun <ContextType : Any> provideExpansionsForSpine(spine: Spine, options: CompletionProviderOptions<ContextType>): List<Expansion> {
-            return provideForRuleItems(spine.expectedNextRuleItems, options)
+            return provideForRuleItems(spine.expectedNextRuleItems, options, spine.targetGrammar)
         }
 
-        fun <ContextType : Any> provideForConcatenations(concatenations: Set<Concatenation>, options: CompletionProviderOptions<ContextType>): List<Expansion> = when (options.depth) {
+        fun <ContextType : Any> provideForConcatenations(concatenations: Set<Concatenation>, options: CompletionProviderOptions<ContextType>, targetGrammar: Grammar? = null): List<Expansion> = when (options.depth) {
             0 -> emptyList()
             else -> concatenations.flatMap { concat ->
-                expand(options.depth, concat, options)
+                expand(options.depth, concat, options, targetGrammar)
             }
         }
 
-        fun <ContextType : Any> provideForRuleItems(ruleItems: Set<RuleItem>, options: CompletionProviderOptions<ContextType>): List<Expansion> =
-            provideExpansionsForRuleItem(options.depth, ruleItems, options)
+        fun <ContextType : Any> provideForRuleItems(ruleItems: Set<RuleItem>, options: CompletionProviderOptions<ContextType>, targetGrammar: Grammar? = null): List<Expansion> =
+            provideExpansionsForRuleItem(options.depth, ruleItems, options, targetGrammar)
 
-        fun <ContextType : Any> provideExpansionsForRuleItem(curDepth: Int, ruleItems: Set<RuleItem>, options: CompletionProviderOptions<ContextType>): List<Expansion> =
+        fun <ContextType : Any> provideExpansionsForRuleItem(curDepth: Int, ruleItems: Set<RuleItem>, options: CompletionProviderOptions<ContextType>, targetGrammar: Grammar? = null): List<Expansion> =
             ruleItems.flatMap { ri ->
-                expand(curDepth, ri, options)
+                expand(curDepth, ri, options, targetGrammar)
             }
 
-        fun <ContextType : Any> expand(curDepth: Int, ri: RuleItem, options: CompletionProviderOptions<ContextType>): List<Expansion> =
-            expandItem(curDepth, ri, options).map { exp ->
+        fun <ContextType : Any> expand(curDepth: Int, ri: RuleItem, options: CompletionProviderOptions<ContextType>, targetGrammar: Grammar? = null): List<Expansion> =
+            expandItem(curDepth, ri, options, targetGrammar).map { exp ->
                 if (null == exp.name) {
                     Expansion(exp.ruleItem, ri.owningRule.name.value, exp.list)
                 } else {
@@ -188,25 +538,23 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             }
 
 
-        fun <ContextType : Any> expandItem(curDepth: Int, item: RuleItem, options: CompletionProviderOptions<ContextType>): List<Expansion> = when (item) {
-            is Choice -> item.alternative.flatMap { expandItem(curDepth, it, options) }
+        fun <ContextType : Any> expandItem(curDepth: Int, item: RuleItem, options: CompletionProviderOptions<ContextType>, targetGrammar: Grammar? = null): List<Expansion> = when (item) {
+            is Choice -> item.alternative.flatMap { expandItem(curDepth, it, options, targetGrammar) }
             is Concatenation -> {
                 //FIXME: SPACE may not be valid skip rule !
+                // label (Expansion.name): the innermost rule whose right-hand side holds the whole segment.
+                // A segment of one part keeps the name of that part, a segment of more parts gets its name from the enclosing rule.
                 var results = listOf<Expansion>(Expansion(item, null, ""))
-                val nameFunc = when {
-                    item.items.count { (it is Terminal && it.isLiteral).not() } > 1 -> { exp: Expansion -> null }
-                    else -> { exp: Expansion -> exp.name }
-                }
                 for (concItem in item.items) {
-                    val expand = expandItem(curDepth, concItem, options)
-                    val newResults = expand.flatMap { exp ->
-                        val expName = nameFunc.invoke(exp)
-                        val expRl = exp.ruleItem
-                        results.map { res ->
+                    val expand = expandItem(curDepth, concItem, options, targetGrammar)
+                    // earlier items vary slowest, so the segments are in the order of the alternatives
+                    val newResults = results.flatMap { res ->
+                        expand.map { exp ->
                             when {
                                 exp.list.isBlank() -> res // do not concat blank/empty items
-                                res.list.isBlank() -> Expansion(expRl, res.name ?: expName, exp.list) // first item
-                                else -> Expansion(res.ruleItem, res.name ?: expName, "${res.list} ${exp.list}")
+                                res.list.isBlank() -> Expansion(exp.ruleItem, exp.name, exp.list) // first item
+                                // more than one part, so the segment is the concatenation (used when it is expanded further, see CompletionProviderOptions.path)
+                                else -> Expansion(item, null, "${res.list} ${exp.list}")
                             }
                         }
                     }
@@ -216,22 +564,71 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             }
 
             is ConcatenationItem -> when (item) {
-                is OptionalItem -> expandItem(curDepth, item.item, options) + Expansion(item, null, "")
-                is ListOfItems -> expandItem(curDepth, item.item, options)
+                is OptionalItem -> when {
+                    options.showOptionalItems -> expandItem(curDepth, item.item, options, targetGrammar) + Expansion(item, null, "")
+                    else -> listOf(Expansion(item, null, ""))
+                }
+                is SimpleList -> {
+                    // the minimum number of items, and also one item if the minimum is 0
+                    val itemExps = expandItem(curDepth, item.item, options, targetGrammar)
+                    when {
+                        0 != item.min -> repeatExpansions(item, itemExps, item.min)
+                        options.showOptionalItems -> listOf(Expansion(item, null, "")) + itemExps
+                        else -> listOf(Expansion(item, null, ""))
+                    }
+                }
+
+                is SeparatedList -> {
+                    // the minimum number of items (also one item if the minimum is 0),
+                    // and 'item sep item' if the maximum allows 2 items, so that the separator is shown
+                    val itemExps = expandItem(curDepth, item.item, options, targetGrammar)
+                    val sepExps = expandItem(curDepth, item.separator, options, targetGrammar)
+                    val counts = when {
+                        0 != item.min -> listOf(item.min)
+                        options.showOptionalItems -> listOf(0, 1)
+                        else -> listOf(0)
+                    }
+                    val withTwo = when {
+                        counts == listOf(0) -> counts
+                        counts.any { it >= 2 } -> counts
+                        -1 == item.max || item.max >= 2 -> counts + 2
+                        else -> counts
+                    }
+                    withTwo.flatMap { n ->
+                        when (n) {
+                            0 -> listOf(Expansion(item, null, ""))
+                            else -> repeatExpansions(item, itemExps, n, sepExps)
+                        }
+                    }
+                }
+
+                is ListOfItems -> expandItem(curDepth, item.item, options, targetGrammar)
                 is SimpleItem -> when (item) {
-                    is Group -> expandItem(curDepth, item.groupedContent, options)
+                    is Group -> expandItem(curDepth, item.groupedContent, options, targetGrammar)
                     is TangibleItem -> when (item) {
                         is EmptyRule -> listOf(textFor(item, options))
                         is Terminal -> listOf(textFor(item, options))
-                        is Embedded -> listOf(textFor(item, options)) //TODO: could expand this !
-                        is NonTerminal -> when (curDepth) {
+                        // expanded like a rule reference, its rule (and the rules it refers to) resolved in the embedded grammar
+                        is Embedded -> when (val ruleDepth = options.ruleDepth[item.embeddedGoalName.value] ?: curDepth) {
                             0 -> listOf(textFor(item, options))
                             else -> {
-                                val refRule = item.referencedRule(item.owningRule.grammar)
+                                val embeddedGrammar = item.embeddedGrammarReference.resolved
+                                val embeddedRule = embeddedGrammar?.findAllResolvedGrammarRule(item.embeddedGoalName)
+                                when {
+                                    null == embeddedGrammar || null == embeddedRule || embeddedRule.isLeaf -> listOf(textFor(item, options))
+                                    else -> expandItem(ruleDepth - 1, embeddedRule.rhs, options, embeddedGrammar).map { Expansion(it.ruleItem, it.name ?: item.embeddedGoalName.value, it.list) }
+                                }
+                            }
+                        }
+                        // a depth given for the rule (options.ruleDepth) is used instead of the current depth
+                        is NonTerminal -> when (val ruleDepth = options.ruleDepth[item.ruleReference.value] ?: curDepth) {
+                            0 -> listOf(textFor(item, options))
+                            else -> {
+                                val refRule = referencedRuleFor(item, targetGrammar)
                                 when {
                                     refRule.isLeaf -> listOf(textFor(item, options))
                                     else -> {
-                                        expandItem(curDepth - 1, refRule.rhs, options).map { Expansion(it.ruleItem, it.name ?: item.ruleReference.value, it.list) }
+                                        expandItem(ruleDepth - 1, refRule.rhs, options, targetGrammar).map { Expansion(it.ruleItem, it.name ?: item.ruleReference.value, it.list) }
                                     }
                                 }
                             }
@@ -247,6 +644,27 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             }
 
             else -> error("Unsupported subtype of RuleItem: ${item::class.simpleName}")
+        }
+
+        /**
+         * all combinations of [count] items, each one of [itemExpansions], separated by a space
+         * (and by one of [separatorExpansions] if there are any).
+         * A combination of more than one item refers to [list].
+         */
+        fun repeatExpansions(list: ListOfItems, itemExpansions: List<Expansion>, count: Int, separatorExpansions: List<Expansion> = emptyList()): List<Expansion> {
+            fun join(res: Expansion, exp: Expansion) = when {
+                exp.list.isBlank() -> res
+                res.list.isBlank() -> exp
+                else -> Expansion(list, null, "${res.list} ${exp.list}") // more than one part, named by the enclosing rule
+            }
+            var results = itemExpansions
+            for (i in 1 until count) {
+                if (separatorExpansions.isNotEmpty()) {
+                    results = results.flatMap { res -> separatorExpansions.map { sep -> join(res, sep) } }
+                }
+                results = results.flatMap { res -> itemExpansions.map { exp -> join(res, exp) } }
+            }
+            return results
         }
 
         fun <ContextType : Any> textFor(item: RuleItem, options: CompletionProviderOptions<ContextType>): Expansion = when (item) {
@@ -291,26 +709,27 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             else -> error("Unsupported subtype of RuleItem: ${item::class.simpleName}")
         }
 
-        fun <ContextType : Any> provideForTangibles(tangibles: Set<TangibleItem>, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
+        fun <ContextType : Any> provideForTangibles(tangibles: Set<TangibleItem>, options: CompletionProviderOptions<ContextType>, targetGrammar: Grammar? = null): List<CompletionItem> {
             return tangibles.flatMap { ri ->
                 when {
                     ri.owningRule.isSkip -> emptyList() //make this an option to exclude skip stuff, this also needs to be extended/improved does not cover all cases
-                    else -> provideForTangible(ri, options)
+                    else -> provideForTangible(ri, options, targetGrammar)
                 }
             }
         }
 
         // maybe should pass in a GrammarRule rather than TangibleItem
-        fun <ContextType : Any> provideForTangible(tangibleItem: TangibleItem, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
+        fun <ContextType : Any> provideForTangible(tangibleItem: TangibleItem, options: CompletionProviderOptions<ContextType>, targetGrammar: Grammar? = null): List<CompletionItem> {
             return when (tangibleItem) {
                 // Empty -> provides nothing
                 // Embedded -> should not occur in spine as the embedded item is used.
 
                 is NonTerminal -> { //must be a reference to leaf
                     val name = tangibleItem.ruleReference.value
-                    val refRule = tangibleItem.referencedRule(tangibleItem.owningRule.grammar)
-                    val label = refRule.compressedLeaf.unescapedValue.value
-                    listOf(CompletionItem(CompletionItemKind.PATTERN, label, "<$name>").apply { detail=tangibleItem })
+                    val refRule = referencedRuleFor(tangibleItem, targetGrammar)
+                    // label is the rule name, the description holds the pattern (regex)
+                    val pattern = refRule.compressedLeaf.unescapedValue.value
+                    listOf(CompletionItem(CompletionItemKind.PATTERN, name, "<$name>").apply { detail = tangibleItem; description = pattern })
                 }
 
                 is Terminal -> {
@@ -318,18 +737,19 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         tangibleItem.owningRule.isLeaf -> tangibleItem.owningRule.name.value
                         else -> tangibleItem.escapedValue.value
                     }
+                    // a pattern: label is the rule name, the description holds the pattern (regex)
                     when {
                         tangibleItem.isPattern -> when {
                             options.provideValuesForPatternTerminals -> try {
                                 val p = RegexValueProvider(tangibleItem.unescapedValue.value, 'X') //TODO: pass in the 'any value'
                                 val txt = p.provide()
-                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, txt).apply { detail=tangibleItem })
+                                listOf(CompletionItem(CompletionItemKind.PATTERN, name, txt).apply { detail = tangibleItem; description = tangibleItem.unescapedValue.value })
                             } catch (t: Throwable) {
                                 t.printStackTrace() // should not happen, but bugs in AGL regex could cause it
-                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, "<$name>").apply { detail=tangibleItem })
+                                listOf(CompletionItem(CompletionItemKind.PATTERN, name, "<$name>").apply { detail = tangibleItem; description = tangibleItem.unescapedValue.value })
                             }
 
-                            else -> listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, "<$name>").apply { detail=tangibleItem })
+                            else -> listOf(CompletionItem(CompletionItemKind.PATTERN, name, "<$name>").apply { detail = tangibleItem; description = tangibleItem.unescapedValue.value })
                         }
 
                         else -> listOf(CompletionItem(CompletionItemKind.LITERAL, "'$name'", tangibleItem.unescapedValue.value).apply { detail=tangibleItem })

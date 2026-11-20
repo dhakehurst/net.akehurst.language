@@ -26,7 +26,7 @@ import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.parser.api.Rule
@@ -152,8 +152,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
             override fun endBranch(nodeInfo: SpptDataNodeInfo) {
                 val opt = nodeInfo.alt.option
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
-                val children = stack.pop(numChildren)
-                val adjChildren = children.reversed()
+                val adjChildren = stack.pop(numChildren)
                 val downData = downStack.pop()
                 val value = when {
                     null == downData -> null //branch not used for element property value, push null for correct num children on stack

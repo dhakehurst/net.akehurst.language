@@ -1036,23 +1036,17 @@ class test_m2mTransformLanguage {
 
     @Test
     fun check_grammar() {
-        val proc = Agl.registry.agl.asmTransform.processor
-        assertTrue(Agl.registry.agl.asmTransform.issues.isEmpty(), Agl.registry.agl.asmTransform.issues.toString())
+        val proc = Agl.registry.agl.m2mTransform.processor
+        assertTrue(Agl.registry.agl.m2mTransform.issues.isEmpty(), Agl.registry.agl.m2mTransform.issues.toString())
         assertNotNull(proc)
     }
 
+    //TODO: M2mTransform.typesDomain is not yet written (only M2mTransformDomain), give the expected types when it is
     @Ignore
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.asmTransform.processor!!.typesDomain
-        val expected = grammarTypeModel("net.akehurst.language.agl", "AsmTransform") {
-            //unit = ruleList ;
-            //ruleList = [formatRule]* ;
-            //formatRule = typeReference '->' formatExpression ;
-            //formatExpression
-            // = stringExpression
-            // | whenExpression
-            // ;
+        val actual = Agl.registry.agl.m2mTransform.processor!!.typesDomain
+        val expected = grammarTypeModel("net.akehurst.language", "M2mTransform") {
         }
 
         TypesDomainTest.tmAssertEquals(expected, actual)

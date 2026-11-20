@@ -17,6 +17,7 @@
 package net.akehurst.language.automaton.leftcorner.transitions
 
 import net.akehurst.language.automaton.leftcorner.Transition
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -26,6 +27,7 @@ class test_multi_0_n_literal {
         assertEquals(expected, actual)
     }
 
+    @Ignore //placeholder: test not written yet
     @Test
     fun t() {
         TODO()

@@ -16,6 +16,8 @@
 
 package net.akehurst.language.grammar.processor
 
+import net.akehurst.language.regex.api.RegexEngineKind
+import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
@@ -30,6 +32,8 @@ import net.akehurst.language.automaton.leftcorner.ParserStateSet
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.asm.GrammarRuleAbstract
+import net.akehurst.language.regex.agl.regexMatcher
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
@@ -107,6 +111,9 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 this.checkRuleUsage(grammar)
                 this.checkForDuplicates(grammar)
                 this.checkPreferenceRules(grammar)
+                this.checkLeafChoices(grammar)
+                this.checkOptionalsCoveredByList(grammar)
+                this.checkOptions(grammar)
                 if (this@AglGrammarSemanticAnalyser._issues.errors.isEmpty() && _analyseAmbiguities) {
                     this.checkForAmbiguities(grammar, automatonKind)
                 }
@@ -126,6 +133,176 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         } else {
             ref.resolveAs(g)
         }
+    }
+
+    /**
+     * A leaf is matched with one regex, and a regex takes the first alternative of a choice that matches.
+     * The alternatives of a longest choice ('|') are put longest first when they all have a fixed length,
+     * otherwise their order is kept and the longest match is not guaranteed, so warn.
+     */
+    private fun checkOptions(grammar: Grammar) {
+        val scanner = grammar.options.get<Any>(AglGrammar.OPTION_scanner)
+        if (null != scanner && null == ScannerKind.entries.firstOrNull { it.name == scanner.toString() }) {
+            issueWarn(grammar, "Grammar option '${AglGrammar.OPTION_scanner}' has value '$scanner', expected one of ${ScannerKind.entries.joinToString { it.name }}", null)
+        }
+        val regexEngine = grammar.options.get<Any>(AglGrammar.OPTION_regexEngine)
+        if (null != regexEngine && null == RegexEngineKind.entries.firstOrNull { it.name == regexEngine.toString() }) {
+            issueWarn(grammar, "Grammar option '${AglGrammar.OPTION_regexEngine}' has value '$regexEngine', expected one of ${RegexEngineKind.entries.joinToString { it.name }}", null)
+        }
+    }
+
+    private fun checkLeafChoices(grammar: Grammar) {
+        grammar.grammarRule.forEach { rule ->
+            val rhs = rule.rhs
+            if (rule.isLeaf && rhs is ChoiceLongest && rhs.alternative.size > 1) {
+                val lengths = rhs.alternative.map { GrammarRuleAbstract.leafLength(it) }
+                if (lengths.any { it.isFixed.not() }) {
+                    issueWarn(
+                        rule,
+                        "Leaf rule '${rule.name}' is a choice with an alternative that can match a varying number of characters, the first alternative that matches is taken, not the longest.",
+                        null
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Lists are greedy: an earlier list takes as much as it can.
+     * So an optional (or a list with minimum 0) after a list with no maximum can never match anything
+     * when every terminal it can contain is also matched by the item of the list, warn about it.
+     * Items in between must be such optionals too (they are empty for the same reason).
+     * Conservative: only a list whose item is a single terminal (literal, pattern or leaf rule) is checked,
+     * and a terminal is covered when it is the same terminal or a literal that the pattern matches.
+     */
+    private fun checkOptionalsCoveredByList(grammar: Grammar) {
+        grammar.grammarRule.forEach { rule ->
+            if (rule.isLeaf.not() && rule.isSkip.not()) {
+                concatenationsOf(rule.rhs, emptySet()).forEach { concat ->
+                    concat.items.forEachIndexed { i, before ->
+                        val listTerminal = unboundedListItemTerminal(before, emptySet())
+                        if (null != listTerminal) {
+                            // the items after the list, as long as each one is an optional the list covers:
+                            // all of them are empty, because the list takes what they could match
+                            var j = i + 1
+                            while (j < concat.items.size && isCoveredOptional(listTerminal, concat.items[j])) {
+                                val after = concat.items[j]
+                                issueWarn(
+                                    after,
+                                    "In rule '${rule.name}', '${itemText(after)}' can never match anything: lists are greedy and the list '${itemText(before)}' before it matches everything '${itemText(after)}' can contain.",
+                                    null
+                                )
+                                j++
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun isCoveredOptional(listTerminal: Terminal, item: RuleItem): Boolean {
+        val content = optionalContent(item, emptySet()) ?: return false
+        val terminals = allTerminalsOf(content, emptySet()) ?: return false
+        return terminals.isNotEmpty() && terminals.all { covers(listTerminal, it) }
+    }
+
+    private fun itemText(item: RuleItem): String = when (item) {
+        is NonTerminal -> item.ruleReference.value
+        is Terminal -> item.id
+        else -> item.toString()
+    }
+
+    private fun referencedRuleOrNull(item: NonTerminal): GrammarRule? = runCatching { item.referencedRule(item.owningRule.grammar) }.getOrNull()
+
+    /** concatenations in the rhs of a rule, also inside choices and groups (not inside other rules) */
+    private fun concatenationsOf(item: RuleItem, visiting: Set<RuleItem>): List<Concatenation> = when {
+        visiting.contains(item) -> emptyList()
+        item is Concatenation -> listOf(item) + item.items.flatMap { concatenationsOf(it, visiting + item) }
+        item is Choice -> item.alternative.flatMap { concatenationsOf(it, visiting + item) }
+        item is Group -> concatenationsOf(item.groupedContent, visiting + item)
+        item is OptionalItem -> concatenationsOf(item.item, visiting + item)
+        item is ListOfItems -> concatenationsOf(item.item, visiting + item)
+        else -> emptyList()
+    }
+
+    /** the single terminal that is the item of [item], when [item] is (a reference to) a simple list with no maximum */
+    private fun unboundedListItemTerminal(item: RuleItem, visiting: Set<GrammarRule>): Terminal? = when (item) {
+        is SimpleList -> if (-1 == item.max) singleTerminal(item.item, emptySet()) else null
+        is Group -> unboundedListItemTerminal(item.groupedContent, visiting)
+        is Concatenation -> if (1 == item.items.size) unboundedListItemTerminal(item.items[0], visiting) else null
+        is NonTerminal -> referencedRuleOrNull(item)?.let { r ->
+            if (r.isLeaf || visiting.contains(r)) null else unboundedListItemTerminal(r.rhs, visiting + r)
+        }
+
+        else -> null
+    }
+
+    private fun singleTerminal(item: RuleItem, visiting: Set<GrammarRule>): Terminal? = when (item) {
+        is Terminal -> item
+        is Group -> singleTerminal(item.groupedContent, visiting)
+        is Concatenation -> if (1 == item.items.size) singleTerminal(item.items[0], visiting) else null
+        is Choice -> if (1 == item.alternative.size) singleTerminal(item.alternative[0], visiting) else null
+        is NonTerminal -> referencedRuleOrNull(item)?.let { r ->
+            when {
+                visiting.contains(r) -> null
+                r.isLeaf -> runCatching { r.compressedLeaf }.getOrNull()
+                else -> singleTerminal(r.rhs, visiting + r)
+            }
+        }
+
+        else -> null
+    }
+
+    /** what [item] contains when it is (a reference to) an optional or a list with minimum 0 */
+    private fun optionalContent(item: RuleItem, visiting: Set<GrammarRule>): RuleItem? = when (item) {
+        is OptionalItem -> item.item
+        is SimpleList -> if (0 == item.min) item.item else null
+        is Group -> optionalContent(item.groupedContent, visiting)
+        is Concatenation -> if (1 == item.items.size) optionalContent(item.items[0], visiting) else null
+        is NonTerminal -> referencedRuleOrNull(item)?.let { r ->
+            if (r.isLeaf || visiting.contains(r)) null else optionalContent(r.rhs, visiting + r)
+        }
+
+        else -> null
+    }
+
+    /** every terminal that can occur in what [item] matches, null when not known (e.g. embedded grammar) */
+    private fun allTerminalsOf(item: RuleItem, visiting: Set<GrammarRule>): Set<Terminal>? = when (item) {
+        is Terminal -> setOf(item)
+        is EmptyRule -> emptySet()
+        is Group -> allTerminalsOf(item.groupedContent, visiting)
+        is OptionalItem -> allTerminalsOf(item.item, visiting)
+        is SeparatedList -> {
+            val i = allTerminalsOf(item.item, visiting)
+            val s = allTerminalsOf(item.separator, visiting)
+            if (null == i || null == s) null else i + s
+        }
+
+        is ListOfItems -> allTerminalsOf(item.item, visiting)
+        is Concatenation -> item.items.map { allTerminalsOf(it, visiting) }.let { l -> if (l.any { null == it }) null else l.flatMap { it!! }.toSet() }
+        is Choice -> item.alternative.map { allTerminalsOf(it, visiting) }.let { l -> if (l.any { null == it }) null else l.flatMap { it!! }.toSet() }
+        is NonTerminal -> referencedRuleOrNull(item)?.let { r ->
+            when {
+                visiting.contains(r) -> emptySet()
+                r.isLeaf -> runCatching { r.compressedLeaf }.getOrNull()?.let { setOf(it) }
+                else -> allTerminalsOf(r.rhs, visiting + r)
+            }
+        }
+
+        else -> null
+    }
+
+    /** true when every text [t] matches is also matched by [listTerminal] */
+    private fun covers(listTerminal: Terminal, t: Terminal): Boolean = when {
+        listTerminal.isPattern == t.isPattern && listTerminal.unescapedValue.value == t.unescapedValue.value -> true
+        listTerminal.isPattern && t.isLiteral -> {
+            val text = t.unescapedValue.value
+            val m = runCatching { regexMatcher(listTerminal.unescapedValue.value) }.getOrNull()
+            text.isNotEmpty() && m?.matchAt(text, 0)?.matchedText?.length == text.length
+        }
+
+        else -> false
     }
 
     private fun checkRuleUsage(grammar: Grammar) {
@@ -244,8 +421,13 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
             is Choice -> rhs.alternative.forEach { analyseRuleItem(context, grammar, it) }
             is Group -> analyseRuleItem(context, grammar, rhs.groupedContent)
             is OptionalItem -> analyseRuleItem(context, grammar, rhs.item)
-            is SimpleList -> analyseRuleItem(context, grammar, rhs.item)
+            is SimpleList -> {
+                if (0 == rhs.max) issueError(rhs, "A list must have a maximum greater than 0", null)
+                analyseRuleItem(context, grammar, rhs.item)
+            }
+
             is SeparatedList -> {
+                if (0 == rhs.max) issueError(rhs, "A list must have a maximum greater than 0", null)
                 analyseRuleItem(context, grammar, rhs.item)
                 analyseRuleItem(context, grammar, rhs.separator)
             }

@@ -59,6 +59,7 @@ class test_CompletionProvider {
         """
         val sentence = ""
         val expected = listOf(
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "namespace", text = "<namespace>"),
             CompletionItem(kind = CompletionItemKind.SEGMENT, label = "unit", text = "<namespace> <styleSet>"),
             CompletionItem(kind = CompletionItemKind.LITERAL, label = "'namespace'", text = "namespace")
         )
@@ -78,9 +79,17 @@ class test_CompletionProvider {
             CompletionItem(kind=CompletionItemKind.REFERRED, label="GrammarRule", text="S"),
             CompletionItem(kind=CompletionItemKind.REFERRED, label="LITERAL", text="'a'"),
             CompletionItem(kind=CompletionItemKind.SEGMENT, label="rule", text="<rule>"),
+            CompletionItem(kind=CompletionItemKind.SEGMENT, label="typeImport", text="<typeImport>"),
             CompletionItem(kind=CompletionItemKind.LITERAL, label="'$$'", text="$$"),
+            CompletionItem(kind=CompletionItemKind.LITERAL, label="'identify'", text="identify"),
+            CompletionItem(kind=CompletionItemKind.LITERAL, label="'import-types'", text="import-types"),
+            CompletionItem(kind=CompletionItemKind.LITERAL, label="'refers-to'", text="refers-to"),
+            CompletionItem(kind=CompletionItemKind.LITERAL, label="'type'", text="type"),
             CompletionItem(kind=CompletionItemKind.LITERAL, label="'}'", text="}"),
-            CompletionItem(kind=CompletionItemKind.PATTERN, label= $$"[\\$][a-zA-Z_][a-zA-Z_0-9-]*", text="<SPECIAL_IDENTIFIER>"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$nostyle"),
+            CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
+            CompletionItem(kind=CompletionItemKind.PATTERN, label= "SPECIAL_IDENTIFIER", text="<SPECIAL_IDENTIFIER>"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -95,8 +104,9 @@ class test_CompletionProvider {
         """
         val sentence = "namespace test styles StyleSet { S "
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "','", ","),
-            CompletionItem(CompletionItemKind.LITERAL, "'{'", "{"),
+            CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
+            CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
+            CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -111,9 +121,16 @@ class test_CompletionProvider {
         """
         val sentence = "namespace test styles StyleSet { S, "
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.KEYWORD_STYLE_ID.value),
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.REFERRED, "LITERAL", "'a'"),
+            CompletionItem(CompletionItemKind.SEGMENT, "selectorSingle", "<selectorSingle>"),
+            CompletionItem(CompletionItemKind.LITERAL, "'identify'", "identify"),
+            CompletionItem(CompletionItemKind.LITERAL, "'refers-to'", "refers-to"),
+            CompletionItem(CompletionItemKind.LITERAL, "'type'", "type"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$nostyle"),
+            CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
+            CompletionItem(CompletionItemKind.PATTERN, "SPECIAL_IDENTIFIER", "<SPECIAL_IDENTIFIER>"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -128,11 +145,11 @@ class test_CompletionProvider {
         """
         val sentence = "namespace test styles StyleSet { S {"
         val expected = listOf(
+            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
             CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
-            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -145,7 +162,7 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S { foreground"
+        val sentence = "namespace test styles StyleSet { S { foreground"
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "style", ":"),
         )
@@ -160,7 +177,7 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S { foreground:"
+        val sentence = "namespace test styles StyleSet { S { foreground:"
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
@@ -177,7 +194,7 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S { foreground: "
+        val sentence = "namespace test styles StyleSet { S { foreground: "
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
@@ -194,7 +211,7 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S { foreground: blue"
+        val sentence = "namespace test styles StyleSet { S { foreground: blue"
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "style", ";"),
         )
@@ -209,13 +226,13 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S { foreground: blue;"
+        val sentence = "namespace test styles StyleSet { S { foreground: blue;"
         val expected = listOf(
+            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
             CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
-            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -228,11 +245,20 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S { foreground: blue; }"
+        val sentence = "namespace test styles StyleSet { S { foreground: blue; }"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.KEYWORD_STYLE_ID.value),
+            CompletionItem(CompletionItemKind.REFERRED, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.REFERRED, "LITERAL", "'a'"),
+            CompletionItem(CompletionItemKind.SEGMENT, "rule", "<rule>"),
+            CompletionItem(CompletionItemKind.LITERAL, "'$$'", "$$"),
+            CompletionItem(CompletionItemKind.LITERAL, "'identify'", "identify"),
+            CompletionItem(CompletionItemKind.LITERAL, "'refers-to'", "refers-to"),
+            CompletionItem(CompletionItemKind.LITERAL, "'type'", "type"),
+            CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "SPECIAL_IDENTIFIER", "\$nostyle"),
+            CompletionItem(CompletionItemKind.PATTERN, "PATTERN", "<PATTERN>"),
+            CompletionItem(CompletionItemKind.PATTERN, "SPECIAL_IDENTIFIER", "<SPECIAL_IDENTIFIER>"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }

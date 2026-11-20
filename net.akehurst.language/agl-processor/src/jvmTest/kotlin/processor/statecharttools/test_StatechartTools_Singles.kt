@@ -41,9 +41,9 @@ import kotlin.test.assertTrue
 class test_StatechartTools_Singles {
 
     companion object {
-        private val grammarStr = GrammarString(this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found"))
+        private val grammarStr = GrammarString(this::class.java.getResource("/Statecharts/version_/grammar.agl-grm")?.readText() ?: error("File not found"))
 
-        private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found"))
+        private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/Statecharts/version_/references.agl-ref")?.readText() ?: error("File not found"))
 
         private val formatterStr = FormatString($$"""
            namespace com.itemis.create

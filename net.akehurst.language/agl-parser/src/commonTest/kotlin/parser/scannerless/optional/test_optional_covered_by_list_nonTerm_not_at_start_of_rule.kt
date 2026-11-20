@@ -111,7 +111,7 @@ class test_optional_covered_by_list_nonTerm_not_at_start_of_rule : test_LeftCorn
         // The dynamic-prio of vs is based on order of choices and vss it higher than v
         // Thus the option with vs being vss is chosen over the option of oa being non-empty
         val expected = """
-             S { 'b' vs { vvs { v:'x' vs { v:'x' } } } oa { 'a' } }
+             S { 'b' vs { vvs { v:'x' vs { vvs { v:'x' vs { v:'a' } } } } } oa { <EMPTY> } }
         """.trimIndent()
 
         super.test_pass(rrs, goal, sentence, 2, expected)
@@ -121,7 +121,7 @@ class test_optional_covered_by_list_nonTerm_not_at_start_of_rule : test_LeftCorn
     fun bxxxa() {
         val sentence = "bxxxa"
 
-        val expected = "S { 'b' vs { vvs { v : 'x' vs { vvs { v : 'x' vs { v : 'x' } } } } } oa { 'a' } }"
+        val expected = "S { 'b' vs { vvs { v : 'x' vs { vvs { v : 'x' vs { vvs { v : 'x' vs { v : 'a' } } } } } } } oa { <EMPTY> } }"
 
         super.test_pass(rrs, goal, sentence, 2, expected)
     }

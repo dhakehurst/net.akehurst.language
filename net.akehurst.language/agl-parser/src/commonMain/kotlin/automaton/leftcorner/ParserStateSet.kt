@@ -17,7 +17,11 @@
 package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.util.AutomatonBuildLock
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.agl.util.concurrentMutableMapOf
+import net.akehurst.language.agl.util.lazyUnderBuildLock
+import kotlin.concurrent.Volatile
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.api.AutomatonState
@@ -36,14 +40,19 @@ class ParserStateSet(
     preBuilt: Boolean
 ) : Automaton {
 
+    // the automaton is built on demand, possibly by several parses at the same time:
+    // what is built is changed only under AutomatonBuildLock, finding what is already built does not need the lock
     private var nextLookaheadSetId = 0
-    private val lookaheadSets = mutableListOf<LookaheadSet>()
+    private val lookaheadSets = concurrentMutableMapOf<LookaheadSetKey, LookaheadSet>()
     private var nextStateNumber = 0
+
+    private data class LookaheadSetKey(val includeRT: Boolean, val includeEOT: Boolean, val matchAny: Boolean, val content: Set<RuntimeRule>)
 
     internal val runtimeTransitionCalculator = RuntimeTransitionCalculator(this)
 
+    @Volatile
     var preBuilt = preBuilt; private set
-    internal val buildCache: BuildCache by lazy {
+    internal val buildCache: BuildCache by lazyUnderBuildLock {
         when (automatonKind) {
             AutomatonKind.LOOKAHEAD_NONE -> TODO() //BuildCacheLC0(this)
             AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
@@ -51,11 +60,11 @@ class ParserStateSet(
         }
     }
 
-    val usedRules: Set<RuntimeRule> by lazy { this.runtimeRuleSet.calcUsedRules(this.startState.runtimeRules.first()) }
-    val usedTerminalRules: Set<RuntimeRule> by lazy { this.usedRules.filter { it.isTerminal }.toSet() }
-    val usedNonTerminalRules: Set<RuntimeRule> by lazy { this.usedRules.filter { it.isNonTerminal }.toSet() }
-    val firstTerminals: Set<RuntimeRule> by lazy { this.startState.transitionsGoal(this.startState).map { it.target.firstRule }.toSet() }
-    val embeddedRuntimeRuleSet: Set<RuntimeRuleSet> by lazy {
+    val usedRules: Set<RuntimeRule> by lazyUnderBuildLock { this.runtimeRuleSet.calcUsedRules(this.startState.runtimeRules.first()) }
+    val usedTerminalRules: Set<RuntimeRule> by lazyUnderBuildLock { this.usedRules.filter { it.isTerminal }.toSet() }
+    val usedNonTerminalRules: Set<RuntimeRule> by lazyUnderBuildLock { this.usedRules.filter { it.isNonTerminal }.toSet() }
+    val firstTerminals: Set<RuntimeRule> by lazyUnderBuildLock { this.startState.transitionsGoal(this.startState).map { it.target.firstRule }.toSet() }
+    val embeddedRuntimeRuleSet: Set<RuntimeRuleSet> by lazyUnderBuildLock {
         val embRules = this.usedRules.filter { it.isEmbedded }.toSet()
         embRules.map {
             val rhs = it.rhs as RuntimeRuleRhsEmbedded
@@ -71,14 +80,14 @@ class ParserStateSet(
     private val _statesByRulePosition = mutableMapOf<List<RulePositionRuntime>, ParserState>()
     private val _states = mutableListOf<ParserState>()
 
-    val allBuiltStates: List<ParserState> get() = this._states.toList()
+    val allBuiltStates: List<ParserState> get() = AutomatonBuildLock.withLock { this._states.toList() }
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
-    val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
-    val startRulePosition by lazy { RulePositionRuntime(goalRule as RuntimeRule, RulePosition.OPTION_NONE, RulePosition.START_OF_RULE) }
-    val finishRulePosition by lazy { RulePositionRuntime(goalRule as RuntimeRule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE) }
-    val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
-    val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
+    val goalRule by lazyUnderBuildLock { runtimeRuleSet.goalRuleFor[userGoalRule] }
+    val startRulePosition by lazyUnderBuildLock { RulePositionRuntime(goalRule as RuntimeRule, RulePosition.OPTION_NONE, RulePosition.START_OF_RULE) }
+    val finishRulePosition by lazyUnderBuildLock { RulePositionRuntime(goalRule as RuntimeRule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE) }
+    val startState: ParserState by lazyUnderBuildLock { this.createState(listOf(startRulePosition)) }
+    val finishState: ParserState by lazyUnderBuildLock { this.createState(listOf(finishRulePosition)) }
 
     internal val firstOf = FirstOf()
 
@@ -127,10 +136,10 @@ class ParserStateSet(
     //internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
     //fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
-    internal fun createState(rulePositions: List<RulePositionRuntime>): ParserState {
+    internal fun createState(rulePositions: List<RulePositionRuntime>): ParserState = AutomatonBuildLock.withLock {
         if (Debug.CHECK) check(this._statesByRulePosition.contains(rulePositions).not()) { "State already created for $rulePositions" }
         val existing = this._statesByRulePosition[rulePositions]
-        return if (null != existing) {
+        if (null != existing) {
             existing
         } else {
             val state = ParserState(StateNumber(this.nextStateNumber++), rulePositions.toList(), this)
@@ -140,10 +149,10 @@ class ParserStateSet(
         }
     }
 
-    internal fun createMergedState(rulePositions: List<RulePositionRuntime>): ParserState {
+    internal fun createMergedState(rulePositions: List<RulePositionRuntime>): ParserState = AutomatonBuildLock.withLock {
         if (Debug.CHECK) check(this._statesByRulePosition.contains(rulePositions).not()) { "State already created for $rulePositions" }
         val existing = this._statesByRulePosition[rulePositions]
-        return if (null != existing) {
+        if (null != existing) {
             existing
         } else {
             val si = this.buildCache.mergedStateInfoFor(rulePositions)
@@ -181,19 +190,14 @@ class ParserStateSet(
             }
 
             else -> {
-                val existing = this.lookaheadSets.firstOrNull {
-                    it.includesRT == includeRT &&
-                            it.includesEOT == includeEOT &&
-                            it.matchANY == matchAny &&
-                            it.content == content  //TODO: slow
-                }
-                if (null == existing) {
-                    val num = this.nextLookaheadSetId++
-                    val lhs = LookaheadSet(num, includeRT, includeEOT, matchAny, content)
-                    this.lookaheadSets.add(lhs)
-                    lhs
-                } else {
-                    existing
+                val key = LookaheadSetKey(includeRT, includeEOT, matchAny, content)
+                this.lookaheadSets[key] ?: AutomatonBuildLock.withLock {
+                    this.lookaheadSets[key] ?: run {
+                        val num = this.nextLookaheadSetId++
+                        val lhs = LookaheadSet(num, includeRT, includeEOT, matchAny, content)
+                        this.lookaheadSets[key] = lhs
+                        lhs
+                    }
                 }
             }
         }
@@ -202,9 +206,9 @@ class ParserStateSet(
     internal fun createLookaheadSet(part: LookaheadSetPart): LookaheadSet = createLookaheadSet(part.includesRT, part.includesEOT, part.matchANY, part.content)
 
     fun precedenceRulesFor(sourceState: ParserState): RuntimePreferenceRule? =
-        sourceState.runtimeRules.map { src -> this.runtimeRuleSet.precedenceRulesFor(src) }.firstOrNull() //FIXME: if more than one rule ?
+        sourceState.runtimeRules.firstNotNullOfOrNull { src -> this.runtimeRuleSet.precedenceRulesFor(src) } //FIXME: if more than one rule has precedence rules ?
 
-    fun build(): ParserStateSet {
+    fun build(): ParserStateSet = AutomatonBuildLock.withLock {
         if (this.preBuilt.not()) {
             this.buildCache.switchCacheOn()
             buildAndTraverse()
@@ -214,7 +218,7 @@ class ParserStateSet(
             // already built
             //TODO: would like to throw error here! error("Automaton already built")
         }
-        return this
+        this
     }
 
     private fun buildAndTraverse() {

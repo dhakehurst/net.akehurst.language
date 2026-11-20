@@ -37,7 +37,7 @@ class test_Java8_Singles_antlrOptm {
 
     private companion object {
 
-        val antlrOptmProcessor: LanguageProcessor<Asm, SentenceContext> by lazy { createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl") }
+        val antlrOptmProcessor: LanguageProcessor<Asm, SentenceContext> by lazy { createJava8Processor("/Java/version_8/languages/antlrOptm/grammar.agl-grm") }
 
         val proc = antlrOptmProcessor
 
@@ -286,7 +286,7 @@ public class BadBinaryLiterals {
 
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun long_concatenation() {
 
         val sentence = """

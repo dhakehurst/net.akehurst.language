@@ -17,6 +17,8 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -47,6 +49,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
     override val extends by lazy { listOf(AglBase) }
 
+    //TODO: future enhancement (David 2026-11-20): enum literals in expressions (e.g. 'Colour.RED').
+    // Today there is no syntax for them, 'Colour.RED' is read as navigation of a property 'Colour'.
+    // (std.Type therefore offers isEnum/isData/... Boolean properties rather than a 'kind' enum.)
     override val grammarString = $$"""
         namespace $$NAMESPACE_NAME
           grammar $$NAME : $${AglBase.NAME} {
@@ -73,7 +78,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
               | group
               | block
               ;
-            rootExpression = propertyReference ;
+            rootExpression = '&'? propertyReference ;
             literalExpression = literal ;
             
             navigationExpression = navigationRoot navigationPart+ ;
@@ -119,7 +124,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             
             group = '(' expression ')' ;
             
-            propertyCall = '.' propertyReference ;
+            propertyCall = '.' '&'? propertyReference ;
             methodCall = '.' methodReference '(' argumentList ')' ;
             argumentList = [expression / ',']* ;
             
@@ -205,7 +210,6 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
     override val crossReferenceString = """
         namespace ${NAMESPACE_NAME}
-            scope §root { }
     """.trimIndent() //TODO
 
     override val styleString: String = """
@@ -219,6 +223,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
         namespace ${NAMESPACE_NAME}
         
     """.trimIndent() // TODO
+
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
 
     override val grammarDomain by lazy {
         grammarDomain(NAME) {
@@ -260,7 +269,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("block")
                     }
                     concatenation("rootExpression") {
-                        ref("propertyReference")
+                        opt { lit("&") }; ref("propertyReference")
                     }
                     concatenation("literalExpression") { ref("literal") }
                     concatenation("navigationExpression") {
@@ -334,7 +343,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     concatenation("typeTest") { ref("expression"); lit("is"); ref("typeReference") }
                     concatenation("group") { lit("("); ref("expression"); lit(")") }
                     concatenation("propertyCall") {
-                        lit("."); ref("propertyReference")
+                        lit("."); opt { lit("&") }; ref("propertyReference")
                     }
                     concatenation("methodCall") {
                         lit("."); ref("methodReference")
@@ -724,6 +733,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
 //            TODO("not implemented")
             }
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

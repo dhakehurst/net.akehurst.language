@@ -26,7 +26,7 @@ import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -82,10 +82,10 @@ class AsmSimpleBuilder(
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _locationMap = LocationMapDefault() //TODO: what to use here
     private val _objectGraph = objectGraphSimpleAsm(_typesDomain, null,_issues,_locationMap)
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(_objectGraph)
+    private val _interpreter = ExpressionsInterpreterOverTypedObjectCombined(_objectGraph)
     private val _asm = AsmSimple(_objectGraph)
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple>()
-    private val _identifyingValueInFor: (SimpleName, AsmStructure) -> Any? = { inTypeName: SimpleName, item: AsmStructure ->
+    private val _identifyingValueInFor: (QualifiedName, AsmStructure) -> Any? = { inTypeName: QualifiedName, item: AsmStructure ->
         SemanticAnalyserSimple.identifyingValueInFor(_interpreter, _crossReferenceDomain, inTypeName, item)
     }
 
@@ -165,7 +165,7 @@ class AsmElementSimpleBuilder(
     private val _context: SentenceContext?,
     private val _scopeMap: MutableMap<AsmPath, ScopeSimple>,
     private val _asm: AsmSimple,
-    private val _identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    private val _identifyingValueInFor: (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
     _asmPath: AsmPath,
     _typeName: String,
     _isRoot: Boolean,
@@ -189,14 +189,15 @@ class AsmElementSimpleBuilder(
             }
         }
     }
-    private val _element = _asm.createStructure("/", _elementQualifiedTypeName).also {
+    // each element needs its own parsePath: it is used for equality (and indexing) when there is no semantic path
+    private val _element = _asm.createStructure(_asmPath.value, _elementQualifiedTypeName).also {
         it.syntaxAnalyserPath = _asmPath
         if (_isRoot) _asm.addRoot(it)
     }
     private val _elementScope by lazy {
         _parentScope?.let {
-            if (null != _context && _crossReferenceDomain.isScopeDefinedFor(_element.typeName)) {
-                val refInParent = _identifyingValueInFor(_parentScope.forTypeName.last, _element) as String?
+            if (null != _context && _crossReferenceDomain.isScopeDefinedFor(_typesDomain, _element.qualifiedTypeName)) {
+                val refInParent = _identifyingValueInFor(_parentScope.forTypeName, _element) as String?
                     ?: _element.typeName.value
                 val newScope = _parentScope.createOrGetChildScope(refInParent, _element.qualifiedTypeName)
                 _scopeMap[_asmPath] = newScope
@@ -304,7 +305,7 @@ class ListAsmElementSimpleBuilder(
     private val _asm: AsmSimple,
     private val _asmPath: AsmPath,
     private val _parentScope: ScopeSimple?,
-    private val _identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    private val _identifyingValueInFor: (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
 ) {
 
     private val _list = mutableListOf<AsmValue>()

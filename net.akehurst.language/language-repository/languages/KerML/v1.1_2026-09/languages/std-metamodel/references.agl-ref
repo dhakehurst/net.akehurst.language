@@ -1,0 +1,178 @@
+/**
+ * Copyright (C) 2026 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// KerML references written against the metamodel types (types.agl-typ, converted from the Pilot Implementation's SysML_xmi.uml),
+// for the 'std-metamodel' variant: tested in agl-processor test_KerML_v1_1_2026_09_std_metamodel_references.
+// OPEN marks what is not (yet) as the spec says.
+//
+// Assumptions about the ASM made by the asm-transform:
+//  - every name the BNF resolves ('p = [QualifiedName]') is put, as a List<String> of its segments (unquoted),
+//    into the metamodel property p itself (e.g. FeatureTyping.type); the references below resolve it to the element.
+//  - declaredName / declaredShortName hold the unquoted names.
+//  - an owned member is in Namespace.ownedRelationship as an OwningMembership whose ownedRelatedElement is the member.
+//  - a scope block of a type also applies to its subtypes (RV7), so 'scope Namespace' covers every Namespace.
+//
+// Spec references: KerML 1.1 Beta 2, 8.2.3.5 Name Resolution (local Namespace of each kind of context Relationship),
+// 7.2.5.4 Imports, 8.3.3.3.4 Feature (effective name).
+
+namespace KerML.Root.Namespaces
+    import KerML.Root.Elements
+    import KerML.Root.Namespaces
+    import KerML.Root.Annotations
+    import KerML.Root.Dependencies
+    import KerML.Core.Types
+    import KerML.Core.Classifiers
+    import KerML.Core.Features
+    import KerML.Kernel.DataTypes
+    import KerML.Kernel.Classes
+    import KerML.Kernel.Structures
+    import KerML.Kernel.Associations
+    import KerML.Kernel.Behaviors
+    import KerML.Kernel.Functions
+    import KerML.Kernel.Metadata
+    import KerML.Kernel.Connectors
+    import KerML.Kernel.Interactions
+    import SysML.Systems.Ports
+
+    // An element is a member of the Namespace that owns its OwningMembership ($container), with the visibility of that membership.
+    // Its names are its declaredName and declaredShortName; a Feature without names has the effective name of the
+    // feature its first owned Redefinition redefines (KerML 8.3.3.3.4, Feature::namingFeature), i.e. the last segment of that name
+    // (the transform puts the redefined feature's name in 'general', which redefinedFeature redefines in the metamodel).
+    identify Element by declaredName | declaredShortName
+        | when { $self is Feature -> when { ownedRelationship.filter({ r -> r is Redefinition }).size == 0 -> $nothing else -> ownedRelationship.filter({ r -> r is Redefinition }).first.general.last } else -> $nothing }
+        visibility $container.visibility
+    // An alias: a Membership that is not an OwningMembership gives another name to its memberElement (KerML 7.2.5.3).
+    // (An OwningMembership has no memberName of its own, it is derived from the owned member, so it gives no alias.)
+    identify Membership by memberName | memberShortName visibility visibility alias-for memberElement
+
+    scope Namespace {
+        // KerML 7.2.5.4: an import makes the visible memberships of another namespace (or one membership) visible here.
+        // 'recursive' (::**) also imports the nested namespaces. The local Namespace of an Import is the importOwningNamespace (8.2.3.5.2).
+        import forall ownedRelationship of-type NamespaceImport members-of importedNamespace recursive isRecursive == true visibility visibility
+        import forall ownedRelationship of-type MembershipImport element importedMembership recursive isRecursive == true visibility visibility
+    }
+
+    scope Type {
+        // KerML 7.3.2: a Type inherits the memberships of its general types: those of its owned Specializations
+        // and the original type of its Conjugation.
+        // The transform puts the name of the general type of FeatureTyping, Subsetting, ReferenceSubsetting, CrossSubsetting and
+        // Redefinition into 'general' (the BNF assigns it through GeneralType); a Subclassification has it in 'superclassifier'.
+        // OPEN: a general type given as a feature chain is an owned Feature in ownedRelatedElement, not in 'general'.
+        inherit forall ownedRelationship of-type Specialization members-of general when ($self is Subclassification) == false
+        inherit forall ownedRelationship of-type Subclassification members-of superclassifier
+        inherit forall ownedRelationship of-type PortConjugation members-of originalPortDefinition
+        inherit forall ownedRelationship of-type Conjugation members-of originalType
+        // KerML 9.2: implicitly, every Type specializes Base::Anything (see the implicit specializations below)
+        inherit named Base.Anything
+    }
+
+    // KerML 9.2 (Semantic Library), implicit specializations: a Type of each kind (also) specializes the default library type
+    // of its kind (e.g. a Class specializes Occurrences::Occurrence), so it has the members of that type too.
+    // A scope block of a type also applies to its subtypes, the nearest first.
+    // OPEN: the spec adds the implicit specialization only when the type has no owned specialization of that kind.
+    scope Classifier { inherit named Base.Anything }
+    scope DataType { inherit named Base.DataValue }
+    scope Class { inherit named Occurrences.Occurrence }
+    scope Structure { inherit named Objects.Object }
+    scope Association { inherit named Links.Link }
+    scope AssociationStructure { inherit named Objects.LinkObject }
+    scope Behavior { inherit named Performances.Performance }
+    scope Function { inherit named Performances.Evaluation }
+    scope Predicate { inherit named Performances.BooleanEvaluation }
+    scope Metaclass { inherit named Metaobjects.Metaobject }
+    scope Feature { inherit named Base.things }
+    scope Step { inherit named Performances.performances }
+    scope Expression { inherit named Performances.evaluations }
+    scope BooleanExpression { inherit named Performances.booleanEvaluations }
+    scope Invariant { inherit named Performances.trueEvaluations }
+    scope Connector { inherit named Links.links }
+    scope Flow { inherit named Transfers.transfers }
+    scope SuccessionFlow { inherit named Transfers.flowTransfersBefore }
+
+    references {
+        // KerML 8.2.3.5.2: the local Namespace of a Specialization (and of a Conjugation) owned by a Type is the
+        // owningNamespace of that Type: so the lookup starts in the scope the owning Type is in, never in the Type itself.
+        // $owner is the owning Type (the scope the relationship is in), $owner.$owner the Namespace that owns it.
+        // KerML 8.2.3.5.1: the redefinedFeature (here 'general' of a Redefinition) is resolved with each general Type of the owningType
+        // of the owning Feature in turn as the local Namespace ('from inherited' = each inherited scope in order, then outwards).
+        // OPEN: KerML 8.2.3.5.2, a ReferenceSubsetting of an end Feature of a Connector is resolved from the owningNamespace of the Connector.
+        in Specialization {
+            // a Specialization declared as a member (in an OwningMembership) has as local Namespace its owningNamespace,
+            // i.e. the scope it is in, so it uses the normal lookup
+            property general when {
+                ($container is OwningMembership) and ($self is Subsetting) -> refers-to Feature
+                $container is OwningMembership -> refers-to Type
+                $self is Redefinition -> refers-to Feature from inherited $owner.$owner
+                $self is FeatureTyping -> refers-to Type from $owner.$owner
+                $self is Subsetting -> refers-to Feature from $owner.$owner
+                else -> refers-to Type from $owner.$owner
+            }
+            // a Specialization declared as a member ('specialization S subtype A specializes B', 'subclassifier ...', 'subset ...')
+            // has its specific type given by name too; it is in an OwningMembership, not in the ownedRelationship of a Type,
+            // so its local Namespace is the owningNamespace of the Specialization (the scope it is in)
+            property specific refers-to Type when $container is OwningMembership
+        }
+        in FeatureTyping { property typedFeature refers-to Feature when $container is OwningMembership }
+        in Subclassification {
+            property superclassifier when {
+                $container is OwningMembership -> refers-to Classifier
+                else -> refers-to Classifier from $owner.$owner
+            }
+            property subclassifier refers-to Classifier when $container is OwningMembership
+        }
+        in Conjugation {
+            property originalType when {
+                $container is OwningMembership -> refers-to Type
+                else -> refers-to Type from $owner.$owner
+            }
+            property conjugatedType refers-to Type when $container is OwningMembership
+        }
+        in PortConjugation { property originalPortDefinition refers-to PortDefinition from $owner.$owner }
+        // OPEN: the transform puts the name of '~P' into ConjugatedPortTyping.conjugatedPortDefinition (2.0 thread, V9), but the name
+        // denotes the PortDefinition P, whose owned ConjugatedPortDefinition is the target (its name is derived, '~' + P's name).
+        // Needs a way to refer to P and then navigate to P.conjugatedPortDefinition, or an identify for ConjugatedPortDefinition.
+        in Disjoining {
+            property typeDisjoined refers-to Type
+            property disjoiningType refers-to Type
+        }
+        in Unioning { property unioningType refers-to Type }
+        in Intersecting { property intersectingType refers-to Type }
+        in Differencing { property differencingType refers-to Type }
+        in FeatureInverting {
+            property featureInverted refers-to Feature
+            property invertingFeature refers-to Feature
+        }
+        in TypeFeaturing {
+            property featureOfType refers-to Feature
+            property featuringType refers-to Type
+        }
+        // KerML 8.2.3.5.2: the first chaining feature is resolved as if the owning relationship of the chained feature were the
+        // context relationship (normal lookup); each later one in the previous chaining feature.
+        in Feature { forall ownedRelationship of-type FeatureChaining { property chainingFeature refers-to Feature from $previous.chainingFeature } }
+        // KerML 8.2.3.5.2: the local Namespace of an Import is the importOwningNamespace (the scope it is in)
+        in NamespaceImport { property importedNamespace refers-to Namespace }
+        // KerML 8.2.3.5.1: the importedMembership is the Membership itself, not its memberElement.
+        // OPEN: agl scopes hold elements, not memberships, so this refers to the member Element.
+        in MembershipImport { property importedMembership refers-to Element }
+        // KerML 8.2.3.5.2: the local Namespace of a Membership is its membershipOwningNamespace (the scope it is in).
+        // OPEN: for a FeatureReferenceExpression / InstantiationExpression the spec skips those namespaces outwards
+        // (the non-invocation Namespace), and for a FeatureChainExpression it is the result parameter of the argument expression.
+        // (an OwningMembership has no memberElement of its own: it is derived from the owned member element)
+        in Membership { property memberElement refers-to Element when ($self is OwningMembership) == false }
+        in Annotation { property annotatedElement refers-to Element }
+        // OPEN: Dependency.client / supplier are lists of qualified names (List<List<String>>), which a 'property' line cannot refer from;
+        // needs either one Membership-like object per name in the transform, or a references DSL form for a list of names.
+    }

@@ -17,6 +17,8 @@
 
 package net.akehurst.language.types.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -51,6 +53,8 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
     override val grammarString = """
         namespace $NAMESPACE_NAME
           grammar $NAME : Base {
+            override namespace = 'namespace' possiblyQualifiedName option* import* definition* association* ;
+            override possiblyQualifiedName = [name / '.']+ ;
             override definition
               = singletonDefinition
               | primitiveDefinition
@@ -61,31 +65,41 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
               | interfaceDefinition
               | unionDefinition
               ;
-            singletonDefinition = 'singleton' IDENTIFIER ;
-            primitiveDefinition = 'primitive' IDENTIFIER ;
-            enumDefinition = 'enum' IDENTIFIER enumLiterals? ;
+            singletonDefinition = 'singleton' name ;
+            primitiveDefinition = 'primitive' name ;
+            enumDefinition = 'enum' name enumLiterals? ;
             enumLiterals = '{' [IDENTIFIER / ',']+ '}' ;
-            valueDefinition = 'value' IDENTIFIER supertypes? '(' constructorParameter ')' ;
-            collectionDefinition = 'collection' IDENTIFIER typeParameterList ;
+            valueDefinition = 'value' name supertypes? '(' constructorParameter ')' ;
+            collectionDefinition = 'collection' name typeParameterList ;
             dataDefinition =
-              'data' IDENTIFIER typeParameterList? supertypes? '{'
+              'data' name typeParameterList? supertypes? '{'
                 constructor*
                 property*
               '}'
             ;
-            interfaceDefinition = 'interface' IDENTIFIER typeParameterList? supertypes? interfaceBody? ;
+            interfaceDefinition = 'interface' name typeParameterList? supertypes? interfaceBody? ;
             interfaceBody = '{' property* '}' ;
-            unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
+            unionDefinition = 'union' name '{' alternatives '}' ;
             alternatives = [typeReference / '|']+ ;
             typeParameterList = '<' [IDENTIFIER / ',']+ '>' ;
             supertypes = ':' [typeReference / ',']+ ;
-            constructor = 'constructor' '(' constructorParameter* ')' ;
-            constructorParameter = cmp_ref? val_var? IDENTIFIER ':' typeReference ;
-            property = cmp_ref? val_var IDENTIFIER ':' typeReference ;
+            constructor = 'constructor' '(' [constructorParameter / ',']* ')' ;
+            constructorParameter = characteristics name ':' typeReference ;
+            property = characteristics name ':' typeReference ;
             typeReference = possiblyQualifiedName typeArgumentList? '?'?;
-            typeArgumentList = '<' [ typeReference / ',']+ '>' ;
+            typeArgumentList = '<' [ typeArgument / ',']* '>' ;
+            typeArgument = typeArgumentName? typeReference ;
+            typeArgumentName = name ':' ;
+            characteristics = cmp_ref? val_var? str_drv? 'idn'? ;
             cmp_ref = 'cmp' | 'ref' ;
             val_var = 'val' | 'var' ;
+            str_drv = 'str' | 'drv' ;
+            // only binary associations, n-ary associations are not yet possible
+            association = 'association' '{' associationEnd associationEnd '}' ;
+            associationEnd = 'end' 'owned'? characteristics name ':' typeReference ;
+            // a name that is not an IDENTIFIER (e.g. contains '$') is written between backticks
+            name = IDENTIFIER | QUOTED_NAME ;
+            leaf QUOTED_NAME = "`[^`]+`" ;
           }
       """.trimIndent()
 
@@ -116,10 +130,10 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
             interface PropertyDeclaration {
                 cmp typeInstance
             }
-            interface ConstructorDeclaration {
+            interface ConstructorDefinition {
                 cmp parameters
             }
-            interface MethodDeclaration {
+            interface MethodDefinition {
                 cmp parameters
             }
             interface ParameterDeclaration {
@@ -166,11 +180,20 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
           // TODO
     """.trimIndent()
 
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
+
     override val grammarDomain by lazy {
         grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
+                    concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
+                        lit("namespace"); ref("possiblyQualifiedName"); lst(0, -1) { ref("option") }; lst(0, -1) { ref("import") }; lst(0, -1) { ref("definition") }; lst(0, -1) { ref("association") }
+                    }
+                    separatedList("possiblyQualifiedName", 1, -1, overrideKind = OverrideKind.REPLACE) { ref("name"); lit(".") }
                     choice("definition", overrideKind = OverrideKind.REPLACE) {
                         ref("singletonDefinition")
                         ref("primitiveDefinition")
@@ -181,29 +204,32 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         ref("interfaceDefinition")
                         ref("unionDefinition")
                     }
-                    concatenation("singletonDefinition") { lit("singleton"); ref("IDENTIFIER") }
-                    concatenation("primitiveDefinition") { lit("primitive"); ref("IDENTIFIER") }
-                    concatenation("enumDefinition") { lit("enum"); ref("IDENTIFIER"); opt { ref("enumLiterals") } }
+                    concatenation("singletonDefinition") { lit("singleton"); ref("name") }
+                    concatenation("primitiveDefinition") { lit("primitive"); ref("name") }
+                    concatenation("enumDefinition") { lit("enum"); ref("name"); opt { ref("enumLiterals") } }
                     concatenation("enumLiterals") { lit("{"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit("}") }
-                    concatenation("valueDefinition") { lit("value"); ref("IDENTIFIER"); opt { ref("supertypes") }; lit("("); ref("constructorParameter"); lit(")") }
-                    concatenation("collectionDefinition") { lit("collection"); ref("IDENTIFIER"); ref("typeParameterList") }
+                    concatenation("valueDefinition") { lit("value"); ref("name"); opt { ref("supertypes") }; lit("("); ref("constructorParameter"); lit(")") }
+                    concatenation("collectionDefinition") { lit("collection"); ref("name"); ref("typeParameterList") }
                     concatenation("dataDefinition") {
-                        lit("data"); ref("IDENTIFIER"); opt { ref("typeParameterList") }; opt { ref("supertypes") }; lit("{");
+                        lit("data"); ref("name"); opt { ref("typeParameterList") }; opt { ref("supertypes") }; lit("{");
                         lst(0, -1) { ref("constructor") };
                         lst(0, -1) { ref("property") };
                         lit("}")
                     }
-                    concatenation("interfaceDefinition") { lit("interface"); ref("IDENTIFIER"); opt { ref("typeParameterList") }; opt { ref("supertypes") }; opt { ref("interfaceBody") } }
+                    concatenation("interfaceDefinition") { lit("interface"); ref("name"); opt { ref("typeParameterList") }; opt { ref("supertypes") }; opt { ref("interfaceBody") } }
                     concatenation("interfaceBody") { lit("{"); lst(0, -1) { ref("property") }; lit("}") }
-                    concatenation("unionDefinition") { lit("union"); ref("IDENTIFIER"); lit("{"); ref("alternatives"); lit("}") }
+                    concatenation("unionDefinition") { lit("union"); ref("name"); lit("{"); ref("alternatives"); lit("}") }
                     separatedList("alternatives", 1, -1) { ref("typeReference"); lit("|") }
                     concatenation("typeParameterList") { lit("<"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit(">"); }
                     concatenation("supertypes") { lit(":"); spLst(1, -1) { ref("typeReference"); lit(",") } }
-                    concatenation("constructor") { lit("constructor"); lit("("); lst(0, -1) { ref("constructorParameter") }; lit(")") }
-                    concatenation("constructorParameter") { opt { ref("cmp_ref") }; opt { ref("val_var") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
-                    concatenation("property") { opt { ref("cmp_ref") }; ref("val_var"); ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("constructor") { lit("constructor"); lit("("); spLst(0, -1) { ref("constructorParameter"); lit(",") }; lit(")") }
+                    concatenation("constructorParameter") { ref("characteristics"); ref("name"); lit(":"); ref("typeReference") }
+                    concatenation("property") { ref("characteristics"); ref("name"); lit(":"); ref("typeReference") }
                     concatenation("typeReference") { ref("possiblyQualifiedName"); opt { ref("typeArgumentList") }; opt { lit("?") } }
-                    concatenation("typeArgumentList") { lit("<"); spLst(1, -1) { ref("typeReference"); lit(",") }; lit(">") }
+                    concatenation("typeArgumentList") { lit("<"); spLst(0, -1) { ref("typeArgument"); lit(",") }; lit(">") }
+                    concatenation("typeArgument") { opt { ref("typeArgumentName") }; ref("typeReference") }
+                    concatenation("typeArgumentName") { ref("name"); lit(":") }
+                    concatenation("characteristics") { opt { ref("cmp_ref") }; opt { ref("val_var") }; opt { ref("str_drv") }; opt { lit("idn") } }
                     choice("cmp_ref") {
                         lit("cmp")
                         lit("ref")
@@ -212,6 +238,17 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         lit("val")
                         lit("var")
                     }
+                    choice("str_drv") {
+                        lit("str")
+                        lit("drv")
+                    }
+                    concatenation("association") { lit("association"); lit("{"); ref("associationEnd"); ref("associationEnd"); lit("}") }
+                    concatenation("associationEnd") { lit("end"); opt { lit("owned") }; ref("characteristics"); ref("name"); lit(":"); ref("typeReference") }
+                    choice("name") {
+                        ref("IDENTIFIER")
+                        ref("QUOTED_NAME")
+                    }
+                    concatenation("QUOTED_NAME", isLeaf = true) { pat("`[^`]+`") }
                 }
             }
         }
@@ -248,7 +285,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                 interface_("ValueType") {
                     supertype("StructuredType")
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
-                        typeArgument("ConstructorDeclaration")
+                        typeArgument("ConstructorDefinition")
                     }
                 }
                 interface_("UnionType") {
@@ -310,16 +347,16 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
 
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
-                interface_("MethodDeclarationResolved") {
-                    supertype("MethodDeclaration")
+                interface_("MethodDefinitionResolved") {
+                    supertype("MethodDefinition")
                 }
-                interface_("MethodDeclarationPrimitive") {
-                    supertype("MethodDeclaration")
+                interface_("MethodDefinitionPrimitive") {
+                    supertype("MethodDefinition")
                 }
-                interface_("MethodDeclarationDerived") {
-                    supertype("MethodDeclaration")
+                interface_("MethodDefinitionDerived") {
+                    supertype("MethodDefinition")
                 }
-                interface_("MethodDeclaration") {
+                interface_("MethodDefinition") {
 
                     propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
@@ -334,10 +371,10 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                 interface_("DataType") {
                     supertype("StructuredType")
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
-                        typeArgument("ConstructorDeclaration")
+                        typeArgument("ConstructorDefinition")
                     }
                 }
-                interface_("ConstructorDeclaration") {
+                interface_("ConstructorDefinition") {
 
                     propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
@@ -358,7 +395,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         parameter(setOf(), "name", "SimpleName")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
-                        typeArgument("ConstructorDeclaration")
+                        typeArgument("ConstructorDefinition")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
@@ -393,7 +430,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     }
                     propertyOf(setOf(VAL, REF, STR), "context", "TypeDefinition", false)
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STR), "resolvedDeclarationOrNull", "TypeDefinition", false)
+                    propertyOf(setOf(VAL, REF, STR), "resolvedDefinitionOrNull", "TypeDefinition", false)
                     propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
                         typeArgument("TypeArgument")
                     }
@@ -472,7 +509,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         typeArgument("String")
                     }
                     propertyOf(setOf(VAR, REF, STR), "method", "List", false) {
-                        typeArgument("MethodDeclaration")
+                        typeArgument("MethodDefinition")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                     propertyOf(setOf(VAR, CMP, STR), "propertyByIndex", "Map", false) {
@@ -528,7 +565,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     }
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
-                    propertyOf(setOf(VAL, REF, STR), "resolvedDeclaration", "TypeDefinition", false)
+                    propertyOf(setOf(VAL, REF, STR), "resolvedDefinition", "TypeDefinition", false)
                     propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
                         typeArgument("TypeArgumentNamed")
                     }
@@ -652,16 +689,18 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         parameter(setOf(), "name", "ParameterName")
                         parameter(setOf(), "typeInstance", "TypeInstance")
                         parameter(setOf(), "defaultValue", "String")
+                        parameter(setOf(), "property", "PropertyDeclaration")
                     }
                     propertyOf(setOf(VAL, REF, STR), "defaultValue", "String", false)
                     propertyOf(setOf(VAL, CMP, STR), "name", "ParameterName", false)
+                    propertyOf(setOf(VAL, REF, STR), "property", "PropertyDeclaration", true)
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
-                data("MethodDeclarationResolvedSimple") {
-                    supertype("MethodDeclarationAbstract")
-                    supertype("MethodDeclarationResolved")
+                data("MethodDefinitionResolvedSimple") {
+                    supertype("MethodDefinitionAbstract")
+                    supertype("MethodDefinitionResolved")
                     constructor_ {
-                        parameter(setOf(), "original", "MethodDeclaration")
+                        parameter(setOf(), "original", "MethodDefinition")
                         parameter(setOf(), "owner", "TypeDefinition")
                         parameter(setOf(), "name", "MethodName")
                         parameter(setOf(), "parameters", "List")
@@ -670,16 +709,34 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     }
                     propertyOf(setOf(VAL, REF, STR), "description", "String", false)
                     propertyOf(setOf(VAL, CMP, STR), "name", "MethodName", false)
-                    propertyOf(setOf(VAL, REF, STR), "original", "MethodDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STR), "original", "MethodDefinition", false)
                     propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
                     propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
                     }
                     propertyOf(setOf(VAL, REF, STR), "returnType", "TypeInstance", false)
                 }
-                data("MethodDeclarationDerivedSimple") {
-                    supertype("MethodDeclarationAbstract")
-                    supertype("MethodDeclarationDerived")
+                data("MethodDefinitionPrimitiveSimple") {
+                    supertype("MethodDefinitionAbstract")
+                    supertype("MethodDefinitionPrimitive")
+                    constructor_ {
+                        parameter(setOf(), "owner", "TypeDefinition")
+                        parameter(setOf(), "name", "MethodName")
+                        parameter(setOf(), "parameters", "List")
+                        parameter(setOf(), "returnType", "TypeInstance")
+                        parameter(setOf(), "description", "String")
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "description", "String", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "MethodName", false)
+                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
+                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
+                        typeArgument("ParameterDeclaration")
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "returnType", "TypeInstance", false)
+                }
+                data("MethodDefinitionDerivedSimple") {
+                    supertype("MethodDefinitionAbstract")
+                    supertype("MethodDefinitionDerived")
                     constructor_ {
                         parameter(setOf(), "owner", "TypeDefinition")
                         parameter(setOf(), "name", "MethodName")
@@ -697,8 +754,8 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                     }
                     propertyOf(setOf(VAL, REF, STR), "returnType", "TypeInstance", false)
                 }
-                data("MethodDeclarationAbstract") {
-                    supertype("MethodDeclaration")
+                data("MethodDefinitionAbstract") {
+                    supertype("MethodDefinition")
                     constructor_ {}
                 }
                 data("InterfaceTypeSimple") {
@@ -736,7 +793,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         parameter(setOf(), "name", "SimpleName")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
-                        typeArgument("ConstructorDeclaration")
+                        typeArgument("ConstructorDefinition")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
@@ -744,8 +801,8 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                         typeArgument("TypeInstance")
                     }
                 }
-                data("ConstructorDeclarationSimple") {
-                    supertype("ConstructorDeclaration")
+                data("ConstructorDefinitionSimple") {
+                    supertype("ConstructorDefinition")
                     constructor_ {
                         parameter(setOf(), "owner", "TypeDefinition")
                         parameter(setOf(), "parameters", "List")
@@ -844,6 +901,11 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
     override val formatDomain by lazy {
         formatDomain(NAME) {
 //            TODO("not implemented")
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

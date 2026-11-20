@@ -1,9 +1,11 @@
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.expressions.asm.PropertyCallDefault
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdFunctionLib
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
@@ -37,6 +39,7 @@ class ExpressionTypeResolver(
         is InfixExpression -> this.typeOfInfixExpressionFor(self)
         is CastExpression -> this.typeOfCastExpressionFor(self)
         is GroupExpression -> this.typeOfGroupExpressionFor(self)
+        is FunctionCall -> this.typeOfFunctionCallFor(self)
         else -> error("Subtype of Expression not handled in 'typeOfExpressionFor' : '${this::class.simpleName}'")
 
     }
@@ -67,7 +70,6 @@ class ExpressionTypeResolver(
     fun NavigationExpression.typeOfNavigationExpressionFor(self: TypeInstance): TypeInstance {
         val st = this.start
         val start = when (st) {
-            is LiteralExpression -> TODO()
             is RootExpression -> when {
                 st.isNothing -> StdLibDefault.NothingType
                 st.isSelf -> self
@@ -76,7 +78,8 @@ class ExpressionTypeResolver(
                 }
             }
 
-            else -> error("type of Navigation.start not handled")
+            // e.g. a literal, '(when { ... }).p', 'List(...).size', 'T() { ... }.p'
+            else -> st.typeOfExpressionFor(self)
         }
         val r = this.parts.fold(start) { acc, it ->
             when (acc) {
@@ -107,21 +110,43 @@ class ExpressionTypeResolver(
                 }
             }
 
-            else -> error("type of Navigation.start not handled")
+            // the start is not a property (e.g. '(when { ... }).p'): no declaration
+            else -> null
         }
         var acc = pd?.typeInstance
-        val r = expr.parts.forEach {
-            pd = when (it) {
-                is PropertyCall -> acc?.allResolvedProperty?.get(PropertyName(it.propertyName))
-                else -> null //everything must be property calls
+        expr.parts.forEach {
+            when (it) {
+                is PropertyCall -> {
+                    pd = acc?.let { ti -> resolvedOrIssue(ti) }?.allResolvedProperty?.get(PropertyName(it.propertyName))
+                    acc = pd?.typeInstance
+                }
+                // an index into a collection (e.g. 'a.b[0].c'): the element type, the last property stays the collection property
+                is IndexOperation -> acc = acc?.typeArguments?.firstOrNull()?.type
+                else -> {
+                    //everything else must be property calls or index operations
+                    pd = null
+                    acc = null
+                }
             }
-            acc = pd?.typeInstance
         }
         return pd
     }
 
-    fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance =
-        self?.allResolvedProperty?.get(PropertyName(this.propertyName))?.typeInstance ?: StdLibDefault.NothingType
+    /** the type, or null with an error issue if it does not resolve (e.g. a missing import) */
+    private fun resolvedOrIssue(ti: TypeInstance): TypeInstance? = when (ti.resolvedDefinitionOrNull) {
+        null -> {
+            issues.error(null, "Cannot resolve type '${ti.typeName.value}' in namespace '${ti.namespace.qualifiedName.value}', is an import needed?")
+            null
+        }
+
+        else -> ti
+    }
+
+    fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance = when {
+        // the special property '.\$type' of every value
+        PropertyCallDefault.TYPE == this.propertyName && null != self -> StdLibDefault.Type.type()
+        else -> self?.allResolvedProperty?.get(PropertyName(this.propertyName))?.typeInstance ?: StdLibDefault.NothingType
+    }
 
     fun MethodCall.typeOfMethodCallFor(self: TypeInstance?): TypeInstance =
         self?.allResolvedMethod?.get(MethodName(this.methodName))?.returnType ?: StdLibDefault.NothingType
@@ -137,8 +162,10 @@ class ExpressionTypeResolver(
     fun WhenExpression.typeOfWhenExpressionFor(self: TypeInstance): TypeInstance {
         val opts = this.options.map {
             it.expression.typeOfExpressionFor(self)
-        }
-        return commonSuperTypeOf(opts)
+        } + this.elseOption.expression.typeOfExpressionFor(self)
+        // a '\$nothing' option does not contribute to the type, unless all options are '\$nothing'
+        val notNothing = opts.filter { it != StdLibDefault.NothingType }
+        return commonSuperTypeOf(notNothing.ifEmpty { opts })
     }
 
     fun TernaryConditionExpression.typeOfTernaryConditionFor(self: TypeInstance): TypeInstance {
@@ -163,8 +190,8 @@ class ExpressionTypeResolver(
     }
 
     private fun typeOfInfixOperator(lhs: TypeInstance, op: String, rhs: TypeInstance): TypeInstance = when (op) {
-        "==" -> StdLibDefault.Boolean
-        "+" -> lhs
+        "==", "!=", "<", "<=", ">", ">=", "and", "or", "xor" -> StdLibDefault.Boolean
+        "+", "-", "*", "/", "%" -> lhs
         else -> error("Unsupported Operator '$op'")
     }
 
@@ -180,9 +207,9 @@ class ExpressionTypeResolver(
         return StdLibDefault.TupleType.typeTuple(args)
     }
 
-    fun OnExpression.typeOfOnExpressionFor(self: TypeInstance): TypeInstance {
-        TODO()
-    }
+    // the result of an OnExpression is the object its expression gives, with the properties set
+    fun OnExpression.typeOfOnExpressionFor(self: TypeInstance): TypeInstance =
+        this.expression.typeOfExpressionFor(self)
 
     fun LambdaExpression.typeOfLambdaExpressionFor(self: TypeInstance): TypeInstance {
         TODO()
@@ -193,6 +220,34 @@ class ExpressionTypeResolver(
 
     fun GroupExpression.typeOfGroupExpressionFor(self: TypeInstance): TypeInstance =
         this.expression.typeOfExpressionFor(self)
+
+    /**
+     * List(a, b, ...) and Set(a, b, ...) are a List/Set of the common supertype of the argument types (Any if there are no arguments),
+     * Pair(a, b) is a Pair of the argument types, other functions have their declared return type.
+     * A function that is not in the std function library is given by the user of the interpreter, so its type is Any.
+     */
+    fun FunctionCall.typeOfFunctionCallFor(self: TypeInstance): TypeInstance {
+        val argTypes = this.arguments.map { it.typeOfExpressionFor(self) }
+        fun elementType(): TypeInstance {
+            // a '\$nothing' argument does not contribute to the element type, unless all arguments are '\$nothing'
+            val notNothing = argTypes.filter { it != StdLibDefault.NothingType }
+            return when {
+                argTypes.isEmpty() -> StdLibDefault.AnyType
+                else -> commonSuperTypeOf(notNothing.ifEmpty { argTypes })
+            }
+        }
+        val funcName = this.possiblyQualifiedName.value
+        return when (funcName) {
+            "List" -> StdLibDefault.List.type(listOf(elementType().asTypeArgument))
+            "Set" -> StdLibDefault.Set.type(listOf(elementType().asTypeArgument))
+            "Pair" -> when (argTypes.size) {
+                2 -> StdLibDefault.Pair.type(listOf(argTypes[0].asTypeArgument, argTypes[1].asTypeArgument))
+                else -> StdLibDefault.Pair.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
+            }
+            else -> StdFunctionLib.findFirstFunctionNamed(funcName)?.returnTypeReference?.typeOfTypeReference()
+                ?: StdLibDefault.AnyType
+        }
+    }
 
     fun TypeReference.typeOfTypeReference(): TypeInstance {
         //val td = typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedName) ?: StdLibDefault.NothingType.resolvedDeclaration

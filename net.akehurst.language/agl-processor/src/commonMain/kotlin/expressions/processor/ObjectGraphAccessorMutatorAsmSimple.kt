@@ -27,9 +27,9 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.collections.transitiveClosure
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.transitiveClosure
 import net.akehurst.language.expressions.api.FunctionDefinitionFloating
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.asm.TypeReferenceDefault
@@ -213,7 +213,7 @@ object StdFunctionLibForAsmSimple : FunctionLib {
         (declaration as MutableMap)["Set"] = FunctionDefinitionPrimitive(
             SimpleName("Set"),
             listOf(), //TODO
-            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            TypeReferenceDefault(StdLibDefault.Set.qualifiedName, emptyList(), false),
             null
         ).also {
             it.execution = { args -> args.toSet() }
@@ -221,10 +221,18 @@ object StdFunctionLibForAsmSimple : FunctionLib {
         (declaration as MutableMap)["List"] = FunctionDefinitionPrimitive(
             SimpleName("List"),
             listOf(), //TODO
-            TypeReferenceDefault(StdLibDefault.Pair.qualifiedName, emptyList(), false),
+            TypeReferenceDefault(StdLibDefault.List.qualifiedName, emptyList(), false),
             null
         ).also {
             it.execution = { args -> args }
+        }
+        (declaration as MutableMap)["Map"] = FunctionDefinitionPrimitive(
+            SimpleName("Map"),
+            listOf(), //TODO
+            TypeReferenceDefault(StdLibDefault.Map.qualifiedName, emptyList(), false),
+            null
+        ).also {
+            it.execution = { args -> args.associate { a -> a as Pair<*, *> } }
         }
     }
 
@@ -240,7 +248,7 @@ class ExternalGetterAsmSimple(
     val locationMap: LocationMap,
 ) : ExternalGetter {
 
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(typesDomain, issues, locationMap, this))
+    private val _interpreter = ExpressionsInterpreterOverTypedObjectCombined(ObjectGraphAccessorMutatorByReflection(typesDomain, issues, locationMap, this))
 
     override fun typeFor(obj: Any, ifNotFound: TypeInstance): TypeInstance {
         val tp = when {
@@ -248,7 +256,11 @@ class ExternalGetterAsmSimple(
                 val qn = obj.qualifiedTypeName
                 typesDomain.findByQualifiedNameOrNull(qn)
             }
-
+            obj is AsmReference -> {
+                obj.value?.qualifiedTypeName ?.let {
+                    typesDomain.findByQualifiedNameOrNull(it)
+                }
+            }
             else -> {
                 typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
             }
@@ -274,9 +286,9 @@ class ExternalGetterAsmSimple(
         }
 
         crossReferenceDomain?.let {
-            val id = SemanticAnalyserSimple.identifyingValueInFor(_interpreter, crossReferenceDomain, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last, obj)
+            val id = SemanticAnalyserSimple.identifyingValueInFor(_interpreter, crossReferenceDomain, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME, obj)
             when (id) {
-                is String -> obj.setSemanticQualifiedPath(listOf(id)) //TODO: list of string returned from identifyingValueInFor
+                is String -> obj.semanticQualifiedPath = listOf(id) //TODO: list of string returned from identifyingValueInFor
             }
         }
 
@@ -290,7 +302,8 @@ class ExternalGetterAsmSimple(
                 val v = obj.getPropertyOrNull(PropertyValueName(propertyName))
                 when (v) {
                     is AsmStructure -> v
-                    is AsmReference -> v
+                    is AsmReference -> v.resolvedOrSelf()
+                    is AsmList -> v.referredOrRaw()
                     else -> v?.raw
                 }
             }
@@ -298,11 +311,13 @@ class ExternalGetterAsmSimple(
                 val v = it.property[PropertyValueName(propertyName)]?.value
                 when (v) {
                     is AsmStructure -> v
-                    is AsmReference -> v
+                    is AsmReference -> v.resolvedOrSelf()
+                    is AsmList -> v.referredOrRaw()
                     else -> v?.raw
                 }
             }
-            else -> TODO()
+            // not an ASM object, the caller gives a warning and uses $nothing
+            else -> null
         }
     }
 
@@ -329,11 +344,16 @@ class ExternalGetterAsmSimple(
         }
     }
 
-    override fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? = createStructure(qualifiedName, constructorArgs)
+    override suspend fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any? = createStructure(qualifiedName, constructorArgs)
 
     override suspend fun getPropertySuspend(obj: Any, propertyName: String): Any? = getProperty(obj, propertyName) //TODO:
 
     override suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?) = setProperty(obj, propertyName, isReference, value) //TODO:
+
+    private val _links = AssociationLinkStore()
+
+    override fun getLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any): Any? = _links.get(association, end, obj)
+    override fun setLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) = _links.set(association, end, obj, value)
 }
 
 private class TypedObjectAsmValue(
@@ -349,7 +369,7 @@ private class TypedObjectAsmValue(
     override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
 
     override fun setProperty(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
-    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setPropertySuspend(this, name, value)
 
     override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
     override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
@@ -402,6 +422,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             is Double -> StdLibDefault.Real
 
             is Instant -> StdLibDefault.Timestamp
+            is ByteArray -> StdLibDefault.Binary
             is Throwable -> StdLibDefault.Exception
             is Pair<*, *> -> {
                 val fstType = typeFor(obj.first, StdLibDefault.AnyType)
@@ -454,6 +475,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             is Char -> typedAs(obj.toString(), StdLibDefault.String) //TODO: do we need an explicit Char type ?
             is String -> typedAs(obj, StdLibDefault.String)
             is Instant -> typedAs(obj, StdLibDefault.Timestamp)
+            is ByteArray -> typedAs(obj, StdLibDefault.Binary)
             is Throwable -> typedAs(obj, StdLibDefault.Exception)
             is Pair<*, *> -> {
                 val ifFstTypeNotFound = when {
@@ -491,6 +513,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             is Array<*> -> toTypedCollection(obj.toList(), StdLibDefault.List, ifNotFound) { it.toList() }
             //TODO: special array types IntArray, LongArray, etc
             is List<*> -> toTypedCollection(obj, StdLibDefault.List, ifNotFound) { it.toList() }
+            is OrderedSet<*> -> toTypedCollection(obj.toList(), StdLibDefault.OrderedSet, ifNotFound) { it.toOrderedSet() }
             is Set<*> -> toTypedCollection(obj, StdLibDefault.Set, ifNotFound) { it.toSet() }
 
             is Map<*, *> -> {
@@ -525,6 +548,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             null -> Unit
             is TypedObject -> untyped(possiblyTypedObject as TypedObject)
             is List<*> -> possiblyTypedObject.map { untypedAny(it) }
+            is OrderedSet<*> -> possiblyTypedObject.map { untypedAny(it) }.toOrderedSet()
             is Set<*> -> possiblyTypedObject.map { untypedAny(it) }.toSet()
             is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
             is AsmPrimitive -> possiblyTypedObject.value
@@ -643,6 +667,12 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
                 typedAs(AsmListSeparatedSimple(collection.map { it.self as AsmValue }.toSeparatedList()), type)
             }
 
+            StdLibDefault.OrderedSet.qualifiedName -> {
+                val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
+                val type = StdLibDefault.OrderedSet.type(listOf(elType.asTypeArgument))
+                typedAs(collection.toOrderedSet(), type)
+            }
+
             StdLibDefault.Set.qualifiedName -> {
                 val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
                 val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
@@ -677,6 +707,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             StdLibDefault.List.qualifiedName -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.ListSeparated.qualifiedName -> StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.Set.qualifiedName -> StdLibDefault.Set.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.OrderedSet.qualifiedName -> StdLibDefault.OrderedSet.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.Map.qualifiedName -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
             else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
         }
@@ -818,7 +849,7 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
             null -> when {
                 asmValue is AsmStructure -> {
                     val pv = asmValue.property[PropertyValueName(propertyName)]
-                    pv?.let { toTypedObject(it.value, StdLibDefault.AnyType) } ?: nothing()
+                    pv?.let { toTypedObject(it.value.resolvedOrSelf(), StdLibDefault.AnyType) } ?: nothing()
                 }
 
                 else -> {
@@ -858,12 +889,12 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
                 is PropertyDeclarationStored -> when (asmValue) {
                     is AsmStructure -> {
                         val pv = asmValue.property[PropertyValueName(propertyName)]
-                        pv?.let { toTypedObject(pv.value, propRes.typeInstance) } ?: nothing()
+                        pv?.let { toTypedObject(pv.value.resolvedOrSelf(), propRes.typeInstance) } ?: nothing()
                     }
 
                     is AsmReference -> asmValue.value?.let {
                         val v = it.property[PropertyValueName(propertyName)]?.value
-                        toTypedObject(v, propRes.typeInstance)
+                        toTypedObject(v?.resolvedOrSelf(), propRes.typeInstance)
                     } ?: nothing()
                     else -> error("Cannot evaluate property '${propertyName}' on object of type '${tobj::class.simpleName}'")
                 }
@@ -946,6 +977,9 @@ open class ObjectGraphAccessorMutatorAsmSimple_old(
     override suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject =
         executeMethod(tobj, methodName, args) // no need for anything suspend specific
 
+    override suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject =
+        callFunction(function, args, typeReferenceResolver) // no need for anything suspend specific
+
     override fun callFunction(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject {
         val decl = function
         val arguments = args.map { untyped(it) }
@@ -1020,3 +1054,21 @@ data class ObjectGraphEdgeSimple(
     override val property: PropertyDeclaration
 ) : ObjectGraphEdge
 
+/**
+ * reading a reference property as a value gives the referred element when the reference is resolved,
+ * an unresolved reference gives Unit, which becomes \$nothing (the reference itself is read with '&')
+ */
+internal fun Any.resolvedOrSelf(): Any = when (this) {
+    is AsmReference -> this.value ?: Unit
+    else -> this
+}
+
+/**
+ * reading a list that holds references gives the referred elements, an unresolved reference is left out
+ * (the list of references itself is read with '&')
+ */
+internal fun AsmList.referredOrRaw(): Any = when {
+    this is AsmListSeparated -> this.raw
+    this.elements.any { it is AsmReference } -> this.elements.mapNotNull { el -> if (el is AsmReference) el.value else el.raw }
+    else -> this.raw
+}

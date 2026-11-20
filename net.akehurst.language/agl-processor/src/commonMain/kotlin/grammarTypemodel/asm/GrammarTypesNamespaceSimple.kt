@@ -28,6 +28,7 @@ import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.api.TypesNamespace
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesNamespaceAbstract
+import net.akehurst.language.types.asm.TypesDomainSimple
 
 class GrammarTypesNamespaceSimple(
     override val qualifiedName: QualifiedName,
@@ -46,6 +47,36 @@ class GrammarTypesNamespaceSimple(
                     typesDomain.addNamespace(ns)
                     ns
                 }
+
+        /**
+         * Types given by the user (e.g. a types string) may use the qualified name of a grammar as a namespace.
+         * The types for a grammar must be in a GrammarTypesNamespace,
+         * so if any such namespace is a plain TypesNamespace, returns a copy of the domain in which it is a GrammarTypesNamespace
+         * (holding the same types). The default transform then uses those types for the grammar rules with the same type name.
+         * Otherwise returns the given domain.
+         */
+        fun withGrammarNamespaces(typesDomain: TypesDomain, grammarQualifiedNames: Collection<QualifiedName>): TypesDomain {
+            val toConvert = typesDomain.namespace.filter { it !is GrammarTypesNamespace && grammarQualifiedNames.contains(it.qualifiedName) }
+            return when {
+                toConvert.isEmpty() -> typesDomain
+                else -> {
+                    val result = TypesDomainSimple(typesDomain.name, typesDomain.options)
+                    // keep the order of the namespaces, it matters for lookup
+                    typesDomain.namespace.forEach { ns ->
+                        when {
+                            toConvert.contains(ns) -> result.addNamespace(GrammarTypesNamespaceSimple(ns.qualifiedName, ns.options, ns.import))
+                            ns is StdLibDefault -> result.addNamespace(ns)
+                            else -> ns.findInOrCloneTo(result)
+                        }
+                    }
+                    typesDomain.namespace.filter { it !is StdLibDefault }.forEach { ns ->
+                        ns.ownedTypes.forEach { it.findInOrCloneTo(result) }
+                    }
+                    result.resolveImports()
+                    result
+                }
+            }
+        }
     }
 
     override fun findInOrCloneTo(other: TypesDomain): TypesNamespace =

@@ -943,6 +943,7 @@ class test_m2mTransformInterpreter {
                                  a1:Attribute {
                                    name == 'a1'
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String := X + ' contains a1'
@@ -1015,6 +1016,7 @@ class test_m2mTransformInterpreter {
                                  Attribute {
                                    name == Y
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String := X + ' contains ' + Y
@@ -1163,6 +1165,7 @@ class test_m2mTransformInterpreter {
                                  a1:Attribute {
                                    name == 'a1'
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String == X + ' contains a1'
@@ -1235,6 +1238,7 @@ class test_m2mTransformInterpreter {
                                  Attribute {
                                    name == Y
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String == X + ' contains ' + Y
@@ -2483,7 +2487,7 @@ class test_m2mTransformInterpreter {
                 val cdr = suite.crossReferenceDomains[k]
                 Pair(v.name, objectGraphSimpleAsm(v, null,issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
-            val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
+            val interpreter = M2mTransformInterpreterCombined(m2m, ogs, issues)
 
             val source:Map<DomainReference, List<TypedObject>> = case.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")

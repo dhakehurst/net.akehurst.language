@@ -114,7 +114,6 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         check_calcFirstTermClosure(
             RP(rG, oN, SOR), RP(rG, oN, SOR), LookaheadSetPart.EOT,
             setOf(
-                "G",
                 "G-S[0]",
                 "G-S[0]-'a'",
             )
@@ -122,7 +121,6 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
         check_calcAllClosure(
             rG, setOf(
-                "G",
                 "G-S[0]",
                 "G-S[1]",
                 "G-S[2]",
@@ -281,7 +279,7 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             rG,
             RP(rG, oN, SR), RP(rG, oN, SR), S,
             setOf(
-                ParentNext(true, RP(rG, oN, ER), LHS(EOT), LHS()),
+                ParentNext(true, RP(rG, oN, ER), LHS(EOT), LHS(EOT)),
                 ParentNext(true, RP(S1, oN, p1), LHS(a), LHS(EOT)),
                 ParentNext(true, RP(S1, oN, p1), LHS(a), LHS(a))
             )
@@ -335,22 +333,20 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         check_calcFirstTermClosure(
             RP(rG, oN, SOR), RP(rG, oN, SOR), LookaheadSetPart.EOT,
             setOf(
-                "G",
                 "G-S.b",
                 "G-S.b-'a'",
-                "G-S.b-<E>"
+                "G-S.b-<EL>"
             )
         )
 
         check_calcAllClosure(
             rG, setOf(
-                "G",
                 "G-S.b",
                 "G-S.i",
                 "G-S.s",
                 "G-S.e",
                 "G-S.b-'a'",
-                "G-S.b-<E>",
+                "G-S.b-<EL>",
                 "G-S.i-'a'",
                 "G-S.s-'b'"
             )
@@ -362,7 +358,7 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             RP(rG, oN, SOR), RP(rG, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 FirstTerminalInfo(a, LHS(b, EOT)),
-                FirstTerminalInfo(EMPTY, LHS(EOT))
+                FirstTerminalInfo(EMPTY_LIST, LHS(EOT))
             )
         )
 
@@ -410,46 +406,95 @@ class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         check_calcFirstTermClosure(
             RP(rG, oN, SOR), RP(rG, oN, SOR), LookaheadSetPart.EOT,
             setOf(
-                "G-NE.0",
-                "G-NE.1",
-                "G-NE.0-MR[0]",
-                "G-NE.1-GMI[0]",
-                "G-NE.0-MR[0]-MI[0]",
-                "G-NE.1-GMI[0]-oTA.b",
-                "G-NE.0-MR[0]-MI[0]-id",
-                "G-NE.1-GMI[0]-oTA.b-TA[0]",
-                "G-NE.1-GMI[0]-oTA.b-<E>",
-                "G-NE.1-GMI[0]-oTA.b-TA[0]-'<>'"
+                "G-NE.o0",
+                "G-NE.o1",
+                "G-NE.o0-MR[0]",
+                "G-NE.o1-GMI[0]",
+                "G-NE.o0-MR[0]-MI[0]",
+                "G-NE.o1-GMI[0]-oTA.b",
+                "G-NE.o0-MR[0]-MI[0]-id",
+                "G-NE.o1-GMI[0]-oTA.b-TA[0]",
+                "G-NE.o1-GMI[0]-oTA.b-<EL>",
+                "G-NE.o1-GMI[0]-oTA.b-TA[0]-'<>'"
             )
         )
 
+        // the E = P | id ; P = E '++' cycle is printed as paths up to the point where a closure item repeats
         check_calcAllClosure(
             rG, setOf(
-                "G-NE.0",
-                "G-NE.1",
-                "G-NE.0-MR[0]",
-                "G-NE.0-MR[1]",
-                "G-NE.0-MR[2]",
-                "G-NE.0-MR[ER]",
-                "G-NE.1-GMI[0]",
-                "G-NE.1-GMI[1]",
-                "G-NE.1-GMI[ER]",
-                "G-NE.0-MR[0]-MI[0]",
-                "G-NE.0-MR[0]-MI[1]",
-                "G-NE.0-MR[0]-MI[2]",
-                "G-NE.0-MR[0]-MI[3]",
-                "G-NE.0-MR[0]-MI[ER]",
-                "G-NE.0-MR[1]-'::'",
-                "G-NE.0-MR[2]-id",
-                "G-NE.1-GMI[0]-oTA.b",
-                "G-NE.1-GMI[0]-oTA.e",
-                "G-NE.1-GMI[1]-MI[0]",
-                "G-NE.1-GMI[1]-MI[1]",
-                "G-NE.1-GMI[1]-MI[2]",
-                "G-NE.1-GMI[1]-MI[3]",
-                "G-NE.1-GMI[1]-MI[ER]",
-                "G-NE.0-MR[0]-MI[0]-id",
-                "G-NE.0-MR[0]-MI[1]='('",
+                "G-NE.o0",
+                "G-NE.o1",
+                "G-NE.o0-MR[0]",
+                "G-NE.o0-MR[1]",
+                "G-NE.o0-MR[2]",
+                "G-NE.o0-MR[ER]",
+                "G-NE.o1-GMI[0]",
+                "G-NE.o1-GMI[1]",
+                "G-NE.o1-GMI[ER]",
+                "G-NE.o0-MR[2]-id",
+                "G-NE.o0-MR[1]-'::'",
+                "G-NE.o0-MR[0]-MI[0]",
+                "G-NE.o0-MR[0]-MI[1]",
+                "G-NE.o0-MR[0]-MI[2]",
+                "G-NE.o0-MR[0]-MI[3]",
+                "G-NE.o0-MR[0]-MI[ER]",
+                "G-NE.o1-GMI[0]-oTA.b",
+                "G-NE.o1-GMI[0]-oTA.e",
+                "G-NE.o1-GMI[1]-MI[0]",
+                "G-NE.o1-GMI[1]-MI[1]",
+                "G-NE.o1-GMI[1]-MI[2]",
+                "G-NE.o1-GMI[1]-MI[3]",
+                "G-NE.o1-GMI[1]-MI[ER]",
+                "G-NE.o0-MR[0]-MI[0]-id",
+                "G-NE.o0-MR[0]-MI[1]-'('",
+                "G-NE.o0-MR[0]-MI[3]-')'",
+                "G-NE.o1-GMI[1]-MI[0]-id",
+                "G-NE.o0-MR[0]-MI[2]-E.o0",
+                "G-NE.o0-MR[0]-MI[2]-E.o1",
+                "G-NE.o1-GMI[1]-MI[1]-'('",
+                "G-NE.o1-GMI[1]-MI[3]-')'",
+                "G-NE.o1-GMI[0]-oTA.b-<EL>",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0",
+                "G-NE.o1-GMI[1]-MI[2]-E.o1",
+                "G-NE.o1-GMI[0]-oTA.b-TA[0]",
+                "G-NE.o0-MR[0]-MI[2]-E.o1-id",
+                "G-NE.o1-GMI[0]-oTA.b-TA[ER]",
+                "G-NE.o1-GMI[1]-MI[2]-E.o1-id",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[1]",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[ER]",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[1]",
+                "G-NE.o1-GMI[0]-oTA.b-TA[0]-'<>'",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[ER]",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o1",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[1]-'++'",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o1",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[1]-'++'",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o1-id",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o1-id",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[0]",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[1]",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[ER]",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[0]",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[1]",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[ER]",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o0",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o1",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[1]-'++'",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o0",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o1",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[1]-'++'",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o1-id",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o1-id",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o0-P[1]",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o0-P[ER]",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o0-P[1]",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o0-P[ER]",
+                "G-NE.o0-MR[0]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o0-P[1]-'++'",
+                "G-NE.o1-GMI[1]-MI[2]-E.o0-P[0]-E.o0-P[0]-E.o0-P[1]-'++'",
             )
         )
     }

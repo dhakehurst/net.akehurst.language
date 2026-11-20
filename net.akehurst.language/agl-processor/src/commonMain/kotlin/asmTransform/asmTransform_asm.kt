@@ -32,8 +32,15 @@ import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.VariableAssignmentStatement
+import net.akehurst.language.expressions.asm.IndexOperationDefault
+import net.akehurst.language.expressions.asm.LiteralExpressionDefault
+import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.asm.OnExpressionDefault
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.TypesDomainSimple
 
@@ -52,10 +59,8 @@ class AsmTransformDomainDefault(
                     semanticAnalysis { sentenceContext(context) }
                 }
             )
-            return when {
-                res.allIssues.errors.isEmpty() -> res
-                else -> error(res.allIssues.toString())
-            }
+            // errors are returned as issues of the result (as TypesDomainSimple.fromString does), not thrown
+            return res
         }
 
         fun fromGrammarDomain(
@@ -255,6 +260,39 @@ class AsmTransformationRuleDefault(
     }
 
     override fun toString(): String  = "${grammarRuleName.value}: ${expression}"
+}
+
+class ModifyObjectRuleDefault(
+    override val possiblyQualifiedTypeName: PossiblyQualifiedName,
+    override val modifyStatements: List<VariableAssignmentStatement>
+) : ModifyObjectRule {
+
+    override var grammarRuleName: GrammarRuleName = GrammarRuleName("<unset>")
+
+    // on child[0] { modifyStatements }
+    override val expression: Expression = OnExpressionDefault(
+        NavigationExpressionDefault(
+            RootExpressionDefault("child"),
+            listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, 0L))))
+        )
+    ).also { it.propertyAssignments = modifyStatements }
+
+    override val isResolved: Boolean get() = null != this._resolvedType
+    override val resolvedType: TypeInstance get() = _resolvedType ?: error("TransformationRule for '${grammarRuleName.value}' has not been resolved")
+
+    private var _resolvedType: TypeInstance? = null
+
+    override fun resolveTypeAs(type: TypeInstance) {
+        _resolvedType = type
+    }
+
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val ni = indent.inc
+        val stmts = modifyStatements.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
+        return "$indent${grammarRuleName}: { ${possiblyQualifiedTypeName.value} ->\n$stmts\n$indent}"
+    }
+
+    override fun toString(): String = "${grammarRuleName.value}: { ${possiblyQualifiedTypeName.value} -> ${modifyStatements.joinToString(separator = " ")} }"
 }
 
 internal fun asmTransformationRule(type: TypeInstance, expression: Expression): AsmTransformationRuleDefault {

@@ -124,6 +124,38 @@ class test_AglGrammarSemanticAnalyser {
     }
 
     @Test
+    fun simpleList_max_0() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'b'{0} ;
+            }
+        """.trimIndent()
+
+        val expected = setOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 6, null), "A list must have a maximum greater than 0")
+        )
+
+        test(grammarStr, expected)
+    }
+
+    @Test
+    fun separatedList_max_0() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = ['b' / ',']0 ;
+            }
+        """.trimIndent()
+
+        val expected = setOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 13, null), "A list must have a maximum greater than 0") // TODO: separated list location includes the following space
+        )
+
+        test(grammarStr, expected)
+    }
+
+    @Test
     fun rule_nonTerminalQualified() {
         val grammarStr = """
             namespace ns.test

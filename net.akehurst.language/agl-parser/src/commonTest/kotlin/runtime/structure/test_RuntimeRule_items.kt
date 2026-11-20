@@ -326,18 +326,19 @@ class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val rG = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
+        val c = rrs.findRuntimeRule("','")
 
         //then
         assertEquals(2, (rG as RuntimeRule).rulePositions.size)
         check(RP(rG,oN, SOR),setOf(S))
         check(RP(rG,oN, EOR),setOf())
-        assertEquals(5, S.rulePositions.size)
-        check(RP(S, oLE, SOR),setOf(EMPTY))
-        check(RP(S,oLE, EOR),setOf())
-        check(RP(S, oLI, SOR),setOf(a))
-        check(RP(S,oLI, PMI),setOf(a))
-        check(RP(S,oLI, EOR),setOf())
+        assertEquals(4, S.rulePositions.size)
+        check(RP(S, oSI, SOR),setOf(a))
+        check(RP(S, oSI, pSI),setOf(a))
+        check(RP(S, oSS, pSS),setOf(c))
+        check(RP(S,oSI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
+        assertEquals(0, c.rulePositions.size)
     }
 
 }

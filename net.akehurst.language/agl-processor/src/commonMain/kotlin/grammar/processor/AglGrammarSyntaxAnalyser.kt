@@ -22,7 +22,7 @@ import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -67,7 +67,6 @@ internal class AglGrammarSyntaxAnalyser(
         this.register(this::empty)
         this.register(this::choice)
         this.register(this::simpleChoice)
-        this.register(this::priorityChoice)
         this.register(this::ambiguousChoice)
         this.register(this::concatenation)
         this.register(this::concatenationItem)
@@ -239,7 +238,7 @@ internal class AglGrammarSyntaxAnalyser(
         return { EmptyRuleDefault().also { setLocationFor(it, target, sentence) } }
     }
 
-    // choice = ambiguousChoice | priorityChoice | simpleChoice ;
+    // choice = ambiguousChoice | simpleChoice ;
     private fun choice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> RuleItem {
         return children[0] as (Grammar) -> RuleItem
     }
@@ -250,15 +249,6 @@ internal class AglGrammarSyntaxAnalyser(
         return { grm ->
             val alternative = simpleChoice.items.map { reduceConcatenation(it.invoke(grm)) }
             ChoiceLongestDefault(alternative).also { setLocationFor(it, target, sentence) }
-        }
-    }
-
-    // priorityChoice : [concatenation, '<']* ;
-    private fun priorityChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> RuleItem {
-        val priorityChoice = (children as List<Any>).toSeparatedList<Any, ((Grammar) -> Concatenation), String>()
-        return { grm ->
-            val alternative = priorityChoice.items.map { reduceConcatenation(it.invoke(grm)) }
-            ChoicePriorityDefault(alternative).also { setLocationFor(it, target, sentence) }
         }
     }
 

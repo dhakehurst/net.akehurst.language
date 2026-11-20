@@ -180,7 +180,7 @@ class test_AllDefault {
           }
          */
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -224,7 +224,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -270,7 +270,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -317,7 +317,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -363,7 +363,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -422,7 +422,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -486,7 +486,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -542,7 +542,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -621,7 +621,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -740,7 +740,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -848,7 +848,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -941,7 +941,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1056,7 +1056,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1170,7 +1170,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1288,7 +1288,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1394,7 +1394,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1515,7 +1515,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1606,7 +1606,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1656,7 +1656,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1719,7 +1719,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1789,7 +1789,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1859,7 +1859,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -1931,7 +1931,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2007,7 +2007,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2074,7 +2074,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2140,7 +2140,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2219,7 +2219,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2299,7 +2299,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2387,7 +2387,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2479,7 +2479,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2568,7 +2568,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2641,7 +2641,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2726,7 +2726,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -2835,7 +2835,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3010,7 +3010,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3108,7 +3108,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3190,7 +3190,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3282,7 +3282,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3392,7 +3392,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3556,7 +3556,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3653,7 +3653,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3761,7 +3761,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3933,7 +3933,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -3991,7 +3991,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4052,7 +4052,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4124,7 +4124,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4211,7 +4211,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4290,7 +4290,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4370,7 +4370,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4463,7 +4463,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4564,7 +4564,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4673,7 +4673,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4790,7 +4790,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -4904,7 +4904,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5011,7 +5011,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5119,7 +5119,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5266,7 +5266,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5396,7 +5396,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5528,7 +5528,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5637,7 +5637,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5755,7 +5755,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5878,7 +5878,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -5990,7 +5990,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -6120,7 +6120,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -6283,7 +6283,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -6471,7 +6471,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmTransform(
-            "FromGrammarOuter",
+            "Outer",
             typesDomain("FromGrammarParsedGrammarUnit", true) {
                 namespace("test.Outer") {} //default adds 'std' namespace
                 namespace("test.Inner") {} //default adds 'std' namespace
@@ -6669,7 +6669,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmTransform(
-            "FromGrammarO",
+            "O",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 namespace("test.O") {}
                 namespace("test.I") {}
@@ -6749,7 +6749,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -6800,7 +6800,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -6872,7 +6872,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -6966,7 +6966,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7012,7 +7012,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7062,7 +7062,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7108,7 +7108,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7154,7 +7154,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7199,7 +7199,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7245,7 +7245,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7305,7 +7305,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7392,7 +7392,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7442,7 +7442,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7494,7 +7494,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7546,7 +7546,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7621,7 +7621,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmGrammarTransform(
-            "FromGrammarTest",
+            "Test",
             "test.Test",
             typesDomain = typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Test") {}
@@ -7692,7 +7692,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmTransform(
-            "FromGrammarTest",
+            "Test",
             typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Base") {}
                 grammarTypeNamespace("test.Test") {}
@@ -7766,7 +7766,7 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmTransform(
-            "FromGrammarTest",
+            "Test",
             typesDomain("FromGrammarParsedGrammarUnit", true) {
                 grammarTypeNamespace("test.Base") {}
                 grammarTypeNamespace("test.Test") {}

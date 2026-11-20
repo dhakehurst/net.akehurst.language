@@ -404,7 +404,7 @@ class test_Performance {
 
    // @Test
     fun bench_06_java8() {
-        val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
+        val grammarFile = "/Java/version_8/languages/aglOptm/grammar.agl-grm"
         val grammarStr = this::class.java.getResource(grammarFile)?.readText() ?: error("file not found '$grammarFile'")
         val proc = Agl.processorFromString<Asm, SentenceContext>(
             grammarDefinitionStr = grammarStr,

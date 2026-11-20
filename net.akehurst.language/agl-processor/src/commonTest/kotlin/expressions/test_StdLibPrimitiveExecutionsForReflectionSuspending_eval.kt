@@ -49,8 +49,8 @@ class test_StdLibPrimitiveExecutionsForReflectionSuspending_eval {
             val st = typesDomain.findByQualifiedNameOrNull(selfType.asQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val og = ObjectGraphAccessorMutatorByReflection(typesDomain, issues, LocationMapDefault(), primitiveExecutor = StdLibPrimitiveExecutionsForReflection(issues))
-            val interpreter = ExpressionsInterpreterOverTypedObjectSuspending(og)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(og)
+            val actual = interpreter.evaluateStrSuspend(EvaluationContext.ofSelf(og.typedAs(self, st)), expression)
             assertEquals(expected, og.untyped(actual))
         }
     }

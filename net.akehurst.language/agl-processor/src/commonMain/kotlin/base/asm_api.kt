@@ -150,6 +150,8 @@ interface Domain<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
 
     fun resolveReference(reference:DefinitionReference<DT>): DT?
 
+    fun merge(other: Domain<NT, DT>): Domain<NT, DT>
+
     fun addNamespace(value: NT)
     fun mergeNamespace(value: NT)
 }

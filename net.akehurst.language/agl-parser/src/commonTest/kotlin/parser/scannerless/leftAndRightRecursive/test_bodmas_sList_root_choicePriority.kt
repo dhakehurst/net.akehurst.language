@@ -42,7 +42,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         val rrs = runtimeRuleSet {
             concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
-            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("root")
                 ref("group")
                 ref("div")
@@ -50,7 +50,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
                 ref("add")
                 ref("sub")
             }
-            choice("root", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("root", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("var")
                 ref("bool")
             }

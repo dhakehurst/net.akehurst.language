@@ -31,7 +31,7 @@ class test_a1bOa2 : test_LeftCornerParserAbstract() {
         // S = S1 < a
         // S1 = a b?
         val deterministic = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("S1")
                 literal("a")
             }

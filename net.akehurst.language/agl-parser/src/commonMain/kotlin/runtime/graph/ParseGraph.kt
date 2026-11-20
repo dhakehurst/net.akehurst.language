@@ -23,12 +23,13 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
 import net.akehurst.language.automaton.leftcorner.ParserState
-import net.akehurst.language.collections.binaryHeap
+import net.akehurst.kotlinx.collections.binaryHeap
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.TreeDataGrowing
+import net.akehurst.language.sppt.treedata.compareChildAlternatives
 
 internal class ParseGraph(
     val sentence: Sentence,
@@ -161,11 +162,25 @@ internal class ParseGraph(
 
     var treeData = TreeDataGrowing<GrowingNodeIndex, SpptDataNode>(stateSetNumber)
 
+    /**
+     * incomplete growing nodes by (startPosition, nextInputPositionAfterSkip).
+     * Used to find nodes on other stacks that cover the same input,
+     * i.e. nodes that would be one node if their parser states were merged.
+     */
+    private val _incompleteByPosition = hashMapOf<Pair<Int, Int>, MutableSet<GrowingNodeIndex>>()
+
     val goals: Set<SpptDataNode> get() = this._goals
 
     var goalMatchedAll = true
 
     val canGrow: Boolean get() = this._gss.isEmpty.not()
+
+    /**
+     * When set (e.g. when streaming), called with the existing node when a new parse of the same text
+     * is found and the merge cannot pick one (undecidable, or the choice is marked ambiguous).
+     * [newChildren] gives the children of the new parse.
+     */
+    var onAmbiguity: ((existing: SpptDataNode, newChildren: () -> List<SpptDataNode>) -> Unit)? = null
 
     val numberOfHeads get() = this._gss.numberOfHeads
 
@@ -248,6 +263,7 @@ internal class ParseGraph(
         //       this.completeNodes.clear()
         this._gss.clear()
         this._goals.clear()
+        this._incompleteByPosition.clear()
         this.treeData = TreeDataGrowing(stateSetNumber)
     }
 
@@ -255,6 +271,9 @@ internal class ParseGraph(
      * return next if a new head was created else oldHead
      */
     private fun addGrowingHead(oldHead: GrowingNodeIndex?, next: GrowingNodeIndex) {
+        if (next.isComplete.not()) {
+            this._incompleteByPosition.getOrPut(Pair(next.startPosition, next.nextInputPositionAfterSkip)) { hashSetOf() }.add(next)
+        }
         when {
             null == oldHead -> {
                 this._gss.root(next)
@@ -338,6 +357,46 @@ internal class ParseGraph(
         return true
     }
 
+    /**
+     * The merge decision could not decide between the existing complete node and the new one
+     * (same rule, start, end, option and dynamic priority, e.g. different splits of the input between concatenation children).
+     * Keeping whichever came first makes the tree depend on the order of the parse
+     * (pre-built vs on-demand automaton, earlier parses with the same processor),
+     * so the children are chosen with the same order independent rule as for growing nodes, see [compareChildAlternatives].
+     */
+    private fun chooseUndecidableCompleteParentFirstChild(existing: SpptDataNode, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex): Boolean {
+        val newChildren = listOf(child)
+        if (newIsPreferredAlternative(existing, newChildren)) {
+            this.treeData.setFirstChildForComplete(newParent.complete, child, false)
+        }
+        this.addGrowingHead(previous, newParent)
+        return true
+    }
+
+    /** see [chooseUndecidableCompleteParentFirstChild] */
+    private fun chooseUndecidableCompleteParentLastChild(existing: SpptDataNode, oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex?): Boolean {
+        val chain = this.treeData.growingChainOf(oldParent)
+        if (null != chain) {
+            val newChildren = chain.toList() + child
+            if (newIsPreferredAlternative(existing, newChildren)) {
+                this.treeData.setNextChildForCompleteParent(oldParent, newParent.complete, child, false)
+            }
+        }
+        this.addGrowingHead(previous, newParent)
+        return true
+    }
+
+    private fun newIsPreferredAlternative(existing: SpptDataNode, newChildren: List<SpptDataNode>): Boolean {
+        val existingAlternatives = this.treeData.complete.childrenFor(existing)
+        return when (existingAlternatives.size) {
+            1 -> {
+                val existingChildren = existingAlternatives[0].second
+                existingChildren != newChildren && compareChildAlternatives(newChildren, existingChildren) > 0
+            }
+            else -> false // none, or ambiguous alternatives kept on purpose: leave as is
+        }
+    }
+
     private fun mergeDecisionOnLength(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>,ifEqual: (reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         val newReasonList = reasonList+MergeReason.LENGTH
         val existingLength = existingParent.nextInputPosition - existingParent.startPosition
@@ -386,11 +445,14 @@ internal class ParseGraph(
         return ifEqual(newReasonList)
     }
 
+    // TODO: possibly remove dynamic priority (and collecting childrenPriorities) to save time; priorities of children
+    //  can not decide well without looking at the whole tree. Kept for choice and list nodes for now (2026-11-16):
+    //  without it test_leftRecursive aa/aaa never terminate and test_n_P_Im gives nested trees, so it needs a replacement first.
     private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: ( reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         val newReasonList = reasonList+MergeReason.DYNAMIC_PRIORITY
         val extList = existingParent.dynamicPriority
         val newList = newParent.dynamicPriority
-        for (i in extList.indices) {
+        for (i in 0 until minOf(extList.size, newList.size)) {
             val e = extList[i]
             val n = newList[i]
             when {
@@ -421,14 +483,6 @@ internal class ParseGraph(
                         }
                     }
 
-                    RuntimeRuleChoiceKind.PRIORITY_LONGEST -> mergeDecisionOnPriority(existingParent, newParent, emptyList()) {rl ->
-                        mergeDecisionOnLength(existingParent, newParent, rl) {rl2 ->
-                            mergeDecisionOnDynamicPriority(existingParent, newParent, rl2) { rl3 ->
-                                MergeDecision(rl3, MergeChoice.UNDECIDABLE, "${newParent.dynamicPriority} == ${existingParent.dynamicPriority}")
-                            }
-                        }
-                    }
-
                     RuntimeRuleChoiceKind.AMBIGUOUS -> MergeDecision(listOf( MergeReason.CHOICE_RULE_AMBIGUOUS),MergeChoice.KEEP_BOTH_AS_ALTERNATIVES,"")
                 }
             }
@@ -448,15 +502,33 @@ internal class ParseGraph(
                 }
             }
 
+            // concatenation: no dynamic priority of the children (lists are greedy),
+            // TODO: possible future enhancement: a syntax for a non-greedy list
+            // an equal length is decided by the order independent child rule, see chooseUndecidableCompleteParent*
             else -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
-                mergeDecisionOnDynamicPriority(existingParent, newParent, rl) { rl2->
-                    MergeDecision(rl2,MergeChoice.UNDECIDABLE,"${newParent.dynamicPriority} == ${existingParent.dynamicPriority}")
-                }
+                MergeDecision(rl, MergeChoice.UNDECIDABLE, "same length")
             }
         }
     }
 
     fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peekPrevious(gn)
+
+    /**
+     * Used when streaming, to keep memory flat: forget the index entries that can not be looked up again,
+     * i.e. those whose next input position is before [position], the smallest next input position of any head.
+     */
+    internal fun dropIncompleteIndexBefore(position: Int) {
+        this._incompleteByPosition.keys.removeAll { it.second < position }
+    }
+
+    /**
+     * Other incomplete nodes still in the GSS that cover the same input as 'gn'
+     * (same start, same next input position, same number of children) but are in a different parser state.
+     */
+    fun siblingsOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> {
+        val all = this._incompleteByPosition[Pair(gn.startPosition, gn.nextInputPositionAfterSkip)] ?: return emptySet()
+        return all.filter { it != gn && it.state != gn.state && it.numNonSkipChildren == gn.numNonSkipChildren && this._gss.contains(it) }.toSet()
+    }
 
     /**
      * START
@@ -558,9 +630,13 @@ internal class ParseGraph(
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentFirstChild(existingComplete, parent, child, previous)
                     MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentFirstChild(existingComplete, parent, child, previous)
-                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
+                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> {
+                        onAmbiguity?.invoke(existingComplete) { listOf(child) }
+                        keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
+                    }
                     MergeChoice.UNDECIDABLE -> {
-                        useExistingCompleteParentFirstChild(parent, child, previous)
+                        onAmbiguity?.invoke(existingComplete) { listOf(child) }
+                        chooseUndecidableCompleteParentFirstChild(existingComplete, parent, child, previous)
                         //keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     }
                 }
@@ -618,9 +694,13 @@ internal class ParseGraph(
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentLastChild(previous, parent, child, prevPrev)
                     MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentLastChild(previous, parent, child, prevPrev)
-                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
+                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> {
+                        onAmbiguity?.invoke(existingComplete) { (this.treeData.growingChainOf(previous)?.toList() ?: emptyList()) + child }
+                        keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
+                    }
                     MergeChoice.UNDECIDABLE -> {
-                        useExistingCompleteParentLastChild(parent, child, prevPrev)
+                        onAmbiguity?.invoke(existingComplete) { (this.treeData.growingChainOf(previous)?.toList() ?: emptyList()) + child }
+                        chooseUndecidableCompleteParentLastChild(existingComplete, previous, parent, child, prevPrev)
                         //keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
                     }
                 }

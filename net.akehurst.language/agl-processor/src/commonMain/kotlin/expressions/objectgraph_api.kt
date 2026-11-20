@@ -50,6 +50,16 @@ interface TypedObject {
     fun asString(indent: Indent = Indent()): String
 }
 
+/**
+ * A lambda value (type std.Lambda) that can be invoked with a typed value, giving a typed value,
+ * as used by typed method executions (MethodDefinition.executionTyped), so that values keep their own type and accessor-mutator.
+ * 'self' is the untyped lambda, as used by untyped executions.
+ */
+interface TypedLambda : TypedObject {
+    fun invokeTyped(arg: TypedObject): TypedObject
+    suspend fun invokeTypedSuspend(arg: TypedObject): TypedObject
+}
+
 class EvaluationContext(
     val parent: EvaluationContext?,
     initialNamedValues: Map<String, TypedObject>
@@ -179,9 +189,25 @@ interface ExternalGetter {
     fun getProperty(obj: Any, propertyName: String): Any?
     fun setProperty(obj: Any, propertyName: String, isReference: Boolean, value: Any?)
 
-    fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
+    suspend fun createStructureSuspend(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): Any?
     suspend fun getPropertySuspend(obj: Any, propertyName: String): Any?
     suspend fun setPropertySuspend(obj: Any, propertyName: String, isReference: Boolean, value: Any?)
+
+    /**
+     * The value of a property owned by an association (AssociationEnd.ownedByAssociation): the object(s) linked to 'obj' at 'end'.
+     * A list if 'end' is a collection, otherwise the object or null.
+     * Links are stored outside the objects, keyed by the objects at their ends (using equals/hashCode).
+     */
+    fun getLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any): Any?
+
+    /**
+     * Sets the links of 'obj' at 'end' to 'value' (a list if 'end' is a collection), replacing its previous links at that end.
+     * The opposite end then navigates back to 'obj'.
+     */
+    fun setLinkEnd(association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?)
+
+    suspend fun getLinkEndSuspend(association: TypesAssociation, end: AssociationEnd, obj: Any): Any? = getLinkEnd(association, end, obj)
+    suspend fun setLinkEndSuspend(association: TypesAssociation, end: AssociationEnd, obj: Any, value: Any?) = setLinkEnd(association, end, obj, value)
 }
 
 interface FunctionLib {
@@ -204,6 +230,12 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
      */
     fun getProperty(tobj: TypedObject, propertyName: String): TypedObject
 
+    /**
+     * as [getProperty], but a reference property gives the reference itself, not the element it refers to ('.&name' in expressions).
+     * An object graph without references gives the same value as [getProperty].
+     */
+    fun getPropertyAsReference(tobj: TypedObject, propertyName: String): TypedObject = getProperty(tobj, propertyName)
+
     fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
 
     fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject)
@@ -211,8 +243,10 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
     suspend fun createLambdaValueSuspend(lambda: suspend (it: TypedObject) -> TypedObject): TypedObject
     suspend fun createStructureValueSuspend(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject
     suspend fun getPropertySuspend(tobj: TypedObject, propertyName: String): TypedObject
+    suspend fun getPropertyAsReferenceSuspend(tobj: TypedObject, propertyName: String): TypedObject = getPropertyAsReference(tobj, propertyName)
     suspend fun setPropertySuspend(tobj: TypedObject, propertyName: String, value: TypedObject)
     suspend fun executeMethodSuspend(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
+    suspend fun callFunctionSuspend(function: FunctionDefinitionFloating, args: List<TypedObject>, typeReferenceResolver: (TypeReference) -> TypeInstance): TypedObject
 
 }
 

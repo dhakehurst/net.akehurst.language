@@ -36,7 +36,8 @@ data class SyntaxAnalysisResultDefault<AsmType : Any>(
 
 data class SemanticAnalysisResultDefault(
     override val resolvedReferences: List<ResolvedReference>,
-    override val issues: IssueCollection<LanguageIssue>
+    override val issues: IssueCollection<LanguageIssue>,
+    override val semanticTags: List<SemanticTag> = emptyList()
 ) : SemanticAnalysisResult
 
 data class ProcessResultDefault<AsmType : Any>(

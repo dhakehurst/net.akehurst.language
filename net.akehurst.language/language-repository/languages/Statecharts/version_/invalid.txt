@@ -1,4 +1,4 @@
-//# StatechartSpecification
+//# Global::StatechartSpecification
 interface: in event after
 interface: in event always
 interface: in event oncycle

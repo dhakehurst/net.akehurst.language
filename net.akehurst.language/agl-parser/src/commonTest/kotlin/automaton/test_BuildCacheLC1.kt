@@ -16,10 +16,12 @@
 
 package net.akehurst.language.automaton.leftcorner
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class test_BuildCacheLC1 {
 
+    @Ignore //placeholder: test not written yet
     @Test
     fun x() {
         TODO()

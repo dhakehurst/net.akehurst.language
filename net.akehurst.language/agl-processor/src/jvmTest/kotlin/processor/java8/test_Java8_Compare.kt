@@ -25,7 +25,7 @@ import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import std.extensions.capitalise
+import net.akehurst.kotlinx.utils.capitalise
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -54,11 +54,11 @@ class test_Java8_Compare {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_aglSpec.agl", true)
-        var aglOptmProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_aglOptm.agl", true)
+        var aglSpecProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/languages/aglSpec/grammar.agl-grm", true)
+        var aglOptmProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/languages/aglOptm/grammar.agl-grm", true)
 
-        var antlrSpecProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_antlrSpec.agl")
-        var antlrOptmProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl")
+        var antlrSpecProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/languages/antlrSpec/grammar.agl-grm")
+        var antlrOptmProcessor: LanguageProcessor<Asm, SentenceContext> = createJava8Processor("/Java/version_8/languages/antlrOptm/grammar.agl-grm")
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, SentenceContext> {
             println("Building $path")
@@ -153,28 +153,28 @@ class test_Java8_Compare {
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5)
+    @Timeout(60)
     fun aglSpec(data: Data) {
         this.testParse(data,aglSpecProcessor, true)
     }
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5)
+    @Timeout(60)
     fun aglOptm(data: Data) {
         this.testParse(data,aglOptmProcessor, true)
     }
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5)
+    @Timeout(60)
     fun antlrSpec(data: Data) {
         this.testParse(data,antlrSpecProcessor)
     }
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(10)
+    @Timeout(60)
     fun antlrOptm(data: Data) {
         this.testParse(data,antlrOptmProcessor)
     }

@@ -19,7 +19,7 @@ package net.akehurst.language.agl.m2mTransform.processor.interpreter
 
 import net.akehurst.kotlinx.collections.topologicalSort
 import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.CollectionTemplate
 import net.akehurst.language.m2mTransform.api.M2mTransformRule
@@ -27,8 +27,8 @@ import net.akehurst.language.m2mTransform.api.ObjectTemplate
 import net.akehurst.language.m2mTransform.api.PropertyTemplateExpression
 import net.akehurst.language.m2mTransform.api.PropertyTemplateRhs
 import net.akehurst.language.m2mTransform.processor.M2mTransformExecution
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.cartesianProduct
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.findCoveringSubsets2
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.cartesianProduct
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.findCoveringSubsets2
 import net.akehurst.language.m2mTransform.processor.TemplateMatchAlternatives
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
@@ -88,7 +88,7 @@ class M2mPatternMatcher(
             }
 
             else -> {
-                val exprInterp = ExpressionsInterpreterOverTypedObject(accessorMutator)
+                val exprInterp = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator)
                 val evc = EvaluationContext.of(variables)
                 val value = exprInterp.evaluateExpression(evc, expr)
                 val isMatch = accessorMutator.equalTo(src, value)
@@ -155,7 +155,7 @@ class M2mPatternMatcher(
         }
         val res = options.map { opt ->
             opt.flatMap { it.alternatives }.merge()
-        }
+        }.filter { it.isMatch } // a repeated variable with different values is no match
         return res
     }
 

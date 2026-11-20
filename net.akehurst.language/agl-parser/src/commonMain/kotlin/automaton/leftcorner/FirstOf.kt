@@ -86,6 +86,7 @@ internal class FirstOf(
                             when {
                                 else -> when (rhs) {
                                     is RuntimeRuleRhsEmpty -> nrps.addAll(rp.next())
+                                    is RuntimeRuleRhsEmptyList -> nrps.addAll(rp.next())
                                     is RuntimeRuleRhsGoal -> TODO()
                                     is RuntimeRuleRhsEmbedded -> {
                                         val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)

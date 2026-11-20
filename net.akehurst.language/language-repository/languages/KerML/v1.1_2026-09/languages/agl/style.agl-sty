@@ -1,0 +1,40 @@
+namespace net.akehurst.language.kerML
+
+styles KerMLv1_1 {
+    $keyword, TYPED_BY, SPECIALIZES, SUBSETS, REFERENCES, CROSSES, REDEFINES, CONJUGATES {
+        foreground: blue;
+        font-weight: bold;
+    }
+
+    SINGLE_LINE_NOTE, MULTILINE_NOTE {
+        foreground: gray;
+        font-style: italic;
+    }
+
+    REGULAR_COMMENT {
+        foreground: DarkSlateGrey;
+        font-style: italic;
+    }
+
+    STRING_VALUE {
+        foreground: DarkGreen;
+    }
+
+    DECIMAL_VALUE, EXPONENTIAL_VALUE {
+        foreground: DarkCyan;
+    }
+
+    NAME {
+        foreground: DarkRed;
+    }
+
+    ShortName {
+        foreground: DarkRed;
+        font-style: italic;
+    }
+
+    PrefixMetadataMember {
+        foreground: green;
+        font-style: italic;
+    }
+}

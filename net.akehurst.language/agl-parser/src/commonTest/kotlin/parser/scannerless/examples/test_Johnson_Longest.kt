@@ -107,9 +107,11 @@ class test_Johnson_Longest : test_LeftCornerParserAbstract() {
 
         val expected = """
             S {
+              S {
                 S { 'a' }
                 S { 'a' }
-                S { 'a' }
+              }
+              S { 'a' }
             }
         """.trimIndent()
 
@@ -127,21 +129,23 @@ class test_Johnson_Longest : test_LeftCornerParserAbstract() {
         val sentence = "aaaa"
 
         val expected = """
-         S|1 {
             S {
-                S|2 { 'a' }
-                S|2 { 'a' }
-                S|2 { 'a' }
+              S {
+                S {
+                  S { 'a' }
+                  S { 'a' }
+                }
+                S { 'a' }
               }
-            S|2 { 'a' }
-          }
+              S { 'a' }
+            }
         """.trimIndent()
 
         super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 5,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -151,32 +155,34 @@ class test_Johnson_Longest : test_LeftCornerParserAbstract() {
         val sentence = "a".repeat(10)
 
         val expected = """
-             S|1 {
-                S|1 {
-                    S|1 { 
-                        S|1 {
+            S {
+              S {
+                S {
+                  S {
+                    S {
+                      S {
+                        S {
+                          S {
                             S {
-                                S|2 { 'a' }
-                                S|2 { 'a' }
-                                S|2 { 'a' }
-                              }
-                            S|1 {
-                                S|2 { 'a' }
-                                S|2 { 'a' }
-                              }
+                              S { 'a' }
+                              S { 'a' }
+                            }
+                            S { 'a' }
                           }
-                        S|1 {
-                            S|2 { 'a' }
-                            S|2 { 'a' }
-                          }
+                          S { 'a' }
+                        }
+                        S { 'a' }
                       }
-                    S|1 { 
-                        S|2 { 'a' }
-                        S|2 { 'a' }
-                      }
+                      S { 'a' }
+                    }
+                    S { 'a' }
                   }
-                S|2 { 'a' }
+                  S { 'a' }
+                }
+                S { 'a' }
               }
+              S { 'a' }
+            }
         """.trimIndent()
 
         super.test_pass(

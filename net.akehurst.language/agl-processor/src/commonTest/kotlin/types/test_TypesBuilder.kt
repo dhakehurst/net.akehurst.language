@@ -19,7 +19,7 @@ package net.akehurst.language.types.builder
 
 import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorByReflection
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.types.asm.StdLibDefault
@@ -44,7 +44,7 @@ class test_TypesBuilder {
             }
         }
         val issues = IssueHolder()
-        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+        val interpret = ExpressionsInterpreterOverTypedObjectCombined(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
 
         val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
         assertEquals("Hello World!", actual.self)
@@ -61,7 +61,7 @@ class test_TypesBuilder {
             }
         }
         val issues = IssueHolder()
-        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+        val interpret = ExpressionsInterpreterOverTypedObjectCombined(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
 
         val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
         assertEquals("Hello World!", actual.self)
@@ -88,7 +88,7 @@ class test_TypesBuilder {
             }
         }
         val issues = IssueHolder()
-        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+        val interpret = ExpressionsInterpreterOverTypedObjectCombined(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
 
         val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
         assertEquals("Hello World!", actual.self)
@@ -104,7 +104,7 @@ class test_TypesBuilder {
             }
         }
         val issues = IssueHolder()
-        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+        val interpret = ExpressionsInterpreterOverTypedObjectCombined(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
 
         val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
         assertEquals("Hello World!", actual.self)
@@ -120,7 +120,7 @@ class test_TypesBuilder {
             }
         }
         val issues = IssueHolder()
-        val interpret = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
+        val interpret = ExpressionsInterpreterOverTypedObjectCombined(ObjectGraphAccessorMutatorByReflection(types, issues, LocationMapDefault()))
 
         val actual = interpret.evaluateStr(EvaluationContext.ofSelf(interpret.objectGraph.toTypedObject(DataClass("id1"), StdLibDefault.AnyType)),$$"$self.derProp")
         assertEquals("Hello World!", actual.self)

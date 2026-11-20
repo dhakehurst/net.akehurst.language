@@ -77,6 +77,8 @@ internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType :
     override val styleString: StyleString? get() = StyleString(languageObject.styleString)
     override val styleDomain: AglStyleDomain? get() = languageObject.styleDomain
 
+    override val completionString: CompletionString? get() = CompletionString(languageObject.completionString)
+
     override val issues: IssueCollection<LanguageIssue> = IssueHolder(LanguageProcessorPhase.ALL)
 
     override val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit> = mutableListOf()
@@ -91,6 +93,7 @@ internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType :
 
     //val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
     override val styleStrObservers: MutableList<(StyleString?, StyleString?) -> Unit> = mutableListOf()
+    override val completionStrObservers: MutableList<(CompletionString?, CompletionString?) -> Unit> = mutableListOf()
     //val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
     override fun update(
@@ -100,6 +103,7 @@ internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType :
         crossReferenceString: CrossReferenceString?,
         styleString: StyleString?,
         formatString: FormatString?,
+        completionString: CompletionString?,
     ) {
         error("Cannot update a LanguageDefinition that is based on a LanguageObject")
     }

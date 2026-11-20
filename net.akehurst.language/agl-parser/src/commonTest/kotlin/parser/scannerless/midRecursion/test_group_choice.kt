@@ -41,7 +41,7 @@ class test_group_choice : test_LeftCornerParserAbstract() {
             concatenation("S") { ref("rules") }
             multi("rules",0,-1,"normalRule")
             concatenation("normalRule") { ref("ID"); literal("="); ref("choice"); literal(";")}
-            choice("choice", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("choice", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("priorityChoice")
                 ref("longestChoice")
             }

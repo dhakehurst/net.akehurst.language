@@ -32,7 +32,7 @@ class test_abOcLiteral : test_LeftCornerParserAbstract() {
     // c = 'c' ;
     private companion object {
         val S = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ab")
                 ref("c")
             }

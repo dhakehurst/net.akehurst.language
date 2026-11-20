@@ -74,6 +74,29 @@ internal class ChildChain<CN> private constructor(
     }
 }
 
+/**
+ * Order independent choice between two child lists of the same node (same rule, start and end).
+ * > 0 prefers [a], < 0 prefers [b].
+ * Rule: at the first child that differs, the longer child wins, then (same rule) the higher option,
+ * then a fixed order on rule number and option so that the result never depends on the order of the parse.
+ * Used both when two derivations meet at the same growing node and when they give the same complete node
+ * that the merge decision can not decide (see ParseGraph).
+ */
+internal fun compareChildAlternatives(a: List<SpptDataNode>, b: List<SpptDataNode>): Int {
+    for (i in 0 until minOf(a.size, b.size)) {
+        val x = a[i]
+        val y = b[i]
+        if (x == y) continue
+        val lx = x.nextInputPosition - x.startPosition
+        val ly = y.nextInputPosition - y.startPosition
+        if (lx != ly) return lx.compareTo(ly)
+        if (x.rule == y.rule && x.option != y.option) return x.option.asIndex.compareTo(y.option.asIndex)
+        if (x.rule.number != y.rule.number) return -x.rule.number.compareTo(y.rule.number)
+        if (x.option != y.option) return x.option.asIndex.compareTo(y.option.asIndex)
+    }
+    return a.size.compareTo(b.size)
+}
+
 class TreeDataGrowing<GN, CN : SpptDataNode>(
     val forStateSetNumber: Int
 ) {
@@ -163,6 +186,7 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
             val extended = chain?.append(nextChild) ?: ChildChain.of(nextChild)
             // O(n) materialisation, once, when promoting to `complete`.
             this.complete.setChildren(newParent, extended.toList(), isAlternative)
+            if (recordCompleteChains) this._completeChains[newParent] = extended
             //extended.toList().forEach { this.incrementParents(it) }
         } else {
             //must have already been completed!
@@ -175,8 +199,10 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
         val chain = this._growingChildren[oldParent]
         // O(1) append; old parent's chain is unchanged (structurally shared).
         val extended = chain?.append(nextChild) ?: ChildChain.of(nextChild)
-        this.setGrowingChildren(newParent, extended)
+        this.addGrowingChildren(newParent, extended)
     }
+
+    private fun compareAlternatives(a: List<CN>, b: List<CN>): Int = compareChildAlternatives(a, b)
 /*
     fun inGrowingParentChildAt(parent: GN, childIndex: Int): CN? {
         val children = this._growingChildren[parent]
@@ -195,6 +221,22 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
         this.complete.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
     }
 */
+    /**
+     * Set when streaming the parse: the chain of children of each node completed from a growing parent is kept
+     * (see [completeChainOf]) so that the streamer can tell which children it has already sent.
+     */
+    var recordCompleteChains = false
+
+    /** the chain of children of a growing parent, newest child first */
+    internal fun growingChainOf(parent: GN): ChildChain<CN>? = this._growingChildren[parent]
+
+    /** the chain of children a complete node was given from its growing parent, when [recordCompleteChains] is set */
+    internal fun completeChainOf(node: CN): ChildChain<CN>? = this._completeChains[node]
+
+    internal fun removeCompleteChain(node: CN) {
+        this._completeChains.remove(node)
+    }
+
     fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeData) {
         this.complete.setSkipDataAfter(leafNodeIndex, skipData)
     }
@@ -210,6 +252,7 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
     // --- Implementation ---
 
     private val _growingChildren = hashMapOf<GN, ChildChain<CN>?>()
+    private val _completeChains = hashMapOf<CN, ChildChain<CN>>()
     // private val _numberOfGrowingParents = hashMapOf<CN, Int>()
 
     // private fun hasParents(child: CN) = (this._numberOfGrowingParents[child] ?: 0) != 0
@@ -235,6 +278,30 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
     private fun setGrowingChildren(parent: GN, children: ChildChain<CN>?) {
         if (Debug.OUTPUT_TREE_DATA) Debug.debug(Debug.IndentDelta.NONE) { "Set growing children: $parent = $children" }
         this._growingChildren[parent] = children
+    }
+
+    /** like [setGrowingChildren], but when [parent] already has a different chain, keep the better one (see [compareAlternatives]) */
+    private fun addGrowingChildren(parent: GN, children: ChildChain<CN>) {
+        // one map lookup in the usual case (parent not there yet)
+        val existing = this._growingChildren.put(parent, children)
+        if (null != existing && existing !== children && sameChain(existing, children).not()) {
+            // two derivations reached the same growing node: keep the better chain, using an order independent rule,
+            // so that the tree does not depend on the order of the parse (e.g. pre-built vs on-demand automaton).
+            // Both chains have the same number of children, so choosing here gives the same result as
+            // keeping all chains and choosing when the node completes, without keeping more than one chain.
+            if (compareAlternatives(children.toList(), existing.toList()) <= 0) this._growingChildren[parent] = existing
+        }
+    }
+
+    private fun sameChain(a: ChildChain<CN>, b: ChildChain<CN>): Boolean {
+        var x: ChildChain<CN>? = a
+        var y: ChildChain<CN>? = b
+        while (x != null && y != null) {
+            if (x === y) return true
+            if (x.head != y.head) return false
+            x = x.prev; y = y.prev
+        }
+        return x == null && y == null
     }
 
     private fun removeGrowingNode(gni: GN): ChildChain<CN>? {

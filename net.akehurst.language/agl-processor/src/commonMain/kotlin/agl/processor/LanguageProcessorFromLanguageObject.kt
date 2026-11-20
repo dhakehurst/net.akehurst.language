@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.Formatter
@@ -44,6 +45,7 @@ internal class LanguageProcessorFromLanguageObject<AsmType : Any, ContextType : 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = languageObject.syntaxAnalyser
     override val formatter: Formatter = FormatterOverAsmSimple(languageObject.formatDomain, languageObject.typesDomain, this.allIssues, LocationMapDefault()) as Formatter //TODO:what locationMap to use
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = languageObject.semanticAnalyser
+    override val completionDomain: AglCompletionDomain? = languageObject.completionDomain
 
     init {
         languageObject.automata.forEach { (userGoalRuleName, automaton) ->

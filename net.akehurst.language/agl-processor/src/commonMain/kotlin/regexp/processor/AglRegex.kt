@@ -16,6 +16,7 @@
 
 package net.akehurst.language.regexp.processor
 
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -169,6 +170,11 @@ object AglRegex : LanguageObjectAbstract<Regex, SentenceContext>() {
           // TODO
     """.trimIndent()
 
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
+
     override val grammarDomain: GrammarDomain
         get() = TODO("not implemented")
 
@@ -185,6 +191,9 @@ object AglRegex : LanguageObjectAbstract<Regex, SentenceContext>() {
         get() = TODO("not implemented")
 
     override val formatDomain: AglFormatDomain
+        get() = TODO("not implemented")
+
+    override val completionDomain: AglCompletionDomain
         get() = TODO("not implemented")
 
     override val defaultTargetGrammar: Grammar

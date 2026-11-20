@@ -16,6 +16,11 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
+import net.akehurst.language.grammar.processor.contextFromGrammar
+import net.akehurst.language.agl.util.ReentrantLockCommon
+import net.akehurst.language.completion.api.AglCompletionDomain
+import net.akehurst.language.completion.processor.AglCompletion
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.processor.*
@@ -34,6 +39,8 @@ import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.*
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.m2mTransform.processor.M2mTransform
+import net.akehurst.language.m2mTransformTest.api.M2mTransformTestDomain
+import net.akehurst.language.m2mTransformTest.processor.M2mTransformTest
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.DeclarationsForNamespace
 import net.akehurst.language.reference.processor.AglCrossReference
@@ -53,10 +60,23 @@ fun contextFromGrammarRegistry(registry: GrammarRegistry = Agl.registry): Senten
     return context
 }
 
+/**
+ * The context for an asm-transform definition:
+ * the whole grammar domain ('grammar') and types domain ('types'), used by AsmTransformSemanticAnalyser,
+ * and (CR6 a) the rules of the grammars (as [contextFromGrammar]) and the types (as [contextFromTypesDomain]), e.g. for completion.
+ *
+ * TODO: future enhancement (CR6 b, David 2026-11-17): a context of only the proper (rule and type) items,
+ *  with another way to give the grammar domain and the types domain to AsmTransformSemanticAnalyser
+ *  (it writes the types it creates into the types domain, and generates the default transform from the whole grammar domain).
+ */
 //@Deprecated("Currently no alternative, but to be replaced")
-fun contextFromGrammarAndTypesDomain(grammarDomain: GrammarDomain, typesDomain: TypesDomain)= SentenceContextAny().also {
-    it.addToScope(null, listOf("grammar"), QualifiedName("GrammarDomain"),null, grammarDomain)
-    it.addToScope(null, listOf("types"), QualifiedName("TypesDomain"),null, typesDomain)
+fun contextFromGrammarAndTypesDomain(grammarDomain: GrammarDomain, typesDomain: TypesDomain): SentenceContext {
+    val domains = SentenceContextAny().also {
+        it.addToScope(null, listOf("grammar"), QualifiedName("GrammarDomain"), null, grammarDomain)
+        it.addToScope(null, listOf("types"), QualifiedName("TypesDomain"), null, typesDomain)
+    }
+    // the domain items first, they are found by name ('grammar', 'types') with any type
+    return domains.union(contextFromGrammar(grammarDomain)).union(contextFromTypesDomain(typesDomain))
 }
 
 fun contextFromRegistryGrammars(registry: LanguageRegistry = Agl.registry): SentenceContext = registry.let {
@@ -129,10 +149,12 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     private val _grammars = mutableMapOf<QualifiedName, Grammar>()
 
-    //private val _registryLock = Mutex
+    // the registry may be used from several threads (e.g. an editor and direct calls), its maps are changed and read under this lock.
+    // The lock is never held while the (lazy) agl languages are created, the lazies take it when they register.
+    private val _registryLock = ReentrantLockCommon()
     private val _registry = mutableMapOf<LanguageIdentity, LanguageDefinition<*, *>>()
 
-    override val languages: Map<LanguageIdentity, LanguageDefinition<*, *>> get() = _registry
+    override val languages: Map<LanguageIdentity, LanguageDefinition<*, *>> get() = _registryLock.withLock { _registry.toMap() }
 
     override val grammars: List<Grammar> get() = languages.flatMap { it.value.grammarDomain!!.allDefinitions.toList() }
 
@@ -144,8 +166,10 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val crossReferenceLanguageIdentity: LanguageIdentity get() = AglCrossReference.identity
         override val asmTransformLanguageIdentity: LanguageIdentity get() = AsmTransform.identity
         override val m2mTransformLanguageIdentity: LanguageIdentity get() = M2mTransform.identity
+        override val m2mTransformTestLanguageIdentity: LanguageIdentity get() = M2mTransformTest.identity
         override val styleLanguageIdentity: LanguageIdentity get() = AglStyle.identity
         override val formatLanguageIdentity: LanguageIdentity get() = AglFormat.identity
+        override val completionLanguageIdentity: LanguageIdentity get() = AglCompletion.identity
 
         override val base: LanguageDefinition<Any, SentenceContext> by lazy {
             this@LanguageRegistryDefault.registerFromLanguageObject(AglBase)
@@ -177,6 +201,13 @@ class LanguageRegistryDefault : LanguageRegistry {
             expressions // ensure expressions is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(M2mTransform)
         }
+
+        override val m2mTransformTest: LanguageDefinition<M2mTransformTestDomain, SentenceContext> by lazy {
+            base //ensure base is instantiated
+            expressions // ensure expressions is instantiated
+            m2mTransform // ensure m2mTransform is instantiated
+            this@LanguageRegistryDefault.registerFromLanguageObject(M2mTransformTest)
+        }
         override val crossReference: LanguageDefinition<CrossReferenceDomain, SentenceContext> by lazy {
             base //ensure base is instantiated
             expressions // ensure expressions is instantiated
@@ -193,6 +224,12 @@ class LanguageRegistryDefault : LanguageRegistry {
             base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglStyle)
         }
+
+        override val completion: LanguageDefinition<AglCompletionDomain, SentenceContext> by lazy {
+            base //ensure base is instantiated
+            expressions //ensure expressions is instantiated
+            this@LanguageRegistryDefault.registerFromLanguageObject(AglCompletion)
+        }
     }
 
     override fun initialise() {
@@ -203,12 +240,14 @@ class LanguageRegistryDefault : LanguageRegistry {
         agl.asmTransform
         agl.crossReference
         agl.m2mTransform
+        agl.m2mTransformTest
         agl.format
         agl.style
+        agl.completion
     }
 
-    fun <AsmType : Any, ContextType : Any> registerFromDefinition(definition: LanguageDefinition<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> {
-        return if (this._registry.containsKey(definition.identity)) {
+    fun <AsmType : Any, ContextType : Any> registerFromDefinition(definition: LanguageDefinition<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> = _registryLock.withLock {
+        if (this._registry.containsKey(definition.identity)) {
             error("LanguageDefinition '${definition.identity}' is already registered, please unregister the old one first")
         } else {
             this._registry[definition.identity] = definition
@@ -234,7 +273,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     )
 
     fun <AsmType : Any, ContextType : Any> registerFromLanguageObject(languageObject: LanguageObject<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> {
-        return if (this._registry.containsKey(languageObject.identity)) {
+        return if (_registryLock.withLock { this._registry.containsKey(languageObject.identity) }) {
             error("LanguageDefinition '${languageObject.identity}' is already registered, please unregister the old one first")
         } else {
             val definition = LanguageDefinitionFromAsm<AsmType, ContextType>(
@@ -248,9 +287,11 @@ class LanguageRegistryDefault : LanguageRegistry {
     }
 
     override fun unregister(identity: LanguageIdentity) {
-        val definition = this._registry.remove(identity)
-        definition?.grammarDomain?.allDefinitions?.forEach {
-            unregisterGrammar(it.qualifiedName)
+        _registryLock.withLock {
+            val definition = this._registry.remove(identity)
+            definition?.grammarDomain?.allDefinitions?.forEach {
+                unregisterGrammar(it.qualifiedName)
+            }
         }
     }
 
@@ -265,7 +306,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             agl.styleLanguageIdentity -> agl.style
             agl.formatLanguageIdentity -> agl.format
             agl.crossReferenceLanguageIdentity -> agl.crossReference
-            else -> this._registry[identity]
+            else -> _registryLock.withLock { this._registry[identity] }
         } as LanguageDefinition<AsmType, ContextType>?
     }
 
@@ -292,16 +333,18 @@ class LanguageRegistryDefault : LanguageRegistry {
         aglOptions: ProcessOptions<GrammarDomain, SentenceContext>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> {
-        val existing = this.findOrNull<AsmType, ContextType>(identity)
-        return if (null == existing) {
-            val placeholder = createLanguageDefinition(identity, aglOptions, configuration)
-            registerFromDefinition(placeholder)
-        } else {
-            existing
+        // findOrNull first (without the lock) as it may create an agl language
+        @Suppress("UNCHECKED_CAST")
+        return this.findOrNull<AsmType, ContextType>(identity) ?: _registryLock.withLock {
+            // check again under the lock, so that only one placeholder is registered when several threads ask at once
+            (this._registry[identity] as LanguageDefinition<AsmType, ContextType>?) ?: run {
+                val placeholder = createLanguageDefinition(identity, aglOptions, configuration)
+                registerFromDefinition(placeholder)
+            }
         }
     }
 
-    fun findGrammarOrNullByQualifiedName(qualifiedName: QualifiedName): Grammar? = _grammars[qualifiedName]
+    fun findGrammarOrNullByQualifiedName(qualifiedName: QualifiedName): Grammar? = _registryLock.withLock { _grammars[qualifiedName] }
 
     override fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar? =
         when (nameOrQName) {
@@ -310,10 +353,10 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
     override fun registerGrammar(grammar: Grammar) {
-        _grammars[grammar.qualifiedName] = grammar
+        _registryLock.withLock { _grammars[grammar.qualifiedName] = grammar }
     }
 
     fun unregisterGrammar(qualifiedName: QualifiedName) {
-        _grammars.remove(qualifiedName)
+        _registryLock.withLock { _grammars.remove(qualifiedName) }
     }
 }

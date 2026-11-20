@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.collections.binaryHeap
+import net.akehurst.kotlinx.collections.binaryHeap
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

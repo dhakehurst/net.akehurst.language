@@ -30,7 +30,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.asm.VariableAssignmentStatementDefault
@@ -163,10 +163,7 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
     private fun modifyRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AsmTransformationRule {
         val possiblyQualifiedTypeName = children[1] as PossiblyQualifiedName
         val statements = children[3] as List<VariableAssignmentStatement>
-        val expr = OnExpressionDefault(RootExpressionDefault("\$it"))
-        expr.propertyAssignments = statements
-        val tr = AsmTransformationRuleDefault(expr)
-        return tr
+        return ModifyObjectRuleDefault(possiblyQualifiedTypeName, statements)
     }
 
     // assignmentStatement = propertyName grammarRuleIndex? ':=' expression ;

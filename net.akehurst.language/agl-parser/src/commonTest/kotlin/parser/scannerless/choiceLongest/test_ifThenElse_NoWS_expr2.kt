@@ -33,7 +33,7 @@ class test_ifThenElse_NoWS_expr2 : test_LeftCornerParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("expr") }
-            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("VAR") }
                 concatenation { literal("if"); ref("expr"); literal("then"); ref("expr") }
                 concatenation { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }

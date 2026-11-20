@@ -241,7 +241,8 @@ class OnExpressionDefault(
 }
 
 data class RootExpressionDefault(
-    override val name: String
+    override val name: String,
+    override val asReference: Boolean = false
 ) : ExpressionAbstract(), RootExpression {
     companion object {
         val NOTHING = RootExpressionDefault("\$nothing")
@@ -252,11 +253,11 @@ data class RootExpressionDefault(
     override val isNothing: Boolean get() = NOTHING == this
     override val isSelf: Boolean get() = SELF == this
 
-    override fun toString(): String = name
+    override fun toString(): String = if (asReference) "&$name" else name
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
         !is RootExpressionDefault -> false
-        else -> other.name == this.name
+        else -> other.name == this.name && other.asReference == this.asReference
     }
 }
 
@@ -293,17 +294,23 @@ data class NavigationExpressionDefault(
 }
 
 data class PropertyCallDefault(
-    override val propertyName: String
+    override val propertyName: String,
+    override val asReference: Boolean = false
 ) : PropertyCall {
+    companion object {
+        /** the special property '.\$type' of every value: its runtime type, a value of type 'std.Type' */
+        const val TYPE = "\$type"
+    }
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append(".")
+        if (asReference) sb.append("&")
         sb.append(propertyName)
         return sb.toString()
     }
 
-    override fun toString(): String = ".$propertyName"
+    override fun toString(): String = if (asReference) ".&$propertyName" else ".$propertyName"
 }
 
 data class MethodCallDefault(
@@ -332,7 +339,7 @@ data class LambdaExpressionDefault(
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val vars = variables.joinToString()
-        return "{ $vars -> ${expression.asString(indent, imports)}} }"
+        return "{ $vars -> ${expression.asString(indent, imports)} }"
     }
 
     override fun toString(): String = "{ ${variables.joinToString()} -> $expression }"
@@ -413,6 +420,67 @@ class InfixExpressionDefault(
     override val expressions: List<Expression>,
     override val operators: List<String>
 ) : InfixExpression {
+    companion object {
+        /**
+         * Precedence of the infix operators, higher binds tighter (as in Kotlin).
+         * All operators are left-associative.
+         * TODO: make the precedence table configurable
+         */
+        val OPERATOR_PRECEDENCE = mapOf(
+            "*" to 7, "/" to 7, "%" to 7,
+            "+" to 6, "-" to 6,
+            "<" to 5, "<=" to 5, ">" to 5, ">=" to 5,
+            "==" to 4, "!=" to 4,
+            "and" to 3,
+            "xor" to 2,
+            "or" to 1,
+        )
+
+        /**
+         * Builds an expression for 'expressions' separated by 'operators', that respects the operator precedence.
+         * Operands that are themselves (not grouped) infix expressions are flattened first,
+         * so the result does not depend on how the parser nested them.
+         * Each resulting InfixExpression has exactly one operator.
+         */
+        fun withPrecedence(expressions: List<Expression>, operators: List<String>): Expression {
+            val flatExpressions = mutableListOf<Expression>()
+            val flatOperators = mutableListOf<String>()
+            fun addOperand(e: Expression) {
+                when (e) {
+                    is InfixExpression -> {
+                        addOperand(e.expressions.first())
+                        for (i in e.operators.indices) {
+                            flatOperators.add(e.operators[i])
+                            addOperand(e.expressions[i + 1])
+                        }
+                    }
+
+                    else -> flatExpressions.add(e)
+                }
+            }
+            addOperand(expressions.first())
+            for (i in operators.indices) {
+                flatOperators.add(operators[i])
+                addOperand(expressions[i + 1])
+            }
+            // precedence climbing
+            var pos = 0
+            fun parse(minPrec: Int): Expression {
+                var lhs = flatExpressions[pos]
+                while (pos < flatOperators.size) {
+                    val op = flatOperators[pos]
+                    val prec = OPERATOR_PRECEDENCE[op] ?: 0
+                    if (prec < minPrec) break
+                    pos++
+                    val rhs = parse(prec + 1)
+                    lhs = InfixExpressionDefault(listOf(lhs, rhs), listOf(op))
+                }
+                return lhs
+            }
+            return parse(0)
+        }
+    }
+
     override fun asString(indent: Indent, imports: List<Import>): String = "$this"
 
     override fun toString(): String = "${expressions.first()} ${operators.indices.joinToString { operators[it] + " " + expressions[it + 1] }}"
@@ -436,10 +504,10 @@ class TypeTestExpressionDefault(
 ) : TypeTestExpression {
     override fun asString(indent: Indent, imports: List<Import>): String {
         val ttn = targetType.asString(indent, imports)
-        return "${expression.asString(indent, imports)} as $ttn"
+        return "${expression.asString(indent, imports)} is $ttn"
     }
 
-    override fun toString(): String = "$expression as $targetType"
+    override fun toString(): String = "$expression is $targetType"
 }
 
 data class TypeReferenceDefault(
@@ -515,8 +583,33 @@ object ExpressionExt {
             is StatementBlockExpression -> this.assignment.flatMap { it.freeVariables } + this.expression.freeVariables
             is TernaryConditionExpression -> this.condition.freeVariables + this.trueExpression.freeVariables + this.falseExpression.freeVariables
             is TypeTestExpression -> this.expression.freeVariables
+            is VariableAssignmentStatement -> this.rhs.freeVariables
             is WithExpression -> this.withContext.freeVariables + this.expression.freeVariables
             is WhenExpression -> this.options.flatMap { it.condition.freeVariables + it.expression.freeVariables } + this.elseOption.expression.freeVariables
             else -> error("Unsupported Expression subtype ${this::class.simpleName}")
         }
+}
+
+/**
+ * the same expression, where the last property read gives a reference itself ('&name' or '.&name'), not the element it refers to.
+ * Used by processors that work on the referring side of references (e.g. reference resolution, formatting).
+ */
+fun Expression.withLastStepAsReference(): Expression = when (this) {
+    is RootExpression -> when {
+        this.name.startsWith("\$") || this.asReference -> this
+        else -> RootExpressionDefault(this.name, true)
+    }
+
+    is NavigationExpression -> {
+        val last = this.parts.lastOrNull()
+        when {
+            null == last -> NavigationExpressionDefault(this.start.withLastStepAsReference(), this.parts)
+            last is PropertyCall && last.propertyName.startsWith("\$").not() && last.asReference.not() ->
+                NavigationExpressionDefault(this.start, this.parts.dropLast(1) + PropertyCallDefault(last.propertyName, true))
+
+            else -> this
+        }
+    }
+
+    else -> this
 }

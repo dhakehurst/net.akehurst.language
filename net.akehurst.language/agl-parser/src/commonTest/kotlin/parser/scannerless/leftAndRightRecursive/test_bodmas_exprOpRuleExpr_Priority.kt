@@ -37,7 +37,7 @@ class test_bodmas_exprOpRuleExpr_Priority : test_LeftCornerParserAbstract() {
                 ref("par")
             }
             concatenation("I") { ref("E"); ref("op"); ref("E") }
-            choice("op", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("/")
                 literal("M")
                 literal("+")

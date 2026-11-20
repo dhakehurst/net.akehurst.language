@@ -16,9 +16,12 @@
 
 package net.akehurst.language.style.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -34,6 +37,7 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.style.asm.AglStyleDomainDefault
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.types.builder.typesDomain
 
@@ -50,7 +54,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
         namespace $NAMESPACE_NAME
             grammar $NAME : ${AglBase.NAME} {
                 override unit = namespace styleSet* ;
-                styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
+                styleSet = 'styles' IDENTIFIER extends? '{' typeImport* rule* '}' ;
+                typeImport = 'import-types' possiblyQualifiedName ;
                 extends = ':' [possiblyQualifiedName / ',']+ ;
                 rule = metaRule | tagRule ;
                 metaRule = '$$' PATTERN '{' styleList '}' ;
@@ -60,7 +65,9 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                  | selectorSingle
                  ; //TODO
                 selectorAndComposition = [selectorSingle /',']2+ ;
-                selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER ;
+                selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER | semanticSelector ;
+                semanticSelector = semanticKind possiblyQualifiedName ;
+                semanticKind = 'type' | 'identify' | 'refers-to' ;
                 styleList = style* ;
                 style = STYLE_ID ':' styleValue ';' ;
                 styleValue = STYLE_VALUE | STRING ;
@@ -96,12 +103,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
     """.trimIndent()
 
     override val crossReferenceString = """
-        namespace $NAMESPACE_NAME
+        namespace ${NAMESPACE_NAME}.style.api
           references {
-            in scope property typeReference refers-to GrammarRule
-            in identifiable property typeReference refers-to GrammarRule
-            in referenceDefinition property typeReference refers-to GrammarRule
-            in referenceDefinition property propertyReference refers-to GrammarRule
+            in AglStyleSelector {
+              property value refers-to GrammarRule | LITERAL | PATTERN
+            }
           }
     """.trimIndent()
 
@@ -131,6 +137,49 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
           // TODO
     """.trimIndent()
 
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          completion $NAME {
+            style -> replace [
+              CompletionItem() { label := 'style' text := '<STYLE_ID>: <STYLE_VALUE>;' }
+            ]
+            STYLE_ID -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'foreground' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'background' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'font-style' }
+            ]
+            STYLE_VALUE -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := '<colour>' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'bold' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'italic' }
+            ]
+            SPECIAL_IDENTIFIER -> add [
+              CompletionItem() { kind := 'LITERAL' label := 'SPECIAL_IDENTIFIER' text := '${'$'}keyword' },
+              CompletionItem() { kind := 'LITERAL' label := 'SPECIAL_IDENTIFIER' text := '${'$'}nostyle' }
+            ]
+            styleValue -> hide
+            STRING -> hide
+            // the choice 'rule' does not enclose a position, so its alternatives are used as context
+            in tagRule '{' -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'rule' text := '{' },
+              CompletionItem() { label := 'rule' text := '{
+          <STYLE_ID>: <STYLE_VALUE>;
+        }' }
+            ]
+            in tagRule '}' -> decorate { label := 'rule' }
+            in metaRule '{' -> replace [
+              CompletionItem() { kind := 'LITERAL' label := 'rule' text := '{' },
+              CompletionItem() { label := 'rule' text := '{
+          <STYLE_ID>: <STYLE_VALUE>;
+        }' }
+            ]
+            in metaRule '}' -> decorate { label := 'rule' }
+            in style ':' -> decorate { label := 'style' }
+            in style ';' -> decorate { label := 'style' }
+            in selectorAndComposition ',' -> decorate { label := 'selectorAndComposition' }
+          }
+    """.trimIndent()
+
     override val grammarDomain by lazy {
         grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
@@ -142,9 +191,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     }
                     concatenation("styleSet") {
                         lit("styles"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
+                        lst(0, -1) { ref("typeImport") }
                         lst(0, -1) { ref("rule") }
                         lit("}")
                     }
+                    concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
                     concatenation("extends") {
                         lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
                     }
@@ -168,6 +219,15 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         ref("PATTERN")
                         ref("IDENTIFIER")
                         ref("SPECIAL_IDENTIFIER")
+                        ref("semanticSelector")
+                    }
+                    concatenation("semanticSelector") {
+                        ref("semanticKind"); ref("possiblyQualifiedName")
+                    }
+                    choice("semanticKind") {
+                        lit("type")
+                        lit("identify")
+                        lit("refers-to")
                     }
                     // these must match what is in the AglGrammarGrammar
                     concatenation("LITERAL", isLeaf = true) { pat(CommonRegexPatterns.LITERAL.value) }
@@ -179,7 +239,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         ref("STYLE_ID"); lit(":"); ref("styleValue"); lit(";")
                     }
                     choice("styleValue") {
-                        ref("STYLE_ID")
+                        ref("STYLE_VALUE")
                         ref("STRING")
                     }
                     concatenation("STYLE_ID", isLeaf = true) { pat("[-a-zA-Z_][-a-zA-Z_0-9]*") }
@@ -192,7 +252,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
     override val typesDomain by lazy {
         typesDomain(NAME, true, AglBase.typesDomain.namespace) {
             grammarTypeNamespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
-                enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
+                enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META", "TYPE", "IDENTIFY", "REFERS_TO"))
                 interface_("AglStyleDomain") {
                     supertype("Domain") { ref("StyleNamespace"); ref("StyleSet") }
                 }
@@ -322,13 +382,19 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     createObject("unit", "AglStyleDomain") { /* custom SyntaxAnalyser */ }
                     createObject("namespace", "StyleNamespace") { /* custom SyntaxAnalyser */ }
                     createObject("styleSet", "StyleSet") { /* custom SyntaxAnalyser */ }
+                    createObject("typeImport", "Import") { /* custom SyntaxAnalyser */ }
                     transToListOf("extends", "StyleSetReference", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("rule", "AglStyleRule") { /* custom SyntaxAnalyser */ }
                     createObject("metaRule", "AglStyleMetaRule") { /* custom SyntaxAnalyser */ }
                     createObject("tagRule", "AglStyleTagRule") { /* custom SyntaxAnalyser */ }
                     transToListOf("selectorExpression", "AglStyleSelector", $$"/* custom SyntaxAnalyser */ $nothing")
                     transToListOf("selectorAndComposition", "AglStyleSelector", $$"/* custom SyntaxAnalyser */ $nothing")
-                    createObject("selectorSingle", "AglStyleSelector") { /* custom SyntaxAnalyser */ }
+                    createObject("selectorSingle", "AglStyleSelector") {
+                        /* custom SyntaxAnalyser, the assignment says which property the leaf gives a value to (used for completion) */
+                        assignment("value", 0, "child[0]")
+                    }
+                    createObject("semanticSelector", "AglStyleSelector") { /* custom SyntaxAnalyser */ }
+                    leafStringRule("semanticKind")
                     transToListOf("styleList", "AglStyleDeclaration", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("style", "AglStyleDeclaration") { /* custom SyntaxAnalyser */ }
                     child0StringRule("styleValue")
@@ -348,7 +414,12 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
 
     override val crossReferenceDomain by lazy {
         crossReferenceDomain(NAME) {
-            //TODO
+            // GrammarRule, LITERAL and PATTERN are the types of the items in a context from a grammar (contextFromGrammar)
+            declarationsFor("${NAMESPACE_NAME}.style.api") {
+                reference("AglStyleSelector") {
+                    property("value", listOf("GrammarRule", "LITERAL", "PATTERN"), null)
+                }
+            }
         }
     }
 
@@ -380,6 +451,48 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
     override val formatDomain by lazy {
         formatDomain(NAME) {
 //            TODO("not implemented")
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
+            namespace(NAMESPACE_NAME) {
+                completion(NAME) {
+                    replace("style") {
+                        item(label = "style", text = "<STYLE_ID>: <STYLE_VALUE>;")
+                    }
+                    replace("STYLE_ID") {
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "foreground")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "background")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "font-style")
+                    }
+                    replace("STYLE_VALUE") {
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "<colour>")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "bold")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "italic")
+                    }
+                    add("SPECIAL_IDENTIFIER") {
+                        item(kind = CompletionItemKind.LITERAL, label = "SPECIAL_IDENTIFIER", text = AglStyleDomainDefault.KEYWORD_STYLE_ID.value)
+                        item(kind = CompletionItemKind.LITERAL, label = "SPECIAL_IDENTIFIER", text = AglStyleDomainDefault.NO_STYLE_ID.value)
+                    }
+                    hide("styleValue")
+                    hide("STRING")
+                    // a choice (e.g. rule) is not an enclosing rule of a position, so its alternatives (tagRule, metaRule) are used
+                    replace("{", context = "tagRule", forLiteral = true) {
+                        item(kind = CompletionItemKind.LITERAL, label = "rule", text = "{")
+                        item(label = "rule", text = "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}")
+                    }
+                    decorate("}", context = "tagRule", label = "rule", forLiteral = true)
+                    replace("{", context = "metaRule", forLiteral = true) {
+                        item(kind = CompletionItemKind.LITERAL, label = "rule", text = "{")
+                        item(label = "rule", text = "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}")
+                    }
+                    decorate("}", context = "metaRule", label = "rule", forLiteral = true)
+                    decorate(":", context = "style", label = "style", forLiteral = true)
+                    decorate(";", context = "style", label = "style", forLiteral = true)
+                    decorate(",", context = "selectorAndComposition", label = "selectorAndComposition", forLiteral = true)
+                }
+            }
         }
     }
 

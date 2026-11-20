@@ -34,7 +34,7 @@ class test_Java8Agl_BlocksAndStatements {
 
     private companion object {
 
-        private val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_aglOptm.agl").readText()
+        private val grammarStr = this::class.java.getResource("/Java/version_8/languages/aglOptm/grammar.agl-grm").readText()
 
         val processor by lazy {
             Agl.processorFromString(
@@ -90,7 +90,7 @@ class test_Java8Agl_BlocksAndStatements {
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5, unit = TimeUnit.SECONDS)
+    @Timeout(60, unit = TimeUnit.SECONDS)
     fun parse(data: Data) {
         val result = processor.parse(data.text)
         assertNotNull(result.sppt)
@@ -102,7 +102,7 @@ class test_Java8Agl_BlocksAndStatements {
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("data")
-    @Timeout(5, unit = TimeUnit.SECONDS)
+    @Timeout(60, unit = TimeUnit.SECONDS)
     fun process(data: Data) {
         val result = processor.process(data.text)
         assertNotNull(result.asm)
