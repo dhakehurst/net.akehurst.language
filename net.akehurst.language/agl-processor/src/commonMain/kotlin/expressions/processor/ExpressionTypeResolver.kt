@@ -1,5 +1,6 @@
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.expressions.asm.PropertyCallDefault
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.ram.IssueHolder
@@ -132,8 +133,11 @@ class ExpressionTypeResolver(
         else -> ti
     }
 
-    fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance =
-        self?.allResolvedProperty?.get(PropertyName(this.propertyName))?.typeInstance ?: StdLibDefault.NothingType
+    fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance = when {
+        // the special property '.\$type' of every value
+        PropertyCallDefault.TYPE == this.propertyName && null != self -> StdLibDefault.Type.type()
+        else -> self?.allResolvedProperty?.get(PropertyName(this.propertyName))?.typeInstance ?: StdLibDefault.NothingType
+    }
 
     fun MethodCall.typeOfMethodCallFor(self: TypeInstance?): TypeInstance =
         self?.allResolvedMethod?.get(MethodName(this.methodName))?.returnType ?: StdLibDefault.NothingType

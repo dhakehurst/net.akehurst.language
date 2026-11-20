@@ -357,6 +357,8 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
     private val Set_typeName = SimpleName("Set")
     private val OrderedSet_typeName = SimpleName("OrderedSet")
     private val Map_typeName = SimpleName("Map")
+    private val Type_typeName = SimpleName("Type")
+    private val Property_typeName = SimpleName("Property")
 
     init {
         val nsb = TypeNamespaceBuilder(QualifiedName("std"), emptyList(), this)
@@ -629,6 +631,68 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                 propertyPrimitive<Map<*, *>, Any?>("keys", "Set", false, "Keys in the Map.", accessor = { self -> (self as Map<*, *>).keys }) { typeArgument("K") }
                 propertyPrimitive<Map<*, *>, Any?>("values", "Collection", false, "Values in the Map.", accessor = { self -> (self as Map<*, *>).values }) { typeArgument("V") }
             }
+
+            // --- reflection: the type of a value ('.\$type') and its properties ---
+            // interfaces, values of them cannot be constructed in expressions, they are given by '.\$type'
+            interface_(Type_typeName.value, TypeInstance::class) {
+                propertyPrimitive<TypeInstance, String>("name", "String", false, "Simple name of the type.", accessor = { self -> self.typeName.value })
+                propertyPrimitive<TypeInstance, String>("qualifiedName", "String", false, "Qualified name of the type.", accessor = { self -> self.qualifiedTypeName.value })
+                propertyPrimitive<TypeInstance, Boolean>("isNullable", "Boolean", false, "True if the type is nullable.", accessor = { self -> self.isNullable })
+                propertyPrimitive<TypeInstance, List<TypeInstance>>("typeArgument", "List", false, "Type arguments of the type.", accessor = { self -> self.typeArguments.map { it.type } }) {
+                    typeArgument(Type_typeName.value)
+                }
+                propertyPrimitive<TypeInstance, List<TypeInstance>>("supertype", "List", false, "Direct supertypes of the type.", accessor = { self -> self.resolvedDefinitionOrNull?.supertypes ?: emptyList() }) {
+                    typeArgument(Type_typeName.value)
+                }
+                propertyPrimitive<TypeInstance, List<TypeInstance>>("allSupertype", "List", false, "All (transitive) supertypes of the type.", accessor = { self -> self.resolvedDefinitionOrNull?.allSuperTypes ?: emptyList() }) {
+                    typeArgument(Type_typeName.value)
+                }
+                propertyPrimitive<TypeInstance, List<PropertyDeclaration>>(
+                    "property", "List", false, "Properties of the type, own and inherited, with type arguments resolved.",
+                    accessor = { self -> Type_properties(self) }
+                ) {
+                    typeArgument(Property_typeName.value)
+                }
+                propertyPrimitive<TypeInstance, Boolean>("isSpecial", "Boolean", false, "True if the type is a special type (e.g. Any, Nothing).", accessor = { self -> self.resolvedDefinitionOrNull is SpecialType })
+                propertyPrimitive<TypeInstance, Boolean>("isSingleton", "Boolean", false, "True if the type is a singleton type.", accessor = { self -> self.resolvedDefinitionOrNull is SingletonType })
+                propertyPrimitive<TypeInstance, Boolean>("isPrimitive", "Boolean", false, "True if the type is a primitive type.", accessor = { self -> self.resolvedDefinitionOrNull is PrimitiveType })
+                propertyPrimitive<TypeInstance, Boolean>("isEnum", "Boolean", false, "True if the type is an enum type.", accessor = { self -> self.resolvedDefinitionOrNull is EnumType })
+                propertyPrimitive<TypeInstance, Boolean>("isValue", "Boolean", false, "True if the type is a value type.", accessor = { self -> self.resolvedDefinitionOrNull is ValueType })
+                propertyPrimitive<TypeInstance, Boolean>("isUnion", "Boolean", false, "True if the type is a union type.", accessor = { self -> self.resolvedDefinitionOrNull is UnionType })
+                propertyPrimitive<TypeInstance, Boolean>("isTuple", "Boolean", false, "True if the type is a tuple type.", accessor = { self -> self.resolvedDefinitionOrNull is TupleType })
+                propertyPrimitive<TypeInstance, Boolean>("isCollection", "Boolean", false, "True if the type is a collection type.", accessor = { self -> self.resolvedDefinitionOrNull is CollectionType })
+                propertyPrimitive<TypeInstance, Boolean>("isData", "Boolean", false, "True if the type is a data type.", accessor = { self -> self.resolvedDefinitionOrNull is DataType })
+                propertyPrimitive<TypeInstance, Boolean>("isInterface", "Boolean", false, "True if the type is an interface type.", accessor = { self -> self.resolvedDefinitionOrNull is InterfaceType })
+                methodPrimitive("findPropertyByName", Property_typeName.value, true) {
+                    parameter("name", "String")
+                    description("The property of this type with the given name, own or inherited, \$nothing if there is none.")
+                    execution { self, args -> Type_properties(self as TypeInstance).firstOrNull { it.name.value == args[0] } }
+                }
+                methodPrimitive("conformsTo", "Boolean", false) {
+                    parameter("other", Type_typeName.value)
+                    description("True if this type conforms to (is the same as, or a subtype of) the other type.")
+                    execution { self, args -> (self as TypeInstance).conformsTo(args[0] as TypeInstance) }
+                }
+            }
+            interface_(Property_typeName.value, PropertyDeclaration::class) {
+                propertyPrimitive<PropertyDeclaration, String>("name", "String", false, "Name of the property.", accessor = { self -> self.name.value })
+                propertyPrimitive<PropertyDeclaration, TypeInstance>("type", Type_typeName.value, false, "Type of the property.", accessor = { self -> self.typeInstance })
+                propertyPrimitive<PropertyDeclaration, TypeInstance>(
+                    "owner", Type_typeName.value, false, "The type that declares the property (without type arguments).",
+                    accessor = { self -> ((self as? PropertyDeclarationResolved)?.original?.owner ?: self.owner).type() }
+                )
+                propertyPrimitive<PropertyDeclaration, Boolean>("isComposite", "Boolean", false, "True if the property is composite (the owner owns the value).", accessor = { self -> self.isComposite })
+                propertyPrimitive<PropertyDeclaration, Boolean>("isReference", "Boolean", false, "True if the property is a reference.", accessor = { self -> self.isReference })
+                propertyPrimitive<PropertyDeclaration, Boolean>("isReadOnly", "Boolean", false, "True if the property is read only.", accessor = { self -> self.isReadOnly })
+                propertyPrimitive<PropertyDeclaration, Boolean>("isDerived", "Boolean", false, "True if the property is derived.", accessor = { self -> self.isDerived })
+                //TODO: future enhancement (David 2026-11-20): 'setValue(obj, value)', not wanted for now
+                methodPrimitive("getValue", "Any", true) {
+                    parameter("obj", "Any")
+                    description("The value of this property of the given object, \$nothing if the object has no such property.")
+                    executionTyped { self, args -> Property_getValueTyped(self, args) }
+                    executionTypedSuspend { self, args -> Property_getValueTypedSuspend(self, args) }
+                }
+            }
         }
         nsb.build()
     }
@@ -666,6 +730,41 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
     val ListSeparated by lazy { super.findOwnedCollectionTypeNamedOrNull(ListSeparated_typeName)!! }
     val OrderedSet by lazy { super.findOwnedCollectionTypeNamedOrNull(OrderedSet_typeName)!! }
     val Map by lazy { super.findOwnedCollectionTypeNamedOrNull(Map_typeName)!! }
+
+    /** reflection: the type of a value, given by '.\$type' */
+    val Type by lazy { super.findOwnedInterfaceTypeNamedOrNull(Type_typeName)!! }
+
+    /** reflection: a property of a type */
+    val Property by lazy { super.findOwnedInterfaceTypeNamedOrNull(Property_typeName)!! }
+
+    /** the properties, own and inherited (with type arguments resolved), of the type */
+    private fun Type_properties(self: TypeInstance): List<PropertyDeclaration> = when (self.resolvedDefinitionOrNull) {
+        null -> emptyList()
+        else -> self.allResolvedProperty.values.toList()
+    }
+
+    private fun Property_getValueArg(methodName: String, args: List<TypedObject>): TypedObject {
+        check(1 == args.size) { "Method '${methodName}' takes 1 argument got ${args.size} arguments." }
+        return args[0]
+    }
+
+    private fun Property_getValueTyped(self: TypedObject, args: List<TypedObject>): TypedObject {
+        val obj = Property_getValueArg("getValue", args)
+        val prop = self.untyped as PropertyDeclaration
+        return when {
+            obj.isNothing -> obj
+            else -> obj.getProperty(prop.name.value)
+        }
+    }
+
+    private suspend fun Property_getValueTypedSuspend(self: TypedObject, args: List<TypedObject>): TypedObject {
+        val obj = Property_getValueArg("getValue", args)
+        val prop = self.untyped as PropertyDeclaration
+        return when {
+            obj.isNothing -> obj
+            else -> obj.getPropertySuspend(prop.name.value)
+        }
+    }
 
     override fun findInOrCloneTo(other: TypesDomain): TypesNamespace = this
 

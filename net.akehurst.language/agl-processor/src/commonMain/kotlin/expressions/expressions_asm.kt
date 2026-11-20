@@ -297,6 +297,10 @@ data class PropertyCallDefault(
     override val propertyName: String,
     override val asReference: Boolean = false
 ) : PropertyCall {
+    companion object {
+        /** the special property '.\$type' of every value: its runtime type, a value of type 'std.Type' */
+        const val TYPE = "\$type"
+    }
 
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()

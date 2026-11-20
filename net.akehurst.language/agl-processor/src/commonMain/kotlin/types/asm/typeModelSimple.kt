@@ -207,14 +207,25 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
         }
     }
 
+    /**
+     * the first type with the given simple name, searching the namespaces in order, except that the
+     * standard library namespace ('std') is searched last, so that a type of a language
+     * (e.g. 'Type' of KerML) is found before a 'std' type with the same name.
+     * A 'std' type that is hidden by a language type can always be found by its qualified name, e.g. 'std.Type'.
+     */
     override fun findFirstDefinitionByNameOrNull(typeName: SimpleName): TypeDefinition? {
+        var stdNs: TypesNamespace? = null
         for (ns in namespace) {
-            val t = ns.findOwnedTypeNamed(typeName)
-            if (null != t) {
-                return t
+            if (ns.qualifiedName == StdLibDefault.qualifiedName) {
+                stdNs = ns
+            } else {
+                val t = ns.findOwnedTypeNamed(typeName)
+                if (null != t) {
+                    return t
+                }
             }
         }
-        return null
+        return stdNs?.findOwnedTypeNamed(typeName)
     }
 
     override fun findByQualifiedNameOrNull(qualifiedName: QualifiedName): TypeDefinition? {
@@ -811,9 +822,13 @@ abstract class TypesNamespaceAbstract(
             }
 
             is SimpleName -> {
+                // own types, then the imported namespaces in order, except that 'std' is searched last
+                // (as in TypesDomain.findFirstDefinitionByNameOrNull), so an imported language type (e.g. KerML 'Type')
+                // is found before a 'std' type with the same name
                 val tn = qualifiedOrImportedTypeName
+                val (stdImports, otherImports) = import.partition { it.asQualifiedName == StdLibDefault.qualifiedName }
                 findOwnedTypeNamed(tn)
-                    ?: import.firstNotNullOfOrNull {
+                    ?: (otherImports + stdImports).firstNotNullOfOrNull {
                         val tns = _importedNamespaces[it.asQualifiedName]
                         //    ?: error("namespace '$it' not resolved in namespace '$qualifiedName', have you called resolveImports() on the TypeModel and does it contain the required namespace?")
                         (tns as TypesNamespace?)?.findOwnedTypeNamed(tn)

@@ -314,4 +314,45 @@ class test_m2mTransformInterpreter_targetExpressions {
 
     @Test
     fun flatMapOfListOfLists_combinedSuspend() = runTest { flatMapOfListOfLists(Mode.SUSPEND) }
+
+    // --- reflection: '.$type' (std.Type, std.Property) of source objects ---
+
+    private suspend fun reflectionTypeName(mode: Mode) {
+        val r = run(mode, "Node(label := p.\$type.name, relationships := List()) {}")
+        assertNoIssues(r)
+        assertEquals(listOf(Node("Page", emptyList())), r.nodes)
+    }
+
+    private suspend fun reflectionPropertiesToTargetObjects(mode: Mode) {
+        val r = run(mode, "Node(label := p.\$type.qualifiedName, relationships := p.\$type.property.map({ pr -> Relation(type := pr.name, targetKey := pr.type.name) {} })) {}")
+        assertNoIssues(r)
+        assertEquals(
+            listOf(Node("mock.src.Page", listOf(Relation("name", "String"), Relation("labels", "List"), Relation("links", "List")))),
+            r.nodes
+        )
+    }
+
+    private suspend fun reflectionGetValue(mode: Mode) {
+        val r = run(mode, "Node(label := p.\$type.findPropertyByName('name').getValue(p) as String, relationships := List()) {}")
+        assertNoIssues(r)
+        assertEquals(listOf(Node("p1", emptyList())), r.nodes)
+    }
+
+    @Test
+    fun reflectionTypeName_combined() = runTest { reflectionTypeName(Mode.SYNC) }
+
+    @Test
+    fun reflectionTypeName_combinedSuspend() = runTest { reflectionTypeName(Mode.SUSPEND) }
+
+    @Test
+    fun reflectionPropertiesToTargetObjects_combined() = runTest { reflectionPropertiesToTargetObjects(Mode.SYNC) }
+
+    @Test
+    fun reflectionPropertiesToTargetObjects_combinedSuspend() = runTest { reflectionPropertiesToTargetObjects(Mode.SUSPEND) }
+
+    @Test
+    fun reflectionGetValue_combined() = runTest { reflectionGetValue(Mode.SYNC) }
+
+    @Test
+    fun reflectionGetValue_combinedSuspend() = runTest { reflectionGetValue(Mode.SUSPEND) }
 }

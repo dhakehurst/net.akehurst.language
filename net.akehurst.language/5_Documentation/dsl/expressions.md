@@ -56,13 +56,63 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 | `tuple { a := 1 b := 'x' }` | create a tuple |
 | `{ x := e ... expr }` | block with local variables |
 | `$nothing` | no value |
+| `e.$type` | the runtime type of `e`, see [Reflection](#reflection) |
 
 A property that is not set reads as `$nothing` if it is nullable, and as an empty collection if its type is a collection
 (`List`, `Set`, `OrderedSet`, `Map`), e.g. a metamodel property of multiplicity 0..* that the sentence gives no elements for
 (see `test_ReferenceResolverSimple_unsetCollection`); reading any other unset property is an error.
 
-Special names: `$self` (current object), `$nothing`; in [asm-transform](asm-transform.md) also `child`, `children`,
+Special names: `$self` (current object), `$nothing`, `.$type` (of every value); in [asm-transform](asm-transform.md) also `child`, `children`,
 `$matchedText`, `$alternative`; in [references](references.md) also `$container`, `$owner`, `$root`, `$previous`; in [format](format.md) `$EOL`.
+
+## Reflection
+
+`e.$type` is the runtime type of the value of `e`: the type of the object itself, not the type it is declared or cast as
+(for a `Circle` in a `List<Item>`, `items[0].$type.name` and `(items[0] as Item).$type.name` are both `'Circle'`).
+It is a value of the std interface `Type`, whose properties are values of the std interface `Property`
+(both are given by `.$type`, they cannot be created):
+
+```
+namespace std
+  interface Type {
+    val drv name: String
+    val drv qualifiedName: String
+    val drv isNullable: Boolean
+    val drv typeArgument: List<Type>
+    val drv supertype: List<Type>                   // direct supertypes
+    val drv allSupertype: List<Type>                // all (transitive) supertypes
+    val drv property: List<Property>                // own and inherited
+    val drv isSpecial: Boolean                      // Any, Nothing
+    val drv isSingleton: Boolean
+    val drv isPrimitive: Boolean
+    val drv isEnum: Boolean
+    val drv isValue: Boolean
+    val drv isUnion: Boolean
+    val drv isTuple: Boolean
+    val drv isCollection: Boolean
+    val drv isData: Boolean
+    val drv isInterface: Boolean
+    fun findPropertyByName(name: String): Property?  // $nothing if there is none
+    fun conformsTo(other: Type): Boolean
+  }
+  interface Property {
+    val drv name: String
+    val drv type: Type
+    val drv owner: Type                             // the type that declares it (without type arguments)
+    val drv isComposite: Boolean
+    val drv isReference: Boolean
+    val drv isReadOnly: Boolean
+    val drv isDerived: Boolean
+    fun getValue(obj: Any): Any?                    // the value of this property of obj, $nothing if obj has none
+  }
+```
+
+For example `$self.$type.property.map { p -> p.name }`, `x.$type.findPropertyByName('radius').getValue(x)`,
+`when { p.type.isCollection -> ... }`. `$nothing.$type` is `$nothing` (with a warning).
+The same works in [m2m transforms](m2m-transform.md), on source and target objects.
+A type name is found in the language's own namespaces before `std`, so a language with its own `Type` (e.g. KerML)
+writes `std.Type` for the reflection type.
+The examples are tested in `agl-processor/src/commonTest/kotlin/expressions/test_ExpressionsInterpreter_reflection.kt`.
 
 ## References
 
