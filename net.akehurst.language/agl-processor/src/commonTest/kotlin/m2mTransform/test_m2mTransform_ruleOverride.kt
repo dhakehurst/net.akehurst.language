@@ -80,6 +80,20 @@ class test_m2mTransform_ruleOverride {
             )
         }
 
+        suspend fun transformRootSuspend(sentence: String, text: String) = objectGraphs().let { (ogS, ogD) ->
+            Agl.transformSuspend(
+                M2mTransformString(text),
+                typeDomains = mapOf(DomainReference("s") to shapes, DomainReference("d") to drawing),
+                accessorMutators = mapOf(shapes.name to ogS, drawing.name to ogD),
+                domains = mapOf(DomainReference("s") to listOf(ogS.toTypedObject(shapesProcessor.process(sentence).asm!!.root.first(), StdLibDefault.AnyType))),
+                ruleArguments = emptyMap(),
+                targetDomainReference = DomainReference("d")
+            )
+        }
+
+        fun labels(targets: List<net.akehurst.language.objectgraph.api.TypedObject>) =
+            targets.map { (it.self as AsmStructure).getProperty(PropertyValueName("label")).asString().trim() }
+
         suspend fun transformSuspend(sentence: String, text: String) = objectGraphs().let { (ogS, ogD) ->
             Agl.transformSuspend(
                 M2mTransformString(text),
@@ -116,5 +130,74 @@ class test_m2mTransform_ruleOverride {
         val resSync = transform(SENTENCE, header(RULES))
         assertTrue(resSync.issues.errors.isEmpty(), resSync.issues.toString())
         assertEquals(listOf("'Circle c'", "'any'"), resSync.targets.map { (it.self as AsmStructure).getProperty(PropertyValueName("label")).asString().trim() }.sorted())
+    }
+
+    @Test
+    fun most_specific_wins() = runTest {
+        val rules = """
+            top mapping AnyToTarget {
+                domain s o:Any {}
+                domain d t:Disc := Disc(label := 'any') {}
+            }
+            top mapping ShapeToTarget : AnyToTarget {
+                domain s o:Shape {}
+                domain d t:Disc := Disc(label := 'shape') {}
+            }
+            top mapping CircleToTarget : ShapeToTarget {
+                domain s o:Circle { name == n }
+                domain d t:Disc := Disc(label := 'Circle ' + n) {}
+            }
+        """
+        val res = transformSuspend(SENTENCE, header(rules))
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertEquals(listOf("'Circle c'", "'shape'"), labels(res.targets).sorted())
+    }
+
+    @Test
+    fun overriding_rule_need_not_be_top() = runTest {
+        val rules = RULES.replace("top mapping CircleToTarget", "mapping CircleToTarget")
+        val res = transformSuspend(SENTENCE, header(rules))
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertEquals(listOf("'Circle c'", "'any'"), labels(res.targets).sorted())
+    }
+
+    @Test
+    fun ambiguous_overrides_is_error() = runTest {
+        val rules = RULES + """
+            top mapping CircleToTarget2 : AnyToTarget {
+                domain s o:Circle {}
+                domain d t:Disc := Disc(label := 'circle') {}
+            }
+        """
+        val res = transformSuspend(SENTENCE, header(rules))
+        assertTrue(
+            res.issues.errors.any { it.message == "More than one rule that extends 'AnyToTarget' applies to the same source, and none of them extends the others: 'CircleToTarget', 'CircleToTarget2'." },
+            res.issues.toString()
+        )
+    }
+
+    @Test
+    fun override_in_where_map_all() = runTest {
+        val rules = """
+            top mapping UnitToDrawing {
+                domain s u:Unit { item == items }
+                domain d dr:Drawing := Drawing() { discs := ds }
+                where { map all AnyToTarget { s := items  d := ds } }
+            }
+            mapping AnyToTarget {
+                domain s o:Any {}
+                domain d t:Disc := Disc(label := 'any') {}
+            }
+            mapping CircleToTarget : AnyToTarget {
+                domain s o:Circle { name == n }
+                domain d t:Disc := Disc(label := 'Circle ' + n) {}
+            }
+        """
+        val res = transformRootSuspend(SENTENCE, header(rules))
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertEquals(1, res.targets.size, res.targets.toString())
+        @Suppress("UNCHECKED_CAST")
+        val discs = (res.targets[0].self as AsmStructure).getProperty(PropertyValueName("discs")).asString()
+        assertEquals(listOf("'Circle c'", "'any'"), Regex("label = ('[^']*')").findAll(discs).map { it.groupValues[1] }.toList(), discs)
     }
 }

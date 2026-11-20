@@ -39,6 +39,7 @@ import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpe
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.MappingStep
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.MappingStepKind
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.orderMappingSteps
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.extendsRule
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -98,16 +99,31 @@ class M2mTransformInterpreterCombined(
     fun transform(targetTransform: M2mTransformRuleSet, targetDomainRef: DomainReference, ruleArguments: Map<String, TypedObject>, domainGraphs: Map<DomainReference, List<TypedObject>>): M2MTransformResult =
         transformInternal(targetTransform, targetDomainRef, ruleArguments, domainGraphs) { x, r, s, a -> executeRule(x, r, s, a) }
 
-    private fun executeRule(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit = when (rule) {
-        is M2mTransformAbstractRule -> executeAbstract(m2mExecution, rule, source, ruleArguments)
+    /** applies 'rule', or for each source binding the most specific rule that extends it and applies there (rule extends as override) */
+    private fun executeRule(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit =
+        executeRuleWithOverridesInternal(
+            m2mExecution, rule, source, ruleArguments,
+            { x, r, s, a -> ruleApplies(x, r, s, a) },
+            { x, r, s, a -> executeRuleOwn(x, r, s, a) }
+        ) { x, r, s, a -> executeRule(x, r, s, a) }
+
+    private fun ruleApplies(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Boolean =
+        ruleAppliesInternal(
+            m2mExecution, rule, source, ruleArguments,
+            { x, r, s -> matchSourceVariables(x, r, s) }
+        ) { x, r, w, e -> executeWhen(x, r, w, e) }
+
+    private fun executeRuleOwn(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit = when (rule) {
+        is M2mTransformAbstractRule -> Unit // an abstract rule is never applied itself, only the rules that extend it
         is M2MTransformRelation -> executeRelation(m2mExecution, rule, source, ruleArguments)
         is M2MTransformMapping -> executeMapping(m2mExecution, rule, source, ruleArguments)
         is M2MTransformTable -> executeTable(m2mExecution, rule, source, ruleArguments)
         else -> error("Unknown rule type ${rule::class}")
     }
 
-    private fun executeAbstract(m2mExecution: M2mTransformExecution, rule: M2mTransformAbstractRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit =
-        executeAbstractInternal(m2mExecution, rule, source, ruleArguments) { x, r, s, a -> executeRule(x, r, s, a) }
+    // replaced by executeRuleWithOverridesInternal (an abstract rule applies the one most specific rule that extends it)
+//    private fun executeAbstract(m2mExecution: M2mTransformExecution, rule: M2mTransformAbstractRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit =
+//        executeAbstractInternal(m2mExecution, rule, source, ruleArguments) { x, r, s, a -> executeRule(x, r, s, a) }
 
     private fun executeMapping(m2mExecution: M2mTransformExecution, rule: M2MTransformMapping, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) =
         executeMappingInternal(
@@ -265,16 +281,31 @@ class M2mTransformInterpreterCombined(
     suspend fun transformSuspend(targetTransform: M2mTransformRuleSet, targetDomainRef: DomainReference, ruleArguments: Map<String, TypedObject>, domainGraphs: Map<DomainReference, List<TypedObject>>): M2MTransformResult =
         transformInternal(targetTransform, targetDomainRef, ruleArguments, domainGraphs) { x, r, s, a -> executeRuleSuspend(x, r, s, a) }
 
-    private suspend fun executeRuleSuspend(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit = when (rule) {
-        is M2mTransformAbstractRule -> executeAbstractSuspend(m2mExecution, rule, source, ruleArguments)
+    /** applies 'rule', or for each source binding the most specific rule that extends it and applies there (rule extends as override) */
+    private suspend fun executeRuleSuspend(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit =
+        executeRuleWithOverridesInternal(
+            m2mExecution, rule, source, ruleArguments,
+            { x, r, s, a -> ruleAppliesSuspend(x, r, s, a) },
+            { x, r, s, a -> executeRuleOwnSuspend(x, r, s, a) }
+        ) { x, r, s, a -> executeRuleSuspend(x, r, s, a) }
+
+    private suspend fun ruleAppliesSuspend(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Boolean =
+        ruleAppliesInternal(
+            m2mExecution, rule, source, ruleArguments,
+            { x, r, s -> matchSourceVariablesSuspend(x, r, s) }
+        ) { x, r, w, e -> executeWhenSuspend(x, r, w, e) }
+
+    private suspend fun executeRuleOwnSuspend(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit = when (rule) {
+        is M2mTransformAbstractRule -> Unit // an abstract rule is never applied itself, only the rules that extend it
         is M2MTransformRelation -> executeRelationSuspend(m2mExecution, rule, source, ruleArguments)
         is M2MTransformMapping -> executeMappingSuspend(m2mExecution, rule, source, ruleArguments)
         is M2MTransformTable -> executeTableSuspend(m2mExecution, rule, source, ruleArguments)
         else -> error("Unknown rule type ${rule::class}")
     }
 
-    private suspend fun executeAbstractSuspend(m2mExecution: M2mTransformExecution, rule: M2mTransformAbstractRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit =
-        executeAbstractInternal(m2mExecution, rule, source, ruleArguments) { x, r, s, a -> executeRuleSuspend(x, r, s, a) }
+    // replaced by executeRuleWithOverridesInternal (an abstract rule applies the one most specific rule that extends it)
+//    private suspend fun executeAbstractSuspend(m2mExecution: M2mTransformExecution, rule: M2mTransformAbstractRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit =
+//        executeAbstractInternal(m2mExecution, rule, source, ruleArguments) { x, r, s, a -> executeRuleSuspend(x, r, s, a) }
 
     private suspend fun executeMappingSuspend(m2mExecution: M2mTransformExecution, rule: M2MTransformMapping, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) =
         executeMappingInternal(
@@ -699,6 +730,82 @@ class M2mTransformInterpreterCombined(
         issues.addAll(issuesBefore)
         domainAccessorMutatorByDomainName.forEach { (dn, am) -> am.issues.addAll(accessorIssuesBefore[dn] ?: emptySet()) }
         return M2MTransformResult(allIssues, m2mExecution.records, targetDomainRef)
+    }
+
+    /**
+     * rule extends as override: for each source binding, the most specific (non-abstract) rule that extends 'rule' and applies there
+     * (its templates match and its 'when' holds) is applied instead of 'rule', and its records are also recorded for 'rule'.
+     * If none applies, 'rule' itself is applied (an abstract rule applies nothing).
+     * If more than one applies and none of them extends the others, that is an error issue and nothing is applied for that binding.
+     */
+    private inline fun executeRuleWithOverridesInternal(
+        m2mExecution: M2mTransformExecution,
+        rule: M2mTransformRule,
+        source: Map<DomainReference, List<TypedObject>>,
+        ruleArguments: Map<String, TypedObject>,
+        ruleApplies: (m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) -> Boolean,
+        executeRuleOwn: (m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) -> Unit,
+        executeRule: (m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) -> Unit
+    ) {
+        val overriding = m2mExecution.targetTransform.rule.values.filter { r -> r !is M2mTransformAbstractRule && r !== rule && r.extendsRule(rule) }
+        when {
+            overriding.isEmpty() -> executeRuleOwn(m2mExecution, rule, source, ruleArguments)
+            else -> {
+                // one binding at a time: each combination of one object per source domain (a bound target value is kept as given)
+                val srcDomains = source.filterKeys { it != m2mExecution.targetDomainRef }
+                val tgtPart = source.filterKeys { it == m2mExecution.targetDomainRef }
+                srcDomains.cartesianProduct().forEach { combination ->
+                    val single = combination.mapValues { listOf(it.value) } + tgtPart
+                    val applying = overriding.filter { ruleApplies(m2mExecution, it, single, ruleArguments) }
+                    val mostSpecific = applying.filter { r -> applying.none { o -> o !== r && o.extendsRule(r) } }
+                    when {
+                        mostSpecific.isEmpty() -> executeRuleOwn(m2mExecution, rule, single, ruleArguments)
+                        mostSpecific.size > 1 -> m2mExecution.errorIssue(
+                            "More than one rule that extends '${rule.name.value}' applies to the same source, and none of them extends the others: ${mostSpecific.joinToString { "'${it.name.value}'" }}."
+                        )
+
+                        else -> {
+                            val winner = mostSpecific.first()
+                            executeRule(m2mExecution, winner, single, ruleArguments)
+                            // the winner's results are also results of 'rule' (e.g. for 'where map Rule' and 'mapped Rule')
+                            val known = m2mExecution.records[rule]?.alternatives ?: emptyList()
+                            m2mExecution.records[winner]?.bySource(combination.mapValues { listOf(it.value) })
+                                ?.filter { alt -> known.none { it === alt } }
+                                ?.forEach { m2mExecution.addRecord(rule, it) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * true if 'rule' applies to 'source' (one object per source domain): its templates match and its 'when' holds
+     */
+    private inline fun ruleAppliesInternal(
+        m2mExecution: M2mTransformExecution,
+        rule: M2mTransformRule,
+        source: Map<DomainReference, List<TypedObject>>,
+        ruleArguments: Map<String, TypedObject>,
+        matchSourceVariables: (m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, source: Map<DomainReference, List<TypedObject>>) -> Map<DomainReference, TemplateMatchAlternatives>,
+        executeWhen: (m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, when_: Expression, evc: EvaluationContext) -> Pair<Boolean, EvaluationContext>
+    ): Boolean = when (rule) {
+        is M2mTransformPatternRule -> {
+            val domToListOfAlts = matchSourceVariables(m2mExecution, rule, source)
+            val altSources = domToListOfAlts.map { (k, v) -> Pair(k, v.alternatives) }.toMap().cartesianProduct()
+            altSources.any { alt ->
+                val allVars = alt.values.merge()
+                when {
+                    allVars.isMatch.not() -> false
+                    else -> {
+                        val evc = EvaluationContext.of(ruleArguments + allVars.matchedVariables)
+                        rule.when_?.let { executeWhen(m2mExecution, rule, it, evc).first } ?: true
+                    }
+                }
+            }
+        }
+        //TODO: a table (or other rule kind) that extends another rule is never chosen as its override
+        else -> false
     }
 
     private inline fun executeAbstractInternal(

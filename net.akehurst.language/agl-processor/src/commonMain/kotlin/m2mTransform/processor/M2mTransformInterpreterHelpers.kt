@@ -18,6 +18,7 @@
 package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.expressions.asm.ExpressionExt.freeVariables
+import net.akehurst.language.m2mTransform.api.M2mTransformRule
 import net.akehurst.language.m2mTransform.api.RuleCall
 import net.akehurst.language.m2mTransform.api.RuleWhere
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
@@ -387,6 +388,26 @@ object M2mTransformInterpreterHelpers {
         }
         val cyclic = (0 until n).filter { unmet[it] > 0 }.map { steps[it] }
         return Pair(ordered, cyclic)
+    }
+
+    /**
+     * true if this rule extends 'other', directly or through other rules (an unresolved or cyclic extends is ignored here)
+     */
+    fun M2mTransformRule.extendsRule(other: M2mTransformRule): Boolean {
+        val visited = mutableSetOf<M2mTransformRule>()
+        fun ext(r: M2mTransformRule): Boolean = r.extends.any { ref ->
+            val sup = ref.resolved
+            when {
+                null == sup -> false
+                sup === other -> true
+                visited.any { it === sup } -> false
+                else -> {
+                    visited.add(sup)
+                    ext(sup)
+                }
+            }
+        }
+        return ext(this)
     }
 
     val RuleWhere.domainArgumentNames: List<String> get() = this.domainArguments.flatMap { (_, v) -> v.freeVariables } //TODO: does not handle RuleWhen freeVars !

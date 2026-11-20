@@ -353,6 +353,24 @@ class test_Doc_M2mTransform {
     }
 
     @Test
+    fun extending_rules() {
+        // m2m-transform.md: "Extending rules"
+        val actual = transform(
+            """
+            top mapping AnyLabel {
+              domain s o:Any {}
+              domain d l:String := 'other'
+            }
+            mapping CircleLabel : AnyLabel {
+              domain s c:Circle { name == n }
+              domain d l:String := 'circle ' + n
+            }
+            """
+        )
+        assertEquals(listOf("'circle c'", "'other'", "'circle d'", "'other'"), actual)
+    }
+
+    @Test
     fun collection_templates() {
         // m2m-transform.md: "Collection templates"
         val actual = transform(

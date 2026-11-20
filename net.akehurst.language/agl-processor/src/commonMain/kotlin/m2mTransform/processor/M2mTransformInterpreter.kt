@@ -45,13 +45,16 @@ data class M2MTransformResult(
     val record: Map<M2mTransformRule, MappingRecord>,
     val targetDomainRef: DomainReference
 ) {
+    /**
+     * the targets of the top rules; a record that is also kept for an extended rule (rule extends as override) is counted once
+     */
     val targets: List<TypedObject>
-        get() = record.values.flatMap {
-            if (it.rule.isTop) {
-                it.alternatives.mapNotNull { it[targetDomainRef] }
-            } else {
-                emptyList()
+        get() {
+            val alts = mutableListOf<Map<DomainReference, TypedObject>>()
+            record.values.filter { it.rule.isTop }.forEach { rec ->
+                rec.alternatives.forEach { alt -> if (alts.none { it === alt }) alts.add(alt) }
             }
+            return alts.mapNotNull { it[targetDomainRef] }
         }
 
     fun asString(indent: Indent = Indent()): String {

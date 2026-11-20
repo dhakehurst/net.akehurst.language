@@ -187,6 +187,31 @@ mapping SquareLabel : ShapeToLabel {
 
 Result: `'circle c'`, `'circle d'`, `'square s'`.
 
+An abstract rule is meant to have one extending rule that matches each source; if more than one matches, see below.
+
+## Extending rules
+
+A rule that extends another rule (`: Name`) replaces it wherever it applies. For each source binding, the most specific extending rule
+whose templates match and whose `when` holds is applied instead of the extended rule, and its result also counts as a result of the extended rule
+(for `where map Name` and `mapped Name`). The extended rule is applied to every other source. This holds wherever the extended rule is applied:
+as a `top` rule, or called from `where` (also `map all`) or `when`. The extending rule does not need to be `top`.
+It does not inherit the templates of the rule it extends; it gives its own.
+
+```
+top mapping AnyLabel {
+  domain s o:Any {}
+  domain d l:String := 'other'
+}
+mapping CircleLabel : AnyLabel {
+  domain s c:Circle { name == n }
+  domain d l:String := 'circle ' + n
+}
+```
+
+Result: `'circle c'`, `'other'`, `'circle d'`, `'other'` (the square and the connector are `'other'`), one result per source object.
+
+If more than one extending rule applies to the same source and none of them extends the others, that is an error and none is applied for that source.
+
 ## Collection templates
 
 `prop == [ ... ]` matches a collection. The members of the template are separated by `,`.
