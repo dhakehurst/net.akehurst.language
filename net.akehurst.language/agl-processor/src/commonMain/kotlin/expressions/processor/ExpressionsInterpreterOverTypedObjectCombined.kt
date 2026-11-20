@@ -17,6 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.expressions.asm.PropertyCallDefault
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
@@ -628,6 +629,27 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
      */
     protected open fun evaluateSpecialProperty(obj: TypedObject, name: String): TypedObject? = null
 
+    /**
+     * the value of '.\$type': the runtime type of 'obj' (a value of type 'std.Type'),
+     * found from the object itself by its own accessor-mutator, not the type it was cast to or declared as.
+     * The type of 'obj' is kept when it has the same definition, so that type arguments (e.g. of a List) are kept.
+     */
+    private fun evaluateRuntimeTypeOf(obj: TypedObject): TypedObject = when {
+        objectGraph.isNothing(obj) -> {
+            issues.warn(null, $$"Cannot get property '$${PropertyCallDefault.TYPE}' on $nothing, returning $nothing.")
+            objectGraph.nothing()
+        }
+
+        else -> {
+            val found = obj.accessor.typeFor(obj.self, obj.type)
+            val runtimeType = when {
+                found.resolvedDefinitionOrNull == obj.type.resolvedDefinitionOrNull -> obj.type
+                else -> found
+            }
+            objectGraph.typedAs(runtimeType, StdLibDefault.Type.type())
+        }
+    }
+
     private inline fun evaluateNavigationInternal(
         evc: EvaluationContext,
         expression: NavigationExpression,
@@ -641,6 +663,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         val result = expression.parts.fold(start) { acc, it ->
             when (it) {
                 is PropertyCall -> when {
+                    it.propertyName == PropertyCallDefault.TYPE -> evaluateRuntimeTypeOf(acc)
                     it.propertyName.startsWith("\$") -> evaluateSpecialProperty(acc, it.propertyName) ?: evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), it.asReference, getProperty)
                     else -> evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), it.asReference, getProperty)
                 }

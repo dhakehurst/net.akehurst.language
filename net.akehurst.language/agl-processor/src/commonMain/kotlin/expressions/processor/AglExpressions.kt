@@ -49,6 +49,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
     override val extends by lazy { listOf(AglBase) }
 
+    //TODO: future enhancement (David 2026-11-20): enum literals in expressions (e.g. 'Colour.RED').
+    // Today there is no syntax for them, 'Colour.RED' is read as navigation of a property 'Colour'.
+    // (std.Type therefore offers isEnum/isData/... Boolean properties rather than a 'kind' enum.)
     override val grammarString = $$"""
         namespace $$NAMESPACE_NAME
           grammar $$NAME : $${AglBase.NAME} {
