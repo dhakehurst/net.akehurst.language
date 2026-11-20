@@ -19,6 +19,7 @@ package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.expressions.asm.ExpressionExt.freeVariables
 import net.akehurst.language.m2mTransform.api.M2mTransformRule
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.m2mTransform.api.RuleCall
 import net.akehurst.language.m2mTransform.api.RuleWhere
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
@@ -391,12 +392,14 @@ object M2mTransformInterpreterHelpers {
     }
 
     /**
-     * true if this rule extends 'other', directly or through other rules (an unresolved or cyclic extends is ignored here)
+     * true if this rule extends 'other', directly or through other rules (an unresolved or cyclic extends is ignored here).
+     * 'ruleNamed' looks up a rule by name in the executing transform
      */
-    fun M2mTransformRule.extendsRule(other: M2mTransformRule): Boolean {
+    fun M2mTransformRule.extendsRule(other: M2mTransformRule, ruleNamed: (SimpleName) -> M2mTransformRule? = { null }): Boolean {
         val visited = mutableSetOf<M2mTransformRule>()
         fun ext(r: M2mTransformRule): Boolean = r.extends.any { ref ->
-            val sup = ref.resolved
+            // by name in the executing transform first: a rule inherited from an extended transform may be replaced ('override')
+            val sup = ruleNamed(ref.nameOrQName.simpleName) ?: ref.resolved
             when {
                 null == sup -> false
                 sup === other -> true
@@ -409,6 +412,14 @@ object M2mTransformInterpreterHelpers {
         }
         return ext(this)
     }
+
+    /**
+     * the rule a call refers to: looked up by name in the executing transform (so a rule inherited from an extended transform
+     * calls the replacing rule, marked 'override'), else the rule the call was resolved to
+     */
+    fun M2mTransformExecution.ruleFor(call: RuleCall): M2mTransformRule? = targetTransform.allRule[call.ruleName] ?: call.resolved
+
+    fun M2mTransformExecution.ruleNamed(name: SimpleName): M2mTransformRule? = targetTransform.allRule[name]
 
     val RuleWhere.domainArgumentNames: List<String> get() = this.domainArguments.flatMap { (_, v) -> v.freeVariables } //TODO: does not handle RuleWhen freeVars !
     val RuleCall.ruleArgumentNames: List<String> get() = this.ruleArguments.flatMap { (_, v) -> v.freeVariables } //TODO: does not handle RuleWhen freeVars !

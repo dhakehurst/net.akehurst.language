@@ -212,6 +212,35 @@ Result: `'circle c'`, `'other'`, `'circle d'`, `'other'` (the square and the con
 
 If more than one extending rule applies to the same source and none of them extends the others, that is an error and none is applied for that source.
 
+## Extending transforms
+
+A transform can extend other transforms (`transform T(...) : U`). It has the rules of `U` as well as its own, and both must have the same domains.
+A rule marked `override` replaces the inherited rule with the same name, everywhere, also where the inherited rules call it (`where map Name`, `mapped Name`, `: Name`).
+A rule with the same name as an inherited one must be marked `override`, and `override` on a rule with no inherited rule of that name is an error.
+So a transform can hold only the rules that are changed:
+
+```
+transform Labels(s:Shapes, d:Drawing) {
+  top mapping ItemLabel {
+    domain s o:Any {}
+    domain d l:String := 'item ' + k
+    where { map Kind { s := o  d := k } }
+  }
+  mapping Kind {
+    domain s o:Any {}
+    domain d k:String := 'shape'
+  }
+}
+transform MyLabels(s:Shapes, d:Drawing) : Labels {
+  override mapping Kind {
+    domain s o:Any {}
+    domain d k:String := o.$type.name
+  }
+}
+```
+
+Result of `MyLabels`: `'item Circle'`, `'item Square'`, `'item Circle'`, `'item Connection'`. `Labels` still gives `'item shape'` for every item.
+
 ## Collection templates
 
 `prop == [ ... ]` matches a collection. The members of the template are separated by `,`.

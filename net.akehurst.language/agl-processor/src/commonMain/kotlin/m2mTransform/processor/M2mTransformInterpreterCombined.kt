@@ -40,6 +40,8 @@ import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpe
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.MappingStepKind
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.orderMappingSteps
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.extendsRule
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.ruleFor
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.ruleNamed
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -747,7 +749,7 @@ class M2mTransformInterpreterCombined(
         executeRuleOwn: (m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) -> Unit,
         executeRule: (m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>) -> Unit
     ) {
-        val overriding = m2mExecution.targetTransform.rule.values.filter { r -> r !is M2mTransformAbstractRule && r !== rule && r.extendsRule(rule) }
+        val overriding = m2mExecution.targetTransform.allRule.values.filter { r -> r !is M2mTransformAbstractRule && r !== rule && r.extendsRule(rule) { m2mExecution.ruleNamed(it) } }
         when {
             overriding.isEmpty() -> executeRuleOwn(m2mExecution, rule, source, ruleArguments)
             else -> {
@@ -757,7 +759,7 @@ class M2mTransformInterpreterCombined(
                 srcDomains.cartesianProduct().forEach { combination ->
                     val single = combination.mapValues { listOf(it.value) } + tgtPart
                     val applying = overriding.filter { ruleApplies(m2mExecution, it, single, ruleArguments) }
-                    val mostSpecific = applying.filter { r -> applying.none { o -> o !== r && o.extendsRule(r) } }
+                    val mostSpecific = applying.filter { r -> applying.none { o -> o !== r && o.extendsRule(r) { m2mExecution.ruleNamed(it) } } }
                     when {
                         mostSpecific.isEmpty() -> executeRuleOwn(m2mExecution, rule, single, ruleArguments)
                         mostSpecific.size > 1 -> m2mExecution.errorIssue(
@@ -1201,7 +1203,7 @@ class M2mTransformInterpreterCombined(
     ): Pair<Boolean, EvaluationContext> {
         // TODO: use an extended Expression evaluator that handles the RuleWhen options, so we can have compound when-expressions
         return when (when_) {
-            is RuleWhenRelationHolds, is RuleWhenMappingHolds -> when_.resolved?.let { rule ->
+            is RuleWhenRelationHolds, is RuleWhenMappingHolds -> m2mExecution.ruleFor(when_)?.let { rule ->
                 // as QVT: a rule in 'when' is a precondition, it holds if the rule was applied with these source values
                 val source = getSource(m2mExecution, rule, when_.domainArguments, evc)
                 val found = findAppliedRecord(m2mExecution, rule, source) ?: run {
@@ -1219,7 +1221,7 @@ class M2mTransformInterpreterCombined(
                 Pair(false, evc)
             }
 
-            is RuleWhenRelationHoldsForAll, is RuleWhenMappingHoldsForAll -> when_.resolved?.let { rule ->
+            is RuleWhenRelationHoldsForAll, is RuleWhenMappingHoldsForAll -> m2mExecution.ruleFor(when_)?.let { rule ->
                 val source = getSource(m2mExecution, rule, when_.domainArguments, evc)
                 when (val elements = sourceElementsForAll(m2mExecution, owningRule, when_, source)) {
                     null -> Pair(false, evc)
@@ -1347,7 +1349,7 @@ class M2mTransformInterpreterCombined(
 
             // 2. Evaluate internal 'where' clauses
             val wherePassed = rule.where.all { rw ->
-                when (val childWhereRule = rw.resolved) {
+                when (val childWhereRule = m2mExecution.ruleFor(rw)) {
                     is M2MTransformRelation -> checkRelation(m2mExecution, childWhereRule, rw.domainArguments, altEvc).first
                     null -> {
                         m2mExecution.errorIssue("In 'where' clause of rule '${rule.name.value}', rule '${rw.ruleName.value}' is unresolved in '${m2mExecution.targetTransform.name.value}'.")
@@ -1441,7 +1443,7 @@ class M2mTransformInterpreterCombined(
             Pair(it.key.value, value)
         }
         return when (where) { //TODO: support more complex expressions - override the expression interpreter to intercept function calls as rule-calls
-            is RuleWhereCallRelation, is RuleWhereCallMapping -> where.resolved?.let { rule ->
+            is RuleWhereCallRelation, is RuleWhereCallMapping -> m2mExecution.ruleFor(where)?.let { rule ->
                 val boundArgs = evaluateArguments(m2mExecution, where.domainArguments, evc)
                 val tgtValue = executeRuleWhere(m2mExecution, owningRule, rule, ruleArguments, boundArgs)
                 if (null == tgtValue) m2mExecution.warnIssue("In rule '${owningRule.name.value}' the 'where' clause matched nothing.")
@@ -1471,7 +1473,7 @@ class M2mTransformInterpreterCombined(
                 evc
             }
 
-            is RuleWhereCallRelationForAll, is RuleWhereCallMappingForAll -> where.resolved?.let { rule ->
+            is RuleWhereCallRelationForAll, is RuleWhereCallMappingForAll -> m2mExecution.ruleFor(where)?.let { rule ->
                 val tgtElemType = rule.domainSignature[m2mExecution.targetDomainRef]?.variable?.type ?: StdLibDefault.AnyType
                 val tgtType = StdLibDefault.List.type(listOf(tgtElemType.asTypeArgument)) //TODO: get this from tgt variable
                 val boundArgs = evaluateArguments(m2mExecution, where.domainArguments, evc)

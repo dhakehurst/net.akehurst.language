@@ -129,8 +129,26 @@ class M2mTransformRuleSetDefault(
 
     override val extends: List<M2mTransformRuleSetReference> = argExtends.toMutableList()
     override val importTypes: List<Import> = mutableListOf()
-    override val topRule: List<M2mTransformRule> get() = rule.values.filter { it.isTop }
+    override val topRule: List<M2mTransformRule> get() = allRule.values.filter { it.isTop }
     override val rule: Map<SimpleName, M2mTransformRule> = mutableMapOf()
+    override val allRule: Map<SimpleName, M2mTransformRule> get() = allRuleVisiting(mutableListOf())
+
+    /** an extends cycle is an error found by the semantic analyser, here a transform already visited is skipped */
+    private fun allRuleVisiting(visited: MutableList<M2mTransformRuleSet>): Map<SimpleName, M2mTransformRule> {
+        visited.add(this)
+        val result = linkedMapOf<SimpleName, M2mTransformRule>()
+        extends.forEach { ref ->
+            val sup = ref.resolved
+            when {
+                null == sup -> Unit
+                visited.any { it === sup } -> Unit
+                sup is M2mTransformRuleSetDefault -> result.putAll(sup.allRuleVisiting(visited))
+                else -> result.putAll(sup.allRule)
+            }
+        }
+        result.putAll(rule)
+        return result
+    }
     override val domainParameterResolved: Map<DomainReference, TypesDomain> get() = _domainParameterResolved
 
     init {
@@ -181,6 +199,7 @@ abstract class M2mTransformRuleAbstract(
 ) : M2mTransformRule {
     override val parameters: List<VariableDefinition> = mutableListOf()
     override val extends: List<M2mTransformRuleReference> = mutableListOf()
+    override var isOverride: Boolean = false
 
     override fun conformsTo(other: M2mTransformRule): Boolean = when {
         other === this -> true

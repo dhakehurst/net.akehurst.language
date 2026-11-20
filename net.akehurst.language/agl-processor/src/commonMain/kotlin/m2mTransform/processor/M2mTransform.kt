@@ -66,10 +66,10 @@ grammar $NAME : Base {
   extends = ':' [possiblyQualifiedName / ',']+ ;
   typeImport = 'import-types' possiblyQualifiedName ;
   transformRule = abstractRule | relationRule | mappingRule | tableRule ;
-  abstractRule = 'abstract' 'top'? 'rule' ruleName ruleParameters? extends? '{' domainSignature* '}' ;
-  relationRule = 'top'? 'relation' ruleName ruleParameters? extends? '{' pivot* domainTemplate 2+ when? where? '}' ;
-  mappingRule = 'top'? 'mapping' ruleName ruleParameters? extends? '{' domainTemplate+ domainAssignment when? where? '}' ;
-  tableRule = 'top'? 'table' ruleName ruleParameters? extends? '{' unnamedDomainSignature 2+ values+ when? where? '}' ;
+  abstractRule = 'override'? 'abstract' 'top'? 'rule' ruleName ruleParameters? extends? '{' domainSignature* '}' ;
+  relationRule = 'override'? 'top'? 'relation' ruleName ruleParameters? extends? '{' pivot* domainTemplate 2+ when? where? '}' ;
+  mappingRule = 'override'? 'top'? 'mapping' ruleName ruleParameters? extends? '{' domainTemplate+ domainAssignment when? where? '}' ;
+  tableRule = 'override'? 'top'? 'table' ruleName ruleParameters? extends? '{' unnamedDomainSignature 2+ values+ when? where? '}' ;
   ruleParameters = '(' [variableDefinition / ',']+ ')' ;
   pivot = 'pivot' variableDefinition ;
   domainPrimitive = 'primitive' 'domain' variableDefinition ;
@@ -188,12 +188,12 @@ grammar $NAME : Base {
                         ref("tableRule")
                     }
                     concatenation("abstractRule") {
-                        lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
+                        opt { lit("override") }; lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("domainSignature") }
                         lit("}")
                     }
                     concatenation("relationRule") {
-                        opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
+                        opt { lit("override") }; opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("pivot") }
                         lst(2, -1) { ref("domainTemplate") }
                         opt { ref("when") }
@@ -201,7 +201,7 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("mappingRule") {
-                        opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
+                        opt { lit("override") }; opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(1, -1) { ref("domainTemplate") }
                         ref("domainAssignment")
                         opt { ref("when") }
@@ -209,7 +209,7 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("tableRule") {
-                        opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
+                        opt { lit("override") }; opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(2, -1) { ref("unnamedDomainSignature") }
                         lst(1, -1) { ref("values") }
                         opt { ref("when") }
