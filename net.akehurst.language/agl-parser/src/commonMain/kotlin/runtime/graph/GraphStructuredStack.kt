@@ -104,6 +104,7 @@ class GraphStructuredStack<E>(
     fun push(currentHead: E, nextHead: E) {
         this._growingHeadHeap.remove(currentHead)
         var set = _previous[nextHead]
+        val existed = null != set
         if (null == set) {
             set = linkedSetOf()
             _previous[nextHead] = set
@@ -113,6 +114,12 @@ class GraphStructuredStack<E>(
             // nothing
         }
         val added = set.add(currentHead)
+        if (existed && added && null == this._growingHeadHeap.peekOneOf(nextHead)) {
+            // nextHead is already in the GSS and has already been grown (it is no longer a head),
+            // so it would never grow over this new previous: make it a head again.
+            // (Happens within one input position, e.g. with empty rules; before 2026-11-21 the result depended on processing order.)
+            this._growingHeadHeap[nextHead] = nextHead
+        }
         if (added) {
             val hc = this._count[currentHead]
             if (null == hc) { // should not happen !
