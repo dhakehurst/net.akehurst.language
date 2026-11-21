@@ -535,42 +535,26 @@ internal class RuntimeParserAgl(
                             })
                         val trhs = grp.value.filter { it.action == ParseAction.HEIGHT }
                         */
-                        if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
-                            var doneIt = false
-                            var i = 0
-                            while (doneIt.not() && i < trgs.size) {
-                                val b = take(trgs[i])
-                                grownGraft = grownGraft || b
-                                doneIt = doneIt || b
-                                ++i
-                            }
-                            i = 0
-                            while (doneIt.not() && i < trhs.size) {
-                                val b = take(trhs[i])
-                                grownHeight = grownHeight || b
-                                doneIt = doneIt || b
-                                ++i
-                            }
-                        } else {
-                            for (tr in grp.value) {
-                                when (tr.action) {
-                                    ParseAction.HEIGHT -> {
-                                        val b = take(tr)
-                                        grownHeight = grownHeight || b
-                                    }
-
-                                    ParseAction.GRAFT -> {
-                                        val b = take(tr)
-                                        grownGraft = grownGraft || b
-                                    }
-
-                                    ParseAction.GOAL -> {
-                                        val b = take(tr)
-                                        grownGraft = grownGraft || b
-                                    }
-
-                                    else -> error("Internal Error: should only have HEIGHT or GRAFT or GOAL transitions here")
+                        // every transition is taken: preferring GRAFT over HEIGHT here dropped a HEIGHT before the rest of the input was seen,
+                        // which changed the language (e.g. S = N1 'a' N1 | <EMPTY> ; N1 = S 'b' | S rejected 'aabb')
+                        for (tr in grp.value) {
+                            when (tr.action) {
+                                ParseAction.HEIGHT -> {
+                                    val b = take(tr)
+                                    grownHeight = grownHeight || b
                                 }
+
+                                ParseAction.GRAFT -> {
+                                    val b = take(tr)
+                                    grownGraft = grownGraft || b
+                                }
+
+                                ParseAction.GOAL -> {
+                                    val b = take(tr)
+                                    grownGraft = grownGraft || b
+                                }
+
+                                else -> error("Internal Error: should only have HEIGHT or GRAFT or GOAL transitions here")
                             }
                         }
                     }
@@ -807,23 +791,9 @@ internal class RuntimeParserAgl(
         val precRules = this.stateSet.precedenceRulesFor(runtimeContext.head.state)
         return when {
             null == precRules -> when {
-                2 > transitions.size -> transitions.map { it.first }
-                else -> {
-                    //if no explicit preference, prefer GRAFT over HEIGHT for same rule
-                    val toGrp = transitions.groupBy { it.first.target.runtimeRulesAsSet }
-                    toGrp.flatMap {
-                        val actGrp = it.value.groupBy { it.first.action }
-                        when {
-                            2 > actGrp.size -> it.value.map { it.first }
-                            else -> {
-                                val grafts = actGrp[ParseAction.GRAFT]!!
-                                // FIXME: this silently picks one parse (GRAFT over HEIGHT, then the left-most GRAFT target).
-                                //  It is an ambiguity that is not reported, e.g. by the streaming parse (ParseStreamer). Look into this later.
-                                resolveGrafts1(grafts)
-                            }
-                        }
-                    }
-                }
+                // no preference rule: all transitions are kept, the tree is chosen when the alternatives meet (merge decision).
+                // (Before 2026-11-21 GRAFT was preferred over HEIGHT here, which could drop a needed HEIGHT.)
+                else -> transitions.map { it.first }
             }
 
             else -> {

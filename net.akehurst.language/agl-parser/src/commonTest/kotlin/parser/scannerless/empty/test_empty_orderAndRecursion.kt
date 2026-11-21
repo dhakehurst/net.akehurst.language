@@ -101,4 +101,47 @@ class test_empty_orderAndRecursion {
 
     @Test
     fun nullableRecursion_abb() = assertParsesInAllModes(::nullableRecursion, "abb", listOf("a", "ab"))
+
+    // S = N1 'a' N1 | <EMPTY> ; N1 = S 'b' | S
+    // At position 1 the empty N1 can GRAFT into the outer S or HEIGHT into an inner S;
+    // preferring the GRAFT dropped the HEIGHT that is needed, so 'aabb' was rejected.
+    private fun graftAndHeight() = runtimeRuleSet {
+        choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation { ref("N1"); literal("a"); ref("N1") }
+            concatenation { empty() }
+        }
+        choice("N1", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation { ref("S"); literal("b") }
+            concatenation { ref("S") }
+        }
+    }
+
+    @Test
+    fun graftAndHeight_aabb() = assertParsesInAllModes(::graftAndHeight, "aabb", listOf("a", "ab", "aab"))
+
+    @Test
+    fun graftAndHeight_a_ab_aab() {
+        for (s in listOf("a", "ab", "ba", "aab", "aba")) assertParsesInAllModes(::graftAndHeight, s, listOf("aabb"))
+    }
+
+    // S = N3 | S N1 'a' | N3 N3 ; N1 = <EMPTY> | N2 'b' ; N2 = S N1 | 'a' 'b' ; N3 = <EMPTY>
+    private fun leftRecursiveEmpties() = runtimeRuleSet {
+        choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation { ref("N3") }
+            concatenation { ref("S"); ref("N1"); literal("a") }
+            concatenation { ref("N3"); ref("N3") }
+        }
+        choice("N1", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation { empty() }
+            concatenation { ref("N2"); literal("b") }
+        }
+        choice("N2", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation { ref("S"); ref("N1") }
+            concatenation { literal("a"); literal("b") }
+        }
+        choice("N3", RuntimeRuleChoiceKind.AMBIGUOUS) { concatenation { empty() } }
+    }
+
+    @Test
+    fun leftRecursiveEmpties_bba() = assertParsesInAllModes(::leftRecursiveEmpties, "bba", listOf("a", "ba"))
 }
