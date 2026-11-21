@@ -198,6 +198,8 @@ internal class ParseGraph(
 
     val peekNextHead get() = this._gss.peekFirstHead!!
 
+    fun startGrowing(head: GrowingNodeIndex) = this._gss.startGrowing(head)
+
     val isEmpty: Boolean get() = _gss.isEmpty && treeData.isClean
 
     fun createGrowingNodeIndex(

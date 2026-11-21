@@ -49,6 +49,7 @@ class GraphStructuredStack<E>(
     fun extractRoot() = this._growingHeadHeap.extractRoot()!!
 
     fun clear() {
+        this._toRegrow.clear()
         this._count.clear()
         this._previous.clear()
         this._growingHeadHeap.clear()
@@ -101,8 +102,20 @@ class GraphStructuredStack<E>(
      * will not create new head if nextHead already exists somewhere in the GSS
      * returns true if created a new head
      */
+    // nodes made a head again because they got a new previous after they were grown (see push), and not yet grown again.
+    // They must stay heads until grown, even if another push (with it as the previous) or a drop happens first;
+    // before 2026-11-22 that removed them, and whether it did depended on the order of transitions (hash order).
+    private val _toRegrow = hashSetOf<E>()
+
+    /**
+     * [head] is about to be grown
+     */
+    fun startGrowing(head: E) {
+        this._toRegrow.remove(head)
+    }
+
     fun push(currentHead: E, nextHead: E) {
-        this._growingHeadHeap.remove(currentHead)
+        if (this._toRegrow.contains(currentHead).not()) this._growingHeadHeap.remove(currentHead)
         var set = _previous[nextHead]
         val existed = null != set
         if (null == set) {
@@ -119,6 +132,7 @@ class GraphStructuredStack<E>(
             // so it would never grow over this new previous: make it a head again.
             // (Happens within one input position, e.g. with empty rules; before 2026-11-21 the result depended on processing order.)
             this._growingHeadHeap[nextHead] = nextHead
+            this._toRegrow.add(nextHead)
         }
         if (added) {
             val hc = this._count[currentHead]
@@ -139,6 +153,7 @@ class GraphStructuredStack<E>(
     fun peekPrevious(head: E): Set<E> = _previous[head]?.toMutableSet() ?: emptySet()
 
     fun pop(head: E): Set<E> {
+        if (this._toRegrow.contains(head)) return this._previous[head]?.toSet() ?: emptySet() // still to be grown, see _toRegrow
         this._growingHeadHeap.remove(head)
         val count = this._count[head]
         return if (null == count) {
@@ -196,6 +211,7 @@ class GraphStructuredStack<E>(
      * if the head is part of other stacks it will not be dropped
      */
     fun dropStack(head: E, ifDropped: (n: E) -> Unit): Boolean {
+        if (this._toRegrow.contains(head)) return false // still to be grown, see _toRegrow
         val d = this._growingHeadHeap.remove(head)
         return this.removeStack(head, ifDropped)
     }

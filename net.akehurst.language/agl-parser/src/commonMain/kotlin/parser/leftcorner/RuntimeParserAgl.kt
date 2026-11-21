@@ -265,6 +265,7 @@ internal class RuntimeParserAgl(
             }
 
             val head = this.graph.peekNextHead
+            this.graph.startGrowing(head)
 
             //TODO: move empty checking stuff to doWidth
             if (head.isEmptyMatch && doneEmpties.contains(Pair(head.state, graph.previousOf(head).map { Pair(it, graph.previousOf(it)) }))) {
@@ -435,6 +436,41 @@ internal class RuntimeParserAgl(
             }
         }
 
+    private val _selfNestingListItem = HashMap<Set<RuntimeRule>, RuntimeRule?>()
+
+    /**
+     * When [rules] is one list rule L without a maximum, whose item rule E derives L by unit steps only
+     * (E = ... | L, possibly through other single item rules), return E, else null.
+     * For such a list, when a complete E can both be GRAFTed into an L (as its next item) and start a new L by HEIGHT,
+     * the HEIGHT is not needed: every sentence the new (nested) L leads to is also accepted
+     * by continuing the outer L with the items of the nested one (no maximum, so any number of items is allowed).
+     * Without dropping it, an expression like '1 + 1 + ... + 1' is parsed in every possible nesting (very slow).
+     */
+    private fun selfNestingListItem(rules: Set<RuntimeRule>): RuntimeRule? = _selfNestingListItem.getOrPut(rules) {
+        val list = rules.singleOrNull() ?: return@getOrPut null
+        val item = when (val rhs = list.rhs) {
+            is RuntimeRuleRhsListSimple -> if (RuntimeRuleRhsList.MULTIPLICITY_N == rhs.max) rhs.repeatedRhsItem else null
+            is RuntimeRuleRhsListSeparated -> if (RuntimeRuleRhsList.MULTIPLICITY_N == rhs.max) rhs.repeatedRhsItem else null
+            else -> null
+        } ?: return@getOrPut null
+        // unit steps: a choice option or a concatenation with exactly one item
+        val done = mutableSetOf<RuntimeRule>()
+        val todo = ArrayDeque(listOf(item))
+        var found = false
+        while (todo.isNotEmpty() && found.not()) {
+            val r = todo.removeFirst()
+            if (done.add(r).not()) continue
+            val units = when (val rhs = r.rhs) {
+                is RuntimeRuleRhsChoice, is RuntimeRuleRhsConcatenation -> rhs.rhsItems.filter { 1 == it.size }.map { it[0] as RuntimeRule }
+                else -> emptyList()
+            }
+            for (u in units) {
+                if (u == list) found = true else todo.add(u)
+            }
+        }
+        if (found) item else null
+    }
+
     private fun growComplete2(
         head: GrowingNodeIndex,
         previous: GrowingNodeIndex,
@@ -537,7 +573,16 @@ internal class RuntimeParserAgl(
                         */
                         // every transition is taken: preferring GRAFT over HEIGHT here dropped a HEIGHT before the rest of the input was seen,
                         // which changed the language (e.g. S = N1 'a' N1 | <EMPTY> ; N1 = S 'b' | S rejected 'aabb')
-                        for (tr in grp.value) {
+                        // Except for a list that nests in itself as an item, see [selfNestingListItem]
+                        val nestItem = selfNestingListItem(grp.key)
+                        if (null != nestItem && trgs.isNotEmpty() && trhs.isNotEmpty() && head.state.runtimeRulesAsSet.contains(nestItem)) {
+                            var g = false
+                            for (tr in trgs) g = take(tr) || g
+                            grownGraft = grownGraft || g
+                            if (g.not()) {
+                                for (tr in trhs) grownHeight = take(tr) || grownHeight
+                            }
+                        } else for (tr in grp.value) {
                             when (tr.action) {
                                 ParseAction.HEIGHT -> {
                                     val b = take(tr)
@@ -891,6 +936,7 @@ internal class RuntimeParserAgl(
             //while ((this.canGrow && this.graph.goals.isEmpty())) {
             //val nextToProcess = this.graph.nextToProcess()
             val head = this.graph.peekNextHead
+            this.graph.startGrowing(head)
             checkForTerminationRequest()
             // val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
             val grown = growHead(head, possibleEndOfText, growArgs)
@@ -909,6 +955,7 @@ internal class RuntimeParserAgl(
             //while ((this.canGrow && this.graph.goals.isEmpty())) {
             //val nextToProcess = this.graph.nextToProcess()
             val head = this.graph.peekNextHead
+            this.graph.startGrowing(head)
             checkForTerminationRequest()
             //val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
             val grown = growHead(head, possibleEndOfText, growArgs)
