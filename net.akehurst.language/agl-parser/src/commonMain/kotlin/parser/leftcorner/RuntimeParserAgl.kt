@@ -757,6 +757,8 @@ internal class RuntimeParserAgl(
                     // at the end of the text (e.g. the position given to expectedAt) every continuation is still possible,
                     // so preference rules (which choose by the next token) must not drop any
                     atEnd -> transitions
+                    // no preference rule for the head: the filter keeps every candidate (Def 55), so no static guard is needed
+                    null == this.stateSet.precedenceRulesFor(runtimeContext.head.state) -> transitions
                     else -> resolvePrecedence(transitions.map { Pair(it, staticGuard(it, runtimeContext)) }, runtimeContext, possibleEndOfText, parseArgs)
                 }
                 val transWithValidLookahead = transitionsWithValidLookahead(runtimeContext, kept, possibleEndOfText, parseArgs)
