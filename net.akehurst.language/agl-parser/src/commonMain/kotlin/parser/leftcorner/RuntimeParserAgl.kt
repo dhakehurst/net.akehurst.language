@@ -436,6 +436,31 @@ internal class RuntimeParserAgl(
             }
         }
 
+    /**
+     * A HEIGHT that starts a list L without maximum with a complete [head] E whose option is exactly L
+     * (E = ... | L | ... or E = L) only nests the start of L in L: L{ E{ L{x} } w }.
+     * The same text is accepted by the flat L{ x w } (no maximum, and x already has the minimum number of items),
+     * so the HEIGHT is not needed. Together with [heightOnlyNests] (nesting after the first item) the lists stay flat.
+     * Static (head state and target only), so it does not depend on what was parsed before.
+     */
+    private fun nestsListAtStart(head: GrowingNodeIndex, tr: Transition): Boolean {
+        if (ParseAction.HEIGHT != tr.action) return false
+        val list = tr.target.runtimeRulesAsSet.singleOrNull() ?: return false
+        val unbounded = when (val rhs = list.rhs) {
+            is RuntimeRuleRhsListSimple -> RuntimeRuleRhsList.MULTIPLICITY_N == rhs.max
+            is RuntimeRuleRhsListSeparated -> RuntimeRuleRhsList.MULTIPLICITY_N == rhs.max
+            else -> false
+        }
+        if (unbounded.not()) return false
+        return head.state.rulePosition.all { rp ->
+            rp.isAtEnd && when (val rhs = rp.rule.rhs) {
+                is RuntimeRuleRhsChoice -> rhs.rhsItems.getOrNull(rp.option.asIndex)?.let { 1 == it.size && it[0] == list } ?: false
+                is RuntimeRuleRhsConcatenation -> rhs.rhsItems.size == 1 && rhs.rhsItems[0].let { 1 == it.size && it[0] == list }
+                else -> false
+            }
+        }
+    }
+
     private val _selfNestingListItem = HashMap<Set<RuntimeRule>, RuntimeRule?>()
 
     /**
@@ -531,6 +556,7 @@ internal class RuntimeParserAgl(
         var grownHeight = false
         var grownGraft = false
         val transitions = head.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
+            .filterNot { nestsListAtStart(head, it) }
         // take each transition at most once, even when it is a choice for more than one rule position of a merged previous
         val taken = mutableMapOf<Transition, Boolean>()
         fun take(tr: Transition): Boolean = taken.getOrPut(tr) {

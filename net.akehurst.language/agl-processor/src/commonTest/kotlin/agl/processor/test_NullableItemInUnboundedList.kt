@@ -122,4 +122,45 @@ class test_NullableItemInUnboundedList {
         )
         assertEquals(listOf("In rule 'S', the separated list of 'A' has no maximum and both its item and separator can be empty: a sentence has infinitely many trees."), w)
     }
+
+    private fun cycleWarnings(grammar: String): List<String> {
+        val res = Agl.processorFromStringSimple(GrammarString(grammar))
+        res.processor ?: error(res.issues.toString())
+        return res.issues.warnings.map { it.message }.filter { it.contains("derives itself") }
+    }
+
+    @Test
+    fun unit_cycle_through_list() {
+        val w = cycleWarnings(
+            """
+            namespace t
+            grammar T {
+                S = E ;
+                E = 'a' | L ;
+                L = [E / ',']+ ;
+            }
+            """.trimIndent()
+        )
+        assertEquals(
+            listOf(
+                "Rule 'E' derives itself by single-item steps without consuming input (E -> L -> E): a sentence has infinitely many trees.",
+                "Rule 'L' derives itself by single-item steps without consuming input (L -> E -> L): a sentence has infinitely many trees."
+            ), w
+        )
+    }
+
+    @Test
+    fun no_unit_cycle() {
+        val w = cycleWarnings(
+            """
+            namespace t
+            grammar T {
+                S = E ;
+                E = 'a' | L ;
+                L = [E / ',']2+ ;
+            }
+            """.trimIndent()
+        )
+        assertEquals(emptyList(), w)
+    }
 }

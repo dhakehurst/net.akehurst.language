@@ -54,16 +54,17 @@ internal class GrowingNodeIndex(
         // For an unbounded list (max = -1) the count is capped at K = max(min, 1) (items),
         // the list guards give the same answer for every count >= K, so larger counts need not split the node.
         // Without the cap a list node is split n times (n^2 more edges).
+        // Not capped when the item derives the list by two or more unit steps (see RuntimeRuleRhsList.itemDerivesListByLongUnitChain).
         fun listSize(runtimeRule: RuntimeRule, numNonSkipChildren: Int): Int = when (val rhs = runtimeRule.rhs) {
             is RuntimeRuleRhsListSimple -> {
                 val k = maxOf(rhs.min, 1)
-                if (-1 == rhs.max && numNonSkipChildren > k) k else numNonSkipChildren
+                if (-1 == rhs.max && numNonSkipChildren > k && rhs.itemDerivesListByLongUnitChain.not()) k else numNonSkipChildren
             }
 
             is RuntimeRuleRhsListSeparated -> {
                 // keep the parity (item vs separator position)
                 val k = maxOf(rhs.min, 1)
-                if (-1 == rhs.max && numNonSkipChildren > 2 * k + 1) 2 * k + (numNonSkipChildren % 2) else numNonSkipChildren
+                if (-1 == rhs.max && numNonSkipChildren > 2 * k + 1 && rhs.itemDerivesListByLongUnitChain.not()) 2 * k + (numNonSkipChildren % 2) else numNonSkipChildren
             }
 
             is RuntimeRuleRhsNonTerminal -> numNonSkipChildren

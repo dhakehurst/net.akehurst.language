@@ -114,6 +114,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 this.checkLeafChoices(grammar)
                 this.checkOptionalsCoveredByList(grammar)
                 this.checkNullableItemInUnboundedList(grammar)
+                this.checkUnitCycles(grammar)
                 this.checkOptions(grammar)
                 if (this@AglGrammarSemanticAnalyser._issues.errors.isEmpty() && _analyseAmbiguities) {
                     this.checkForAmbiguities(grammar, automatonKind)
@@ -246,6 +247,54 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         }
         grammar.grammarRule.forEach { rule ->
             if (rule.isLeaf.not()) check(rule, rule.rhs, emptySet())
+        }
+    }
+
+    /**
+     * A rule that derives itself by single-item steps (without consuming input), e.g. E = 'a' | L ; L = [E / ',']+ ,
+     * is a cyclic grammar: a sentence has infinitely many trees. The parser gives a loop free tree, warn about it.
+     * A single-item step is a choice alternative, a group, an optional, a list with minimum 0 or 1,
+     * or a concatenation where all other items can be empty.
+     */
+    private fun checkUnitCycles(grammar: Grammar) {
+        val nullableRules = nullableRules(grammar)
+        fun unitRules(item: RuleItem): List<GrammarRule> = when (item) {
+            is NonTerminal -> referencedRuleOrNull(item)?.let { if (it.isLeaf) emptyList() else listOf(it) } ?: emptyList()
+            is Choice -> item.alternative.flatMap { unitRules(it) }
+            is Group -> unitRules(item.groupedContent)
+            is OptionalItem -> unitRules(item.item)
+            is ListOfItems -> if (item.max != 0 && item.min <= 1) unitRules(item.item) else emptyList()
+            is Concatenation -> item.items.flatMapIndexed { i, it ->
+                val othersNullable = item.items.filterIndexed { j, _ -> j != i }.all { o -> isNullable(o, nullableRules) }
+                if (othersNullable) unitRules(it) else emptyList()
+            }
+            else -> emptyList()
+        }
+        val edges = mutableMapOf<GrammarRule, List<GrammarRule>>()
+        fun edgesOf(r: GrammarRule) = edges.getOrPut(r) { unitRules(r.rhs).distinct() }
+        grammar.grammarRule.filter { it.isLeaf.not() && it.isSkip.not() }.forEach { rule ->
+            // shortest cycle back to rule (breadth first)
+            val parent = mutableMapOf<GrammarRule, GrammarRule>()
+            val todo = ArrayDeque(listOf(rule))
+            var found = false
+            while (todo.isNotEmpty() && found.not()) {
+                val r = todo.removeFirst()
+                for (n in edgesOf(r)) {
+                    if (n == rule) { parent[rule] = r; found = true; break }
+                    if (parent.containsKey(n).not()) { parent[n] = r; todo.add(n) }
+                }
+            }
+            if (found) {
+                val path = mutableListOf(rule)
+                var c = parent[rule]!!
+                while (c != rule) { path.add(0, c); c = parent[c]!! }
+                path.add(0, rule)
+                issueWarn(
+                    rule,
+                    "Rule '${rule.name}' derives itself by single-item steps without consuming input (${path.joinToString(" -> ") { it.name.toString() }}): a sentence has infinitely many trees.",
+                    null
+                )
+            }
         }
     }
 

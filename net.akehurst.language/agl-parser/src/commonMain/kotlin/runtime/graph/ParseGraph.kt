@@ -466,6 +466,29 @@ internal class ParseGraph(
         return ifEqual(newReasonList)
     }
 
+    /**
+     * true when one of [children] that spans the same input as [parent] leads, through stored children that also span
+     * the same input, back to a node of the same rule and span as [parent].
+     * Only possible with a cyclic grammar (a rule that derives itself by single-item steps, e.g. E = 'a' | L ; L = [E / ',']+),
+     * which has infinitely many trees; taking such an alternative would make the tree loop.
+     */
+    private fun leadsBackTo(parent: SpptDataNode, children: List<SpptDataNode>): Boolean {
+        val start = parent.startPosition
+        val end = parent.nextInputPosition
+        fun sameSpan(n: SpptDataNode) = n.startPosition == start && n.nextInputPosition == end
+        val visited = mutableSetOf<SpptDataNode>()
+        val todo = ArrayDeque(children.filter { sameSpan(it) })
+        while (todo.isNotEmpty()) {
+            val n = todo.removeFirst()
+            if (n.rule == parent.rule) return true
+            if (visited.add(n).not()) continue
+            val stored = this.treeData.preferred(n) ?: n
+            if (stored.rule.isTerminal) continue
+            this.treeData.complete.childrenFor(stored).forEach { (_, ch) -> ch.filter { sameSpan(it) }.forEach { todo.add(it) } }
+        }
+        return false
+    }
+
     private fun mergeDecision(existingParent: SpptDataNode, newParent: SpptDataNode): MergeDecision {
         return when {
             newParent.rule.isChoice -> {
@@ -627,7 +650,11 @@ internal class ParseGraph(
             val existingComplete = this.treeData.preferred(newParent)
             if (null != existingComplete) {
                 // already completed this parent - should we use new or existing parent
-                val md = this.mergeDecision(existingComplete, newParent)
+                val md = when {
+                    // loop-free tree (David Q11, 2026-11-22): never take an alternative that leads back to this node over the same span
+                    leadsBackTo(newParent, listOf(child)) -> MergeDecision(emptyList(), MergeChoice.PREFER_EXISTING, "new alternative is a loop")
+                    else -> this.mergeDecision(existingComplete, newParent)
+                }
                 //println("MergeDecision-F on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentFirstChild(existingComplete, parent, child, previous)
@@ -691,7 +718,11 @@ internal class ParseGraph(
             val newParent = parent.complete
             val existingComplete = this.treeData.preferred(newParent)
             if (null != existingComplete) {
-                val md = this.mergeDecision(existingComplete,newParent)
+                val md = when {
+                    // loop-free tree, see growNextParent (only the last child can span the whole node)
+                    leadsBackTo(newParent, listOf(child)) -> MergeDecision(emptyList(), MergeChoice.PREFER_EXISTING, "new alternative is a loop")
+                    else -> this.mergeDecision(existingComplete, newParent)
+                }
                 //println("MergeDecision-N on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentLastChild(previous, parent, child, prevPrev)
