@@ -113,6 +113,8 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 this.checkPreferenceRules(grammar)
                 this.checkLeafChoices(grammar)
                 this.checkOptionalsCoveredByList(grammar)
+                this.checkNullableItemInUnboundedList(grammar)
+                this.checkUnitCycles(grammar)
                 this.checkOptions(grammar)
                 if (this@AglGrammarSemanticAnalyser._issues.errors.isEmpty() && _analyseAmbiguities) {
                     this.checkForAmbiguities(grammar, automatonKind)
@@ -199,6 +201,134 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 }
             }
         }
+    }
+
+    /**
+     * A list with no maximum whose item can match nothing (is nullable) has infinitely many trees for a sentence:
+     * any number of empty items can be added. The parser only builds some of them, so warn.
+     * For a separated list this is only so when the separator can be empty too (otherwise the separators bound the number of items).
+     */
+    private fun checkNullableItemInUnboundedList(grammar: Grammar) {
+        val nullableRules = nullableRules(grammar)
+        fun nullable(item: RuleItem) = isNullable(item, nullableRules)
+        fun check(rule: GrammarRule, item: RuleItem, visiting: Set<RuleItem>) {
+            if (visiting.contains(item)) return
+            val v = visiting + item
+            when (item) {
+                is SeparatedList -> {
+                    if (-1 == item.max && nullable(item.item) && nullable(item.separator)) {
+                        issueWarn(
+                            item,
+                            "In rule '${rule.name}', the separated list of '${itemText(item.item)}' has no maximum and both its item and separator can be empty: a sentence has infinitely many trees.",
+                            null
+                        )
+                    }
+                    check(rule, item.item, v)
+                    check(rule, item.separator, v)
+                }
+
+                is ListOfItems -> {
+                    if (-1 == item.max && nullable(item.item)) {
+                        issueWarn(
+                            item,
+                            "In rule '${rule.name}', the list of '${itemText(item.item)}' has no maximum and its item can be empty: a sentence has infinitely many trees.",
+                            null
+                        )
+                    }
+                    check(rule, item.item, v)
+                }
+
+                is Concatenation -> item.items.forEach { check(rule, it, v) }
+                is Choice -> item.alternative.forEach { check(rule, it, v) }
+                is Group -> check(rule, item.groupedContent, v)
+                is OptionalItem -> check(rule, item.item, v)
+                else -> Unit
+            }
+        }
+        grammar.grammarRule.forEach { rule ->
+            if (rule.isLeaf.not()) check(rule, rule.rhs, emptySet())
+        }
+    }
+
+    /**
+     * A rule that derives itself by single-item steps (without consuming input), e.g. E = 'a' | L ; L = [E / ',']+ ,
+     * is a cyclic grammar: a sentence has infinitely many trees. The parser gives a loop free tree, warn about it.
+     * A single-item step is a choice alternative, a group, an optional, a list with minimum 0 or 1,
+     * or a concatenation where all other items can be empty.
+     */
+    private fun checkUnitCycles(grammar: Grammar) {
+        val nullableRules = nullableRules(grammar)
+        fun unitRules(item: RuleItem): List<GrammarRule> = when (item) {
+            is NonTerminal -> referencedRuleOrNull(item)?.let { if (it.isLeaf) emptyList() else listOf(it) } ?: emptyList()
+            is Choice -> item.alternative.flatMap { unitRules(it) }
+            is Group -> unitRules(item.groupedContent)
+            is OptionalItem -> unitRules(item.item)
+            is ListOfItems -> if (item.max != 0 && item.min <= 1) unitRules(item.item) else emptyList()
+            is Concatenation -> item.items.flatMapIndexed { i, it ->
+                val othersNullable = item.items.filterIndexed { j, _ -> j != i }.all { o -> isNullable(o, nullableRules) }
+                if (othersNullable) unitRules(it) else emptyList()
+            }
+            else -> emptyList()
+        }
+        val edges = mutableMapOf<GrammarRule, List<GrammarRule>>()
+        fun edgesOf(r: GrammarRule) = edges.getOrPut(r) { unitRules(r.rhs).distinct() }
+        grammar.grammarRule.filter { it.isLeaf.not() && it.isSkip.not() }.forEach { rule ->
+            // shortest cycle back to rule (breadth first)
+            val parent = mutableMapOf<GrammarRule, GrammarRule>()
+            val todo = ArrayDeque(listOf(rule))
+            var found = false
+            while (todo.isNotEmpty() && found.not()) {
+                val r = todo.removeFirst()
+                for (n in edgesOf(r)) {
+                    if (n == rule) { parent[rule] = r; found = true; break }
+                    if (parent.containsKey(n).not()) { parent[n] = r; todo.add(n) }
+                }
+            }
+            if (found) {
+                val path = mutableListOf(rule)
+                var c = parent[rule]!!
+                while (c != rule) { path.add(0, c); c = parent[c]!! }
+                path.add(0, rule)
+                issueWarn(
+                    rule,
+                    "Rule '${rule.name}' derives itself by single-item steps without consuming input (${path.joinToString(" -> ") { it.name.toString() }}): a sentence has infinitely many trees.",
+                    null
+                )
+            }
+        }
+    }
+
+    /** the non-leaf rules (of this grammar and the grammars it extends) that can match nothing, computed as a fixpoint */
+    private fun nullableRules(grammar: Grammar): Set<GrammarRule> {
+        val rules = runCatching { grammar.allResolvedGrammarRule.toList() }.getOrNull() ?: grammar.grammarRule
+        val nullable = mutableSetOf<GrammarRule>()
+        var changed = true
+        while (changed) {
+            changed = false
+            rules.forEach { r ->
+                if (r.isLeaf.not() && nullable.contains(r).not() && isNullable(r.rhs, nullable)) {
+                    nullable.add(r)
+                    changed = true
+                }
+            }
+        }
+        return nullable
+    }
+
+    /**
+     * true when [item] can match nothing, given the rules known to be nullable.
+     * Terminals, leaf rules and embedded grammars are taken as not nullable.
+     */
+    private fun isNullable(item: RuleItem, nullableRules: Set<GrammarRule>): Boolean = when (item) {
+        is EmptyRule -> true
+        is OptionalItem -> true
+        is SeparatedList -> 0 == item.min || isNullable(item.item, nullableRules)
+        is ListOfItems -> 0 == item.min || isNullable(item.item, nullableRules)
+        is Concatenation -> item.items.all { isNullable(it, nullableRules) }
+        is Choice -> item.alternative.any { isNullable(it, nullableRules) }
+        is Group -> isNullable(item.groupedContent, nullableRules)
+        is NonTerminal -> referencedRuleOrNull(item)?.let { nullableRules.contains(it) } ?: false
+        else -> false
     }
 
     private fun isCoveredOptional(listTerminal: Terminal, item: RuleItem): Boolean {

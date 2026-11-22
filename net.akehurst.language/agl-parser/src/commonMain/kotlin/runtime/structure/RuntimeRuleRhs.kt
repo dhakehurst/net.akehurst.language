@@ -301,6 +301,34 @@ sealed class RuntimeRuleRhsList(
 
     abstract val min: Int
     abstract val max: Int
+
+    /**
+     * true when the item of this list derives the list by a chain of two or more unit steps
+     * (a choice option or a concatenation with exactly one item), e.g. L = [E / ',']+ ; E = X | 'a' ; X = L | 'b'.
+     * Then a complete node of the item cannot tell whether it nests the list at its start,
+     * so the list count is not capped in the GSS node identity (see GrowingNodeIndex.listSize).
+     */
+    internal val itemDerivesListByLongUnitChain: Boolean by lazy {
+        val list = this.rule
+        val item = this.rhsItems.firstOrNull()?.firstOrNull() as? RuntimeRule
+        if (null == item) return@lazy false
+        val depth = mutableMapOf(item to 0)
+        val todo = ArrayDeque(listOf(item))
+        var found = false
+        while (todo.isNotEmpty() && found.not()) {
+            val r = todo.removeFirst()
+            val d = depth[r]!!
+            val units = when (val rhs = r.rhs) {
+                is RuntimeRuleRhsChoice, is RuntimeRuleRhsConcatenation -> rhs.rhsItems.filter { 1 == it.size }.map { it[0] as RuntimeRule }
+                else -> emptyList()
+            }
+            for (u in units) when {
+                u == list -> if (d + 1 >= 2) found = true
+                depth.containsKey(u).not() -> { depth[u] = d + 1; todo.add(u) }
+            }
+        }
+        found
+    }
 }
 
 class RuntimeRuleRhsListSimple(

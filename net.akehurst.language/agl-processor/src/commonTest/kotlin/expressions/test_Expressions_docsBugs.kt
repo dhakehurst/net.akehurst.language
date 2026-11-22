@@ -106,6 +106,9 @@ class test_Expressions_docsBugs {
         // ternary with a comparison condition
         "num > 2 ? 'many' : 'few'" to "many",
         "(num > 5) ? 'many' : 'few'" to "few",
+        // the result of a when-option is a whole expression
+        "when { true -> num != 2 else -> false }" to true,
+        "when { true -> num > 2 ? 'many' : 'few' else -> 'none' }" to "many",
         // String.length
         "'abc'.length" to 3L,
         "aList[0].prop1.length" to 2L,

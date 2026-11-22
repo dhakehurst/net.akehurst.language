@@ -93,6 +93,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
             state(ifthen, oN, 3)   // ifthen = 'if' expr 'then' . expr
             state(ifthenelse, oN, 3)   // ifthenelse = 'if' expr 'then' . expr 'else' expr
             state(ifthen, oN, ER)   // ifthen = 'if' expr 'then' expr .
+            state(ifthenelse, oN, 4)   // created for the prefix-merged member set of preference rules (formal proof §11.6)
             state(conditional, o0, ER)   // conditional = ifthen .
             state(expr, o1, ER)   // expr = conditional .
             state(S, oN, ER)   // S = expr .
@@ -110,6 +111,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthen, oN, 2); lhg(_t4);  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 1)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, 2); lhg(_t4);  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 1)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthen, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)) }
+            trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, 4); lhg(_t6);  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)) }   // created for the prefix-merged member set of preference rules (formal proof §11.6)
             trans(WIDTH) { src(ifthen, oN, 2); tgt(_t4, oN, ER); lhg(setOf(_t8,_t3)); ctx(rG, oN, SR) }
             trans(WIDTH) { src(ifthenelse, oN, 2); tgt(_t4, oN, ER); lhg(setOf(_t8,_t3)); ctx(rG, oN, SR) }
             trans(GRAFT) { src(_t4, oN, ER); tgt(ifthen, oN, 3); lhg(setOf(_t8,_t3));  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 2)) }
@@ -150,6 +152,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
             state(ifthen, oN, 3)   // ifthen = 'if' expr 'then' . expr
             state(ifthenelse, oN, 3)   // ifthenelse = 'if' expr 'then' . expr 'else' expr
             state(ifthenelse, oN, 4)   // ifthenelse = 'if' expr 'then' expr . 'else' expr
+            state(ifthen, oN, ER)   // created for the prefix-merged member set of preference rules (formal proof §11.6)
             state(_t6, oN, ER)   // 'else'
             state(ifthenelse, oN, 5)   // ifthenelse = 'if' expr 'then' expr 'else' . expr
             state(ifthenelse, oN, ER)   // ifthenelse = 'if' expr 'then' expr 'else' expr .
@@ -170,6 +173,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthen, oN, 2); lhg(_t4);  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 1)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, 2); lhg(_t4);  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 1)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, 4); lhg(_t6);  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 3)) }
+            trans(GRAFT) { src(expr, o0, ER); tgt(ifthen, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 3)) }   // created for the prefix-merged member set of preference rules (formal proof §11.6)
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, ER); lhg(RT);  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 5)) }
             trans(WIDTH) { src(ifthen, oN, 2); tgt(_t4, oN, ER); lhg(setOf(_t8,_t3)); ctx(rG, oN, SR) }
             trans(WIDTH) { src(ifthenelse, oN, 2); tgt(_t4, oN, ER); lhg(setOf(_t8,_t3)); ctx(rG, oN, SR) }
@@ -236,7 +240,7 @@ class test_ifthenelse_conditional : test_AutomatonAbstract() {
             trans(WIDTH) { src(ifthenelse, oN, 1); tgt(_t3, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(rG, oN, SR),RP(ifthenelse, oN, 3),RP(ifthen, oN, 3)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthen, oN, 2); lhg(_t4);  prevPair(RP(rG, oN, SR), RP(ifthen, oN, 1)); prevPair(RP(ifthen, oN, 3), RP(ifthen, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 1)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, 2); lhg(_t4);  prevPair(RP(rG, oN, SR), RP(ifthenelse, oN, 1)); prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 1)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 1)) }
-            trans(GRAFT) { src(expr, o0, ER); tgt(ifthen, oN, ER); lhg(RT);  prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 3)) }
+            trans(GRAFT) { src(expr, o0, ER); tgt(ifthen, oN, ER); lhg(RT);  prevPair(RP(ifthenelse, oN, 3), RP(ifthen, oN, 3)); prevPair(RP(ifthen, oN, 3), RP(ifthen, oN, 3)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, 4); lhg(_t6);  prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 3)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 3)) }
             trans(GRAFT) { src(expr, o0, ER); tgt(ifthenelse, oN, ER); lhg(RT);  prevPair(RP(ifthenelse, oN, 3), RP(ifthenelse, oN, 5)); prevPair(RP(ifthen, oN, 3), RP(ifthenelse, oN, 5)) }
             trans(WIDTH) { src(ifthen, oN, 2); tgt(_t4, oN, ER); lhg(setOf(_t8,_t3)); ctx(RP(rG, oN, SR),RP(ifthen, oN, 3),RP(ifthenelse, oN, 3)) }

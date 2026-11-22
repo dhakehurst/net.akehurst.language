@@ -25,13 +25,17 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class test_ParserWontStop {
 
     @Test
-    fun list_of_optional__reports_issue_instead_of_throwing() {
-        // S = A* ; A = 'a'? ;  -- currently makes the parser loop on empty A
+    fun list_of_optional__parses() {
+        // S = A* ; A = 'a'? ;  -- used to make the parser loop on empty A,
+        // capping the list count in the node identity (GrowingNodeIndex.listSize) makes it stop.
+        // The grammar has infinitely many trees for "aa" (a grammar warning reports a nullable item in an unbounded list),
+        // so only success is asserted, not the tree.
         val rrs = runtimeRuleSet {
             multi("S", 0, -1, "A")
             optional("A", "'a'")
@@ -41,11 +45,7 @@ class test_ParserWontStop {
 
         val res = sut.parse("aa", ParseOptionsDefault(goalRuleName = "S"))
 
-        assertNull(res.sppt)
-        val issues = res.issues.all.toList()
-        assertEquals(1, issues.size, issues.toString())
-        assertEquals(LanguageIssueKind.ERROR, issues[0].kind)
-        assertEquals(LanguageProcessorPhase.PARSE, issues[0].phase)
-        assertEquals(IssueMessage.PARSER_WONT_STOP, issues[0].message)
+        assertNotNull(res.sppt, res.issues.toString())
+        assertEquals(0, res.issues.all.size, res.issues.toString())
     }
 }

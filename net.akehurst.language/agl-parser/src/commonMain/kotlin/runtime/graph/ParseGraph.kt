@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
 import net.akehurst.language.agl.util.Debug
@@ -319,18 +321,42 @@ internal class ParseGraph(
         // keep oldParent - no need to do anything with it
         // newParent should not have been added to anything......what if it already has been, should we remove it ?
         // child is the head we are not growing...will be removed later if not grown by other transitions
-        // previous not useful
-        return false // did not 'grow' the head
+        return continueStackWithExistingCompleteParent(oldParent, newParent, previous)
     }
 
-    private fun preferExistingCompleteParentLastChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex?): Boolean {
+    private fun preferExistingCompleteParentLastChild(existing: SpptDataNode, oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex?): Boolean {
         // ( dropNewHeadAndKeepExisting )
         // don't change TreeData
         // keep oldParent - no need to do anything with it
         // newParent should not have been added to anything......what if it already has been, should we remove it ?
         // child is the head we are not growing...will be removed later if not grown by other transitions
-        // previous not useful
-        return false // did not 'grow' the head
+        return continueStackWithExistingCompleteParent(existing, newParent, previous)
+    }
+
+    /**
+     * The merge decision keeps the existing tree for this span, but that tree may have been made in another stack
+     * (another previous, or the same previous with a different runtime lookahead).
+     * The choice of tree must not end this stack (formal proof C2, Thm 47): this stack goes on with the new node
+     * in its OWN state (so its transitions and preference filters are its own), and its tree is the existing one:
+     * the complete node of the new node is equal to the existing node (same rule and span), the tree data is not changed.
+     * (Before 2026-11-21 the new head was dropped: which stacks survived depended on the order in which they arrived,
+     * and so on lookahead that depends on what the (lazily built) automaton has seen before.)
+     * Only when the existing node covers the same input; a longer existing node still replaces a shorter one.
+     */
+    // (node, previous) pairs already continued in this parse, so that unit cycles (S -> P -> S over the same span) end
+    private val _continuedWithExisting = mutableSetOf<Pair<GrowingNodeIndex, GrowingNodeIndex?>>()
+
+    private fun continueStackWithExistingCompleteParent(existing: SpptDataNode, newParent: GrowingNodeIndex, previous: GrowingNodeIndex?): Boolean {
+        return when {
+            existing.nextInputPosition != newParent.nextInputPositionAfterSkip -> false
+            existing.nextInputNoSkip != newParent.nextInputPositionBeforeSkip -> false
+            this._continuedWithExisting.add(Pair(newParent, previous)).not() -> false
+            else -> {
+                if (Debug.CHECK) check(newParent.complete == existing)
+                this.addGrowingHead(previous, newParent)
+                true
+            }
+        }
     }
 
     private fun keepBothCompleteParentsFirstChild(oldParent: SpptDataNode, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex): Boolean {
@@ -399,6 +425,7 @@ internal class ParseGraph(
         }
     }
 
+    // TODO: a meeting rule that prefers the alternative with more list children was tried (2026-11-22) and changed Dot trees (Cluster.dot); revisit after release.
     private fun mergeDecisionOnLength(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>,ifEqual: (reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         val newReasonList = reasonList+MergeReason.LENGTH
         val existingLength = existingParent.nextInputPosition - existingParent.startPosition
@@ -464,6 +491,29 @@ internal class ParseGraph(
             }
         }
         return ifEqual(newReasonList)
+    }
+
+    /**
+     * true when one of [children] that spans the same input as [parent] leads, through stored children that also span
+     * the same input, back to a node of the same rule and span as [parent].
+     * Only possible with a cyclic grammar (a rule that derives itself by single-item steps, e.g. E = 'a' | L ; L = [E / ',']+),
+     * which has infinitely many trees; taking such an alternative would make the tree loop.
+     */
+    private fun leadsBackTo(parent: SpptDataNode, children: List<SpptDataNode>): Boolean {
+        val start = parent.startPosition
+        val end = parent.nextInputPosition
+        fun sameSpan(n: SpptDataNode) = n.startPosition == start && n.nextInputPosition == end
+        val visited = mutableSetOf<SpptDataNode>()
+        val todo = ArrayDeque(children.filter { sameSpan(it) })
+        while (todo.isNotEmpty()) {
+            val n = todo.removeFirst()
+            if (n.rule == parent.rule) return true
+            if (visited.add(n).not()) continue
+            val stored = this.treeData.preferred(n) ?: n
+            if (stored.rule.isTerminal) continue
+            this.treeData.complete.childrenFor(stored).forEach { (_, ch) -> ch.filter { sameSpan(it) }.forEach { todo.add(it) } }
+        }
+        return false
     }
 
     private fun mergeDecision(existingParent: SpptDataNode, newParent: SpptDataNode): MergeDecision {
@@ -536,6 +586,7 @@ internal class ParseGraph(
      * START
      */
     fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeData?): GrowingNodeIndex {
+        this._continuedWithExisting.clear()
         val nextInputPositionAfterSkip = initialSkipData?.root?.nextInputPosition ?: startPosition
         val st = this.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0, emptyList())
         this._gss.root(st)
@@ -627,7 +678,11 @@ internal class ParseGraph(
             val existingComplete = this.treeData.preferred(newParent)
             if (null != existingComplete) {
                 // already completed this parent - should we use new or existing parent
-                val md = this.mergeDecision(existingComplete, newParent)
+                val md = when {
+                    // loop-free tree (David Q11, 2026-11-22): never take an alternative that leads back to this node over the same span
+                    leadsBackTo(newParent, listOf(child)) -> MergeDecision(emptyList(), MergeChoice.PREFER_EXISTING, "new alternative is a loop")
+                    else -> this.mergeDecision(existingComplete, newParent)
+                }
                 //println("MergeDecision-F on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentFirstChild(existingComplete, parent, child, previous)
@@ -691,11 +746,15 @@ internal class ParseGraph(
             val newParent = parent.complete
             val existingComplete = this.treeData.preferred(newParent)
             if (null != existingComplete) {
-                val md = this.mergeDecision(existingComplete,newParent)
+                val md = when {
+                    // loop-free tree, see growNextParent (only the last child can span the whole node)
+                    leadsBackTo(newParent, listOf(child)) -> MergeDecision(emptyList(), MergeChoice.PREFER_EXISTING, "new alternative is a loop")
+                    else -> this.mergeDecision(existingComplete, newParent)
+                }
                 //println("MergeDecision-N on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentLastChild(previous, parent, child, prevPrev)
-                    MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentLastChild(previous, parent, child, prevPrev)
+                    MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentLastChild(existingComplete, previous, parent, child, prevPrev)
                     MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> {
                         onAmbiguity?.invoke(existingComplete) { (this.treeData.growingChainOf(previous)?.toList() ?: emptyList()) + child }
                         keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)

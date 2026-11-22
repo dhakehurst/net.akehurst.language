@@ -73,29 +73,40 @@ class test_aa : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        // parser does not terminate for this grammar, reported as an error issue
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertTrue(issues.errors.any { it.message == IssueMessage.PARSER_WONT_STOP }, issues.toString())
+        // S -> P -> S is a cycle of single-item steps (infinitely many trees);
+        // the parser stops and the tree is loop free (David Q11, 2026-11-22)
+        super.test_pass(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
     fun aaa() {
         val sentence = "aaa"
 
+        // a cyclic grammar is outside the formal model; this is the Q11 loop-free choice (not a model result), the same pre-built and on-demand
         val expected = """
             S { P { P1 {
-              P { S { 'a' } }
-              S { P { P1 {
+              P { P1 {
                 P { S { 'a' } }
                 S { 'a' }
-              } } }
+              } }
+              S { 'a' }
             } } }
         """.trimIndent()
 
-        // parser does not terminate for this grammar, reported as an error issue
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertTrue(issues.errors.any { it.message == IssueMessage.PARSER_WONT_STOP }, issues.toString())
+        // S -> P -> S is a cycle of single-item steps (infinitely many trees);
+        // the parser stops and the tree is loop free (David Q11, 2026-11-22)
+        super.test_pass(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 }
