@@ -471,6 +471,55 @@ internal class RuntimeParserAgl(
         if (found) item else null
     }
 
+    private val _unitDerives = HashMap<Pair<RuntimeRule, RuntimeRule>, Boolean>()
+
+    /** true if [from] derives [to] by zero or more unit steps (a choice option or a concatenation with exactly one item) */
+    private fun unitDerives(from: RuntimeRule, to: RuntimeRule): Boolean = _unitDerives.getOrPut(Pair(from, to)) {
+        val done = mutableSetOf<RuntimeRule>()
+        val todo = ArrayDeque(listOf(from))
+        var found = false
+        while (todo.isNotEmpty() && found.not()) {
+            val r = todo.removeFirst()
+            if (r == to) found = true
+            if (done.add(r).not()) continue
+            when (val rhs = r.rhs) {
+                is RuntimeRuleRhsChoice, is RuntimeRuleRhsConcatenation -> rhs.rhsItems.filter { 1 == it.size }.forEach { todo.add(it[0] as RuntimeRule) }
+                else -> Unit
+            }
+        }
+        found
+    }
+
+    /**
+     * When a complete [head] (rule E) can both GRAFT into a previous R and HEIGHT into a new R (all [trgs] and [trhs] target rule R),
+     * the HEIGHT only nests R in itself and is not needed, when there are no preference rules for [head] (they choose the nesting) and either:
+     *  - R is a list without maximum and E derives R by unit steps (see [selfNestingListItem]), or
+     *  - the GRAFT completes R (E is its last item) and E and R derive each other by unit steps, usually E == R
+     *    (e.g. E = E '+' E | ... , or S = S S | 'a').
+     * Every sentence the nested R leads to is also accepted without it:
+     *  a + (b w) via the HEIGHT is the same text as (a + b) w via the GRAFT, because (a + b) is again an E
+     *  that can start w the same way as b did, and the result is again an R;
+     *  for a list, the outer list takes the items of the nested one.
+     * (With E deriving R but not R deriving E, the result is not again an R, e.g. S = N1 'a' N1 | <EMPTY> ; N1 = S 'b' | S needs the HEIGHT for 'aabb'.)
+     * Without this, an expression like '1 + 1 + ... + 1' is parsed in every possible nesting (very slow).
+     * The trees are the ones the GRAFT gives (flat lists, left nested binary rules), as before 2026-11-21.
+     */
+    private fun heightOnlyNests(head: GrowingNodeIndex, rules: Set<RuntimeRule>, trgs: List<Transition>, trhs: List<Transition>): Boolean {
+        val r = rules.singleOrNull() ?: return false
+        return when {
+            trgs.isEmpty() || trhs.isEmpty() -> false
+            null != this.stateSet.precedenceRulesFor(head.state) -> false
+            else -> {
+                val nestItem = selfNestingListItem(rules)
+                when {
+                    null != nestItem && head.state.runtimeRulesAsSet.contains(nestItem) -> true
+                    trgs.all { it.target.isAtEnd } && head.state.runtimeRulesAsSet.any { unitDerives(it, r) && unitDerives(r, it) } -> true
+                    else -> false
+                }
+            }
+        }
+    }
+
     private fun growComplete2(
         head: GrowingNodeIndex,
         previous: GrowingNodeIndex,
@@ -573,9 +622,8 @@ internal class RuntimeParserAgl(
                         */
                         // every transition is taken: preferring GRAFT over HEIGHT here dropped a HEIGHT before the rest of the input was seen,
                         // which changed the language (e.g. S = N1 'a' N1 | <EMPTY> ; N1 = S 'b' | S rejected 'aabb')
-                        // Except for a list that nests in itself as an item, see [selfNestingListItem]
-                        val nestItem = selfNestingListItem(grp.key)
-                        if (null != nestItem && trgs.isNotEmpty() && trhs.isNotEmpty() && head.state.runtimeRulesAsSet.contains(nestItem)) {
+                        // Except where the HEIGHT only nests the rule in itself, see [heightOnlyNests]
+                        if (heightOnlyNests(head, grp.key, trgs, trhs)) {
                             var g = false
                             for (tr in trgs) g = take(tr) || g
                             grownGraft = grownGraft || g

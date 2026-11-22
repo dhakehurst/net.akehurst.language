@@ -21,12 +21,17 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.kotlinx.collections.BinaryHeap
 import net.akehurst.kotlinx.collections.deepClone
 
+/**
+ * keepRegrowHeads: keep a node that was made a head again (see push) until [startGrowing] is called for it,
+ *   the user of the GSS must then call [startGrowing] for each head before growing it
+ */
 class GraphStructuredStack<E>(
     val _growingHeadHeap: BinaryHeap<E, E>,
     previous: MutableMap<E, MutableSet<E>>,
-    count: MutableMap<E, Int>
+    count: MutableMap<E, Int>,
+    val keepRegrowHeads: Boolean = false
 ) {
-    constructor(headHeap: BinaryHeap<E, E>) : this(headHeap, hashMapOf<E, MutableSet<E>>(), hashMapOf<E, Int>()) //no need to preserve insertion order
+    constructor(headHeap: BinaryHeap<E, E>, keepRegrowHeads: Boolean = false) : this(headHeap, hashMapOf<E, MutableSet<E>>(), hashMapOf<E, Int>(), keepRegrowHeads) //no need to preserve insertion order
 
     private val _previous = previous
 
@@ -132,7 +137,7 @@ class GraphStructuredStack<E>(
             // so it would never grow over this new previous: make it a head again.
             // (Happens within one input position, e.g. with empty rules; before 2026-11-21 the result depended on processing order.)
             this._growingHeadHeap[nextHead] = nextHead
-            this._toRegrow.add(nextHead)
+            if (keepRegrowHeads) this._toRegrow.add(nextHead)
         }
         if (added) {
             val hc = this._count[currentHead]

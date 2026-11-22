@@ -158,7 +158,7 @@ internal class ParseGraph(
                 }
             }
         }
-    })
+    }, keepRegrowHeads = true)
 
     var treeData = TreeDataGrowing<GrowingNodeIndex, SpptDataNode>(stateSetNumber)
 
