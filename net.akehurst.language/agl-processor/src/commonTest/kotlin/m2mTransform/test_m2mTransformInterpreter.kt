@@ -1637,6 +1637,145 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            testSuit("umlRdbms QVT example - top table PrimitiveUmlTypeToSqlType, no identify") {
+                typesDomain("uml", "SimpleUML", true) {
+                    namespace("uml") {
+                        data("UmlModelElement") {
+                            propertyOf(setOf(REF, VAR), "name", "String")
+                        }
+                        data("Package") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("Attribute") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("PackageElement") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("Classifier") {
+                            supertypes("PackageElement")
+                        }
+                        data("Class") {
+                            supertypes("Classifier")
+                            propertyOf(setOf(CMP, VAR), "kind", "String")
+                        }
+                        data("PrimitiveDataType") {
+                            supertypes("Classifier")
+                            constructor_ {
+                                parameter(setOf(REF, VAL), "name", "String")
+                            }
+                        }
+                        data("Association") {
+                            supertypes("PackageElement")
+                        }
+                        association {
+                            end("Package", setOf(REF, VAR), "namespace")
+                            end("PackageElement", setOf(CMP, VAR), "elements", false, "Set")
+                        }
+                        association {
+                            end("Classifier", setOf(REF, VAR), "type")
+                            end("Attribute", setOf(REF, VAR), "typeOpposite", false, "Set")
+                        }
+                        association {
+                            end("Class", setOf(REF, VAR), "owner")
+                            end("Attribute", setOf(CMP, VAR), "attribute", false, "Set")
+                        }
+                        association {
+                            end("Class", setOf(REF, VAR), "general", false, "Set")
+                            end("Class", setOf(REF, VAR), "generalOpposite", false, "Set")
+                        }
+                        association {
+                            end("Class", setOf(REF, VAR), "source")
+                            end("Association", setOf(REF, VAR), "reverse", false, "Set")
+                        }
+                        association {
+                            end("Class", setOf(REF, VAR), "destination")
+                            end("Association", setOf(REF, VAR), "forward", false, "Set")
+                        }
+                    }
+                }
+                typesDomain("rdbms", "SimpleRDBMS", true) {
+                    namespace("rdbms") {
+                        data("RModelElement") {
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
+                        }
+                        data("Schema") {
+                            supertypes("RModelElement")
+                        }
+                        data("Table") {
+                            supertypes("RModelElement")
+                        }
+                        data("Column") {
+                            supertypes("RModelElement")
+                        }
+                        data("Key") {
+                            supertypes("RModelElement")
+                        }
+                        data("ForeignKey") {
+                            supertypes("RModelElement")
+                        }
+                        association {
+                            end("Schema", setOf(REF, VAR), "schema")
+                            end("Table", setOf(CMP, VAR), "tables", false, "Set")
+                        }
+                        association {
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Column", setOf(CMP, VAR), "column", false, "Set")
+                        }
+                        association {
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Key", setOf(CMP, VAR), "key", false, "Set")
+                        }
+                        association {
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("ForeignKey", setOf(CMP, VAR), "foreignKey", false, "Set")
+                        }
+                        association {
+                            end("Key", setOf(REF, VAR), "refersTo", false, "Set")
+                            //TODO: refersToOpposite is not navigable!
+                            end("ForeignKey", setOf(REF, VAR), "refersToOpposite", false, "Set")
+                        }
+                        association {
+                            end("Column", setOf(REF, VAR), "column", false, "Set")
+                            end("ForeignKey", setOf(REF, VAR), "foreignKey", false, "Set")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
+                        top table PrimitiveUmlTypeToSqlType {
+                            domain  uml :PrimitiveDataType                /**/ domain rdbms :String
+                            /*===================================================================*/ 
+                            values uml.PrimitiveDataType(name := 'Int'){}     to  'NUMBER'
+                            values uml.PrimitiveDataType(name := 'Boolean'){} to  'BOOLEAN'
+                            values uml.PrimitiveDataType(name := 'String'){}  to  'VARCHAR'
+                        }
+                    }
+                """
+                )
+                testCase("primitive Int -> NUMBER") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "Int")
+                        }
+                    }
+                    target("rdbms") {
+                        string("NUMBER")
+                    }
+                }
+                testCase("primitive Boolean -> BOOLEAN") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "Boolean")
+                        }
+                    }
+                    target("rdbms") {
+                        string("BOOLEAN")
+                    }
+                }
+            }
             testSuit("umlRdbms QVT example - abstract PrimitiveUmlTypeToSqlType") {
                 typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {

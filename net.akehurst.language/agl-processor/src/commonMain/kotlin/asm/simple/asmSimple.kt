@@ -285,6 +285,8 @@ object AnyExt {
         return when {
             this is AsmReferenceSimple && other is AsmReferenceSimple -> this.equalTo(other)
             this is AsmStructureSimple && other is AsmStructureSimple -> this.equalTo(other)
+            // AsmPrimitive (deprecated) wraps a kotlin primitive value, the same value is equal whether wrapped or not
+            this is AsmPrimitive || other is AsmPrimitive -> (if (this is AsmPrimitive) this.value else this) == (if (other is AsmPrimitive) other.value else other)
             else -> this == other
         }
     }

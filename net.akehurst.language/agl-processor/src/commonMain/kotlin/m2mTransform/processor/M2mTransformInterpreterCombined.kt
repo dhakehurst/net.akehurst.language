@@ -17,6 +17,8 @@
 
 package net.akehurst.language.m2mTransform.processor
 
+import net.akehurst.language.asm.api.AsmReference
+import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AnyExt.asString
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.ExecutionStepCombined
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecutorCombined
@@ -1003,6 +1005,21 @@ class M2mTransformInterpreterCombined(
         }
     }
 
+    /**
+     * A table row value is a new value, so it is compared with the source value by value (MT-Q27, David 2026-11-22):
+     * objects are equal if both have the same semantic identity (from 'identify'),
+     * or, if either has none, if they have the same type and equal property values (AsmValue.equalTo).
+     * Other values are compared by the object graph.
+     */
+    private fun tableValueEqual(og: ObjectGraphAccessorMutator, lhs: TypedObject, rhs: TypedObject): Boolean {
+        val l = lhs.self.let { if (it is AsmReference) it.value ?: it else it }
+        val r = rhs.self.let { if (it is AsmReference) it.value ?: it else it }
+        return when {
+            l is AsmValue && r is AsmValue -> l.equalTo(r)
+            else -> og.equalTo(lhs, rhs)
+        }
+    }
+
     private inline fun executeTableInternal(
         m2mExecution: M2mTransformExecution,
         rule: M2MTransformTable,
@@ -1018,7 +1035,7 @@ class M2mTransformInterpreterCombined(
                     val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
                     val drExp = vs[srcDomainRef] ?: error("")
                     val value = evaluate(srcObjectGraph, evc, drExp)
-                    val match = srcObjectGraph.equalTo(v, value)
+                    val match = tableValueEqual(srcObjectGraph, v, value)
                     if (match) {
                         Pair(srcDomainRef, value)
                     } else {
