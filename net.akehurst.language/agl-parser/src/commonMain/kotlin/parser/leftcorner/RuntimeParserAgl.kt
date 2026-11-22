@@ -826,7 +826,7 @@ internal class RuntimeParserAgl(
         val precRules = this.stateSet.precedenceRulesFor(runtimeContext.head.state) ?: return false
         val matched = transitions.mapIndexedNotNull { i, (tr, lh) ->
             when {
-                precedenceFor(precRules, tr.target.rulePosition, lh, runtimeContext, tr.action, tr).isEmpty() -> null
+                precedenceFor(precRules, tr.target.rulePosition, lh, runtimeContext, tr.action, tr, longestTokensAt(runtimeContext.head.nextInputPositionAfterSkip, transitions.map { staticGuard(it.first, runtimeContext) })).isEmpty() -> null
                 else -> tokensOf[i]
             }
         }
@@ -983,16 +983,38 @@ internal class RuntimeParserAgl(
      *  (B) one of its operators is the token at the position and in the static guard, or
      *  (A) the transition is a GRAFT that completes the option's rule and the rule's body contains one of its operators.
      */
-    private fun precedenceFor(precRules: RuntimePreferenceRule, to: List<RulePositionRuntime>, lh: LookaheadSetPart, runtimeContext: RuntimeContext, action: ParseAction, tr: Transition): List<RuntimePreferenceOption> {
+    /**
+     * N of Def 55: the terminals that the scanner finds at [pos] by longest match, taken over the terminals the candidates can read
+     * there (the union of their static [guards]; a guard that reads any token stands for every terminal of the grammar).
+     * All terminals of the longest length are kept. It depends only on the input and the static guards, never on the runtime
+     * lookahead or earlier parses. A terminal that is only the start of a longer token there (e.g. 'or' at the start of the
+     * IDENTIFIER originalType, or '-' at the start of '->') is not in N.
+     */
+    private fun longestTokensAt(pos: Int, guards: List<LookaheadSetPart>): Set<RuntimeRule> {
+        val terminals: Collection<RuntimeRule> = when {
+            guards.any { it.matchANY } -> this.stateSet.usedTerminalRules
+            else -> guards.flatMap { it.content }.toSet()
+        }
+        val lengths = terminals.mapNotNull { t ->
+            when {
+                t.isEmptyTerminal || t.isEmptyListTerminal || t.isEndOfText || t.rhs !is RuntimeRuleRhsTerminal -> null
+                else -> this.graph.scanner.matchedLength(sentence, pos, t).let { if (it > 0) Pair(t, it) else null }
+            }
+        }
+        val max = lengths.maxOfOrNull { it.second } ?: return emptySet()
+        return lengths.filter { it.second == max }.map { it.first }.toSet()
+    }
+
+    private fun precedenceFor(precRules: RuntimePreferenceRule, to: List<RulePositionRuntime>, lh: LookaheadSetPart, runtimeContext: RuntimeContext, action: ParseAction, tr: Transition, n: Set<RuntimeRule>): List<RuntimePreferenceOption> {
         val pos = runtimeContext.head.nextInputPositionAfterSkip
         val g = staticGuard(tr, runtimeContext)
-        val isCandidate = g.matchANY || (g.includesEOT && this.graph.scanner.isEnd(sentence, pos)) || g.content.any { this.graph.scanner.isLookingAt(sentence, pos, it) }
+        val isCandidate = g.matchANY || (g.includesEOT && this.graph.scanner.isEnd(sentence, pos)) || g.content.any { n.contains(it) }
         if (isCandidate.not()) return emptyList()
         return precRules.options.filter { prOpt ->
             val matching = to.filter { precedenceSpineMatches(prOpt, it, runtimeContext) }
             when {
                 matching.isEmpty() -> false
-                prOpt.operators.any { (g.matchANY || g.content.contains(it)) && this.graph.scanner.isLookingAt(sentence, pos, it) } -> true // (B)
+                prOpt.operators.any { (g.matchANY || g.content.contains(it)) && n.contains(it) } -> true // (B)
                 ParseAction.GRAFT == action -> matching.any { rp -> rp.isAtEnd && prOpt.operators.any { op -> bodyTerminals(rp, precRules.contextRule).contains(op) } } // (A)
                 else -> false
             }
@@ -1132,9 +1154,15 @@ internal class RuntimeParserAgl(
     ): List<Triple<Transition, LookaheadSetPart, RuntimeContext>> {
         // a group of transitions that would be one transition if the states were merged is matched by the union over
         // all its members (each with its own transition and context), so the result does not depend on the order in the group (C1)
+        // N (Def 55): the tokens found at the position by longest match over what the candidates (with all their group members) can read there
+        val allMembers = transitions.flatMap { t -> membersOf[t] ?: listOf(t) }
+        val n = when {
+            allMembers.isEmpty() -> emptySet()
+            else -> longestTokensAt(allMembers.first().third.head.nextInputPositionAfterSkip, allMembers.map { (tr, _, ctx) -> staticGuard(tr, ctx) })
+        }
         val precedence = transitions.flatMap { t ->
             val targets = targetsOf[t] ?: t.first.target.rulePosition
-            val prec = (membersOf[t] ?: listOf(t)).flatMap { (tr, lh, ctx) -> precedenceFor(precRules, targets, lh, ctx, tr.action, tr) }.distinct()
+            val prec = (membersOf[t] ?: listOf(t)).flatMap { (tr, lh, ctx) -> precedenceFor(precRules, targets, lh, ctx, tr.action, tr, n) }.distinct()
             prec.map { Pair(t, it) }
         }
         return when {

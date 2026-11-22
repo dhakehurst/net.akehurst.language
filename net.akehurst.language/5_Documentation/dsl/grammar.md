@@ -104,7 +104,7 @@ For an alternative that is a separated list (`add = [E / '+']2+`), write `add IT
 Note that an alternative is also preferred when its node is finished and its body contains one of its terminals, so its line decides how tightly it binds, not only the next token.
 A preference rule decides only between the alternatives it names, so name every alternative that competes, e.g. for a dangling `else`:
 `IfStatement on 'else' right` then `IfElseStatement on 'else' right`.
-An operator literal that is a prefix of an identifier (e.g. `'or'` in `originalType`) should be a whole-word leaf (e.g. `"or(?![a-zA-Z_0-9])"`), otherwise it is found at that position and can make a preference fire.
+A preference uses longest match among the terminals possible at that point: `'or'` is not the token at the start of `originalType` (an IDENTIFIER matches longer), and `'-'` is not the token where `'->'` matches. So when a preference rule applies, a reading that needs the shorter terminal where a longer possible terminal matches is not taken.
 
 TODO: Preference options on list rules (e.g. `reference ITEM on 'when'`) are not yet covered by the formal semantics; postponed after release.
 TODO: a syntax for a preference that is decided only by the next token (not also when the alternative's node is finished); postponed after release.

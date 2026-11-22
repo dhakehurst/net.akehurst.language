@@ -98,9 +98,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             
             infixExpression = [expression / INFIX_OPERATOR]2+ ;
             leaf INFIX_OPERATOR
-              = "or(?![a-zA-Z_0-9-])" | "and(?![a-zA-Z_0-9-])" | "xor(?![a-zA-Z_0-9-])"  // logical, whole words (not the start of an IDENTIFIER) 
+              = 'or' | 'and' | 'xor'  // logical 
               | '==' | '!=' | '<=' | '>=' | '<' | '>'  // comparison
-              | '/' | '*' | '%' | '+' | "-(?!>)" // arithmetic ('-' is not found inside '->')
+              | '/' | '*' | '%' | '+' | '-' // arithmetic
               ;
             
             functionCall = IDENTIFIER '(' argumentList ')' ;
@@ -294,13 +294,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     }
                     choice("INFIX_OPERATOR", isLeaf = true) {
                         // logical
-                        // whole words: 'or' must not be found at the start of an IDENTIFIER such as 'originalType',
-                        // else a preference on INFIX_OPERATOR fires there (formal proof Def 55, N = tokens found at the position)
-                        pat("or(?![a-zA-Z_0-9-])"); pat("and(?![a-zA-Z_0-9-])"); pat("xor(?![a-zA-Z_0-9-])")
+                        lit("or"); lit("and"); lit("xor")
                         // comparison
                         lit("=="); lit("!="); lit("<="); lit(">="); lit("<"); lit(">");
                         // arithmetic
-                        lit("/"); lit("*"); lit("%"); lit("+"); pat("-(?!>)"); // '-' is not found inside '->'
+                        lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
                     }
                     concatenation("functionCall") {
                         ref("IDENTIFIER"); lit("("); ref("argumentList"); lit(")")
