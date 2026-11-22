@@ -700,7 +700,7 @@ class test_m2mTransformInterpreter {
                             propertyString("prop1", "value2")
                         }
                     }
-                    expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'd2' of rule 'A12A2'.")
+                    // a false 'when' gives no issue, only a trace (MT-Q29)
                     target("d2") {
                     }
                 }

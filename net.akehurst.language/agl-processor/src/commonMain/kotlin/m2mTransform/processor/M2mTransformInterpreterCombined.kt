@@ -953,7 +953,8 @@ class M2mTransformInterpreterCombined(
                                     }
 
                                 } else {
-                                    m2mExecution.infoIssue("when clause evaluated to false for target domain ref '${m2mExecution.targetDomainRef.value}' of rule '${rule.name}'.")
+                                    // as QVT, a false 'when' means the rule does not apply; trace only, as for a relation (MT-Q29)
+                                    m2mExecution.evaluationTrace("when clause evaluated to false for target domain ref '${m2mExecution.targetDomainRef.value}' of rule '${rule.name}'.")
                                 }
                             }
                         }

@@ -89,7 +89,7 @@ With target `d` it creates a `Disc` for each `Circle`; with target `s` (and the 
 
 ## when
 
-A `when` condition must hold, or the rule is not applied (an INFORMATION issue says so):
+A `when` condition must hold, or the rule is not applied (that is not an issue; the execution trace says so):
 
 ```
 top mapping CircleToDisc {
