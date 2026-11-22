@@ -1176,9 +1176,14 @@ internal class RuntimeParserAgl(
                     0 -> maxPrec.map { it.first }
                     else -> assoc.map { it.first }
                 }
-                // formal proof Def 55 (3): Sel together with every candidate that no option matches
-                val unmatched = transitions.filter { t -> precedence.none { it.first === t } }
-                sel + unmatched.filter { u -> sel.none { it === u } }
+                // formal proof Def 55 (3): Sel together with every candidate that the preference rule does not cover,
+                // i.e. whose target is a rule position of no option of the rule (with spine match); the rule decides only
+                // among transitions into the options it names (for a list option: the positions of the list rule)
+                val notCovered = transitions.filter { t ->
+                    val targets = targetsOf[t] ?: t.first.target.rulePosition
+                    precRules.options.none { prOpt -> targets.any { rp -> precedenceSpineMatches(prOpt, rp, t.third) } }
+                }
+                sel + notCovered.filter { u -> sel.none { it === u } }
             }
         }
     }
