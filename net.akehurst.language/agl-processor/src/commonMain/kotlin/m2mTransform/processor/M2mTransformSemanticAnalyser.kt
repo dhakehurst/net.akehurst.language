@@ -89,6 +89,8 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                                     if (null == typesDomain) {
                                         _issues.error(null, "TypesDomain '${dr.value}' not found in rule '${k.value}'")
                                     } else {
+                                         // TODO: check that a template value conforms to its property type, e.g. an object template
+                                         //  'key == Key {..}' for a collection property 'key: Set<Key>' is not reported
                                          val typeIssues = rhs.resolveTypes(typesDomain)
                                          _issues.addAll(typeIssues)
                                     }
@@ -132,6 +134,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
         }
     }
 
+    // TODO: transforms (for 'extends') are only looked up in this text; look them up also in the namespaces given by 'import ns' (MT20, docs m2m-transform.md)
     /** a transform named in 'extends' is looked up by qualified name, or by simple name in the same namespace first */
     private fun resolveTransformExtends(asm: M2mTransformDomain, def: M2mTransformRuleSet) {
         def.extends.forEach { ref ->

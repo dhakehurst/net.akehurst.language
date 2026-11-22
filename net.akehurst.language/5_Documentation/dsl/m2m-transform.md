@@ -121,6 +121,8 @@ Result: the discs `c` and `d`, and `'disc c'`, `'disc d'`.
 
 If `R` has not been applied yet for those values, it is applied first, so the order of the `top` rules does not matter.
 
+A `when` holds one condition: either one Boolean expression or one `related` / `mapped` check. The two cannot be combined in one `when`.
+
 ## table
 
 A `table` is a rule given as a list of values, one column per domain. Call it from `where`:
@@ -140,6 +142,8 @@ table SizeName {
 
 Result: `:Disc { label = 'c'  size = 'small' }` and `:Disc { label = 'd'  size = 'big' }`.
 A `table` can be `top`, and is used like a relation, in both directions.
+A row matches when the value of every source domain equals its column: objects are equal if they have the same identity (from `identify`),
+otherwise if they have the same type and equal property values. A `table` has no `when` or `where` (that is an error).
 
 ## Calling rules
 
@@ -197,7 +201,7 @@ A rule that extends another rule (`: Name`) replaces it wherever it applies. For
 whose templates match and whose `when` holds is applied instead of the extended rule, and its result also counts as a result of the extended rule
 (for `where map Name` and `mapped Name`). The extended rule is applied to every other source. This holds wherever the extended rule is applied:
 as a `top` rule, or called from `where` (also `map all`) or `when`. The extending rule does not need to be `top`.
-It does not inherit the templates of the rule it extends; it gives its own.
+It does not inherit the templates of the rule it extends; it gives its own. (Inheriting the templates may be added later.)
 
 ```
 top mapping AnyLabel {
@@ -297,6 +301,6 @@ The whole collection can be named too, `point == ps:[ ... ]`.
     domain d disc:Disc { label == n }
   }
   ```
-* `import-types ns` (first in the transform, after any options) imports the types used in the transform; `import ns` (in the namespace) imports other transforms.
+* `import-types ns` (first in the transform, after any options) imports the types used in the transform; `import ns` (in the namespace) is accepted, but rules are only looked up in the transform itself and in the transforms it extends, which must be in the same text. Using the transforms of an imported namespace is not supported yet.
 * `#name : value` sets a transform option (the option syntax of all agl DSLs). No options are defined yet.
 * Tests of a transform are written in their own language, see [m2m-transform-test](m2m-transform-test.md).

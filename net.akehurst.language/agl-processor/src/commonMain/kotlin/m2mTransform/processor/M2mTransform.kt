@@ -384,6 +384,7 @@ grammar $NAME : Base {
                     tagRule("typeReference") {
                         declaration("foreground", "DarkBlue")
                     }
+                    // TODO: no grammar rule is named 'propertyName' (the rule is 'propertyReference'), so this style is never used (MT5)
                     tagRule("propertyName") {
                         declaration("foreground", "Blue")
                     }
