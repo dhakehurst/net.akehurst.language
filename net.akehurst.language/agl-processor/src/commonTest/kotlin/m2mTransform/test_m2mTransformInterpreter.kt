@@ -2350,6 +2350,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            // TODO(David): expected results of this suite do not follow from its transform (MT-Q28, 2026-11-22), to be reviewed
             testSuit("Where called relation creates object") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
@@ -2410,6 +2411,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            // TODO(David): expected results of this suite do not follow from its transform (MT-Q28, 2026-11-22), to be reviewed
             testSuit("Where created object is passed to where") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
@@ -2469,6 +2471,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            // TODO(David): expected results of this suite do not follow from its transform (MT-Q28, 2026-11-22), to be reviewed
             testSuit("Setting the owner") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
