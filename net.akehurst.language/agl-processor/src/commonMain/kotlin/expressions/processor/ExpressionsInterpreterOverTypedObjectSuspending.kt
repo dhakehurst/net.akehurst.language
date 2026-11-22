@@ -27,7 +27,8 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
-//TODO: merge with other
+// replaced by ExpressionsInterpreterOverTypedObjectCombined (evaluateStrSuspend / evaluateExpressionSuspend)
+/*
 open class ExpressionsInterpreterOverTypedObjectSuspending(
     val objectGraph: ObjectGraphAccessorMutator,
     val customFunctions: FunctionLib? = null
@@ -69,7 +70,7 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
         is FunctionCall -> this.evaluateFunctionCall(evc, expression)
         is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
-        is OnExpression -> TODO()
+        is OnExpression -> evaluateExpression(evc, expression.expression).also { self -> propertyAssignmentBlock(evc, self, expression.propertyAssignments) }
         is NavigationExpression -> this.evaluateNavigation(evc, expression)
         is LambdaExpression -> this.evaluateLambda(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)
@@ -397,7 +398,8 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
                 }
             }
 
-            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
+            // values of different types are not equal (the negation of '==')
+            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
         }
 
         // arithmetic
@@ -638,4 +640,4 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
             self.setPropertySuspend( it.variable.name, value)
         }
     }
-}
+}*/

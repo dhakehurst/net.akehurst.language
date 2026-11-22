@@ -56,7 +56,7 @@ class test_rightRecursionWithEmpty : test_LeftCornerParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S { 'a' }
+            S { 'a' S { <EMPTY> } }
         """.trimIndent()
 
         super.test_pass(
@@ -74,7 +74,7 @@ class test_rightRecursionWithEmpty : test_LeftCornerParserAbstract() {
         val sentence = "aaa"
 
         val expected = """
-            S { 'a' }
+            S { 'a' S { 'a' S { 'a' S { <EMPTY> } } } }
         """.trimIndent()
 
         super.test_pass(

@@ -17,6 +17,8 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -47,6 +49,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
     override val extends by lazy { listOf(AglBase) }
 
+    //TODO: future enhancement (David 2026-11-20): enum literals in expressions (e.g. 'Colour.RED').
+    // Today there is no syntax for them, 'Colour.RED' is read as navigation of a property 'Colour'.
+    // (std.Type therefore offers isEnum/isData/... Boolean properties rather than a 'kind' enum.)
     override val grammarString = $$"""
         namespace $$NAMESPACE_NAME
           grammar $$NAME : $${AglBase.NAME} {
@@ -73,7 +78,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
               | group
               | block
               ;
-            rootExpression = propertyReference ;
+            rootExpression = '&'? propertyReference ;
             literalExpression = literal ;
             
             navigationExpression = navigationRoot navigationPart+ ;
@@ -119,7 +124,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             
             group = '(' expression ')' ;
             
-            propertyCall = '.' propertyReference ;
+            propertyCall = '.' '&'? propertyReference ;
             methodCall = '.' methodReference '(' argumentList ')' ;
             argumentList = [expression / ',']* ;
             
@@ -137,10 +142,16 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             typeReference = possiblyQualifiedName typeArgumentList? '?'?;
             typeArgumentList = '<' [ typeReference / ',']+ '>' ;
             
-            literal = BOOLEAN | INTEGER | REAL | STRING ;
+            override literal = BOOLEAN | INTEGER | REAL | STRING ;
         
             leaf SPECIAL = '$' IDENTIFIER ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
+            
+            // later lines win: the ternary binds loosest, then the infix operators
+            preference expression {
+              ternaryConditionExpression on '?' right
+              infixExpression ITEM on INFIX_OPERATOR right
+            }
           }
       """.trimIndent()
 
@@ -205,7 +216,6 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
     override val crossReferenceString = """
         namespace ${NAMESPACE_NAME}
-            scope §root { }
     """.trimIndent() //TODO
 
     override val styleString: String = """
@@ -219,6 +229,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
         namespace ${NAMESPACE_NAME}
         
     """.trimIndent() // TODO
+
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
 
     override val grammarDomain by lazy {
         grammarDomain(NAME) {
@@ -260,7 +275,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("block")
                     }
                     concatenation("rootExpression") {
-                        ref("propertyReference")
+                        opt { lit("&") }; ref("propertyReference")
                     }
                     concatenation("literalExpression") { ref("literal") }
                     concatenation("navigationExpression") {
@@ -334,7 +349,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     concatenation("typeTest") { ref("expression"); lit("is"); ref("typeReference") }
                     concatenation("group") { lit("("); ref("expression"); lit(")") }
                     concatenation("propertyCall") {
-                        lit("."); ref("propertyReference")
+                        lit("."); opt { lit("&") }; ref("propertyReference")
                     }
                     concatenation("methodCall") {
                         lit("."); ref("methodReference")
@@ -375,14 +390,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     concatenation("SPECIAL", isLeaf = true) { lit("$"); ref("IDENTIFIER") }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
 
-                    // If we have an 'expression'
-                    // ideally graft it into a 'whenOption'
-                    // next best thing is to graft into an infix an end it if lh=='->'
+                    // later lines win (formal proof Def 55): the ternary binds loosest: 'a > b ? c : d' is '(a > b) ? c : d', 'a ? b : c + d' is 'a ? b : (c + d)'
+                    // (no lines for '->' are needed: with longest match '-' is never the token where '->' is, so an infix expression cannot continue there)
                     preference("expression") {
+                        optionRight(listOf("ternaryConditionExpression"), ChoiceIndicator.NONE, -1, listOf("?"))
                         optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM, -1, listOf("INFIX_OPERATOR"))
-                        // really want to match the 'ER' position ??
-                        optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM, -1, listOf("->"))
-                        optionRight(listOf("whenOption"), ChoiceIndicator.NONE, -1, listOf("->"))
                     }
                 }
             }
@@ -724,6 +736,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
 
 //            TODO("not implemented")
             }
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

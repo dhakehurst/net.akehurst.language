@@ -141,7 +141,7 @@ class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
               Popt { P {
                 'p'
                 '{'
-                SPopt { eSP : Inner::SP { xopt { §empty } } }
+                SPopt { §empty }
                 '}'
               } }
               RList { <EMPTY_LIST> }
@@ -257,7 +257,7 @@ class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
               Popt { P {
                 'p'
                 '{'
-                SPopt { eSP : Inner::SP { xopt { §empty } } }
+                SPopt { §empty }
                 '}'
               } }
               RList { R {

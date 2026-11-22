@@ -27,6 +27,8 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
+// replaced by ExpressionsInterpreterOverTypedObjectCombined (evaluateStr / evaluateExpression)
+/*
 open class ExpressionsInterpreterOverTypedObject(
     val objectGraph: ObjectGraphAccessorMutator,
     val customFunctions: FunctionLib? = null
@@ -72,7 +74,7 @@ open class ExpressionsInterpreterOverTypedObject(
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
         is FunctionCall -> this.evaluateFunctionCall(evc, expression)
         is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
-        is OnExpression -> TODO()
+        is OnExpression -> this.evaluateOn(evc, expression)
         is NavigationExpression -> this.evaluateNavigation(evc, expression)
         is LambdaExpression -> this.evaluateLambda(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)
@@ -137,7 +139,10 @@ open class ExpressionsInterpreterOverTypedObject(
         val start = evaluateExpression(evc, st)
         val result = expression.parts.fold(start) { acc, it ->
             when (it) {
-                is PropertyCall -> evaluatePropertyName(acc, PropertyName(it.propertyName))
+                is PropertyCall -> when {
+                    it.propertyName.startsWith("\$") -> evaluateSpecialProperty(acc, it.propertyName) ?: evaluatePropertyName(acc, PropertyName(it.propertyName))
+                    else -> evaluatePropertyName(acc, PropertyName(it.propertyName))
+                }
                 is MethodCall -> evaluateMethodCall(evc, acc, MethodName(it.methodName), it.arguments)
                 is IndexOperation -> evaluateIndexOperation(evc, acc, it.indices)
                 else -> error("should not happen")
@@ -145,6 +150,12 @@ open class ExpressionsInterpreterOverTypedObject(
         }
         return result
     }
+
+    /**
+     * the value of a special property ('.\$name') of 'obj', given by the user of the interpreter (e.g. '.\$owner' in references),
+     * null if it is not a special property, then it is an ordinary property of 'obj'
+     */
+    protected open fun evaluateSpecialProperty(obj: TypedObject, name: String): TypedObject? = null
 
     private fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
         return when {
@@ -401,8 +412,11 @@ open class ExpressionsInterpreterOverTypedObject(
                 }
             }
 
-            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
+            // values of different types are not equal (the negation of '==')
+            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
         }
+
+        "<", "<=", ">", ">=" -> evaluateComparisonOperator(objectGraph, lhs, op, rhs)
 
         // arithmetic
         "/" -> when {
@@ -555,7 +569,7 @@ open class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValue { it ->
-            val newEvc = evc.child(mapOf("it" to it))
+            val newEvc = evc.child(mapOf(lambdaParameterName(expression) to it))
             evaluateExpression(newEvc, expression.expression)
         }
         return lambda
@@ -615,6 +629,13 @@ open class ExpressionsInterpreterOverTypedObject(
         return tuple
     }
 
+    /** evaluate the expression, then set the properties of the resulting object, result is that (same) object */
+    private fun evaluateOn(evc: EvaluationContext, expression: OnExpression): TypedObject {
+        return evaluateExpression(evc, expression.expression).also { self ->
+            propertyAssignmentBlock(evc, self, expression.propertyAssignments)
+        }
+    }
+
     private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
         return constructObject(evc, expression).also { self ->
             propertyAssignmentBlock(evc, self, expression.propertyAssignments)
@@ -631,30 +652,63 @@ open class ExpressionsInterpreterOverTypedObject(
             null -> error("Type not found ${expression.possiblyQualifiedTypeName}")
             is DataType, is ValueType -> {
                 val args = expression.constructorArguments.map { evaluateExpression(evc, it.rhs) }
-                val constructorArgs = when {
-                    args.isNotEmpty() -> {
-                        val constructors = when (typeDef) {
-                            is DataType -> typeDef.constructors
-                            is ValueType -> typeDef.constructors
-                            else -> error("Type '${typeDef.qualifiedName.value}' has no constructors")
-                        }
-                        val constructor = constructors.firstOrNull { cons ->
-                            cons.parameters.size == args.size && cons.parameters.zip(args).all { (p, a) -> a.type.conformsTo(p.typeInstance) }
-                        } ?: error("Constructor not found for '${typeDef.qualifiedName.value}' with arguments ${args.joinToString { it.type.qualifiedTypeName.value }}")
-
-                        // val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
-                        // if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
-
-                        constructor.parameters.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.toMap()
-                    }
-
-                    else -> emptyMap()
-                }
+                val constructorArgs = constructorArgumentsFor(typeDef, expression.constructorArguments.map { it.variable.name }, args)
                 objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
             }
 
             else -> error("Cannot create an object of type '${typeDef.qualifiedName.value}'")
         }
+    }
+
+    /**
+     * Chooses the declared constructor of typeDef for the given constructor arguments,
+     * first by parameter name, otherwise by position.
+     * Returns the arguments keyed by parameter name.
+     * With no arguments: a declared 0 parameter constructor is required, unless the type declares no constructors.
+     */
+    private fun constructorArgumentsFor(typeDef: TypeDefinition, argNames: List<String>, args: List<TypedObject>): Map<String, TypedObject> {
+        val constructors = when (typeDef) {
+            is DataType -> typeDef.constructors
+            is ValueType -> typeDef.constructors
+            else -> emptyList()
+        }
+        val declared = { constructors.joinToString { c -> "(${c.parameters.joinToString { p -> "${p.name.value}: ${p.typeInstance.signature(null, 0)}" }})" } }
+        return when {
+            args.isEmpty() -> when {
+                constructors.isEmpty() || constructors.any { it.parameters.isEmpty() } -> emptyMap()
+                else -> error("Type '${typeDef.qualifiedName.value}' has no declared constructor with 0 parameters, declared constructors are: ${declared()}")
+            }
+
+            else -> {
+                val argsByName = argNames.zip(args).toMap()
+                val byName = constructors.firstOrNull { cons ->
+                    cons.parameters.size == args.size && cons.parameters.all { p ->
+                        argsByName[p.name.value]?.let { a -> constructorArgumentConforms(a.type, p.typeInstance) } ?: false
+                    }
+                }
+                when {
+                    null != byName -> byName.parameters.associate { p -> Pair(p.name.value, argsByName[p.name.value]!!) }
+                    else -> {
+                        val byPosition = constructors.firstOrNull { cons ->
+                            cons.parameters.size == args.size && cons.parameters.zip(args).all { (p, a) -> constructorArgumentConforms(a.type, p.typeInstance) }
+                        } ?: error(
+                            "Constructor not found for '${typeDef.qualifiedName.value}' with arguments (${argNames.zip(args).joinToString { (n, a) -> "$n: ${a.type.signature(null, 0)}" }}), declared constructors are: ${declared()}"
+                        )
+                        byPosition.parameters.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.toMap()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * conformsTo is covariant in the type arguments,
+     * in addition, if either type has no type arguments (e.g. parameter type 'List'), only the type definitions are compared
+     */
+    private fun constructorArgumentConforms(argType: TypeInstance, paramType: TypeInstance): Boolean = when {
+        argType.conformsTo(paramType) -> true
+        argType.typeArguments.isEmpty() || paramType.typeArguments.isEmpty() -> argType.resolvedDefinition.conformsTo(paramType.resolvedDefinition)
+        else -> false
     }
 
     /**
@@ -668,3 +722,4 @@ open class ExpressionsInterpreterOverTypedObject(
         }
     }
 }
+*/

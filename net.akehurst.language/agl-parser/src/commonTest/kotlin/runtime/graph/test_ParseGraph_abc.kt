@@ -25,6 +25,7 @@ import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.common.SentenceDefault
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -65,6 +66,7 @@ class test_ParseGraph_abc {
         //assertEquals(0, head.previous.values.first().node.currentState.position)
     }
 
+    @Ignore //placeholder: test not written yet
     @Test
     fun s1() {
         val rrs = runtimeRuleSet {

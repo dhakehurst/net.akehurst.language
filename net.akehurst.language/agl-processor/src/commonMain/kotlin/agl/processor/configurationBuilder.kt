@@ -43,6 +43,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _crossReferenceString: CrossReferenceString? = base.crossReferenceString
     private var _styleString: StyleString? = base.styleString
     private var _formatString: FormatString? = base.formatString
+    private var _completionString: CompletionString? = base.completionString
 
     private var _regexEngineKind: RegexEngineKind = base.regexEngineKind
     private var _scannerKind: ScannerKind = base.scannerKind
@@ -59,6 +60,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = base.semanticAnalyserResolver
     private var _formatModelResolver: FormatResolver<AsmType, ContextType>? = base.formatResolver
     private var _styleResolver: StyleResolver<AsmType, ContextType>? = base.styleResolver
+    private var _completionResolver: CompletionResolver<AsmType, ContextType>? = base.completionResolver
     private var _completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = base.completionProviderResolver
 
     fun targetGrammarName(value: String?) {
@@ -91,6 +93,10 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
 
     fun formatString(value: FormatString?) {
         _formatString = value
+    }
+
+    fun completionString(value: CompletionString?) {
+        _completionString = value
     }
 
     fun scanner(scannerKind: ScannerKind, regexEngineKind: RegexEngineKind) {
@@ -155,6 +161,10 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         _styleResolver = func
     }
 
+    fun completionResolver(func: CompletionResolver<AsmType, ContextType>?) {
+        _completionResolver = func
+    }
+
     fun completionProvider(value: CompletionProviderResolver<AsmType, ContextType>?) {
         _completionProviderResolver = value
     }
@@ -169,6 +179,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             crossReferenceString = _crossReferenceString,
             styleString = _styleString,
             formatString = _formatString,
+            completionString = _completionString,
 
             regexEngineKind = _regexEngineKind,
             scannerKind = _scannerKind,
@@ -182,6 +193,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             semanticAnalyserResolver = _semanticAnalyserResolver,
             formatResolver = _formatModelResolver,
             styleResolver = _styleResolver,
+            completionResolver = _completionResolver,
             completionProviderResolver = _completionProviderResolver
         )
     }

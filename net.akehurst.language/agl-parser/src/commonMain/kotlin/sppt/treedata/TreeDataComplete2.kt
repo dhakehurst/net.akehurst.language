@@ -130,6 +130,18 @@ class TreeDataComplete2(
         this._skipDataAfter.remove(node)
     }
 
+    /**
+     * Used when streaming: drop what is stored for a node that has been sent to the listener.
+     * Only called for a node that ends before the committed frontier, so no later parse can produce
+     * the same rule at the same start position, and the preferred entry is not needed any more.
+     */
+    fun removeSent(node: SpptDataNode) {
+        this._complete.remove(node)
+        if (this._preferred[node.preferred] == node) this._preferred.remove(node.preferred)
+        this._skipDataAfter.remove(node)
+        this._embeddedFor.remove(node)
+    }
+
     private fun setEmbeddedChild(parent: SpptDataNode, child: SpptDataNode) {
         val completeChildren = listOf(child)
         this.setCompletedBy(parent, completeChildren, true)  //might it ever not be preferred!

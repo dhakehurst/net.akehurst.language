@@ -33,6 +33,12 @@ interface RegexMatcher {
 
     fun matchesAt(text: String, atPosition: Int): Boolean
 
+    /** the fewest characters a match can have, -1 if the pattern can never match */
+    val minLength: Int
+
+    /** the most characters a match can have, -1 if there is no maximum (a loop) */
+    val maxLength: Int
+
 }
 
 interface Regex {

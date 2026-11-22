@@ -41,6 +41,7 @@ class test_CompletionProviderSimple {
             val context: SentenceContext? = contextAsmSimple(),
             val sentence: String,
             val position: Int,
+            val depth: Int? = null,
             val expected: List<CompletionItem>
         )
 
@@ -58,6 +59,7 @@ class test_CompletionProviderSimple {
             val actual = proc.expectedItemsAt(data.sentence, data.position, Agl.options {
                 completionProvider {
                     sentenceContext(data.context)
+                    data.depth?.let { depth(it) }
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
@@ -122,7 +124,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "[a-z]", "<PAT>")
+            CompletionItem(CompletionItemKind.PATTERN, "PAT", "<PAT>")
         )
         test(
             TestData(
@@ -169,6 +171,34 @@ class test_CompletionProviderSimple {
     }
 
     @Test
+    fun embedded_expanded_with_depth() {
+        val grammarStr = """
+            namespace test
+            grammar Inner {
+                S = 'a' 'b' ;
+            }
+            grammar Test {
+                S = 'x' Inner::S ;
+            }
+        """
+        val sentence = ""
+        // the embedded rule is expanded like any other rule (q41)
+        val expected = listOf(
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "S", text = "x a b"),
+            CompletionItem(CompletionItemKind.LITERAL, "'x'", "x")
+        )
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = sentence.length,
+                depth = 2,
+                expected = expected
+            )
+        )
+    }
+
+    @Test
     fun FailedParseReasonLookahead__varDef_no_scope() {
         val grammarStr = """
             namespace test
@@ -185,7 +215,7 @@ class test_CompletionProviderSimple {
 
         val expected = listOf(
             CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<NAME>")
+            CompletionItem(CompletionItemKind.PATTERN, "NAME", "<NAME>")
         )
 
         test(
@@ -238,7 +268,7 @@ class test_CompletionProviderSimple {
         val expected = listOf(
             CompletionItem(CompletionItemKind.REFERRED, "TypeDef", "int"),
             CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<REF>"),
+            CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
         )
 
         test(
@@ -270,10 +300,11 @@ class test_CompletionProviderSimple {
                 sentence = sentence,
                 position = 0,
                 expected = listOf(
-                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+                    // "That" is a pattern (double quotes)
                     CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
-                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "<That> is a sentence ."),
                     CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+                    CompletionItem(CompletionItemKind.PATTERN, "That", "<That>"),
                 )
             )
         )
@@ -309,7 +340,7 @@ class test_CompletionProviderSimple {
                 sentence = sentence,
                 position = 3,
                 expected = listOf(
-                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+                    // word completion: only literals that extend the typed word are offered
                     CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
                 )
             )

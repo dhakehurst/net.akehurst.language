@@ -129,8 +129,26 @@ class M2mTransformRuleSetDefault(
 
     override val extends: List<M2mTransformRuleSetReference> = argExtends.toMutableList()
     override val importTypes: List<Import> = mutableListOf()
-    override val topRule: List<M2mTransformRule> get() = rule.values.filter { it.isTop }
+    override val topRule: List<M2mTransformRule> get() = allRule.values.filter { it.isTop }
     override val rule: Map<SimpleName, M2mTransformRule> = mutableMapOf()
+    override val allRule: Map<SimpleName, M2mTransformRule> get() = allRuleVisiting(mutableListOf())
+
+    /** an extends cycle is an error found by the semantic analyser, here a transform already visited is skipped */
+    private fun allRuleVisiting(visited: MutableList<M2mTransformRuleSet>): Map<SimpleName, M2mTransformRule> {
+        visited.add(this)
+        val result = linkedMapOf<SimpleName, M2mTransformRule>()
+        extends.forEach { ref ->
+            val sup = ref.resolved
+            when {
+                null == sup -> Unit
+                visited.any { it === sup } -> Unit
+                sup is M2mTransformRuleSetDefault -> result.putAll(sup.allRuleVisiting(visited))
+                else -> result.putAll(sup.allRule)
+            }
+        }
+        result.putAll(rule)
+        return result
+    }
     override val domainParameterResolved: Map<DomainReference, TypesDomain> get() = _domainParameterResolved
 
     init {
@@ -181,6 +199,7 @@ abstract class M2mTransformRuleAbstract(
 ) : M2mTransformRule {
     override val parameters: List<VariableDefinition> = mutableListOf()
     override val extends: List<M2mTransformRuleReference> = mutableListOf()
+    override var isOverride: Boolean = false
 
     override fun conformsTo(other: M2mTransformRule): Boolean = when {
         other === this -> true
@@ -391,10 +410,30 @@ data class ObjectTemplateDefault(
     }
 }
 
+data class CollectionTemplateGapDefault(
+    override val name: SimpleName?
+) : CollectionTemplateGap {
+    override fun toString(): String = name?.let { "${it.value}:..." } ?: "..."
+}
+
 data class CollectionTemplateDefault(
-    override val isSubset: Boolean,
-    override val elements: List<PropertyTemplateRhs>
+    override val elements: List<PropertyTemplateRhs>,
+    override val gaps: List<CollectionTemplateGap?>
 ) : CollectionTemplate {
+    companion object {
+        /** without gaps (isSubset false), or with one unnamed gap before the members (isSubset true) */
+        fun of(isSubset: Boolean, elements: List<PropertyTemplateRhs>) = CollectionTemplateDefault(
+            elements,
+            List(elements.size + 1) { i -> if (isSubset && 0 == i) CollectionTemplateGapDefault(null) else null }
+        )
+    }
+
+    init {
+        check(gaps.size == elements.size + 1) { "gaps must have one more entry than elements" }
+    }
+
+    override val isSubset: Boolean get() = gaps.any { null != it }
+
     override var identifier: SimpleName? = null
     override fun setIdentifierValue(value: SimpleName) {
         this.identifier = value
@@ -407,13 +446,18 @@ data class CollectionTemplateDefault(
     override fun asString(indent: Indent): String {
         val id = identifier?.let { "${it.value}:" } ?: ""
         val elIndent = indent.inc
-        val elems = elements.joinToString(separator = "\n") { el -> "$elIndent${el.asString(elIndent)}" }
+        // a gap takes the place of the ',' between members
+        val lines = mutableListOf<String>()
+        for (i in 0..elements.size) {
+            gaps[i]?.let { lines.add("$elIndent$it") }
+            if (i < elements.size) {
+                val needsComma = i + 1 < elements.size && null == gaps[i + 1]
+                lines.add("$elIndent${elements[i].asString(elIndent)}" + if (needsComma) "," else "")
+            }
+        }
         return when {
-            elements.isEmpty() -> "$id[ ]"
-            else -> """$id[
-            $elems
-            $indent]
-            """.trimIndent()
+            lines.isEmpty() -> "$id[ ]"
+            else -> "$id[\n" + lines.joinToString(separator = "\n") + "\n$indent]"
         }
     }
 }

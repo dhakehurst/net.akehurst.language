@@ -42,7 +42,7 @@ class test_ma_sList_root_choicePriority : test_AutomatonAbstract() {
     // must be fresh per test or automaton is not correct for different parses (due to caching)
     private val rrs = ruleSet("Test") {
         concatenation("S") { ref("E") }
-        choicePriority("E") {
+        choiceLongest("E") {
             ref("R")
             ref("M")
             ref("A")
@@ -417,10 +417,15 @@ class test_ma_sList_root_choicePriority : test_AutomatonAbstract() {
                 prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
                 prevPair(RP(rG, oN, SR), RP(A, oSI, pSI))
             }
+            trans(HEIGHT) { src(E, o1, ER); tgt(S, oN, ER); lhg(setOf(RT), setOf(RT));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
+            }
             trans(HEIGHT) { src(E, o1, ER); tgt(M, SI, 1); lhg(setOf(_t6), setOf(RT,_t7,_t6));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
                 prevPair(RP(rG, oN, SR), RP(A, oSI, pSI))
             }
             trans(HEIGHT) { src(E, o1, ER); tgt(A, SI, 1); lhg(setOf(_t7), setOf(RT,_t7,_t6));
+                prevPair(RP(rG, oN, SR), RP(rG, oN, SR))
                 prevPair(RP(rG, oN, SR), RP(A, oSI, pSI))
             }
             trans(GRAFT) { src(E, o1, ER); tgt(A, SI, ER); lhg(RT);

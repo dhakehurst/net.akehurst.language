@@ -32,7 +32,7 @@ class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("C"); ref("C") }
-            choice("C", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("cC")
                 literal("d")
             }

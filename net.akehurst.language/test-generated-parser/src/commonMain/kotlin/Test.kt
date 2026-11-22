@@ -28,6 +28,7 @@ import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.aut
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
@@ -64,6 +65,7 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, SentenceContext>() 
     override val crossReferenceString: String = ""
     override val styleString: String = ""
     override val formatString: String = ""
+    override val completionString: String = ""
 
     override val grammarDomain: GrammarDomain get() = TODO("not implemented")
     override val typesDomain: TypesDomain = typesDomain("test", true) {
@@ -74,6 +76,7 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, SentenceContext>() 
     override val crossReferenceDomain: CrossReferenceDomain get() = TODO("builder for cross reference model")
     override val styleDomain: AglStyleDomain get() = TODO("not implemented")
     override val formatDomain: AglFormatDomain get() = TODO("not implemented")
+    override val completionDomain: AglCompletionDomain get() = TODO("not implemented")
     override val defaultTargetGrammar: Grammar
         get() = TODO("not implemented")
     override val defaultTargetGoalRule: String

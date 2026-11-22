@@ -34,7 +34,7 @@ import kotlin.test.assertTrue
 class test_Dot_SyntaxAnalyser {
 
     companion object {
-        private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
+        private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl-grm").readText()
         var processor: LanguageProcessor<Asm, SentenceContext> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }
 

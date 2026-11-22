@@ -32,8 +32,10 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.agl.util.ReentrantLockCommon
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
+import net.akehurst.language.util.cachedWithLock
 import kotlin.properties.Delegates
 
 abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
@@ -106,13 +108,18 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
 
     //override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
     override val styleStrObservers = mutableListOf<(oldValue: StyleString?, newValue: StyleString?) -> Unit>()
+    override val completionStrObservers = mutableListOf<(oldValue: CompletionString?, newValue: CompletionString?) -> Unit>()
     //override val styleObservers = mutableListOf<(oldValue: AglStyleModel?, newValue: AglStyleModel?) -> Unit>()
 
     override fun toString(): String = identity.value
 
     // --- implementation ---
 
-    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
+    // one lock for the processor and style caches: the style is computed from the processor,
+    // so that several threads (e.g. an editor and direct calls) get the same processor, created once
+    private val _cacheLock = ReentrantLockCommon()
+
+    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cachedWithLock(_cacheLock) {
         val tg = this.targetGrammar
         val gm = this.grammarDomain
         if (null == tg || null == gm) {
@@ -126,7 +133,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     }.apply { this.resetAction = { old -> processorObservers.forEach { it(old, null) } } }
 
     // style is not part of the processor...only used by editors
-    protected val _style_cache: CachedValue<AglStyleDomain?> = cached {
+    protected val _style_cache: CachedValue<AglStyleDomain?> = cachedWithLock(_cacheLock) {
         _styleResolver?.let {
             val p = this.processor
             if (null == p) {

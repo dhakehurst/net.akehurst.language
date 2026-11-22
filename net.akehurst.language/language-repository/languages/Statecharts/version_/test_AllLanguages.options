@@ -1,0 +1,2 @@
+// options for test_AllLanguages for this language version, see TestOptions in test_AllLanguages.kt
+skip: agl-ref // TODO: references.agl-ref does not match the current grammar (property names, missing types), see @Ignore on agl-processor test_StatechartTools_References

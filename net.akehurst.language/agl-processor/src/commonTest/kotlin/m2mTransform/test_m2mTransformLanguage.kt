@@ -372,6 +372,10 @@ class test_m2mTransformLanguage {
                           related Rel2{d1:=x d2:=y}
                         }
                       }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -401,6 +405,10 @@ class test_m2mTransformLanguage {
                         when {
                           related all Rel2{d1:=x d2:=y}
                         }
+                      }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
                       }
                     }
                 """.trimIndent()
@@ -432,6 +440,10 @@ class test_m2mTransformLanguage {
                           mapped Map2{d1:=x d2:=y}
                         }
                       }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := Y() {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -461,6 +473,10 @@ class test_m2mTransformLanguage {
                         when {
                           mapped all Map2{d1:=x d2:=y}
                         }
+                      }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := Y() {}
                       }
                     }
                 """.trimIndent()
@@ -494,6 +510,10 @@ class test_m2mTransformLanguage {
                           relate Rel2{d1:=x d2:=y}
                         }
                       }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -523,6 +543,10 @@ class test_m2mTransformLanguage {
                         where {
                           relate all Rel2{d1:=x d2:=y}
                         }
+                      }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
                       }
                     }
                 """.trimIndent()
@@ -554,6 +578,10 @@ class test_m2mTransformLanguage {
                           map Map2{d1:=x d2:=y}
                         }
                       }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := Y() {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -583,6 +611,10 @@ class test_m2mTransformLanguage {
                         where {
                           map all Map2{d1:=x d2:=y}
                         }
+                      }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := Y() {}
                       }
                     }
                 """.trimIndent()
@@ -1036,23 +1068,17 @@ class test_m2mTransformLanguage {
 
     @Test
     fun check_grammar() {
-        val proc = Agl.registry.agl.asmTransform.processor
-        assertTrue(Agl.registry.agl.asmTransform.issues.isEmpty(), Agl.registry.agl.asmTransform.issues.toString())
+        val proc = Agl.registry.agl.m2mTransform.processor
+        assertTrue(Agl.registry.agl.m2mTransform.issues.isEmpty(), Agl.registry.agl.m2mTransform.issues.toString())
         assertNotNull(proc)
     }
 
+    //TODO: M2mTransform.typesDomain is not yet written (only M2mTransformDomain), give the expected types when it is
     @Ignore
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.asmTransform.processor!!.typesDomain
-        val expected = grammarTypeModel("net.akehurst.language.agl", "AsmTransform") {
-            //unit = ruleList ;
-            //ruleList = [formatRule]* ;
-            //formatRule = typeReference '->' formatExpression ;
-            //formatExpression
-            // = stringExpression
-            // | whenExpression
-            // ;
+        val actual = Agl.registry.agl.m2mTransform.processor!!.typesDomain
+        val expected = grammarTypeModel("net.akehurst.language", "M2mTransform") {
         }
 
         TypesDomainTest.tmAssertEquals(expected, actual)

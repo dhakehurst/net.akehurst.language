@@ -56,9 +56,9 @@ grammar Mdl {
 
     literal
       = BOOLEAN
-      < INTEGER
-      < REAL
-      < DOUBLE_QUOTE_STRING
+      | INTEGER
+      | REAL
+      | DOUBLE_QUOTE_STRING
       ;
 
     leaf IDENTIFIER = "[a-zA-Z_$][a-zA-Z_0-9$.-]*" ;

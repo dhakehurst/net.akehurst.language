@@ -17,6 +17,8 @@
 
 package net.akehurst.language.m2mTransform.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.processor.contextFromLanguageObject
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -51,80 +53,71 @@ object M2mTransform : LanguageObjectAbstract<M2mTransformDomain, SentenceContext
 
     override val extends by lazy { listOf(AglBase) }
 
+    // must give the same grammar as grammarDomain, which is the one used (test_M2mTransformGrammarString)
     override val grammarString: String = """
 namespace $NAMESPACE_NAME
 
 grammar $NAME : Base {
-    override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
-    transform = 'transform' IDENTIFIER '(' domainParams ')' extends? '{' option* typeImport* transformRule* '} ;
-    domainParams = [parameterDefinition / ',']2+ ;
-    parameterDefinition = IDENTIFIER ':' DOMAIN_NAME ;
-    extends = ':' [possiblyQualifiedName / ',']+ ;
-    option = 'option' IDENTIFIER '=' expression ;
-    typeImport = 'import-types' possiblyQualifiedName ;
-    
-    transformRule = abstractRule | relationRule | mappingRule | tableRule ;
-    abstractRule = 'abstract' 'top'? 'rule' ruleName ruleParameters? extends? '{' domainSignature* '}' ;
-    relationRule = 'top'? 'relation' ruleName ruleParameters? extends? '{' pivot* domainTemplate{2+} when? where? '}' ;
-    mappingRule = 'top'? 'mapping' ruleName ruleParameters? extends? '{' domainTemplate+ domainAssignment when? where? '}' ;
-    tableRule = 'top'? 'table' ruleName ruleParameters? extends? '{' unnamedDomainSignature{2+} values+ when? where? '}' ;
-    ruleParameters = '(' [variableDefinition / ',']+ ')' ;
-    
-    pivot = 'pivot' variableDefinition ;
-    domainSignature = 'domain' domainReference variableDefinition ;
-    unnamedDomainSignature = 'domain' domainReference ':' typeReference ;
-    domainTemplate = domainSignature domainTemplateRhs ;
-    domainTemplateRhs = domainPrimitiveRhs | domainObjectRhs ;
-    domainPrimitiveRhs = '==' expression ;
-    domainObjectRhs = propertyTemplateBlock ;
-    domainAssignment = domainSignature ':=' expression ;
-    variableDefinition = variableName ':' typeReference ;
-    values = 'values' [expression / 'to']2+ ;
-
-    typeReference = Expressions::typeReference ;
-    expression = Expressions::expression ;
-    
-    when = 'when' '{' whenExpression '}' ;
-    whenExpression = expression | relationHolds | relationHoldsForAll | mappingHolds | mappingHoldsForAll ;
-    relationHolds = 'related' ruleCall ;
-    relationHoldsForAll = 'related' 'all' ruleCall ; 
-    mappingHolds = 'mapped' ruleCall ;
-    mappingHoldsForAll = 'mapped' 'all' ruleCall ;
-    
-    where = 'where' '{' whereExpression+ '}' ;
-    whereExpression = callRelation | callRelationForAll | callMapping | callMappingForAll ;
-    callRelation = 'relate' ruleCall ;
-    callRelationForAll = 'relate' 'all' ruleCall ;
-    callMapping = 'map' ruleCall ;
-    callMappingForAll = 'map' 'all' ruleCall ;
-
-    ruleCall = ruleName arguments? '{' argAssignment* '}' ;
-    arguments = '(' [argAssignment / ',']+ ')' ;
-    argAssignment = variableName ':=' expression ;
-
-    propertyTemplateRhs =  objectTemplate | collectionTemplate | expression ;
-    objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
-    propertyTemplateBlock = '{' propertyTemplate*  '}';
-    propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
-    collectionTemplate = (variableName ':')? '[' ('...')? [propertyTemplateRhs / ',' ]* ']' ;
-
-    leaf DOMAIN_NAME := IDENTIFIER ;
-    leaf domainReference := IDENTIFIER ;
-    leaf ruleName := IDENTIFIER ;
-    leaf propertyReference := IDENTIFIER ;
-    leaf variableName := IDENTIFIER ;
-    
-    testUnit = option* import* testNamespace* ;
-    testNamespace = 'namespace' possiblyQualifiedName option* import* transformTest* ;
-    transformTest = 'transform-test' IDENTIFIER '(' domainParams ')' '{'
-       testCase*
-    '}' ;
-    testCase = 'test-case' IDENTIFIER '{'
-      testDomain*
-    '}' ;
-    testDomain = 'domain' IDENTIFIER ':=' expression ;
+  override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
+  transform = 'transform' IDENTIFIER '(' domainParams ')' extends? '{' option* typeImport* transformRule* '}' ;
+  domainParams = [parameterDefinition / ','] 2+ ;
+  parameterDefinition = IDENTIFIER ':' DOMAIN_NAME ;
+  leaf DOMAIN_NAME = IDENTIFIER ;
+  extends = ':' [possiblyQualifiedName / ',']+ ;
+  typeImport = 'import-types' possiblyQualifiedName ;
+  transformRule = abstractRule | relationRule | mappingRule | tableRule ;
+  abstractRule = 'override'? 'abstract' 'top'? 'rule' ruleName ruleParameters? extends? '{' domainSignature* '}' ;
+  relationRule = 'override'? 'top'? 'relation' ruleName ruleParameters? extends? '{' pivot* domainTemplate 2+ when? where? '}' ;
+  mappingRule = 'override'? 'top'? 'mapping' ruleName ruleParameters? extends? '{' domainTemplate+ domainAssignment when? where? '}' ;
+  tableRule = 'override'? 'top'? 'table' ruleName ruleParameters? extends? '{' unnamedDomainSignature 2+ values+ when? where? '}' ;
+  ruleParameters = '(' [variableDefinition / ',']+ ')' ;
+  pivot = 'pivot' variableDefinition ;
+  domainPrimitive = 'primitive' 'domain' variableDefinition ;
+  domainSignature = 'domain' domainReference variableDefinition ;
+  unnamedDomainSignature = 'domain' domainReference ':' typeReference ;
+  domainTemplate = domainSignature domainTemplateRhs ;
+  domainTemplateRhs = domainPrimitiveRhs | domainObjectRhs ;
+  domainPrimitiveRhs = '==' expression ;
+  domainObjectRhs = propertyTemplateBlock ;
+  domainAssignment = domainSignature ':=' expression ;
+  variableDefinition = variableName ':' typeReference ;
+  values = 'values' [expression / 'to'] 2+ ;
+  typeReference = Expressions::typeReference ;
+  expression = Expressions::expression ;
+  when = 'when' '{' whenExpression '}' ;
+  whenExpression = relationHolds | relationHoldsForAll | mappingHolds | mappingHoldsForAll | expression ;
+  relationHolds = 'related' ruleCall ;
+  relationHoldsForAll = 'related' 'all' ruleCall ;
+  mappingHolds = 'mapped' ruleCall ;
+  mappingHoldsForAll = 'mapped' 'all' ruleCall ;
+  where = 'where' '{' whereExpression+ '}' ;
+  whereExpression = callRelationForAll | callRelation | callMappingForAll | callMapping ;
+  callRelation = 'relate' ruleCall ;
+  callRelationForAll = 'relate' 'all' ruleCall ;
+  callMapping = 'map' ruleCall ;
+  callMappingForAll = 'map' 'all' ruleCall ;
+  ruleCall = ruleName arguments? '{' argAssignment+ '}' ;
+  arguments = '(' [argAssignment / ',']+ ')' ;
+  argAssignment = variableName ':=' expression ;
+  propertyTemplateRhs = objectTemplate | collectionTemplate | expression ;
+  objectTemplate = ( variableName ':' )? typeReference propertyTemplateBlock ;
+  propertyTemplateBlock = '{' propertyTemplate* '}' ;
+  propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
+  collectionTemplate = ( variableName ':' )? '[' collectionGap? [propertyTemplateRhs / collectionSeparator]* collectionGap? ']' ;
+  collectionSeparator = ',' | collectionGap ;
+  collectionGap = ( variableName ':' )? '...' ;
+  leaf domainReference = IDENTIFIER ;
+  leaf ruleName = IDENTIFIER ;
+  leaf propertyReference = IDENTIFIER ;
+  leaf variableName = IDENTIFIER ;
+  testUnit = option* import* testNamespace* ;
+  testNamespace = 'namespace' possiblyQualifiedName option* import* transformTest* ;
+  transformTest = 'transform-test' IDENTIFIER '(' domainParams ')' '{' testCase* '}' ;
+  testCase = 'test-case' IDENTIFIER '{' testDomain 2+ '}' ;
+  testDomain = 'domain' IDENTIFIER ':=' expression ;
 }
     """
+
 
     override val typesString: String = """
         namespace $NAMESPACE_NAME
@@ -155,6 +148,11 @@ grammar $NAME : Base {
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
           // TODO
     """.trimIndent()
 
@@ -190,12 +188,12 @@ grammar $NAME : Base {
                         ref("tableRule")
                     }
                     concatenation("abstractRule") {
-                        lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
+                        opt { lit("override") }; lit("abstract"); opt { lit("top") }; lit("rule"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("domainSignature") }
                         lit("}")
                     }
                     concatenation("relationRule") {
-                        opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
+                        opt { lit("override") }; opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("pivot") }
                         lst(2, -1) { ref("domainTemplate") }
                         opt { ref("when") }
@@ -203,7 +201,7 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("mappingRule") {
-                        opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
+                        opt { lit("override") }; opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(1, -1) { ref("domainTemplate") }
                         ref("domainAssignment")
                         opt { ref("when") }
@@ -211,7 +209,7 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("tableRule") {
-                        opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
+                        opt { lit("override") }; opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("ruleParameters") }; opt { ref("extends") }; lit("{")
                         lst(2, -1) { ref("unnamedDomainSignature") }
                         lst(1, -1) { ref("values") }
                         opt { ref("when") }
@@ -285,8 +283,13 @@ grammar $NAME : Base {
                     concatenation("propertyTemplateBlock") { lit("{"); lst(0, -1) { ref("propertyTemplate") }; lit("}") }
                     concatenation("propertyTemplate") { ref("propertyReference"); lit("=="); ref("propertyTemplateRhs") }
                     concatenation("collectionTemplate") {
-                        opt { grp { ref("variableName"); lit(":") } }; lit("["); opt { lit("...") }; spLst(0, -1) { ref("propertyTemplateRhs"); lit(",") }; lit("]")
+                        opt { grp { ref("variableName"); lit(":") } }; lit("["); opt { ref("collectionGap") }; spLst(0, -1) { ref("propertyTemplateRhs"); ref("collectionSeparator") }; opt { ref("collectionGap") }; lit("]")
                     }
+                    choice("collectionSeparator") {
+                        lit(",")
+                        ref("collectionGap")
+                    }
+                    concatenation("collectionGap") { opt { grp { ref("variableName"); lit(":") } }; lit("...") }
 
                     concatenation("domainReference", isLeaf = true) { ref("IDENTIFIER") }
                     concatenation("ruleName", isLeaf = true) { ref("IDENTIFIER") }
@@ -365,6 +368,11 @@ grammar $NAME : Base {
         }
     }
 
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
+        }
+    }
+
     override val styleDomain by lazy {
         styleDomain(NAME,  sentenceContext = contextFromGrammar(AglStyle.grammarDomain, grammarDomain).union(contextFromLanguageObject(listOf(AglBase)))) {
             namespace(NAMESPACE_NAME) {
@@ -376,6 +384,7 @@ grammar $NAME : Base {
                     tagRule("typeReference") {
                         declaration("foreground", "DarkBlue")
                     }
+                    // TODO: no grammar rule is named 'propertyName' (the rule is 'propertyReference'), so this style is never used (MT5)
                     tagRule("propertyName") {
                         declaration("foreground", "Blue")
                     }

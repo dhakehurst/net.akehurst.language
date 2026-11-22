@@ -700,7 +700,7 @@ class test_m2mTransformInterpreter {
                             propertyString("prop1", "value2")
                         }
                     }
-                    expectIssue(LanguageIssueKind.INFORMATION, "when clause evaluated to false for target domain ref 'd2' of rule 'A12A2'.")
+                    // a false 'when' gives no issue, only a trace (MT-Q29)
                     target("d2") {
                     }
                 }
@@ -943,6 +943,7 @@ class test_m2mTransformInterpreter {
                                  a1:Attribute {
                                    name == 'a1'
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String := X + ' contains a1'
@@ -1015,6 +1016,7 @@ class test_m2mTransformInterpreter {
                                  Attribute {
                                    name == Y
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String := X + ' contains ' + Y
@@ -1163,6 +1165,7 @@ class test_m2mTransformInterpreter {
                                  a1:Attribute {
                                    name == 'a1'
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String == X + ' contains a1'
@@ -1235,6 +1238,7 @@ class test_m2mTransformInterpreter {
                                  Attribute {
                                    name == Y
                                  }
+                                 ...
                                ]
                             }
                             domain d2 a2:String == X + ' contains ' + Y
@@ -1633,6 +1637,145 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            testSuit("umlRdbms QVT example - top table PrimitiveUmlTypeToSqlType, no identify") {
+                typesDomain("uml", "SimpleUML", true) {
+                    namespace("uml") {
+                        data("UmlModelElement") {
+                            propertyOf(setOf(REF, VAR), "name", "String")
+                        }
+                        data("Package") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("Attribute") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("PackageElement") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("Classifier") {
+                            supertypes("PackageElement")
+                        }
+                        data("Class") {
+                            supertypes("Classifier")
+                            propertyOf(setOf(CMP, VAR), "kind", "String")
+                        }
+                        data("PrimitiveDataType") {
+                            supertypes("Classifier")
+                            constructor_ {
+                                parameter(setOf(REF, VAL), "name", "String")
+                            }
+                        }
+                        data("Association") {
+                            supertypes("PackageElement")
+                        }
+                        association {
+                            end("Package", setOf(REF, VAR), "namespace")
+                            end("PackageElement", setOf(CMP, VAR), "elements", false, "Set")
+                        }
+                        association {
+                            end("Classifier", setOf(REF, VAR), "type")
+                            end("Attribute", setOf(REF, VAR), "typeOpposite", false, "Set")
+                        }
+                        association {
+                            end("Class", setOf(REF, VAR), "owner")
+                            end("Attribute", setOf(CMP, VAR), "attribute", false, "Set")
+                        }
+                        association {
+                            end("Class", setOf(REF, VAR), "general", false, "Set")
+                            end("Class", setOf(REF, VAR), "generalOpposite", false, "Set")
+                        }
+                        association {
+                            end("Class", setOf(REF, VAR), "source")
+                            end("Association", setOf(REF, VAR), "reverse", false, "Set")
+                        }
+                        association {
+                            end("Class", setOf(REF, VAR), "destination")
+                            end("Association", setOf(REF, VAR), "forward", false, "Set")
+                        }
+                    }
+                }
+                typesDomain("rdbms", "SimpleRDBMS", true) {
+                    namespace("rdbms") {
+                        data("RModelElement") {
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
+                        }
+                        data("Schema") {
+                            supertypes("RModelElement")
+                        }
+                        data("Table") {
+                            supertypes("RModelElement")
+                        }
+                        data("Column") {
+                            supertypes("RModelElement")
+                        }
+                        data("Key") {
+                            supertypes("RModelElement")
+                        }
+                        data("ForeignKey") {
+                            supertypes("RModelElement")
+                        }
+                        association {
+                            end("Schema", setOf(REF, VAR), "schema")
+                            end("Table", setOf(CMP, VAR), "tables", false, "Set")
+                        }
+                        association {
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Column", setOf(CMP, VAR), "column", false, "Set")
+                        }
+                        association {
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Key", setOf(CMP, VAR), "key", false, "Set")
+                        }
+                        association {
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("ForeignKey", setOf(CMP, VAR), "foreignKey", false, "Set")
+                        }
+                        association {
+                            end("Key", setOf(REF, VAR), "refersTo", false, "Set")
+                            //TODO: refersToOpposite is not navigable!
+                            end("ForeignKey", setOf(REF, VAR), "refersToOpposite", false, "Set")
+                        }
+                        association {
+                            end("Column", setOf(REF, VAR), "column", false, "Set")
+                            end("ForeignKey", setOf(REF, VAR), "foreignKey", false, "Set")
+                        }
+                    }
+                }
+                transform(
+                    $$"""
+                    namespace test
+                    transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
+                        top table PrimitiveUmlTypeToSqlType {
+                            domain  uml :PrimitiveDataType                /**/ domain rdbms :String
+                            /*===================================================================*/ 
+                            values uml.PrimitiveDataType(name := 'Int'){}     to  'NUMBER'
+                            values uml.PrimitiveDataType(name := 'Boolean'){} to  'BOOLEAN'
+                            values uml.PrimitiveDataType(name := 'String'){}  to  'VARCHAR'
+                        }
+                    }
+                """
+                )
+                testCase("primitive Int -> NUMBER") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "Int")
+                        }
+                    }
+                    target("rdbms") {
+                        string("NUMBER")
+                    }
+                }
+                testCase("primitive Boolean -> BOOLEAN") {
+                    input("uml") {
+                        element("PrimitiveDataType") {
+                            propertyString("name", "Boolean")
+                        }
+                    }
+                    target("rdbms") {
+                        string("BOOLEAN")
+                    }
+                }
+            }
             testSuit("umlRdbms QVT example - abstract PrimitiveUmlTypeToSqlType") {
                 typesDomain("uml", "SimpleUML", true) {
                     namespace("uml") {
@@ -2025,9 +2168,6 @@ class test_m2mTransformInterpreter {
                                 name==n
                                 type=='NUMBER'
                             }
-                            where {
-                                relate ComplexUmlTypeToSqlType { uml:=at rdbms:=ct }
-                            }
                         }                        
                         table PrimitiveUmlTypeToSqlType {
                             domain  uml :PrimitiveDataType                    /**/ domain rdbms :String
@@ -2049,7 +2189,8 @@ class test_m2mTransformInterpreter {
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
-                            propertyNothing("table")
+                            // an unset collection property (Package.elements) reads as an empty collection
+                            propertyListOfElement("table") {}
                         }
                     }
                 }
@@ -2151,18 +2292,18 @@ class test_m2mTransformInterpreter {
                                 element("Table") {
                                     reference("schema", "pkg1")
                                     propertyString("name", "Cls1")
-                                    propertyElementExplicitType("key", "Key") {
-                                        reference("owner", "pkg1.Cls1")
-                                        propertyString("name", "_pk")
-                                        reference("column", "pkg1.Cls1._id")
-                                        propertyString("kind", "primary")
-                                    }
                                     propertyListOfElement("column") {
                                         element("Column") {
                                             reference("owner", "pkg1.Cls1")
                                             propertyString("name", "_id")
                                             propertyString("type", "NUMBER")
                                         }
+                                    }
+                                    propertyElementExplicitType("key", "Key") {
+                                        reference("owner", "pkg1.Cls1")
+                                        propertyString("name", "_pk")
+                                        reference("column", "pkg1.Cls1._id")
+                                        propertyString("kind", "primary")
                                     }
                                 }
                             }
@@ -2190,12 +2331,6 @@ class test_m2mTransformInterpreter {
                                 element("Table") {
                                     reference("schema", "pkg1")
                                     propertyString("name", "Cls1")
-                                    propertyElementExplicitType("key", "Key") {
-                                        reference("owner", "pkg1.Cls1")
-                                        propertyString("name", "_pk")
-                                        reference("column", "pkg1.Cls1._id")
-                                        propertyString("kind", "primary")
-                                    }
                                     propertyListOfElement("column") {
                                         element("Column") {
                                             reference("owner", "pkg1.Cls1")
@@ -2203,12 +2338,19 @@ class test_m2mTransformInterpreter {
                                             propertyString("type", "NUMBER")
                                         }
                                     }
+                                    propertyElementExplicitType("key", "Key") {
+                                        reference("owner", "pkg1.Cls1")
+                                        propertyString("name", "_pk")
+                                        reference("column", "pkg1.Cls1._id")
+                                        propertyString("kind", "primary")
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+            // TODO(David): expected results of this suite do not follow from its transform (MT-Q28, 2026-11-22), to be reviewed
             testSuit("Where called relation creates object") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
@@ -2269,6 +2411,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            // TODO(David): expected results of this suite do not follow from its transform (MT-Q28, 2026-11-22), to be reviewed
             testSuit("Where created object is passed to where") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
@@ -2328,6 +2471,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             }
+            // TODO(David): expected results of this suite do not follow from its transform (MT-Q28, 2026-11-22), to be reviewed
             testSuit("Setting the owner") {
                 typesDomain("d1", "Domain1", true) {
                     namespace("n1") {
@@ -2483,7 +2627,7 @@ class test_m2mTransformInterpreter {
                 val cdr = suite.crossReferenceDomains[k]
                 Pair(v.name, objectGraphSimpleAsm(v, null,issues, LocationMapDefault(), ExternalGetterAsmSimple(v, cdr, issues, LocationMapDefault())))
             }
-            val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
+            val interpreter = M2mTransformInterpreterCombined(m2m, ogs, issues)
 
             val source:Map<DomainReference, List<TypedObject>> = case.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")

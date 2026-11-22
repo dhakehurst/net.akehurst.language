@@ -393,6 +393,168 @@ class test_ProvidedTransform {
                     }
                 }
             }
+            testData("tuple rule uses the parse node: \$alternative, child, children") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a | b c ;
+                        leaf a = 'a' ;
+                        leaf b = 'b' ;
+                        leaf c = 'c' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: tuple {
+                          alt := §alternative
+                          first := child[0]
+                          last := children.last
+                        }
+                      }
+                """.replace("§", "$").trimIndent()
+                )
+                sentencePass("a") {
+                    expectedAsm {
+                        tuple {
+                            propertyInteger("alt", 0)
+                            propertyString("first", "a")
+                            propertyString("last", "a")
+                        }
+                    }
+                }
+                sentencePass("bc") {
+                    expectedAsm {
+                        tuple {
+                            propertyInteger("alt", 1)
+                            propertyString("first", "b")
+                            propertyString("last", "c")
+                        }
+                    }
+                }
+            }
+            testData("a warning when evaluating a transformation rule is a warning, not an error") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a? 'x' ;
+                        leaf a = 'a' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: tuple { v := child[0].child[0].child }
+                      }
+                """.trimIndent()
+                )
+                // 'x': child[0].child[0] is $nothing, getting 'child' on it gives a warning and $nothing
+                sentencePass("x") {
+                    expectedAsm {
+                        tuple {
+                            propertyNothing("v")
+                        }
+                    }
+                }
+            }
+            testData("List(...) function call in a transformation rule") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a b ;
+                        leaf a = 'a' ;
+                        leaf b = 'b' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: tuple { l := List(child[0], child[1], 'k') }
+                      }
+                """.trimIndent()
+                )
+                sentencePass("ab") {
+                    expectedAsm {
+                        tuple {
+                            propertyListOfString("l", listOf("a", "b", "k"))
+                        }
+                    }
+                }
+            }
+            testData("List(...) function call in an object property assignment") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a b ;
+                        leaf a = 'a' ;
+                        leaf b = 'b' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: S() { l := List(child[0], child[1], 'k') }
+                      }
+                """.trimIndent()
+                )
+                sentencePass("ab") {
+                    expectedAsm {
+                        element("S") {
+                            propertyListOfString("l", listOf("a", "b", "k"))
+                        }
+                    }
+                }
+            }
+            testData("navigation that starts from a when expression") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = A ;
+                        A = a ;
+                        leaf a = 'a' ;
+                      }
+                """.trimIndent()
+                )
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      asm-transform Test {
+                        S: S() { w := (when { child[0] != ${'$'}nothing -> child[0] else -> ${'$'}nothing }).v }
+                        A: A() { v := child[0] }
+                      }
+                """.trimIndent()
+                )
+                sentencePass("a") {
+                    expectedAsm {
+                        element("S") {
+                            propertyString("w", "a")
+                        }
+                    }
+                }
+            }
         }
     }
 

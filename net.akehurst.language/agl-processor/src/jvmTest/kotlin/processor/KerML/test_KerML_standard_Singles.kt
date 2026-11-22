@@ -27,7 +27,7 @@ import kotlin.test.*
 class test_KerML_standard_Singles {
 
     private companion object {
-        private val grammarPathStr = "/KerML/v2_2023-08/grammars/standard/grammar.agl"
+        private val grammarPathStr = "/KerML/v1.1_2026-09/languages/standard/grammar.agl-grm"
         private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
         var processor: LanguageProcessor<Asm, SentenceContext> = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr)

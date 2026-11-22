@@ -21,6 +21,8 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test
+import net.akehurst.language.parsermessages.IssueMessage
+import kotlin.test.assertTrue
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -61,15 +63,15 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
 
         val expected = "S { E { 'a' } }"
 
-        assertFailsWith<IllegalStateException> {
-            super.test_pass(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-            )
-        }
+        // E = L and L = [E / ',']+ is a cycle of single-item steps (infinitely many trees);
+        // the parser stops and the tree is loop free with flat lists (David Q11, 2026-11-22)
+        super.test_pass(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -84,15 +86,15 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<IllegalStateException> {
-            super.test_pass(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-            )
-        }
+        // E = L and L = [E / ',']+ is a cycle of single-item steps (infinitely many trees);
+        // the parser stops and the tree is loop free with flat lists (David Q11, 2026-11-22)
+        super.test_pass(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -104,17 +106,19 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
               E { 'a' }
               ','
               E { 'a' }
+              ','
+              E { 'a' }
             } } }
         """.trimIndent()
 
-        assertFailsWith<IllegalStateException> {
-            super.test_pass(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-            )
-        }
+        // E = L and L = [E / ',']+ is a cycle of single-item steps (infinitely many trees);
+        // the parser stops and the tree is loop free with flat lists (David Q11, 2026-11-22)
+        super.test_pass(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 }

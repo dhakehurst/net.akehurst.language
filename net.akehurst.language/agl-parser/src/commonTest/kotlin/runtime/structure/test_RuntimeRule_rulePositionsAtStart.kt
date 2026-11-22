@@ -188,7 +188,7 @@ class test_RuntimeRule_rulePositionsAtStart {
 
         //then
         val expected = setOf<RulePositionRuntime>(
-            RulePositionRuntime(r, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE)
+            RulePositionRuntime(r, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE)
 
         )
         assertEquals(expected, actual)
@@ -196,12 +196,13 @@ class test_RuntimeRule_rulePositionsAtStart {
 
     @Test
     fun S_slist_0N() {
-        // S = a*;
+        // S = [a/b]*;
 
         //given
         val rrs = runtimeRuleSet {
-            multi("S", 0, -1, "'a'")
+            sList("S", 0, -1, "'a'", "'b'")
             literal("'a'", "a")
+            literal("'b'", "b")
         }
         val r = rrs.findRuntimeRule("S")
 

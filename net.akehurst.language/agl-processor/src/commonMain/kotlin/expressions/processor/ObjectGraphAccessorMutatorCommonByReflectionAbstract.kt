@@ -27,8 +27,8 @@ import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.simple.AsmStructurePropertySimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.ListSeparated
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
@@ -50,7 +50,7 @@ private class TypedObjectAny(
     override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
 
     override fun setProperty(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
-    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setProperty(this, name, value) //TODO: Suspend version
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setPropertySuspend(this, name, value)
 
     override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
     override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
@@ -59,6 +59,44 @@ private class TypedObjectAny(
         accessor.forEachIndexed(this, body)
     }
 
+    override fun asString(indent: Indent): String = "$indent$self"
+
+    override fun hashCode(): Int = self.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is TypedObject -> false
+        else -> self == other.self
+    }
+
+    override fun toString(): String = "$self : ${type.qualifiedTypeName}"
+}
+
+/** a lambda value, see [TypedLambda] */
+internal class TypedLambdaAny(
+    override val accessor: ObjectGraphAccessorMutator,
+    override val type: TypeInstance,
+    override val self: Any,
+    private val typed: ((TypedObject) -> TypedObject)?,
+    private val typedSuspend: (suspend (TypedObject) -> TypedObject)?
+) : TypedLambda {
+
+    override val untyped: Any get() = accessor.untyped(this)
+    override val isNothing: Boolean get() = false
+
+    override fun invokeTyped(arg: TypedObject): TypedObject =
+        typed?.invoke(arg) ?: error("Lambda can only be invoked from suspending evaluation")
+
+    override suspend fun invokeTypedSuspend(arg: TypedObject): TypedObject = when {
+        null != typedSuspend -> typedSuspend.invoke(arg)
+        else -> invokeTyped(arg)
+    }
+
+    override fun getProperty(name: String) = accessor.getProperty(this, name)
+    override suspend fun getPropertySuspend(name: String) = accessor.getPropertySuspend(this, name)
+    override fun setProperty(name: String, value: TypedObject) = accessor.setProperty(this, name, value)
+    override suspend fun setPropertySuspend(name: String, value: TypedObject) = accessor.setPropertySuspend(this, name, value)
+    override fun executeMethod(name: String, argValues: List<TypedObject>) = accessor.executeMethod(this, name, argValues)
+    override suspend fun executeMethodSuspend(name: String, argValues: List<TypedObject>) = accessor.executeMethodSuspend(this, name, argValues)
+    override fun forEachIndexed(body: (index: Int, value: TypedObject) -> Unit) = accessor.forEachIndexed(this, body)
     override fun asString(indent: Indent): String = "$indent$self"
 
     override fun hashCode(): Int = self.hashCode()
@@ -113,6 +151,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             is TypedObject -> untyped(possiblyTypedObject as TypedObject)
             is ListSeparated<*,*,*> -> possiblyTypedObject.map { untypedAny(it) }.toSeparatedList()
             is List<*> -> possiblyTypedObject.map { untypedAny(it) }
+            is OrderedSet<*> -> possiblyTypedObject.map { untypedAny(it) }.toOrderedSet()
             is Set<*> -> possiblyTypedObject.map { untypedAny(it) }.toSet()
             is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
             else -> possiblyTypedObject
@@ -135,6 +174,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             is Char -> typedAs(obj.toString(), StdLibDefault.String) //TODO: do we need an explicit Char type ?
             is String -> typedAs(obj, StdLibDefault.String)
             is Instant -> typedAs(obj, StdLibDefault.Timestamp)
+            is ByteArray -> typedAs(obj, StdLibDefault.Binary)
             is Throwable -> typedAs(obj, StdLibDefault.Exception)
             is Pair<*, *> -> {
                 val ifFstTypeNotFound = when {
@@ -154,7 +194,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             }
 
             is OrderedSet<*> -> toTypedCollection(obj.toList(), StdLibDefault.OrderedSet, ifNotFound) { it.toOrderedSet() }
-            is ListSeparated<*, *, *> -> toTypedCollection(obj.toSeparatedList(), StdLibDefault.ListSeparated, ifNotFound) { it.toOrderedSet() }
+            is ListSeparated<*, *, *> -> toTypedCollection(obj.toSeparatedList(), StdLibDefault.ListSeparated, ifNotFound) { it.toList() }
             is Array<*> -> toTypedCollection(obj.toList(), StdLibDefault.List, ifNotFound) { it.toList() }
             //TODO: special array types IntArray, LongArray, etc
             is List<*> -> toTypedCollection(obj, StdLibDefault.List, ifNotFound) { it.toList() }
@@ -219,11 +259,15 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         val tArgs = typeArgs.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k), v) }
         val type = StdLibDefault.TupleType.type(tArgs)
         val obj = AsmStructureSimple(type.qualifiedTypeName)
-        val asmPv = args.entries.mapIndexed { i,(k,v) -> AsmStructurePropertySimple(PropertyValueName(k),i,v) }
+        // store plain values (as setProperty does), so that walkers over the ASM (scopes, references) see the tuple's content
+        val asmPv = args.entries.mapIndexed { i,(k,v) -> AsmStructurePropertySimple(PropertyValueName(k),i, untypedAny(v)) }
         obj.addAllProperty(asmPv)
         return typedAs(obj, type)
     }
 
+    //TODO: the elements of the created List/Set (and Map keys/values) are the TypedObjects themselves, not plain values,
+    // so callers (e.g. constructor executions) get e.g. List<TypedObject> and must unwrap them.
+    // Unwrapping here changes how elements are read back everywhere (getFromListWithIndex etc.), so postponed.
     override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {
         return when (collectionType.qualifiedTypeName) {
             StdLibDefault.List.qualifiedName -> {
@@ -254,6 +298,12 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
                 typedAs(list.toSeparatedList(), StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)))
             }
 
+            StdLibDefault.OrderedSet.qualifiedName -> {
+                val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
+                val type = StdLibDefault.OrderedSet.type(listOf(elType.asTypeArgument))
+                typedAs(collection.toOrderedSet(), type)
+            }
+
             StdLibDefault.Set.qualifiedName -> {
                 val elType = collectionType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType
                 val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
@@ -276,6 +326,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             StdLibDefault.List.qualifiedName -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.ListSeparated.qualifiedName -> StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.Set.qualifiedName -> StdLibDefault.Set.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+            StdLibDefault.OrderedSet.qualifiedName -> StdLibDefault.OrderedSet.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             StdLibDefault.Map.qualifiedName -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
             else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
         }
@@ -285,7 +336,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     override fun valueOf(value: TypedObject): Any = untyped(value)
 
     override fun getFromListWithIndex(tobj: TypedObject, index: Int): TypedObject {
-        val self = untyped(tobj)
+        val self = tobj.self // elements that are TypedObjects are kept, see forEachIndexed
         return when (self) {
             is List<*> -> {
                 val el = self.getOrNull(index.toInt())
@@ -326,7 +377,9 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     }
 
     override fun forEachIndexed(tobj: TypedObject, body: (index: Int, value: TypedObject) -> Unit) {
-        val self = untyped(tobj)
+        // not 'untyped(tobj)', which would unwrap elements that are TypedObjects, which are then re-typed by this accessor-mutator,
+        // that may not know their type (e.g. elements from another domain)
+        val self = tobj.self
         when (self) {
             is Collection<*> -> self.forEachIndexed { index, el -> body(index, toTypedObject(el, StdLibDefault.AnyType)) }
             is Map<*,*> -> self.entries.forEachIndexed { index, el -> body(index, toTypedObject(Pair(el.key,el.value), StdLibDefault.AnyType)) } //TODO Pair Type
@@ -381,6 +434,8 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return ObjectGraphAny(nodes, edges)
     }
 
+    //TODO: future enhancement (agreed 2026-11-13): type the elements lazily, when they are read (forEachIndexed, getFromListWithIndex),
+    // rather than all of them here; long lists pay typeFor for every element even if few are used.
     private fun toTypedCollection(obj: Iterable<*>, baseCollType: TypeDefinition, ifNotFound: TypeInstance, func: (Iterable<TypedObject>) -> Iterable<TypedObject>): TypedObject {
         val ifElementTypeNotFound = when {
             baseCollType == ifNotFound.resolvedDefinition && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type

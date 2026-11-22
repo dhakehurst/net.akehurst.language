@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -32,6 +33,7 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.m2mTransform.api.M2mTransformDomain
+import net.akehurst.language.m2mTransformTest.api.M2mTransformTestDomain
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.types.api.TypesDomain
@@ -72,6 +74,11 @@ data class StyleString(override val value: String) : PublicValueType
 // @JvmInline
 // TODO: value classes don't work (fully) in js and wasm
 data class FormatString(override val value: String) : PublicValueType
+
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+/** text of the AGL completion language, customises the completion items offered for a language */
+data class CompletionString(override val value: String) : PublicValueType
 
 // @JvmInline
 // TODO: value classes don't work (fully) in js and wasm
@@ -117,8 +124,10 @@ interface AglLanguages {
     val crossReferenceLanguageIdentity: LanguageIdentity
     val asmTransformLanguageIdentity: LanguageIdentity
     val m2mTransformLanguageIdentity: LanguageIdentity
+    val m2mTransformTestLanguageIdentity: LanguageIdentity
     val styleLanguageIdentity: LanguageIdentity
     val formatLanguageIdentity: LanguageIdentity
+    val completionLanguageIdentity: LanguageIdentity
 
     val base: LanguageDefinition<Any, SentenceContext>
     val expressions: LanguageDefinition<Expression, SentenceContext>
@@ -162,8 +171,20 @@ interface AglLanguages {
      * }
      */
     val m2mTransform: LanguageDefinition<M2mTransformDomain, SentenceContext>
+
+    /**
+     * Semantic Analysis requires a context containing the transforms that are tested.
+     * E.g. contextFromM2mTransformDomain(m2mTransformDomain)
+     */
+    val m2mTransformTest: LanguageDefinition<M2mTransformTestDomain, SentenceContext>
     val style: LanguageDefinition<AglStyleDomain, SentenceContext>
     val format: LanguageDefinition<AglFormatDomain, SentenceContext>
+
+    /**
+     * Semantic Analysis can use a context containing the grammar the completions are for, to check the rule names.
+     * E.g. contextFromGrammar(grammarDomain)
+     */
+    val completion: LanguageDefinition<AglCompletionDomain, SentenceContext>
 }
 
 
@@ -207,6 +228,9 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val styleString: StyleString?
     val styleDomain: AglStyleDomain?
 
+    /** customises the completion items (AGL completion language) */
+    val completionString: CompletionString?
+
     val issues: IssueCollection<LanguageIssue>
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
@@ -221,6 +245,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
     //val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
     val styleStrObservers: MutableList<(StyleString?, StyleString?) -> Unit>
+    val completionStrObservers: MutableList<(CompletionString?, CompletionString?) -> Unit>
     //val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
     fun update(
@@ -230,5 +255,6 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
         crossReferenceString: CrossReferenceString? = null,
         styleString: StyleString? = null,
         formatString: FormatString? = null,
+        completionString: CompletionString? = null,
     )
 }

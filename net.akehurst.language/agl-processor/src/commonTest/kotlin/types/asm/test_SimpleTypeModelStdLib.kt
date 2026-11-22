@@ -66,6 +66,11 @@ class test_SimpleTypeModelStdLib {
     }
 
     @Test
+    fun primitive_Binary() {
+        assertEquals("std.Binary", StdLibDefault.Binary.qualifiedTypeName.value)
+    }
+
+    @Test
     fun tupleType() {
         val actual = StdLibDefault.TupleType
         assertEquals("std.TupleType",actual.qualifiedName.value)

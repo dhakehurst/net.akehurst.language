@@ -18,11 +18,31 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
+import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionProviderOptions
+import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.reference.api.CrossReferenceDomain
 
+/**
+ * The default items, where a type name is expected ('scope', 'identify', 'in', 'refers-to', 'of-type', 'import-into-scope')
+ * the types in the sentence context (e.g. contextFromTypesDomain), from the references definition of AglCrossReference.
+ * Simple names are offered, with an additional edit that imports the namespace when needed, qualified names on a clash (CR1).
+ */
 class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceDomain, SentenceContext>() {
 
-        //TODO
+    companion object {
+        private val transformRuleSet by lazy {
+            AglCrossReference.asmTransformDomain.findDefinitionByQualifiedNameOrNull(AglCrossReference.defaultTargetGrammar.qualifiedName)
+                ?: error("Internal error: transform rule set for '${AglCrossReference.defaultTargetGrammar.qualifiedName}' not found")
+        }
+    }
+
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
+        val items = nextExpected.flatMap { spine ->
+            provideDefaultWithReferencesForSpine(spine, options, options.sentenceContext, transformRuleSet, AglCrossReference.typesDomain, AglCrossReference.crossReferenceDomain)
+        }
+        return defaultSortAndFilter(items)
+    }
 
 }

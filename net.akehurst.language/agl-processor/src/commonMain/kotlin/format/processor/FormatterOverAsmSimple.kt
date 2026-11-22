@@ -25,6 +25,7 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.processor.objectGraphSimpleAsm
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.agl.util.ReentrantLockCommon
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.types.api.TypesDomain
@@ -38,7 +39,10 @@ class FormatterOverAsmSimple(
 
     private val _formatter = FormatterOverTypedObject(formatDomain, objectGraphSimpleAsm(typesDomain, null,issues, locationMap))
 
-    override  fun formatSelf(formatSetName: PossiblyQualifiedName, self: Any): FormatResult {
+    // the object graph (with its issues and location map) is shared by all calls, so one format at a time
+    private val _lock = ReentrantLockCommon()
+
+    override  fun formatSelf(formatSetName: PossiblyQualifiedName, self: Any): FormatResult = _lock.withLock {
         val sb = StringBuilder()
 
         for (root in (self as Asm).root) {
@@ -46,7 +50,7 @@ class FormatterOverAsmSimple(
             sb.append(str)
         }
 
-        return FormatResultDefault(mapOf(FormatResultDefault.DEFAULT to sb.toString() ), IssueHolder(LanguageProcessorPhase.FORMAT))
+        FormatResultDefault(mapOf(FormatResultDefault.DEFAULT to sb.toString() ), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
     override  fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext): FormatResult {

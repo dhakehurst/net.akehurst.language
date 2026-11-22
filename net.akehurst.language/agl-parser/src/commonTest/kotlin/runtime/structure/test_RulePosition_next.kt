@@ -31,6 +31,7 @@ class test_RulePosition_next {
         val SOR = RulePosition.START_OF_RULE
 
         val oN = RulePosition.OPTION_NONE
+        val o0 = OptionNum(0)
         val o1 = OptionNum(1)
         val o2 =  OptionNum(2)
         val OMI = RulePosition.OPTION_MULTI_ITEM
@@ -139,9 +140,9 @@ class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePositionRuntime> = RP(r_S, oN, SOR).next()
+        val actual: Set<RulePositionRuntime> = RP(r_S, o0, SOR).next()
         val expected: Set<RulePositionRuntime> = setOf(
-            RP(r_S, oN, EOR)
+            RP(r_S, o0, EOR)
         )
 
         assertEquals(expected, actual)
@@ -305,8 +306,8 @@ class test_RulePosition_next {
 
         val actual: Set<RulePositionRuntime> = RP(r_S, OLI, SOR).next()
         val expected: Set<RulePositionRuntime> = setOf(
-            RP(r_S, oN, EOR),
-            RP(r_S, oN, PLS)
+            RP(r_S, OLI, EOR),
+            RP(r_S, OLI, PLS)
         )
 
         assertEquals(expected, actual)
@@ -405,7 +406,7 @@ class test_RulePosition_next {
         //val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         //val G = SM.startState
 
-        val rp = RP(S, oN, SOR)
+        val rp = RP(S, OLI, SOR)
         val actual = rp.next()
         val expected: Set<RulePositionRuntime> = setOf(
             RP(S, OLI, PLS),

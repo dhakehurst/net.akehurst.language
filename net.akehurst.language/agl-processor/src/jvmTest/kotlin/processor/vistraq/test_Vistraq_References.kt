@@ -41,8 +41,8 @@ import kotlin.test.assertTrue
 class test_Vistraq_References {
 
     companion object {
-        private val grammarStr = GrammarString(this::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found"))
-        private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/vistraq/version_/references.agl")?.readText() ?: error("File not found"))
+        private val grammarStr = GrammarString(this::class.java.getResource("/vistraq/version_/grammar.agl-grm")?.readText() ?: error("File not found"))
+        private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/vistraq/version_/references.agl-ref")?.readText() ?: error("File not found"))
 
         private val grammarList =
             Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry(Agl.registry)) } })
@@ -168,12 +168,12 @@ class test_Vistraq_References {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(62, 5, 4, 21, null),
-                "Reference 'CD.C' not resolved, to type(s) [NodeType] in scope '/CD'", null
+                "Reference 'C' not resolved, to type(s) [NodeType] in scope '/CD'", null
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(62, 5, 4, 21, null),
-                "Reference 'CD.D' not resolved, to type(s) [NodeType] in scope '/CD'", null
+                "Reference 'D' not resolved, to type(s) [NodeType] in scope '/CD'", null
             )
         )
 

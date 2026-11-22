@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 //import net.akehurst.language.asm.simple.*
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -28,6 +29,7 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
+import net.akehurst.language.asm.simple.AsmStructureParseIdentity
 import net.akehurst.language.asm.simple.asValueName
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
@@ -41,8 +43,10 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sentence.common.SentenceAbstract
 import net.akehurst.language.sppt.api.*
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
+import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
@@ -96,6 +100,13 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     val typesDomain: TypesDomain get() = objectGraph.typesDomain
 
     private var _asm: AsmType? = null
+    internal val asmOrNull: AsmType? get() = _asm
+
+    /**
+     * When true (set by [SyntaxAnalysisStream] while streaming), the parse identity of a structure is not set when it is created,
+     * because its parse path is not known yet; [SyntaxAnalysisStream] sets it when the parse finishes.
+     */
+    internal var deferParseIdentity = false
     override val asm: AsmType get() = _asm as AsmType  //TODO: return ObjectGraph (AsmFactory should be removable!)
 
     val relevantRuleSet = asmTransform.findNamespaceOrNull(relevantTrRuleSet.front)?.findDefinitionOrNull(relevantTrRuleSet.last)
@@ -108,7 +119,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
     }
 
-    private fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): AsmTransformationRule? {
+    internal fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): AsmTransformationRule? {
         return relevantRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(GrammarRuleName(grmRuleName))
     }
 
@@ -157,8 +168,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 val tr = when {
                     isRoot -> {
                         isRoot = false
-                        val trRule = syntaxAnalyserStack.peek().findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag)
-                            ?: error("Type not found for ${nodeInfo.node.rule.tag}")
+                        val trRule = syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag)
                         trRule
                     }
 
@@ -171,8 +181,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             override fun endBranch(nodeInfo: SpptDataNodeInfo) {
                 val opt = nodeInfo.alt.option
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
-                val children = stack.pop(numChildren)
-                val adjChildren = children.reversed()
+                val adjChildren = stack.pop(numChildren)
                 val downData = downStack.pop()
                 val value = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack
@@ -180,6 +189,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { setLocationFor(it.self, nodeInfo, sentence) }
+                (value?.self as? AsmStructure)?.let { setPropertyLocationsFor(it, adjChildren, sentence) }
                 stack.push(ChildData(nodeInfo, value))
                 // path = path.parent!!
             }
@@ -196,12 +206,11 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                     else -> downStack.peek().path
                 }
                 val parentTr = when {
-                    isRoot -> syntaxAnalyserStack.peek().findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Type not found for ${nodeInfo.node.rule.tag}")
+                    isRoot -> syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag)
                     else -> downStack.peek().trRule.forChildren
                 }
                 val p = nodeInfo.path //TODO: (for AsmPath) syntaxAnalyserStack.peek().pathFor(parentPath, parentTr.resolvedType.resolvedDeclaration, nodeInfo)
-                val tu = syntaxAnalyserStack.peek().findTrRuleForGrammarRuleNamedOrNull(embRuleName)
-                    ?: error("Type not found for $embRuleName")
+                val tu = syntaxAnalyserStack.peek().trRuleOrIssue(embRuleName)
                 val dd = resolveCompressed(p, tu, nodeInfo)
                 downStack.push(dd)
             }
@@ -228,7 +237,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         treeData.traverseTreeDepthFirst(walker, false)
     }
 
-    private fun setAsm(value: AsmType) {
+    internal fun setAsm(value: AsmType) {
         this._asm = value
     }
 
@@ -260,6 +269,16 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             }
         }
     }
+
+    /**
+     * the transformation rule for the grammar rule, or (with an error issue) a rule that gives nothing,
+     * e.g. when the transform definition has errors (a missing rule), so that analysis ends gracefully instead of throwing
+     */
+    private fun trRuleOrIssue(grammarRuleName: String): AsmTransformationRule =
+        findTrRuleForGrammarRuleNamedOrNull(grammarRuleName) ?: run {
+            issues.error(null, "No transformation rule found for grammar rule '$grammarRuleName' (the transform definition may have errors)")
+            asmTransformationRule(StdLibDefault.NothingType, RootExpressionDefault.NOTHING)
+        }
 
     private fun trRuleForNode(parentTrRule: AsmTransformationRule?, nodeInfo: SpptDataNodeInfo): AsmTransformationRule {
         //val parentType = parentTrRule?.resolvedType
@@ -344,8 +363,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 
                 }
 */
-                else -> this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag)
-                    ?: error("Transform Rule for '${nodeInfo.node.rule.tag}' not found")
+                else -> this.trRuleOrIssue(nodeInfo.node.rule.tag)
             }
         }
     }
@@ -485,7 +503,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
     }
 
-    private fun resolveCompressed(p: ParsePath, trRule: AsmTransformationRule, nodeInfo: SpptDataNodeInfo): DownData2 {
+    internal fun resolveCompressed(p: ParsePath, trRule: AsmTransformationRule, nodeInfo: SpptDataNodeInfo): DownData2 {
         val typeDecl = trRule.resolvedType.resolvedDefinition
         return when {
             typeDecl is StructuredType && nodeInfo.node.rule.isOptional && nodeInfo.node.rule.hasOnyOneRhsItem && nodeInfo.node.rule.rhsItems[0][0].isTerminal -> {
@@ -550,7 +568,28 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
     }
 
-    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): TypedObject? = when {
+    /**
+     * Records where the value of each String (or List of String) property of 'structure' is in the sentence:
+     * the location of the direct child parse node whose value equals the property value.
+     * Children are taken in order, each at most once, so two properties with the same text get different locations.
+     * A property whose value does not come from a direct child (e.g. computed by the transform) gets no location.
+     */
+    private fun setPropertyLocationsFor(structure: AsmStructure, children: List<ChildData>, sentence: Sentence) {
+        val used = mutableSetOf<Int>()
+        structure.propertyOrdered.forEach { prop ->
+            val pv = prop.value
+            val isText = pv is String || (pv is List<*> && pv.isNotEmpty() && pv.all { it is String })
+            if (isText) {
+                val idx = children.indices.firstOrNull { i -> i !in used && children[i].value?.self == pv }
+                if (null != idx) {
+                    used.add(idx)
+                    locationMap.addPropertyLocation(structure, prop.name.value, sentence.locationForNode(children[idx].nodeInfo.node))
+                }
+            }
+        }
+    }
+
+    internal fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): TypedObject? = when {
         target.node.rule.isEmptyTerminal -> objectGraph.nothing() // for empty or optional rules
         target.node.rule.isEmptyListTerminal -> null  // return null for empty lists
 
@@ -560,7 +599,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
     }
 
-    private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): TypedObject? =
+    internal fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): TypedObject? =
         createValueFromBranch2(sentence, downData, target, children)
 
     private fun createValueFromBranch2(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): TypedObject {
@@ -616,10 +655,17 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         if (asm.self is AsmStructureSimple) { //FIXME: don't like this here...hacky!
             val self = asm.self as AsmStructureSimple
             self.parsePath = downData.path.toString()
+            // the same structure can be the value of several nested parse nodes (e.g. a choice); its identity is from the innermost one
+            if (self.hasIdentity.not() && deferParseIdentity.not()) self.setIdentity(AsmStructureParseIdentity((sentence as? SentenceAbstract)?.identity, self.qualifiedTypeName, self.parsePath))
             //self.setProperty(AsmTransformInterpreter.MATCHED_TEXT.asValueName, asmMatchedText, self.property.size)
         }
+        // keep the kind of each issue (e.g. a warning for navigating \$nothing stays a warning)
         _trf.issues.forEach {
-            super.issues.error(null, "Error evaluating transformation rule '${it.message}':\n${tr.asString()}")
+            when (it.kind) {
+                LanguageIssueKind.ERROR -> super.issues.error(null, "Error evaluating transformation rule '${it.message}':\n${tr.asString()}")
+                LanguageIssueKind.WARNING -> super.issues.warn(null, "Warning evaluating transformation rule '${it.message}':\n${tr.asString()}")
+                else -> super.issues.info(null, "Evaluating transformation rule '${it.message}':\n${tr.asString()}")
+            }
         }
         return asm
     }

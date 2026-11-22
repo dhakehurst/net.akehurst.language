@@ -37,7 +37,6 @@ kotlin {
             dependencies {
                 api(project(":agl-parser"))
                 api(project(":agl-regex"))
-                api(project(":collections")) //TODO merge with kotlinx collections
 
                 api(libs.nak.kotlinx.utils) // needed for asyncLazy
                 api(libs.nak.kotlinx.collections) // needed for topologicalSort, OrderedSet

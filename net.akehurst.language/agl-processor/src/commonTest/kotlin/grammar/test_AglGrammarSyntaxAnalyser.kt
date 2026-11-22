@@ -151,21 +151,6 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
-    fun rule_prioChoice() {
-        val sentence = """
-            namespace test
-            grammar Test {
-              a = 'a' < 'a' ;
-            }
-        """.trimIndent()
-        val sppt = parse(sentence)
-        //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser()
-        val res = sut.transform(sppt)
-        println(res.asm!!.allDefinitions[0].toString())
-    }
-
-    @Test
     fun rule_ambigChoice() {
         val sentence = """
             namespace test

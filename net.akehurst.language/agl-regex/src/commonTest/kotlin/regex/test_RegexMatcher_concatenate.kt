@@ -26,7 +26,7 @@ class test_RegexMatcher_concatenate {
     fun empty() {
         val m = regexMatcher("")
         val actual = m.match("a", 0)
-        val expected = null
+        val expected = RegexMatcher.MatchResultAgl("") // as Kotlin, the empty pattern matches the empty string
         assertEquals(expected, actual)
     }
 

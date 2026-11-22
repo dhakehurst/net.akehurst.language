@@ -24,7 +24,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.VariableAssignmentStatement
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -125,8 +125,9 @@ class AsmTransformInterpreter(
         }*/
     }
 
-    val issues get() = IssueHolder(LanguageProcessorPhase.INTERPRET)
-    val exprInterpreter = ExpressionsInterpreterOverTypedObject(objectGraph)
+    // the issues of evaluating the transformation rules (were a new, always empty holder on each access, so errors were lost)
+    val issues get() = exprInterpreter.issues
+    val exprInterpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraph)
 
     fun clear() {
         this.issues.clear()

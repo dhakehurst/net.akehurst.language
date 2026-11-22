@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.rightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
@@ -30,7 +31,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
                 ref("P")
                 ref("I")
@@ -38,11 +39,11 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
             sList("I",2,-1,"S","'o'")
             literal("'o'","o")
             concatenation("P") { ref("S"); literal("p"); literal("a") }
-            //preferenceFor("S") {
-            //    left("I", setOf())
-            //    left("I", setOf())
-            //    left("I", setOf())
-            //}
+            // the grammar is ambiguous ('apaoa' etc.), the preference gives the expected trees; the order matters (I first)
+            preferenceFor("S") {
+                leftOption(listOf("I"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'o'"))
+                left(listOf("P"), setOf("'p'"))
+            }
         }
 
         val goal = "S"

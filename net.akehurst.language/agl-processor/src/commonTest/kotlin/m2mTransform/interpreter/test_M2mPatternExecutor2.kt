@@ -22,7 +22,7 @@ import net.akehurst.language.m2mTransform.asm.ObjectTemplateDefault
 import net.akehurst.language.m2mTransform.asm.PropertyTemplateDefault
 import net.akehurst.language.m2mTransform.asm.PropertyTemplateExpressionDefault
 import net.akehurst.language.m2mTransform.builder.patternTemplate
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
@@ -47,7 +47,7 @@ class test_M2mPatternExecutor2 {
             val initVars = input.keys
             val sut = M2mPatternExecutor2(issues, accessorMutator, initVars, emptyList())
 
-            val tgtName = M2mTransformInterpreter.RESULT
+            val tgtName = M2mTransformInterpreterHelpers.RESULT
             val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
             val evc = EvaluationContext.of(typedInput)
             sut.build(tgtName, template, tgtType)
@@ -350,10 +350,10 @@ class test_M2mPatternExecutor2 {
         val expectedPlan = $$"""
             §result := a := A(){}
             a$p1 := p
-            a$p2 := q
-            a$p3 := r
             a.p1 := a$p1
+            a$p2 := q
             a.p2 := a$p2
+            a$p3 := r
             a.p3 := a$p3
         """.trimIndent()
         val expectedResult = asmSimple(types) {
@@ -398,10 +398,10 @@ class test_M2mPatternExecutor2 {
 
         val expectedPlan = $$"""
             a$p1 := p
-            a$p2 := q
-            a$p3 := r
             §result := a := A(a$p1){}
+            a$p2 := q
             a.p2 := a$p2
+            a$p3 := r
             a.p3 := a$p3
         """.trimIndent()
         val expectedResult = asmSimple(types) {
@@ -450,14 +450,14 @@ class test_M2mPatternExecutor2 {
             §result := a := A(a$p1){}
             a$p3 := p := r
             a$p2 := q := p
-            a.p3 := a$p3
             a.p2 := a$p2
+            a.p3 := a$p3
         """.trimIndent()
         val expectedResult = asmSimple(types) {
             element("A") {
                 propertyInteger("p1", 2)
-                propertyInteger("p3", 2)
                 propertyInteger("p2", 2)
+                propertyInteger("p3", 2)
             }
         }.root[0]
 
@@ -500,8 +500,8 @@ class test_M2mPatternExecutor2 {
         val expectedPlan = $$"""
             §result := a
             a$p2 := q
-            a$p3 := r
             a.p2 := a$p2
+            a$p3 := r
             a.p3 := a$p3
         """.trimIndent()
         val expectedResult = asmSimple(types) {
@@ -563,21 +563,21 @@ class test_M2mPatternExecutor2 {
         )
         val expectedPlan = $$"""
             a2$id$rhs := 'A2-1'
-            a2$b$obj$prop := s
             a2$id := a2$id$rhs
             §result := a2 := A2(a2$id){}
             a2$b := B2(){}
-            a2$b$obj$owner := a2
             a2.b := a2$b
-            a2$b$obj.prop := a2$b$obj$prop
+            a2$b$obj$owner := a2
             a2$b$obj.owner := a2$b$obj$owner
+            a2$b$obj$prop := s
+            a2$b$obj.prop := a2$b$obj$prop
          """.trimIndent()
         val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
             element("A2") {
                 propertyString("id", "A2-1")
                 propertyElementExplicitType("b", "B2") {
-                    propertyString("prop", "strValue")
                     reference("owner", "A2-1")
+                    propertyString("prop", "strValue")
                 }
             }
         }.root[0]
@@ -663,7 +663,7 @@ class test_M2mPatternExecutor2 {
 
         val tgtType = types.findByQualifiedNameOrNull(QualifiedName("test.State"))!!.type()
         val input_pd = AsmStructureSimple("test.PartDefinition".asQualifiedName).also {
-            it.setSemanticQualifiedPath(listOf("part-1"))
+            it.semanticQualifiedPath = listOf("part-1")
             it.setProperty(PropertyValueName("name"), AsmPrimitiveSimple.stdString("part-1"), 0)
         }
         val input = mapOf<String, Any>(
@@ -672,17 +672,17 @@ class test_M2mPatternExecutor2 {
         )
         val expectedPlan = $$"""
             state$name := n
-            pd$name := pdn := pd.name
             §result := state := State(state$name){}
+            pd$name := pdn := pd.name
             sm$name := pdn
-            sm$state$col$el0 := state
             state$machine := sm := pd.observableStateMachine ?: StateMachine(sm$name){}
             state.machine := state$machine
             sm$owner := pd
-            pd$observableStateMachine := sm
-            Synchronize Collection sm$state
             sm.owner := sm$owner
+            pd$observableStateMachine := sm
             pd.observableStateMachine := pd$observableStateMachine
+            sm$state$col$el0 := state
+            Synchronize Collection sm$state
             sm.state := sm$state
         """.trimIndent()
         var stateObject: AsmStructure? = null
@@ -816,17 +816,17 @@ class test_M2mPatternExecutor2 {
         // instead of constructing a fresh StateMachine.
         val expectedPlan = $$"""
             state$name := n
-            pd$name := pdn := pd.name
             §result := state := State(state$name){}
+            pd$name := pdn := pd.name
             sm$name := pdn
-            sm$state$col$el0 := state
             state$machine := sm := pd.observableStateMachine ?: StateMachine(sm$name){}
             state.machine := state$machine
             sm$owner := pd
-            pd$observableStateMachine := sm
-            Synchronize Collection sm$state
             sm.owner := sm$owner
+            pd$observableStateMachine := sm
             pd.observableStateMachine := pd$observableStateMachine
+            sm$state$col$el0 := state
+            Synchronize Collection sm$state
             sm.state := sm$state
         """.trimIndent()
         var stateObject: AsmStructure? = null
@@ -1009,29 +1009,29 @@ class test_M2mPatternExecutor2 {
         val expectedPlan = $$"""
             §result := trans := Transition(){}
             pd$name := pdn := pd.name
-            src$name := srcStateName
-            tgt$name := tgtStateName
-            trans$label$rhs := 'event ' + exp
-            sm$transition$col$el0 := trans
             sm$name := pdn
-            trans$label := trans$label$rhs
             trans$machine := sm := pd.observableStateMachine ?: StateMachine(sm$name){}
-            trans.label := trans$label
             trans.machine := trans$machine
             sm$owner := pd
-            pd$observableStateMachine := sm
-            sm$state$col$src := src := sm.state[name==src$name] ?: State(src$name){}
-            sm$state$col$tgt := tgt := sm.state[name==tgt$name] ?: State(tgt$name){}
-            Synchronize Collection sm$transition
             sm.owner := sm$owner
+            pd$observableStateMachine := sm
             pd.observableStateMachine := pd$observableStateMachine
-            trans$source := src
+            src$name := srcStateName
+            sm$state$col$src := src := sm.state[name==src$name] ?: State(src$name){}
+            tgt$name := tgtStateName
+            sm$state$col$tgt := tgt := sm.state[name==tgt$name] ?: State(tgt$name){}
             Synchronize Collection sm$state
-            trans$target := tgt
-            sm.transition := sm$transition
-            trans.source := trans$source
             sm.state := sm$state
+            sm$transition$col$el0 := trans
+            Synchronize Collection sm$transition
+            sm.transition := sm$transition
+            trans$source := src
+            trans.source := trans$source
+            trans$target := tgt
             trans.target := trans$target
+            trans$label$rhs := 'event ' + exp
+            trans$label := trans$label$rhs
+            trans.label := trans$label
         """.trimIndent()
         var transObject: AsmStructure? = null
         val expectedResult = asmSimple(types, crossReferenceDomain = crossRefs, sentenceContext = contextAsmSimple()) {
@@ -1052,10 +1052,10 @@ class test_M2mPatternExecutor2 {
                     }
                     propertyListOfElement("transition") {
                         transObject = element("Transition") {
-                            propertyString("label","event <expression>")
                             reference("machine", "part-1")
                             reference("source", "state-0")
                             reference("target", "state-1")
+                            propertyString("label","event <expression>")
                         }
                     }
                 }
@@ -1097,10 +1097,10 @@ class test_M2mPatternExecutor2 {
         val typedInput = input.entries.associate { (k, v) -> Pair(k, accessorMutator.toTypedObject(v, StdLibDefault.AnyType)) }
         val evc = EvaluationContext.of(typedInput)
         val sut = M2mPatternExecutor2(issues, accessorMutator, input.keys, emptyList())
-        sut.build(M2mTransformInterpreter.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type())
+        sut.build(M2mTransformInterpreterHelpers.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.A"))!!.type())
 
         val ex = assertFailsWith<IllegalStateException> {
-            sut.execute(evc, M2mTransformInterpreter.RESULT)
+            sut.execute(evc, M2mTransformInterpreterHelpers.RESULT)
         }
         assertTrue(ex.message?.contains("Paradox") == true)
     }
@@ -1218,7 +1218,7 @@ class test_M2mPatternExecutor2 {
         val evc = EvaluationContext.of(typedInput)
         val sut = M2mPatternExecutor2(issues, accessorMutator, input.keys, emptyList())
 
-        sut.build(M2mTransformInterpreter.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.StateMachine"))!!.type())
+        sut.build(M2mTransformInterpreterHelpers.RESULT, template, types.findByQualifiedNameOrNull(QualifiedName("test.StateMachine"))!!.type())
         val plan = sut.executionPlan.map { it.description }
         val producerIdx = plan.indexOfFirst { it.contains("pdn := pd.name") }
         val consumerIdx = plan.indexOfFirst { it.contains("sm\$name := pdn") }

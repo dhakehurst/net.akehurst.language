@@ -37,7 +37,7 @@ class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract
                 ref("P")
             }
             sList("I",2,-1,"E","op")
-            choice("op", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("/")
                 literal("*")
                 literal("+")

@@ -44,7 +44,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
         fun test(typesDomain: TypesDomain, self: Any, pqn:String, expression: String, expected: Any) {
             val st = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn.asPossiblyQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault()))
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault()))
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(expected, actual.untyped, "Expected != Actual:\n$expected\n$actual")
         }
@@ -52,7 +52,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
         fun test_fail(typesDomain: TypesDomain, self: Any, pqn:String, expression: String, expected: List<LanguageIssue>) {
             val st = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn.asPossiblyQualifiedName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault()))
+            val interpreter = ExpressionsInterpreterOverTypedObjectCombined(objectGraphSimpleAsm(typesDomain, null,issues, LocationMapDefault()))
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(interpreter.objectGraph.typedAs(self, st)), expression)
             assertEquals(Unit, actual.untyped)
             assertEquals(expected, interpreter.issues.all.toList())
@@ -77,6 +77,18 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
         val self = asm.root[0]
 
         test(tm, self, "ns.Test", expression, Unit)
+    }
+
+    @Test
+    fun not_equal__different_types_is_the_negation_of_equal() {
+        val tm = typesDomain("test", true) { namespace("ns") { data("Test") { } } }
+        // values of different types are never equal, so '!=' is true ($nothing has its own type)
+        test(tm, Unit, "Nothing", $$"'out' == $nothing", false)
+        test(tm, Unit, "Nothing", $$"'out' != $nothing", true)
+        test(tm, Unit, "Nothing", $$"$nothing != $nothing", false)
+        test(tm, Unit, "Nothing", "'a' != 1", true)
+        test(tm, Unit, "Nothing", "'a' != 'a'", false)
+        test(tm, Unit, "Nothing", "'a' != 'b'", true)
     }
 
     @Test

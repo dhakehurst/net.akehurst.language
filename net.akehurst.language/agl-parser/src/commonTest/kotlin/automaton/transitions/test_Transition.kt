@@ -32,12 +32,12 @@ class test_Transition : test_AutomatonUtilsAbstract() {
 
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("expr") }
-            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("root")
                 ref("div")
                 ref("add")
             }
-            choice("root", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("root", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("var")
             }
             sList("div", 2, -1, "expr", "'/'")

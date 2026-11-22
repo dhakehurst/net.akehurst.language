@@ -44,7 +44,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
                 ref("group")
                 ref("infix")
             }
-            choice("root", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("root", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("var")
                 ref("bool")
             }

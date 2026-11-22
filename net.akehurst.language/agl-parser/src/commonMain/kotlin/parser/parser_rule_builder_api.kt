@@ -24,7 +24,6 @@ annotation class RuntimeRuleSetDslMarker
 interface RuleSetBuilder {
     fun concatenation(ruleName: String, isSkip: Boolean = false, isPseudo: Boolean = false, init: ConcatenationBuilder.() -> Unit)
     fun choiceLongest(ruleName: String, isSkip: Boolean = false, isPseudo: Boolean = false, init: ChoiceBuilder.() -> Unit)
-    fun choicePriority(ruleName: String, isSkip: Boolean = false, isPseudo: Boolean = false, init: ChoiceBuilder.() -> Unit)
     fun optional(ruleName: String, itemRef: String, isSkip: Boolean = false, isPseudo: Boolean = false)
     fun multi(ruleName: String, min: Int, max: Int, itemRef: String, isSkip: Boolean = false, isPseudo: Boolean = false)
     fun sList(ruleName: String, min: Int, max: Int, itemRef: String, sepRef: String, isSkip: Boolean = false, isPseudo: Boolean = false)

@@ -17,7 +17,7 @@
 
 package net.akehurst.language.m2mTransform.processor
 
-import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter.Companion.cartesianProduct
+import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.cartesianProduct
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -130,7 +130,7 @@ class test_m2mTransformInterpreterHelperFunctions {
         val cover = listOf(1, 3)
         val subsets = listOf("a", "b", "c")
 
-        val actual = M2mTransformInterpreter.findCoveringSubsets2(cover, subsets) { a, b ->
+        val actual = M2mTransformInterpreterHelpers.findCoveringSubsets2(cover, subsets) { a, b ->
             Pair(map[a]!!.contains(b), "$a$b")
         }
         println(actual)
@@ -147,7 +147,7 @@ class test_m2mTransformInterpreterHelperFunctions {
         val cover = listOf(1, 2, 3)
         val subsets = listOf("a", "b", "c")
 
-        val actual = M2mTransformInterpreter.findCoveringSubsets2(cover, subsets) { a, b ->
+        val actual = M2mTransformInterpreterHelpers.findCoveringSubsets2(cover, subsets) { a, b ->
             Pair(map[a]!!.contains(b), "$a$b")
         }
         println(actual)

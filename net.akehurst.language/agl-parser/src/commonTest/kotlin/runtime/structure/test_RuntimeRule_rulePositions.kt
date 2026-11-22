@@ -19,6 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import net.akehurst.language.parser.api.RulePosition
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class test_RuntimeRule_rulePositions {
 
@@ -147,14 +148,11 @@ class test_RuntimeRule_rulePositions {
         }
         val S = rrs.findRuntimeRule("S")
 
-        //when
-        val actual = S.rulePositionsNotAtStart
-
-        //then
-        val expected = setOf(
-            RulePositionRuntime(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE)
-        )
-        assertEquals(expected, actual)
+        //when / then: a list with max 0 is a grammar error (reported by the grammar semantic analyser)
+        val e = assertFailsWith<IllegalStateException> {
+            S.rulePositionsNotAtStart
+        }
+        assertEquals("Internal Error: max must be > 0", e.message)
     }
 
     @Test

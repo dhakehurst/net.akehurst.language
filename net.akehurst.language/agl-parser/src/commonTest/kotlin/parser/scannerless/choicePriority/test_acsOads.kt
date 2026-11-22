@@ -33,7 +33,7 @@ class test_acsOads : test_LeftCornerParserAbstract() {
     // ads1 = ads 'd' 'a'
     private companion object {
         private val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("acs")
                 ref("ads")
             }

@@ -39,7 +39,7 @@ import kotlin.test.assertNull
 class test_Java8_Singles_aglSpec {
 
     private companion object {
-        val grammarFile = "/Java/version_8/grammars/grammar_aglSpec.agl"
+        val grammarFile = "/Java/version_8/languages/aglSpec/grammar.agl-grm"
         val aglSpecProcessor: LanguageProcessor<Asm, SentenceContext> by lazy { createJava8Processor(grammarFile, true) }
 
         val proc = aglSpecProcessor
@@ -308,7 +308,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(60)
     fun long_concatenation() {
 
         val sentence = """

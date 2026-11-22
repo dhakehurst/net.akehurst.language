@@ -43,6 +43,18 @@ internal class FirstOf(
     */
     fun expectedAt(rulePosition: RulePositionRuntime, ifReachedEnd: LookaheadSetPart): LookaheadSetPart {
         this._firstOfNotEmpty.clear()
+        // A rule met again while its first-set is being computed (recursion) gives the value of the previous pass
+        // (initially: not nullable, no terminals). Repeat until the values no longer change (least fixpoint),
+        // else terminals behind a nullable recursion are lost, e.g. S = 'a' N3 ; N3 = N1 N3 | <EMPTY> ; N1 = N3 'b'
+        var res: LookaheadSetPart
+        do {
+            val before = HashMap(this._firstOfNotEmpty)
+            res = expectedAtPass(rulePosition, ifReachedEnd)
+        } while (before != this._firstOfNotEmpty)
+        return res
+    }
+
+    private fun expectedAtPass(rulePosition: RulePositionRuntime, ifReachedEnd: LookaheadSetPart): LookaheadSetPart {
         return when {
             rulePosition.isAtEnd -> ifReachedEnd
             else -> {
@@ -54,7 +66,7 @@ internal class FirstOf(
                         else -> {
                             val next = rulePosition.next()
                             val notSelf = next - rulePosition
-                            val ne = notSelf.map { nrp -> this.expectedAt(nrp, ifReachedEnd) }
+                            val ne = notSelf.map { nrp -> this.expectedAtPass(nrp, ifReachedEnd) }
                                 .fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                             res.result.union(ne)
                         }
@@ -86,6 +98,7 @@ internal class FirstOf(
                             when {
                                 else -> when (rhs) {
                                     is RuntimeRuleRhsEmpty -> nrps.addAll(rp.next())
+                                    is RuntimeRuleRhsEmptyList -> nrps.addAll(rp.next())
                                     is RuntimeRuleRhsGoal -> TODO()
                                     is RuntimeRuleRhsEmbedded -> {
                                         val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
@@ -144,6 +157,9 @@ internal class FirstOf(
                 if (null == result) {
                     done[rule.number] = true
                     result = firstOfNotEmptySafe(rule, doneRp, done)
+                    // union with the previous pass, so the values only grow and the iteration in expectedAt ends
+                    val prev = _firstOfNotEmpty[rule.number]
+                    if (null != prev) result = prev.union(result)
                     _firstOfNotEmpty[rule.number] = result
                 }
                 result

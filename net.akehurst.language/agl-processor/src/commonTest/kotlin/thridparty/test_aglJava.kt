@@ -127,7 +127,7 @@ grammar Types : Annotations {
     WildcardBounds = 'extends' ReferenceType | 'super' ReferenceType ;
 
     UnannType = UnannTypeNonArray Dims? ;
-    UnannTypeNonArray = UnannReferenceType < UnannPrimitiveType ;
+    UnannTypeNonArray = UnannReferenceType | UnannPrimitiveType ;
     UnannReferenceType = UnannQualifiedTypeReference ;
     UnannQualifiedTypeReference = UnannTypeReference ( '.' [ TypeReference / '.' ]+ )? ;
     UnannTypeReference = IDENTIFIER TypeArguments? ;

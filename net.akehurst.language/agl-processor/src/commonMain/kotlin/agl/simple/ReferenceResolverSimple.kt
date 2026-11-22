@@ -33,15 +33,24 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.asm.PropertyCallDefault
+import net.akehurst.language.expressions.asm.withLastStepAsReference
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.ReferenceExpression
+import net.akehurst.language.reference.api.ReferenceExpressionProperty
+import net.akehurst.language.reference.api.ScopeImport
+import net.akehurst.language.reference.api.ScopeImportKind
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
+import net.akehurst.language.reference.asm.isReferableType
+import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
@@ -50,7 +59,9 @@ import net.akehurst.language.types.asm.StdLibDefault
 
 data class ReferenceExpressionContext(
     val element: AsmValue,
-    val scope: Scope
+    val scope: Scope,
+    /** inside a 'forall', the element before 'element' in the collection ('\$previous'), null for the first element or outside a 'forall' */
+    val previous: AsmStructure? = null
 )
 
 /**
@@ -62,7 +73,7 @@ class ReferenceResolverSimple(
     val crossReferenceDomain: CrossReferenceDomain,
     val sentenceContext: SentenceContext,
     val sentenceIdentity: Any?,
-    val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
+    val identifyingValueInFor: (inTypeName: QualifiedName, item: AsmStructure) -> Any?,
     val resolveFunction: ResolveScopedItem?,
     private val _locationMap: LocationMap,
     private val _accessor: ObjectGraphAccessorMutator
@@ -71,7 +82,14 @@ class ReferenceResolverSimple(
     private val scopeStack = mutableStackOf(sentenceContext.getScopeForSentenceOrNull(sentenceIdentity) ?: sentenceContext.newScopeForSentence(sentenceIdentity))
     private val scopeForElement = mutableMapOf<AsmStructure, Scope>()
     private val _issues = _accessor.issues
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(_accessor)
+    /** the interpreter for expressions in references, with the special properties '.\$container' and '.\$owner' of every element */
+    private val _interpreter: ExpressionsInterpreterOverTypedObjectCombined = object : ExpressionsInterpreterOverTypedObjectCombined(_accessor) {
+        override fun evaluateSpecialProperty(obj: TypedObject, name: String): TypedObject? = when (name) {
+            CONTAINER -> typedOf(structuresIn(obj).singleOrNull()?.let { containerOf(it) })
+            OWNER -> typedOf(structuresIn(obj).singleOrNull()?.let { ownerOf(it) })
+            else -> null
+        }
+    }
 
     val resolvedReferences = mutableListOf<ResolvedReference>()
 
@@ -85,6 +103,7 @@ class ReferenceResolverSimple(
     override fun beforeRoot(root: Any) {
         when (root) {
             is AsmStructure -> {
+                recordContainersOfSentence(root)
                 //val ref = createReferableFunction.invoke()
                 //val elScope = rootScope//.rootScope.scopeMap[ref] ?: rootScope
                 // scopeStack.push(elScope)
@@ -105,32 +124,89 @@ class ReferenceResolverSimple(
 
     override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         val parentScope = scopeStack.peek()
-        val inTypeName = parentScope.forTypeName.last
-        val refInParent = identifyingValueInFor.invoke(inTypeName, value)
-        val elScope = when (refInParent) {
-            null -> parentScope
-            is String -> parentScope.getChildScopeOrNull(refInParent) ?: parentScope
-            is List<*> -> when {
-                refInParent.all { it is String } -> {
-                    var lastScope = parentScope
-                    for (r in refInParent) {
-                        lastScope = lastScope.getChildScopeOrNull(r as String) ?: parentScope
+        val inTypeName = parentScope.forTypeName
+        // an element identified when the scope was built has a semantic path; its identifying value is not evaluated again,
+        // because by now a referring property it uses may have become a reference (e.g. resolved on demand)
+        val refInParent = when {
+            null != value.semanticQualifiedPath -> null
+            else -> identifyingValueInFor.invoke(inTypeName, value)
+        }
+        val elScope = when {
+            null != value.semanticQualifiedPath -> scopeOfElement(value) ?: parentScope
+            else -> when (refInParent) {
+                // an unnamed element: its anonymous scope, if it has one (see ScopeCreator)
+                null -> anonymousScopeOf[value] ?: parentScope
+                is String -> parentScope.getChildScopeOrNull(refInParent) ?: parentScope
+                is List<*> -> when {
+                    refInParent.all { it is String } -> {
+                        var lastScope = parentScope
+                        for (r in refInParent) {
+                            lastScope = lastScope.getChildScopeOrNull(r as String) ?: parentScope
+                        }
+                        lastScope
                     }
-                    lastScope
+
+                    else -> TODO()
                 }
 
                 else -> TODO()
             }
-
-            else -> TODO()
         }
         scopeStack.push(elScope)
         scopeForElement[value] = elScope
 
-        val references = crossReferenceDomain.referencesFor(value.typeName)
+        resolveReferencesOf(value, elScope)
+    }
+
+    // elements whose references have been handled, or are being handled (to stop cycles)
+    private val _referencesHandled = mutableSetOf<AsmStructure>()
+
+    /**
+     * handle the reference expressions for 'value', at most once per element.
+     * Called by the tree walk, and on demand when a lookup needs a reference of an element (e.g. the target of an import) before the walk reaches it.
+     */
+    private fun resolveReferencesOf(value: AsmStructure, elScope: Scope) {
+        if (_referencesHandled.contains(value)) return
+        _referencesHandled.add(value)
+        // an element of another sentence (resolved on demand): its containers are needed for '\$container' and '\$owner'
+        if (!_containerOf.containsKey(value)) elementOf(elScope.rootScope.ownerItem)?.let { recordContainersOfSentence(it) }
+        _resolving.addLast(value)
+        try {
+            handleReferencesOf(value, elScope)
+        } finally {
+            _resolving.removeLast()
+        }
+    }
+
+    // elements whose references are being handled, innermost last
+    private val _resolving = ArrayDeque<AsmStructure>()
+
+    // per element, the referring properties set by a 'forall' of a containing element; the element's own reference definitions for them are not used ('forall' wins)
+    private val _setByForall = mutableMapOf<AsmStructure, MutableSet<String>>()
+
+    private fun isSetByForall(value: AsmStructure, refExpr: ReferenceExpression): Boolean =
+        refExpr is ReferenceExpressionPropertyDefault && _setByForall[value]?.contains(refExpr.referringPropertyPath.asString()) == true
+
+    private fun handleReferencesOf(value: AsmStructure, elScope: Scope) {
+        val references = crossReferenceDomain.referencesFor(typesDomain, value.qualifiedTypeName)
         val type = typesDomain.findByQualifiedNameOrNull(value.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-        for (refExpr in references) {
-            handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value, type)
+        for (match in references) {
+            when {
+                match.isAmbiguous && isConditionalChoice(match.candidates) -> {
+                    match.candidates.firstOrNull { conditionHolds(it, value) }?.takeIf { !isSetByForall(value, it) }?.let { refExpr ->
+                        handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value, type)
+                    }
+                }
+
+                match.isAmbiguous -> raiseError(
+                    value,
+                    "Ambiguous references for type '${value.qualifiedTypeName.value}', candidates: ${match.candidates.joinToString(separator = ", ") { "'${it.asString().trim()}'" }}"
+                )
+
+                else -> match.singleOrNull?.takeIf { conditionHolds(it, value) && !isSetByForall(value, it) }?.let { refExpr ->
+                    handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value, type)
+                }
+            }
         }
     }
 
@@ -157,74 +233,69 @@ class ReferenceResolverSimple(
         // 'property' navigation 'refers-to' typeReferences from? ;
         //check referred to item exists
         // resolve reference & convert property value to reference
-        val scope = when (refExpr.fromNavigation) {
-            null -> scopeStack.peek()
-            else -> {
-                //scope for result of navigation
-                val elType = typesDomain.findByQualifiedNameOrNull(exprContext.element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-                val fromEl = _interpreter.evaluateExpression(
-                    EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(exprContext.element, elType)), refExpr.fromNavigation
-                ).self
-                when (fromEl) {
-                    is AsmNothing -> error("Cannot get scope for result of '${exprContext.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
-                    is AsmStructure -> {
-                        val fromElId =
-                            identifyingValueInFor.invoke(exprContext.scope.forTypeName.last, fromEl) as String? ?: error("'${fromEl}' not identifiable, therefore cannot determine it's scope")
-                        val elScope = exprContext.scope.getChildScopeOrNull(fromElId) ?: error("Scope for '${fromElId}' not found")
-                        elScope
-                        //scopeForElement[fromEl]!!
-                    }
-
-                    is AsmReference -> {
-                        val v = fromEl.value // ?: error("'${fromEl.reference}' not resolved, therefore cannot determine it's scope")
-                        if (null == v) {
-                            raiseError(self, "Cannot resolve reference to ${fromEl.reference}")
-                            null
-                        } else {
-                            val fromElId =
-                                identifyingValueInFor.invoke(exprContext.scope.forTypeName.last, v) as String? ?: error("'${fromEl.reference}' not identifiable, therefore cannot determine it's scope")
-                            val elScope = exprContext.scope.getChildScopeOrNull(fromElId) ?: error("Scope for '${fromElId}' not found")
-                            elScope
-                            //scopeForElement[v] ?: error("Scope for '${v}' not found !")
-                        }
-                    }
-
-                    else -> error("Cannot get scope for result of '${exprContext.element}.${refExpr.fromNavigation}' in is not an AsmStructure, rather it is a '${fromEl::class.simpleName}'")
-                }
+        // an unset referring property (e.g. an optional reference that the sentence does not give) has nothing to resolve: no error
+        when (isUnsetReferringProperty(self, refExpr)) {
+            true -> return
+            false -> Unit
+            null -> {
+                val valueOfReferringProperty = referringValueOf(self, _accessor.typeFor(self, StdLibDefault.AnyType), refExpr)
+                if (null == valueOfReferringProperty || Unit == valueOfReferringProperty || valueOfReferringProperty is AsmNothing) return
             }
+        }
+        val fromNav = refExpr.fromNavigation
+        val isFromPrevious = null != fromNav && fromNav.start is RootExpression && (fromNav.start as RootExpression).name == SCOPE_PREVIOUS
+        // 'from \$previous...' : resolve in the scope of the target of the reference reached from the previous element of the 'forall'
+        // for the first element (no previous) the normal lookup is used
+        val chain = when {
+            isFromPrevious && null != exprContext.previous -> ChainLookup(previousTargetOf(exprContext.previous, fromNav!!))
+            // 'from \$previous... else <nav>' : the first element is looked up in the target of the reference reached by <nav>
+            isFromPrevious && null != refExpr.fromElseNavigation -> elseChainOf(exprContext, refExpr.fromElseNavigation!!)
+            else -> null
+        }
+        // 'from E' : the lookup starts in the scope of element E (or of the target of reference E)
+        // 'from inherited E' : the lookup is in what E inherits, then outwards from E, never in E's own members
+        val fromScope = when {
+            null == fromNav || isFromPrevious -> null
+            else -> fromScopeOf(exprContext, fromNav, self)
+        }
+        if (null != fromNav && !isFromPrevious && null == fromScope) return // issue already raised
+        val fromScopes = when {
+            null != fromScope && refExpr.fromInherited -> inheritedScopesInSentenceOrderOf(fromScope)
+            else -> null
+        }
+        val scope = when {
+            null != fromScope -> fromScope
+            else -> exprContext.scope
         }
         if (null != scope) {
             val elType = _accessor.typeFor(self, StdLibDefault.AnyType)
-            var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, elType)), refExpr.referringPropertyNavigation).self
+            var referringValue = referringValueOf(self, elType, refExpr)
             if (referringValue is AsmReference) {
                 referringValue = referringValue.reference
             }
+            if (referringValue is List<*>) {
+                // elements of a List<String> property arrive wrapped as TypedObject
+                referringValue = referringValue.map { if (it is TypedObject) it.self else it }
+            }
             when {
                 referringValue is String -> {
-                    val pqn = referringValue.asPossiblyQualifiedName
-                    val qname = when(pqn) {
-                        is QualifiedName -> pqn.parts.map { it.value }
-                        is SimpleName -> scope.scopePath + pqn.value
-                    }
-                    handleCreateReference(scope,self, elType,refExpr,qname)
+                    val qname = referringValue.split(".")
+                    handleCreateReference(scope, exprContext.scope, fromScopes, chain, self, elType, refExpr, qname)
                 }
-                referringValue is List<*> && referringValue.all { it is String } -> {
+
+                referringValue is List<*> && referringValue.isNotEmpty() && referringValue.all { it is String } -> {
                     val qname = referringValue.map { it as String }
-                    handleCreateReference(scope,self,elType,refExpr, qname)
+                    handleCreateReference(scope, exprContext.scope, fromScopes, chain, self, elType, refExpr, qname)
                 }
                 // Deprecated
                 referringValue is AsmPrimitive -> {
-                    val pqn = (referringValue.value as String).asPossiblyQualifiedName
-                    val qname = when(pqn) {
-                        is QualifiedName -> pqn.parts.map { it.value }
-                        is SimpleName -> scope.scopePath + pqn.value
-                    }
-                    handleCreateReference(scope,self, elType,refExpr,qname)
+                    val qname = (referringValue.value as String).split(".")
+                    handleCreateReference(scope, exprContext.scope, fromScopes, chain, self, elType, refExpr, qname)
                 }
                 // Deprecated
-                referringValue is AsmList && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
+                referringValue is AsmList && referringValue.elements.isNotEmpty() && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
                     val qname = referringValue.elements.map { (it as AsmPrimitive).value as String }
-                    handleCreateReference(scope,self,elType,refExpr, qname)
+                    handleCreateReference(scope, exprContext.scope, fromScopes, chain, self, elType, refExpr, qname)
                 }
 
                 else -> raiseError(self, "Referring value '${elType.typeName.value}.${refExpr.referringPropertyNavigation}=$referringValue' on element $self is not a String or List<String>")
@@ -234,42 +305,133 @@ class ReferenceResolverSimple(
         }
     }
 
-    private fun handleCreateReference(scope: Scope, self: Any, type: TypeInstance, refExpr: ReferenceExpressionPropertyDefault, qName: List<String>) {
-        val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
-        val targets = referredToTypes.flatMap { td ->
-            // Use context (not scope) because the reference could have been created from a different sentence
-            sentenceContext.findItemsByQualifiedNameConformingTo(qName) {
-                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDefinition
-                itemType.conformsTo(td)
+    /**
+     * true if the referring navigation is a single property of 'self' that has no value, false if it has one,
+     * null if that is not known without evaluating the navigation.
+     * The property is read directly, so a property that is not set does not give an issue
+     * (evaluating it would, when its declared type is not nullable).
+     */
+    private fun isUnsetReferringProperty(self: Any, refExpr: ReferenceExpressionPropertyDefault): Boolean? {
+        val path = refExpr.referringPropertyPath
+        val start = path.start
+        return when {
+            self is AsmStructure && path.parts.isEmpty() && start is RootExpression && start.name.startsWith("$").not() -> {
+                val v = self.property[PropertyValueName(start.name)]?.value
+                null == v || Unit == v || v is AsmNothing
             }
+            else -> null
         }
+    }
+
+    /**
+     * the value of the referring navigation on 'self'.
+     * When the property is already converted to a reference (it was resolved before, e.g. on demand),
+     * the method calls after the property ('name.removeSurrounding(..)') are applied to the property's original value,
+     * rebuilt from the reference text (a List<String> was joined with '.').
+     */
+    private fun referringValueOf(self: Any, elType: TypeInstance, refExpr: ReferenceExpressionPropertyDefault): Any? {
+        val selfTyped = _interpreter.objectGraph.typedAs(self, elType)
+        val path = refExpr.referringPropertyPath
+        val trailing = refExpr.referringPropertyNavigation.parts.drop(path.parts.size)
+        if (trailing.isEmpty()) return evaluateReferring(EvaluationContext.ofSelf(selfTyped), refExpr.referringPropertyNavigation).self
+        val pathValue = evaluateReferring(EvaluationContext.ofSelf(selfTyped), path)
+        val pv = pathValue.self
+        return when (pv) {
+            is AsmReference -> {
+                // the declared type of the property says if the original value was a List<String> (pathValue.type is the referred type)
+                val (owner, propName) = when {
+                    path.parts.isEmpty() -> Pair(selfTyped, (path.start as RootExpression).name)
+                    else -> Pair(
+                        evaluateReferring(EvaluationContext.ofSelf(selfTyped), NavigationExpressionDefault(path.start, path.parts.dropLast(1))),
+                        (path.parts.last() as PropertyCall).propertyName
+                    )
+                }
+                val declaredType = owner.type.resolvedDefinition.findAllPropertyOrNull(net.akehurst.language.types.api.PropertyName(propName))?.typeInstance
+                val isList = declaredType?.resolvedDefinition?.conformsTo(StdLibDefault.List) ?: false
+                val raw: TypedObject = when {
+                    isList -> _interpreter.objectGraph.createCollection(
+                        StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)),
+                        pv.reference.split(".").map { _interpreter.objectGraph.typedAs(it, StdLibDefault.String) }
+                    )
+                    else -> _interpreter.objectGraph.typedAs(pv.reference, StdLibDefault.String)
+                }
+                evaluateReferring(EvaluationContext.ofSelf(raw), NavigationExpressionDefault(RootExpressionDefault.SELF, trailing)).self
+            }
+            else -> evaluateReferring(EvaluationContext.ofSelf(selfTyped), refExpr.referringPropertyNavigation).self
+        }
+    }
+
+    private fun handleCreateReference(scope: Scope, contextScope: Scope, fromScopes: List<Scope>?, chain: ChainLookup?, self: Any, type: TypeInstance, refExpr: ReferenceExpressionPropertyDefault, qName: List<String>) {
+        if (null != chain && null == chain.previousTarget) {
+            // the previous element's reference is not resolved (its error is already reported), so this one cannot be resolved either; no further error
+            val referringProperty = refExpr.referringPropertyPath.propertyFor(self, type)
+            createReference(self, referringProperty, null, qName)
+            return
+        }
+        val chainScope = chain?.previousTarget?.let { scopeOfElement(it) }
+        val referredToTypes = refExpr.refersToTypeName.mapNotNull { crossReferenceDomain.findTypeNamedIn(typesDomain, refExpr, it) }.filter { it.isReferableType }
+        val conforms = { typeName: QualifiedName ->
+            val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDefinition
+            referredToTypes.any { td -> itemType.conformsTo(td) }
+        }
+        // an element whose name is computed from this reference (e.g. 'perform a;' is named 'a') is not a target of it, that would be circular:
+        // while looking up, such an element is not an item of its scope (so the lookup goes on as if it was not there)
+        val selfStr = (self as? TypedObject)?.self as? AsmStructure ?: self as? AsmStructure
+        val outerExcluding = _excluding
+        _excluding = selfStr?.let { r -> { f: Found -> isNamedByReference(f, r, refExpr) } }
+        val found = try { when {
+            // 'from \$previous...' : members of the previous target, visible from outside
+            null != chain -> when (chainScope) {
+                null -> emptyList()
+                else -> resolveMembersOf(chainScope, qName)
+            }
+            // Use context (not scope) because the reference could have been created from a different sentence
+            null == fromScopes -> resolveQualifiedNameInAll(scope.scopePath, qName, scope.rootScope)
+            // 'from inherited E' (E has the scope 'scope'): each inherited scope in turn (in the order the inheriting elements are in the sentence),
+            // the lookup starts in that scope and goes outwards from it, the first that gives a result is used;
+            // if none does, the normal lookup outwards from E, starting in the scope that E is in (so not in E's own members)
+            else -> fromScopes.firstNotNullOfOrNull { st -> resolveQualifiedNameInAll(st.scopePath, qName, st.rootScope).ifEmpty { null } } ?: when {
+                scope.scopePath.isEmpty() -> emptyList()
+                else -> resolveQualifiedNameInAll(scope.scopePath.dropLast(1), qName, scope.rootScope)
+            }
+        } } finally {
+            _excluding = outerExcluding
+        }
+        val targets = found
+            .flatMap { aliasTargets(it, mutableListOf()) }
+            .distinctBy { Pair(it.typeName, it.item) }
+            .filter { conforms.invoke(it.typeName) }
+            .map { ItemInScope(it.name, it.typeName, null, it.item!!) }
         when {
             targets.isEmpty() -> {
                 /*
                 val selfId = when (self) {
-                    is AsmStructure -> identifyingValueInFor.invoke(scope.forTypeName.last, self)
+                    is AsmStructure -> identifyingValueInFor.invoke(scope.forTypeName, self)
                     else -> self.toString()
                 }
                  */
-                raiseError(self, "Reference '${qName.joinToString(".")}' not resolved, to type(s) ${refExpr.refersToTypeName} in scope '${scope.scopeIdentity}'")//of element '$selfId'")
+                raiseError(self, "Reference '${qName.joinToString(".")}' not resolved, to type(s) ${refExpr.refersToTypeName} in scope '${(chainScope ?: contextScope).scopeIdentity}'")//of element '$selfId'")
                 //raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '${list}' in scope of element '$self'")
-                val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self, type)
-                createReference(self, referringProperty, null)
+                val referringProperty = refExpr.referringPropertyPath.propertyFor(self, type)
+                createReference(self, referringProperty, null, qName)
             }
 
             1 < targets.size -> {
                 val msg = "Multiple target of type(s) ${refExpr.refersToTypeName} found for referring value '${qName.joinToString(".")}' in scope of element '$self': $targets"
                 raiseError(self, msg)
-                val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self, type)
-                createReference(self, referringProperty, null)
+                val referringProperty = refExpr.referringPropertyPath.propertyFor(self, type)
+                createReference(self, referringProperty, null, qName)
             }
 
             else -> {
                 val referred = targets.first().item // already checked for empty and > 1, so must be only one
+                if (self is AsmStructure) {
+                    elementOf(referred)?.let { _targetOf.getOrPut(self) { mutableMapOf() }[refExpr.referringPropertyPath.asString()] = it }
+                }
                 when {
                     //  referred.isExternal -> {
                     //      // cannot resolve, intentionally external, refer to null
-                    //      val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
+                    //      val referringProperty = refExpr.referringPropertyPath.propertyFor(self)
                     //      createReference(referringProperty, null)
                     //  }
 
@@ -278,12 +440,12 @@ class ReferenceResolverSimple(
                         when (ref) {
                             null -> this.raiseError(
                                 self,
-                                "Asm does not contain element '$referred' as reference for '${type.typeName.value}.${refExpr.referringPropertyNavigation}'"
+                                "Asm does not contain element '$referred' as reference for '${type.typeName.value}.${refExpr.referringPropertyPath}'"
                             )
 
                             is AsmStructure -> {
-                                val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self,type)
-                                createReference(self, referringProperty, ref)
+                                val referringProperty = refExpr.referringPropertyPath.propertyFor(self,type)
+                                createReference(self, referringProperty, ref, qName)
                             }
 
                             else -> this.raiseError(self, "Asm element '$referred' is not a reference to a structured element of the asm")
@@ -293,53 +455,871 @@ class ReferenceResolverSimple(
                     else -> {
                         // no resolve function so do not resolve, maybe intentional so do not warn or error
                         // create reference but do not resolve it
-                        val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self,type)
-                        createReference(self, referringProperty, null)
+                        val referringProperty = refExpr.referringPropertyPath.propertyFor(self,type)
+                        createReference(self, referringProperty, null, qName)
                     }
                 }
+            }
+        }
+    }
+
+    // ---- name lookup ----
+
+    private companion object {
+        const val ROOT = "\$root"
+        const val SCOPE_PREVIOUS = "\$previous"
+        const val CONTAINER = "\$container"
+        const val OWNER = "\$owner"
+        const val PUBLIC = "public"
+        const val PROTECTED = "protected"
+        const val PRIVATE = "private"
+        const val MAX_ALIAS_DEPTH = 100
+    }
+
+    /** an item found by name; 'item' is null for a child scope that has no item of the same name */
+    private data class Found(val name: String, val typeName: QualifiedName, val item: Any?, val owner: Scope)
+
+    /** from where a scope is looked into, decides which visibilities are visible */
+    private enum class Access { INSIDE, SUBTYPE, OUTSIDE }
+
+    private fun isVisible(visibility: String, access: Access) = when (access) {
+        Access.INSIDE -> true
+        Access.SUBTYPE -> visibility != PRIVATE
+        Access.OUTSIDE -> visibility == PUBLIC
+    }
+
+    /** the scopes from 'rootScope' along 'scopePath', as far as they exist, innermost last */
+    private fun chainFrom(rootScope: Scope, scopePath: List<String>): List<Scope> {
+        val chain = mutableListOf(rootScope)
+        for (seg in scopePath) {
+            chain.add(chain.last().getChildScopeOrNull(seg) ?: break)
+        }
+        return chain
+    }
+
+    /**
+     * KerML style name resolution (8.2.3.5):
+     * the first part of the name is looked up in the innermost scope of 'chain', then outwards. The nearest scope with that name is used.
+     * Looking up a name in one scope finds owned items first, then inherited items, then imported items.
+     * The remaining parts are looked up only inside the scope found for the previous part, and only items visible from outside are found.
+     * The root scope of another sentence than 'homeRoot' gives only its owned items: its imports (at file level) are only for its own sentence.
+     */
+    private fun resolveQualifiedName(chain: List<Scope>, qName: List<String>, homeRoot: Scope?): List<Found> {
+        if (qName.isEmpty()) return emptyList()
+        val first = qName.first()
+        var found = emptyList<Found>()
+        for (s in chain.asReversed()) {
+            found = when {
+                s.scopePath.isEmpty() && s !== homeRoot -> ownedItems(s, first, Access.INSIDE)
+                else -> localResolve(s, first, Access.INSIDE, mutableListOf())
+            }
+            if (found.isEmpty() && qName.size > 1) {
+                // a child scope with that name, without an item
+                s.getChildScopeOrNull(first)?.let { found = listOf(Found(first, it.forTypeName, null, s)) }
+            }
+            if (found.isNotEmpty()) break
+        }
+        found = resolveRest(found, qName.drop(1))
+        return found.filter { null != it.item }
+    }
+
+    /**
+     * as resolveQualifiedName, for the scopes along 'scopePath' in every sentence of the context (scopes of the same path in different sentences are one namespace):
+     * the first part of the name is looked up at the innermost depth first, in each sentence that has a scope there, then outwards;
+     * the nearest depth with that name is used (e.g. 'x' inside 'a' is found as 'a.x', not as a top-level 'x' of another sentence).
+     */
+    private fun resolveQualifiedNameInAll(scopePath: List<String>, qName: List<String>, homeRoot: Scope?): List<Found> {
+        if (qName.isEmpty()) return emptyList()
+        val chains = sentenceContext.scopeForSentence.values.map { chainFrom(it, scopePath) }
+        val maxDepth = chains.maxOfOrNull { it.size } ?: return emptyList()
+        val first = qName.first()
+        var found = emptyList<Found>()
+        for (d in (maxDepth - 1) downTo 0) {
+            found = chains.filter { it.size > d }.flatMap { ch -> firstPartIn(ch[d], first, qName.size > 1, homeRoot) }
+            if (found.isNotEmpty()) break
+        }
+        return resolveRest(found, qName.drop(1)).filter { null != it.item }
+    }
+
+    /** the items for the first part of a name in scope 's' (see resolveQualifiedName); with 'hasRest' also a child scope without an item */
+    private fun firstPartIn(s: Scope, first: String, hasRest: Boolean, homeRoot: Scope?): List<Found> {
+        val found = when {
+            s.scopePath.isEmpty() && s !== homeRoot -> ownedItems(s, first, Access.INSIDE)
+            else -> localResolve(s, first, Access.INSIDE, mutableListOf())
+        }
+        return when {
+            found.isEmpty() && hasRest -> s.getChildScopeOrNull(first)?.let { listOf(Found(first, it.forTypeName, null, s)) } ?: emptyList()
+            else -> found
+        }
+    }
+
+    /** the remaining parts of a qualified name, each looked up only inside the scope found for the part before, and only items visible from outside are found */
+    private fun resolveRest(start: List<Found>, rest: List<String>): List<Found> {
+        var found = start
+        for (seg in rest) {
+            found = found.flatMap { f ->
+                // an item found by a further name ('identify T by a | b') has its scope under its first name
+                val ns = f.owner.getChildScopeOrNull(f.name) ?: elementOf(f.item)?.let { scopeOfElement(it) }
+                when (ns) {
+                    null -> emptyList()
+                    else -> localResolve(ns, seg, Access.OUTSIDE, mutableListOf()).ifEmpty {
+                        // a child scope without an item; not when there is an item that is not visible
+                        when {
+                            null != ns.items[seg] -> emptyList()
+                            else -> ns.getChildScopeOrNull(seg)?.let { listOf(Found(seg, it.forTypeName, null, ns)) } ?: emptyList()
+                        }
+                    }
+                }
+            }
+        }
+        return found
+    }
+
+    /** items named 'name' owned by scope 's', that are visible with 'access' */
+    private fun ownedItems(s: Scope, name: String, access: Access): List<Found> =
+        s.items[name]?.map { (typeName, p) -> Found(name, typeName, p.second, s) }?.filter { isVisible(visibilityOf(it), access) && _excluding?.invoke(it) != true } ?: emptyList()
+
+    // while a reference is looked up: the items that are not targets of it (see handleCreateReference)
+    private var _excluding: ((Found) -> Boolean)? = null
+
+    /** items named 'name' in scope 's': owned, else inherited, else imported */
+    private fun localResolve(s: Scope, name: String, access: Access, visited: MutableList<Scope>): List<Found> {
+        if (visited.any { it === s }) return emptyList()
+        visited.add(s)
+        val owned = ownedItems(s, name, access)
+        if (owned.isNotEmpty()) return owned
+        val ownerEl = ownerElementOf(s) ?: return emptyList()
+        val scopeImports = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName)
+        val importsIntoScope = importsIntoScopeOf(ownerEl)
+        if (scopeImports.isEmpty() && importsIntoScope.isEmpty()) return emptyList()
+        val inheritAccess = if (access == Access.OUTSIDE) Access.OUTSIDE else Access.SUBTYPE
+        // 'inherit forall ...' first, then 'inherit by-position', then 'inherit named ...'
+        val inherits = scopeImports.filter { it.kind == ScopeImportKind.INHERIT }
+        val inherited = inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) ->
+            srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.flatMap { t -> scopeOfElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
+        }.distinct().let { hideOverridden(it) }
+        if (inherited.isNotEmpty()) return inherited
+        val inheritedByPosition = inherits.filter { it.byPosition }.flatMap { si ->
+            byPositionScopesOf(si, s).flatMap { localResolve(it, name, inheritAccess, visited) }
+        }.distinct()
+        if (inheritedByPosition.isNotEmpty()) return inheritedByPosition
+        val inheritedNamed = inherits.filter { null != it.named }.flatMap { si ->
+            namedTargetsOf(si, ownerEl).flatMap { t -> scopeOfAnyElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
+        }.distinct()
+        if (inheritedNamed.isNotEmpty()) return inheritedNamed
+        // the imports declared for the scope ('import forall ...'), then the elements in the scope that import into it ('import-into-scope ...')
+        val imports = scopeImports.filter { it.kind != ScopeImportKind.INHERIT }.flatMap { si -> importElementsOf(si, ownerEl).map { Pair(si, it) } } + importsIntoScope
+        val imported = imports.flatMap { (si, impEl) ->
+            when {
+                access == Access.OUTSIDE && normaliseVisibility(evaluate(si.visibility, impEl)) != PUBLIC -> emptyList()
+                else -> {
+                    val recursive = evaluate(si.recursive, impEl) == true
+                    targetsOf(si, impEl, s).flatMap { t ->
+                        val direct = when (si.kind) {
+                            // the element is imported under the name it is imported by (e.g. an alias for it), or its own name
+                            ScopeImportKind.IMPORT_ELEMENT -> foundForElement(t).filter { it.name == name || importedNameOf(si, impEl) == name }.map { Found(name, it.typeName, it.item, it.owner) }
+                            else -> scopeOfElement(t)?.let { localResolve(it, name, Access.OUTSIDE, visited) } ?: emptyList()
+                        }
+                        val nested = when {
+                            recursive -> scopeOfElement(t)?.let { ts ->
+                                descendantScopes(ts).flatMap { localResolve(it, name, Access.OUTSIDE, visited) }
+                                    .let { if (si.kind == ScopeImportKind.IMPORT_ELEMENT) localResolve(ts, name, Access.OUTSIDE, visited) + it else it }
+                            } ?: emptyList()
+
+                            else -> emptyList()
+                        }
+                        direct + nested
+                    }
+                }
+            }
+        }
+        return imported.distinct()
+    }
+
+    /**
+     * of items found in different inherited scopes, those that another of them inherits (e.g. a redefined feature, inherited by the feature that redefines it) are hidden by it
+     */
+    private fun hideOverridden(found: List<Found>): List<Found> = when {
+        found.size < 2 -> found
+        else -> {
+            val scopes = found.map { f -> elementOf(f.item)?.let { scopeOfAnyElement(it) } }
+            found.filterIndexed { i, _ ->
+                val si = scopes[i]
+                null == si || scopes.indices.none { j -> j != i && null != scopes[j] && si in allInheritedScopesOf(scopes[j]!!) }
+            }
+        }
+    }
+
+    /** the scopes that scope 's' inherits, directly or indirectly */
+    private fun allInheritedScopesOf(s: Scope): List<Scope> {
+        val result = mutableListOf<Scope>()
+        val todo = ArrayDeque(listOf(s))
+        while (todo.isNotEmpty()) {
+            val next = todo.removeFirst()
+            for (inh in inheritedScopesOf(next)) {
+                if (inh !== s && result.none { it === inh }) {
+                    result.add(inh)
+                    todo.addLast(inh)
+                }
+            }
+        }
+        return result
+    }
+
+    /** the last part of the name an element import refers to its element by, null if it is not a reference */
+    private fun importedNameOf(si: ScopeImport, impEl: AsmStructure): String? =
+        (evaluate(si.target, impEl) as? AsmReference)?.let { ref -> _lookedUpNameOf[ref]?.lastOrNull() ?: ref.reference.split(".").last() }
+
+    private fun descendantScopes(s: Scope): List<Scope> = s.childScopes.values.flatMap { listOf(it) + descendantScopes(it) }
+
+    /** lookup for 'from \$previous...': 'previousTarget' is what the previous element's reference resolved to, null if it is not resolved */
+    private class ChainLookup(val previousTarget: AsmStructure?)
+
+    /** the element each resolved reference refers to, per referring element and referring property (as written in the reference definition) */
+    private val _targetOf = mutableMapOf<AsmStructure, MutableMap<String, AsmStructure>>()
+
+    /**
+     * the target of the reference reached by 'nav' ('\$previous.a.b') from 'previous':
+     * all but the last property are navigated from 'previous', the last must be a reference property resolved by this resolver
+     */
+    private fun previousTargetOf(previous: AsmStructure, nav: NavigationExpression): AsmStructure? {
+        val props = nav.parts.map { (it as? PropertyCall)?.propertyName ?: return null }
+        if (props.isEmpty()) return null
+        var el: AsmStructure = previous
+        for (pn in props.dropLast(1)) {
+            el = structuresIn(evaluate(RootExpressionDefault(pn), el)).singleOrNull() ?: return null
+        }
+        val last = props.last()
+        return _targetOf[el]?.get(last) ?: referredElements(evaluate(RootExpressionDefault(last), el)).singleOrNull()
+    }
+
+    /**
+     * for 'from \$previous... else <nav>' and the first element of a 'forall': the target of the reference reached by 'nav' from the element of the 'in'.
+     * The reference is resolved on demand. null (the normal lookup is used) when 'nav' does not reach a reference
+     */
+    private fun elseChainOf(exprContext: ReferenceExpressionContext, nav: NavigationExpression): ChainLookup? {
+        val start = (nav.start as? RootExpression)?.name ?: return null
+        val props = listOf(start) + nav.parts.map { (it as? PropertyCall)?.propertyName ?: return null }
+        var el: AsmStructure = structuresIn(exprContext.element).singleOrNull() ?: return null
+        for (pn in props.dropLast(1)) {
+            el = structuresIn(evaluate(RootExpressionDefault(pn), el)).singleOrNull() ?: return null
+            // the reference may be defined on any element along the navigation (e.g. 'in Ref { property qname.id ... }')
+            resolveReferencesOf(el, scopeForElement[el] ?: exprContext.scope)
+        }
+        val last = props.last()
+        val value = evaluate(RootExpressionDefault(last), el)
+        return when {
+            isReference(value) -> ChainLookup(_targetOf[el]?.get(last) ?: referredElements(value).singleOrNull())
+            else -> null
+        }
+    }
+
+    private fun isReference(v: Any?): Boolean = when (v) {
+        is AsmReference -> true
+        is TypedObject -> isReference(v.self)
+        else -> false
+    }
+
+    /** items for 'qName' among the members of scope 's' (owned, then inherited, then imported) as seen from outside of 's' */
+    private fun resolveMembersOf(s: Scope, qName: List<String>): List<Found> {
+        if (qName.isEmpty()) return emptyList()
+        val first = qName.first()
+        val found = localResolve(s, first, Access.OUTSIDE, mutableListOf()).ifEmpty {
+            s.getChildScopeOrNull(first)?.let { listOf(Found(first, it.forTypeName, null, s)) } ?: emptyList()
+        }
+        return resolveRest(found, qName.drop(1)).filter { null != it.item }
+    }
+
+    /** items for 'qName' among the members of the inherited scope 's', as seen from a subtype (then the rest as seen from outside) */
+    private fun resolveInheritedMembersOf(s: Scope, qName: List<String>): List<Found> {
+        if (qName.isEmpty()) return emptyList()
+        val found = localResolve(s, qName.first(), Access.SUBTYPE, mutableListOf())
+        return resolveRest(found, qName.drop(1)).filter { null != it.item }
+    }
+
+    /**
+     * the scope for 'from E': E (the navigation) is evaluated on the element of the 'in', it gives an element or a reference to an element,
+     * the scope is the scope of that element. null (and an error is raised) if there is no such scope.
+     */
+    private fun fromScopeOf(exprContext: ReferenceExpressionContext, nav: NavigationExpression, self: Any): Scope? {
+        val inEl = structuresIn(exprContext.element).singleOrNull()
+        val v = inEl?.let { evaluate(nav, it) }
+        val el = when (v) {
+            is AsmReference -> v.value ?: run {
+                raiseError(self, "Cannot resolve reference to ${v.reference}")
+                return null
+            }
+
+            else -> structuresIn(v).singleOrNull()
+        }
+        if (null == el) {
+            raiseError(self, "In 'from ${nav.asString()}', the result is not an element")
+            return null
+        }
+        return scopeOfAnyElement(el) ?: run {
+            raiseError(self, "In 'from ${nav.asString()}', the element has no scope")
+            null
+        }
+    }
+
+    private fun ownerScopeOf(s: Scope): Scope? = when {
+        s.scopePath.isEmpty() -> null
+        else -> chainFrom(s.rootScope, s.scopePath.dropLast(1)).let { ch -> if (ch.size == s.scopePath.size) ch.last() else null }
+    }
+
+    /** the scopes that scope 's' inherits: from 'inherit forall ...', then from 'inherit named ...' */
+    private fun inheritedScopesOf(s: Scope): List<Scope> {
+        val ownerEl = ownerElementOf(s) ?: return emptyList()
+        val inherits = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName).filter { it.kind == ScopeImportKind.INHERIT }
+        return inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) -> srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.mapNotNull { scopeOfElement(it) } } +
+                inherits.filter { it.byPosition }.flatMap { si -> byPositionScopesOf(si, s) } +
+                inherits.filter { null != it.named }.flatMap { si -> namedTargetsOf(si, ownerEl).mapNotNull { scopeOfAnyElement(it) } }
+    }
+
+    /**
+     * the scopes that scope 's' inherits, as inheritedScopesOf, but those from 'inherit forall ...' ordered by the position in the sentence of the element
+     * that gives them (e.g. 'f redefines a : B' : first the scope of 'a', then that of 'B', whatever the order of the inherit rules); then those from 'inherit named ...'
+     */
+    private fun inheritedScopesInSentenceOrderOf(s: Scope): List<Scope> {
+        val ownerEl = ownerElementOf(s) ?: return emptyList()
+        val inherits = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName).filter { it.kind == ScopeImportKind.INHERIT }
+        val fromForall = inheritForallSources(inherits, ownerEl)
+            .flatMap { (si, srcs, resolveNow) -> srcs.map { src -> Pair(src, targetsOf(si, src, s, resolveNow).mapNotNull { scopeOfElement(it) }) } }
+            .sortedBy { (src, _) -> _locationMap[src]?.position ?: Int.MAX_VALUE } // stable, so without a position the rule order is kept
+            .flatMap { it.second }
+        val fromByPosition = inherits.filter { it.byPosition }.flatMap { si -> byPositionScopesOf(si, s) }
+        val fromNamed = inherits.filter { null != it.named }.flatMap { si -> namedTargetsOf(si, ownerEl).mapNotNull { scopeOfAnyElement(it) } }
+        return (fromForall + fromByPosition + fromNamed).distinct()
+    }
+
+    /**
+     * the elements selected by each 'inherit forall' of 'inherits' (the scope imports for the type of 'ownerEl'), and whether their references may be resolved now.
+     * An element within which a reference is being resolved (e.g. the typing of 'ownerEl', which is looked up in the scope of 'ownerEl') is left out:
+     * the inheritance would depend on itself. While that is so, the references of the other elements are not resolved now either,
+     * as they could need what is not resolved yet (e.g. 'ref p : T :> p.q', 'q' needs the typing 'T'); the tree walk resolves them later.
+     */
+    private fun inheritForallSources(inherits: List<ScopeImport>, ownerEl: AsmStructure): List<Triple<ScopeImport, List<AsmStructure>, Boolean>> {
+        val sources = inherits.filter { null == it.named && !it.byPosition }.map { si -> Pair(si, importElementsOf(si, ownerEl)) }
+        // a source whose own reference is being resolved can not be used yet (cycle).
+        // When the source is the scope owner itself ('forall $self', or no 'forall'), every reference in its body is within it, so only its own references count
+        val beingResolved = { src: AsmStructure -> _resolving.any { r -> if (src === ownerEl) r === ownerEl else isWithin(r, src) } }
+        val anyBeingResolved = sources.any { (_, srcs) -> srcs.any(beingResolved) }
+        return sources.map { (si, srcs) -> Triple(si, srcs.filterNot(beingResolved), !anyBeingResolved) }
+    }
+
+    /** true if 'el' is 'ancestor' or contained in it (in the ASM) */
+    private fun isWithin(el: AsmStructure, ancestor: AsmStructure): Boolean {
+        var c: AsmStructure? = el
+        while (null != c) {
+            if (c === ancestor) return true
+            c = _containerOf[c]
+        }
+        return false
+    }
+
+    /**
+     * 'inherit by-position' for scope 's' (the scope of element X): X is the i-th of the items counted (those for which the condition holds) in the scope that X is in;
+     * the result is the scope of the i-th item counted in each scope that the owner of that scope inherits, in the order of 'from inherited'
+     */
+    private fun byPositionScopesOf(si: ScopeImport, s: Scope): List<Scope> {
+        val x = ownerElementOf(s) ?: return emptyList()
+        if (!isCountedBy(si, x)) return emptyList()
+        val scopeOfX = ownerScopeOf(s) ?: return emptyList()
+        val i = countedItemsOf(si, scopeOfX).indexOfFirst { it === x }
+        if (i < 0) return emptyList()
+        return inheritedScopesInSentenceOrderOf(scopeOfX)
+            .mapNotNull { g -> countedItemsOf(si, g).getOrNull(i)?.let { scopeOfAnyElement(it) } }
+            .filter { it !== s }
+            .distinct()
+    }
+
+    private fun isCountedBy(si: ScopeImport, el: AsmStructure): Boolean = null == si.condition || evaluate(si.condition, el) == true
+
+    /** the elements owned by scope 'sc' that 'inherit by-position' counts, in sentence order */
+    private fun countedItemsOf(si: ScopeImport, sc: Scope): List<AsmStructure> =
+        sc.items.values.flatMap { byType -> byType.values.mapNotNull { elementOf(it.second) } }
+            .distinct()
+            .filter { isCountedBy(si, it) }
+            .sortedBy { _locationMap[it]?.position ?: Int.MAX_VALUE }
+
+    /** the elements found by the qualified name of an 'inherit named', if its condition holds for 'ownerEl', per rule */
+    private val _namedTargets = mutableMapOf<ScopeImport, List<AsmStructure>>()
+
+    /** 'inherit named' rules already warned about (their element is not found), one warning per rule */
+    private val _namedNotFound = mutableSetOf<ScopeImport>()
+
+    private fun namedTargetsOf(si: ScopeImport, ownerEl: AsmStructure): List<AsmStructure> {
+        val named = si.named ?: return emptyList()
+        if (null != si.condition && evaluate(si.condition, ownerEl) != true) return emptyList()
+        return _namedTargets.getOrPut(si) {
+            // the first name is looked up in (the owned items of) the root scopes of the context, the rest inside the scope found for the name before
+            val start = sentenceContext.scopeForSentence.values.flatMap { root -> ownedItems(root, named.first(), Access.INSIDE) }
+            val found = resolveRest(start, named.drop(1)).mapNotNull { elementOf(it.item) }.distinct()
+            if (found.isEmpty() && _namedNotFound.add(si)) {
+                _issues.warn(_locationMap[ownerEl], "Element '${named.joinToString(".")}' of 'inherit named' for type '${ownerEl.qualifiedTypeName.value}' not found in the context, nothing is inherited from it")
+            }
+            found
+        }
+    }
+
+    private fun elementOf(item: Any?): AsmStructure? = item?.let { sentenceContext.resolveScopedItem.invoke(it) as? AsmStructure }
+
+    /** the element that created scope 's', i.e. the item in the owning scope with the scope's name and type */
+    private fun ownerElementOf(s: Scope): AsmStructure? {
+        // the root scope of a sentence (its root element) or the anonymous scope of an unnamed element
+        if (s.scopePath.isEmpty() || null != s.ownerItem) return elementOf(s.ownerItem)
+        val owner = ownerScopeOf(s) ?: return null
+        val name = s.scopePath.last()
+        val items = owner.items[name] ?: return null
+        return (items[s.forTypeName]?.second?.let { elementOf(it) }) ?: items.values.firstNotNullOfOrNull { elementOf(it.second) }
+    }
+
+    /** the scope of element 'el': the scope it created, or the root scope of a sentence for its root element */
+    private fun scopeOfAnyElement(el: AsmStructure): Scope? =
+        scopeOfElement(el) ?: sentenceContext.scopeForSentence.values.firstOrNull { elementOf(it.ownerItem) === el } ?: anonymousScopeOf[el]
+
+    /** the anonymous scopes of unnamed elements (they have an ownerItem, and the element has no semantic path) */
+    private val anonymousScopeOf: Map<AsmStructure, Scope> by lazy {
+        val map = mutableMapOf<AsmStructure, Scope>()
+        fun walk(sc: Scope) {
+            sc.childScopes.values.forEach { ch ->
+                ch.ownerItem?.let { elementOf(it) }?.let { map[it] = ch }
+                walk(ch)
+            }
+        }
+        sentenceContext.scopeForSentence.values.forEach { walk(it) }
+        map
+    }
+
+    /** the scope created by element 'el', found via its semantic path */
+    private fun scopeOfElement(el: AsmStructure): Scope? {
+        val path = el.semanticQualifiedPath ?: return null
+        if (path.isEmpty()) return null
+        return sentenceContext.scopeForSentence.values.firstNotNullOfOrNull { root ->
+            val ch = chainFrom(root, path)
+            when {
+                ch.size != path.size + 1 -> null
+                ownerElementOf(ch.last()) === el -> ch.last()
+                else -> null
+            }
+        }
+    }
+
+    /** where element 'el' is an item in a scope */
+    private fun foundForElement(el: AsmStructure): List<Found> {
+        val path = el.semanticQualifiedPath ?: return emptyList()
+        if (path.isEmpty()) return emptyList()
+        val name = path.last()
+        return sentenceContext.scopeForSentence.values.flatMap { root ->
+            val ch = chainFrom(root, path.dropLast(1))
+            when {
+                ch.size != path.size -> emptyList()
+                else -> ch.last().items[name]?.filter { (_, p) -> elementOf(p.second) === el }?.map { (typeName, p) -> Found(name, typeName, p.second, ch.last()) } ?: emptyList()
+            }
+        }
+    }
+
+    private fun visibilityOf(f: Found): String {
+        val el = elementOf(f.item) ?: return PUBLIC
+        val id = crossReferenceDomain.identifyingExpressionFor(typesDomain, f.owner.forTypeName, el.qualifiedTypeName).singleOrNull ?: return PUBLIC
+        return normaliseVisibility(evaluate(id.visibility, el))
+    }
+
+    private fun normaliseVisibility(v: Any?): String = when (v) {
+        PROTECTED, PRIVATE -> v as String
+        else -> PUBLIC
+    }
+
+    /**
+     * true if the name by which 'f' is found is computed from the reference being resolved:
+     * the element of 'f' is or contains 'referring' (the element with the referring property), and an identifying expression
+     * of the element that gives the name navigates through 'referring' to the referring property
+     */
+    private fun isNamedByReference(f: Found, referring: AsmStructure, refExpr: ReferenceExpressionPropertyDefault): Boolean {
+        val el = elementOf(f.item) ?: return false
+        // only an element that is or contains 'referring' can be named by its reference
+        recordContainersFor(referring)
+        var c: AsmStructure? = referring
+        while (null != c && c !== el) c = containerOf(c)
+        if (null == c) return false
+        val referringProps = refExpr.referringPropertyPath.let { nav ->
+            val start = (nav.start as? RootExpression)?.name ?: return false
+            listOf(start) + nav.parts.map { (it as? PropertyCall)?.propertyName ?: return false }
+        }
+        val id = crossReferenceDomain.identifyingExpressionFor(typesDomain, f.owner.forTypeName, el.qualifiedTypeName).singleOrNull ?: return false
+        return id.identifiedByAlternatives.any { alt ->
+            nameValue(evaluate(alt, el)) == f.name && navigationsIn(alt).any { navigationReaches(el, it, referring, referringProps) }
+        }
+    }
+
+    /**
+     * true if navigating the property names 'nav' from 'el' reaches 'referring' and then continues with 'referringProps'
+     * ('first' and 'last' of a list are its first and last element; a property of a list is the property of each element; references are not followed)
+     */
+    private fun navigationReaches(el: AsmStructure, nav: List<String>, referring: AsmStructure, referringProps: List<String>): Boolean {
+        var values: List<Any?> = listOf(el)
+        for (i in nav.indices) {
+            if (values.any { v -> structuresIn(v).any { it === referring } } && nav.drop(i).take(referringProps.size) == referringProps) return true
+            values = values.flatMap { navigateProperty(it, nav[i]) }
+            if (values.isEmpty()) return false
+        }
+        return false
+    }
+
+    private fun navigateProperty(v: Any?, name: String): List<Any?> = when (v) {
+        null, is AsmNothing, is AsmReference -> emptyList()
+        is TypedObject -> navigateProperty(v.self, name)
+        is AsmStructure -> v.getPropertyOrNull(PropertyValueName(name))?.let { listOf(it) } ?: emptyList()
+        is AsmList -> navigateProperty(v.elements, name)
+        is List<*> -> when (name) {
+            "first" -> listOfNotNull(v.firstOrNull())
+            "last" -> listOfNotNull(v.lastOrNull())
+            else -> v.flatMap { navigateProperty(it, name) }
+        }
+        else -> emptyList()
+    }
+
+    /** the name given by an identifying value (a String, or the last of a List<String>) */
+    private fun nameValue(v: Any?): String? = when (v) {
+        is String -> v
+        is TypedObject -> nameValue(v.self)
+        is AsmPrimitive -> v.value as? String
+        is List<*> -> nameValue(v.lastOrNull())
+        else -> null
+    }
+
+    /** the property names of each navigation (from the element the expression is evaluated on) in 'e' */
+    private fun navigationsIn(e: Expression?): List<List<String>> = when (e) {
+        null -> emptyList()
+        is RootExpression -> if (e.isSelf || e.isNothing || e.name.startsWith("\$")) emptyList() else listOf(listOf(e.name))
+        is NavigationExpression -> {
+            val args = e.parts.filterIsInstance<MethodCall>().flatMap { mc -> mc.arguments.flatMap { navigationsIn(it) } }
+            val start = e.start
+            val own = when {
+                start is RootExpression && !(start.isSelf || start.isNothing || start.name.startsWith("\$")) ->
+                    listOf(listOf(start.name) + e.parts.filterIsInstance<PropertyCall>().map { it.propertyName })
+                else -> navigationsIn(start)
+            }
+            own + args
+        }
+        is WhenExpression -> e.options.flatMap { navigationsIn(it.condition) + navigationsIn(it.expression) } + navigationsIn(e.elseOption.expression)
+        is InfixExpression -> e.expressions.flatMap { navigationsIn(it) }
+        is TernaryConditionExpression -> navigationsIn(e.condition) + navigationsIn(e.trueExpression) + navigationsIn(e.falseExpression)
+        is CastExpression -> navigationsIn(e.expression)
+        is TypeTestExpression -> navigationsIn(e.expression)
+        else -> emptyList()
+    }
+
+
+    /** if the found item is an alias, the items for what it is an alias for (transitively), else the item itself */
+    private fun aliasTargets(f: Found, seen: MutableList<AsmStructure>): List<Found> {
+        val el = elementOf(f.item) ?: return listOf(f)
+        val aliasFor = crossReferenceDomain.identifyingExpressionFor(typesDomain, f.owner.forTypeName, el.qualifiedTypeName).singleOrNull?.aliasFor ?: return listOf(f)
+        if (seen.any { it === el } || seen.size > MAX_ALIAS_DEPTH) return emptyList()
+        seen.add(el)
+        resolveReferencesOf(el, f.owner)
+        return referredElements(evaluate(aliasFor, el)).flatMap { t -> foundForElement(t).flatMap { aliasTargets(it, seen) } }
+    }
+
+    /** the elements of the scope owner, selected by an import/inherit declaration */
+    private fun importElementsOf(si: ScopeImport, ownerEl: AsmStructure): List<AsmStructure> =
+        structuresIn(evaluate(si.elements, ownerEl)).filter { el -> isSelectedBy(si, el) }
+
+    /** 'el' conforms to one of the 'of-type' types of the import/inherit declaration (if it has any), and its condition (if any) holds for 'el' */
+    private fun isSelectedBy(si: ScopeImport, el: AsmStructure): Boolean {
+        val conforms = when {
+            si.ofType.isEmpty() -> true
+            else -> {
+                val elType = typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)
+                null != elType && si.ofType.any { tn -> crossReferenceDomain.findTypeNamedIn(typesDomain, si, tn)?.let { elType.conformsTo(it) } ?: false }
+            }
+        }
+        return conforms && (null == si.condition || evaluate(si.condition, el) == true)
+    }
+
+    private val _importsIntoScopeOf = mutableMapOf<AsmStructure, List<Pair<ScopeImport, AsmStructure>>>()
+
+    /**
+     * the elements in the scope of 'ownerEl' that import into it ('import-into-scope'), with the declaration that selects each:
+     * the elements contained (in the ASM) in 'ownerEl', not looking inside elements that have a scope of their own (what they contain is in their scope)
+     */
+    private fun importsIntoScopeOf(ownerEl: AsmStructure): List<Pair<ScopeImport, AsmStructure>> {
+        // (a declaration whose type is not found selects nothing; the semantic analysis of the references reports it)
+        val intos = crossReferenceDomain.importsIntoScope(typesDomain).filter { si -> si.ofType.any { crossReferenceDomain.findTypeNamedIn(typesDomain, si, it) != null } }
+        if (intos.isEmpty()) return emptyList()
+        return _importsIntoScopeOf.getOrPut(ownerEl) {
+            val result = mutableListOf<Pair<ScopeImport, AsmStructure>>()
+            val visited = mutableSetOf<AsmStructure>()
+            fun walk(el: AsmStructure) {
+                for (p in el.property.values) {
+                    if (p.isReference) continue
+                    for (child in structuresIn(p.value)) {
+                        if (child === ownerEl || !visited.add(child)) continue
+                        intos.filter { isSelectedBy(it, child) }.forEach { result.add(Pair(it, child)) }
+                        if (null == scopeOfAnyElement(child)) walk(child)
+                    }
+                }
+            }
+            walk(ownerEl)
+            result
+        }
+    }
+
+    /** the elements referred to by the 'target' (a reference property) of an import/inherit declaration, evaluated on 'sourceEl', which is in scope 's'; with 'resolveNow' the references needed are first resolved, if not yet done */
+    private fun targetsOf(si: ScopeImport, sourceEl: AsmStructure, s: Scope, resolveNow: Boolean = true): List<AsmStructure> {
+        if (resolveNow) {
+            resolveReferencesOf(sourceEl, s)
+            resolveReferencesAlong(si.target, sourceEl, s)
+        }
+        return referredElements(evaluate(si.target, sourceEl))
+    }
+
+    /**
+     * the reference may be defined on any element along navigation 'nav' from 'el' (e.g. 'members-of typedBy.featureTyping.name' with the reference on the element of 'featureTyping'),
+     * so handle the references of each element along it, as the walk may not have reached them yet
+     */
+    private fun resolveReferencesAlong(nav: NavigationExpression, el: AsmStructure, s: Scope) {
+        val start = (nav.start as? RootExpression)?.name ?: return
+        val props = listOf(start) + nav.parts.map { (it as? PropertyCall)?.propertyName ?: return }
+        var els = listOf(el)
+        for (pn in props.dropLast(1)) {
+            els = els.flatMap { structuresIn(evaluate(RootExpressionDefault(pn), it)) }
+            els.forEach { resolveReferencesOf(it, scopeForElement[it] ?: s) }
+        }
+    }
+
+    private fun referredElements(v: Any?): List<AsmStructure> = when (v) {
+        null -> emptyList()
+        is AsmReference -> listOfNotNull(v.value)
+        is AsmStructure -> listOf(v)
+        is TypedObject -> referredElements(v.self)
+        is List<*> -> v.flatMap { referredElements(it) }
+        is AsmList -> v.elements.flatMap { referredElements(it) }
+        else -> emptyList()
+    }
+
+    private fun structuresIn(v: Any?): List<AsmStructure> = when (v) {
+        is AsmNothing -> emptyList()
+        null -> emptyList()
+        is AsmStructure -> listOf(v)
+        is TypedObject -> structuresIn(v.self)
+        is List<*> -> v.flatMap { structuresIn(it) }
+        is AsmList -> v.elements.flatMap { structuresIn(it) }
+        else -> emptyList()
+    }
+
+    // ---- containing elements, for '\$container' ----
+
+    /** the element that contains each element of the sentence (in the ASM, not the scope owner) */
+    private val _containerOf = mutableMapOf<AsmStructure, AsmStructure>()
+
+    // root elements of the sentences whose containers have been recorded
+    private val _containersRecordedFor = mutableSetOf<AsmStructure>()
+
+    private fun recordContainersOfSentence(root: AsmStructure) {
+        if (_containersRecordedFor.add(root)) recordContainers(root)
+    }
+
+    /** records the containers of the sentence of 'el' (an element of another sentence, found in a scope), if not yet done */
+    private fun recordContainersFor(el: AsmStructure) {
+        if (_containerOf.containsKey(el) || _containersRecordedFor.contains(el)) return
+        foundForElement(el).firstOrNull()?.let { f -> elementOf(f.owner.rootScope.ownerItem) }?.let { recordContainersOfSentence(it) }
+    }
+
+    private fun recordContainers(owner: AsmStructure) {
+        for (p in owner.property.values) {
+            if (p.isReference) continue
+            for (child in structuresIn(p.value)) {
+                if (child !== owner && !_containerOf.containsKey(child)) {
+                    _containerOf[child] = owner
+                    recordContainers(child)
+                }
+            }
+        }
+    }
+
+    /** the element that contains 'el' in the ASM, null for a root element */
+    private fun containerOf(el: AsmStructure): AsmStructure? = _containerOf[el]
+
+    private val _ownerOf = mutableMapOf<AsmStructure, AsmStructure?>()
+
+    /**
+     * the element that owns the scope 'el' is in (the namespace owner): for an element that is an item of a scope, the element that created that scope;
+     * otherwise the nearest containing element (in the ASM) that has a scope. null if there is none.
+     */
+    private fun ownerOf(el: AsmStructure): AsmStructure? = when {
+        _ownerOf.containsKey(el) -> _ownerOf[el]
+        else -> {
+            val owner = foundForElement(el).firstOrNull()?.let { ownerElementOf(it.owner) }
+                ?: run {
+                    var c = _containerOf[el]
+                    while (null != c && null == scopeOfAnyElement(c)) c = _containerOf[c]
+                    c
+                }
+            _ownerOf[el] = owner
+            owner
+        }
+    }
+
+    /** the elements for the special values ('\$container', '\$owner', '\$root') of 'el', e.g. in an identifying expression */
+    fun specialValuesFor(el: AsmStructure): Map<String, AsmStructure?> {
+        recordContainersFor(el)
+        return mapOf(CONTAINER to containerOf(el), OWNER to ownerOf(el), ROOT to rootOf(el))
+    }
+
+    /** the root element of the sentence of 'el' */
+    private fun rootOf(el: AsmStructure): AsmStructure? {
+        var c = el
+        while (true) c = _containerOf[c] ?: break
+        return when {
+            sentenceContext.scopeForSentence.values.any { elementOf(it.ownerItem) === c } -> c
+            else -> foundForElement(el).firstOrNull()?.let { elementOf(it.owner.rootScope.ownerItem) }
+        }
+    }
+
+    private fun typedOf(el: AsmStructure?): TypedObject = when (el) {
+        null -> _interpreter.objectGraph.nothing()
+        else -> _interpreter.objectGraph.typedAs(el, typesDomain.findByQualifiedNameOrNull(el.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType)
+    }
+
+    /**
+     * evaluates an expression of the references on 'self'. The special values are elements:
+     * '\$container' is the element that contains 'self' in the ASM ('\$nothing' for the root),
+     * '\$owner' is the element that owns the scope 'self' is in, '\$root' is the root element of the sentence of 'self'.
+     * '.\$container' and '.\$owner' are also properties of every element.
+     */
+    /**
+     * the resolver works on the referring side: the last property read of an expression gives a reference itself ('&'),
+     * not the element it refers to (reading a reference property without '&' gives the element)
+     */
+    private fun evaluateReferring(evc: EvaluationContext, expr: Expression): TypedObject =
+        _interpreter.evaluateExpression(evc, expr.withLastStepAsReference())
+
+    private fun evaluate(expr: Expression?, self: AsmStructure): Any? = when (expr) {
+        null -> null
+        else -> {
+            recordContainersFor(self)
+            val evc = EvaluationContext.ofSelf(
+                typedOf(self), mapOf(
+                    CONTAINER to typedOf(containerOf(self)),
+                    OWNER to typedOf(ownerOf(self)),
+                    ROOT to typedOf(rootOf(self))
+                )
+            )
+            val v = evaluateReferring(evc, expr).self
+            when (v) {
+                is AsmPrimitive -> v.value
+                else -> v
+            }
+        }
+    }
+
+    /** several 'property' lines for the same property, where all but the last have a 'when' condition */
+    private fun isConditionalChoice(candidates: List<ReferenceExpression>): Boolean =
+        candidates.all { it is ReferenceExpressionProperty }
+                && candidates.map { (it as ReferenceExpressionProperty).referringPropertyPath.asString() }.distinct().size == 1
+                && candidates.dropLast(1).all { null != (it as ReferenceExpressionProperty).condition }
+
+    private fun conditionHolds(refExpr: ReferenceExpression, self: Any): Boolean {
+        val cond = (refExpr as? ReferenceExpressionProperty)?.condition ?: return true
+        return when (self) {
+            is AsmStructure -> evaluate(cond, self) == true
+            else -> false
+        }
+    }
+
+    /** for each property, the first of its 'property' lines whose condition holds; other reference expressions unchanged */
+    private fun applicable(list: List<ReferenceExpression>, self: Any): List<ReferenceExpression> {
+        val done = mutableSetOf<String>()
+        return list.filter { re ->
+            when (re) {
+                is ReferenceExpressionProperty -> {
+                    val key = re.referringPropertyPath.asString()
+                    when {
+                        done.contains(key) -> false
+                        conditionHolds(re, self) -> {
+                            done.add(key); true
+                        }
+
+                        else -> false
+                    }
+                }
+
+                else -> true
             }
         }
     }
 
     private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, sentenceContext: ReferenceExpressionContext, self: Any, type: TypeInstance) {
-         val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, type)), refExpr.expression)
-        val elType = coll.type.typeArguments.getOrNull(0)?.type ?: StdLibDefault.AnyType
-        for (re in refExpr.referenceExpressionList) {
-            val obj = coll.untyped
-            when (obj) {
-                is Unit -> Unit // do nothing
-                is List<*> ->  {
-                    for (el in obj) {
-                        when {
-                            null==el || el is Unit -> Unit
-                            null == refExpr.ofType -> handleReferenceExpression(re, sentenceContext, el, elType)
-                            el.conformsToType(elType, refExpr.ofType) -> handleReferenceExpression(re, sentenceContext, el, elType)
-
-                            el is AsmNothing -> Unit //do nothing
-                            else -> Unit // el is filtered out by the 'ofType'
-                        }
+         val coll = evaluateReferring(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(self, type)), refExpr.expression)
+        val obj = coll.untyped
+        val isCollection = obj is List<*> || obj is AsmList
+        // 'forall' over a single value (not a collection) : the value is the only element
+        val elType = when {
+            isCollection -> coll.type.typeArguments.getOrNull(0)?.type ?: StdLibDefault.AnyType
+            else -> coll.type
+        }
+        val elements = when (obj) {
+            is Unit -> emptyList()
+            is List<*> -> obj.filter { null != it && it !is Unit && it !is AsmNothing }
+            //Deprecated
+            is AsmNothing -> emptyList()
+            is AsmList -> obj.elements.filter { it !is AsmNothing }
+            else -> listOf(obj)
+        }
+        // when 'from \$previous' is used, the elements are resolved only here, their own reference definitions are not used
+        val usesPrevious = refExpr.referenceExpressionList.any { usesPrevious(it) }
+        var previous: AsmStructure? = null
+        for (el in elements) {
+            el!!
+            // the type of the element itself, the collection's element type may be a supertype or union of it
+            val elActualType = el.actualType(elType)
+            val selected = when {
+                refExpr.ofType.isEmpty() -> true
+                else -> refExpr.ofType.any { elActualType.conformsToType(refExpr, it) } // else el is filtered out by the 'of-type'
+            }
+            if (selected && forallConditionHolds(refExpr, el, elActualType)) {
+                val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure
+                if (usesPrevious && null != elStr) _referencesHandled.add(elStr)
+                val elContext = ReferenceExpressionContext(sentenceContext.element, sentenceContext.scope, previous)
+                val applicableHere = applicable(refExpr.referenceExpressionList, el)
+                if (null != elStr) {
+                    applicableHere.filterIsInstance<ReferenceExpressionPropertyDefault>().forEach { re ->
+                        _setByForall.getOrPut(elStr) { mutableSetOf() }.add(re.referringPropertyPath.asString())
                     }
                 }
-                //Deprecated
-                is AsmNothing -> Unit //do nothing
-                is AsmList -> {
-                    for (el in obj.elements) {
-                        when {
-                            el is AsmNothing -> Unit //do nothing
-                            null == refExpr.ofType -> handleReferenceExpression(re, sentenceContext, el, elType)
-                            el.conformsToType(elType, refExpr.ofType) -> handleReferenceExpression(re, sentenceContext, el, elType)
-                            else -> Unit // el is filtered out by the 'ofType'
-                        }
-                    }
+                for (re in applicableHere) {
+                    handleReferenceExpression(re, elContext, el, elActualType)
                 }
-
-                else -> error("result of navigation should be a List<AsmElementSimple>, got '${coll::class.simpleName}'")
+                previous = elStr
             }
         }
     }
 
-    private fun createReference(source: Any, referringProperty: AsmStructureProperty, refersTo: AsmStructure?) {
+    /** 'forall ... when c { ... }': true if there is no condition or 'c' is true for the element 'el' */
+    private fun forallConditionHolds(refExpr: ReferenceExpressionCollectionDefault, el: Any, elType: TypeInstance): Boolean {
+        val cond = refExpr.condition ?: return true
+        val elStr = (el as? TypedObject)?.self as? AsmStructure ?: el as? AsmStructure
+        return when (elStr) {
+            null -> {
+                val v = evaluateReferring(EvaluationContext.ofSelf(_interpreter.objectGraph.typedAs(el, elType)), cond).self
+                v == true || (v is AsmPrimitive && v.value == true)
+            }
+            else -> evaluate(cond, elStr) == true
+        }
+    }
+
+    private fun usesPrevious(re: ReferenceExpression): Boolean = when (re) {
+        is ReferenceExpressionProperty -> (re.fromNavigation?.start as? RootExpression)?.name == SCOPE_PREVIOUS
+        else -> false
+    }
+
+    /** the name each reference was looked up by (the referring value, after any method calls on the property, e.g. 'removeSurrounding') */
+    private val _lookedUpNameOf = mutableMapOf<AsmReference, List<String>>()
+
+    private fun createReference(source: Any, referringProperty: AsmStructureProperty, refersTo: AsmStructure?, lookedUpName: List<String>) {
         referringProperty.convertToReferenceTo(refersTo)
+        (referringProperty.value as? AsmReference)?.let { _lookedUpNameOf[it] = lookedUpName }
         if (null != refersTo) {
             val srcLocation = _locationMap[source]
             val tgtLocation = _locationMap[refersTo]
@@ -348,15 +1328,26 @@ class ReferenceResolverSimple(
                     source = source,
                     sourceLocation = srcLocation,
                     target = refersTo,
-                    targetLocation = tgtLocation
+                    targetLocation = tgtLocation,
+                    referringLocation = _locationMap.getPropertyLocation(source, referringProperty.name.value)
                 )
             )
         }
     }
 
-    private fun Any.conformsToType(selfType:TypeInstance, typeName: PossiblyQualifiedName): Boolean {
-        val type = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName)?.type() ?: StdLibDefault.NothingType
-        return selfType.conformsTo(type)
+    /** 'typeName' is resolved in the namespace block that holds 'declaration' */
+    private fun TypeInstance.conformsToType(declaration: ReferenceExpression, typeName: PossiblyQualifiedName): Boolean {
+        val type = crossReferenceDomain.findTypeNamedIn(typesDomain, declaration, typeName)?.type() ?: StdLibDefault.NothingType
+        return this.conformsTo(type)
+    }
+
+    /** the type of this element (an AsmStructure has its own type), or [declaredType] when it can't be found */
+    private fun Any.actualType(declaredType: TypeInstance): TypeInstance {
+        val value = (this as? TypedObject)?.self ?: this
+        return when (value) {
+            is AsmStructure -> typesDomain.findByQualifiedNameOrNull(value.qualifiedTypeName)?.type() ?: declaredType
+            else -> declaredType
+        }
     }
 
     private fun TypesDomain.typeOf(self: AsmValue): TypeDefinition =
@@ -387,7 +1378,7 @@ class ReferenceResolverSimple(
                 val selfType = type
                 val front = NavigationExpressionDefault(this.start, this.parts.dropLast(1))
                 val evc = EvaluationContext(null, mapOf(RootExpressionDefault.SELF.name to _interpreter.objectGraph.typedAs(root, selfType)))
-                val v = _interpreter.evaluateExpression(evc, front).self
+                val v = evaluateReferring(evc, front).self
                 val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {
                     is AsmStructure -> {

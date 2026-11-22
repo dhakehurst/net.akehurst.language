@@ -49,7 +49,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_LeftCornerParserAbs
                 ref("add")
                 ref("sub")
             }
-            choice("root",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("root",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("var")
                 ref("bool")
             }

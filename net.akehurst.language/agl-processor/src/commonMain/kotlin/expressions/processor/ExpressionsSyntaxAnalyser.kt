@@ -25,7 +25,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asSimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.sentence.api.Sentence
@@ -143,10 +143,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
-    // root = propertyReference ;
+    // rootExpression = '&'? propertyReference ;
     private fun rootExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression {
-        val v = children[0] as String
+        val asReference = null != children[0]
+        val v = children[1] as String
         return when {
+            asReference -> RootExpressionDefault(v, true)
             v.startsWith("\$") -> when (v) {
                 RootExpressionDefault.NOTHING.name -> RootExpressionDefault.NOTHING
                 RootExpressionDefault.SELF.name -> RootExpressionDefault.SELF
@@ -166,8 +168,14 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         0 -> LiteralExpressionDefault(StdLibDefault.Boolean.qualifiedTypeName, (children[0] as String).toBoolean())
         1 -> LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, (children[0] as String).toLong())
         2 -> LiteralExpressionDefault(StdLibDefault.Real.qualifiedTypeName, (children[0] as String).toDouble())
-        3 -> LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName, (children[0] as String).trim('\''))
+        3 -> LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName, unquoteString(children[0] as String))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'literal'")
+    }
+
+    /** the text of a STRING literal without its surrounding quotes, with the escapes \' and \\ replaced (trim('\'') also removed quotes that belong to the text, e.g. in '\'') */
+    private fun unquoteString(text: String): String = when {
+        text.length >= 2 && text.startsWith('\'') && text.endsWith('\'') -> text.substring(1, text.length - 1).replace("\\'", "'").replace("\\\\", "\\")
+        else -> text
     }
 
     // navigation = navigationRoot navigationPartList ;
@@ -199,10 +207,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // infix = expression INFIX_OPERATOR expression ;
     // infix = [expression / INFIX_OPERATOR]2+ ;
+    // the result is nested by operator precedence, see InfixExpressionDefault.withPrecedence
     private fun infixExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): InfixExpression {
         val expressions = children.filterIsInstance<Expression>()
         val operators = children.filterIsInstance<String>()
-        return InfixExpressionDefault(expressions, operators)
+        // at least one operator, so the result is always an InfixExpression
+        return InfixExpressionDefault.withPrecedence(expressions, operators) as InfixExpression
     }
 
     // functionCall = IDENTIFIER '(' argumentList ')' ;
@@ -300,10 +310,11 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return GroupExpressionDefault(expression)
     }
 
-    // propertyCall = '.' propertyReference ;
+    // propertyCall = '.' '&'? propertyReference ;
     private fun propertyCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCall {
-        val id = children[1] as String
-        return PropertyCallDefault(id)
+        val asReference = null != children[1]
+        val id = children[2] as String
+        return PropertyCallDefault(id, asReference)
     }
 
     // methodCall = '.' methodReference '(' argumentList ')'  ;

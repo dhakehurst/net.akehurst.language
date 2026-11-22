@@ -14,7 +14,6 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":agl-regex"))
-                implementation(project(":collections"))
 
                 api(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
                 api(libs.nak.kotlinx.collections) // for MutableStack

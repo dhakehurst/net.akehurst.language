@@ -17,6 +17,8 @@
 
 package net.akehurst.language.base.processor
 
+import net.akehurst.language.completion.builder.completionDomain
+import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -108,7 +110,6 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
 
     override val crossReferenceString = """
         namespace $NAMESPACE_NAME
-            scope §root { }
     """.trimIndent() //TODO:
 
     override val styleString: String = """
@@ -137,6 +138,11 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
         namespace ${NAMESPACE_NAME}
         
     """.trimIndent() //TODO:
+
+    override val completionString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
 
     override val grammarDomain: GrammarDomain by lazy {
         grammarDomain(NAME) {
@@ -358,6 +364,11 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
             namespace(NAMESPACE_NAME) {
                 //TODO("not implemented")
             }
+        }
+    }
+
+    override val completionDomain: AglCompletionDomain by lazy {
+        completionDomain(NAME) {
         }
     }
 

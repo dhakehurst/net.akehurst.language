@@ -28,7 +28,7 @@ import kotlin.test.*
 
 class test_mscript {
     private companion object {
-        private val grammarStr = this::class.java.getResource("/MScript/version_/grammar.agl").readText()
+        private val grammarStr = this::class.java.getResource("/MScript/version_/grammar.agl-grm").readText()
         val sut = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }
 

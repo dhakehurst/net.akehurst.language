@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.examples
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import net.akehurst.language.regex.agl.RegexEnginePlatform
@@ -43,10 +44,12 @@ class test_Johnson_Longest : test_LeftCornerParserAbstract() {
                 literal("a")
             }
 
-            //precedenceFor("S") {
-            //    left("S2","'a'")
-            //    left("S3","'a'")
-            //}
+            // without a preference the tree shape comes from the merge decisions (right nested);
+            // this preference gives the left nested trees the tests expect
+            preferenceFor("S") {
+                leftOption(listOf("S"), OptionNum(0), setOf("'a'"))
+                leftOption(listOf("S"), OptionNum(1), setOf("'a'"))
+            }
         }
         val goal = "S"
     }
@@ -107,9 +110,11 @@ class test_Johnson_Longest : test_LeftCornerParserAbstract() {
 
         val expected = """
             S {
+              S {
                 S { 'a' }
                 S { 'a' }
-                S { 'a' }
+              }
+              S { 'a' }
             }
         """.trimIndent()
 
@@ -127,21 +132,23 @@ class test_Johnson_Longest : test_LeftCornerParserAbstract() {
         val sentence = "aaaa"
 
         val expected = """
-         S|1 {
             S {
-                S|2 { 'a' }
-                S|2 { 'a' }
-                S|2 { 'a' }
+              S {
+                S {
+                  S { 'a' }
+                  S { 'a' }
+                }
+                S { 'a' }
               }
-            S|2 { 'a' }
-          }
+              S { 'a' }
+            }
         """.trimIndent()
 
         super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 5,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -151,32 +158,34 @@ class test_Johnson_Longest : test_LeftCornerParserAbstract() {
         val sentence = "a".repeat(10)
 
         val expected = """
-             S|1 {
-                S|1 {
-                    S|1 { 
-                        S|1 {
+            S {
+              S {
+                S {
+                  S {
+                    S {
+                      S {
+                        S {
+                          S {
                             S {
-                                S|2 { 'a' }
-                                S|2 { 'a' }
-                                S|2 { 'a' }
-                              }
-                            S|1 {
-                                S|2 { 'a' }
-                                S|2 { 'a' }
-                              }
+                              S { 'a' }
+                              S { 'a' }
+                            }
+                            S { 'a' }
                           }
-                        S|1 {
-                            S|2 { 'a' }
-                            S|2 { 'a' }
-                          }
+                          S { 'a' }
+                        }
+                        S { 'a' }
                       }
-                    S|1 { 
-                        S|2 { 'a' }
-                        S|2 { 'a' }
-                      }
+                      S { 'a' }
+                    }
+                    S { 'a' }
                   }
-                S|2 { 'a' }
+                  S { 'a' }
+                }
+                S { 'a' }
               }
+              S { 'a' }
+            }
         """.trimIndent()
 
         super.test_pass(

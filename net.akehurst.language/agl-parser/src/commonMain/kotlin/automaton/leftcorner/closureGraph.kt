@@ -360,9 +360,33 @@ internal class ClosureGraph(
         }
 
     fun resolveAllChildParentInfo() {
-        this.root.resolveDown()
-        for (cls in this.nonRootClosures) {
-            cls.resolveDown()
+        // Pass the first-terminal info (downInfo) up from the terminals with a worklist until nothing changes.
+        // A recursive walk (resolveDown) stops at an item that is still in progress on a left-recursive cycle,
+        // so items resolved through it kept incomplete downInfo (e.g. left recursion through 2+ unit rules failed).
+        // This is also not recursive, so deep grammars cannot overflow the stack.
+        // Only the newly added info of an item is passed on to its parents.
+        val all = listOf<ClosureItem>(this.root) + this.nonRootClosures
+        val delta = linkedMapOf<ClosureItem, MutableSet<FirstTerminalInfo>>()
+        for (cls in all) {
+            (cls as ClosureItemAbstractGraph).downInfo = linkedSetOf()
+            if (cls.children.isEmpty() && cls.rulePosition.isTerminal) {
+                val fti = FirstTerminalInfo(cls.rulePosition.rule, cls.parentExpectedAt)
+                (cls.downInfo as MutableSet).add(fti)
+                delta.getOrPut(cls) { linkedSetOf() }.add(fti)
+            }
+        }
+        while (delta.isNotEmpty()) {
+            val child = delta.keys.first()
+            val newInfo = delta.remove(child)!!
+            // root has no parents (and asking _parentsOf would create an entry for it)
+            if (child.isRoot.not() && (child.rulePosition.isAtStart || child.rulePosition.isTerminal)) {
+                for (parent in this.parentsOf(child)) {
+                    val pDown = parent.downInfo as MutableSet
+                    for (fti in newInfo) {
+                        if (pDown.add(fti)) delta.getOrPut(parent) { linkedSetOf() }.add(fti)
+                    }
+                }
+            }
         }
     }
 

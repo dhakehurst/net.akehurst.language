@@ -17,6 +17,9 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.automaton.api.AutomatonKind
+import net.akehurst.language.automaton.leftcorner.LookaheadSet
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.common.SentenceDefault
@@ -51,14 +54,16 @@ class test_ParseGraph {
 
     @Test
     fun start() {
-        val userGoalRule = RuntimeRule(0, 0, "a", false, false)
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
+        }
+        val userGoalRule = rrs.findRuntimeRule("S")
         val text = "a"
-        val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
+        val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
         val sut = ParseGraph(SentenceDefault(text, null), scanner, 0)
 
-        //    val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
-        //    val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
-        //    sut.start(startState, 0, setOf(startState.stateSet.createLookaheadSet(false,true,false, emptySet())), null)
+        val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
+        sut.start(startState, 0, setOf(LookaheadSet.EOT), null)
 
         val actual = sut.canGrow
 

@@ -18,6 +18,7 @@ package net.akehurst.language.reference.builder
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
@@ -76,18 +77,18 @@ class DeclarationsForNamespaceBuilder(
         val exprResult = Agl.registry.agl.expressions.processor!!.process(expressionStr)
         check(exprResult.allIssues.errors.isEmpty()) { exprResult.allIssues.toString() }
         val expression = exprResult.asm ?: error("No expression created from given expressionStr")
-        val i = IdentifiableDefault(SimpleName(typeName), expression)
+        val i = IdentifiableDefault(typeName.asPossiblyQualifiedName, expression)
         _rootIdentifiables.add(i)
     }
 
     fun scope(forTypeName: String, init: ScopeDefinitionBuilder.() -> Unit) {
-        val b = ScopeDefinitionBuilder(SimpleName(forTypeName))
+        val b = ScopeDefinitionBuilder(forTypeName.asPossiblyQualifiedName)
         b.init()
         _scopes.add(b.build())
     }
 
     fun reference(inType: String, init: ReferenceDefinitionBuilder.() -> Unit) {
-        val b = ReferenceDefinitionBuilder(SimpleName(inType))
+        val b = ReferenceDefinitionBuilder(inType.asPossiblyQualifiedName)
         b.init()
         _references.add(b.build())
     }
@@ -103,7 +104,7 @@ class DeclarationsForNamespaceBuilder(
 
 @CrossReferenceModelBuilderMarker
 class ScopeDefinitionBuilder(
-    private val _forTypeName: SimpleName
+    private val _forTypeName: PossiblyQualifiedName
 ) {
     private val _identifiables = mutableListOf<Identifiable>()
 
@@ -111,7 +112,7 @@ class ScopeDefinitionBuilder(
         val exprResult = Agl.registry.agl.expressions.processor!!.process(expressionStr)
         check(exprResult.allIssues.errors.isEmpty()) { exprResult.allIssues.toString() }
         val expression = exprResult.asm ?: error("No expression created from given expressionStr")
-        val i = IdentifiableDefault(SimpleName(typeName), expression)
+        val i = IdentifiableDefault(typeName.asPossiblyQualifiedName, expression)
         _identifiables.add(i)
     }
 
@@ -124,7 +125,7 @@ class ScopeDefinitionBuilder(
 
 @CrossReferenceModelBuilderMarker
 class ReferenceDefinitionBuilder(
-    private val _inType: SimpleName
+    private val _inType: PossiblyQualifiedName
 ) {
     val _refExpressionList = mutableListOf<ReferenceExpression>()
 
