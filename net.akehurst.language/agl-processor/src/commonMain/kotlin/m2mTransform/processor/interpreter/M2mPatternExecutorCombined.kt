@@ -8,6 +8,7 @@ import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.asm.ExpressionExt.freeVariables
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.objectgraph.api.EvaluationContext
@@ -409,12 +410,15 @@ class M2mPatternExecutorCombined(
             if (!isAlreadyBound) add(objVarName)
         }
 
+        // the type of the object is the template's type; lhsType is the type of the property the object is assigned to
+        // (it may differ, e.g. a collection property, or a supertype)
+        val tplType = template.type ?: error("Cannot traverseObjectTemplate, type not resolved")
+
         // 2. Recursively resolve constructor arguments (always setLhs = false)
         // Note: we pass objVarName as the parent name!
-        traverseObjectTemplateProperties(false, objVarName, lhsType, conArgTemplates)
+        traverseObjectTemplateProperties(false, objVarName, tplType, conArgTemplates)
 
         // 3. Emit the Object Resolution Step
-        val tplType = template.type ?: error("Cannot traverseObjectTemplate, type not resolved")
         val conStr = "${tplType.typeName.value}(${conArgNames.joinToString()}){}"
         val harvestStr = when {
             !shouldHarvestFromSource -> null
@@ -459,7 +463,7 @@ class M2mPatternExecutorCombined(
         }
 
         // 4. Recursively resolve non-constructor properties
-        traverseObjectTemplateProperties(true, objVarName, lhsType, template.propertyOnlyTemplates)
+        traverseObjectTemplateProperties(true, objVarName, tplType, template.propertyOnlyTemplates)
     }
 
     fun traverseObjectTemplateProperties(setLhs: Boolean, parentVarName: String, parentType: TypeInstance, propertyTemplates: Collection<PropertyTemplate>) {
@@ -565,6 +569,27 @@ class M2mPatternExecutorCombined(
 
     // --- step bodies, shared by execute and executeSuspend ---
 
+    /**
+     * Reads a target property to find out if its value already exists in the model.
+     * The property may validly be unset (it is about to be enforced), so an error raised for reading
+     * an unset property is dropped when the result is \$nothing.
+     */
+    /**
+     * true if 'value', read from the model, is an existing object that an object template of type 'tplType' describes:
+     * it is set and of the template's type (e.g. an unset collection property reads as an empty collection, which is not such an object)
+     */
+    private fun isExistingObjectFor(value: TypedObject, tplType: TypeInstance): Boolean =
+        !accessorMutator.isNothing(value) && accessorMutator.typeFor(accessorMutator.untyped(value), value.type).conformsTo(tplType)
+
+    private inline fun harvestRead(obj: TypedObject, propertyName: String, getProperty: (obj: TypedObject, name: String) -> TypedObject): TypedObject {
+        val before = accessorMutator.issues.all.toSet()
+        val value = getProperty(obj, propertyName)
+        if (accessorMutator.isNothing(value)) {
+            accessorMutator.issues.dropIssuesRaisedSince(LanguageIssueKind.ERROR, before)
+        }
+        return value
+    }
+
     private inline fun propertyTemplateExpressionBody(
         evc: EvaluationContext,
         canBeHarvested: Boolean,
@@ -579,7 +604,7 @@ class M2mPatternExecutorCombined(
     ) {
         if (canBeHarvested) {
             val parent = evc.getOrInParent(parentName!!) ?: error("$parentName not found")
-            val modelValue = getProperty(parent, lhsName)
+            val modelValue = harvestRead(parent, lhsName, getProperty)
             evc.setNamedValue(targetVarName, modelValue)
             if (rootExprName != null) {
                 evc.setNamedValue(rootExprName, modelValue)
@@ -639,7 +664,7 @@ class M2mPatternExecutorCombined(
             shouldHarvestFromSource && harvestSourceParentName != null && harvestSourcePropName != null -> {
                 val harvestParent = evc.getOrInParent(harvestSourceParentName)
                     ?: error("$harvestSourceParentName not found for harvest source")
-                val sourceValue = getProperty(harvestParent, harvestSourcePropName)
+                val sourceValue = harvestRead(harvestParent, harvestSourcePropName, getProperty)
                 when {
                     harvestFromCollection -> {
                         // MATCH: find an element of the existing collection whose constrained
@@ -671,7 +696,8 @@ class M2mPatternExecutorCombined(
                         }
                     }
 
-                    !accessorMutator.isNothing(sourceValue) -> {
+                    // the existing value is the object the template describes, so it must be of the template's type
+                    isExistingObjectFor(sourceValue, tplType) -> {
                         // Success: harvest the existing value
                         evc.setNamedValue(objVarName, sourceValue)
                         sourceValue
@@ -706,8 +732,8 @@ class M2mPatternExecutorCombined(
                         objectTemplateConstructFresh(evc, tplType, conArgTemplates, objVarName, createStructureValue)
                     }
                 } else {
-                    val existing = getProperty(parentObj, lhsName)
-                    if (!accessorMutator.isNothing(existing)) {
+                    val existing = harvestRead(parentObj, lhsName, getProperty)
+                    if (isExistingObjectFor(existing, tplType)) {
                         evc.setNamedValue(objVarName, existing)
                         existing
                     } else {

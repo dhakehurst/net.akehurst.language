@@ -79,6 +79,16 @@ class IssueHolder(
         return result
     }
 
+    /**
+     * removes the issues of kind 'kind' that are not in 'before' (issues raised since 'before' was taken from 'all').
+     * For callers that cannot use 'dropIssuesRaisedIf', e.g. because the action suspends.
+     */
+    fun dropIssuesRaisedSince(kind: LanguageIssueKind, before: Set<LanguageIssue>) {
+        if (_issues.size > before.size) {
+            _issues.removeAll { it.kind == kind && it !in before }
+        }
+    }
+
     override val size: Int get() = this._issues.size
     override fun iterator(): Iterator<LanguageIssue> = this._issues.iterator()
     override fun isEmpty(): Boolean = this._issues.isEmpty()
