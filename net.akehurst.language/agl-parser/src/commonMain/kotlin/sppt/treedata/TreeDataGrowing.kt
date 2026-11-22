@@ -287,8 +287,10 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
         if (null != existing && existing !== children && sameChain(existing, children).not()) {
             // two derivations reached the same growing node: keep the better chain, using an order independent rule,
             // so that the tree does not depend on the order of the parse (e.g. pre-built vs on-demand automaton).
-            // Both chains have the same number of children, so choosing here gives the same result as
-            // keeping all chains and choosing when the node completes, without keeping more than one chain.
+            // For an unbounded list the node identity caps the number of children (see GrowingNodeIndex.listSize),
+            // so the two chains may have a different number of children. The choice is still the same as
+            // keeping all chains and choosing when the node completes, because both chains get the same suffix
+            // (the choice is extension stable), without keeping more than one chain.
             if (compareAlternatives(children.toList(), existing.toList()) <= 0) this._growingChildren[parent] = existing
         }
     }

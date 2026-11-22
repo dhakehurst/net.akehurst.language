@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSimple
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsNonTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.automaton.leftcorner.ParserState
@@ -48,8 +50,22 @@ internal class GrowingNodeIndex(
         //}
 
         // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
-        // needed because the 'RuleOptionPosition' does not capture the 'position' in the list
-        fun listSize(runtimeRule: RuntimeRule, numNonSkipChildren: Int): Int = when (runtimeRule.rhs) {
+        // needed because the 'RuleOptionPosition' does not capture the 'position' in the list.
+        // For an unbounded list (max = -1) the count is capped at K = max(min, 1) (items),
+        // the list guards give the same answer for every count >= K, so larger counts need not split the node.
+        // Without the cap a list node is split n times (n^2 more edges).
+        fun listSize(runtimeRule: RuntimeRule, numNonSkipChildren: Int): Int = when (val rhs = runtimeRule.rhs) {
+            is RuntimeRuleRhsListSimple -> {
+                val k = maxOf(rhs.min, 1)
+                if (-1 == rhs.max && numNonSkipChildren > k) k else numNonSkipChildren
+            }
+
+            is RuntimeRuleRhsListSeparated -> {
+                // keep the parity (item vs separator position)
+                val k = maxOf(rhs.min, 1)
+                if (-1 == rhs.max && numNonSkipChildren > 2 * k + 1) 2 * k + (numNonSkipChildren % 2) else numNonSkipChildren
+            }
+
             is RuntimeRuleRhsNonTerminal -> numNonSkipChildren
             is RuntimeRuleRhsTerminal -> 0
         }

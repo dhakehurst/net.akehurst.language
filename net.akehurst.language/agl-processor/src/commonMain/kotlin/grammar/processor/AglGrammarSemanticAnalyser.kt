@@ -113,6 +113,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 this.checkPreferenceRules(grammar)
                 this.checkLeafChoices(grammar)
                 this.checkOptionalsCoveredByList(grammar)
+                this.checkNullableItemInUnboundedList(grammar)
                 this.checkOptions(grammar)
                 if (this@AglGrammarSemanticAnalyser._issues.errors.isEmpty() && _analyseAmbiguities) {
                     this.checkForAmbiguities(grammar, automatonKind)
@@ -199,6 +200,86 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 }
             }
         }
+    }
+
+    /**
+     * A list with no maximum whose item can match nothing (is nullable) has infinitely many trees for a sentence:
+     * any number of empty items can be added. The parser only builds some of them, so warn.
+     * For a separated list this is only so when the separator can be empty too (otherwise the separators bound the number of items).
+     */
+    private fun checkNullableItemInUnboundedList(grammar: Grammar) {
+        val nullableRules = nullableRules(grammar)
+        fun nullable(item: RuleItem) = isNullable(item, nullableRules)
+        fun check(rule: GrammarRule, item: RuleItem, visiting: Set<RuleItem>) {
+            if (visiting.contains(item)) return
+            val v = visiting + item
+            when (item) {
+                is SeparatedList -> {
+                    if (-1 == item.max && nullable(item.item) && nullable(item.separator)) {
+                        issueWarn(
+                            item,
+                            "In rule '${rule.name}', the separated list of '${itemText(item.item)}' has no maximum and both its item and separator can be empty: a sentence has infinitely many trees.",
+                            null
+                        )
+                    }
+                    check(rule, item.item, v)
+                    check(rule, item.separator, v)
+                }
+
+                is ListOfItems -> {
+                    if (-1 == item.max && nullable(item.item)) {
+                        issueWarn(
+                            item,
+                            "In rule '${rule.name}', the list of '${itemText(item.item)}' has no maximum and its item can be empty: a sentence has infinitely many trees.",
+                            null
+                        )
+                    }
+                    check(rule, item.item, v)
+                }
+
+                is Concatenation -> item.items.forEach { check(rule, it, v) }
+                is Choice -> item.alternative.forEach { check(rule, it, v) }
+                is Group -> check(rule, item.groupedContent, v)
+                is OptionalItem -> check(rule, item.item, v)
+                else -> Unit
+            }
+        }
+        grammar.grammarRule.forEach { rule ->
+            if (rule.isLeaf.not()) check(rule, rule.rhs, emptySet())
+        }
+    }
+
+    /** the non-leaf rules (of this grammar and the grammars it extends) that can match nothing, computed as a fixpoint */
+    private fun nullableRules(grammar: Grammar): Set<GrammarRule> {
+        val rules = runCatching { grammar.allResolvedGrammarRule.toList() }.getOrNull() ?: grammar.grammarRule
+        val nullable = mutableSetOf<GrammarRule>()
+        var changed = true
+        while (changed) {
+            changed = false
+            rules.forEach { r ->
+                if (r.isLeaf.not() && nullable.contains(r).not() && isNullable(r.rhs, nullable)) {
+                    nullable.add(r)
+                    changed = true
+                }
+            }
+        }
+        return nullable
+    }
+
+    /**
+     * true when [item] can match nothing, given the rules known to be nullable.
+     * Terminals, leaf rules and embedded grammars are taken as not nullable.
+     */
+    private fun isNullable(item: RuleItem, nullableRules: Set<GrammarRule>): Boolean = when (item) {
+        is EmptyRule -> true
+        is OptionalItem -> true
+        is SeparatedList -> 0 == item.min || isNullable(item.item, nullableRules)
+        is ListOfItems -> 0 == item.min || isNullable(item.item, nullableRules)
+        is Concatenation -> item.items.all { isNullable(it, nullableRules) }
+        is Choice -> item.alternative.any { isNullable(it, nullableRules) }
+        is Group -> isNullable(item.groupedContent, nullableRules)
+        is NonTerminal -> referencedRuleOrNull(item)?.let { nullableRules.contains(it) } ?: false
+        else -> false
     }
 
     private fun isCoveredOptional(listTerminal: Terminal, item: RuleItem): Boolean {
