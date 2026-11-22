@@ -67,8 +67,9 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                     def.rule.forEach { (k, v) ->
                         // resolve extends references
                         v.extends.forEach { e ->
-                            def.allRule[e.nameOrQName.simpleName]?.let { //TODO: support qnames !
-                                e.resolveAs(it)
+                            when (val r = def.allRule[e.nameOrQName.simpleName]) { //TODO: support qnames !
+                                null -> _issues.error(locationMap?.get(def), "Rule '${e.nameOrQName.value}' extended by rule '${k.value}' in transform '${def.name.value}' not found.")
+                                else -> e.resolveAs(r)
                             }
                         }
                         v.domainSignature.forEach { (dr, dv) ->
@@ -94,10 +95,10 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                                 }
 
                                 when (val wn = v.when_) {
-                                    is RuleCall -> def.allRule[wn.ruleName]?.let { wn.resolveAs(it) }
+                                    is RuleCall -> resolveRuleCall(def, k, "when", wn, locationMap)
                                 }
                                 v.where.forEach { w ->
-                                    def.allRule[w.ruleName]?.let { w.resolveAs(it) }
+                                    resolveRuleCall(def, k, "where", w, locationMap)
                                 }
                             }
                         }
@@ -107,6 +108,28 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
         }
 
         return SemanticAnalysisResultDefault(emptyList(), _issues)
+    }
+
+    /**
+     * resolves the rule called in a 'when' or 'where' clause of rule 'callerName',
+     * and checks that the called rule has the domains and parameters named in the call
+     */
+    private fun resolveRuleCall(def: M2mTransformRuleSet, callerName: SimpleName, clause: String, call: RuleCall, locationMap: LocationMap?) {
+        val location = locationMap?.get(def)
+        val called = def.allRule[call.ruleName]
+        when (called) {
+            null -> _issues.error(location, "In '$clause' clause of rule '${callerName.value}' in transform '${def.name.value}', the called rule '${call.ruleName.value}' is not found.")
+            else -> {
+                call.resolveAs(called)
+                call.domainArguments.keys.filter { it !in called.domainSignature.keys }.forEach { dr ->
+                    _issues.error(location, "In '$clause' clause of rule '${callerName.value}' in transform '${def.name.value}', the called rule '${call.ruleName.value}' has no domain '${dr.value}'.")
+                }
+                val paramNames = called.parameters.map { it.name }
+                call.ruleArguments.keys.filter { it !in paramNames }.forEach { an ->
+                    _issues.error(location, "In '$clause' clause of rule '${callerName.value}' in transform '${def.name.value}', the called rule '${call.ruleName.value}' has no parameter '${an.value}'.")
+                }
+            }
+        }
     }
 
     /** a transform named in 'extends' is looked up by qualified name, or by simple name in the same namespace first */

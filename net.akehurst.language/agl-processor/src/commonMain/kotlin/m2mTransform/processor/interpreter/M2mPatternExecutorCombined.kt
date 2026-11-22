@@ -85,6 +85,7 @@ class M2mPatternExecutorCombined(
 
     internal val _executions = initialExes.mapIndexed { index, execution -> execution.also { it.index = index } }.toMutableList()
     internal val _knownVariables = initialKnownVariableNames.toMutableSet()
+    private val _initialKnownVariables = initialKnownVariableNames.toSet()
     // Keep your initial properties, then add this compilation-state tracker:
     internal val _locallyBoundVars = initialKnownVariableNames.toMutableSet()
     // Maps variable name -> the model location to harvest/match it from
@@ -168,10 +169,12 @@ class M2mPatternExecutorCombined(
      * because it depends on whether the model property is populated.
      */
     fun harvestVariables(parentIsKnown: Boolean, parentVar: String?, propName: String?, template: PropertyTemplateRhs, fromCollection: Boolean = false, ancestors: Set<String> = emptySet()) {
-        // 'ancestors' are the object variables of the enclosing object templates.
-        // An ancestor is never given a harvest source inside its own sub-template:
+        // 'ancestors' are the object variables of the enclosing object templates that the current object is located via.
+        // Such an ancestor is never given a harvest source inside its own sub-template:
         // the sub-template's object is located via the ancestor, so locating the ancestor
         // via that object would make each depend on the other (a cycle in the execution plan).
+        // An object that is known in its own right (an initially known variable) is not located via its ancestors,
+        // so for its sub-template the chain starts again.
         when (template) {
             is ObjectTemplate -> {
                 val objVar = template.identifier?.value
@@ -182,7 +185,11 @@ class M2mPatternExecutorCombined(
                         _harvestSources[objVar] = HarvestSource(parentVar, propName, fromCollection)
                     }
                 }
-                val subAncestors = objVar?.let { ancestors + it } ?: ancestors
+                val subAncestors = when {
+                    null == objVar -> ancestors
+                    _initialKnownVariables.contains(objVar) -> setOf(objVar)
+                    else -> ancestors + objVar
+                }
                 template.propertyTemplate.values.forEach { pt ->
                     harvestVariables(isKnown, objVar, pt.propertyName.value, pt.rhs, false, subAncestors)
                 }

@@ -140,6 +140,9 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val typeImports = children[8] as List<Import>
         val rules = children[9] as List<M2mTransformRule>
 
+        rules.groupBy { it.name }.filter { it.value.size > 1 }.keys.forEach { rn ->
+            issues.error(locationForNode(sentence, nodeInfo.node), "Rule '${rn.value}' is defined more than once in transform '${name.value}'.")
+        }
         val optHolder = OptionHolderDefault(null, options.toMap())
         return { namespace ->
             val extendRefs = extends.map { M2mTransformRuleSetReferenceDefault(namespace, it) }

@@ -172,4 +172,60 @@ class test_m2mTransform_releaseFixes {
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         assertEquals(listOf("ay"), res.targets.map { it.self.toString() })
     }
+
+    private fun errorsOf(rules: String) = transform(SENTENCE, header(rules)).issues.errors.map { it.message }
+
+    private val circleToDisc = """
+            mapping CircleToDisc(prefix:String) {
+                domain s c:Circle { name == n }
+                domain d disc:Disc := Disc(label := prefix + n) {}
+            }
+    """
+
+    @Test
+    fun MT7_unknown_called_rule_is_an_error() {
+        val errs = errorsOf("""
+            top mapping UnitToDrawing {
+                domain s u:Unit { item == items }
+                domain d dr:Drawing := Drawing() { discs := a }
+                where { map all Unknown { s := items  d := a } }
+            }
+        """)
+        assertEquals(listOf("In 'where' clause of rule 'UnitToDrawing' in transform 'ShapesToDrawing', the called rule 'Unknown' is not found."), errs)
+    }
+
+    @Test
+    fun MT7_unknown_domain_and_parameter_in_call_are_errors() {
+        val errs = errorsOf("""
+            top mapping UnitToDrawing {
+                domain s u:Unit { item == items }
+                domain d dr:Drawing := Drawing() { discs := a }
+                where { map all CircleToDisc(prefx := 'a-') { s := items  x := a } }
+            }
+            $circleToDisc
+        """)
+        assertEquals(
+            listOf(
+                "In 'where' clause of rule 'UnitToDrawing' in transform 'ShapesToDrawing', the called rule 'CircleToDisc' has no domain 'x'.",
+                "In 'where' clause of rule 'UnitToDrawing' in transform 'ShapesToDrawing', the called rule 'CircleToDisc' has no parameter 'prefx'."
+            ), errs
+        )
+    }
+
+    @Test
+    fun MT7_duplicate_rule_name_is_an_error() {
+        val errs = errorsOf("$circleToDisc\n$circleToDisc")
+        assertEquals(listOf("Rule 'CircleToDisc' is defined more than once in transform 'ShapesToDrawing'."), errs)
+    }
+
+    @Test
+    fun MT7_unknown_extended_rule_is_an_error() {
+        val errs = errorsOf("""
+            mapping CircleToDisc : Unknown {
+                domain s c:Circle { name == n }
+                domain d disc:Disc := Disc(label := n) {}
+            }
+        """)
+        assertEquals(listOf("Rule 'Unknown' extended by rule 'CircleToDisc' in transform 'ShapesToDrawing' not found."), errs)
+    }
 }

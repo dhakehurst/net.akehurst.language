@@ -372,6 +372,10 @@ class test_m2mTransformLanguage {
                           related Rel2{d1:=x d2:=y}
                         }
                       }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -401,6 +405,10 @@ class test_m2mTransformLanguage {
                         when {
                           related all Rel2{d1:=x d2:=y}
                         }
+                      }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
                       }
                     }
                 """.trimIndent()
@@ -432,6 +440,10 @@ class test_m2mTransformLanguage {
                           mapped Map2{d1:=x d2:=y}
                         }
                       }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := Y() {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -461,6 +473,10 @@ class test_m2mTransformLanguage {
                         when {
                           mapped all Map2{d1:=x d2:=y}
                         }
+                      }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := Y() {}
                       }
                     }
                 """.trimIndent()
@@ -494,6 +510,10 @@ class test_m2mTransformLanguage {
                           relate Rel2{d1:=x d2:=y}
                         }
                       }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -523,6 +543,10 @@ class test_m2mTransformLanguage {
                         where {
                           relate all Rel2{d1:=x d2:=y}
                         }
+                      }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
                       }
                     }
                 """.trimIndent()
@@ -554,6 +578,10 @@ class test_m2mTransformLanguage {
                           map Map2{d1:=x d2:=y}
                         }
                       }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := Y() {}
+                      }
                     }
                 """.trimIndent()
             ).apply {
@@ -583,6 +611,10 @@ class test_m2mTransformLanguage {
                         where {
                           map all Map2{d1:=x d2:=y}
                         }
+                      }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := Y() {}
                       }
                     }
                 """.trimIndent()

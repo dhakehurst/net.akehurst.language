@@ -2029,9 +2029,6 @@ class test_m2mTransformInterpreter {
                                 name==n
                                 type=='NUMBER'
                             }
-                            where {
-                                relate ComplexUmlTypeToSqlType { uml:=at rdbms:=ct }
-                            }
                         }                        
                         table PrimitiveUmlTypeToSqlType {
                             domain  uml :PrimitiveDataType                    /**/ domain rdbms :String
