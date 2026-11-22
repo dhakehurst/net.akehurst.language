@@ -166,19 +166,24 @@ class M2mPatternExecutorCombined(
      * Whether the value is actually read from the model or constructed is a runtime decision,
      * because it depends on whether the model property is populated.
      */
-    fun harvestVariables(parentIsKnown: Boolean, parentVar: String?, propName: String?, template: PropertyTemplateRhs, fromCollection: Boolean = false) {
+    fun harvestVariables(parentIsKnown: Boolean, parentVar: String?, propName: String?, template: PropertyTemplateRhs, fromCollection: Boolean = false, ancestors: Set<String> = emptySet()) {
+        // 'ancestors' are the object variables of the enclosing object templates.
+        // An ancestor is never given a harvest source inside its own sub-template:
+        // the sub-template's object is located via the ancestor, so locating the ancestor
+        // via that object would make each depend on the other (a cycle in the execution plan).
         when (template) {
             is ObjectTemplate -> {
                 val objVar = template.identifier?.value
                 val isKnown = parentIsKnown || (objVar != null && _knownVariables.contains(objVar))
                 if (isKnown && objVar != null) {
                     _knownVariables.add(objVar)
-                    if (parentIsKnown && parentVar != null && propName != null && !_harvestSources.containsKey(objVar)) {
+                    if (parentIsKnown && parentVar != null && propName != null && !_harvestSources.containsKey(objVar) && !ancestors.contains(objVar)) {
                         _harvestSources[objVar] = HarvestSource(parentVar, propName, fromCollection)
                     }
                 }
+                val subAncestors = objVar?.let { ancestors + it } ?: ancestors
                 template.propertyTemplate.values.forEach { pt ->
-                    harvestVariables(isKnown, objVar, pt.propertyName.value, pt.rhs)
+                    harvestVariables(isKnown, objVar, pt.propertyName.value, pt.rhs, false, subAncestors)
                 }
             }
             is PropertyTemplateExpression -> {
@@ -191,7 +196,7 @@ class M2mPatternExecutorCombined(
                 // not via property harvesting
                 if (parentIsKnown && targetVarName != null && !fromCollection) {
                     _knownVariables.add(targetVarName)
-                    if (parentVar != null && propName != null && !_harvestSources.containsKey(targetVarName)) {
+                    if (parentVar != null && propName != null && !_harvestSources.containsKey(targetVarName) && !ancestors.contains(targetVarName)) {
                         _harvestSources[targetVarName] = HarvestSource(parentVar, propName, false)
                     }
                 }
@@ -205,7 +210,7 @@ class M2mPatternExecutorCombined(
                 template.elements.forEach { et ->
                     // elements of a known collection property may be matched against
                     // existing elements of that collection (parentVar.propName) at runtime
-                    harvestVariables(isKnown, parentVar, propName, et, fromCollection = true)
+                    harvestVariables(isKnown, parentVar, propName, et, fromCollection = true, ancestors = ancestors)
                 }
             }
         }

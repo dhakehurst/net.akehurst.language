@@ -273,8 +273,9 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     }
 
     // ruleParameters = '(' [variableDefinition / ',']+ ')' ;
+    // ruleParameters = '(' [variableDefinition / ',']+ ')' ; the separated list holds the ',' too
     private fun ruleParameters(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<VariableDefinition> =
-        children[1] as List<VariableDefinition>
+        (children[1] as List<Any>).toSeparatedList<Any, VariableDefinition, String>().items
 
     // pivot = 'pivot' variableDefinition ;
     private fun pivot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableDefinition {

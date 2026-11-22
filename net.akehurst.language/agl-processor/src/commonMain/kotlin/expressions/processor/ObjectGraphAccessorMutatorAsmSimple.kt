@@ -277,9 +277,13 @@ class ExternalGetterAsmSimple(
 
     override fun createStructure(qualifiedName: QualifiedName, constructorArgs: Map<String, Any>): AsmValue {
         val obj = AsmStructureSimple(qualifiedName)
+        val objType = typesDomain.findByQualifiedNameOrNull(qualifiedName)?.type()
         constructorArgs.forEach { (k, v) ->
-            val value = when (v) {
-                is AsmValue -> v
+            // a constructor argument for a reference property is stored as a reference (as setProperty does),
+            // when the referred object has a semantic identity
+            val isReference = objType?.allResolvedProperty?.get(PropertyName(k))?.isReference ?: false
+            val value = when {
+                isReference && v is AsmStructure -> v.semanticQualifiedPath?.joinToString(separator = ".")?.let { AsmReferenceSimple(it, v) } ?: v
                 else -> v
             }
             obj.setProperty(PropertyValueName(k), value, obj.property.size)
