@@ -142,7 +142,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             typeReference = possiblyQualifiedName typeArgumentList? '?'?;
             typeArgumentList = '<' [ typeReference / ',']+ '>' ;
             
-            literal = BOOLEAN | INTEGER | REAL | STRING ;
+            override literal = BOOLEAN | INTEGER | REAL | STRING ;
         
             leaf SPECIAL = '$' IDENTIFIER ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
