@@ -107,6 +107,7 @@ A preference rule decides only between the alternatives it names, so name every 
 An operator literal that is a prefix of an identifier (e.g. `'or'` in `originalType`) should be a whole-word leaf (e.g. `"or(?![a-zA-Z_0-9])"`), otherwise it is found at that position and can make a preference fire.
 
 TODO: Preference options on list rules (e.g. `reference ITEM on 'when'`) are not yet covered by the formal semantics; postponed after release.
+TODO: a syntax for a preference that is decided only by the next token (not also when the alternative's node is finished); postponed after release.
 
 ## Embedded grammars
 

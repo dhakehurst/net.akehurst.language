@@ -48,8 +48,6 @@ import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.api.isEmptyMatch
 import kotlin.math.max
 
-object ZZTrace { var on = false }
-
 internal data class RuntimeContext(
     val head: GrowingNodeIndex,
     val prev: GrowingNodeIndex?, // null if head is goal
@@ -524,6 +522,7 @@ internal class RuntimeParserAgl(
      * Without this, an expression like '1 + 1 + ... + 1' is parsed in every possible nesting (very slow).
      * The trees are the ones the GRAFT gives (flat lists, left nested binary rules), as before 2026-11-21.
      */
+    // TODO: more pruning of transitions that only build trees the meeting rule always rejects (speed); each needs a language-preservation proof. Postponed after release.
     private fun heightOnlyNests(head: GrowingNodeIndex, rules: Set<RuntimeRule>, trgs: List<Transition>, trhs: List<Transition>): Boolean {
         val r = rules.singleOrNull() ?: return false
         return when {
@@ -1038,11 +1037,12 @@ internal class RuntimeParserAgl(
                 }
                 // the transition exists, so [rule] is expected in the closure of [state] and the result is not empty
                 if (Debug.CHECK) check(result.isEmpty.not()) { "static guard: ${rule.tag} not expected in the closure of $state" }
-                if (result.isEmpty) println("ZZFOLLOWEMPTY ${rule.tag} $state")
                 return if (result.isEmpty) LookaheadSetPart.ANY else result
             }
             tr.target.rulePosition.map { rpT ->
                 when {
+                    // the GOAL action ends the parse (end of text, or the end of an embedded text): no preference applies to it
+                    ParseAction.GOAL == tr.action -> LookaheadSetPart.ANY
                     rpT.isAtEnd.not() -> anyIfRT(AutomatonBuildLock.withLock { this.stateSet.firstOf.expectedAt(rpT, LookaheadSetPart.RT) })
                     ParseAction.GRAFT == tr.action -> followIn(p, rpT.rule)
                     else -> followIn(q, rpT.rule)
@@ -1105,9 +1105,7 @@ internal class RuntimeParserAgl(
                         val merged = groups.values.map { grp -> Triple(grp.first().first, grp.map { it.second }.reduce { acc, it -> acc.union(it) }, grp.first().third) to grp }
                         val keptMerged = resolvePrecedenceWith(precRules, merged.map { it.first }, merged.associate { it.first to it.second.flatMap { g -> g.first.target.rulePosition } })
                         val kept = merged.filter { m -> keptMerged.any { it === m.first } }.flatMap { it.second }
-                        val zzRes = kept.filter { it.third === runtimeContext }.map { it.first }
-                        if (ZZTrace.on && zzRes.size != transitions.size) println("ZZPREC head=${runtimeContext.head} prev=${runtimeContext.prev?.state} pp=${runtimeContext.prevPrev?.state} || own=${transitions.map{it.first}} || sib=${all.filter{it.third !== runtimeContext}.map{it.first.toString()+" @"+it.third.prev?.state}} || kept=$zzRes")
-                        zzRes
+                        kept.filter { it.third === runtimeContext }.map { it.first }
                     }
                 }
             }

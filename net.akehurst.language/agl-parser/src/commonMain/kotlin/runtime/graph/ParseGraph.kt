@@ -425,6 +425,7 @@ internal class ParseGraph(
         }
     }
 
+    // TODO: a meeting rule that prefers the alternative with more list children was tried (2026-11-22) and changed Dot trees (Cluster.dot); revisit after release.
     private fun mergeDecisionOnLength(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>,ifEqual: (reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         val newReasonList = reasonList+MergeReason.LENGTH
         val existingLength = existingParent.nextInputPosition - existingParent.startPosition
