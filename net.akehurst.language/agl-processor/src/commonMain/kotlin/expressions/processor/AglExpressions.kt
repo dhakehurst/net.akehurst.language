@@ -146,6 +146,12 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
         
             leaf SPECIAL = '$' IDENTIFIER ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
+            
+            // later lines win: the ternary binds loosest, then the infix operators
+            preference expression {
+              ternaryConditionExpression on '?' right
+              infixExpression ITEM on INFIX_OPERATOR right
+            }
           }
       """.trimIndent()
 
@@ -384,18 +390,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     concatenation("SPECIAL", isLeaf = true) { lit("$"); ref("IDENTIFIER") }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
 
-                    // If we have an 'expression'
-                    // ideally graft it into a 'whenOption'
-                    // next best thing is to graft into an infix an end it if lh=='->'
+                    // later lines win (formal proof Def 55): the ternary binds loosest: 'a > b ? c : d' is '(a > b) ? c : d', 'a ? b : c + d' is 'a ? b : (c + d)'
+                    // (no lines for '->' are needed: with longest match '-' is never the token where '->' is, so an infix expression cannot continue there)
                     preference("expression") {
-                        // lowest line first (formal proof Def 55; an option matched by finishing its node (A) binds tighter than every lower line):
-                        // a when-option's result is a whole expression: 'c -> a != b' is 'c -> (a != b)', 'c -> x ? y : z' is 'c -> (x ? y : z)'
-                        optionRight(listOf("whenOption"), ChoiceIndicator.NONE, -1, listOf("->"))
-                        // the ternary binds loosest of the operators: 'a > b ? c : d' is '(a > b) ? c : d', 'a ? b : c + d' is 'a ? b : (c + d)'
                         optionRight(listOf("ternaryConditionExpression"), ChoiceIndicator.NONE, -1, listOf("?"))
                         optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM, -1, listOf("INFIX_OPERATOR"))
-                        // an infix expression ends before '->'
-                        optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM, -1, listOf("->"))
                     }
                 }
             }
