@@ -749,7 +749,17 @@ internal class RuntimeParserAgl(
                 if (null == runtimeContext.prev) {
                     error("previous must have a value if head is incomplete")
                 }
-                val transWithValidLookahead = transitionsWithValidLookahead(runtimeContext, transitions, possibleEndOfText, parseArgs)
+                // formal proof Def 55: the preference filter is a side condition on all transitions of (head state, context) (Cand),
+                // using only the static guards and the input (C0 by ĝ ∩ N); the guard check with the runtime lookahead is applied
+                // separately, to what the filter keeps. So the filter never reads the runtime lookahead (C1, Thm 47/52).
+                val atEnd = parseArgs.allowEOTAfterSkip && this.graph.scanner.isEnd(sentence, runtimeContext.head.nextInputPositionAfterSkip)
+                val kept = when {
+                    // at the end of the text (e.g. the position given to expectedAt) every continuation is still possible,
+                    // so preference rules (which choose by the next token) must not drop any
+                    atEnd -> transitions
+                    else -> resolvePrecedence(transitions.map { Pair(it, staticGuard(it, runtimeContext)) }, runtimeContext, possibleEndOfText, parseArgs)
+                }
+                val transWithValidLookahead = transitionsWithValidLookahead(runtimeContext, kept, possibleEndOfText, parseArgs)
                 transitions.minus(transWithValidLookahead.map { it.first }).forEach {
                     when (it.action) {
                         ParseAction.HEIGHT -> recordFailedHeightLh(parseArgs, runtimeContext.head, it, runtimeContext.prev.runtimeState.runtimeLookaheadSet, possibleEndOfText)
@@ -758,14 +768,7 @@ internal class RuntimeParserAgl(
                         else -> error("Internal Error: should never happen - transition is: ${it}")
                     }
                 }
-                when {
-                    // at the end of the text (e.g. the position given to expectedAt) every continuation is still possible,
-                    // so preference rules (which choose by the next token) must not drop any
-                    parseArgs.allowEOTAfterSkip && this.graph.scanner.isEnd(sentence, runtimeContext.head.nextInputPositionAfterSkip) ->
-                        transWithValidLookahead.map { it.first }
-
-                    else -> resolvePrecedenceByToken(transWithValidLookahead, runtimeContext, possibleEndOfText, parseArgs)
-                }
+                transWithValidLookahead.map { it.first }
             }
 
             else -> transitions
