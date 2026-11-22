@@ -869,21 +869,21 @@ internal class RuntimeParserAgl(
     ): List<Triple<Transition, LookaheadSetPart, RuntimeContext>> {
         val head = runtimeContext.head
         val previous = runtimeContext.prev ?: return emptyList()
-        // the model has one context per node: the members are computed per previous of 'previous' (pp)
-        return this.graph.previousOf(previous).flatMap { pp ->
-            staticMembers(previous.state, pp.state).flatMap { memberState ->
-                val member = GrowingNodeIndex(
-                    RuntimeState(memberState, previous.runtimeState.runtimeLookaheadSet),
-                    previous.startPosition, previous.nextInputPositionBeforeSkip, previous.nextInputPositionAfterSkip,
-                    previous.numNonSkipChildren, previous.childrenPriorities
-                )
-                val ctx = RuntimeContext(head, member, pp)
-                val trs = head.runtimeState.transitionsComplete(memberState, pp.state)
-                // validate with the static lookahead (RT read as any token), not the runtime lookahead
-                trs.mapNotNull { tr ->
-                    val m = matchedLookahead(head.nextInputPositionAfterSkip, tr.lookaheadGuard, possibleEndOfText, setOf(LookaheadSet.ANY), parseArgs.allowEOTAfterSkip)
-                    if (m.first) Triple(tr, m.second, ctx) else null
-                }
+        // the model has one context per node: the members are those of this context only (its pp), never of other
+        // previous nodes of 'previous', which arrive in processing order (C1)
+        val pp = runtimeContext.prevPrev ?: return emptyList()
+        return staticMembers(previous.state, pp.state).flatMap { memberState ->
+            val member = GrowingNodeIndex(
+                RuntimeState(memberState, previous.runtimeState.runtimeLookaheadSet),
+                previous.startPosition, previous.nextInputPositionBeforeSkip, previous.nextInputPositionAfterSkip,
+                previous.numNonSkipChildren, previous.childrenPriorities
+            )
+            val ctx = RuntimeContext(head, member, pp)
+            val trs = head.runtimeState.transitionsComplete(memberState, pp.state)
+            // validate with the static lookahead (RT read as any token), not the runtime lookahead
+            trs.mapNotNull { tr ->
+                val m = matchedLookahead(head.nextInputPositionAfterSkip, tr.lookaheadGuard, possibleEndOfText, setOf(LookaheadSet.ANY), parseArgs.allowEOTAfterSkip)
+                if (m.first) Triple(tr, m.second, ctx) else null
             }
         }
     }
@@ -1103,7 +1103,7 @@ internal class RuntimeParserAgl(
                         // transitions that would go to the same state if parser states were merged act as one transition
                         val groups = all.groupBy { mergedTargetKey(it) }
                         val merged = groups.values.map { grp -> Triple(grp.first().first, grp.map { it.second }.reduce { acc, it -> acc.union(it) }, grp.first().third) to grp }
-                        val keptMerged = resolvePrecedenceWith(precRules, merged.map { it.first }, merged.associate { it.first to it.second.flatMap { g -> g.first.target.rulePosition } })
+                        val keptMerged = resolvePrecedenceWith(precRules, merged.map { it.first }, merged.associate { it.first to it.second.flatMap { g -> g.first.target.rulePosition } }, merged.associate { it.first to it.second })
                         val kept = merged.filter { m -> keptMerged.any { it === m.first } }.flatMap { it.second }
                         kept.filter { it.third === runtimeContext }.map { it.first }
                     }
@@ -1127,11 +1127,14 @@ internal class RuntimeParserAgl(
     private fun resolvePrecedenceWith(
         precRules: RuntimePreferenceRule,
         transitions: List<Triple<Transition, LookaheadSetPart, RuntimeContext>>,
-        targetsOf: Map<Triple<Transition, LookaheadSetPart, RuntimeContext>, List<RulePositionRuntime>>
+        targetsOf: Map<Triple<Transition, LookaheadSetPart, RuntimeContext>, List<RulePositionRuntime>>,
+        membersOf: Map<Triple<Transition, LookaheadSetPart, RuntimeContext>, List<Triple<Transition, LookaheadSetPart, RuntimeContext>>>
     ): List<Triple<Transition, LookaheadSetPart, RuntimeContext>> {
+        // a group of transitions that would be one transition if the states were merged is matched by the union over
+        // all its members (each with its own transition and context), so the result does not depend on the order in the group (C1)
         val precedence = transitions.flatMap { t ->
-            val (tr, lh, ctx) = t
-            val prec = precedenceFor(precRules, targetsOf[t] ?: tr.target.rulePosition, lh, ctx, tr.action, tr)
+            val targets = targetsOf[t] ?: t.first.target.rulePosition
+            val prec = (membersOf[t] ?: listOf(t)).flatMap { (tr, lh, ctx) -> precedenceFor(precRules, targets, lh, ctx, tr.action, tr) }.distinct()
             prec.map { Pair(t, it) }
         }
         return when {
@@ -1179,7 +1182,7 @@ internal class RuntimeParserAgl(
                 // among transitions into the options it names (for a list option: the positions of the list rule)
                 val notCovered = transitions.filter { t ->
                     val targets = targetsOf[t] ?: t.first.target.rulePosition
-                    precRules.options.none { prOpt -> targets.any { rp -> precedenceSpineMatches(prOpt, rp, t.third) } }
+                    precRules.options.none { prOpt -> (membersOf[t] ?: listOf(t)).any { m -> targets.any { rp -> precedenceSpineMatches(prOpt, rp, m.third) } } }
                 }
                 sel + notCovered.filter { u -> sel.none { it === u } }
             }
