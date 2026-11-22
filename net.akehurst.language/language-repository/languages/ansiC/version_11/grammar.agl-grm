@@ -363,6 +363,7 @@ grammar Statements : Declarations {
     IfStatement = 'if' '(' Expression ')' Statement ;
     IfElseStatement = 'if' '(' Expression ')' Statement 'else' Statement ;
     preference Statement {
+        IfStatement on 'else' right
         IfElseStatement on 'else' right
     }
     SwitchStatement = 'switch' '(' Expression ')' Statement ;

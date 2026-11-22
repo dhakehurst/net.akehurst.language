@@ -98,9 +98,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             
             infixExpression = [expression / INFIX_OPERATOR]2+ ;
             leaf INFIX_OPERATOR
-              = 'or' | 'and' | 'xor'  // logical 
+              = "or(?![a-zA-Z_0-9-])" | "and(?![a-zA-Z_0-9-])" | "xor(?![a-zA-Z_0-9-])"  // logical, whole words (not the start of an IDENTIFIER) 
               | '==' | '!=' | '<=' | '>=' | '<' | '>'  // comparison
-              | '/' | '*' | '%' | '+' | '-' // arithmetic
+              | '/' | '*' | '%' | '+' | "-(?!>)" // arithmetic ('-' is not found inside '->')
               ;
             
             functionCall = IDENTIFIER '(' argumentList ')' ;
@@ -294,11 +294,13 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     }
                     choice("INFIX_OPERATOR", isLeaf = true) {
                         // logical
-                        lit("or"); lit("and"); lit("xor")
+                        // whole words: 'or' must not be found at the start of an IDENTIFIER such as 'originalType',
+                        // else a preference on INFIX_OPERATOR fires there (formal proof Def 55, N = tokens found at the position)
+                        pat("or(?![a-zA-Z_0-9-])"); pat("and(?![a-zA-Z_0-9-])"); pat("xor(?![a-zA-Z_0-9-])")
                         // comparison
                         lit("=="); lit("!="); lit("<="); lit(">="); lit("<"); lit(">");
                         // arithmetic
-                        lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
+                        lit("/"); lit("*"); lit("%"); lit("+"); pat("-(?!>)"); // '-' is not found inside '->'
                     }
                     concatenation("functionCall") {
                         ref("IDENTIFIER"); lit("("); ref("argumentList"); lit(")")
@@ -388,12 +390,14 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     // ideally graft it into a 'whenOption'
                     // next best thing is to graft into an infix an end it if lh=='->'
                     preference("expression") {
-                        // the ternary binds loosest: 'a > b ? c : d' is '(a > b) ? c : d', 'a ? b : c + d' is 'a ? b : (c + d)'
+                        // lowest line first (formal proof Def 55; an option matched by finishing its node (A) binds tighter than every lower line):
+                        // a when-option's result is a whole expression: 'c -> a != b' is 'c -> (a != b)', 'c -> x ? y : z' is 'c -> (x ? y : z)'
+                        optionRight(listOf("whenOption"), ChoiceIndicator.NONE, -1, listOf("->"))
+                        // the ternary binds loosest of the operators: 'a > b ? c : d' is '(a > b) ? c : d', 'a ? b : c + d' is 'a ? b : (c + d)'
                         optionRight(listOf("ternaryConditionExpression"), ChoiceIndicator.NONE, -1, listOf("?"))
                         optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM, -1, listOf("INFIX_OPERATOR"))
-                        // really want to match the 'ER' position ??
+                        // an infix expression ends before '->'
                         optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM, -1, listOf("->"))
-                        optionRight(listOf("whenOption"), ChoiceIndicator.NONE, -1, listOf("->"))
                     }
                 }
             }
