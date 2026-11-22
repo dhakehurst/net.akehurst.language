@@ -2054,7 +2054,8 @@ class test_m2mTransformInterpreterCombined {
                     target("rdbms") {
                         element("Schema") {
                             propertyString("name", "pkg1")
-                            propertyNothing("table")
+                            // an unset collection property (Package.elements) reads as an empty collection
+                            propertyListOfElement("table") {}
                         }
                     }
                 }
@@ -2156,18 +2157,18 @@ class test_m2mTransformInterpreterCombined {
                                 element("Table") {
                                     reference("schema", "pkg1")
                                     propertyString("name", "Cls1")
-                                    propertyElementExplicitType("key", "Key") {
-                                        reference("owner", "pkg1.Cls1")
-                                        propertyString("name", "_pk")
-                                        reference("column", "pkg1.Cls1._id")
-                                        propertyString("kind", "primary")
-                                    }
                                     propertyListOfElement("column") {
                                         element("Column") {
                                             reference("owner", "pkg1.Cls1")
                                             propertyString("name", "_id")
                                             propertyString("type", "NUMBER")
                                         }
+                                    }
+                                    propertyElementExplicitType("key", "Key") {
+                                        reference("owner", "pkg1.Cls1")
+                                        propertyString("name", "_pk")
+                                        reference("column", "pkg1.Cls1._id")
+                                        propertyString("kind", "primary")
                                     }
                                 }
                             }
@@ -2195,18 +2196,18 @@ class test_m2mTransformInterpreterCombined {
                                 element("Table") {
                                     reference("schema", "pkg1")
                                     propertyString("name", "Cls1")
-                                    propertyElementExplicitType("key", "Key") {
-                                        reference("owner", "pkg1.Cls1")
-                                        propertyString("name", "_pk")
-                                        reference("column", "pkg1.Cls1._id")
-                                        propertyString("kind", "primary")
-                                    }
                                     propertyListOfElement("column") {
                                         element("Column") {
                                             reference("owner", "pkg1.Cls1")
                                             propertyString("name", "_id")
                                             propertyString("type", "NUMBER")
                                         }
+                                    }
+                                    propertyElementExplicitType("key", "Key") {
+                                        reference("owner", "pkg1.Cls1")
+                                        propertyString("name", "_pk")
+                                        reference("column", "pkg1.Cls1._id")
+                                        propertyString("kind", "primary")
                                     }
                                 }
                             }
