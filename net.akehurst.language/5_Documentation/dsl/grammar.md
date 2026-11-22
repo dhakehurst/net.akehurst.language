@@ -101,6 +101,8 @@ preference E {
 `a+b/c` parses as `add(a, div(b, c))`. Each line is `<alternative> on <terminals> left|right` (associativity).
 For an alternative that is a separated list (`add = [E / '+']2+`), write `add ITEM on '+' left`.
 
+TODO: Preference options on list rules (e.g. `reference ITEM on 'when'`) are not yet covered by the formal semantics; postponed after release.
+
 ## Embedded grammars
 
 `Other::rule` uses a rule from another grammar, with that grammar's own skip rules:

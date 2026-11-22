@@ -388,6 +388,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     // ideally graft it into a 'whenOption'
                     // next best thing is to graft into an infix an end it if lh=='->'
                     preference("expression") {
+                        // the ternary binds loosest: 'a > b ? c : d' is '(a > b) ? c : d', 'a ? b : c + d' is 'a ? b : (c + d)'
+                        optionRight(listOf("ternaryConditionExpression"), ChoiceIndicator.NONE, -1, listOf("?"))
                         optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM, -1, listOf("INFIX_OPERATOR"))
                         // really want to match the 'ER' position ??
                         optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM, -1, listOf("->"))
