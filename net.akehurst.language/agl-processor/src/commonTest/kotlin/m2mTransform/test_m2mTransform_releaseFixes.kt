@@ -144,4 +144,32 @@ class test_m2mTransform_releaseFixes {
         assertTrue(resS.issues.errors.isNotEmpty(), resS.issues.toString())
         assertEquals(emptyList(), resS.targets)
     }
+
+    @Test
+    fun MT15_table_row_matches_only_if_all_source_domains_match() = runTest {
+        val text = """
+            namespace example
+            transform Pairs(s:Shapes, t:Shapes, d:Drawing) {
+                top table PairName {
+                    domain s :String   domain t :String   domain d :String
+                    values 'a' to 'x' to 'ax'
+                    values 'a' to 'y' to 'ay'
+                }
+            }
+        """.trimIndent()
+        val (ogS, ogD) = objectGraphs()
+        val res = Agl.transform(
+            M2mTransformString(text),
+            typeDomains = mapOf(DomainReference("s") to shapes, DomainReference("t") to shapes, DomainReference("d") to drawing),
+            accessorMutators = mapOf(shapes.name to ogS, drawing.name to ogD),
+            domains = mapOf(
+                DomainReference("s") to listOf(ogS.toTypedObject("a", StdLibDefault.String)),
+                DomainReference("t") to listOf(ogS.toTypedObject("y", StdLibDefault.String))
+            ),
+            ruleArguments = emptyMap(),
+            targetDomainReference = DomainReference("d")
+        )
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertEquals(listOf("ay"), res.targets.map { it.self.toString() })
+    }
 }

@@ -1025,8 +1025,8 @@ class M2mTransformInterpreterCombined(
                         null
                     }
                 }
-                // if found a match, add the target value
-                if (srcValues.isEmpty()) {
+                // the row matches only if the value of every source domain matches
+                if (srcValues.isEmpty() || srcValues.size != srcAlt.size) {
                     null
                 } else {
                     val evc = EvaluationContext.of(emptyMap<String, TypedObject>()) //TODO: are there any variables !
