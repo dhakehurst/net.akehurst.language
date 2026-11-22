@@ -40,6 +40,9 @@ class CompleteTreeDataNode(
     override val dynamicPriority: List<Int>
 ) : SpptDataNode {
 
+    // TODO: complete tree nodes are shared by rule and span. The formal exact-result theorem for preference rules assumes nodes
+    //  tagged by context state, so the guarantee holds only where the filter is substitution stable.
+    //  Tagging (up to |Q| more nodes) postponed. (David Q13, 2026-11-22)
     private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
     override fun hashCode(): Int = _hashCode_cache
     override fun equals(other: Any?): Boolean = when {

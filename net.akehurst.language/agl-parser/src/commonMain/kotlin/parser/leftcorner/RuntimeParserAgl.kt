@@ -19,6 +19,7 @@ package net.akehurst.language.parser.leftcorner
 
 import net.akehurst.kotlinx.collections.lazyMutableMapNotNull
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule.RuntimePreferenceOption
@@ -46,6 +47,8 @@ import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.api.isEmptyMatch
 import kotlin.math.max
+
+object ZZTrace { var on = false }
 
 internal data class RuntimeContext(
     val head: GrowingNodeIndex,
@@ -849,10 +852,11 @@ internal class RuntimeParserAgl(
     }
 
     /**
-     * The transitions the same complete head could take if it were a child of a sibling of 'previous'
-     * (a node on another stack covering the same input, see ParseGraph.siblingsOf).
-     * If the parser states were merged, these would be alternatives of the same stack,
-     * so preference rules need to see them together.
+     * The transitions the same complete head could take if 'previous' were another member of its prefix-merged state
+     * (formal proof §11.6, sec:merged): a rule position that has consumed the same symbols X0..X(p-1) over the same input
+     * in the same context. The members are computed from the automaton only (see [staticMembers]), never from the GSS,
+     * so the set does not depend on the order in which heads are processed. Only the own transitions are applied;
+     * those of the members only compete with them in the preference rules (Def 55).
      */
     private fun siblingTransitions(
         runtimeContext: RuntimeContext,
@@ -861,16 +865,16 @@ internal class RuntimeParserAgl(
     ): List<Triple<Transition, LookaheadSetPart, RuntimeContext>> {
         val head = runtimeContext.head
         val previous = runtimeContext.prev ?: return emptyList()
-        val ownPrevs = this.graph.previousOf(previous)
-        // only siblings that are members of the same prefix-merged state (same span, same previous nodes), formal proof Def 55 (local, C1)
-        return this.graph.siblingsOf(previous).filter { this.graph.previousOf(it) == ownPrevs }.flatMap { sib ->
-            val sibPrevs = this.graph.previousOf(sib)
-            val ctxs = when {
-                sibPrevs.isEmpty() -> listOf(RuntimeContext(head, sib, null))
-                else -> sibPrevs.map { RuntimeContext(head, sib, it) }
-            }
-            ctxs.flatMap { ctx ->
-                val trs = head.runtimeState.transitionsComplete(sib.state, ctx.prevPrev?.state ?: stateSet.startState)
+        // the model has one context per node: the members are computed per previous of 'previous' (pp)
+        return this.graph.previousOf(previous).flatMap { pp ->
+            staticMembers(previous.state, pp.state).flatMap { memberState ->
+                val member = GrowingNodeIndex(
+                    RuntimeState(memberState, previous.runtimeState.runtimeLookaheadSet),
+                    previous.startPosition, previous.nextInputPositionBeforeSkip, previous.nextInputPositionAfterSkip,
+                    previous.numNonSkipChildren, previous.childrenPriorities
+                )
+                val ctx = RuntimeContext(head, member, pp)
+                val trs = head.runtimeState.transitionsComplete(memberState, pp.state)
                 // validate with the static lookahead (RT read as any token), not the runtime lookahead
                 trs.mapNotNull { tr ->
                     val m = matchedLookahead(head.nextInputPositionAfterSkip, tr.lookaheadGuard, possibleEndOfText, setOf(LookaheadSet.ANY), parseArgs.allowEOTAfterSkip)
@@ -878,6 +882,82 @@ internal class RuntimeParserAgl(
                 }
             }
         }
+    }
+
+    private val _staticMembers = hashMapOf<Pair<ParserState, ParserState>, List<ParserState>>()
+
+    /**
+     * The other members of the prefix-merged state of [pState] in the context [ppState] (formal proof §11.6):
+     * M1 = { (C,o,1) | body(C,o) starts with X0, C is left-corner reachable from an item expected in [ppState], |o| > 1 },
+     * M(k+1) = { (A,o,k+1) | (A,o,k) in Mk, body(A,o)[k] = Xk, k+1 < |o| }; the members are Mp,
+     * for each rule position of [pState] with consumed symbols X0..X(p-1). A list position is only a member of itself (c)(i).
+     * A member is a member whether or not a GSS node exists for it; its own guards are checked with its transitions (C0).
+     * Each member is given a state holding exactly its rule position; members already in [pState] are left out.
+     */
+    private fun staticMembers(pState: ParserState, ppState: ParserState): List<ParserState> = _staticMembers.getOrPut(Pair(pState, ppState)) {
+        AutomatonBuildLock.withLock {
+            // rules left-corner reachable from the items expected in ppState (reflexive)
+            val lc = mutableSetOf<RuntimeRule>()
+            val work = ArrayDeque<RuntimeRule>()
+            ppState.rulePosition.forEach { q -> q.items.filter { it.isNonTerminal }.forEach { if (lc.add(it)) work.add(it) } }
+            while (work.isNotEmpty()) {
+                val r = work.removeFirst()
+                r.rulePositionsAtStart.forEach { rp0 -> rp0.items.filter { it.isNonTerminal }.forEach { if (lc.add(it)) work.add(it) } }
+            }
+            val own = pState.rulePosition.toSet()
+            val memberRps = pState.rulePosition.flatMap { rpP ->
+                val rule = rpP.rule
+                when {
+                    rule.isListSimple || rule.isListSeparated || rule.isTerminal || rpP.isAtStart || rpP.isAtEnd -> emptyList()
+                    else -> {
+                        val x = bodyOf(rpP).subList(0, rpP.position)
+                        lc.filter { it.isListSimple.not() && it.isListSeparated.not() }.flatMap { c ->
+                            c.rulePositionsAtStart.mapNotNull { rp0 ->
+                                val body = bodyOf(rp0)
+                                when {
+                                    body.size > x.size && body.subList(0, x.size) == x -> RulePositionRuntime(c, rp0.option, x.size)
+                                    else -> null
+                                }
+                            }
+                        }
+                    }
+                }
+            }.filter { it !in own }.toSet()
+            // a state holding exactly the member rule position (a function of the rule position alone, the same pre-built and on-demand),
+            // not an ELR-merged state, so no rule position outside Mp takes part in the comparison
+            memberRps.map { this.stateSet.fetchState(listOf(it)) ?: this.stateSet.createState(listOf(it)) }.filter { it != pState }.distinct()
+        }
+    }
+
+    private fun bodyOf(rp: RulePositionRuntime): List<RuntimeRule> {
+        val rule = rp.rule
+        return when {
+            rule.isChoice -> (rule.rhs as RuntimeRuleRhsChoice).options[rp.option.asIndex].rhsItems[0]
+            else -> rule.rhsItems[0]
+        }.map { it as RuntimeRule }
+    }
+
+    private val _consumedPrefixes = hashMapOf<net.akehurst.language.automaton.leftcorner.ParserState, Set<List<Any>>>()
+
+    /**
+     * The symbols each rule position of [state] has consumed (static, fixed by the automaton).
+     * For a list the position inside the list rule is used, so positions of different list rules never compare equal.
+     */
+    private fun consumedPrefixes(state: net.akehurst.language.automaton.leftcorner.ParserState): Set<List<Any>> = _consumedPrefixes.getOrPut(state) {
+        state.rulePosition.map { rp ->
+            val rule = rp.rule
+            when {
+                rule.isListSimple || rule.isListSeparated || rule.isTerminal -> listOf(rule, rp.option, rp.position)
+                else -> {
+                    val items = when {
+                        rule.isChoice -> (rule.rhs as RuntimeRuleRhsChoice).options[rp.option.asIndex].rhsItems[0]
+                        else -> rule.rhsItems[0]
+                    }
+                    val pos = if (rp.isAtEnd) items.size else rp.position
+                    items.subList(0, pos)
+                }
+            }
+        }.toSet()
     }
 
     private fun precedenceSpineMatches(prOpt: RuntimePreferenceRule.RuntimePreferenceOption, to: RulePositionRuntime, runtimeContext: RuntimeContext): Boolean {
@@ -930,6 +1010,8 @@ internal class RuntimeParserAgl(
         return _staticGuard.getOrPut(Triple(tr, q, p)) {
             fun anyIfRT(l: LookaheadSetPart) = if (l.includesRT) LookaheadSetPart.ANY else l
             fun followIn(state: net.akehurst.language.automaton.leftcorner.ParserState?, rule: RuntimeRule): LookaheadSetPart {
+                // [state] is null only for the previous of the start node, which a transition never grafts into (that is the GOAL action);
+                // reading it as any token is the conservative (over-approximating) guard
                 if (null == state) return LookaheadSetPart.ANY
                 // follow of [rule] where it is expected in the closure of [state]; what is above [state] is read as any token
                 val fol = hashMapOf<RulePositionRuntime, LookaheadSetPart>()
@@ -949,6 +1031,9 @@ internal class RuntimeParserAgl(
                         }
                     }
                 }
+                // the transition exists, so [rule] is expected in the closure of [state] and the result is not empty
+                if (Debug.CHECK) check(result.isEmpty.not()) { "static guard: ${rule.tag} not expected in the closure of $state" }
+                if (result.isEmpty) println("ZZFOLLOWEMPTY ${rule.tag} $state")
                 return if (result.isEmpty) LookaheadSetPart.ANY else result
             }
             tr.target.rulePosition.map { rpT ->
@@ -966,8 +1051,9 @@ internal class RuntimeParserAgl(
     private fun bodyTerminals(rp: RulePositionRuntime, contextRule: RuntimeRule): Set<RuntimeRule> = _bodyTerminals.getOrPut(Pair(rp, contextRule)) { bodyTerminalsCalc(rp, contextRule) }
 
     private fun bodyTerminalsCalc(rp: RulePositionRuntime, contextRule: RuntimeRule): Set<RuntimeRule> {
-        // terminals of the option's body, also those reached through non-terminals (e.g. EqualityOperator = '==' | '!='),
-        // but not through the operands (the preference's context rule)
+        // ops(A,o) of formal proof Def 55: the terminals reachable from the option's body through non-terminals other than
+        // the operands (the preference's context rule), e.g. EqualityOperator = '==' | '!=' (SysML), or the operator rules of AnsiC expressions.
+        // The visited set makes the walk terminate; there is no depth bound.
         val rule = rp.rule
         val items: List<RuntimeRule> = when {
             rule.isChoice && rp.option.isChoiceOption -> (rule.rhsItems.getOrNull(rp.option.asIndex) ?: rule.rhsItems.flatten()).map { it as RuntimeRule }
@@ -975,13 +1061,13 @@ internal class RuntimeParserAgl(
         }
         val result = mutableSetOf<RuntimeRule>()
         val visited = mutableSetOf(rule, contextRule)
-        fun walk(rs: List<RuntimeRule>, depth: Int) {
+        fun walk(rs: List<RuntimeRule>) {
             for (r in rs) when {
                 r.isTerminal -> result.add(r)
-                depth < 3 && visited.add(r) -> walk(r.rhsItems.flatten().map { it as RuntimeRule }, depth + 1)
+                visited.add(r) -> walk(r.rhsItems.flatten().map { it as RuntimeRule })
             }
         }
-        walk(items, 0)
+        walk(items)
         return result
     }
 
@@ -1014,7 +1100,9 @@ internal class RuntimeParserAgl(
                         val merged = groups.values.map { grp -> Triple(grp.first().first, grp.map { it.second }.reduce { acc, it -> acc.union(it) }, grp.first().third) to grp }
                         val keptMerged = resolvePrecedenceWith(precRules, merged.map { it.first }, merged.associate { it.first to it.second.flatMap { g -> g.first.target.rulePosition } })
                         val kept = merged.filter { m -> keptMerged.any { it === m.first } }.flatMap { it.second }
-                        kept.filter { it.third === runtimeContext }.map { it.first }
+                        val zzRes = kept.filter { it.third === runtimeContext }.map { it.first }
+                        if (ZZTrace.on && zzRes.size != transitions.size) println("ZZPREC head=${runtimeContext.head} prev=${runtimeContext.prev?.state} pp=${runtimeContext.prevPrev?.state} || own=${transitions.map{it.first}} || sib=${all.filter{it.third !== runtimeContext}.map{it.first.toString()+" @"+it.third.prev?.state}} || kept=$zzRes")
+                        zzRes
                     }
                 }
             }
@@ -1079,10 +1167,13 @@ internal class RuntimeParserAgl(
                         }
                     }
                 }
-                when (assoc.size) {
+                val sel = when (assoc.size) {
                     0 -> maxPrec.map { it.first }
                     else -> assoc.map { it.first }
                 }
+                // formal proof Def 55 (3): Sel together with every candidate that no option matches
+                val unmatched = transitions.filter { t -> precedence.none { it.first === t } }
+                sel + unmatched.filter { u -> sel.none { it === u } }
             }
         }
     }
