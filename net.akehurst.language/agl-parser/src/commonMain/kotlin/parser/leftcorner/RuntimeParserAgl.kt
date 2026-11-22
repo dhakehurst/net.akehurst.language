@@ -254,7 +254,6 @@ internal class RuntimeParserAgl(
 
         var steps = 0
         val progressSteps = lazyMutableMapNotNull<GrowingNodeIndex, Int> { 0 }
-        val doneEmpties = mutableSetOf<Pair<ParserState, List<Pair<GrowingNodeIndex, Set<GrowingNodeIndex>>>>>()
 
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentNextInputPosition) {
             checkForTerminationRequest()
@@ -267,17 +266,10 @@ internal class RuntimeParserAgl(
             val head = this.graph.peekNextHead
             this.graph.startGrowing(head)
 
-            //TODO: move empty checking stuff to doWidth
-            if (head.isEmptyMatch && doneEmpties.contains(Pair(head.state, graph.previousOf(head).map { Pair(it, graph.previousOf(it)) }))) {
-                //don't do it again
-                this.graph.dropStackWithHead(head)
-            } else {
-                if (head.isEmptyMatch) {
-                    doneEmpties.add(Pair(head.state, graph.previousOf(head).map { Pair(it, graph.previousOf(it)) }))
-                }
-                growHead(head, possibleEndOfText, growArgs)
-                steps++
-            }
+            // (2026-11-22, David Q12) no 'doneEmpties' shortcut any more: dropping an empty head whose state and previous pairs were seen
+            // chose trees and dropped stacks (formal proof C2, Thm 47), and it saved no measurable work; it is redundant in the model (§12)
+            growHead(head, possibleEndOfText, growArgs)
+            steps++
 
             val progStep = progressSteps[head] //FIXME: maybe slow - is there a better way?
             if (progStep > 1000) { //FIXME: make part of config
@@ -827,7 +819,7 @@ internal class RuntimeParserAgl(
         val precRules = this.stateSet.precedenceRulesFor(runtimeContext.head.state) ?: return false
         val matched = transitions.mapIndexedNotNull { i, (tr, lh) ->
             when {
-                precedenceFor(precRules, tr.target.rulePosition, lh, runtimeContext).isEmpty() -> null
+                precedenceFor(precRules, tr.target.rulePosition, lh, runtimeContext, tr.action, tr).isEmpty() -> null
                 else -> tokensOf[i]
             }
         }
@@ -869,7 +861,9 @@ internal class RuntimeParserAgl(
     ): List<Triple<Transition, LookaheadSetPart, RuntimeContext>> {
         val head = runtimeContext.head
         val previous = runtimeContext.prev ?: return emptyList()
-        return this.graph.siblingsOf(previous).flatMap { sib ->
+        val ownPrevs = this.graph.previousOf(previous)
+        // only siblings that are members of the same prefix-merged state (same span, same previous nodes), formal proof Def 55 (local, C1)
+        return this.graph.siblingsOf(previous).filter { this.graph.previousOf(it) == ownPrevs }.flatMap { sib ->
             val sibPrevs = this.graph.previousOf(sib)
             val ctxs = when {
                 sibPrevs.isEmpty() -> listOf(RuntimeContext(head, sib, null))
@@ -877,7 +871,11 @@ internal class RuntimeParserAgl(
             }
             ctxs.flatMap { ctx ->
                 val trs = head.runtimeState.transitionsComplete(sib.state, ctx.prevPrev?.state ?: stateSet.startState)
-                transitionsWithValidLookahead(ctx, trs, possibleEndOfText, parseArgs).map { Triple(it.first, it.second, ctx) }
+                // validate with the static lookahead (RT read as any token), not the runtime lookahead
+                trs.mapNotNull { tr ->
+                    val m = matchedLookahead(head.nextInputPositionAfterSkip, tr.lookaheadGuard, possibleEndOfText, setOf(LookaheadSet.ANY), parseArgs.allowEOTAfterSkip)
+                    if (m.first) Triple(tr, m.second, ctx) else null
+                }
             }
         }
     }
@@ -893,12 +891,98 @@ internal class RuntimeParserAgl(
         }
     }
 
-    private fun precedenceFor(precRules: RuntimePreferenceRule, to: List<RulePositionRuntime>, lh: LookaheadSetPart, runtimeContext: RuntimeContext): List<RuntimePreferenceOption> {
-        val r = precRules.options.filter { prOpt ->
-            val rpMatch = to.any { precedenceSpineMatches(prOpt, it, runtimeContext) }
-            rpMatch && prOpt.operators.any { lh.fullContent.contains(it) }
+    /**
+     * The preference options that apply to the transition [tr] (formal proof Def 55).
+     * The transition is a candidate only when its static guard in this context (see [staticGuard]) meets the token at the position
+     * (N = what the scanner finds in the input there, never the runtime lookahead, which depends on what was parsed before).
+     * An option applies when its spine matches and
+     *  (B) one of its operators is the token at the position and in the static guard, or
+     *  (A) the transition is a GRAFT that completes the option's rule and the rule's body contains one of its operators.
+     */
+    private fun precedenceFor(precRules: RuntimePreferenceRule, to: List<RulePositionRuntime>, lh: LookaheadSetPart, runtimeContext: RuntimeContext, action: ParseAction, tr: Transition): List<RuntimePreferenceOption> {
+        val pos = runtimeContext.head.nextInputPositionAfterSkip
+        val g = staticGuard(tr, runtimeContext)
+        val isCandidate = g.matchANY || (g.includesEOT && this.graph.scanner.isEnd(sentence, pos)) || g.content.any { this.graph.scanner.isLookingAt(sentence, pos, it) }
+        if (isCandidate.not()) return emptyList()
+        return precRules.options.filter { prOpt ->
+            val matching = to.filter { precedenceSpineMatches(prOpt, it, runtimeContext) }
+            when {
+                matching.isEmpty() -> false
+                prOpt.operators.any { (g.matchANY || g.content.contains(it)) && this.graph.scanner.isLookingAt(sentence, pos, it) } -> true // (B)
+                ParseAction.GRAFT == action -> matching.any { rp -> rp.isAtEnd && prOpt.operators.any { op -> bodyTerminals(rp, precRules.contextRule).contains(op) } } // (A)
+                else -> false
+            }
         }
-        return r
+    }
+
+    /**
+     * The static guard of [tr] in the context of [ctx] (formal proof Def 55, the canonical guard with RT read as any token):
+     * for a target that is not at its end, FIRST of the rest of the target;
+     * for a target at its end, the follow of its rule where it is expected in the closure of the state below
+     * (the previous for a HEIGHT, the previous of the previous for a GRAFT); what is above that is read as any token.
+     * It depends only on the automaton states, not on the runtime lookahead, so it is the same for a pre-built and an on-demand automaton.
+     */
+    private val _staticGuard = hashMapOf<Triple<Transition, Any?, Any?>, LookaheadSetPart>()
+
+    private fun staticGuard(tr: Transition, ctx: RuntimeContext): LookaheadSetPart {
+        val q = ctx.prev?.state
+        val p = ctx.prevPrev?.state
+        return _staticGuard.getOrPut(Triple(tr, q, p)) {
+            fun anyIfRT(l: LookaheadSetPart) = if (l.includesRT) LookaheadSetPart.ANY else l
+            fun followIn(state: net.akehurst.language.automaton.leftcorner.ParserState?, rule: RuntimeRule): LookaheadSetPart {
+                if (null == state) return LookaheadSetPart.ANY
+                // follow of [rule] where it is expected in the closure of [state]; what is above [state] is read as any token
+                val fol = hashMapOf<RulePositionRuntime, LookaheadSetPart>()
+                val work = ArrayDeque<RulePositionRuntime>()
+                state.rulePosition.forEach { fol[it] = LookaheadSetPart.ANY; work.add(it) }
+                var result = LookaheadSetPart.EMPTY
+                while (work.isNotEmpty()) {
+                    val rp = work.removeFirst()
+                    val f = fol[rp]!!
+                    val followOfItem = rp.next().map { n -> AutomatonBuildLock.withLock { this.stateSet.firstOf.expectedAt(n, f) } }.fold(LookaheadSetPart.EMPTY) { x, y -> x.union(y) }
+                    if (rp.items.contains(rule)) result = result.union(followOfItem)
+                    rp.items.filter { it.isNonTerminal }.forEach { x ->
+                        x.rulePositionsAtStart.forEach { rp0 ->
+                            val old = fol[rp0]
+                            val nw = old?.union(followOfItem) ?: followOfItem
+                            if (old != nw) { fol[rp0] = nw; work.add(rp0) }
+                        }
+                    }
+                }
+                return if (result.isEmpty) LookaheadSetPart.ANY else result
+            }
+            tr.target.rulePosition.map { rpT ->
+                when {
+                    rpT.isAtEnd.not() -> anyIfRT(AutomatonBuildLock.withLock { this.stateSet.firstOf.expectedAt(rpT, LookaheadSetPart.RT) })
+                    ParseAction.GRAFT == tr.action -> followIn(p, rpT.rule)
+                    else -> followIn(q, rpT.rule)
+                }
+            }.fold(LookaheadSetPart.EMPTY) { a, b -> a.union(b) }
+        }
+    }
+
+    private val _bodyTerminals = hashMapOf<Pair<RulePositionRuntime, RuntimeRule>, Set<RuntimeRule>>()
+
+    private fun bodyTerminals(rp: RulePositionRuntime, contextRule: RuntimeRule): Set<RuntimeRule> = _bodyTerminals.getOrPut(Pair(rp, contextRule)) { bodyTerminalsCalc(rp, contextRule) }
+
+    private fun bodyTerminalsCalc(rp: RulePositionRuntime, contextRule: RuntimeRule): Set<RuntimeRule> {
+        // terminals of the option's body, also those reached through non-terminals (e.g. EqualityOperator = '==' | '!='),
+        // but not through the operands (the preference's context rule)
+        val rule = rp.rule
+        val items: List<RuntimeRule> = when {
+            rule.isChoice && rp.option.isChoiceOption -> (rule.rhsItems.getOrNull(rp.option.asIndex) ?: rule.rhsItems.flatten()).map { it as RuntimeRule }
+            else -> rule.rhsItems.flatten().map { it as RuntimeRule }
+        }
+        val result = mutableSetOf<RuntimeRule>()
+        val visited = mutableSetOf(rule, contextRule)
+        fun walk(rs: List<RuntimeRule>, depth: Int) {
+            for (r in rs) when {
+                r.isTerminal -> result.add(r)
+                depth < 3 && visited.add(r) -> walk(r.rhsItems.flatten().map { it as RuntimeRule }, depth + 1)
+            }
+        }
+        walk(items, 0)
+        return result
     }
 
     private fun resolvePrecedence(
@@ -956,7 +1040,7 @@ internal class RuntimeParserAgl(
     ): List<Triple<Transition, LookaheadSetPart, RuntimeContext>> {
         val precedence = transitions.flatMap { t ->
             val (tr, lh, ctx) = t
-            val prec = precedenceFor(precRules, targetsOf[t] ?: tr.target.rulePosition, lh, ctx)
+            val prec = precedenceFor(precRules, targetsOf[t] ?: tr.target.rulePosition, lh, ctx, tr.action, tr)
             prec.map { Pair(t, it) }
         }
         return when {
