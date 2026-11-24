@@ -25,6 +25,7 @@ import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.ParseOptions
@@ -37,6 +38,7 @@ import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 
 /**
@@ -94,6 +96,13 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     val transformDomain: AsmTransformDomain
 
     val targetTransformRuleSet: AsmTransformRuleSet
+
+    /**
+     * The type of the asm object that syntaxAnalysis (and so process) gives for the goal rule, as defined by the target transform rule set.
+     * @param goalRuleName a rule of the target grammar (or of a grammar it extends); if null the default goal rule is used
+     * @return null if there is no such rule, it has no transform rule, or the transform rule is not resolved
+     */
+    fun targetTypeFor(goalRuleName: GrammarRuleName? = null): TypeInstance?
 
     /**
      * Model of the scopes and cross-references for the LanguageDefinition of this LanguageProcessor

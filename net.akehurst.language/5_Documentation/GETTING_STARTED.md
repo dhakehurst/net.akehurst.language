@@ -132,6 +132,8 @@ Without an [asm-transform](dsl/asm-transform.md), AGL makes the types from the g
 
 `processor.typesDomain.asString()` shows the generated types,
 and `processor.transformDomain.asString()` shows the generated asm-transform.
+`processor.targetTypeFor()` gives the type of the object that `process` gives for the default goal rule,
+and `processor.targetTypeFor(GrammarRuleName("rule"))` for another goal rule (null if there is no such rule).
 
 ## Next
 

@@ -65,8 +65,9 @@ class test_ExpressionsInterpreter_constructObject {
         }
         assertTrue(issues.errors.isEmpty(), issues.toString())
         val node = og.untyped(actual) as Node
-        // TODO: elements of created collections are TypedObjects (E8, postponed), so unwrap them here
-        return node.copy(labels = node.labels.map { (it as? TypedObject)?.self ?: it })
+        // constructor arguments are plain values (E8), so the elements of 'labels' are not TypedObjects
+        assertTrue(node.labels.none { it is TypedObject }, node.labels.toString())
+        return node
     }
 
     private val expected = Node("l", "k", listOf("a"))

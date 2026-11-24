@@ -419,7 +419,7 @@ constructor(
             ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
         val obj = when (typeDef) {
             is SingletonType -> typeDef.objectInstance()
-            is StructuredType -> externalGetter.createStructure(typeDef.qualifiedName, constructorArgs.map {(k,v) -> Pair(k,v.self)}.toMap()) ?: Unit
+            is StructuredType -> externalGetter.createStructure(typeDef.qualifiedName, constructorArgs.map {(k,v) -> Pair(k,untyped(v))}.toMap() // plain values (deep unwrap), as for method and function arguments) ?: Unit
 
             is SpecialType -> error("Should not create an instance of a SpecialType")
             is PrimitiveType -> error("use 'createPrimitiveValue' for PrimitiveType")
