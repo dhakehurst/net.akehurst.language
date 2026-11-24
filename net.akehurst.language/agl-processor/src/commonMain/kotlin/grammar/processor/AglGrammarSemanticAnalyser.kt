@@ -111,6 +111,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
                 this.checkRuleUsage(grammar)
                 this.checkForDuplicates(grammar)
                 this.checkPreferenceRules(grammar)
+                this.checkPatterns(grammar)
                 this.checkLeafChoices(grammar)
                 this.checkOptionalsCoveredByList(grammar)
                 this.checkNullableItemInUnboundedList(grammar)
@@ -582,10 +583,66 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
         }
     }
 
+    /**
+     * every pattern written in the grammar's own rules must be a valid regular expression
+     * (agl-regex follows Kotlin Regex semantics, so Kotlin Regex is used to check),
+     * otherwise the scanner fails when it first uses the pattern
+     */
+    private fun checkPatterns(grammar: Grammar) {
+        for (rule in grammar.grammarRule) {
+            // only what is written in the rule: the rhs of an override rule may come from (or need) the extended grammar
+            val written = when (rule) {
+                is OverrideRule -> rule.overriddenRhs
+                else -> rule.rhs
+            }
+            for (t in written.allTerminal) {
+                if (t.isPattern) {
+                    try {
+                        Regex(t.unescapedValue.value)
+                    } catch (e: Throwable) {
+                        issueError(t, "Pattern ${t.id} in rule '${rule.name.value}' is not a valid regular expression: ${e.message?.lines()?.firstOrNull() ?: e::class.simpleName}", null)
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * the terminals after 'on' must be terminals the parser can read:
+     * a literal or pattern used in the grammar (as written, a leaf rule made of several literals is one pattern),
+     * or the name of a leaf rule
+     */
+    private fun checkPreferenceOnTerminals(grammar: Grammar, po: PreferenceOption) {
+        val terminalValues = grammar.allResolvedTerminal.map { it.escapedValue.value }.toSet()
+        for (term in po.onTerminals) {
+            when (term) {
+                is Terminal -> if (term.escapedValue.value !in terminalValues) {
+                    issueError(po, "Preference option: the terminal ${term.id} after 'on' is not used in grammar '${grammar.name}'", null)
+                }
+
+                is NonTerminal -> {
+                    val r = grammar.findAllResolvedGrammarRule(term.ruleReference)
+                    when {
+                        null == r -> issueError(po, "Preference option: rule '${term.ruleReference.value}' after 'on' is not found in grammar '${grammar.name}'", null)
+                        r.isLeaf.not() -> issueError(po, "Preference option: rule '${term.ruleReference.value}' after 'on' is not a leaf rule, only terminals and leaf rules can be used after 'on'", null)
+                        else -> Unit
+                    }
+                }
+
+                else -> Unit
+            }
+        }
+    }
+
     private fun checkPreferenceRules(grammar: Grammar) {
         for (pr in grammar.preferenceRule) {
             for (po in pr.optionList) {
+                checkPreferenceOnTerminals(grammar, po)
                 for (part in po.spine.parts) {
+                    if (null == grammar.findAllResolvedGrammarRule(part.ruleReference)) {
+                        issueError(po, "Preference option refers to rule '${part.ruleReference.value}', which is not found in grammar '${grammar.name}'", null)
+                        continue
+                    }
                     val refRuleRhs = part.referencedRule(grammar).rhs
                     when (refRuleRhs) {
                         is Choice -> {

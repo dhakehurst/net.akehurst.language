@@ -283,7 +283,7 @@ class SemanticAnalyserSimple(
     private  fun checkAndResolveReferences(options: SemanticAnalysisOptions<SentenceContext>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: SentenceContext) {
         when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
-            crossReferenceDomain.isEmpty -> _issues.warn(null, "Empty CrossReferenceDomain")
+            crossReferenceDomain.isEmpty -> _issues.info(null, "The language has no references definition (CrossReferenceDomain is empty), so no references are checked or resolved.")
             else -> {
                 val resolve = if (options.resolveReferences) {
                     true
