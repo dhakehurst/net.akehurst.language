@@ -145,7 +145,7 @@ namespace net.akehurst.language.kerML
                 isRecursive := child[3].isRecursive
                 visibility := child[0]
                 isImportAll := (when { child[2] != $nothing -> (child[2].child[0] != $nothing) else -> false })
-                ownedRelatedElement := child[4].ownedRelatedElement
+                ownedRelatedElement := child[3].ownedRelatedElement + child[4].ownedRelatedElement
                 ownedRelationship := child[4].ownedRelationship
             }
             else -> $nothing
@@ -945,6 +945,7 @@ namespace net.akehurst.language.kerML
         LiteralBoolean: LiteralBoolean(_identity := $path) {
             value := child[0]
         }
+        BooleanValue: ($matchedText == 'true') as Boolean
         LiteralString: LiteralString(_identity := $path) {
             value := child[0]
         }
@@ -1057,7 +1058,7 @@ namespace net.akehurst.language.kerML
             ownedRelationship := when { when { child[1] != $nothing -> (child[1].child[0] != $nothing) else -> false } -> child[1].child[0].children.filter({ y -> y == child[1].child[0].child[0] and y != $nothing }) else -> children.filter({ y -> false }) } + children.filter({ y -> y == child[2] and y != $nothing })
         }
         MultiplicityExpressionMember: OwningMembership(_identity := $path) {
-            ownedRelatedElement := child[0].children.filter({ y -> y == child[0].child[0] and y != $nothing })
+            ownedRelatedElement := children.filter({ y -> y == child[0] and y != $nothing })
         }
         Metaclass: Metaclass(_identity := $path) {
             isAbstract := child[0].isAbstract
