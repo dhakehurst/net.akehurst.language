@@ -225,7 +225,10 @@ class GraphStructuredStack<E>(
         val count = this._count[node]
         return when (count) {
             null -> true // node is not in this GSS, so result is equivalent of stack removed
-            0 -> {
+            // a node that was made a head again (see push) must still be grown over its new previous,
+            // so it is not removed even when no stack above it is left; it is dropped after it was grown
+            // (before 2026-11-24 it was removed here, so the grammar's language depended on the order of the parse)
+            0 -> if (this._toRegrow.contains(node)) false else {
                 // head is the head of a stack and not in any other stack
                 // so remove it and decrement count for each of its prevs
                 _count.remove(node)
