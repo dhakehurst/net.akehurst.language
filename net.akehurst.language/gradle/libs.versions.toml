@@ -1,7 +1,7 @@
 [versions]
 project = "4.2.4.10-SNAPSHOT"
 
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 dokka = "2.2.0"
 buildconfig = "6.1.2"
 exportPublic = "2.4.0"
