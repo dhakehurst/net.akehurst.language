@@ -40,7 +40,9 @@ import net.akehurst.language.expressions.asm.VariableDefinitionDefault
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 
 class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AsmTransformDomain>() {
@@ -145,6 +147,9 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         val grammarRuleName = children[0] as GrammarRuleName
         val trRule = children[2] as AsmTransformationRule
         trRule.grammarRuleName = grammarRuleName
+        // the rule starts with the grammar rule name, so its location is the start of this node (used for issues about the name)
+        val ruleLoc = sentence.locationForNode(nodeInfo.node)
+        locationMap.addPropertyLocation(trRule, "grammarRuleName", InputLocation(ruleLoc.position, ruleLoc.column, ruleLoc.line, grammarRuleName.value.length, ruleLoc.sentenceIdentity))
         return trRule
     }
 
