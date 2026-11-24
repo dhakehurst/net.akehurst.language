@@ -107,4 +107,22 @@ class test_ReferenceResolverSimple_referringValue {
             test("package A { def 'x' } package B { import A::'x' use u1 : x use u2 : 'x' }")
         )
     }
+
+    // issue #63: a String referring value is split on '.', a List<String> is used as it is (no split),
+    // so a name that contains '.' can be referred to through a List property
+    @Test
+    fun list_value__name_containing_dot__not_split() {
+        assertEquals(listOf(":Def[a.b]"), test("def 'a.b' use u : 'a.b'"))
+    }
+
+    @Test
+    fun list_value__qualified_name_with_part_containing_dot__not_split() {
+        assertEquals(listOf(":Def[p.x.y]"), test("package p { def 'x.y' } use u : p::'x.y'"))
+    }
+
+    @Test
+    fun string_value__is_split_on_dot() {
+        // 'a.b' as a String is the qualified name a.b (b in a), so it finds b in package a, not a def named 'a.b'
+        assertEquals(listOf(":Def[a.b]"), test("package a { def b } ref r = 'a.b'"))
+    }
 }
