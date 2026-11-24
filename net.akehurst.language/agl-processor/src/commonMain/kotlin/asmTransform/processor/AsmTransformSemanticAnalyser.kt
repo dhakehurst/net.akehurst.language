@@ -48,6 +48,7 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.ParameterDefinitionSimple
 import net.akehurst.language.types.asm.PropertyDeclarationStored
@@ -69,6 +70,9 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
 
     private var _context: SentenceContext? = null
+    private var _locationMap: LocationMap? = null
+    // written rules for a grammar rule the grammar does not have (error given), their type is not computed
+    private val _rulesForUnknownGrammarRule = mutableSetOf<AsmTransformationRule>()
     private var __asm: AsmTransformDomain? = null
     private val _asm: AsmTransformDomain get() = __asm!!
     //TODO: rework to allow use of proper items in context
@@ -85,6 +89,8 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         _issues.clear()
         _resolvedReferences.clear()
         _context = null
+        _locationMap = null
+        _rulesForUnknownGrammarRule.clear()
         __asm = null
         transformFromGrammar.reset()
     }
@@ -96,11 +102,17 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
         _context = options.sentenceContext
+        _locationMap = locationMap
         __asm = asm
         if (null == _context) {
             _issues.warn(null, "No sentence context provided, semantic analysis cannot be performed")
         } else {
             (asm as AsmTransformDomainDefault).typesDomain = _typesDomain
+            for (trns in asm.namespace) {
+                for (trs in trns.definition) {
+                    checkRulesNameGrammarRules(trs)
+                }
+            }
             for (trns in asm.namespace) {
                 overrideDefaultNamespace(trns)
                 for (trs in trns.definition) {
@@ -124,6 +136,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                         }
                     }
                     for (trr in trs.rules.values) {
+                        if (trr in _rulesForUnknownGrammarRule) {
+                            trr.resolveTypeAs(StdLibDefault.NothingType)
+                            continue
+                        }
                         val ti = typeFor(trs, trr) // always fetch the type, so that it gets created if need be TODO: maybe do type creation in separate phase!
                         trr.resolveTypeAs(ti)
                     }
@@ -134,6 +150,30 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         }
         return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }
+
+    /**
+     * every written rule must be for a grammar rule of the grammar the rule set is for (AT-Q1).
+     * Checked before the default rules are added, so only the written rules are checked.
+     */
+    private fun checkRulesNameGrammarRules(trs: AsmTransformRuleSet) {
+        val grammar = _grammarDomain.findDefinitionByQualifiedNameOrNull(trs.qualifiedName)
+        when (grammar) {
+            null -> Unit // no grammar for this rule set, nothing to check
+            else -> trs.rules.values.forEach { trr ->
+                if (null == grammar.findAllResolvedGrammarRule(trr.grammarRuleName)) {
+                    _rulesForUnknownGrammarRule.add(trr)
+                    _issues.error(
+                        locationOfRuleName(trr),
+                        "Grammar '${grammar.qualifiedName.value}' has no rule '${trr.grammarRuleName.value}' (in the transformation rule for '${trr.grammarRuleName.value}')"
+                    )
+                }
+            }
+        }
+    }
+
+    /** the location of the grammar rule name at the start of a written transformation rule, null if not known */
+    private fun locationOfRuleName(trr: AsmTransformationRule): InputLocation? =
+        _locationMap?.getPropertyLocation(trr, "grammarRuleName")
 
     /**
      * Without '#override-default-transform' the transform has only the rules written,
@@ -167,7 +207,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
      * converts nonTerm: TypeRef  =>  nonTerm: TypeRef() { ... <prop assignments from default> ...  }
      */
     private fun convertRulesThatSimplyRedefineDefaultType(trs: AsmTransformRuleSet) {
-        val rulesToConvert = trs.rules.values.filter { it.expression is RootExpression && (it.expression as RootExpression).isSelf.not() }
+        val rulesToConvert = trs.rules.values.filter { it.expression is RootExpression && (it.expression as RootExpression).isSelf.not() && it !in _rulesForUnknownGrammarRule }
         when {
             trs.options.overrideDefault -> {
                 findOrCreateGrammarTypeNamespace(trs.qualifiedName) //ensure type namespace exists
@@ -177,8 +217,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     val exprType = _typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn)?.type() ?: StdLibDefault.NothingType
                     // expression is to simply redefine the type for the grammar rule
                     // actual trr expression should be same as default
-                    val defRs = transformFromGrammar.value.findDefinitionByQualifiedNameOrNull(trs.qualifiedName) ?: error("Should exist!")
-                    val defRule = defRs.findOwnedTrRuleForGrammarRuleNamedOrNull(trr.grammarRuleName) ?: error("Should exist!")
+                    val defRs = transformFromGrammar.value.findDefinitionByQualifiedNameOrNull(trs.qualifiedName)
+                    val defRule = defRs?.findOwnedTrRuleForGrammarRuleNamedOrNull(trr.grammarRuleName)
+                    // no default rule: the grammar has no such rule (error given in checkRulesNameGrammarRules) or there is no default rule set (error given in overrideDefaultRuleSet)
+                    if (null == defRule) return@forEach
                     val clonedTypeDeclOrCreated = findOrCloneFromDefaultTypeForTransformRule(pqn, trs, trr)
                     val defExpr = defRule.expression
                     val newExpr = when (defExpr) {
@@ -218,7 +260,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
      * 'T' must exist (or is created with '#create-missing-types'), as must its properties 'p'.
      */
     private fun resolveModifyRules(trs: AsmTransformRuleSet) {
-        val modifyRules = trs.rules.values.filterIsInstance<ModifyObjectRule>()
+        val modifyRules = trs.rules.values.filterIsInstance<ModifyObjectRule>().filter { it !in _rulesForUnknownGrammarRule }
         if (modifyRules.isEmpty()) return
         val gtns = findOrCreateGrammarTypeNamespace(trs.qualifiedName)
         val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)
@@ -449,6 +491,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         when {
             trs.options.createTypes -> {
                 for (trr in trs.rules.values) {
+                    if (trr in _rulesForUnknownGrammarRule) continue
                     val expr = trr.expression
                     val exprPqn = when {
                         trr.isResolved -> trr.resolvedType.qualifiedTypeName

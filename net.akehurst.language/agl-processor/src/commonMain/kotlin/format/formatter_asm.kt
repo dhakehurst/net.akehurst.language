@@ -102,10 +102,8 @@ class FormatDomainDefault(
                     semanticAnalysis { sentenceContext(sentenceContext) }
                 }
             )
-            return when {
-                res.allIssues.errors.isEmpty() -> res
-                else -> error(res.allIssues.toString())
-            }
+            // errors are returned as issues of the result, the caller decides what to do with them
+            return res
         }
     }
 

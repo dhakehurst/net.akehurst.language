@@ -31,6 +31,11 @@ import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.formatter.api.FormatFunctionDefinition
 import net.akehurst.language.formatter.api.FormatSet
 import net.akehurst.language.formatter.api.FormatSetReference
+import net.akehurst.language.formatter.api.FormatExpressionTemplate
+import net.akehurst.language.formatter.api.TemplateElementExpressionProperty
+import net.akehurst.language.types.api.DataType
+import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.GrammarReference
@@ -47,11 +52,11 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
             }.firstOrNull()?.item as? FormatSet
     }
 
-    private val _issues = IssueHolder(LanguageProcessorPhase.FORMAT)
+    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: LocationMap? = null
 
     override fun clear() {
-
+        _issues.clear()
     }
 
 //    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
@@ -71,7 +76,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
         } else {
             checkFormatDomain(context,asm)
         }
-        return SemanticAnalysisResultDefault(emptyList(), IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
+        return SemanticAnalysisResultDefault(emptyList(), _issues)
     }
 
     private fun issueWarn(item: Any?, message: String, data: Any?) {
@@ -88,7 +93,10 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
         domain.namespace.forEach { ns ->
             ns.definition.forEach { def ->
                 when (def) {
-                    is FormatSet -> this.resolveRefs(context, def)
+                    is FormatSet -> {
+                        this.resolveRefs(context, def)
+                        this.checkRuleTypes(context, def)
+                    }
                     is FormatFunctionDefinition -> Unit //TODO
                 }
 
@@ -100,10 +108,40 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
         def.extends.forEach { checkGrammarExistsAndResolve(context, it) }
     }
 
+    /**
+     * the type of each format rule must be in the types of the language (otherwise formatting fails),
+     * a '$name' in the rule's template must be a property of that type: a warning, because formatting then gives empty text for it.
+     * Only checked for a data type without subtypes, as the property may be on a subtype otherwise.
+     */
+    private fun checkRuleTypes(context: SentenceContext?, def: FormatSet) {
+        val typesDomains = context?.findItemsConformingTo { it.value == TypesDomain::class.simpleName }?.mapNotNull { it.item as? TypesDomain } ?: emptyList()
+        if (typesDomains.isEmpty()) return // nothing to check against
+        for (rule in def.rules) {
+            val typeName = rule.forTypeName.possiblyQualifiedName
+            val td = typesDomains.firstNotNullOfOrNull { it.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) }
+            when {
+                null == td -> issueError(rule, "Type '${typeName.value}' of format rule '${typeName.value} -> ...' not found in the types of the language", null)
+                td is DataType && td.subtypes.isEmpty() -> {
+                    val expr = rule.formatExpression
+                    if (expr is FormatExpressionTemplate) {
+                        val props = td.type().allResolvedProperty
+                        expr.content.filterIsInstance<TemplateElementExpressionProperty>().forEach { el ->
+                            if (null == props[PropertyName(el.propertyName)]) {
+                                issueWarn(rule, "Format rule for '${typeName.value}': type '${td.name.value}' has no property '${el.propertyName}', so '$${el.propertyName}' gives no text", null)
+                            }
+                        }
+                    }
+                }
+
+                else -> Unit
+            }
+        }
+    }
+
     private fun checkGrammarExistsAndResolve(context: SentenceContext?, ref: FormatSetReference) {
         val g = context?.let { findFormatSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
         if (null == g) {
-            this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
+            this.issueError(ref, "FormatSet '${ref.nameOrQName.value}' to extend not found", null)
         } else {
             ref.resolveAs(g)
         }

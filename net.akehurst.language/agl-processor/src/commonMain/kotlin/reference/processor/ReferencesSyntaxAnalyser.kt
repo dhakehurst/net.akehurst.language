@@ -434,7 +434,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
             is NavigationExpression -> expr
             is RootExpression -> NavigationExpressionDefault(RootExpressionDefault(expr.name), emptyList())
             else -> {
-                issues.error(locationMap[expr], "", null)
+                issues.error(locationMap[expr], "After 'property' expected a property name or a navigation (e.g. 'a.b'), got '${expr.asString()}'", null)
                 NavigationExpressionDefault(RootExpressionDefault.ERROR, emptyList())
             }
         }

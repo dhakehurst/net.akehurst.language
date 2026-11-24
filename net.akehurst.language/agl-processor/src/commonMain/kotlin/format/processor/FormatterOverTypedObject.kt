@@ -175,7 +175,7 @@ class FormatterOverTypedObject(
                 }
 
                 outputOptionAny.value !is String -> {
-                    issueError(null, "The option '#output' must be a literal String'")
+                    issueError(null, "The option '#output' must be a literal String.")
                     ""
                 }
 
@@ -215,7 +215,7 @@ class FormatterOverTypedObject(
 
                                         else -> when {
                                             _output.contains(outputName.sentence!!) -> {
-                                                issueError(null, "Output named '${outputName.sentence!!}' is already defined!'.")
+                                                issueError(null, "Output named '${outputName.sentence!!}' is already defined.")
                                             }
 
                                             else -> _output[outputName.sentence!!] = resultStr
@@ -253,7 +253,7 @@ class FormatterOverTypedObject(
             is SpecialType -> when {
                 StdLibDefault.NothingType.resolvedDefinition == selfType -> ""
                 StdLibDefault.AnyType.resolvedDefinition == selfType -> {
-                    issues.warn(null, "No formating rule found for type '${self?.type?.typeName?.value}'.")
+                    issues.warn(null, "No formatting rule found for type '${self?.type?.typeName?.value}'.")
                     self.self.toString()
                 }
 
@@ -262,7 +262,7 @@ class FormatterOverTypedObject(
 
             is PrimitiveType, is EnumType -> objectGraph.valueOf(self).toString()
             is SingletonType, is ValueType -> {
-                issues.warn(null, "No formating rule found for type '${self?.type?.typeName?.value}'.")
+                issues.warn(null, "No formatting rule found for type '${self?.type?.typeName?.value}'.")
                 objectGraph.valueOf(self).toString()
             }
 

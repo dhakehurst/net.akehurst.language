@@ -528,7 +528,7 @@ data class TypeReferenceDefault(
         }
 
         if (null == td) {
-            val msg = "In ObjectTemplate, cannot resolveType '${this.possiblyQualifiedName.value}' in TypesDomain '${tm.name.value}'."
+            val msg = "Type '${this.possiblyQualifiedName.value}' not found in TypesDomain '${tm.name.value}'."
             issues.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, null, msg, null))
         } else {
             _resolvedType = td.type(targs)

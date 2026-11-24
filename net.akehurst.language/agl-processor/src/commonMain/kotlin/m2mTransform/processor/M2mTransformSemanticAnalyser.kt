@@ -33,6 +33,17 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.m2mTransform.api.M2mTransformPatternRule
 import net.akehurst.language.m2mTransform.api.RuleCall
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.api.DataType
+import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.m2mTransform.api.M2mTransformRule
+import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.m2mTransform.api.M2MTransformMapping
+import net.akehurst.language.m2mTransform.api.PropertyTemplateRhs
+import net.akehurst.language.m2mTransform.api.ObjectTemplate
+import net.akehurst.language.m2mTransform.api.CollectionTemplate
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.CreateObjectExpression
 
 class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContext> {
 
@@ -48,6 +59,8 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
         locationMap: LocationMap?,
         options: SemanticAnalysisOptions<SentenceContext>
     ): SemanticAnalysisResult {
+        _locationMap = locationMap
+        _asm = asm
         val sentenceContext = options.sentenceContext
         when {
             null == sentenceContext -> _issues.warn(null, "No sentence context provided, either provide one or switch off Semantic Analysis.")
@@ -59,8 +72,8 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                     def.domainParameters.entries.forEach { (k, v) ->
                         val td = (sentenceContext.findItemsNamedConformingTo(v.value) { true }).firstOrNull()?.item
                         when (td) {
-                            null -> _issues.error(null, "TypesDomain '${v.value}' not found in sentence context for parameter '${k}'")
-                            !is TypesDomain -> _issues.error(null, "TypesDomain '${v.value}' is not a TypesDomain in the sentence context, rather a '${td::class.simpleName}'")
+                            null -> _issues.error(locationMap?.get(def), "TypesDomain '${v.value}' for parameter '${k.value}' of transform '${def.name.value}' not found in the sentence context, add it to the context or correct the name.")
+                            !is TypesDomain -> _issues.error(locationMap?.get(def), "'${v.value}' for parameter '${k.value}' of transform '${def.name.value}' is not a TypesDomain in the sentence context, rather a '${td::class.simpleName}'")
                             else -> def.resolveDomainParameter(k, td)
                         }
                     }
@@ -74,11 +87,14 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                         }
                         v.domainSignature.forEach { (dr, dv) ->
                             val typesDomain = def.domainParameterResolved[dr]
-                            if (null == typesDomain) {
-                                _issues.error(null, "TypesDomain '$dr' not found in rule '${k}'")
-                            } else {
-                                val typeIssues = dv.variable.resolveType(typesDomain)
-                                _issues.addAll(typeIssues)
+                            when {
+                                // an unresolved domain parameter is reported once, for the transform
+                                null == typesDomain && def.domainParameters.containsKey(dr) -> Unit
+                                null == typesDomain -> _issues.error(ruleLocation(def, k), "Domain '${dr.value}' used in rule '${k.value}' is not a parameter of transform '${def.name.value}', expected one of ${def.domainParameters.keys.joinToString { "'${it.value}'" }}")
+                                else -> {
+                                    val typeIssues = dv.variable.resolveType(typesDomain)
+                                    _issues.addAll(withRuleLocation(typeIssues, def, v))
+                                }
                             }
                         }
                         // resolve where and when rule refs
@@ -87,13 +103,17 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                                 v.domainTemplate.forEach { (dr,rhs) ->
                                     val typesDomain = def.domainParameterResolved[dr]
                                     if (null == typesDomain) {
-                                        _issues.error(null, "TypesDomain '${dr.value}' not found in rule '${k.value}'")
+                                        // already reported for the domain signature of the rule
                                     } else {
                                          // TODO: check that a template value conforms to its property type, e.g. an object template
                                          //  'key == Key {..}' for a collection property 'key: Set<Key>' is not reported
                                          val typeIssues = rhs.resolveTypes(typesDomain)
-                                         _issues.addAll(typeIssues)
+                                         _issues.addAll(withRuleLocation(typeIssues, def, v))
+                                         checkTemplateProperties(def, k, rhs)
                                     }
+                                }
+                                if (v is M2MTransformMapping) {
+                                    v.expression.forEach { (dr, expr) -> if (null != expr) checkCreateObject(def, k, dr, v, expr) }
                                 }
 
                                 when (val wn = v.when_) {
@@ -116,6 +136,88 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
      * resolves the rule called in a 'when' or 'where' clause of rule 'callerName',
      * and checks that the called rule has the domains and parameters named in the call
      */
+    private var _locationMap: LocationMap? = null
+
+    /** issues made by the asm (no location map there) get the location of the rule they are in */
+    private fun withRuleLocation(issues: List<LanguageIssue>, def: M2mTransformRuleSet, rule: M2mTransformRule): List<LanguageIssue> {
+        val loc = ruleLocation(def, rule.name) ?: return issues
+        return issues.map { if (null == it.location) it.copy(location = loc) else it }
+    }
+
+    /**
+     * a property named in an object template should be a property of the template's type.
+     * A warning, not an error: the object graph may still give the property at runtime (e.g. AsmSimple objects).
+     * Only checked for a data type without subtypes, as the property may be on a subtype otherwise.
+     */
+    private fun checkTemplateProperties(def: M2mTransformRuleSet, ruleName: SimpleName, rhs: PropertyTemplateRhs) {
+        when (rhs) {
+            is ObjectTemplate -> {
+                val td = rhs.type?.resolvedDefinition
+                if (td is DataType && td.subtypes.isEmpty()) {
+                    val props = td.type().allResolvedProperty
+                    rhs.propertyTemplate.forEach { (pn, pt) ->
+                        if (null == props[PropertyName(pn.value)]) {
+                            _issues.warn(
+                                ruleLocation(def, ruleName),
+                                "In rule '${ruleName.value}' of transform '${def.name.value}', type '${td.name.value}' has no property '${pn.value}' (used in the template '${pn.value} == ...'), expected one of ${props.keys.joinToString { "'${it.value}'" }}"
+                            )
+                        }
+                    }
+                }
+                rhs.propertyTemplate.values.forEach { checkTemplateProperties(def, ruleName, it.rhs) }
+            }
+
+            is CollectionTemplate -> rhs.elements.forEach { checkTemplateProperties(def, ruleName, it) }
+            else -> Unit
+        }
+    }
+
+    /**
+     * for 'domain d x:T := T() { p := ... }' the created type must be found (in the domains of the transform)
+     * and, for a data type without subtypes, each assigned property should be a property of it (a warning, as for templates)
+     */
+    private fun checkCreateObject(def: M2mTransformRuleSet, ruleName: SimpleName, dr: DomainReference, rule: M2mTransformPatternRule, expr: Expression) {
+        if (expr !is CreateObjectExpression) return
+        val preferred = def.domainParameterResolved[dr] ?: return // the unresolved domain is already reported
+        val domains = (listOf(preferred) + def.domainParameterResolved.values).distinct()
+        val td = domains.firstNotNullOfOrNull { it.findFirstDefinitionByPossiblyQualifiedNameOrNull(expr.possiblyQualifiedTypeName) }
+        when {
+            null == td -> _issues.error(
+                ruleLocation(def, ruleName),
+                "In rule '${ruleName.value}' of transform '${def.name.value}', the type '${expr.possiblyQualifiedTypeName.value}' to create for domain '${dr.value}' is not found in the domains of the transform"
+            )
+
+            td is DataType && td.subtypes.isEmpty() -> {
+                val props = td.type().allResolvedProperty
+                expr.propertyAssignments.forEach { pa ->
+                    if (null == props[PropertyName(pa.variable.name)]) {
+                        _issues.warn(
+                            ruleLocation(def, ruleName),
+                            "In rule '${ruleName.value}' of transform '${def.name.value}', type '${td.name.value}' has no property '${pa.variable.name}' (assigned in '${td.name.value}() { ${pa.variable.name} := ... }'), expected one of ${props.keys.joinToString { "'${it.value}'" }}"
+                        )
+                    }
+                }
+            }
+
+            else -> Unit
+        }
+    }
+
+    private var _asm: M2mTransformDomain? = null
+
+    /**
+     * rules are data classes (equal when name and 'top' are equal), so the location of a rule is only used
+     * when no other transform has an equal rule, otherwise the location of the transform is used
+     */
+    private fun ruleLocation(def: M2mTransformRuleSet, ruleName: SimpleName): InputLocation? {
+        val rule = def.rule[ruleName]
+        val unique = null != rule && (_asm?.allTransformRuleSet?.count { rs -> rs.rule[ruleName] == rule } ?: 0) <= 1
+        return when {
+            unique -> _locationMap?.get(rule) ?: _locationMap?.get(def)
+            else -> _locationMap?.get(def)
+        }
+    }
+
     private fun resolveRuleCall(def: M2mTransformRuleSet, callerName: SimpleName, clause: String, call: RuleCall, locationMap: LocationMap?) {
         val location = locationMap?.get(def)
         val called = def.allRule[call.ruleName]

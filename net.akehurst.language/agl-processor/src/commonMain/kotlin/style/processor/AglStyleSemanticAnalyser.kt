@@ -89,6 +89,8 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         _issues.error(location, message, data)
     }
 
+    // TODO(issue #20): a style set whose name is not the name of a grammar of the language (e.g. 'styles Reff' for grammar 'Refs') gives no issue,
+    //  its rules are just never used. Report it, once it is decided whether a style set must be named after a grammar.
     private fun resolveStyleSetRefs(sentenceContext: SentenceContext?, styleSet: StyleSet) {
         styleSet.extends.forEach { ref ->
             checkStyleSetExistsAndResolve(sentenceContext,ref)
