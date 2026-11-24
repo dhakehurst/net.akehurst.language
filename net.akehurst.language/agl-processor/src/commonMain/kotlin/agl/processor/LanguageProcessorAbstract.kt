@@ -66,6 +66,7 @@ import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
+import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
@@ -140,6 +141,17 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val targetTransformRuleSet: AsmTransformRuleSet by lazy {
         targetGrammar?.let { transformDomain.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
             ?: error("Target TransformRuleSet not found for grammar '${targetGrammar?.qualifiedName ?: "null"}'")
+    }
+
+    override fun targetTypeFor(goalRuleName: GrammarRuleName?): TypeInstance? {
+        val grammar = this.targetGrammar ?: return null
+        val goal = goalRuleName ?: this.defaultGoalRuleName ?: return null
+        val ruleSet = this.transformDomain.findDefinitionByQualifiedNameOrNull(grammar.qualifiedName) ?: return null
+        val trRule = ruleSet.findAllTrRuleForGrammarRuleNamedOrNull(goal) ?: return null
+        return when {
+            trRule.isResolved -> trRule.resolvedType
+            else -> null
+        }
     }
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
