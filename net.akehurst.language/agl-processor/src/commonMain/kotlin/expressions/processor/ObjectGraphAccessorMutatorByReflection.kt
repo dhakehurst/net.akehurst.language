@@ -784,7 +784,8 @@ constructor(
             is SingletonType -> typeDef.objectInstance()
             is StructuredType -> externalCreateStructure(
                 typeDef.qualifiedName,
-                constructorArgs.map { (k, v) -> Pair(k, v.self) }.toMap()
+                // plain values (deep unwrap, as for method and function arguments), e.g. a List argument is not a List<TypedObject>
+                constructorArgs.map { (k, v) -> Pair(k, untyped(v)) }.toMap()
             ) ?: issueErrorReturnNothing(null, "Creating Structure '${typeDef.qualifiedName.value}' results in null, using value \$nothing.")
 
             is InterfaceType -> error("Should not create an instance of an InterfaceType")
