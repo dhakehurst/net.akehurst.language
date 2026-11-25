@@ -45,6 +45,7 @@ namespace KerML.Root.Namespaces
     import KerML.Kernel.Metadata
     import KerML.Kernel.Connectors
     import KerML.Kernel.Interactions
+    import KerML.Kernel.Expressions
     import SysML.Systems.Ports
 
     // An element is a member of the Namespace that owns its OwningMembership ($container), with the visibility of that membership.
@@ -169,9 +170,22 @@ namespace KerML.Root.Namespaces
         in MembershipImport { property importedMembership refers-to Element }
         // KerML 8.2.3.5.2: the local Namespace of a Membership is its membershipOwningNamespace (the scope it is in).
         // OPEN: for a FeatureReferenceExpression / InstantiationExpression the spec skips those namespaces outwards
-        // (the non-invocation Namespace), and for a FeatureChainExpression it is the result parameter of the argument expression.
-        // (an OwningMembership has no memberElement of its own: it is derived from the owned member element)
-        in Membership { property memberElement refers-to Element when ($self is OwningMembership) == false }
+        // (the non-invocation Namespace); a FeatureChainExpression whose argument is another kind of expression (e.g. 'A().y') is
+        // resolved by the normal lookup, the spec resolves it in the result parameter of the argument expression.
+        // KerML 8.2.3.5.2: the target feature of a FeatureChainExpression ('a.b') is resolved in the feature its argument refers to
+        // (the 'a' of a FeatureReferenceExpression, or the target feature of an argument that is itself a FeatureChainExpression);
+        // its argument is in the first ownedRelationship (a ParameterMembership), the target in a Membership after it.
+        // ('and' evaluates both sides, so the conditions are nested 'when's)
+        // (an OwningMembership or ParameterMembership has no memberElement of its own, so there is nothing to resolve)
+        in Membership {
+            property memberElement when {
+                when { $container is FeatureChainExpression -> ($container.ownedRelationship.first.ownedRelatedElement.first.ownedRelationship.first.ownedRelatedElement.first is FeatureReferenceExpression) else -> false }
+                    -> refers-to Feature from $container.ownedRelationship.first.ownedRelatedElement.first.ownedRelationship.first.ownedRelatedElement.first.ownedRelationship.first.memberElement
+                when { $container is FeatureChainExpression -> ($container.ownedRelationship.first.ownedRelatedElement.first.ownedRelationship.first.ownedRelatedElement.first is FeatureChainExpression) else -> false }
+                    -> refers-to Feature from $container.ownedRelationship.first.ownedRelatedElement.first.ownedRelationship.first.ownedRelatedElement.first.ownedRelationship.last.memberElement
+                else -> refers-to Element
+            }
+        }
         in Annotation { property annotatedElement refers-to Element }
         // OPEN: Dependency.client / supplier are lists of qualified names (List<List<String>>), which a 'property' line cannot refer from;
         // needs either one Membership-like object per name in the transform, or a references DSL form for a list of names.
