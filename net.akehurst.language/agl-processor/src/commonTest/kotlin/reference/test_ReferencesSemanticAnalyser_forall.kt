@@ -98,7 +98,7 @@ class test_ReferencesSemanticAnalyser_forall {
     fun forall_expression_with_property_not_found__error() {
         val (errors, _) = check(refs("forall nope { property id refers-to Item }"))
         assertEquals(1, errors.size, errors.toString())
-        assertTrue(errors[0].contains("no property named 'nope'"), errors.toString())
+        assertTrue(errors[0].contains("has no property 'nope'"), errors.toString())
     }
 
     @Test

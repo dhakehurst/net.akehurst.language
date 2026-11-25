@@ -4,6 +4,7 @@ import net.akehurst.language.expressions.asm.PropertyCallDefault
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdFunctionLib
 import net.akehurst.language.types.asm.StdLibDefault
@@ -15,8 +16,22 @@ class ExpressionTypeResolver(
     val issues: IssueHolder
 ) {
 
-    fun typeFor(expression: Expression, self: TypeInstance): TypeInstance =
-        expression.typeOfExpressionFor(self)
+    /** the location given for issues found while typing the current expression (issue #20); expressions have no location of their own */
+    private var _location: InputLocation? = null
+
+    /**
+     * The type of [expression] evaluated on [self].
+     * Issues found get [location], the location (in the definition) of the item the expression is part of, if given.
+     */
+    fun typeFor(expression: Expression, self: TypeInstance, location: InputLocation? = null): TypeInstance {
+        val prev = _location
+        _location = location
+        try {
+            return expression.typeOfExpressionFor(self)
+        } finally {
+            _location = prev
+        }
+    }
 
     fun typeOfExpressionStr(expression: String, self: TypeDefinition): TypeInstance {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
@@ -54,13 +69,13 @@ class ExpressionTypeResolver(
             when (self.resolvedDefinition) {
                 is StructuredType -> {
                     self.allResolvedProperty[PropertyName(this.name)]?.typeInstance ?: run {
-                        issues.error(null, "'$self' has no property named '${this.name}'")
+                        issues.error(_location, "Type '${self.typeName.value}' has no property '${this.name}'")
                         StdLibDefault.NothingType
                     }
                 }
 
                 else -> {
-                    issues.error(null, "'$self' is not a StructuredType cannot access property named '${this.name}'")
+                    issues.error(_location, "Type '${self.typeName.value}' is not a structured type (data or interface), so it has no property '${this.name}'")
                     StdLibDefault.NothingType
                 }
             }
@@ -135,7 +150,7 @@ class ExpressionTypeResolver(
     /** the type, or null with an error issue if it does not resolve (e.g. a missing import) */
     private fun resolvedOrIssue(ti: TypeInstance): TypeInstance? = when (ti.resolvedDefinitionOrNull) {
         null -> {
-            issues.error(null, "Cannot resolve type '${ti.typeName.value}' in namespace '${ti.namespace.qualifiedName.value}', is an import needed?")
+            issues.error(_location, "Cannot resolve type '${ti.typeName.value}' in namespace '${ti.namespace.qualifiedName.value}', is an import needed?")
             null
         }
 

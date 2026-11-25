@@ -326,8 +326,8 @@ class test_CrossReferenceLanguage {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                null,
-                "'Rule2' has no property named 'ruleX'"
+                InputLocation(64, 27, 3, 5, null),
+                "Type 'Rule2' has no property 'ruleX'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR,
