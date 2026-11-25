@@ -221,9 +221,12 @@ object Agl {
         // The cross-reference domain is created lazily (types may be added to the processor before it is used),
         // so only check that the references string parses, and report its parse issues here.
         val refParseIssues = referenceStr?.let { registry.agl.crossReference.processor?.parse(it.value)?.issues?.toList() } ?: emptyList()
+        // the style domain is only used by a LanguageDefinition, never by the processor, so at least the parse issues of the style string are reported here
+        // TODO: also report the semantic issues of the style string (unknown selectors), without building the types domain before the processor is used
+        val styleIssues = styleStr?.let { registry.agl.style.processor?.parse(it.value)?.issues?.toList() } ?: emptyList()
         return when {
-            refParseIssues.isEmpty() -> proc
-            else -> LanguageProcessorResult(proc.processor, IssueHolder(LanguageProcessorPhase.ALL).also { it.addAllFrom(proc.issues); it.addAll(refParseIssues) })
+            refParseIssues.isEmpty() && styleIssues.isEmpty() -> proc
+            else -> LanguageProcessorResult(proc.processor, IssueHolder(LanguageProcessorPhase.ALL).also { it.addAllFrom(proc.issues); it.addAll(refParseIssues); it.addAll(styleIssues) })
         }
     }
 

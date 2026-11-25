@@ -195,10 +195,10 @@ class test_SemanticAnalyserSimple {
 
         val expected = listOf(
             LanguageIssue(
-                LanguageIssueKind.WARNING,
+                LanguageIssueKind.INFORMATION,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 null,
-                "Empty CrossReferenceDomain"
+                "The language has no references definition (CrossReferenceDomain is empty), so no references are checked or resolved."
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)

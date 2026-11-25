@@ -184,11 +184,15 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
+    private var _formatDefinitionErrors: List<LanguageIssue> = emptyList()
+
     override val formatter: Formatter? by lazy {
         val res = configuration.formatResolver?.invoke(this)
         res?.let {
             this.allIssues.addAllFrom(res.allIssues)
-            res.asm?.let {
+            _formatDefinitionErrors = res.allIssues.errors
+            // a format definition with errors gives no formatter, formatAsm reports the definition errors
+            res.asm?.takeIf { res.allIssues.errors.isEmpty() }?.let {
                 //TODO: make a formatter Resolver !
                 FormatterOverAsmSimple(it, typesDomain, this.allIssues, res.syntaxAnalysis?.locationMap ?: LocationMapDefault()) as Formatter
             }
@@ -416,8 +420,16 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val formatSetName = this.targetGrammar!!.qualifiedName //TODO: make configuratble in options
         //val fm = formatModel?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a FormatModel")
         val frmtr = this.formatter
-            ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Formatter")
-        return frmtr.formatSelf(formatSetName, asm)
+        return when {
+            null != frmtr -> frmtr.formatSelf(formatSetName, asm)
+            null == configuration.formatResolver -> error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Formatter")
+            else -> {
+                val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
+                issues.error(null, "The format definition of the language has errors, nothing is formatted.")
+                _formatDefinitionErrors.forEach { issues.addAll(listOf(it.copy(message = "In the format definition of the language: ${it.message}"))) }
+                FormatResultDefault(emptyMap(), issues)
+            }
+        }
     }
 
     /*

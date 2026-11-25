@@ -378,7 +378,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
             }
         }
@@ -397,7 +397,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
             }
         }
@@ -413,7 +413,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
             }
         }
@@ -465,7 +465,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
             }
         }
@@ -484,7 +484,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
             }
         }
@@ -503,7 +503,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
             }
         }
@@ -540,7 +540,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
             }
         }
@@ -559,13 +559,13 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             }
 
             else -> {
-                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+                issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
             }
         }
 
         else -> {
-            issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+            issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
             objectGraph.nothing()
         }
     }
@@ -703,7 +703,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     ): TypedObject {
         return when {
             objectGraph.isNothing(obj) -> {
-                issues.warn(null, $$"Cannot call method '$${methodName.value}' on on $nothing, returning $nothing.")
+                issues.warn(null, $$"Cannot call method '$${methodName.value}' on $nothing, returning $nothing.")
                 objectGraph.nothing()
             }
 
@@ -1067,7 +1067,7 @@ internal fun evaluateComparisonOperator(objectGraph: ObjectGraphAccessorMutatorC
         }
 
         else -> {
-            objectGraph.issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName} and ${rhs.type.qualifiedTypeName}'")
+            objectGraph.issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
             objectGraph.nothing()
         }
     }

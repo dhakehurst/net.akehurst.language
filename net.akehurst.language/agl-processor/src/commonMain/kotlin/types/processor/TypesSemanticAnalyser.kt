@@ -47,6 +47,9 @@ internal class TypesSemanticAnalyser : SemanticAnalyser<TypesDomain, SentenceCon
         _resolvedReferences.clear()
     }
 
+    // TODO(issue #20): report a property type that is not found (e.g. 'id: Strin' gives no issue today).
+    //  It can't be checked here: std and the grammar namespaces are added to the domain after this analysis
+    //  (TypesDomainSimple.fromString, GrammarTypesNamespaceSimple.withGrammarNamespaces), and type parameters must not be reported.
     override fun analyse(sentenceIdentity: Any?, asm: TypesDomain, locationMap: LocationMap?, options: SemanticAnalysisOptions<SentenceContext>): SemanticAnalysisResult {
         if (asm.options.includeStd) {
             asm.addNamespace(StdLibDefault)
