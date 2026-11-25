@@ -686,13 +686,13 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, SentenceContext>() {
                 data("ParameterDefinitionSimple") {
                     supertype("ParameterDeclaration")
                     constructor_ {
-                        parameter(setOf(), "name", "ParameterName")
+                        parameter(setOf(), "name", "TmParameterName")
                         parameter(setOf(), "typeInstance", "TypeInstance")
                         parameter(setOf(), "defaultValue", "String")
                         parameter(setOf(), "property", "PropertyDeclaration")
                     }
                     propertyOf(setOf(VAL, REF, STR), "defaultValue", "String", false)
-                    propertyOf(setOf(VAL, CMP, STR), "name", "ParameterName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "TmParameterName", false)
                     propertyOf(setOf(VAL, REF, STR), "property", "PropertyDeclaration", true)
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
