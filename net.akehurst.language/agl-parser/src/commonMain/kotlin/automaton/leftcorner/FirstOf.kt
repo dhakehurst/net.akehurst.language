@@ -109,8 +109,12 @@ internal class FirstOf(
                                         )
                                         val embSkipTerms = rhs.embeddedRuntimeRuleSet.skipTerminals
                                         result = result.union(f.result).union(LookaheadSetPart.createFromRuntimeRules(embSkipTerms))
+                                        // an embedded rule is a nonterminal: FIRST(X b) = FIRST(X) + (FIRST(b) if X is nullable),
+                                        // so a nullable embedded rule goes on to the next item, as for RuntimeRuleRhsNonTerminal below
                                         if (f.needsFirstOfParentNext) {
-                                            needsNext = true
+                                            val rpnxt = rp.next()
+                                            val notSelf = rpnxt - rp
+                                            nrps.addAll(notSelf)
                                         }
                                     }
 
@@ -180,13 +184,10 @@ internal class FirstOf(
                     else -> when (rhs) {
                         is RuntimeRuleRhsGoal -> error("should never happen")
                         is RuntimeRuleRhsEmbedded -> {
-                            val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
-                            val f = embSS.firstOf.firstOfNotEmpty(rhs.embeddedStartRule, doneRp, hashMapOf())
-                            val embSkipTerms = rhs.embeddedRuntimeRuleSet.skipTerminals
-                            result = result.union(f.result).union(LookaheadSetPart.createFromRuntimeRules(embSkipTerms))
-                            if (f.needsFirstOfParentNext) {
-                                needsNext = true
-                            }
+                            // as for RuntimeRuleRhsNonTerminal: the rest of the rule is followed if the embedded rule is nullable
+                            val f = firstOfRpNotEmpty(rp, doneRp, done)
+                            result = result.union(f.result)
+                            needsNext = needsNext || f.needsFirstOfParentNext
                         }
 
                         is RuntimeRuleRhsTerminal -> result = result.union(LookaheadSetPart(false, false, false, setOf(item)))

@@ -651,10 +651,6 @@ class test_FirstOf : test_AutomatonUtilsAbstract() {
         check_expectedAt(RP(S, oN, p1), LookaheadSetPart.EOT, expected = setOf(ib, iWS, c))
     }
 
-    // TODO(David): FirstOf treats a nullable embedded rule as making the whole enclosing rule nullable
-    //  (firstOfNotEmptySafe and firstOfRpNotEmpty set needsNext instead of going on to the next item),
-    //  so S = X 'd' ; X = gB 'c' gives {b, _, d} at the start of S instead of {b, _, c}.
-    @Ignore
     @Test
     fun embedded_nullable_inside_a_rule() {
         // Inner: skip WS = '_' ; Bs = B* ; B = 'b'

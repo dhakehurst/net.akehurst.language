@@ -22,6 +22,7 @@
  * It accepts the same language as the 'standard' grammar, but:
  *  - it is modular: one grammar per group of specification clauses, using grammar inheritance.
  *    Choices that need rules of later grammars are extended in the last grammar (SysMLv2_0).
+ *  - it has sub-language (view) grammars, e.g. SysMLStateMachine, that accept only a part of SysML (see before SysMLv2_0).
  *  - expressions are written for AGL, with a preference rule for the operator precedence (KerML Table 6),
  *    so a parse gives one tree with the correct grouping.
  *  - rules that only wrap one other rule (e.g. 'OwnedXMember = X') and empty rules are removed,
@@ -943,6 +944,144 @@ grammar Metadata : DefinitionAndUsage {
     MetadataBodyUsage = 'ref'? ( ':>>' | 'redefines' )? OwnedRedefinition FeatureSpecializationPart? FeatureValue? MetadataBody ;
     ExtendedDefinition = BasicDefinitionPrefix? PrefixMetadataMember+ 'def' Definition ;
     ExtendedUsage = UnextendedUsagePrefix PrefixMetadataMember+ Usage ;
+}
+
+// Sub-language (view) grammars.
+// Each one is a part of SysML (like the classic diagram kinds), selected with the configuration 'targetGrammarName(...)':
+// a sentence must use only that part, and errors and completion are for that part only.
+// They are placed before SysMLv2_0, so that SysMLv2_0, the last grammar, stays the default target grammar.
+// A keyword of a part that a view does not include is not a keyword in that view (it is read as a name).
+
+// State machine view: packages, attributes, occurrences/items/parts/ports, actions, calculations/constraints, states and successions.
+grammar SysMLStateMachine : Attributes, Connections, Calculations, States {
+
+    #defaultGoalRule: RootNamespace
+    #scanner: Classic
+
+    PackageMember = MemberPrefix ( DefinitionElement | UsageElement ) ;
+    UsageElement
+        = NonOccurrenceUsageElement
+        | OccurrenceUsageElement
+    ;
+    OccurrenceUsageMember = MemberPrefix OccurrenceUsageElement ;
+    StructureUsageMember = MemberPrefix StructureUsageElement ;
+    BehaviorUsageMember = MemberPrefix BehaviorUsageElement ;
+    OccurrenceUsageElement
+        = StructureUsageElement
+        | BehaviorUsageElement
+    ;
+    StructureUsageElement
+        = OccurrenceUsage
+        | IndividualUsage
+        | PortionUsage
+        | EventOccurrenceUsage
+        | ItemUsage
+        | PartUsage
+        | PortUsage
+    ;
+    BehaviorUsageElement
+        = ActionUsage
+        | CalculationUsage
+        | StateUsage
+        | ConstraintUsage
+        | PerformActionUsage
+        | ExhibitStateUsage
+        | AssertConstraintUsage
+    ;
+    ActionBehaviorMember
+        = BehaviorUsageMember
+        | ActionNodeMember
+    ;
+    CalculationDefinition = OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration CalculationBody ;
+    CalculationUsage = OccurrenceUsagePrefix 'calc' ActionUsageDeclaration CalculationBody ;
+    CalculationBody
+        = ';'
+        | '{' CalculationBodyPart '}'
+    ;
+    CalculationBodyPart = CalculationBodyItem* ResultExpressionMember? ;
+    CalculationBodyItem
+        = ActionBodyItem
+        | ReturnParameterMember
+    ;
+    ReturnParameterMember = MemberPrefix? 'return' UsageElement ;
+    ConstraintDefinition = OccurrenceDefinitionPrefix 'constraint' 'def' DefinitionDeclaration CalculationBody ;
+    ConstraintUsage = OccurrenceUsagePrefix 'constraint' ConstraintUsageDeclaration CalculationBody ;
+    AssertConstraintUsage = OccurrenceUsagePrefix 'assert' 'not'? AssertConstraintKind CalculationBody ;
+
+    override PackageBodyElement
+        = PackageMember
+        | ElementFilterMember
+        | AliasMember
+        | Import
+    ;
+    override DefinitionElement
+        = Package
+        | LibraryPackage
+        | AnnotatingElement
+        | Dependency
+        | AttributeDefinition
+        | EnumerationDefinition
+        | OccurrenceDefinition
+        | IndividualDefinition
+        | ItemDefinition
+        | PartDefinition
+        | PortDefinition
+        | ActionDefinition
+        | CalculationDefinition
+        | StateDefinition
+        | ConstraintDefinition
+    ;
+    override DefinitionBodyItem
+        = DefinitionMember
+        | VariantUsageMember
+        | NonOccurrenceUsageMember
+        | SourceSuccessionMember? OccurrenceUsageMember
+        | AliasMember
+        | Import
+    ;
+    override NonOccurrenceUsageElement
+        = DefaultReferenceUsage
+        | ReferenceUsage
+        | AttributeUsage
+        | EnumerationUsage
+        | SuccessionAsUsage
+    ;
+    override VariantUsageElement
+        = VariantReference
+        | ReferenceUsage
+        | AttributeUsage
+        | OccurrenceUsage
+        | IndividualUsage
+        | PortionUsage
+        | EventOccurrenceUsage
+        | ItemUsage
+        | PartUsage
+        | PortUsage
+        | BehaviorUsageElement
+    ;
+    override ActionBodyItem
+        = NonBehaviorBodyItem
+        | InitialNodeMember ActionTargetSuccessionMember*
+        | SourceSuccessionMember? ActionBehaviorMember ActionTargetSuccessionMember*
+        | GuardedSuccessionMember
+    ;
+    override NonBehaviorBodyItem
+        = Import
+        | AliasMember
+        | DefinitionMember
+        | VariantUsageMember
+        | NonOccurrenceUsageMember
+        | SourceSuccessionMember? StructureUsageMember
+    ;
+    override StateBodyItem
+        = NonBehaviorBodyItem
+        | SourceSuccessionMember? BehaviorUsageMember TargetTransitionUsageMember*
+        | TransitionUsageMember
+        | EntryActionMember EntryTransitionMember*
+        | DoActionMember
+        | ExitActionMember
+    ;
+    override ExpressionBody = '{' CalculationBodyPart '}' ;
 }
 
 grammar SysMLv2_0 : Attributes, Connections, States, Cases, Views, Metadata {
