@@ -150,11 +150,34 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
             null -> Unit
             is TypedObject -> untyped(possiblyTypedObject as TypedObject)
             is ListSeparated<*,*,*> -> possiblyTypedObject.map { untypedAny(it) }.toSeparatedList()
+            is LazyTypedList -> untypedLazyList(possiblyTypedObject)
             is List<*> -> possiblyTypedObject.map { untypedAny(it) }
             is OrderedSet<*> -> possiblyTypedObject.map { untypedAny(it) }.toOrderedSet()
             is Set<*> -> possiblyTypedObject.map { untypedAny(it) }.toSet()
             is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
             else -> possiblyTypedObject
+        }
+    }
+
+    /**
+     * untyped of a lazily typed List, without typing the elements not yet read.
+     * The result is the same as untyping each typed element (untypedAny(toTypedObject(el))):
+     * primitives are normalised as toTypedObject does (Byte/Short/Int to Long, Float to Double, Char to String),
+     * values that toTypedObject converts in other ways (collections, maps, pairs, ...) are typed first, as before.
+     * Note: an element whose type is not found is no longer reported (warning from typeFor) unless it is read.
+     */
+    private fun untypedLazyList(list: LazyTypedList): List<Any?> = list.mapTypedOrRaw({ untyped(it) }) { index, raw ->
+        when (raw) {
+            null, Unit -> Unit
+            is TypedObject -> untyped(raw)
+            is Boolean, is Long, is Double, is String -> raw
+            is Byte -> raw.toLong()
+            is Short -> raw.toLong()
+            is Int -> raw.toLong()
+            is Float -> raw.toDouble()
+            is Char -> raw.toString()
+            is Iterable<*>, is Map<*, *>, is Pair<*, *>, is Array<*>, is Iterator<*>, is Function<*> -> untyped(list[index])
+            else -> raw // toTypedObject gives typedAs(raw, ..) and untypedAny(raw) is raw
         }
     }
 
@@ -195,9 +218,9 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
 
             is OrderedSet<*> -> toTypedCollection(obj.toList(), StdLibDefault.OrderedSet, ifNotFound) { it.toOrderedSet() }
             is ListSeparated<*, *, *> -> toTypedCollection(obj.toSeparatedList(), StdLibDefault.ListSeparated, ifNotFound) { it.toList() }
-            is Array<*> -> toTypedCollection(obj.toList(), StdLibDefault.List, ifNotFound) { it.toList() }
+            is Array<*> -> toTypedList(obj.toList(), ifNotFound)
             //TODO: special array types IntArray, LongArray, etc
-            is List<*> -> toTypedCollection(obj, StdLibDefault.List, ifNotFound) { it.toList() }
+            is List<*> -> toTypedList(obj, ifNotFound)
             is Set<*> -> toTypedCollection(obj, StdLibDefault.Set, ifNotFound) { it.toSet() }
 
             is Map<*, *> -> {
@@ -221,7 +244,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
                 }
             }
 
-            is Iterator<*> -> toTypedCollection(obj.asSequence().toList(), StdLibDefault.List, ifNotFound) { it.toList() }
+            is Iterator<*> -> toTypedList(obj.asSequence().toList(), ifNotFound)
             is Function<*> -> typedAs(obj, StdLibDefault.Lambda)
             else -> typedAs(obj, typeFor(obj, ifNotFound))
         }
@@ -265,9 +288,9 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return typedAs(obj, type)
     }
 
-    //TODO: the elements of the created List/Set (and Map keys/values) are the TypedObjects themselves, not plain values,
-    // so callers (e.g. constructor executions) get e.g. List<TypedObject> and must unwrap them.
-    // Unwrapping here changes how elements are read back everywhere (getFromListWithIndex etc.), so postponed.
+    // The elements of the created List/Set (and Map keys/values) are the TypedObjects themselves, not plain values,
+    // which keeps the type of elements from another domain (see forEachIndexed).
+    // Values passed to external code (constructor, method and function executions, setProperty) are unwrapped with 'untyped' (E8, David 2026-11-24).
     override fun createCollection(collectionType: TypeInstance, collection: Iterable<TypedObject>): TypedObject {
         return when (collectionType.qualifiedTypeName) {
             StdLibDefault.List.qualifiedName -> {
@@ -434,8 +457,29 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         return ObjectGraphAny(nodes, edges)
     }
 
-    //TODO: future enhancement (agreed 2026-11-13): type the elements lazily, when they are read (forEachIndexed, getFromListWithIndex),
-    // rather than all of them here; long lists pay typeFor for every element even if few are used.
+    /**
+     * A List is typed lazily: each element is typed (toTypedObject) when it is first read, not all of them here (agreed 2026-11-13).
+     * The element type used if an element's type is not found, and the List type, are as for toTypedCollection/createCollection.
+     * A LazyTypedList (read-only) is not wrapped again.
+     * Sets, OrderedSets, ListSeparated and Maps are still typed eagerly.
+     */
+    private fun toTypedList(obj: List<*>, ifNotFound: TypeInstance): TypedObject {
+        val ifElementTypeNotFound = when {
+            StdLibDefault.List == ifNotFound.resolvedDefinition && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type
+            else -> StdLibDefault.AnyType
+        }
+        val type = when {
+            StdLibDefault.List == ifNotFound.resolvedDefinition -> StdLibDefault.List.type(listOf(ifNotFound.typeArguments.firstOrNull() ?: StdLibDefault.AnyType.asTypeArgument))
+            else -> StdLibDefault.List.type(listOf(ifElementTypeNotFound.asTypeArgument))
+        }
+        val elements = when (obj) {
+            is LazyTypedList -> obj
+            // a copy, as before, so a later change to the original list (e.g. a mutable property value) does not change this value
+            else -> LazyTypedList(obj.toList()) { toTypedObject(it, ifElementTypeNotFound) }
+        }
+        return typedAs(elements, type)
+    }
+
     private fun toTypedCollection(obj: Iterable<*>, baseCollType: TypeDefinition, ifNotFound: TypeInstance, func: (Iterable<TypedObject>) -> Iterable<TypedObject>): TypedObject {
         val ifElementTypeNotFound = when {
             baseCollType == ifNotFound.resolvedDefinition && 0 < ifNotFound.typeArguments.size -> ifNotFound.typeArguments[0].type

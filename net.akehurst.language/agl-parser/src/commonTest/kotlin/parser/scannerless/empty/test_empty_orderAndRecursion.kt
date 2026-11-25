@@ -144,4 +144,24 @@ class test_empty_orderAndRecursion {
 
     @Test
     fun leftRecursiveEmpties_bba() = assertParsesInAllModes(::leftRecursiveEmpties, "bba", listOf("a", "ba"))
+
+    // S = 'a' N3 S | N2 N1 N2 ; N1 = <EMPTY> ; N2 = N3 N3 'b' ; N3 = <EMPTY> | 'b'
+    // A node that was made a head again (it gained a new previous after it was grown) was removed from the GSS,
+    // together with its tree data, when the last stack above it was dropped before it was grown again,
+    // so it was never grown over its new previous. 'abb' was rejected after parsing 'bb' and with a pre-built automaton.
+    private fun regrowDropped() = runtimeRuleSet {
+        choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation { literal("a"); ref("N3"); ref("S") }
+            concatenation { ref("N2"); ref("N1"); ref("N2") }
+        }
+        choice("N1", RuntimeRuleChoiceKind.AMBIGUOUS) { concatenation { empty() } }
+        choice("N2", RuntimeRuleChoiceKind.AMBIGUOUS) { concatenation { ref("N3"); ref("N3"); literal("b") } }
+        choice("N3", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation { empty() }
+            concatenation { literal("b") }
+        }
+    }
+
+    @Test
+    fun regrowDropped_abb() = assertParsesInAllModes(::regrowDropped, "abb", listOf("bb", "bbb", "b", "ab"))
 }

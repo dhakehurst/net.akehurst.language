@@ -162,7 +162,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
             }
 
             override fun treeError(msg: String, path: PathFunction) {
-                issues.error(null, "Error 'msg' at '${path.invoke().joinToString(separator = "/")}'")
+                issues.error(null, "Error '$msg' at '${path.invoke().joinToString(separator = "/")}'")
             }
 
         }

@@ -57,7 +57,7 @@ class test_SysML_agl_Singles {
                 }
             })
             // only errors: the processor has no references (with references SysML needs the KerML base, see test_SysML_v2_1_2026_09_agl_references),
-            // so there is a warning 'Empty CrossReferenceDomain'
+            // so there is an information issue that the CrossReferenceDomain is empty
             assertEquals(expIssues, result.allIssues.errors.toSet(), result.allIssues.toString())
         }
     }

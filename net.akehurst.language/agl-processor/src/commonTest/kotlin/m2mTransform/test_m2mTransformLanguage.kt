@@ -221,6 +221,7 @@ class test_m2mTransformLanguage {
                 val tm2 = typesDomain("D2", true) {
                     namespace("n2") {
                         data("Y") { }
+                        data("A") { } // the type created by 'A()'
                     }
                 }
                 typeDomains[dr1] = tm1

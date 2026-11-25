@@ -188,7 +188,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val parameters = children[5] as? List<VariableDefinition> ?: emptyList()
         val extends = children[6] as? List<M2mTransformRuleReference> ?: emptyList()
         val sigDomains = children[8] as List<DomainSignature>
-        return M2MTransformAbstractRuleDefault(isTop, name).also { rel ->
+        return M2MTransformAbstractRuleDefault(isTop, name).also { setLocationFor(it, nodeInfo, sentence) }.also { rel ->
             rel.isOverride = children[0] == "override"
             (rel.parameters as MutableList).addAll(parameters)
             (rel.extends as MutableList).addAll(extends)
@@ -208,7 +208,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val relDomains = children[8] as List<Pair<DomainSignature, ObjectTemplate>>
         val whenExpression = children[9] as Expression?
         val whereExpression = children[10] as List<RuleWhere>?
-        return M2MTransformRelationDefault(isTop, name).also { rel ->
+        return M2MTransformRelationDefault(isTop, name).also { setLocationFor(it, nodeInfo, sentence) }.also { rel ->
             rel.isOverride = children[0] == "override"
             (rel.parameters as MutableList).addAll(parameters)
             (rel.extends as MutableList).addAll(extends)
@@ -232,7 +232,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val outputDomain = children[8] as Pair<DomainSignature, Expression?>
         val whenExpression = children[9] as Expression?
         val whereExpression = children[10] as List<RuleWhere>?
-        return M2MTransformMappingDefault(isTop, name).also { mp ->
+        return M2MTransformMappingDefault(isTop, name).also { setLocationFor(it, nodeInfo, sentence) }.also { mp ->
             mp.isOverride = children[0] == "override"
             (mp.parameters as MutableList).addAll(parameters)
             (mp.extends as MutableList).addAll(extends)
@@ -261,7 +261,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         if (null != whenExpression || null != whereExpression) {
             issues.error(locationForNode(sentence, nodeInfo.node), "'when' and 'where' are not supported in table rule '${name.value}'.")
         }
-        return M2MTransformTableDefault(isTop, name).also { rel ->
+        return M2MTransformTableDefault(isTop, name).also { setLocationFor(it, nodeInfo, sentence) }.also { rel ->
             rel.isOverride = children[0] == "override"
             (rel.parameters as MutableList).addAll(parameters)
             (rel.extends as MutableList).addAll(extends)

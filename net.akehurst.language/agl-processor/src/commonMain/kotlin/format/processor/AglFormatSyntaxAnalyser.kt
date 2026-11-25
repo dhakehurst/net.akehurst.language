@@ -140,7 +140,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
     fun formatRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglFormatRule {
         val forTypeName = children[0] as TypeReference
         val expression = children[2] as Expression
-        return AglFormatRuleDefault(forTypeName, expression)
+        return AglFormatRuleDefault(forTypeName, expression).also { setLocationFor(it, nodeInfo, sentence) }
     }
 
     // viaFormatSet = 'via' possiblyQualifiedName ;
