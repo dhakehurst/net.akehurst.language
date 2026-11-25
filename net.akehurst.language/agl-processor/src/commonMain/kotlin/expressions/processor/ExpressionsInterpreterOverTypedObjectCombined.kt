@@ -81,25 +81,29 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    open fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject = when (expression) {
-        is RootExpression -> this.evaluateRootExpression(evc, expression)
-        is LiteralExpression -> this.evaluateLiteralExpression(expression)
-        is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
-        is FunctionCall -> this.evaluateFunctionCall(evc, expression)
-        is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
-        is OnExpression -> evaluateExpression(evc, expression.expression).also { self -> propertyAssignmentBlock(evc, self, expression.propertyAssignments) }
-        is NavigationExpression -> this.evaluateNavigation(evc, expression)
-        is LambdaExpression -> this.evaluateLambda(evc, expression)
-        is WithExpression -> this.evaluateWith(evc, expression)
-        is WhenExpression -> this.evaluateWhen(evc, expression)
-        is TernaryConditionExpression -> this.evaluateTernaryCondition(evc, expression)
-        is InfixExpression -> this.evaluateInfix(evc, expression)
-        is CastExpression -> this.evaluateCast(evc, expression)
-        is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
-        is GroupExpression -> this.evaluateGroup(evc, expression)
-        is StatementBlockExpression -> this.evaluateStatementBlockExpression(evc, expression)
-        else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
-    }
+    open fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject =
+        // the types do not change during an evaluation, so type lookups are cached (nested evaluations share the cache)
+        objectGraph.withTypeCache {
+            when (expression) {
+                is RootExpression -> this.evaluateRootExpression(evc, expression)
+                is LiteralExpression -> this.evaluateLiteralExpression(expression)
+                is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
+                is FunctionCall -> this.evaluateFunctionCall(evc, expression)
+                is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
+                is OnExpression -> evaluateExpression(evc, expression.expression).also { self -> propertyAssignmentBlock(evc, self, expression.propertyAssignments) }
+                is NavigationExpression -> this.evaluateNavigation(evc, expression)
+                is LambdaExpression -> this.evaluateLambda(evc, expression)
+                is WithExpression -> this.evaluateWith(evc, expression)
+                is WhenExpression -> this.evaluateWhen(evc, expression)
+                is TernaryConditionExpression -> this.evaluateTernaryCondition(evc, expression)
+                is InfixExpression -> this.evaluateInfix(evc, expression)
+                is CastExpression -> this.evaluateCast(evc, expression)
+                is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
+                is GroupExpression -> this.evaluateGroup(evc, expression)
+                is StatementBlockExpression -> this.evaluateStatementBlockExpression(evc, expression)
+                else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
+            }
+        }
 
     /**
      * Only construct the object, do not execute the property assignment block.
@@ -178,25 +182,29 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    open suspend fun evaluateExpressionSuspend(evc: EvaluationContext, expression: Expression): TypedObject = when (expression) {
-        is RootExpression -> this.evaluateRootExpressionSuspend(evc, expression)
-        is LiteralExpression -> this.evaluateLiteralExpression(expression)
-        is CreateObjectExpression -> this.evaluateCreateObjectSuspend(evc, expression)
-        is FunctionCall -> this.evaluateFunctionCallSuspend(evc, expression)
-        is CreateTupleExpression -> this.evaluateCreateTupleSuspend(evc, expression)
-        is OnExpression -> evaluateExpressionSuspend(evc, expression.expression).also { self -> propertyAssignmentBlockSuspend(evc, self, expression.propertyAssignments) }
-        is NavigationExpression -> this.evaluateNavigationSuspend(evc, expression)
-        is LambdaExpression -> this.evaluateLambdaSuspend(evc, expression)
-        is WithExpression -> this.evaluateWithSuspend(evc, expression)
-        is WhenExpression -> this.evaluateWhenSuspend(evc, expression)
-        is TernaryConditionExpression -> this.evaluateTernaryConditionSuspend(evc, expression)
-        is InfixExpression -> this.evaluateInfixSuspend(evc, expression)
-        is CastExpression -> this.evaluateCastSuspend(evc, expression)
-        is TypeTestExpression -> this.evaluateTypeTestSuspend(evc, expression)
-        is GroupExpression -> this.evaluateGroupSuspend(evc, expression)
-        is StatementBlockExpression -> this.evaluateStatementBlockExpressionSuspend(evc, expression)
-        else -> error("Subtype of Expression not handled in evaluateExpressionSuspend '${expression::class.simpleName}'")
-    }
+    open suspend fun evaluateExpressionSuspend(evc: EvaluationContext, expression: Expression): TypedObject =
+        // the types do not change during an evaluation, so type lookups are cached (nested evaluations share the cache)
+        objectGraph.withTypeCache {
+            when (expression) {
+                is RootExpression -> this.evaluateRootExpressionSuspend(evc, expression)
+                is LiteralExpression -> this.evaluateLiteralExpression(expression)
+                is CreateObjectExpression -> this.evaluateCreateObjectSuspend(evc, expression)
+                is FunctionCall -> this.evaluateFunctionCallSuspend(evc, expression)
+                is CreateTupleExpression -> this.evaluateCreateTupleSuspend(evc, expression)
+                is OnExpression -> evaluateExpressionSuspend(evc, expression.expression).also { self -> propertyAssignmentBlockSuspend(evc, self, expression.propertyAssignments) }
+                is NavigationExpression -> this.evaluateNavigationSuspend(evc, expression)
+                is LambdaExpression -> this.evaluateLambdaSuspend(evc, expression)
+                is WithExpression -> this.evaluateWithSuspend(evc, expression)
+                is WhenExpression -> this.evaluateWhenSuspend(evc, expression)
+                is TernaryConditionExpression -> this.evaluateTernaryConditionSuspend(evc, expression)
+                is InfixExpression -> this.evaluateInfixSuspend(evc, expression)
+                is CastExpression -> this.evaluateCastSuspend(evc, expression)
+                is TypeTestExpression -> this.evaluateTypeTestSuspend(evc, expression)
+                is GroupExpression -> this.evaluateGroupSuspend(evc, expression)
+                is StatementBlockExpression -> this.evaluateStatementBlockExpressionSuspend(evc, expression)
+                else -> error("Subtype of Expression not handled in evaluateExpressionSuspend '${expression::class.simpleName}'")
+            }
+        }
 
     /**
      * Only construct the object, do not execute the property assignment block.
