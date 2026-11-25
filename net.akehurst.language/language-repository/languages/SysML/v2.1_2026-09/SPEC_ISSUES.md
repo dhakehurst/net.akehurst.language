@@ -33,7 +33,7 @@ and the same in `CruiseControl2`. With the Pilot behaviour `vehicle_b` resolves 
 (found first). With the specification rule, the name conflicts, so it is hidden and does not resolve through that import.
 The example model seems to rely on the Pilot behaviour.
 
-**AGL.** Not decided yet (open question q47a).
+**AGL.** Follows the specification (decided 2026-11-25): a conflicting name is not resolved through the import and is reported as ambiguous. Examples that rely on the Pilot behaviour are listed as known failing in the reference tests.
 
 ## 2. `new` is used as a keyword in KerML but is not reserved
 

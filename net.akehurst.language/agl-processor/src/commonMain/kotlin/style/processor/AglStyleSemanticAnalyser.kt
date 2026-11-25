@@ -79,6 +79,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
                     }
                 }
             }
+            checkStyleSetNames(asm, sentenceContext)
          }
 
         return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
@@ -89,8 +90,29 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         _issues.error(location, message, data)
     }
 
-    // TODO(issue #20): a style set whose name is not the name of a grammar of the language (e.g. 'styles Reff' for grammar 'Refs') gives no issue,
-    //  its rules are just never used. Report it, once it is decided whether a style set must be named after a grammar.
+    /**
+     * A style set is used for the grammar with the same qualified name ('namespace example styles Shapes' for 'namespace example grammar Shapes').
+     * A style set named after no grammar of the language gives a warning, unless another style set extends it (a base set). (issue #20, David ER5)
+     * The grammars are the sentences of the context whose scope holds grammar rules (see contextFromGrammar); with no grammar in the context nothing is checked.
+     */
+    private fun checkStyleSetNames(asm: AglStyleDomain, sentenceContext: SentenceContext) {
+        val grammarNames = sentenceContext.scopeForSentence
+            .filter { (_, scope) -> scope.items.values.any { it.containsKey(grammarRuleQualifiedName) } }
+            .keys.map { it.toString() }.toSet()
+        if (grammarNames.isEmpty()) return
+        val extended = asm.namespace.flatMap { ns -> ns.definition.flatMap { ss -> ss.extends.map { it.nameOrQName.asQualifiedName(it.localNamespace.qualifiedName) } } }.toSet()
+        asm.namespace.forEach { ns ->
+            ns.definition.forEach { ss ->
+                if (!grammarNames.contains(ss.qualifiedName.value) && !extended.contains(ss.qualifiedName)) {
+                    _issues.warn(
+                        this._locationMap?.get(ss),
+                        "Style set '${ss.qualifiedName.value}' is not named after a grammar of the language, so its rules are not used. Expected one of ${grammarNames.sorted().joinToString { "'$it'" }}"
+                    )
+                }
+            }
+        }
+    }
+
     private fun resolveStyleSetRefs(sentenceContext: SentenceContext?, styleSet: StyleSet) {
         styleSet.extends.forEach { ref ->
             checkStyleSetExistsAndResolve(sentenceContext,ref)

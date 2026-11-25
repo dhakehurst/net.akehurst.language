@@ -221,4 +221,50 @@ class test_SemanticAnalyser {
         assertTrue(actual.allIssues.errors.isEmpty(), actual.allIssues.toString())
         assertEquals(listOf($$"Meta rule pattern \"'[0-9]+'\" matches no terminal"), actual.allIssues.warnings.map { it.message })
     }
+
+    // issue #20, ER5: a style set named after no grammar gives a warning, unless another style set extends it
+    @Test
+    fun styleSet_not_named_after_a_grammar__warning() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            namespace test
+            styles Tset {
+              S {}
+            }
+        """.trimIndent()
+        val expected = listOf(
+            LanguageIssue(
+                LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(15, 1, 2, 22, null),
+                "Style set 'test.Tset' is not named after a grammar of the language, so its rules are not used. Expected one of 'test.Test'"
+            )
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun styleSet_not_named_after_a_grammar_but_extended__no_warning() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            namespace test
+            styles Base {
+              S {}
+            }
+            styles Test : Base {
+            }
+        """.trimIndent()
+        // only the grammar is in this context, so 'Base' is not resolved (an error); no style set name warning is given
+        val context = contextFromGrammar(grammarFor(grammarStr))
+        val actual = aglProc.process(sentence, Agl.options { semanticAnalysis { sentenceContext(context) } })
+        assertTrue(actual.allIssues.none { it.message.startsWith("Style set ") }, actual.allIssues.toString())
+    }
 }

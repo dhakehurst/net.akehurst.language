@@ -59,6 +59,8 @@ So `$keyword { font-weight: bold; }` then `'circle' { foreground: red; }` makes 
 
 The declarations are CSS-like `name: value;` pairs; the editor decides which names it supports.
 `styles B : A { }` extends style set `A`.
+A style set is used for the grammar with the same qualified name (`namespace example styles Shapes` for `namespace example grammar Shapes`).
+A style set named after no grammar of the language gives a warning, unless another style set extends it.
 
 ## Semantic selectors
 

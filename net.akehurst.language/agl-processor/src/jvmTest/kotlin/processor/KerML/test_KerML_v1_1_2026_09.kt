@@ -237,7 +237,6 @@ class test_KerML_v1_1_2026_09_std_metamodel_references {
             "examples/Association Examples/ProductSelection_N_ary.kerml",
             "examples/Behavior Examples/TakePicture.kerml",
             "examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml",
-            "examples/Named Collection Members Example/VehicleTanks.kerml",
             "examples/Simple Tests/ArgumentResolution.kerml",
             "examples/Simple Tests/Behaviors.kerml",
             "examples/Simple Tests/Expressions.kerml",
