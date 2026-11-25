@@ -34,6 +34,7 @@ import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companio
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
+import net.akehurst.language.objectgraph.api.withTypeCache
 import net.akehurst.language.types.api.DataType
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.api.TypeInstance
@@ -504,10 +505,13 @@ class M2mTransformInterpreter(
         val accessorIssuesBefore = domainAccessorMutatorByDomainName.mapValues { (_, am) -> am.issues.all.toSet() }
         val m2mExecution = M2mTransformExecution(targetTransform, targetDomainRef, domainAccessorMutator, issues)
         m2mExecution.evaluationStep("Executing transform rule set '${targetTransform.qualifiedName}' with target domain '${targetDomainRef.value}'.")
-        when {
-            targetTransform.topRule.isEmpty() -> m2mExecution.errorIssue("No conforming top rule found for target domain '${targetDomainRef.value}'")
-            else -> targetTransform.topRule.forEach { topRule ->
-                executeRule(m2mExecution, topRule, domainGraphs, ruleArguments)
+        // the types do not change during a transform, so type lookups are cached
+        domainAccessorMutatorByDomainName.values.withTypeCache {
+            when {
+                targetTransform.topRule.isEmpty() -> m2mExecution.errorIssue("No conforming top rule found for target domain '${targetDomainRef.value}'")
+                else -> targetTransform.topRule.forEach { topRule ->
+                    executeRule(m2mExecution, topRule, domainGraphs, ruleArguments)
+                }
             }
         }
         val allIssues = IssueHolder(LanguageProcessorPhase.INTERPRET)

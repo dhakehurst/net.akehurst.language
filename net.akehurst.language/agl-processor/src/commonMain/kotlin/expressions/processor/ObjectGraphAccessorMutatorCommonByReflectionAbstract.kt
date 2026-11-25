@@ -122,10 +122,41 @@ data class ObjectGraphEdgeAny(
 ) : ObjectGraphEdge
 
 abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureType : Any>(
-    override var typesDomain: TypesDomain,
+    typesDomain: TypesDomain,
     override val issues: IssueHolder,
     override val locationMap: LocationMap
 ) : ObjectGraphAccessorMutator {
+
+    override var typesDomain: TypesDomain = typesDomain
+        set(value) {
+            field = value
+            // the types changed, cached lookups are no longer valid
+            if (null != _typeCache) _typeCache = TypeCache()
+        }
+
+    // --- type lookups cached for a run, see beginTypeCache ---
+    private var _typeCacheDepth = 0
+    private var _typeCache: TypeCache? = null
+
+    override fun beginTypeCache() {
+        if (0 == _typeCacheDepth) _typeCache = TypeCache()
+        _typeCacheDepth++
+    }
+
+    override fun endTypeCache() {
+        if (0 < _typeCacheDepth) {
+            _typeCacheDepth--
+            if (0 == _typeCacheDepth) _typeCache = null
+        }
+    }
+
+    /** type.allResolvedProperty, cached while in a run (see beginTypeCache) */
+    protected fun allResolvedPropertyOf(type: TypeInstance): Map<PropertyName, PropertyDeclarationResolved> =
+        _typeCache?.allResolvedProperty(type) ?: type.allResolvedProperty
+
+    /** type.allResolvedMethod, cached while in a run (see beginTypeCache) */
+    protected fun allResolvedMethodOf(type: TypeInstance): Map<MethodName, MethodDefinitionResolved> =
+        _typeCache?.allResolvedMethod(type) ?: type.allResolvedMethod
 
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<StructureType>>()
 

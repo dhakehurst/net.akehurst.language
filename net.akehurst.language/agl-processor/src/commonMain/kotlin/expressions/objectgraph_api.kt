@@ -221,6 +221,17 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
     val externalGetter: ExternalGetter
     val functionLib: FunctionLib
 
+    /**
+     * Start of a run (an expression evaluation or an m2m transformation) during which the types do not change,
+     * so lookups on types (e.g. the resolved properties and methods of a type) may be cached until the matching [endTypeCache].
+     * Runs may be nested, the cache is dropped when the outermost run ends. The types may change between runs.
+     * Use [withTypeCache]. By default nothing is cached.
+     */
+    fun beginTypeCache() {}
+
+    /** end of a run started by [beginTypeCache] */
+    fun endTypeCache() {}
+
     fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject
 
     fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject
@@ -281,3 +292,24 @@ interface ObjectGraphAccessorMutator : ObjectGraphAccessorMutatorCommon {
 
 }
 */
+
+/** runs [block] as one run of [ObjectGraphAccessorMutator.beginTypeCache] .. [ObjectGraphAccessorMutator.endTypeCache] (inline, so [block] may suspend) */
+inline fun <T> ObjectGraphAccessorMutator.withTypeCache(block: () -> T): T {
+    beginTypeCache()
+    try {
+        return block()
+    } finally {
+        endTypeCache()
+    }
+}
+
+/** as [withTypeCache] for several accessor-mutators (e.g. one per domain of an m2m transformation) */
+inline fun <T> Collection<ObjectGraphAccessorMutator>.withTypeCache(block: () -> T): T {
+    val ams = this.toList()
+    ams.forEach { it.beginTypeCache() }
+    try {
+        return block()
+    } finally {
+        ams.forEach { it.endTypeCache() }
+    }
+}

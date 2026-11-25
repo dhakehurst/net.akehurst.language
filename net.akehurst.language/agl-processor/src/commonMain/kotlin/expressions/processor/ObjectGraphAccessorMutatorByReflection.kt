@@ -698,10 +698,10 @@ constructor(
             else -> null
         }
         return when {
-            v is AsmReference -> toTypedObject(v, tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.AnyType)
+            v is AsmReference -> toTypedObject(v, allResolvedPropertyOf(tobj.type)[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.AnyType)
             // a list that holds references: the references themselves
             v is AsmList && v !is AsmListSeparated && v.elements.any { it is AsmReference } -> {
-                val listType = tobj.type.allResolvedProperty[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
+                val listType = allResolvedPropertyOf(tobj.type)[PropertyName(propertyName)]?.typeInstance ?: StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
                 createCollection(listType, v.elements.map { toTypedObject(it, listType.typeArguments.firstOrNull()?.type ?: StdLibDefault.AnyType) })
             }
             else -> getProperty(tobj, propertyName)
@@ -837,7 +837,7 @@ constructor(
 
             else -> {
                 //TODO: bit mixed up with External and Primitive Accessors - don't think we need both.
-                val typeProp = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                val typeProp = allResolvedPropertyOf(tobj.type)[PropertyName(propertyName)]
                 // a property owned by an association is a link end; its value is not held by the object
                 val linkEnd = if (null == typeProp) typesDomain.findAssociationOwnedEndOrNull(tobj.type, PropertyName(propertyName)) else null
                 val propRes = typeProp ?: linkEnd?.property
@@ -931,7 +931,7 @@ constructor(
 
             else -> {
                 //TODO: bit mixed up with External and Primitive Accessors/Mutators - don't think we need both.
-                val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
+                val propRes = allResolvedPropertyOf(tobj.type)[PropertyName(propertyName)]
                 // a property owned by an association is a link end; its value is not held by the object
                 val linkEnd = if (null == propRes) typesDomain.findAssociationOwnedEndOrNull(tobj.type, PropertyName(propertyName)) else null
                 val r = propRes?.isReference ?: false
@@ -994,7 +994,7 @@ constructor(
         typedExecution: (decl: MethodDefinition, tobj: TypedObject, args: List<TypedObject>) -> TypedObject,
         methodExecution: (obj: Any, decl: MethodDefinition, args: List<*>) -> Any?
     ): TypedObject {
-        val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]
+        val methRes = allResolvedMethodOf(tobj.type)[MethodName(methodName)]
         return when {
             // typed values are passed as they are, and the result is not re-typed
             null != methRes && hasTypedExecution(methRes.original) -> typedExecution(methRes.original, tobj, args)

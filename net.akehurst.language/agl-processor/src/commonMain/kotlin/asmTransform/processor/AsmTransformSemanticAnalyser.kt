@@ -25,6 +25,12 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammar.api.GrammarRule
+import net.akehurst.language.base.api.isSimpleName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.agl.simple.Grammar2TypesDomainMapping
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.asmTransform.api.AsmTransformNamespace
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
@@ -73,14 +79,18 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
     private var _locationMap: LocationMap? = null
     // written rules for a grammar rule the grammar does not have (error given), their type is not computed
     private val _rulesForUnknownGrammarRule = mutableSetOf<AsmTransformationRule>()
+    // type-only rules that cannot be converted (error given), they are not typed
+    private val _typeOnlyRulesInError = mutableSetOf<AsmTransformationRule>()
     private var __asm: AsmTransformDomain? = null
     private val _asm: AsmTransformDomain get() = __asm!!
     //TODO: rework to allow use of proper items in context
     private val _typesDomain: TypesDomain get() = _context!!.findItemsNamedConformingTo("types") { _ -> true }.first().item as TypesDomain
     private val _grammarDomain: GrammarDomain get() = _context!!.findItemsNamedConformingTo("grammar") { _ -> true }.first().item as GrammarDomain
 
+    // a type-only rule 'r: T' (with '#override-default-transform') renames the type of 'r' to 'T' (AT-Q2 B),
+    // so the default transform is generated with 'T' as the type name of 'r', making 'T' the type wherever the default uses the type of 'r'
     private val transformFromGrammar = cached {
-        val res = AsmTransformDomainDefault.fromGrammarDomain(_grammarDomain)
+        val res = AsmTransformDomainDefault.fromGrammarDomain(_grammarDomain, configuration = TypeNamesForTypeOnlyRules(typeOnlyRuleNames()))
         _issues.addAllFrom(res.allIssues)
         res.asm!!
     }
@@ -91,6 +101,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         _context = null
         _locationMap = null
         _rulesForUnknownGrammarRule.clear()
+        _typeOnlyRulesInError.clear()
         __asm = null
         transformFromGrammar.reset()
     }
@@ -136,7 +147,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                         }
                     }
                     for (trr in trs.rules.values) {
-                        if (trr in _rulesForUnknownGrammarRule) {
+                        if (trr in _rulesForUnknownGrammarRule || trr in _typeOnlyRulesInError) {
                             trr.resolveTypeAs(StdLibDefault.NothingType)
                             continue
                         }
@@ -150,6 +161,55 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
         }
         return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }
+
+    /**
+     * maps a grammar rule's type name to the name given by a type-only rule 'r: T',
+     * other rules get the default name
+     */
+    private class TypeNamesForTypeOnlyRules(
+        val names: Map<Pair<QualifiedName, GrammarRuleName>, SimpleName>
+    ) : Grammar2TypesDomainMapping by Grammar2TransformRuleSet.defaultConfiguration {
+        override fun typeNameFor(rule: GrammarRule): SimpleName =
+            names[Pair(rule.grammar.qualifiedName, rule.name)] ?: Grammar2TransformRuleSet.defaultConfiguration.typeNameFor(rule)
+    }
+
+    /**
+     * the type-only rules 'r: T' with a simple name 'T' in rule sets with '#override-default-transform'.
+     * A rule is left out (with an error) if 'T' is the default type name of another rule of the grammar,
+     * because the two types would become one.
+     */
+    private fun typeOnlyRuleNames(): Map<Pair<QualifiedName, GrammarRuleName>, SimpleName> {
+        val result = mutableMapOf<Pair<QualifiedName, GrammarRuleName>, SimpleName>()
+        for (trns in _asm.namespace) {
+            for (trs in trns.definition) {
+                if (trs.options.overrideDefault.not()) continue
+                val grammar = _grammarDomain.findDefinitionByQualifiedNameOrNull(trs.qualifiedName) ?: continue
+                for (trr in typeOnlyRules(trs)) {
+                    val name = (trr.expression as RootExpression).name
+                    if (name.isSimpleName.not()) continue // not expected, a qualified name is parsed as a navigation
+                    val tn = SimpleName(name)
+                    val other = grammar.resolvedGrammarRule.firstOrNull {
+                        it.name != trr.grammarRuleName && it.isLeaf.not() && it.isSkip.not() && Grammar2TransformRuleSet.defaultConfiguration.typeNameFor(it) == tn
+                    }
+                    when (other) {
+                        null -> result[Pair(grammar.qualifiedName, trr.grammarRuleName)] = tn
+                        else -> {
+                            _typeOnlyRulesInError.add(trr)
+                            _issues.error(
+                                locationOfRuleName(trr),
+                                "Cannot change the type of rule '${trr.grammarRuleName.value}' to '${tn.value}', it is the type of rule '${other.name.value}'"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    /** the written rules 'r: T' that only give the type */
+    private fun typeOnlyRules(trs: AsmTransformRuleSet) =
+        trs.rules.values.filter { it.expression is RootExpression && (it.expression as RootExpression).isSelf.not() && it !in _rulesForUnknownGrammarRule }
 
     /**
      * every written rule must be for a grammar rule of the grammar the rule set is for (AT-Q1).
@@ -204,43 +264,41 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
     }
 
     /**
-     * converts nonTerm: TypeRef  =>  nonTerm: TypeRef() { ... <prop assignments from default> ...  }
+     * a type-only rule 'r: T' keeps the default rule of 'r' and changes only its type (AT-Q2 B):
+     * - 'T' a simple name: the type of 'r' is renamed to 'T' (done when the default transform is generated, see [transformFromGrammar]),
+     *   so e.g. for a choice 'T' is the supertype of the alternatives, and the rule stays 'child[0]'
+     * ('T' is always a simple name: a qualified name is parsed as a navigation expression, not as a type-only rule)
+     * - an error if the default has no type of its own to rename (e.g. a leaf, or a choice of leaves, is a String)
      */
     private fun convertRulesThatSimplyRedefineDefaultType(trs: AsmTransformRuleSet) {
-        val rulesToConvert = trs.rules.values.filter { it.expression is RootExpression && (it.expression as RootExpression).isSelf.not() && it !in _rulesForUnknownGrammarRule }
+        val rulesToConvert = typeOnlyRules(trs).filter { it !in _typeOnlyRulesInError }
         when {
             trs.options.overrideDefault -> {
                 findOrCreateGrammarTypeNamespace(trs.qualifiedName) //ensure type namespace exists
                 rulesToConvert.forEach { trr ->
                     val expr = trr.expression as RootExpression
                     val pqn = expr.name.asPossiblyQualifiedName
-                    val exprType = _typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn)?.type() ?: StdLibDefault.NothingType
-                    // expression is to simply redefine the type for the grammar rule
-                    // actual trr expression should be same as default
                     val defRs = transformFromGrammar.value.findDefinitionByQualifiedNameOrNull(trs.qualifiedName)
                     val defRule = defRs?.findOwnedTrRuleForGrammarRuleNamedOrNull(trr.grammarRuleName)
                     // no default rule: the grammar has no such rule (error given in checkRulesNameGrammarRules) or there is no default rule set (error given in overrideDefaultRuleSet)
                     if (null == defRule) return@forEach
-                    val clonedTypeDeclOrCreated = findOrCloneFromDefaultTypeForTransformRule(pqn, trs, trr)
+                    val defDecl = defRule.resolvedType.resolvedDefinitionOrNull
                     val defExpr = defRule.expression
-                    val newExpr = when (defExpr) {
-                        is CreateObjectExpression -> {
-                            CreateObjectExpressionDefault(pqn, defExpr.constructorArguments).also { it.propertyAssignments = defExpr.propertyAssignments }
+                    when {
+                        // the default type was generated with the name given by the rule, use the default rule and its type
+                        expr.name.isSimpleName && null != defDecl && defDecl.name == pqn.simpleName && (defDecl is DataType || defDecl is UnionType) -> {
+                            trs.setRule(defRule)
+                            findOrCloneFromDefaultTypeForTransformRule(defRule.resolvedType.qualifiedTypeName, trs, defRule)
                         }
 
-                        else -> error("Unsupported ${defExpr::class.simpleName}")
-                    }
-                    val newRule = asmTransformationRule(clonedTypeDeclOrCreated.type(), newExpr)
-                    newRule.grammarRuleName = trr.grammarRuleName
-                    trs.setRule(newRule)
-                    //also ensure properties are transferred
-                    val defDecl = defRule.resolvedType.resolvedDefinition
-                    when {
-                        clonedTypeDeclOrCreated is StructuredType -> {
-                            val tocopy = defDecl.property.filter {
-                                it is PropertyDeclarationStored && null == exprType.resolvedDefinition.findOwnedPropertyOrNull(it.name)
-                            }
-                            tocopy.forEach { clonedTypeDeclOrCreated.appendPropertyStored(it.name, it.typeInstance, it.characteristics, it.index) }
+                        defExpr is CreateObjectExpression -> retypeCreatedObject(trs, trr, pqn, defRule, defExpr)
+
+                        else -> {
+                            _typeOnlyRulesInError.add(trr)
+                            _issues.error(
+                                locationOfRuleName(trr),
+                                "Cannot change only the type of rule '${trr.grammarRuleName.value}' to '${expr.name}', its default type is '${displayName(defRule.resolvedType)}', which is not a type of its own, use 'child[0] as ${expr.name}' or '${expr.name}() { ... }'"
+                            )
                         }
                     }
                 }
@@ -250,6 +308,26 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                 rulesToConvert.isNotEmpty() -> {
                     _issues.error(null, "Transformation rules in '${trs.qualifiedName}' rewrite their type, but '${OPTION_OVERRIDE_DEFAULT}' is not specified")
                 }
+            }
+        }
+    }
+
+    /** nonTerm: a.b.T  =>  nonTerm: a.b.T() { ... <prop assignments from default> ...  } */
+    private fun retypeCreatedObject(trs: AsmTransformRuleSet, trr: AsmTransformationRule, pqn: PossiblyQualifiedName, defRule: AsmTransformationRule, defExpr: CreateObjectExpression) {
+        val exprType = _typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn)?.type() ?: StdLibDefault.NothingType
+        val clonedTypeDeclOrCreated = findOrCloneFromDefaultTypeForTransformRule(pqn, trs, trr)
+        val newExpr = CreateObjectExpressionDefault(pqn, defExpr.constructorArguments).also { it.propertyAssignments = defExpr.propertyAssignments }
+        val newRule = asmTransformationRule(clonedTypeDeclOrCreated.type(), newExpr)
+        newRule.grammarRuleName = trr.grammarRuleName
+        trs.setRule(newRule)
+        //also ensure properties are transferred
+        val defDecl = defRule.resolvedType.resolvedDefinition
+        when {
+            clonedTypeDeclOrCreated is StructuredType -> {
+                val tocopy = defDecl.property.filter {
+                    it is PropertyDeclarationStored && null == exprType.resolvedDefinition.findOwnedPropertyOrNull(it.name)
+                }
+                tocopy.forEach { clonedTypeDeclOrCreated.appendPropertyStored(it.name, it.typeInstance, it.characteristics, it.index) }
             }
         }
     }
