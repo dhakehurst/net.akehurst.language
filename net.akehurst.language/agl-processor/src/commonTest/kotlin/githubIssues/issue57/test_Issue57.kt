@@ -17,6 +17,8 @@
 package net.akehurst.language.processor.githubIssues.issue57
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.GrammarString
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -62,12 +64,67 @@ class test_Issue57 {
 
         val testData = listOf(
             TestData("", 0, setOf("[ x ]", "[")),
-//            TestData("[", 1, setOf("x")), //TODO: currently needs  space
+            TestData("[", 1, setOf("x")),
             TestData("[ ", 2, setOf("x")),
-//            TestData("[ x", 3, setOf("]")),  //TODO: currently needs  space
+            TestData("[x", 2, setOf("]")),
+            TestData("[ ", 1, setOf("x")),
+            TestData("[]", 1, setOf("x")),
+            TestData("[  ]", 3, setOf("x")),
+            TestData("[x]", 3, setOf()),
+            TestData("[x] ", 4, setOf()),
+            TestData("[ x", 3, setOf("]")),
             TestData("[ x ", 4, setOf("]")),
             TestData("[ x ]", 5, setOf()),
             TestData("[ x ] ", 6, setOf()),
+        )
+
+        val grammarBracketsComplex = """
+            namespace org.example.bracketscomplex.agl
+
+            grammar BracketsComplex {
+                sentence = word | bracketed;
+                bracketed = '[' word* ']';
+                word = NAME;
+
+                leaf NAME = NAME_CHAR+;
+                leaf NAME_CHAR = "[-.0-9]";
+
+                skip WHITESPACE = "\s+";
+            }
+        """.trimIndent()
+
+        val grammarDoubleBrackets = """
+            namespace org.example.doublebrackets.agl
+
+            grammar DoubleBrackets {
+                sentence = word | bracketed | '(' sentence ')';
+                bracketed = '[' word* ']' | '[' '(' word+ ')' ']';
+                word = NAME;
+
+                leaf NAME = NAME_CHAR+;
+                leaf NAME_CHAR = "[0-9]";
+
+                skip WHITESPACE = "\s+";
+            }
+        """.trimIndent()
+
+        fun processor(grammar: String) = Agl.processorFromStringSimple(GrammarString(grammar)).let {
+            check(it.issues.errors.isEmpty()) { it.issues.toString() }
+            it.processor!!
+        }
+
+        /** the text of each item, with the name of the rule that owns the grammar item of a literal, e.g. ']_bracketed' */
+        fun textsWithOwner(items: List<CompletionItem>) = items.map {
+            when (it.kind) {
+                CompletionItemKind.LITERAL -> "${it.text}_${it.detail?.owningRule?.name}"
+                else -> it.text
+            }
+        }.toSet()
+
+        // the sentences (and positions) of the issue
+        val issueSentences = listOf(
+            "" to 0, "[" to 1, "[ " to 2, "[x" to 2, "[x " to 3, "[( " to 3, "[(x " to 4, "[(x) " to 5,
+            "[ " to 1, "[]" to 1, "[  ]" to 3, "[x]" to 3, "[x] " to 4
         )
     }
 
@@ -137,5 +194,68 @@ class test_Issue57 {
         }
 
 
+    }
+
+    @Test
+    fun BracketsComplex_no_exception_for_issue_sentences() {
+        // issue #57: a ClassCastException (SimpleListDefault to TangibleItem) was thrown in SpineDefault.expectedNextLeafNonTerminalOrTerminal
+        val p = processor(grammarBracketsComplex)
+        for ((sentence, position) in issueSentences) {
+            val res = p.expectedItemsAt(sentence, position)
+            assertTrue(res.issues.errors.isEmpty(), "'$sentence'@$position: ${res.issues}")
+        }
+    }
+
+    @Test
+    fun BracketsComplex() {
+        val p = processor(grammarBracketsComplex)
+        val testData = listOf(
+            TestData("", 0, setOf("<bracketed>", "<word>", "[", "<NAME>")),
+            TestData("[", 1, setOf("<word>", "]", "<NAME>")),
+            TestData("[ ", 2, setOf("<word>", "]", "<NAME>")),
+            TestData("[ ", 1, setOf("<word>", "]", "<NAME>")),
+            TestData("[  ]", 3, setOf("<word>", "]", "<NAME>")),
+            TestData("[1 ", 3, setOf("<word>", "]", "<NAME>")),
+            TestData("[1]", 3, setOf()),
+            TestData("[1] ", 4, setOf()),
+        )
+        for (data in testData) {
+            val res = p.expectedItemsAt(data.sentence, data.position)
+            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+            assertEquals(data.expected, res.items.map { it.text }.toSet(), "'${data.sentence}'@${data.position}")
+        }
+    }
+
+    @Test
+    fun DoubleBrackets_no_exception_for_issue_sentences() {
+        val p = processor(grammarDoubleBrackets)
+        for ((sentence, position) in issueSentences) {
+            val res = p.expectedItemsAt(sentence, position)
+            assertTrue(res.issues.errors.isEmpty(), "'$sentence'@$position: ${res.issues}")
+        }
+    }
+
+    @Test
+    fun DoubleBrackets() {
+        // issue #57: the owning rule of a literal is the rule it is expected in ('(' of sentence at the start, '(' of bracketed after '['),
+        // and only the items of the alternative being parsed are expected (after '[' a <word> of '[' word* ']')
+        val p = processor(grammarDoubleBrackets)
+        val testData = listOf(
+            TestData("", 0, setOf("<bracketed>", "( <sentence> )", "<word>", "(_sentence", "[_bracketed", "<NAME>")),
+            TestData("[", 1, setOf("<word>", "(_bracketed", "]_bracketed", "<NAME>")),
+            TestData("[ ", 2, setOf("<word>", "(_bracketed", "]_bracketed", "<NAME>")),
+            TestData("[ ", 1, setOf("<word>", "(_bracketed", "]_bracketed", "<NAME>")),
+            TestData("[1 ", 3, setOf("<word>", "]_bracketed", "<NAME>")),
+            TestData("[( ", 3, setOf("<word>", "<NAME>")),
+            TestData("[(1 ", 4, setOf("<word>", ")_bracketed", "<NAME>")),
+            TestData("[(1) ", 5, setOf("]_bracketed")),
+            TestData("[1]", 3, setOf()),
+            TestData("[1] ", 4, setOf()),
+        )
+        for (data in testData) {
+            val res = p.expectedItemsAt(data.sentence, data.position)
+            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+            assertEquals(data.expected, textsWithOwner(res.items), "'${data.sentence}'@${data.position}")
+        }
     }
 }
