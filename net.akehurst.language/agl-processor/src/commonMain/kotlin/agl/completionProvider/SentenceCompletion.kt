@@ -41,7 +41,7 @@ internal object SentenceCompletion {
     fun completionTextFor(spine: Spine, targetGrammar: Grammar?): String? {
         val parts = mutableListOf<String>()
         for ((idx, node) in spine.elements.withIndex()) {
-            val ruleItem = (node as? SpineNodeAbstract)?.ruleItem ?: continue // the goal (root) needs nothing more
+            val ruleItem = (node as? SpineNodeAbstract)?.selectedItem ?: continue // the goal (root) needs nothing more
             // the innermost node expects its child at the position, an outer node is filling the child at the position
             val from = if (0 == idx) node.nextChildNumber else node.nextChildNumber + 1
             val remainder = remainderOf(ruleItem, node.nextChildNumber, from, 0 == idx, targetGrammar) ?: return null

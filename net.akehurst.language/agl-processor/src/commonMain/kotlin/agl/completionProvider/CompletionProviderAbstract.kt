@@ -19,6 +19,7 @@ package net.akehurst.language.agl.completionProvider
 
 import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsGoal
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
@@ -44,11 +45,30 @@ import kotlin.text.isBlank
 
 internal abstract class SpineNodeAbstract(
     val ruleItem: RuleItem,
-    override val nextChildNumber: Int
+    override val nextChildNumber: Int,
+    /** the option (alternative) of the runtime rule being parsed, used when [ruleItem] is a [Choice] (issue #57) */
+    val option: Int? = null
 ) : SpineNode {
     override val rule: GrammarRule get() = ruleItem.owningRule
+
+    /**
+     * the item whose children are numbered by [nextChildNumber]:
+     * the alternative being parsed when [ruleItem] is a [Choice] (and [option] is known), else [ruleItem]
+     */
+    val selectedItem: RuleItem
+        get() = when {
+            ruleItem is Choice && null != option -> ruleItem.alternative.getOrNull(option) ?: ruleItem
+            else -> ruleItem
+        }
+
     override val nextExpectedItems: Set<RuleItem>
-        get() = ruleItem.itemsForChild(nextChildNumber)
+        get() = when {
+            selectedItem === ruleItem -> ruleItem.itemsForChild(nextChildNumber)
+            // an alternative that is a single item (not a concatenation) is the only child of the choice
+            selectedItem is Concatenation -> selectedItem.itemsForChild(nextChildNumber)
+            0 == nextChildNumber -> setOf(selectedItem)
+            else -> emptySet()
+        }
 
     //override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItems.flatMap { it.firstTangibleRecursive }.toSet()
     override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItems.flatMap { it.firstConcatenationRecursive }.toSet()
@@ -70,8 +90,9 @@ internal class SpineNodeRoot(
 
 internal class SpineNodeDefault(
     _ruleItem: RuleItem,
-    _index: Int
-) : SpineNodeAbstract(_ruleItem, _index) {
+    _index: Int,
+    _option: Int? = null
+) : SpineNodeAbstract(_ruleItem, _index, _option) {
 }
 
 internal class SpineDefault(
@@ -87,6 +108,13 @@ internal class SpineDefault(
             val rr = it as RuntimeRule
             val orig = mapToGrammar(rr.ruleSetNumber, rr.number)
             when (orig) {
+                // a literal used in several rules maps to one runtime terminal, whose grammar item is the first owner;
+                // use the literal of the rule being parsed, if found (issue #57)
+                is Terminal -> when {
+                    orig.isPattern || orig.owningRule.isLeaf -> orig
+                    else -> literalInSpineFor(orig) ?: orig
+                }
+
                 is TangibleItem -> orig as TangibleItem
                 else -> orig?.let {
                     NonTerminalDefault(orig.owningRule.grammar.selfReference, orig.owningRule.name).also { nt ->
@@ -95,6 +123,48 @@ internal class SpineDefault(
                 }
             }
         }.toSet()
+    }
+
+    /**
+     * the literal (same value as [terminal]) that can be first in the items expected by the innermost spine node,
+     * found through rule references (each rule visited once) and items that can be empty. null if none is found.
+     */
+    private fun literalInSpineFor(terminal: Terminal): Terminal? {
+        val visited = mutableSetOf<GrammarRule>()
+        fun canBeEmpty(item: RuleItem): Boolean = when (item) {
+            is OptionalItem -> true
+            is ListOfItems -> 0 == item.min
+            is EmptyRule -> true
+            else -> false
+        }
+
+        fun find(item: RuleItem): Terminal? = when (item) {
+            is Terminal -> item.takeIf { it.isLiteral && it.escapedValue == terminal.escapedValue }
+            is NonTerminal -> {
+                val ref = CompletionProviderAbstract.referencedRuleFor(item, targetGrammar)
+                when {
+                    ref.isLeaf -> null
+                    visited.add(ref) -> find(ref.rhs)
+                    else -> null
+                }
+            }
+
+            is Choice -> item.alternative.firstNotNullOfOrNull { find(it) }
+            is Concatenation -> {
+                var res: Terminal? = null
+                for (it in item.items) {
+                    res = find(it)
+                    if (null != res || canBeEmpty(it).not()) break
+                }
+                res
+            }
+
+            is OptionalItem -> find(item.item)
+            is ListOfItems -> find(item.item)
+            is Group -> find(item.groupedContent)
+            else -> null
+        }
+        return elements.firstOrNull()?.nextExpectedItems?.firstNotNullOfOrNull { find(it) }
     }
 
     override val expectedNextRuleItems: Set<RuleItem> by lazy {
@@ -114,7 +184,9 @@ internal class SpineDefault(
                 else -> {
                     val rr = it.rule as RuntimeRule
                     val ri = mapToGrammar(rr.ruleSetNumber, rr.number) ?: error("No Grammar Rule item for runtime-rule '$rr'")
-                    SpineNodeDefault(ri, it.position)
+                    // the option of a choice selects its alternative, so that only the items of that alternative are expected (issue #57)
+                    val option = if (rr.rhs is RuntimeRuleRhsChoice) rp.option.value else null
+                    SpineNodeDefault(ri, it.position, option)
                 }
             }
         }

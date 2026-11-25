@@ -25,6 +25,7 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalysisStream
 import net.akehurst.language.api.processor.*
@@ -68,6 +69,8 @@ import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.processor.TypesSemanticAnalyser
+import net.akehurst.language.types.processor.TypeReferenceToCheck
 import net.akehurst.language.types.builder.typesDomain
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
@@ -121,9 +124,13 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         this.grammarDomain.allDefinitions.lastOrNull { it.name == configuration.targetGrammarName } ?: this.grammarDomain.primary
     }
 
+    // the types definition as parsed (with its locations), its type references are checked once the transform domain has added the types from the grammar
+    private var _typesDefinition: Pair<List<TypeReferenceToCheck>, LocationMap?>? = null
+
     override val baseTypesDomain: TypesDomain by lazy {
         val res = configuration.typesResolver?.invoke(this)
         res?.let { addDefinitionIssues("types definition", res.allIssues) }
+        res?.asm?.let { _typesDefinition = Pair(TypesSemanticAnalyser.typeReferencesIn(it), res.syntaxAnalysis?.locationMap) }
         res?.asm?.let { td -> GrammarTypesNamespaceSimple.withGrammarNamespaces(td, this.grammarDomain.allDefinitions.map { it.qualifiedName }) }
             ?: typesDomain((this.targetGrammar?.name ?: this.grammarDomain.name).value, true) {}
     }
@@ -133,9 +140,14 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val transformDomain: AsmTransformDomain by lazy {
         val res = configuration.transformResolver?.invoke(this)
         res?.let { addDefinitionIssues("transform definition", res.allIssues) }
-        res?.asm
+        val td = res?.asm
             ?: AsmTransformDomainDefault.fromGrammarDomain(this.grammarDomain, this.baseTypesDomain).asm
             ?: error("should not happen")
+        val complete = td.typesDomain
+        _typesDefinition?.let { (refs, locMap) ->
+            if (null != complete) addDefinitionIssues("types definition", TypesSemanticAnalyser.checkTypeReferencesFound(refs, locMap, complete))
+        }
+        td
     }
 
     override val targetTransformRuleSet: AsmTransformRuleSet by lazy {
@@ -162,7 +174,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
         val res = configuration.syntaxAnalyserResolver?.invoke(this)
-        res?.let { this.allIssues.addAllFrom(res.allIssues) }
+        // errors (e.g. no asm-transform rule set for the target grammar) are part of every process result
+        res?.let { addDefinitionIssues("syntax analyser", res.allIssues) }
         res?.asm
     }
 
@@ -288,6 +301,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val issues = IssueHolder()
         val result = when {
             opts.syntaxAnalysis.enabled && opts.syntaxAnalysis.streaming -> when (sa) {
+                null -> processTree(sentence, opts, issues)
+
                 is SyntaxAnalyserFromAsmTransformAbstract<*, *> -> {
                     @Suppress("UNCHECKED_CAST")
                     processStreaming(sentence, opts, sa as SyntaxAnalyserFromAsmTransformAbstract<AsmType, Any>, issues)
@@ -310,6 +325,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val parseResult = this.parse(sentence, opts.parse)
         val sppt = parseResult.sppt
         return if (null == sppt || opts.syntaxAnalysis.enabled.not()) {
+            ProcessResultDefault(null, parseResult, processIssues = issues)
+        } else if (null == this.syntaxAnalyser) {
+            // no syntax analyser: an error, not an exception; the definition errors (added in process) say why, when there are any
+            if (_definitionErrors.errors.isEmpty()) issues.error(null, "The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SyntaxAnalyser")
             ProcessResultDefault(null, parseResult, processIssues = issues)
         } else {
             // the analysers are shared and keep state (e.g. the location map used by the semantic analysis), so they are used by one process at a time

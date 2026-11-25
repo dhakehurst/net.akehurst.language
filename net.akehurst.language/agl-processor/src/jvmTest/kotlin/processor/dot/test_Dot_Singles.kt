@@ -982,7 +982,7 @@ digraph G {
     fun dot__style() {
 
         val sentence = """
-        namespace DOT
+        namespace net.akehurst.language.example.dot
         styles Dot {
             C_PREPROCESSOR {
               foreground: gray;

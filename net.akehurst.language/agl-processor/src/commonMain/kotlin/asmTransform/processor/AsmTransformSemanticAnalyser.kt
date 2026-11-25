@@ -218,7 +218,12 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
     private fun checkRulesNameGrammarRules(trs: AsmTransformRuleSet) {
         val grammar = _grammarDomain.findDefinitionByQualifiedNameOrNull(trs.qualifiedName)
         when (grammar) {
-            null -> Unit // no grammar for this rule set, nothing to check
+            // the namespace and name of a rule set are those of its grammar (AT-Q3)
+            null -> _issues.error(
+                _locationMap?.get(trs),
+                "No grammar '${trs.qualifiedName.value}' for asm-transform '${trs.name.value}' in namespace '${trs.namespace.qualifiedName.value}', the namespace and name of an asm-transform must be those of its grammar (grammars: ${_grammarDomain.allDefinitions.joinToString { it.qualifiedName.value }})"
+            )
+
             else -> trs.rules.values.forEach { trr ->
                 if (null == grammar.findAllResolvedGrammarRule(trr.grammarRuleName)) {
                     _rulesForUnknownGrammarRule.add(trr)
@@ -534,7 +539,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
             trs.options.overrideDefault -> {
                 val grmRs = transformFromGrammar.value.findNamespaceOrNull(trs.namespace.qualifiedName)?.findDefinitionOrNull(trs.name)
                 when (grmRs) {
-                    null -> _issues.error(null, "No default ruleset with name '${trs.qualifiedName}' found")
+                    null -> when (_grammarDomain.findDefinitionByQualifiedNameOrNull(trs.qualifiedName)) {
+                        null -> Unit // no grammar for the rule set, error given in checkRulesNameGrammarRules
+                        else -> _issues.error(null, "No default ruleset with name '${trs.qualifiedName}' found")
+                    }
                     else -> {
                         for (grmRl in grmRs.rules.values) {
                             when {

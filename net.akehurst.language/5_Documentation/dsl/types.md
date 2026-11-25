@@ -69,4 +69,5 @@ A property is `characteristics name: Type`, where `Type?` is nullable and `List<
 The standard types (`String`, `Integer`, `Real`, `Boolean`, `Any`, `List`, `Set`, `Map`, ...) are in the namespace `std`.
 A type found by its simple name is searched for in the namespace's own types, then its imports, and in the other namespaces of the domain, with `std` always searched last,
 so a type of a language hides a `std` type with the same name (e.g. KerML `Type` and `std.Type`); use the qualified name `std.Type` for the std one.
+A type named in the types definition of a language (a property, constructor parameter, supertype, union alternative or type argument) that is not found this way, once the types from the grammar are added, is an error.
 A name that is not an identifier is written in backticks, for example `` `$value` ``.
