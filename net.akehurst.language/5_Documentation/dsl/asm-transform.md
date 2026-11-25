@@ -53,8 +53,17 @@ The namespace and name are those of the grammar (`example` and `Shapes`). Each r
 | `r: Type() { p := expr ... }` | create a `Type` and set its properties |
 | `r: tuple { p := expr ... }` | create a tuple |
 | `r: expr as Type` | the value of `expr`, with type `Type` |
-| `r: Type` | keep the default properties, change only the type (needs `#override-default-transform`) |
+| `r: Type` | keep the default rule, give the type of `r` the new name `Type` (needs `#override-default-transform`), see below |
 | `r: { Type -> p := expr ... }` | modify the object of the first item (`child[0]`) by setting its properties, the result is that object, `Type` is the type of `r` |
+
+### Change only the type
+
+`r: Type` renames the type of `r` to `Type`, everywhere the default transform uses it, and keeps the default rule.
+For `circle: Disc` a circle gives a `Disc` with the default properties.
+For a choice of rules, e.g. `item: Thing` for `item = circle | square ;`, `Thing` is the supertype (or the union) of `Circle` and `Square`.
+`Type` must be a simple name, and not the type of another rule.
+It is an error for a rule whose default type is not its own, e.g. a leaf or a choice of literals gives a `String`:
+use `child[0] as Type` or `Type() { ... }` instead.
 
 ### Modify the object of the first item
 

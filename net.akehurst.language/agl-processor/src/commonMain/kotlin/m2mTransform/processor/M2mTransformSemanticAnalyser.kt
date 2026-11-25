@@ -145,8 +145,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
     }
 
     /**
-     * a property named in an object template should be a property of the template's type.
-     * A warning, not an error: the object graph may still give the property at runtime (e.g. AsmSimple objects).
+     * a property named in an object template must be a property of the template's type (David, issue #20 ER3).
      * Only checked for a data type without subtypes, as the property may be on a subtype otherwise.
      */
     private fun checkTemplateProperties(def: M2mTransformRuleSet, ruleName: SimpleName, rhs: PropertyTemplateRhs) {
@@ -157,7 +156,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                     val props = td.type().allResolvedProperty
                     rhs.propertyTemplate.forEach { (pn, pt) ->
                         if (null == props[PropertyName(pn.value)]) {
-                            _issues.warn(
+                            _issues.error(
                                 ruleLocation(def, ruleName),
                                 "In rule '${ruleName.value}' of transform '${def.name.value}', type '${td.name.value}' has no property '${pn.value}' (used in the template '${pn.value} == ...'), expected one of ${props.keys.joinToString { "'${it.value}'" }}"
                             )
@@ -174,7 +173,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
 
     /**
      * for 'domain d x:T := T() { p := ... }' the created type must be found (in the domains of the transform)
-     * and, for a data type without subtypes, each assigned property should be a property of it (a warning, as for templates)
+     * and, for a data type without subtypes, each assigned property must be a property of it
      */
     private fun checkCreateObject(def: M2mTransformRuleSet, ruleName: SimpleName, dr: DomainReference, rule: M2mTransformPatternRule, expr: Expression) {
         if (expr !is CreateObjectExpression) return
@@ -191,7 +190,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                 val props = td.type().allResolvedProperty
                 expr.propertyAssignments.forEach { pa ->
                     if (null == props[PropertyName(pa.variable.name)]) {
-                        _issues.warn(
+                        _issues.error(
                             ruleLocation(def, ruleName),
                             "In rule '${ruleName.value}' of transform '${def.name.value}', type '${td.name.value}' has no property '${pa.variable.name}' (assigned in '${td.name.value}() { ${pa.variable.name} := ... }'), expected one of ${props.keys.joinToString { "'${it.value}'" }}"
                         )

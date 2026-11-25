@@ -425,7 +425,7 @@ internal class Grammar2TransformRuleSet(
                         }
 
                         else -> {
-                            val name = SimpleName(choiceRule.name.value.capitalise) //typeNameFor(choice)
+                            val name = this.configuration?.typeNameFor(choiceRule) ?: SimpleName(choiceRule.name.value.capitalise)
                             val unionType = grammarTypeNamespace.findOwnedOrCreateUnionTypeNamed(name) { ut ->
                                 subtypeTypes.forEach { ut.addAlternative(it) }
                             }
@@ -434,7 +434,7 @@ internal class Grammar2TransformRuleSet(
                     }
 
                     else -> {
-                        val name = SimpleName(choiceRule.name.value.capitalise) //typeNameFor(choice)
+                        val name = this.configuration?.typeNameFor(choiceRule) ?: SimpleName(choiceRule.name.value.capitalise)
                         val unionType = grammarTypeNamespace.findOwnedOrCreateUnionTypeNamed(name) { ut ->
                             subtypeTypes.forEach { ut.addAlternative(it) }
                         }
@@ -928,7 +928,7 @@ internal class Grammar2TransformRuleSet(
                         }
 
                         else -> {
-                            val name = SimpleName(choiceRule.name.value.capitalise) //typeNameFor(choice)
+                            val name = this.configuration?.typeNameFor(choiceRule) ?: SimpleName(choiceRule.name.value.capitalise)
                             val unionType = grammarTypeNamespace.findOwnedOrCreateUnionTypeNamed(name) { ut ->
                                 subtypeTransforms.map { it.resolvedType }.forEach { ut.addAlternative(it) }
                             }
@@ -949,7 +949,7 @@ internal class Grammar2TransformRuleSet(
                     }
 
                     else -> {
-                        val name = SimpleName(choiceRule.name.value.capitalise) //typeNameFor(choice)
+                        val name = this.configuration?.typeNameFor(choiceRule) ?: SimpleName(choiceRule.name.value.capitalise)
                         val unionType = grammarTypeNamespace.findOwnedOrCreateUnionTypeNamed(name) { ut ->
                             subtypeTransforms.map { it.resolvedType }.forEach { ut.addAlternative(it) }
                         }

@@ -301,7 +301,7 @@ class test_m2mTransformInterpreterCombined {
                             propertyOf(emptySet(), "prop1", "B1")
                         }
                         data("B1") {
-                            propertyOf(emptySet(), "prop1", "C1")
+                            propertyOf(emptySet(), "prop2", "C1")
                         }
                         data("C1") {
                             propertyOf(emptySet(), "prop3", "String")
@@ -604,7 +604,7 @@ class test_m2mTransformInterpreterCombined {
                             propertyOf(emptySet(), "prop1", "B1")
                         }
                         data("B1") {
-                            propertyOf(emptySet(), "prop1", "C1")
+                            propertyOf(emptySet(), "prop2", "C1")
                         }
                         data("C1") {
                             propertyOf(emptySet(), "prop3", "String")
@@ -923,7 +923,7 @@ class test_m2mTransformInterpreterCombined {
                         }
                         association {
                             end("Class", emptySet(), "class")
-                            end("Attribute", emptySet(), "attribtute")
+                            end("Attribute", emptySet(), "attribute")
                         }
                     }
                 }
@@ -996,7 +996,7 @@ class test_m2mTransformInterpreterCombined {
                         }
                         association {
                             end("Class", emptySet(), "class")
-                            end("Attribute", emptySet(), "attribtute")
+                            end("Attribute", emptySet(), "attribute")
                         }
                     }
                 }
@@ -1070,7 +1070,7 @@ class test_m2mTransformInterpreterCombined {
                         }
                         association {
                             end("Class", emptySet(), "class")
-                            end("Attribute", emptySet(), "attribtute")
+                            end("Attribute", emptySet(), "attribute")
                         }
                     }
                 }
@@ -1145,7 +1145,7 @@ class test_m2mTransformInterpreterCombined {
                         }
                         association {
                             end("Class", emptySet(), "class")
-                            end("Attribute", emptySet(), "attribtute")
+                            end("Attribute", emptySet(), "attribute")
                         }
                     }
                 }
@@ -1218,7 +1218,7 @@ class test_m2mTransformInterpreterCombined {
                         }
                         association {
                             end("Class", emptySet(), "class")
-                            end("Attribute", emptySet(), "attribtute")
+                            end("Attribute", emptySet(), "attribute")
                         }
                     }
                 }
@@ -1292,7 +1292,7 @@ class test_m2mTransformInterpreterCombined {
                         }
                         association {
                             end("Class", emptySet(), "class")
-                            end("Attribute", emptySet(), "attribtute")
+                            end("Attribute", emptySet(), "attribute")
                         }
                     }
                 }
