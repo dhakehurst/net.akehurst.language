@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.completion.asm.AglCompletionDomainDefault
 import net.akehurst.language.completion.processor.completionProviderWithDefinitions
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
@@ -158,9 +159,18 @@ internal class LanguageProcessorConfigurationSimple(
         CrossReferenceDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), p.configuration.crossReferenceString ?: CrossReferenceString(""))
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, SentenceContext>? = { p ->
-        ProcessResultDefault(
-            SyntaxAnalyserSimple(p.typesDomain, p.transformDomain, p.targetTransformRuleSet.qualifiedName), //FIXME
-        )
+        val tg = p.targetGrammar
+        val trs = tg?.let { p.transformDomain.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
+        when (trs) {
+            // e.g. the asm-transform has another namespace or name than the grammar (AT-Q3), an error rather than an exception
+            null -> ProcessResultDefault<SyntaxAnalyser<Asm>>(null, processIssues = IssueHolder(LanguageProcessorPhase.ALL).also {
+                it.error(null, "No asm-transform rule set for the target grammar '${tg?.qualifiedName?.value ?: "<none>"}', the namespace and name of an asm-transform must be those of its grammar")
+            })
+
+            else -> ProcessResultDefault(
+                SyntaxAnalyserSimple(p.typesDomain, p.transformDomain, trs.qualifiedName), //FIXME
+            )
+        }
     },
     override var semanticAnalyserResolver: SemanticAnalyserResolver<Asm, SentenceContext>? = { p ->
         ProcessResultDefault(

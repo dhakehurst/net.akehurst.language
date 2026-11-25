@@ -162,7 +162,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
         val res = configuration.syntaxAnalyserResolver?.invoke(this)
-        res?.let { this.allIssues.addAllFrom(res.allIssues) }
+        // errors (e.g. no asm-transform rule set for the target grammar) are part of every process result
+        res?.let { addDefinitionIssues("syntax analyser", res.allIssues) }
         res?.asm
     }
 
@@ -288,6 +289,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val issues = IssueHolder()
         val result = when {
             opts.syntaxAnalysis.enabled && opts.syntaxAnalysis.streaming -> when (sa) {
+                null -> processTree(sentence, opts, issues)
+
                 is SyntaxAnalyserFromAsmTransformAbstract<*, *> -> {
                     @Suppress("UNCHECKED_CAST")
                     processStreaming(sentence, opts, sa as SyntaxAnalyserFromAsmTransformAbstract<AsmType, Any>, issues)
@@ -310,6 +313,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val parseResult = this.parse(sentence, opts.parse)
         val sppt = parseResult.sppt
         return if (null == sppt || opts.syntaxAnalysis.enabled.not()) {
+            ProcessResultDefault(null, parseResult, processIssues = issues)
+        } else if (null == this.syntaxAnalyser) {
+            // no syntax analyser: an error, not an exception; the definition errors (added in process) say why, when there are any
+            if (_definitionErrors.errors.isEmpty()) issues.error(null, "The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SyntaxAnalyser")
             ProcessResultDefault(null, parseResult, processIssues = issues)
         } else {
             // the analysers are shared and keep state (e.g. the location map used by the semantic analysis), so they are used by one process at a time
