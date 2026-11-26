@@ -20,6 +20,8 @@ import net.akehurst.language.completion.api.AglCompletionDomain
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.completionProvider.SentenceCompletion
+import net.akehurst.language.regex.agl.regexMatcher
+import net.akehurst.language.regex.api.RegexMatcher
 import net.akehurst.language.agl.simple.SentenceContextAny
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -524,7 +526,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                         .filter {
                             when (it.kind) {
                                 CompletionItemKind.LITERAL -> prefix != it.text && it.text.startsWith(prefix) //do not include if terminal already complete
-                                CompletionItemKind.PATTERN -> false //TODO: try a match for patterns
+                                // a pattern whose match the typed word could be the start of, i.e. the word can be continued (issue #57, IC1)
+                                CompletionItemKind.PATTERN -> patternOf(it)?.let { pattern -> canContinue(pattern, prefix) } ?: false
                                 CompletionItemKind.SEGMENT -> false
                                 // a name in the context that starts with the typed word (not already complete)
                                 CompletionItemKind.REFERRED -> prefix != it.text && it.text.startsWith(prefix)
@@ -541,6 +544,28 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
             else -> expectedTerminalsAt(sentence, position, options)
         }
+    }
+
+    /** the pattern (regex) of the grammar item of a PATTERN completion item, null if it has none */
+    private fun patternOf(item: CompletionItem): String? = when (val d = item.detail) {
+        is Terminal -> d.takeIf { it.isPattern }?.unescapedValue?.value
+        is NonTerminal -> CompletionProviderAbstract.referencedRuleFor(d, targetGrammar).takeIf { it.isLeaf }?.compressedLeaf?.unescapedValue?.value
+        else -> null
+    }
+
+    // the matcher for each pattern, so that a pattern is parsed once
+    private val _prefixMatchers = mutableMapOf<String, RegexMatcher?>()
+
+    /** true if [word] can be the start of a match of [pattern] (it is a match, or can be continued to one) */
+    private fun canContinue(pattern: String, word: String): Boolean {
+        val matcher = _prefixMatchers.getOrPut(pattern) {
+            try {
+                regexMatcher(pattern)
+            } catch (t: Throwable) {
+                null // a pattern the agl regex parser does not support, no continuation is offered
+            }
+        }
+        return matcher?.isPrefixOfMatch(word) ?: false
     }
 
     /**

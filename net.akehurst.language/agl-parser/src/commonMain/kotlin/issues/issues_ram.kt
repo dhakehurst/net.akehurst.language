@@ -89,6 +89,18 @@ class IssueHolder(
         }
     }
 
+    /**
+     * replaces each issue raised since the holder had [sizeBefore] issues (the issues are kept in the order raised)
+     * by [transform] of it, e.g. to give it a location or more context. Nothing is done if the holder is smaller (e.g. it was cleared).
+     */
+    fun replaceIssuesRaisedSince(sizeBefore: Int, transform: (LanguageIssue) -> LanguageIssue) {
+        if (sizeBefore < 0 || _issues.size <= sizeBefore) return
+        val all = _issues.toList()
+        _issues.clear()
+        _issues.addAll(all.subList(0, sizeBefore))
+        _issues.addAll(all.subList(sizeBefore, all.size).map(transform))
+    }
+
     override val size: Int get() = this._issues.size
     override fun iterator(): Iterator<LanguageIssue> = this._issues.iterator()
     override fun isEmpty(): Boolean = this._issues.isEmpty()

@@ -258,4 +258,45 @@ class test_Issue57 {
             assertEquals(data.expected, textsWithOwner(res.items), "'${data.sentence}'@${data.position}")
         }
     }
+
+    @Test
+    fun BracketsComplex_pattern_continued() {
+        // issue #57 (IC1): a pattern whose match the typed word could be the start of is offered from the start of the word
+        val p = processor(grammarBracketsComplex)
+        val testData = listOf(
+            TestData("1", 1, setOf("<NAME>@0")),
+            TestData("[1", 2, setOf("<NAME>@1", "<word>@2", "]@2", "<NAME>@2")),
+            TestData("[12", 3, setOf("<NAME>@1", "<word>@3", "]@3", "<NAME>@3")),
+            TestData("[1 2", 4, setOf("<NAME>@3", "<word>@4", "]@4", "<NAME>@4")),
+            TestData("[1 ", 3, setOf("<word>@3", "]@3", "<NAME>@3")),
+        )
+        for (data in testData) {
+            val res = p.expectedItemsAt(data.sentence, data.position)
+            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+            assertEquals(data.expected, res.items.map { "${it.text}@${it.offeredPosition}" }.toSet(), "'${data.sentence}'@${data.position}")
+        }
+    }
+
+    @Test
+    fun pattern_partly_typed_continued() {
+        // issue #57 (IC1, IC2): a partly typed word that is not yet a match of the pattern, but can be continued to one
+        val p = processor("""
+            namespace test
+            grammar Test {
+                sentence = '[' NUMBER* ']';
+                leaf NUMBER = "[0-9]+\.[0-9]+";
+                skip WHITESPACE = "\s+";
+            }
+        """.trimIndent())
+        val testData = listOf(
+            TestData("[1", 2, setOf("<NUMBER>@1")),
+            TestData("[1.", 3, setOf("<NUMBER>@1")),
+            TestData("[1.5", 4, setOf("<NUMBER>@1", "<NUMBER>@4", "]@4")),
+        )
+        for (data in testData) {
+            val res = p.expectedItemsAt(data.sentence, data.position)
+            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+            assertEquals(data.expected, res.items.map { "${it.text}@${it.offeredPosition}" }.toSet(), "'${data.sentence}'@${data.position}")
+        }
+    }
 }
