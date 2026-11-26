@@ -199,7 +199,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Index operation on non List value is not possible: 'strValue'"
+                "Index operation on non List value is not possible: 'strValue', in the expression 'prop1[0]'"
             )
         )
         test_fail(tm, self, "ns.Test","prop1[0]", expectedIssues)
@@ -225,7 +225,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Only one index value should be used for Lists"
+                "Only one index value should be used for Lists, in the expression 'prop1[0, 1, 2]'"
             )
         )
         test_fail(tm, self, "ns.Test","prop1[0,1,2]", expectedIssues)
@@ -251,7 +251,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Index value must evaluate to an Integer for Lists"
+                "Index value must evaluate to an Integer for Lists, in the expression 'prop1['a']'"
             )
         )
         test_fail(tm, self, "ns.Test","prop1['a']", expectedIssues)
@@ -277,7 +277,7 @@ class test_ExpressionsInterpreterOverTypedObject_AsmSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "In getFromListWithIndex argument index '4' out of range"
+                "In getFromListWithIndex argument index '4' out of range, in the expression 'prop1[4]'"
             )
         )
         test_fail(tm, self, "ns.Test","prop1[4]", expectedIssues)

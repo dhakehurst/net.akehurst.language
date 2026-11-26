@@ -68,6 +68,30 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         issues.warn(location, message, data)
     }
 
+    // the depth of nested evaluateExpression calls, issues are given their context when the outermost one ends
+    private var _evaluationDepth = 0
+
+    /**
+     * Issues raised while evaluating [expression] (the outermost evaluation) that have no location get the location of 'self'
+     * in the object graph (e.g. the element of the user's sentence), and each message quotes the expression. (issue #20, ER7)
+     */
+    private inline fun <T> withIssueContext(evc: EvaluationContext, expression: Expression, eval: () -> T): T {
+        _evaluationDepth++
+        val sizeBefore = if (1 == _evaluationDepth) issues.size else -1
+        try {
+            return eval()
+        } finally {
+            _evaluationDepth--
+            if (sizeBefore >= 0 && issues.size > sizeBefore) {
+                val loc = evc.self?.let { self -> locationMap[self.self] }
+                val exprText = expression.asString().replace(Regex("\\s+"), " ").trim().let { if (it.length > 80) it.take(77) + "..." else it }
+                issues.replaceIssuesRaisedSince(sizeBefore) { iss ->
+                    iss.copy(location = iss.location ?: loc, message = "${iss.message.trimEnd().removeSuffix(".")}, in the expression '$exprText'")
+                }
+            }
+        }
+    }
+
     // --- Non-suspending API ---
 
     /**
@@ -81,7 +105,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    open fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject =
+    open fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject = withIssueContext(evc, expression) {
         // the types do not change during an evaluation, so type lookups are cached (nested evaluations share the cache)
         objectGraph.withTypeCache {
             when (expression) {
@@ -104,6 +128,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
                 else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
             }
         }
+    }
 
     /**
      * Only construct the object, do not execute the property assignment block.
@@ -182,7 +207,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    open suspend fun evaluateExpressionSuspend(evc: EvaluationContext, expression: Expression): TypedObject =
+    open suspend fun evaluateExpressionSuspend(evc: EvaluationContext, expression: Expression): TypedObject = withIssueContext(evc, expression) {
         // the types do not change during an evaluation, so type lookups are cached (nested evaluations share the cache)
         objectGraph.withTypeCache {
             when (expression) {
@@ -205,6 +230,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
                 else -> error("Subtype of Expression not handled in evaluateExpressionSuspend '${expression::class.simpleName}'")
             }
         }
+    }
 
     /**
      * Only construct the object, do not execute the property assignment block.

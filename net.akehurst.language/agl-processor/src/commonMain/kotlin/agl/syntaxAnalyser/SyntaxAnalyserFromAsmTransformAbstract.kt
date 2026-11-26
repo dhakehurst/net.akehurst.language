@@ -230,7 +230,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             }
 
             override fun treeError(msg: String, path: PathFunction) {
-                issues.error(null, "Error 'msg' at '${path.invoke().joinToString(separator = "/")}'")
+                issues.error(null, "Error '$msg' at '${path.invoke().joinToString(separator = "/")}'")
             }
 
         }
@@ -659,12 +659,19 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             if (self.hasIdentity.not() && deferParseIdentity.not()) self.setIdentity(AsmStructureParseIdentity((sentence as? SentenceAbstract)?.identity, self.qualifiedTypeName, self.parsePath))
             //self.setProperty(AsmTransformInterpreter.MATCHED_TEXT.asValueName, asmMatchedText, self.property.size)
         }
-        // keep the kind of each issue (e.g. a warning for navigating \$nothing stays a warning)
-        _trf.issues.forEach {
-            when (it.kind) {
-                LanguageIssueKind.ERROR -> super.issues.error(null, "Error evaluating transformation rule '${it.message}':\n${tr.asString()}")
-                LanguageIssueKind.WARNING -> super.issues.warn(null, "Warning evaluating transformation rule '${it.message}':\n${tr.asString()}")
-                else -> super.issues.info(null, "Evaluating transformation rule '${it.message}':\n${tr.asString()}")
+        // keep the kind of each issue (e.g. a warning for navigating \$nothing stays a warning).
+        // An issue found while evaluating points at the part of the sentence being transformed, the message names the rule (issue #20, ER7)
+        if (_trf.issues.isNotEmpty()) {
+            val nodeLocation = sentence.locationForNode(target.node)
+            _trf.issues.forEach {
+                val loc = it.location ?: nodeLocation
+                // the expression interpreter quotes the expression
+                val msg = "${it.message}, of the transform rule for grammar rule '${target.node.rule.tag}'"
+                when (it.kind) {
+                    LanguageIssueKind.ERROR -> super.issues.error(loc, msg, it.data)
+                    LanguageIssueKind.WARNING -> super.issues.warn(loc, msg, it.data)
+                    else -> super.issues.info(loc, msg, it.data)
+                }
             }
         }
         return asm
