@@ -596,7 +596,7 @@ class ReferenceResolverSimple(
         // 'inherit forall ...' first, then 'inherit by-position', then 'inherit named ...'
         val inherits = scopeImports.filter { it.kind == ScopeImportKind.INHERIT }
         val inherited = inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) ->
-            srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.flatMap { t -> scopeOfElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
+            srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.flatMap { t -> scopeOfAnyElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
         }.distinct().let { hideOverridden(it) }
         if (inherited.isNotEmpty()) return inherited
         val inheritedByPosition = inherits.filter { it.byPosition }.flatMap { si ->
@@ -605,7 +605,7 @@ class ReferenceResolverSimple(
         if (inheritedByPosition.isNotEmpty()) return inheritedByPosition
         val inheritedNamed = inherits.filter { null != it.named }.flatMap { si ->
             namedTargetsOf(si, ownerEl).flatMap { t -> scopeOfAnyElement(t)?.let { localResolve(it, name, inheritAccess, visited) } ?: emptyList() }
-        }.distinct()
+        }.distinct().let { hideOverridden(it) }
         if (inheritedNamed.isNotEmpty()) return inheritedNamed
         // the imports declared for the scope ('import forall ...'), then the elements in the scope that import into it ('import-into-scope ...')
         val imports = scopeImports.filter { it.kind != ScopeImportKind.INHERIT }.flatMap { si -> importElementsOf(si, ownerEl).map { Pair(si, it) } } + importsIntoScope
@@ -771,7 +771,7 @@ class ReferenceResolverSimple(
     private fun inheritedScopesOf(s: Scope): List<Scope> {
         val ownerEl = ownerElementOf(s) ?: return emptyList()
         val inherits = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName).filter { it.kind == ScopeImportKind.INHERIT }
-        return inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) -> srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.mapNotNull { scopeOfElement(it) } } +
+        return inheritForallSources(inherits, ownerEl).flatMap { (si, srcs, resolveNow) -> srcs.flatMap { src -> targetsOf(si, src, s, resolveNow) }.mapNotNull { scopeOfAnyElement(it) } } +
                 inherits.filter { it.byPosition }.flatMap { si -> byPositionScopesOf(si, s) } +
                 inherits.filter { null != it.named }.flatMap { si -> namedTargetsOf(si, ownerEl).mapNotNull { scopeOfAnyElement(it) } }
     }
@@ -784,7 +784,7 @@ class ReferenceResolverSimple(
         val ownerEl = ownerElementOf(s) ?: return emptyList()
         val inherits = crossReferenceDomain.scopeImportsFor(typesDomain, ownerEl.qualifiedTypeName).filter { it.kind == ScopeImportKind.INHERIT }
         val fromForall = inheritForallSources(inherits, ownerEl)
-            .flatMap { (si, srcs, resolveNow) -> srcs.map { src -> Pair(src, targetsOf(si, src, s, resolveNow).mapNotNull { scopeOfElement(it) }) } }
+            .flatMap { (si, srcs, resolveNow) -> srcs.map { src -> Pair(src, targetsOf(si, src, s, resolveNow).mapNotNull { scopeOfAnyElement(it) }) } }
             .sortedBy { (src, _) -> _locationMap[src]?.position ?: Int.MAX_VALUE } // stable, so without a position the rule order is kept
             .flatMap { it.second }
         val fromByPosition = inherits.filter { it.byPosition }.flatMap { si -> byPositionScopesOf(si, s) }
@@ -1080,7 +1080,16 @@ class ReferenceResolverSimple(
      */
     private fun resolveReferencesAlong(nav: NavigationExpression, el: AsmStructure, s: Scope) {
         val start = (nav.start as? RootExpression)?.name ?: return
-        val props = listOf(start) + nav.parts.map { (it as? PropertyCall)?.propertyName ?: return }
+        if (nav.parts.any { it !is PropertyCall }) {
+            // a navigation with other parts (e.g. 'ownedRelationship.filter({ r -> r is X }).last.target'):
+            // evaluate each prefix of it and handle the references of the elements it gives
+            for (n in 0 until nav.parts.size) {
+                val prefix = NavigationExpressionDefault(nav.start, nav.parts.take(n))
+                structuresIn(evaluate(prefix, el)).forEach { resolveReferencesOf(it, scopeForElement[it] ?: s) }
+            }
+            return
+        }
+        val props = listOf(start) + nav.parts.map { (it as PropertyCall).propertyName }
         var els = listOf(el)
         for (pn in props.dropLast(1)) {
             els = els.flatMap { structuresIn(evaluate(RootExpressionDefault(pn), it)) }
