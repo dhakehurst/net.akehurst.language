@@ -813,7 +813,7 @@ constructor(
         propertyExecution: (obj: Any, decl: PropertyDeclaration) -> Any?
     ): TypedObject {
         return when {
-            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
+            StdLibDefault.TupleType == resolvedDefinitionOf(tobj.type) -> {
                 val obj = untyped(tobj)
                 when (obj) {
                     is Map<*, *> -> {
@@ -872,7 +872,7 @@ constructor(
                             }
 
                             else -> {
-                                val type = tobj.type.resolvedDefinition
+                                val type = resolvedDefinitionOf(tobj.type)
                                 val execResult = primitiveExecutor.propertyValue(obj, type, propResOriginal)
                                 when (execResult) {
                                     null -> {
@@ -921,7 +921,7 @@ constructor(
         propertyMutation: (obj: Any, decl: PropertyDeclaration,value: Any?) -> Unit
     ) {
         when {
-            StdLibDefault.TupleType == tobj.type.resolvedDefinition -> {
+            StdLibDefault.TupleType == resolvedDefinitionOf(tobj.type) -> {
                 when (tobj.self) {
                     is MutableMap<*, *> -> {
                         (tobj.self as MutableMap<String, Any>)[propertyName] = untyped(value)
@@ -937,7 +937,7 @@ constructor(
                 val r = propRes?.isReference ?: false
                 when {
                     null != linkEnd -> {
-                        val uv = if (value.type.resolvedDefinition == StdLibDefault.NothingType.resolvedDefinition) null else untyped(value)
+                        val uv = if (resolvedDefinitionOf(value.type) == StdLibDefault.NothingType.resolvedDefinition) null else untyped(value)
                         linkEndMutator(linkEnd.association, linkEnd.end, untyped(tobj), uv)
                     }
                     else -> when (propRes) {
@@ -964,7 +964,7 @@ constructor(
                             }
                             //TODO suspend !
                             else -> {
-                                val type = tobj.type.resolvedDefinition
+                                val type = resolvedDefinitionOf(tobj.type)
                                 val execResult = primitiveExecutor.propertyValue(obj, type, propResOriginal)
                                 when (execResult) {
                                     null -> {
@@ -1023,7 +1023,7 @@ constructor(
             }
 
             else -> {
-                val typeDef = tobj.type.resolvedDefinition
+                val typeDef = resolvedDefinitionOf(tobj.type)
                 val arguments = args.map { untyped(it) }
                 val obj = untyped(tobj)
                 val methResOriginal = methRes.original

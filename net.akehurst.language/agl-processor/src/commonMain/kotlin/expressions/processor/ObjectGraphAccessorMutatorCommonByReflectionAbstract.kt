@@ -150,6 +150,17 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         }
     }
 
+    /** type.resolvedDefinitionOrNull, cached while in a run (see beginTypeCache) */
+    protected fun resolvedDefinitionOrNullOf(type: TypeInstance): TypeDefinition? =
+        when (val tc = _typeCache) {
+            null -> type.resolvedDefinitionOrNull
+            else -> tc.resolvedDefinitionOrNull(type)
+        }
+
+    /** type.resolvedDefinition (an error if it does not resolve), cached while in a run (see beginTypeCache) */
+    protected fun resolvedDefinitionOf(type: TypeInstance): TypeDefinition =
+        resolvedDefinitionOrNullOf(type) ?: type.resolvedDefinition
+
     /** type.allResolvedProperty, cached while in a run (see beginTypeCache) */
     protected fun allResolvedPropertyOf(type: TypeInstance): Map<PropertyName, PropertyDeclarationResolved> =
         _typeCache?.allResolvedProperty(type) ?: type.allResolvedProperty

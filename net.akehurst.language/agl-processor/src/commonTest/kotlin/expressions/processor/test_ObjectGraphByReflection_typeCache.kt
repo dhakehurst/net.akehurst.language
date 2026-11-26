@@ -25,6 +25,7 @@ import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertNotSame
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 /** type lookups are cached only during a run (beginTypeCache .. endTypeCache) */
@@ -32,6 +33,7 @@ class test_ObjectGraphByReflection_typeCache {
 
     private class AM(td: net.akehurst.language.types.api.TypesDomain) : ObjectGraphAccessorMutatorByReflection(td, IssueHolder(), LocationMapDefault()) {
         fun props(t: TypeInstance) = allResolvedPropertyOf(t)
+        fun def(t: TypeInstance) = resolvedDefinitionOrNullOf(t)
     }
 
     private val domain = typesDomain("test", true) {
@@ -76,5 +78,20 @@ class test_ObjectGraphByReflection_typeCache {
             am.typesDomain = domain
             assertNotSame(p1, am.props(typeA()))
         }
+    }
+
+    @Test
+    fun resolvedDefinition_in_a_run_is_as_without_cache() {
+        val am = AM(domain)
+        val ns = domain.findNamespaceOrNull("ns".asQualifiedName)!!
+        val unresolvable = ns.createTypeInstance(null, net.akehurst.language.base.api.SimpleName("NotDefined"), emptyList(), false)
+        val expected = typeA().resolvedDefinitionOrNull
+        am.withTypeCache {
+            assertSame(expected, am.def(typeA()))
+            assertSame(expected, am.def(typeA()))
+            assertNull(am.def(unresolvable))
+            assertNull(am.def(unresolvable))
+        }
+        assertSame(expected, am.def(typeA()))
     }
 }

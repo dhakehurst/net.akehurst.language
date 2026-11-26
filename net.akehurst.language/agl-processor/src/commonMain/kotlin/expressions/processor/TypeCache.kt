@@ -23,6 +23,8 @@ import net.akehurst.language.types.api.PropertyDeclarationResolved
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.types.asm.TypeInstanceSimple
 
 /**
  * Lookups on types, cached for one run of an accessor-mutator (see ObjectGraphAccessorMutator.beginTypeCache),
@@ -30,8 +32,10 @@ import net.akehurst.language.types.api.TypeInstance
  *
  * TypeInstances are often created anew for each value (e.g. TypeDefinition.type()), and TypeInstance.equals does not
  * always mean 'resolves to the same definition', so:
- *  - a TypeInstance without type arguments is keyed by its resolved definition (identity) and nullability,
- *  - any other TypeInstance is keyed by itself (identity).
+ *  - the resolved definition of a TypeInstanceSimple is keyed by what it is resolved from (its namespace (identity) and name),
+ *    of any other TypeInstance by the TypeInstance itself (identity),
+ *  - resolved properties/methods of a TypeInstance without type arguments are keyed by its resolved definition (identity) and nullability,
+ *    of any other TypeInstance by the TypeInstance itself (identity).
  */
 internal class TypeCache {
 
@@ -43,12 +47,28 @@ internal class TypeCache {
 
     private data class Key(val definitionOrInstance: Identity, val isNullable: Boolean)
 
+    /** TypeInstanceSimple.resolvedDefinitionOrNull is namespace.findTypeNamed(qualifiedOrImportedTypeName) */
+    private data class NameKey(val namespace: Identity, val name: PossiblyQualifiedName)
+
+    private val _resolvedDefinition = mutableMapOf<Any, TypeDefinition?>()
+
+    fun resolvedDefinitionOrNull(type: TypeInstance): TypeDefinition? {
+        val k: Any = when (type) {
+            is TypeInstanceSimple -> NameKey(Identity(type.namespace), type.qualifiedOrImportedTypeName)
+            else -> Identity(type)
+        }
+        return when {
+            _resolvedDefinition.containsKey(k) -> _resolvedDefinition[k]
+            else -> type.resolvedDefinitionOrNull.also { _resolvedDefinition[k] = it }
+        }
+    }
+
     private val _allResolvedProperty = mutableMapOf<Key, Map<PropertyName, PropertyDeclarationResolved>>()
     private val _allResolvedMethod = mutableMapOf<Key, Map<MethodName, MethodDefinitionResolved>>()
 
     private fun keyFor(type: TypeInstance): Key {
         val def: TypeDefinition? = when {
-            type.typeArguments.isEmpty() -> type.resolvedDefinitionOrNull
+            type.typeArguments.isEmpty() -> resolvedDefinitionOrNull(type)
             else -> null
         }
         return Key(Identity(def ?: type), type.isNullable)
