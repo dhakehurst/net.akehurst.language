@@ -980,10 +980,10 @@ grammar Metadata : DefinitionAndUsage {
 // The definition and usage rules are all in the module grammars, so a view has the same element types (and references) as SysMLv2_1.
 // They are placed before SysMLv2_1, so that SysMLv2_1, the last grammar, stays the default target grammar.
 // A keyword of a part that a view does not include is not a keyword in that view (it is read as a name).
-// The views are generated from SysMLv2_1 (its choices without the parts a view excludes) by a script, gen_views.py (not in the repository yet).
+// The views are maintained by hand: when a choice of SysMLv2_1 changes, change the views too (test_SysML_..._agl_views checks them).
 
 // State machine view: packages, attributes, occurrences/items/parts/ports, actions, calculations/constraints, states and successions.
-// (generated: the choices of SysMLv2_1 without the parts not in Attributes, Connections, Calculations, States and without AllocationDefinition, AllocationUsage, BindingConnectorAsUsage, ConnectionDefinition, ConnectionUsage, FlowDefinition, FlowUsage, InterfaceDefinition, InterfaceUsage, Message, SuccessionFlowUsage)
+// (the choices of SysMLv2_1 without the parts not in Attributes, Connections, Calculations, States and without AllocationDefinition, AllocationUsage, BindingConnectorAsUsage, ConnectionDefinition, ConnectionUsage, FlowDefinition, FlowUsage, InterfaceDefinition, InterfaceUsage, Message, SuccessionFlowUsage)
 grammar SysMLStateMachine : Attributes, Connections, Calculations, States {
 
     #defaultGoalRule: RootNamespace
@@ -1126,7 +1126,7 @@ grammar SysMLStateMachine : Attributes, Connections, Calculations, States {
 }
 
 // Structure view: packages, attributes, occurrences/items/parts, ports, connections, interfaces, allocations and flows.
-// (generated: the choices of SysMLv2_1 without the parts not in Attributes, Connections and without Message, SuccessionAsUsage, SuccessionFlowUsage)
+// (the choices of SysMLv2_1 without the parts not in Attributes, Connections and without Message, SuccessionAsUsage, SuccessionFlowUsage)
 grammar SysMLStructure : Attributes, Connections {
 
     #defaultGoalRule: RootNamespace
@@ -1236,7 +1236,7 @@ grammar SysMLStructure : Attributes, Connections {
 }
 
 // Activity view: packages, attributes, occurrences/items/parts/ports, actions, calculations/constraints, successions and flows.
-// (generated: the choices of SysMLv2_1 without the parts not in Attributes, Connections, Calculations and without AllocationDefinition, AllocationUsage, ConnectionDefinition, ConnectionUsage, InterfaceDefinition, InterfaceUsage, Message)
+// (the choices of SysMLv2_1 without the parts not in Attributes, Connections, Calculations and without AllocationDefinition, AllocationUsage, ConnectionDefinition, ConnectionUsage, InterfaceDefinition, InterfaceUsage, Message)
 grammar SysMLActivity : Attributes, Connections, Calculations {
 
     #defaultGoalRule: RootNamespace
@@ -1376,7 +1376,7 @@ grammar SysMLActivity : Attributes, Connections, Calculations {
 }
 
 // Sequence (interaction) view: packages, attributes, occurrences/events/items/parts, ports, interfaces, messages, flows, successions and actions.
-// (generated: the choices of SysMLv2_1 without the parts not in Attributes, Connections, Actions and without AllocationDefinition, AllocationUsage)
+// (the choices of SysMLv2_1 without the parts not in Attributes, Connections, Actions and without AllocationDefinition, AllocationUsage)
 grammar SysMLSequence : Attributes, Connections, Actions {
 
     #defaultGoalRule: RootNamespace
@@ -1518,7 +1518,7 @@ grammar SysMLSequence : Attributes, Connections, Actions {
 }
 
 // Requirements view: packages, attributes, occurrences/items/parts/ports, actions, calculations/constraints, requirements and concerns.
-// (generated: the choices of SysMLv2_1 without the parts not in Attributes, Ports, Requirements)
+// (the choices of SysMLv2_1 without the parts not in Attributes, Ports, Requirements)
 grammar SysMLRequirements : Attributes, Ports, Requirements {
 
     #defaultGoalRule: RootNamespace
