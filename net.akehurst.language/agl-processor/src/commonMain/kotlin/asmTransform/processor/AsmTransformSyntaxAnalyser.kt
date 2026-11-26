@@ -121,9 +121,17 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         val optHolder = OptionHolderDefault(null, options.toMap())
         return { namespace ->
             val extendRefs = extends.map { AsmTransformRuleSetReferenceDefault(namespace, it) }
-            val asm = AsmTransformRuleSetDefault(namespace, name, extendRefs, optHolder, rules)
+            // only one rule for a grammar rule (AT-Q4): the first is used, each further one is an error
+            val firstRules = rules.distinctBy { it.grammarRuleName }
+            rules.filter { r -> firstRules.none { it === r } }.forEach { dup ->
+                issues.error(
+                    locationMap.getPropertyLocation(dup, "grammarRuleName"),
+                    "Rule '${dup.grammarRuleName.value}' is already transformed in '${QualifiedName(namespace.qualifiedName, name).value}'"
+                )
+            }
+            val asm = AsmTransformRuleSetDefault(namespace, name, extendRefs, optHolder, firstRules)
             typeImports.forEach { asm.addImportType(it) }
-            rules.forEach { asm.setRule(it) }
+            firstRules.forEach { asm.setRule(it) }
             asm.also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
