@@ -189,7 +189,7 @@ class ReferencesSemanticAnalyser(
                     // the type resolver is used only to report why when one does not
                     when {
                         missingProperties(identifiedBy, identifiedType).isNotEmpty() -> {
-                            _typeResolver!!.typeFor(identifiedBy, identifiedType.type())
+                            _typeResolver!!.typeFor(identifiedBy, identifiedType.type(), _locationMap?.get(ReferencesSyntaxAnalyser.PropertyValue(identifiable, "expression")) ?: _locationMap?.get(identifiable))
                             raiseError(
                                 ReferencesSyntaxAnalyser.PropertyValue(identifiable, "expression"),
                                 "$msgStart, '${identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
@@ -413,7 +413,7 @@ class ReferencesSemanticAnalyser(
             }
             type
         }
-        val collTypeInstance = _typeResolver!!.typeFor(refExpr.expression, contextType.type())
+        val collTypeInstance = _typeResolver!!.typeFor(refExpr.expression, contextType.type(), _locationMap?.get(refExpr) ?: _locationMap?.get(ref))
         val collType = collTypeInstance.resolvedDefinition
         when {
             // the type resolver has already reported why the expression has no type (e.g. a property not found)
