@@ -59,6 +59,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::definition)
         super.register(this::function)
         super.register(this::format)
+        super.register(this::extends)
         super.register(this::formatRule)
         super.register(this::viaFormatSet)
         super.register(this::templateExpression)
