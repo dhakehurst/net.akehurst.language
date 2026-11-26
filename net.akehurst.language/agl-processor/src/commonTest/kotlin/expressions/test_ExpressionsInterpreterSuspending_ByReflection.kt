@@ -163,8 +163,8 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
         val self = TestObj("strValue")
 
         val expectedIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "Unable to evaluate property 'prop2': Property 'prop2' not found on class 'TestObj'"),
-            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.INTERPRET, null, "Executing property 'prop2' on 'TestObj' results in null, using value \$nothing.", null)
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "Unable to evaluate property 'prop2': Property 'prop2' not found on class 'TestObj', in the expression 'prop2'"),
+            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.INTERPRET, null, "Executing property 'prop2' on 'TestObj' results in null, using value \$nothing, in the expression 'prop2'", null)
         )
         test_fail(tm, self, "ns.TestObj", "prop2", Unit, expectedIssues)
     }
@@ -202,7 +202,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Index operation on non List value is not possible: 'strValue'"
+                "Index operation on non List value is not possible: 'strValue', in the expression 'prop1[0]'"
             )
         )
         test_fail(tm, self, "ns.TestObj", "prop1[0]", Unit, expectedIssues)
@@ -228,7 +228,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Only one index value should be used for Lists"
+                "Only one index value should be used for Lists, in the expression 'propList[0, 1, 2]'"
             )
         )
         test_fail(tm, self, "ns.TestObj", "propList[0,1,2]", Unit, expectedIssues)
@@ -254,7 +254,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Index value must evaluate to an Integer for Lists"
+                "Index value must evaluate to an Integer for Lists, in the expression 'propList['a']'"
             )
         )
         test_fail(tm, self, "ns.TestObj", "propList['a']", Unit, expectedIssues)
@@ -280,7 +280,7 @@ class test_ExpressionsInterpreterSuspending_ByReflection {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "In getFromListWithIndex argument index '4' out of range"
+                "In getFromListWithIndex argument index '4' out of range, in the expression 'propList[4]'"
             )
         )
         test_fail(tm, self, "ns.TestObj", "propList[4]", Unit, expectedIssues)
