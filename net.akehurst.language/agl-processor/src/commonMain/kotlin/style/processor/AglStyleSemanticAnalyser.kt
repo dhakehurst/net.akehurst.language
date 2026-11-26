@@ -66,11 +66,13 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         this._locationMap = locationMap ?: LocationMapDefault()
         val sentenceContext = options.sentenceContext
         val locMap = locationMap ?: LocationMapDefault()
+        // the extended style sets are resolved first (also without a context), so that allRules of every style set is complete
+        asm.namespace.forEach { ns ->
+            ns.definition.forEach { ss -> resolveStyleSetRefs(asm, sentenceContext, ss) }
+        }
         if (null != sentenceContext) {
             asm.namespace.forEach { ns ->
                 ns.definition.forEach { ss ->
-                    resolveStyleSetRefs(sentenceContext, ss)
-
                     ss.rules.forEach { rule ->
                         when (rule) {
                             is AglStyleMetaRule -> analyseMetaRule(rule, locMap, sentenceContext)
@@ -113,22 +115,36 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
         }
     }
 
-    private fun resolveStyleSetRefs(sentenceContext: SentenceContext?, styleSet: StyleSet) {
+    private fun resolveStyleSetRefs(asm: AglStyleDomain, sentenceContext: SentenceContext?, styleSet: StyleSet) {
         styleSet.extends.forEach { ref ->
-            checkStyleSetExistsAndResolve(sentenceContext,ref)
+            checkStyleSetExistsAndResolve(asm, sentenceContext, styleSet, ref)
         }
     }
 
-    private fun checkStyleSetExistsAndResolve(sentenceContext: SentenceContext?, ref: StyleSetReference) {
-        val resolvedSS = sentenceContext?.let {
-            findStyleSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName)
-        }
-        if (null == resolvedSS) {
-            this.issueError(ref, "StyleSet '${ref.nameOrQName}' not found", null)
-        } else {
-            ref.resolveAs(resolvedSS)
+    /**
+     * An extended style set is looked up first in the style domain being analysed (the same style file),
+     * by its qualified name (a simple name is qualified with the namespace of the extending style set),
+     * then in the sentence context.
+     * A style set that is not found is an error, reported only when there is a sentence context (without one, nothing is checked).
+     * A style set must not extend itself, directly or indirectly (allRules would never end):
+     * a reference that would close a cycle is an error and is left unresolved.
+     */
+    private fun checkStyleSetExistsAndResolve(asm: AglStyleDomain, sentenceContext: SentenceContext?, styleSet: StyleSet, ref: StyleSetReference) {
+        val qualifiedName = ref.nameOrQName.asQualifiedName(ref.localNamespace.qualifiedName)
+        val resolvedSS = asm.findDefinitionByQualifiedNameOrNull(qualifiedName)
+            ?: sentenceContext?.let { findStyleSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
+        when {
+            null != resolvedSS && extendsOrIs(resolvedSS, styleSet, mutableSetOf()) ->
+                this.issueError(ref, "StyleSet '${styleSet.qualifiedName.value}' extends itself (via '${ref.nameOrQName.value}')", null)
+            null != resolvedSS -> ref.resolveAs(resolvedSS)
+            null != sentenceContext -> this.issueError(ref, "StyleSet '${ref.nameOrQName}' not found", null)
+            else -> Unit
         }
     }
+
+    /** true if [from] is [target] or extends it, following the references resolved so far */
+    private fun extendsOrIs(from: StyleSet, target: StyleSet, visited: MutableSet<StyleSet>): Boolean =
+        from == target || (visited.add(from) && from.extends.any { r -> r.resolved?.let { extendsOrIs(it, target, visited) } ?: false })
 
     /**
      * The pattern of a meta rule is matched against each terminal as written in the grammar, quotes included (e.g. 'circle').
