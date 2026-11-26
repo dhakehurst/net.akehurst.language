@@ -143,7 +143,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     // the body of the lambda is captured by createLambdaValue, so it cannot share an inline body
     private fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValue { it ->
-            val newEvc = evc.child(lambdaBindings(expression, it))
+            val newEvc = evc.childNoCopy(lambdaBindings(expression, it)) // a new map for each call, held by nothing else
             evaluateExpression(newEvc, expression.expression)
         }
         return lambda
@@ -244,7 +244,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     // the body of the lambda is captured by createLambdaValueSuspend, so it cannot share an inline body
     private suspend fun evaluateLambdaSuspend(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
         val lambda = objectGraph.createLambdaValueSuspend { it ->
-            val newEvc = evc.child(lambdaBindings(expression, it))
+            val newEvc = evc.childNoCopy(lambdaBindings(expression, it)) // a new map for each call, held by nothing else
             evaluateExpressionSuspend(newEvc, expression.expression)
         }
         return lambda
@@ -850,7 +850,7 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         return when {
             objectGraph.nothing() == newSelf -> newSelf
             else -> {
-                val newEvc = evc.child(mapOf(RootExpressionDefault.SELF.name to newSelf))
+                val newEvc = evc.childNoCopy(mapOf(RootExpressionDefault.SELF.name to newSelf))
                 val result = eval(newEvc, expression.expression)
                 result
             }

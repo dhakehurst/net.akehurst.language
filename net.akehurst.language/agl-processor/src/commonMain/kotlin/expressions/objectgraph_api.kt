@@ -60,12 +60,22 @@ interface TypedLambda : TypedObject {
     suspend fun invokeTypedSuspend(arg: TypedObject): TypedObject
 }
 
-class EvaluationContext(
+class EvaluationContext private constructor(
     val parent: EvaluationContext?,
-    initialNamedValues: Map<String, TypedObject>
+    initialNamedValues: Map<String, TypedObject>,
+    copy: Boolean
 ) {
+    /** the given named values are copied, so later changes to that map are not seen by this context */
+    constructor(parent: EvaluationContext?, initialNamedValues: Map<String, TypedObject>) : this(parent, initialNamedValues, true)
+
     companion object {
         fun of(namedValues: Map<String, TypedObject>, parent: EvaluationContext? = null) = EvaluationContext(parent, namedValues)
+
+        /**
+         * as [of], but the given map is used as it is, not copied (it is copied when a value is first set, see [setNamedValue]).
+         * Only for a map that nothing else holds or changes, e.g. the bindings the interpreter makes for one lambda call.
+         */
+        internal fun ofNoCopy(namedValues: Map<String, TypedObject>, parent: EvaluationContext? = null) = EvaluationContext(parent, namedValues, false)
         fun ofSelf(
             self: TypedObject,
             namedValues: Map<String, TypedObject> = emptyMap(),
@@ -77,9 +87,16 @@ class EvaluationContext(
         }
     }
 
-    val namedValues: Map<String, TypedObject> = initialNamedValues.toMutableMap()
+    // copy-on-write: a context made by ofNoCopy holds the given map until a value is first set
+    private var _namedValues: Map<String, TypedObject> = if (copy) initialNamedValues.toMutableMap() else initialNamedValues
+    private var _namedValuesOwned: Boolean = copy
+
+    val namedValues: Map<String, TypedObject> get() = _namedValues
     val self get() = getOrInParent(RootExpressionDefault.SELF.name)
 
+    //TODO: conceptual flaw (review 2026-11-26): a trace describes a run, but this list is per scope frame, so a trace added in a
+    // lambda, 'with' or statement block frame is lost with that frame. Unused so far (no callers of addExecutionTrace).
+    // Needs a bigger redesign (e.g. a trace owned by the run/interpreter), agreed with David to do separately.
     val executionTrace: List<String> = mutableListOf()
 
     fun getOrInParent(name: String): TypedObject? =
@@ -90,10 +107,17 @@ class EvaluationContext(
 
     fun child(namedValues: Map<String, TypedObject> = emptyMap()) = of(namedValues, this)
 
+    /** as [child], without copying [namedValues], see [ofNoCopy] */
+    internal fun childNoCopy(namedValues: Map<String, TypedObject>) = ofNoCopy(namedValues, this)
+
     fun childSelf(self: TypedObject, namedValues: Map<String, TypedObject> = emptyMap()) = ofSelf(self, namedValues, parent = this)
 
     fun setNamedValue(name: String, value: TypedObject): EvaluationContext {
-        (namedValues as MutableMap)[name] = value
+        if (_namedValuesOwned.not()) {
+            _namedValues = _namedValues.toMutableMap()
+            _namedValuesOwned = true
+        }
+        (_namedValues as MutableMap)[name] = value
         return this
     }
 
