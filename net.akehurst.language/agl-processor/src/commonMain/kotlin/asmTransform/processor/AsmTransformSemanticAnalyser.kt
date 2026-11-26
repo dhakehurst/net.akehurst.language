@@ -154,6 +154,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                         val ti = typeFor(trs, trr) // always fetch the type, so that it gets created if need be TODO: maybe do type creation in separate phase!
                         trr.resolveTypeAs(ti)
                     }
+                    checkCreatedObjectProperties(trs)
                 }
             }
             // in case new namespaces/types were created TODO: maybe only if OPTION_CREATE_TYPES specified
@@ -382,6 +383,28 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                         }
                     }
                     trr.resolveTypeAs(typeDecl.type())
+                }
+            }
+        }
+    }
+
+    /**
+     * without '#create-missing-types' every property set by 'T() { p := e }' must be a property of 'T' (AT-Q5),
+     * as for a modify rule (see [resolveModifyRules])
+     */
+    private fun checkCreatedObjectProperties(trs: AsmTransformRuleSet) {
+        if (trs.options.createTypes) return
+        for (trr in trs.rules.values) {
+            val expr = trr.expression
+            if (expr !is CreateObjectExpression || trr.isResolved.not()) continue
+            val typeDecl = trr.resolvedType.resolvedDefinitionOrNull as? StructuredType ?: continue // type not found: error given in typeFor
+            expr.propertyAssignments.forEach { ass ->
+                val propName = PropertyName(ass.variable.name)
+                if (null == typeDecl.findAllPropertyOrNull(propName)) {
+                    _issues.error(
+                        _locationMap?.get(ass) ?: locationOfRuleName(trr),
+                        "Type '${typeDecl.qualifiedName.value}' has no property '${propName.value}' (set in the transformation rule for '${trr.grammarRuleName.value}'), use '#${OPTION_CREATE_TYPES}' to create it"
+                    )
                 }
             }
         }
