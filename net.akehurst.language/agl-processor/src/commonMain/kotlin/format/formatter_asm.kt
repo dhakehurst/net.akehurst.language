@@ -172,7 +172,22 @@ class FormatSetDefault(
     override val rules: List<AglFormatRule>
 ) : FormatSet, DefinitionAbstract<FormatDefinition>() {
 
-    override val allRules: List<AglFormatRule> get() = extends.flatMap { allRules } + rules
+    /**
+     * the rules of the extended format sets (in the order of 'extends', each with its own extended rules first), then the own rules.
+     * Only resolved references are followed; a format set already visited is not visited again, so a cycle terminates.
+     */
+    override val allRules: List<AglFormatRule> get() = collectAllRules(mutableSetOf())
+
+    private fun collectAllRules(visited: MutableSet<FormatSet>): List<AglFormatRule> = when {
+        visited.add(this).not() -> emptyList()
+        else -> extends.flatMap { ref ->
+            when (val ext = ref.resolved) {
+                null -> emptyList()
+                is FormatSetDefault -> ext.collectAllRules(visited)
+                else -> if (visited.add(ext)) ext.allRules else emptyList()
+            }
+        } + rules
+    }
 
 }
 

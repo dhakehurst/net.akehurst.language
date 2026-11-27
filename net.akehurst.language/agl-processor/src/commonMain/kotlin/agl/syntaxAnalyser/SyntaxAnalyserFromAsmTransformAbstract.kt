@@ -42,6 +42,7 @@ import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceAbstract
 import net.akehurst.language.sppt.api.*
@@ -168,11 +169,11 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 val tr = when {
                     isRoot -> {
                         isRoot = false
-                        val trRule = syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag)
+                        val trRule = syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag, sentence.locationForNode(nodeInfo.node))
                         trRule
                     }
 
-                    else -> syntaxAnalyserStack.peek().trRuleForNode(parentDownData?.trRule?.forChildren, nodeInfo)
+                    else -> syntaxAnalyserStack.peek().trRuleForNode(parentDownData?.trRule?.forChildren, nodeInfo, sentence)
                 }
                 val ddcomp = resolveCompressed(p, tr, nodeInfo)
                 downStack.push(ddcomp)
@@ -206,11 +207,11 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                     else -> downStack.peek().path
                 }
                 val parentTr = when {
-                    isRoot -> syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag)
+                    isRoot -> syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag, sentence.locationForNode(nodeInfo.node))
                     else -> downStack.peek().trRule.forChildren
                 }
                 val p = nodeInfo.path //TODO: (for AsmPath) syntaxAnalyserStack.peek().pathFor(parentPath, parentTr.resolvedType.resolvedDeclaration, nodeInfo)
-                val tu = syntaxAnalyserStack.peek().trRuleOrIssue(embRuleName)
+                val tu = syntaxAnalyserStack.peek().trRuleOrIssue(embRuleName, sentence.locationForNode(nodeInfo.node))
                 val dd = resolveCompressed(p, tu, nodeInfo)
                 downStack.push(dd)
             }
@@ -274,13 +275,14 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
      * the transformation rule for the grammar rule, or (with an error issue) a rule that gives nothing,
      * e.g. when the transform definition has errors (a missing rule), so that analysis ends gracefully instead of throwing
      */
-    private fun trRuleOrIssue(grammarRuleName: String): AsmTransformationRule =
+    private fun trRuleOrIssue(grammarRuleName: String, location: InputLocation?): AsmTransformationRule =
         findTrRuleForGrammarRuleNamedOrNull(grammarRuleName) ?: run {
-            issues.error(null, "No transformation rule found for grammar rule '$grammarRuleName' (the transform definition may have errors)")
+            // located on the sentence text of the node (AT-Q7)
+            issues.error(location, "No transformation rule found for grammar rule '$grammarRuleName' (the transform definition may have errors)")
             asmTransformationRule(StdLibDefault.NothingType, RootExpressionDefault.NOTHING)
         }
 
-    private fun trRuleForNode(parentTrRule: AsmTransformationRule?, nodeInfo: SpptDataNodeInfo): AsmTransformationRule {
+    private fun trRuleForNode(parentTrRule: AsmTransformationRule?, nodeInfo: SpptDataNodeInfo, sentence: Sentence): AsmTransformationRule {
         //val parentType = parentTrRule?.resolvedType
         val parentTypeDecl = parentTrRule?.resolvedType?.resolvedDefinition
         val nodeRule = nodeInfo.node.rule
@@ -363,7 +365,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 
                 }
 */
-                else -> this.trRuleOrIssue(nodeInfo.node.rule.tag)
+                else -> this.trRuleOrIssue(nodeInfo.node.rule.tag, sentence.locationForNode(nodeInfo.node))
             }
         }
     }

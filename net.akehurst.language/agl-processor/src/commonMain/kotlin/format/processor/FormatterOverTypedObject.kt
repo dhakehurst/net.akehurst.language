@@ -84,7 +84,8 @@ class FormatterOverTypedObject(
         val fs = formatDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
         when (fs) {
             is FormatSet -> {
-                var map = fs.rules.associateBy { rl ->
+                // rules of the extended format sets first, so an own rule for the same type replaces the extended one
+                var map = fs.allRules.associateBy { rl ->
                     super.evaluateTypeReference(rl.forTypeName)
                 }
                 map
