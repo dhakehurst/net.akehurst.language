@@ -20,6 +20,10 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.ProcessOptions
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -298,5 +302,38 @@ class test_Issue57 {
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             assertEquals(data.expected, res.items.map { "${it.text}@${it.offeredPosition}" }.toSet(), "'${data.sentence}'@${data.position}")
         }
+    }
+
+    @Test
+    fun omitLiteralsAlreadyAfterPosition() {
+        // issue #57 (IC3a): option to leave out a literal that is already the text after the position (after skip text)
+        val options = Agl.options<Asm, SentenceContext> { completionProvider { omitLiteralsAlreadyAfterPosition(true) } }
+        fun texts(p: LanguageProcessor<Asm, SentenceContext>, sentence: String, position: Int, opts: ProcessOptions<Asm, SentenceContext>?) =
+            p.expectedItemsAt(sentence, position, opts).let {
+                assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
+                it.items.map { it.text }.toSet()
+            }
+
+        val pBrackets = processor(grammarString)
+        assertEquals(setOf("x"), texts(pBrackets, "[]", 1, options))
+        assertEquals(setOf("]"), texts(pBrackets, "[x", 2, options), "nothing after the position")
+
+        val pComplex = processor(grammarBracketsComplex)
+        // the default keeps ']'
+        assertEquals(setOf("<word>", "]", "<NAME>"), texts(pComplex, "[]", 1, null))
+        assertEquals(setOf("<word>", "<NAME>"), texts(pComplex, "[]", 1, options))
+        assertEquals(setOf("<word>", "<NAME>"), texts(pComplex, "[  ]", 2, options), "skip text after the position")
+        assertEquals(setOf("<word>", "]", "<NAME>"), texts(pComplex, "[ 1 ]", 2, options), "a different text after the position")
+
+        val pIf = processor("""
+            namespace test
+            grammar Test {
+                sentence = 'if' NAME? ;
+                leaf NAME = "[a-z]+";
+                skip WHITESPACE = "\s+";
+            }
+        """.trimIndent())
+        assertEquals(setOf(), texts(pIf, "if x", 0, options).filter { it == "if" }.toSet())
+        assertEquals(setOf("if"), texts(pIf, "ifx", 0, options).filter { it == "if" }.toSet(), "'if' is only the start of the word 'ifx'")
     }
 }
