@@ -32,6 +32,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
@@ -247,55 +248,76 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
         }
     }
 
+    /** implemented as kotlin classes (style_asm_api.kt, style_asm.kt); these types must match them (test_AglStyle_typesDomain) **/
     override val typesDomain by lazy {
-        typesDomain(NAME, true, AglBase.typesDomain.namespace) {
-            grammarTypeNamespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
-                enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META", "TYPE", "IDENTIFY", "REFERS_TO"))
+        val regexNs = AglGrammar.typesDomain.findNamespaceOrNull(QualifiedName("net.akehurst.language.regex.api"))!!
+        typesDomain(NAME, true, AglBase.typesDomain.namespace + regexNs) {
+            grammarTypeNamespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api", "net.akehurst.language.regex.api")) {
+                enum("AglStyleSelectorKind", listOf("SPECIAL", "LITERAL", "PATTERN", "RULE_NAME", "TYPE", "IDENTIFY", "REFERS_TO"))
                 interface_("AglStyleDomain") {
                     supertype("Domain") { ref("StyleNamespace"); ref("StyleSet") }
                 }
                 interface_("StyleNamespace") {
                     supertype("Namespace") { ref("StyleSet") }
+                    propertyOf(setOf(VAL, REF, STR), "styleSet", "List", false) {
+                        typeArgument("StyleSet")
+                    }
                 }
                 interface_("StyleSetReference") {
-
+                    propertyOf(setOf(VAL, REF, STR), "localNamespace", "StyleNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STR), "nameOrQName", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAL, REF, STR), "resolved", "StyleSet", true)
                 }
                 interface_("StyleSet") {
                     supertype("Definition") { ref("StyleSet") }
-                    propertyOf(setOf(VAR, CMP, STR), "extends", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "StyleNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STR), "extends", "List", false) {
                         typeArgument("StyleSetReference")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "rules", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "importTypes", "List", false) {
+                        typeArgument("Import")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "rules", "List", false) {
+                        typeArgument("AglStyleRule")
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "metaRules", "List", false) {
+                        typeArgument("AglStyleMetaRule")
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "tagRules", "List", false) {
+                        typeArgument("AglStyleTagRule")
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "allRules", "List", false) {
                         typeArgument("AglStyleRule")
                     }
                 }
                 interface_("AglStyleRule") {
                     supertype("Formatable")
-                    propertyOf(setOf(VAR, CMP, STR), "declaration", "Map", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "declaration", "Map", false) {
                         typeArgument("String")
                         typeArgument("AglStyleDeclaration")
-                    }
-                    propertyOf(setOf(VAR, CMP, STR), "selector", "List", false) {
-                        typeArgument("AglStyleSelector")
                     }
                 }
                 interface_("AglStyleMetaRule") {
                     supertype("AglStyleRule")
+                    propertyOf(setOf(VAL, CMP, STR), "pattern", "EscapedPattern", false)
                 }
                 interface_("AglStyleTagRule") {
                     supertype("AglStyleRule")
+                    propertyOf(setOf(VAL, CMP, STR), "selector", "List", false) {
+                        typeArgument("AglStyleSelector")
+                    }
                 }
                 data("AglStyleSelector") {
-
                     constructor_ {
                         parameter(setOf(), "value", "String")
                         parameter(setOf(), "kind", "AglStyleSelectorKind")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "kind", "AglStyleSelectorKind", false)
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "kind", "AglStyleSelectorKind", false)
+                    propertyOf(setOf(VAR, REF, STR), "resolvedTypeName", "QualifiedName", true)
+                    propertyOf(setOf(VAL, REF, STR), "matchTag", "String", false)
                 }
                 data("AglStyleDeclaration") {
-
                     constructor_ {
                         parameter(setOf(), "name", "String")
                         parameter(setOf(), "value", "String")
@@ -304,7 +326,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
             }
-            namespace("net.akehurst.language.style.asm", listOf("net.akehurst.language.style.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
+            namespace("net.akehurst.language.style.asm", listOf("net.akehurst.language.style.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm", "net.akehurst.language.regex.api")) {
                 data("StyleSetReferenceDefault") {
                     supertype("StyleSetReference")
                     constructor_ {
@@ -312,48 +334,65 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         parameter(setOf(), "nameOrQName", "PossiblyQualifiedName")
                     }
                     propertyOf(setOf(VAL, REF, STR), "localNamespace", "StyleNamespace", false)
-                    propertyOf(setOf(VAL, REF, STR), "nameOrQName", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(VAR, REF, STR), "resolved", "StyleSet", false)
+                    propertyOf(setOf(VAL, CMP, STR), "nameOrQName", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAR, REF, STR), "resolved", "StyleSet", true)
                 }
                 data("StyleNamespaceDefault") {
                     supertype("StyleNamespace")
                     supertype("NamespaceAbstract") { ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
                         parameter(setOf(), "qualifiedName", "QualifiedName")
+                        parameter(setOf(), "options", "OptionHolder")
                         parameter(setOf(), "import", "List")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                     propertyOf(setOf(VAR, CMP, STR), "import", "List", false) {
                         typeArgument("Import")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
                 data("AglStyleSetDefault") {
                     supertype("StyleSet")
+                    supertype("DefinitionAbstract") { ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
                         parameter(setOf(), "namespace", "StyleNamespace")
                         parameter(setOf(), "name", "SimpleName")
                         parameter(setOf(), "extends", "List")
+                        parameter(setOf(), "options", "OptionHolder")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "extends", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "StyleNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "extends", "List", false) {
                         typeArgument("StyleSetReference")
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "StyleNamespace", false)
-                    propertyOf(setOf(VAR, CMP, STR), "rules", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "importTypes", "List", false) {
+                        typeArgument("Import")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "rules", "List", false) {
                         typeArgument("AglStyleRule")
                     }
                 }
-                data("AglStyleRuleDefault") {
-                    supertype("AglStyleRule")
+                data("AglStyleMetaRuleDefault") {
+                    supertype("AglStyleMetaRule")
                     constructor_ {
-                        parameter(setOf(), "selector", "List")
+                        parameter(setOf(), "pattern", "EscapedPattern")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "pattern", "EscapedPattern", false)
                     propertyOf(setOf(VAR, CMP, STR), "declaration", "Map", false) {
                         typeArgument("String")
                         typeArgument("AglStyleDeclaration")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "selector", "List", false) {
+                }
+                data("AglStyleTagRuleDefault") {
+                    supertype("AglStyleTagRule")
+                    constructor_ {
+                        parameter(setOf(), "selector", "List")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "selector", "List", false) {
                         typeArgument("AglStyleSelector")
+                    }
+                    propertyOf(setOf(VAR, CMP, STR), "declaration", "Map", false) {
+                        typeArgument("String")
+                        typeArgument("AglStyleDeclaration")
                     }
                 }
                 data("AglStyleDomainDefault") {
@@ -361,10 +400,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     supertype("DomainAbstract") { ref("net.akehurst.language.style.api.StyleNamespace"); ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
                         parameter(setOf(), "name", "SimpleName")
+                        parameter(setOf(), "options", "OptionHolder")
                         parameter(setOf(), "namespace", "List")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "namespace", "List", false) {
                         typeArgument("StyleNamespace")
                     }
                 }
