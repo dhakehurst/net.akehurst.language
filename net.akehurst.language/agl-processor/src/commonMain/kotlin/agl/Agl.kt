@@ -49,6 +49,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.m2mTransform.processor.M2MTransformResult
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterCombined
+import net.akehurst.language.objectgraph.api.ExecutionTraceListener
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
@@ -482,6 +483,7 @@ object Agl {
      * @param ruleArguments values for rule parameters
      * @param targetDomainReference the domain to create
      * @param transformName the transform in [m2m] to run, a simple or qualified name; null runs the first transform in [m2m]
+     * @param traceListener if given, told about each step of the transform (see [ExecutionTraceListener]); null means no tracing
      * @return the result; if the transform text has errors, they are its issues and the transform is not run
      */
     fun transform(
@@ -491,7 +493,8 @@ object Agl {
         domains: Map<DomainReference, List<TypedObject>>,
         ruleArguments: Map<String, TypedObject>,
         targetDomainReference: DomainReference,
-        transformName: PossiblyQualifiedName? = null
+        transformName: PossiblyQualifiedName? = null,
+        traceListener: ExecutionTraceListener? = null
     ): M2MTransformResult {
         val sentenceContext = SentenceContextAny()
         typeDomains.forEach { (k, v) ->
@@ -513,7 +516,7 @@ object Agl {
             if (null == m2m && res.allIssues.errors.isEmpty()) issueHolder.error(null, "The transform text gave no transform.")
             return M2MTransformResult(issueHolder, emptyMap(), targetDomainReference)
         }
-        val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder)
+        val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder, traceListener)
         val tgtTransform = selectTransform(m2m, transformName)
             ?: return M2MTransformResult(
                 issueHolder.also { it.error(null, "Transform '${transformName?.value}' not found.") },
@@ -531,7 +534,8 @@ object Agl {
         domains: Map<DomainReference, List<TypedObject>>,
         ruleArguments: Map<String, TypedObject>,
         targetDomainReference: DomainReference,
-        transformName: PossiblyQualifiedName? = null
+        transformName: PossiblyQualifiedName? = null,
+        traceListener: ExecutionTraceListener? = null
     ): M2MTransformResult {
         val sentenceContext = SentenceContextAny()
         typeDomains.forEach { (k, v) ->
@@ -553,7 +557,7 @@ object Agl {
             if (null == m2m && res.allIssues.errors.isEmpty()) issueHolder.error(null, "The transform text gave no transform.")
             return M2MTransformResult(issueHolder, emptyMap(), targetDomainReference)
         }
-        val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder)
+        val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder, traceListener)
         val tgtTransform = selectTransform(m2m, transformName)
             ?: return M2MTransformResult(
                 issueHolder.also { it.error(null, "Transform '${transformName?.value}' not found.") },

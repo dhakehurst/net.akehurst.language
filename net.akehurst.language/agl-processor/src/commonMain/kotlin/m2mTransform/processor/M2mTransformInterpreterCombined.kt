@@ -47,6 +47,9 @@ import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpe
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterHelpers.ruleNamed
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
 import net.akehurst.language.objectgraph.api.EvaluationContext
+import net.akehurst.language.objectgraph.api.ExecutionTraceListener
+import net.akehurst.language.objectgraph.api.TraceStepKind
+import net.akehurst.language.objectgraph.api.allVisibleNamedValues
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.objectgraph.api.withTypeCache
@@ -71,7 +74,12 @@ import net.akehurst.language.types.asm.StdLibDefault
 class M2mTransformInterpreterCombined(
     val m2m: M2mTransformDomain,
     val domainAccessorMutatorByDomainName: Map<SimpleName, ObjectGraphAccessorMutator>,
-    val issues: IssueHolder = IssueHolder(LanguageProcessorPhase.INTERPRET)
+    val issues: IssueHolder = IssueHolder(LanguageProcessorPhase.INTERPRET),
+    /**
+     * if given, told about each step of a transform: the rule set, each rule, 'when' and 'where',
+     * and (from the expression interpreters) each expression node; null means no tracing
+     */
+    val traceListener: ExecutionTraceListener? = null
 ) {
 
     companion object {
@@ -121,10 +129,14 @@ class M2mTransformInterpreterCombined(
 
     private fun executeRuleOwn(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit = when (rule) {
         is M2mTransformAbstractRule -> Unit // an abstract rule is never applied itself, only the rules that extend it
-        is M2MTransformRelation -> executeRelation(m2mExecution, rule, source, ruleArguments)
-        is M2MTransformMapping -> executeMapping(m2mExecution, rule, source, ruleArguments)
-        is M2MTransformTable -> executeTable(m2mExecution, rule, source, ruleArguments)
-        else -> error("Unknown rule type ${rule::class}")
+        else -> m2mExecution.evaluationStep(TraceStepKind.RULE, rule, ruleArguments, { ruleText(rule) }) {
+            when (rule) {
+                is M2MTransformRelation -> executeRelation(m2mExecution, rule, source, ruleArguments)
+                is M2MTransformMapping -> executeMapping(m2mExecution, rule, source, ruleArguments)
+                is M2MTransformTable -> executeTable(m2mExecution, rule, source, ruleArguments)
+                else -> error("Unknown rule type ${rule::class}")
+            }
+        }
     }
 
     // replaced by executeRuleWithOverridesInternal (an abstract rule applies the one most specific rule that extends it)
@@ -183,7 +195,10 @@ class M2mTransformInterpreterCombined(
         matchVariablesFromCollectionTemplateToElementsInInternal(m2mExecution, evc, collectionTemplate, accessorMutator, collectionType, elements) { x, e, og, s, rhs -> matchVariablesFromRhs(x, e, og, s, rhs) }
 
     fun executeWhen(m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, when_: Expression, evc: EvaluationContext): Pair<Boolean, EvaluationContext> =
-        executeWhenInternal(m2mExecution, owningRule, when_, evc, { x, r, a, e -> getSource(x, r, a, e) }, { x, r, s, a -> executeRule(x, r, s, a) }) { og, e, ex -> evaluate(og, e, ex) }
+        m2mExecution.evaluationStep(TraceStepKind.WHEN, when_, evc.allVisibleNamedValues(), { whenText(owningRule, when_) }) {
+            executeWhenInternal(m2mExecution, owningRule, when_, evc, { x, r, a, e -> getSource(x, r, a, e) }, { x, r, s, a -> executeRule(x, r, s, a) }) { og, e, ex -> evaluate(og, e, ex) }
+                .also { m2mExecution.evaluationTrace(if (it.first) "when holds" else "when does not hold") }
+        }
 
     fun checkRelation(m2mExecution: M2mTransformExecution, rule: M2MTransformRelation, domainArguments: Map<DomainReference, Expression>, callerEvc: EvaluationContext): Pair<Boolean, EvaluationContext> =
         checkRelationInternal(
@@ -201,11 +216,13 @@ class M2mTransformInterpreterCombined(
      * returns matchedVariables + variables set by executing the where
      */
     fun executeWhere(m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, where: RuleWhere, evc: EvaluationContext): EvaluationContext =
-        executeWhereInternal(
-            m2mExecution, owningRule, where, evc,
-            { og, e, ex -> evaluate(og, e, ex) },
-            { x, a, e -> evaluateArguments(x, a, e) }
-        ) { x, o, r, a, s -> executeRuleWhere(x, o, r, a, s) }
+        m2mExecution.evaluationStep(TraceStepKind.WHERE, where, evc.allVisibleNamedValues(), { whereText(owningRule, where) }) {
+            executeWhereInternal(
+                m2mExecution, owningRule, where, evc,
+                { og, e, ex -> evaluate(og, e, ex) },
+                { x, a, e -> evaluateArguments(x, a, e) }
+            ) { x, o, r, a, s -> executeRuleWhere(x, o, r, a, s) }
+        }
 
     /*
      * returns null if the where-rule matches nothing
@@ -303,10 +320,14 @@ class M2mTransformInterpreterCombined(
 
     private suspend fun executeRuleOwnSuspend(m2mExecution: M2mTransformExecution, rule: M2mTransformRule, source: Map<DomainReference, List<TypedObject>>, ruleArguments: Map<String, TypedObject>): Unit = when (rule) {
         is M2mTransformAbstractRule -> Unit // an abstract rule is never applied itself, only the rules that extend it
-        is M2MTransformRelation -> executeRelationSuspend(m2mExecution, rule, source, ruleArguments)
-        is M2MTransformMapping -> executeMappingSuspend(m2mExecution, rule, source, ruleArguments)
-        is M2MTransformTable -> executeTableSuspend(m2mExecution, rule, source, ruleArguments)
-        else -> error("Unknown rule type ${rule::class}")
+        else -> m2mExecution.evaluationStep(TraceStepKind.RULE, rule, ruleArguments, { ruleText(rule) }) {
+            when (rule) {
+                is M2MTransformRelation -> executeRelationSuspend(m2mExecution, rule, source, ruleArguments)
+                is M2MTransformMapping -> executeMappingSuspend(m2mExecution, rule, source, ruleArguments)
+                is M2MTransformTable -> executeTableSuspend(m2mExecution, rule, source, ruleArguments)
+                else -> error("Unknown rule type ${rule::class}")
+            }
+        }
     }
 
     // replaced by executeRuleWithOverridesInternal (an abstract rule applies the one most specific rule that extends it)
@@ -363,7 +384,10 @@ class M2mTransformInterpreterCombined(
         matchVariablesFromCollectionTemplateToElementsInInternal(m2mExecution, evc, collectionTemplate, accessorMutator, collectionType, elements) { x, e, og, s, rhs -> matchVariablesFromRhsSuspend(x, e, og, s, rhs) }
 
     suspend fun executeWhenSuspend(m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, when_: Expression, evc: EvaluationContext): Pair<Boolean, EvaluationContext> =
-        executeWhenInternal(m2mExecution, owningRule, when_, evc, { x, r, a, e -> getSourceSuspend(x, r, a, e) }, { x, r, s, a -> executeRuleSuspend(x, r, s, a) }) { og, e, ex -> evaluateSuspend(og, e, ex) }
+        m2mExecution.evaluationStep(TraceStepKind.WHEN, when_, evc.allVisibleNamedValues(), { whenText(owningRule, when_) }) {
+            executeWhenInternal(m2mExecution, owningRule, when_, evc, { x, r, a, e -> getSourceSuspend(x, r, a, e) }, { x, r, s, a -> executeRuleSuspend(x, r, s, a) }) { og, e, ex -> evaluateSuspend(og, e, ex) }
+                .also { m2mExecution.evaluationTrace(if (it.first) "when holds" else "when does not hold") }
+        }
 
     suspend fun checkRelationSuspend(m2mExecution: M2mTransformExecution, rule: M2MTransformRelation, domainArguments: Map<DomainReference, Expression>, callerEvc: EvaluationContext): Pair<Boolean, EvaluationContext> =
         checkRelationInternal(
@@ -381,11 +405,13 @@ class M2mTransformInterpreterCombined(
      * returns matchedVariables + variables set by executing the where
      */
     suspend fun executeWhereSuspend(m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, where: RuleWhere, evc: EvaluationContext): EvaluationContext =
-        executeWhereInternal(
-            m2mExecution, owningRule, where, evc,
-            { og, e, ex -> evaluateSuspend(og, e, ex) },
-            { x, a, e -> evaluateArgumentsSuspend(x, a, e) }
-        ) { x, o, r, a, s -> executeRuleWhereSuspend(x, o, r, a, s) }
+        m2mExecution.evaluationStep(TraceStepKind.WHERE, where, evc.allVisibleNamedValues(), { whereText(owningRule, where) }) {
+            executeWhereInternal(
+                m2mExecution, owningRule, where, evc,
+                { og, e, ex -> evaluateSuspend(og, e, ex) },
+                { x, a, e -> evaluateArgumentsSuspend(x, a, e) }
+            ) { x, o, r, a, s -> executeRuleWhereSuspend(x, o, r, a, s) }
+        }
 
     /*
      * returns null if the where-rule matches nothing
@@ -463,8 +489,23 @@ class M2mTransformInterpreterCombined(
     /** types of all domains of the transform can be referred to in expressions (e.g. 'is', 'as'), those of 'og' first */
     private fun interpreter(og: ObjectGraphAccessorMutator) = ExpressionsInterpreterOverTypedObjectCombined(
         og, null,
-        domainAccessorMutatorByDomainName.values.filter { it !== og }.map { it.typesDomain }
+        domainAccessorMutatorByDomainName.values.filter { it !== og }.map { it.typesDomain },
+        traceListener
     )
+
+    private fun ruleText(rule: M2mTransformRule): String = when (rule) {
+        is M2MTransformMapping -> "mapping '${rule.name.value}'"
+        is M2MTransformRelation -> "relation '${rule.name.value}'"
+        is M2MTransformTable -> "table '${rule.name.value}'"
+        else -> "rule '${rule.name.value}'"
+    }
+
+    private fun whenText(owningRule: M2mTransformRule, when_: Expression): String =
+        "when of '${owningRule.name.value}': ${when_.asString().replace(Regex("\\s+"), " ").trim()}"
+
+    private fun whereText(owningRule: M2mTransformRule, where: RuleWhere): String =
+        "where of '${owningRule.name.value}': call '${where.ruleName.value}'"
+
 
     private fun compileRelationWhereClause(
         m2mExecution: M2mTransformExecution,
@@ -525,7 +566,8 @@ class M2mTransformInterpreterCombined(
         val initExes = listOf(recordMapping) + whereSteps
         val executor = M2mPatternExecutorCombined(
             m2mExecution.issues, m2mExecution.targetAccessorMutator, initVars, initExes,
-            domainAccessorMutatorByDomainName.values.filter { it !== m2mExecution.targetAccessorMutator }.map { it.typesDomain }
+            domainAccessorMutatorByDomainName.values.filter { it !== m2mExecution.targetAccessorMutator }.map { it.typesDomain },
+            traceListener
         )
         executor.build(tgtName, template, lhsType)
         return Pair(executor, tgtName)
@@ -734,14 +776,15 @@ class M2mTransformInterpreterCombined(
         val accessorIssuesBefore = domainAccessorMutatorByDomainName.mapValues { (_, am) -> am.issues.all.toSet() }
         issues.clear()
         domainAccessorMutatorByDomainName.values.forEach { it.issues.clear() }
-        val m2mExecution = M2mTransformExecution(targetTransform, targetDomainRef, domainAccessorMutator, issues)
-        m2mExecution.evaluationStep("Executing transform rule set '${targetTransform.qualifiedName}' with target domain '${targetDomainRef.value}'.")
-        // the types do not change during a transform, so type lookups are cached
-        domainAccessorMutatorByDomainName.values.withTypeCache {
-            when {
-                targetTransform.topRule.isEmpty() -> m2mExecution.errorIssue("No conforming top rule found for target domain '${targetDomainRef.value}'")
-                else -> targetTransform.topRule.forEach { topRule ->
-                    executeRule(m2mExecution, topRule, domainGraphs, ruleArguments)
+        val m2mExecution = M2mTransformExecution(targetTransform, targetDomainRef, domainAccessorMutator, issues, traceListener)
+        m2mExecution.evaluationStep(TraceStepKind.TRANSFORM, targetTransform, ruleArguments, { "transform '${targetTransform.qualifiedName.value}' to domain '${targetDomainRef.value}'" }) {
+            // the types do not change during a transform, so type lookups are cached
+            domainAccessorMutatorByDomainName.values.withTypeCache {
+                when {
+                    targetTransform.topRule.isEmpty() -> m2mExecution.errorIssue("No conforming top rule found for target domain '${targetDomainRef.value}'")
+                    else -> targetTransform.topRule.forEach { topRule ->
+                        executeRule(m2mExecution, topRule, domainGraphs, ruleArguments)
+                    }
                 }
             }
         }
@@ -863,7 +906,6 @@ class M2mTransformInterpreterCombined(
         executeWhere: (m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, where: RuleWhere, evc: EvaluationContext) -> EvaluationContext,
         setPropertiesFromExpression: (m2mExecution: M2mTransformExecution, obj: TypedObject, evc: EvaluationContext, expression: Expression) -> Unit
     ) {
-        m2mExecution.evaluationStep("Executing mapping rule '${rule.name.value}'.")
         // for each domain reference get the match alternatives for each source object
         // Map of DomainReference -> List< TemplateMatchAlternatives per object >
         val domToListOfAlts = matchSourceVariables(m2mExecution, rule, source)
@@ -978,7 +1020,6 @@ class M2mTransformInterpreterCombined(
         executeWhen: (m2mExecution: M2mTransformExecution, owningRule: M2mTransformRule, when_: Expression, evc: EvaluationContext) -> Pair<Boolean, EvaluationContext>,
         executeRelationMainBody: (m2mExecution: M2mTransformExecution, rule: M2MTransformRelation, srcMatch: Map<DomainReference, TemplateMatchResult>, varsAfterWhen: EvaluationContext, whereSteps: List<ExecutionStepCombined>) -> Unit
     ) {
-        m2mExecution.evaluationStep("Executing relation rule '${rule.name.value}'.")
         val domToListOfAlts = matchSourceVariables(m2mExecution, rule, source)
         when {
             domToListOfAlts.isEmpty() -> m2mExecution.warnIssue("No matches found in source domains for rule '${rule.name}'.")
@@ -1035,7 +1076,6 @@ class M2mTransformInterpreterCombined(
         ruleArguments: Map<String, TypedObject>,
         evaluate: (og: ObjectGraphAccessorMutator, evc: EvaluationContext, expression: Expression) -> TypedObject
     ) {
-        m2mExecution.evaluationStep("Executing table rule '${rule.name.value}'.")
         source.cartesianProduct().mapNotNull { srcAlt ->
             val mapping = rule.values.firstNotNullOfOrNull { vs ->
                 val srcValues = srcAlt.mapNotNull { (srcDomainRef, v) ->
