@@ -33,6 +33,13 @@ interface RegexMatcher {
 
     fun matchesAt(text: String, atPosition: Int): Boolean
 
+    /**
+     * true if the text from [startPosition] to its end is the start of a match, i.e. some text added after it can give a match
+     * (the text is itself a match, or can be continued to one). E.g. for `[0-9]+\.[0-9]+`: "1" and "1." are, "1.a" is not.
+     * Used to find a partly typed word that a pattern can continue (completion).
+     */
+    fun isPrefixOfMatch(text: CharSequence, startPosition: Int = 0): Boolean
+
     /** the fewest characters a match can have, -1 if the pattern can never match */
     val minLength: Int
 

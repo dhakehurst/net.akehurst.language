@@ -645,7 +645,10 @@ object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap
                 propertyPrimitive<ListSeparated<*, *, *>, Any?>("separators", "List", false, "Separators in the ListSeparated.", accessor = { self -> (self as ListSeparated<*, *, *>).separators }) { typeArgument("S") }
             }
             collection(OrderedSet_typeName.value, listOf("E"), net.akehurst.kotlinx.collections.OrderedSet::class) {
-                //TODO:
+                supertype("Collection") { ref("E") }
+                // ordered, so the first and last elements are defined (the value may be held as a List, e.g. one created by an asm-transform)
+                propertyPrimitive<Collection<*>, Any?>("first", "E", false, "First element in the OrderedSet.", accessor = { self -> self.firstOrNull() })
+                propertyPrimitive<Collection<*>, Any?>("last", "E", false, "Last element in the OrderedSet.", accessor = { self -> self.lastOrNull() })
             }
             collection(Map_typeName.value, listOf("K", "V"), kotlin.collections.Map::class) {
                 supertype("Collection") { ref("Pair") }

@@ -610,10 +610,10 @@ class M2mTransformInterpreterCombined(
      * true if 'rule' was already applied for the variables bound in 'matched' (as QVT, a rule is applied at most once for the same binding)
      */
     private fun isAlreadyApplied(m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, matched: TemplateMatchResult, arguments: Map<String, TypedObject>): Boolean =
-        m2mExecution.appliedBindings[rule]?.any { b -> sameBinding(b, bindingKey(matched, arguments)) } ?: false
+        m2mExecution.appliedBindings[rule]?.contains(m2mExecution.bindingIdentity(bindingKey(matched, arguments))) ?: false
 
     private fun markApplied(m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, matched: TemplateMatchResult, arguments: Map<String, TypedObject>) {
-        m2mExecution.appliedBindings.getOrPut(rule) { mutableListOf() }.add(bindingKey(matched, arguments))
+        m2mExecution.appliedBindings.getOrPut(rule) { mutableSetOf() }.add(m2mExecution.bindingIdentity(bindingKey(matched, arguments)))
     }
 
     private fun sameBinding(a: Map<String, TypedObject>, b: Map<String, TypedObject>): Boolean =
