@@ -161,6 +161,13 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
     protected fun resolvedDefinitionOf(type: TypeInstance): TypeDefinition =
         resolvedDefinitionOrNullOf(type) ?: type.resolvedDefinition
 
+    /** typesDomain.findByQualifiedNameOrNull(qualifiedName)?.type(), cached while in a run (see beginTypeCache) */
+    protected fun typeOfQualifiedNameOrNull(qualifiedName: QualifiedName): TypeInstance? =
+        when (val tc = _typeCache) {
+            null -> typesDomain.findByQualifiedNameOrNull(qualifiedName)?.type()
+            else -> tc.typeByQualifiedNameOrNull(qualifiedName) { typesDomain.findByQualifiedNameOrNull(it)?.type() }
+        }
+
     /** type.allResolvedProperty, cached while in a run (see beginTypeCache) */
     protected fun allResolvedPropertyOf(type: TypeInstance): Map<PropertyName, PropertyDeclarationResolved> =
         _typeCache?.allResolvedProperty(type) ?: type.allResolvedProperty
@@ -227,7 +234,7 @@ abstract class ObjectGraphAccessorMutatorCommonByReflectionAbstract<StructureTyp
         null == obj -> nothing()
         Unit == obj -> nothing()
         obj is TypedObject -> obj as TypedObject
-        obj is AsmStructure -> typedAs(obj, typesDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)?.type() ?: ifNotFound)
+        obj is AsmStructure -> typedAs(obj, typeOfQualifiedNameOrNull(obj.qualifiedTypeName) ?: ifNotFound)
         else -> when (obj) {
             is Boolean -> typedAs(obj, StdLibDefault.Boolean)
             is Byte -> typedAs(obj.toLong(), StdLibDefault.Integer)

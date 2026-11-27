@@ -25,6 +25,7 @@ import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypeArgumentNamed
 import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.types.asm.TypeInstanceSimple
 
 /**
@@ -94,4 +95,15 @@ internal class TypeCache {
             null -> type.allResolvedMethod
             else -> _allResolvedMethod.getOrPut(k) { type.allResolvedMethod }
         }
+
+    private val _typeByQualifiedName = mutableMapOf<QualifiedName, TypeInstance?>()
+
+    /**
+     * the type (without type arguments) of the definition with the given qualified name, from [find] (e.g. typesDomain.findByQualifiedNameOrNull(qn)?.type()).
+     * The same TypeInstance is given for each lookup of the name in a run (e.g. for each AsmStructure of that type); not found (null) is cached too.
+     */
+    fun typeByQualifiedNameOrNull(qualifiedName: QualifiedName, find: (QualifiedName) -> TypeInstance?): TypeInstance? = when {
+        _typeByQualifiedName.containsKey(qualifiedName) -> _typeByQualifiedName[qualifiedName]
+        else -> find.invoke(qualifiedName).also { _typeByQualifiedName[qualifiedName] = it }
+    }
 }
