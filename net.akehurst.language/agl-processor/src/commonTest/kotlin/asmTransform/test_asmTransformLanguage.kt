@@ -18,6 +18,10 @@
 package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import kotlin.test.assertEquals
+import net.akehurst.language.expressions.processor.AglExpressions
+import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.test.AsmTransformDomainTest
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
@@ -28,6 +32,20 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class test_asmTransformLanguage {
+
+    @Test
+    fun process_grammarString_EQ_grammarModel() {
+        // AT-Q8: the grammar string must parse and be the same as the grammar built in code
+        val res = Agl.registry.agl.grammar.processor!!.process(
+            AglBase.grammarString + "\n" + AglExpressions.grammarString + "\n" + AsmTransform.grammarString,
+            Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry()) } }
+        )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val actual = res.asm!!.findDefinitionByQualifiedNameOrNull(AsmTransform.defaultTargetGrammar.qualifiedName)!!.asString()
+        val expected = AsmTransform.defaultTargetGrammar.asString()
+        assertEquals(expected, actual)
+    }
+
 
     companion object Companion {
         data class TestData(
