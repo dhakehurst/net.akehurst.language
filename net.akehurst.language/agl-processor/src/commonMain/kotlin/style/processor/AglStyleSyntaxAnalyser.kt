@@ -188,16 +188,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     // selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER | semanticSelector ;
     fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleSelector {
         if (4 == nodeInfo.alt.option.asIndex) return children[0] as AglStyleSelector
-        // Must match what is done in AglGrammarSyntaxAnalyser.terminal,
-        // but keep the enclosing (single or double) quotes
-        val isPattern = nodeInfo.node.rule.tag == "PATTERN"
+        // the value is the selector as written, with its enclosing quotes and escapes (e.g. '\''), which is how it is matched
         val mt = children[0] as String
-        //val escaped = mt.substring(1, mt.length - 1)
-        val value = if (isPattern) {
-            mt.replace("\\\"", "\"")
-        } else {
-            mt.replace("\\'", "'").replace("\\\\", "\\")
-        }
         val kind = when (nodeInfo.alt.option.asIndex) {
             0 -> AglStyleSelectorKind.LITERAL
             1 -> AglStyleSelectorKind.PATTERN
@@ -205,8 +197,6 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
             3 -> AglStyleSelectorKind.SPECIAL
             else -> error("Internal error: AglStyleSelectorKind not handled")
         }
-        //val str = target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
-        //return listOf(value)
         return AglStyleSelector(mt, kind)
     }
 
