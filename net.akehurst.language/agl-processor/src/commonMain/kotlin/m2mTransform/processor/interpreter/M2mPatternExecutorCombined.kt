@@ -8,6 +8,7 @@ import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.asm.ExpressionExt.freeVariables
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObjectCombined
+import net.akehurst.language.objectgraph.api.ExecutionTraceListener
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
@@ -49,7 +50,9 @@ class M2mPatternExecutorCombined(
     initialKnownVariableNames: Set<String>,
     initialExes: List<ExecutionStepCombined>,
     /** further types domains for type references in expressions, e.g. the source domains of the transform */
-    otherTypesDomains: List<net.akehurst.language.types.api.TypesDomain> = emptyList()
+    otherTypesDomains: List<net.akehurst.language.types.api.TypesDomain> = emptyList(),
+    /** if given, told about each expression node evaluated by the steps; null means no tracing */
+    traceListener: ExecutionTraceListener? = null
 ) {
 
     companion object {
@@ -92,7 +95,7 @@ class M2mPatternExecutorCombined(
     internal val _harvestSources = mutableMapOf<String, HarvestSource>()
     val executionPlan get() = _executions.topologicalSort(::compareExecutions)
 
-    private val _exprInterp = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator, null, otherTypesDomains)
+    private val _exprInterp = ExpressionsInterpreterOverTypedObjectCombined(accessorMutator, null, otherTypesDomains, traceListener)
 
     fun addExecution(value: ExecutionStepCombined) {
         value.index = _executions.size
