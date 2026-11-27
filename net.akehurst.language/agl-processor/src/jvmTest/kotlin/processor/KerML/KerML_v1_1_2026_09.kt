@@ -89,12 +89,18 @@ object KerML_v1_1_2026_09 {
 
     private val packageRegex = Regex("^\\s*(?:library\\s+|standard\\s+)*package\\s+('[^']+'|\\w+)", RegexOption.MULTILINE)
 
+    // a top-level element that is not a package (at the start of a line, e.g. 'class Camera {' in Camera.kerml)
+    private val topLevelRegex = Regex("^(?:abstract\\s+)?(?:class|struct|behavior|classifier|datatype|assoc|function|predicate|interaction|metaclass)\\s+('[^']+'|\\w+)", RegexOption.MULTILINE)
+
+    /** true if text 't' uses the top-level element 'name', as 'name::' or by an element import 'import name;' */
+    private fun uses(t: String, name: String) = t.contains("$name::") || Regex("import\\s+${Regex.escape(name)}\\s*;").containsMatchIn(t)
+
     /**
-     * the files of 'files' (other than f) whose top-level packages f uses (as 'P::'), transitively.
+     * the files of 'files' (other than f) whose top-level packages (or other top-level elements) f uses (as 'P::', or 'import P;'), transitively.
      * A package is taken from the folder of the file that uses it; if no file there defines it, from the first file (of 'files') that does.
      */
     fun usedFiles(f: File, files: List<File>): List<File> {
-        val pkgs = files.associateWith { g -> packageRegex.findAll(g.readText()).map { it.groupValues[1] }.toList() }
+        val pkgs = files.associateWith { g -> g.readText().let { t -> (packageRegex.findAll(t) + topLevelRegex.findAll(t)).map { it.groupValues[1] }.toList() } }
         val definedBy = mutableMapOf<String, MutableList<File>>()
         pkgs.forEach { (g, ps) -> ps.forEach { definedBy.getOrPut(it) { mutableListOf() }.add(g) } }
         val used = mutableListOf<File>()
@@ -103,7 +109,7 @@ object KerML_v1_1_2026_09 {
             val u = todo.removeAt(0)
             val t = u.readText()
             for ((pkg, defs) in definedBy) {
-                if (t.contains("$pkg::")) {
+                if (uses(t, pkg)) {
                     val sameFolder = defs.filter { it.parentFile == u.parentFile }
                     for (g in sameFolder.ifEmpty { defs.take(1) }) {
                         if (g != f && g !in used) {

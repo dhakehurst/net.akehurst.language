@@ -239,7 +239,6 @@ class test_KerML_v1_1_2026_09_std_metamodel_references {
             "examples/Simple Tests/ArgumentResolution.kerml",
             "examples/Simple Tests/Behaviors.kerml",
             "examples/Simple Tests/Expressions.kerml",
-            "examples/Simple Tests/FeatureChains.kerml",
             "examples/Simple Tests/Filtering.kerml",
             "examples/Simple Tests/MetadataTest.kerml",
             "examples/Simple Tests/Scoping.kerml",
