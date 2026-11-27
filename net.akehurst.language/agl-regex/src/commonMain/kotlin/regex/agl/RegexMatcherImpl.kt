@@ -109,6 +109,11 @@ internal class RegexMatcherImpl(
         }
     }
 
+    override fun isPrefixOfMatch(text: CharSequence, startPosition: Int): Boolean {
+        if (startPosition < 0 || startPosition > text.length) throw IndexOutOfBoundsException("startPosition $startPosition is out of bounds of the text of length ${text.length}")
+        return Simulation(text, startPosition).aliveAtEnd(this.start, startPosition)
+    }
+
     // the loops whose iteration started without a char being matched since
     private class LoopsStarted(val loop: State, val next: LoopsStarted?) {
         fun contains(s: State): Boolean = this.loop == s || (this.next?.contains(s) ?: false)
@@ -165,6 +170,32 @@ internal class RegexMatcherImpl(
                 pos++
             }
             return matchEnd
+        }
+
+        /**
+         * true if some way through the NFA from 'startState', starting at 'from', reads all of the text (to its end)
+         * and is then at the goal or can still read more, i.e. the text from 'from' is the start of a match
+         */
+        fun aliveAtEnd(startState: State, from: Int): Boolean {
+            if (startState == ERROR_STATE) return false
+            var current = ArrayList<State>()
+            stamp++
+            addThreads(current, startState, from)
+            var pos = from
+            while (true) {
+                if (pos == text.length) return current.isNotEmpty() // at the goal, or a thread that reads a character next
+                val next = ArrayList<State>()
+                stamp++
+                for (s in current) {
+                    if (s.isGoal.not()) {
+                        val t = s.outgoing[0]
+                        if (matches(t.matcher, text, pos)) addThreads(next, t.to, pos + 1)
+                    }
+                }
+                if (next.isEmpty()) return false
+                current = next
+                pos++
+            }
         }
 
         /** true if some way through the NFA from 'startState', starting at 'from', ends exactly at 'target' */

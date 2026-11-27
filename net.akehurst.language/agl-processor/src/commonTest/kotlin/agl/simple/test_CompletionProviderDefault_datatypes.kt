@@ -131,6 +131,8 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class A") {
                     expectedCompletionItems(
                         listOf(
+                            // 'A' can be continued as an ID (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'{'", "{"),
                         )
                     )
@@ -163,6 +165,8 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class A { prop") {
                     expectedCompletionItems(
                         listOf(
+                            // the typed word can be continued (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "ID", "<ID>"),
                             CompletionItem(CompletionItemKind.LITERAL, "':'", ":"),
                         )
                     )
@@ -193,6 +197,8 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class A { prop : B") {
                     expectedCompletionItems(
                         listOf(
+                            // the typed word can be continued (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "<typeArguments>"),
                             CompletionItem(CompletionItemKind.LITERAL, "'<'", "<"),
@@ -223,6 +229,8 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class A { prop : B<C") {
                     expectedCompletionItems(
                         listOf(
+                            // the typed word can be continued (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "<typeArguments>"),
                             CompletionItem(CompletionItemKind.LITERAL, "','", ","),
                             CompletionItem(CompletionItemKind.LITERAL, "'<'", "<"),
@@ -250,6 +258,8 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class A { prop : B<C,D") {
                     expectedCompletionItems(
                         listOf(
+                            // the typed word can be continued (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "<typeArguments>"),
                             CompletionItem(CompletionItemKind.LITERAL, "','", ","),
                             CompletionItem(CompletionItemKind.LITERAL, "'<'", "<"),
@@ -325,6 +335,8 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class A { prop : B") {
                     expectedCompletionItems(
                         listOf(
+                            // the typed word can be continued (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE> <typeArguments>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <TYPE>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeReference> >"),
@@ -350,6 +362,8 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class A { prop : B<C") {
                     expectedCompletionItems(
                         listOf(
+                            // the typed word can be continued (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeReference> >"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeReference> , <typeReference> >"),
                             CompletionItem(CompletionItemKind.LITERAL, "','", ","),
@@ -379,6 +393,8 @@ class test_CompletionProviderDefault_datatypes {
                 sentencePass("class A { prop : B<C,D") {
                     expectedCompletionItems(
                         listOf(
+                            // the typed word can be continued (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeReference> >"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeReference> , <typeReference> >"),
                             CompletionItem(CompletionItemKind.LITERAL, "','", ","),
@@ -468,6 +484,8 @@ class test_CompletionProviderDefault_datatypes {
                         listOf(
                             // completes the typed word 'Int', from its start
                             CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"),
+                            // 'Int' can be continued as a TYPE (issue #57, IC1)
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
                             // 'Int' is complete, what can come next (no references, a property name 'ID' refers to nothing)
                             CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <typeReference>"),
                             CompletionItem(CompletionItemKind.SEGMENT, "typeArguments", "< <typeArgumentList> >"),
