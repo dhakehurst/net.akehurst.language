@@ -44,6 +44,11 @@ import net.akehurst.language.m2mTransform.api.ObjectTemplate
 import net.akehurst.language.m2mTransform.api.CollectionTemplate
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.CreateObjectExpression
+import net.akehurst.language.expressions.api.*
+import net.akehurst.language.m2mTransform.api.PropertyTemplateExpression
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypeParameterReference
 
 class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, SentenceContext> {
 
@@ -122,6 +127,8 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                                 v.where.forEach { w ->
                                     resolveRuleCall(def, k, "where", w, locationMap)
                                 }
+                                checkVariablesBound(def, v)
+                                if (v is M2MTransformMapping) checkAssignedTypes(def, v)
                             }
                         }
                     }
@@ -198,6 +205,207 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Senten
                 }
             }
 
+            else -> Unit
+        }
+    }
+
+    /**
+     * Each variable used in an expression of a pattern rule must be bound (issue #20, ER8): by the rule's domain signatures,
+     * parameters or pivots, by a template ('name == n', 'p:Point { }', a gap 'rest:...', a member that is only a variable),
+     * or as an argument of a 'when'/'where' call that is only a variable (it may be the target the call binds).
+     * Bindings of the rules this rule extends count too. Names inside 'with', in lambdas and block assignments are local,
+     * and a name in the '{ p := ... }' of a constructor may be a property of the created object, so those are not reported.
+     */
+    private fun checkVariablesBound(def: M2mTransformRuleSet, rule: M2mTransformPatternRule) {
+        val bound = mutableSetOf<String>()
+        val visited = mutableSetOf<M2mTransformRule>()
+        fun bindAll(r: M2mTransformRule) {
+            if (!visited.add(r)) return
+            r.domainSignature.values.forEach { bound.add(it.variable.name.value) }
+            r.parameters.forEach { bound.add(it.name.value) }
+            if (r is M2mTransformPatternRule) {
+                r.pivot.keys.forEach { bound.add(it.value) }
+                r.domainTemplate.values.forEach { bindTemplate(it, bound) }
+                val calls = listOfNotNull(r.when_ as? RuleCall) + r.where
+                calls.forEach { c -> c.domainArguments.values.forEach { a -> if (a is RootExpression) bound.add(a.name) } }
+            }
+            r.extends.forEach { e -> e.resolved?.let { bindAll(it) } }
+        }
+        bindAll(rule)
+
+        val used = mutableListOf<String>()
+        rule.domainTemplate.values.forEach { usesInTemplate(it, used) }
+        if (rule is M2MTransformMapping) rule.expression.values.forEach { e -> if (null != e) usesIn(e, emptySet(), used) }
+        when (val wn = rule.when_) {
+            null -> Unit
+            is RuleCall -> callUses(wn, used)
+            else -> usesIn(wn, emptySet(), used)
+        }
+        rule.where.forEach { callUses(it, used) }
+
+        used.filter { it !in bound }.distinct().forEach { n ->
+            _issues.error(
+                ruleLocation(def, rule.name),
+                "In rule '${rule.name.value}' of transform '${def.name.value}', the variable '$n' is used but never bound; bind it in a template (e.g. 'name == $n'), as a rule parameter, or with a 'when'/'where' call"
+            )
+        }
+    }
+
+    /**
+     * In a mapping, a value assigned with ':=' must conform to the type it is assigned to (issue #20, ER8):
+     * the property in 'T() { p := v }', or the target variable in 'domain d x:T := v'.
+     * Only checked when the type of the value is certain: a variable whose type is given by the domain signature,
+     * a pivot or parameter, or by the template property it is bound to, a literal, and property navigations from them.
+     * Collections, 'Any' and nullability are not checked.
+     */
+    private fun checkAssignedTypes(def: M2mTransformRuleSet, rule: M2MTransformMapping) {
+        val env = mutableMapOf<String, TypeInstance?>() // null: bound more than once with different types
+        fun bind(name: String, t: TypeInstance?) {
+            if (null == t) return
+            env[name] = if (env.containsKey(name) && env[name] != t) null else t
+        }
+        rule.domainSignature.values.forEach { bind(it.variable.name.value, it.variable.type) }
+        rule.pivot.values.forEach { bind(it.name.value, it.type) }
+        rule.parameters.forEach { bind(it.name.value, it.type) }
+        fun bindTemplate(rhs: PropertyTemplateRhs, type: TypeInstance?) {
+            when (rhs) {
+                is ObjectTemplate -> {
+                    val t = rhs.type ?: type
+                    rhs.identifier?.let { bind(it.value, t) }
+                    val props = t?.takeIf { null != it.resolvedDefinitionOrNull }?.allResolvedProperty ?: emptyMap()
+                    rhs.propertyTemplate.forEach { (pn, pt) -> bindTemplate(pt.rhs, props[PropertyName(pn.value)]?.typeInstance) }
+                }
+
+                is PropertyTemplateExpression -> (rhs.expression as? RootExpression)?.let { if (!it.isSelf && !it.isNothing) bind(it.name, type) }
+                else -> Unit
+            }
+        }
+        rule.domainTemplate.forEach { (dr, rhs) -> bindTemplate(rhs, rule.domainSignature[dr]?.variable?.type) }
+
+        fun literalType(qn: QualifiedName): TypeInstance? =
+            def.domainParameterResolved.values.firstNotNullOfOrNull { it.findByQualifiedNameOrNull(qn) }?.type()
+                ?: StdLibDefault.findOwnedTypeNamed(qn.last)?.type()
+
+        fun typeOf(e: Expression): TypeInstance? = when (e) {
+            is RootExpression -> if (e.isSelf || e.isNothing) null else env[e.name]
+            is LiteralExpression -> literalType(e.qualifiedTypeName)
+            is GroupExpression -> typeOf(e.expression)
+            is NavigationExpression -> e.parts.fold(typeOf(e.start)) { t, part ->
+                when {
+                    null == t || null == t.resolvedDefinitionOrNull -> null
+                    part is PropertyCall -> t.allResolvedProperty[PropertyName(part.propertyName)]?.typeInstance
+                    else -> null
+                }
+            }
+
+            else -> null
+        }
+
+        fun checkable(t: TypeInstance?): TypeInstance? = t?.takeIf {
+            val td = it.resolvedDefinitionOrNull
+            null != td && it !is TypeParameterReference && !it.isCollection
+                && td != StdLibDefault.AnyType.resolvedDefinition && td != StdLibDefault.NothingType.resolvedDefinition
+        }?.notNullable()
+
+        fun check(valueExpr: Expression, target: TypeInstance?, what: String) {
+            val tt = checkable(target) ?: return
+            val vt = checkable(typeOf(valueExpr)) ?: return
+            if (!vt.conformsTo(tt)) {
+                _issues.error(
+                    ruleLocation(def, rule.name),
+                    "In rule '${rule.name.value}' of transform '${def.name.value}', the value '${valueExpr.asString()}' has type '${vt.typeName.value}', which does not conform to the type '${tt.typeName.value}' of $what"
+                )
+            }
+        }
+
+        rule.expression.forEach { (dr, expr) ->
+            if (null == expr) return@forEach
+            val targetVar = rule.domainSignature[dr]?.variable
+            when (expr) {
+                is CreateObjectExpression -> {
+                    val domains = (listOfNotNull(def.domainParameterResolved[dr]) + def.domainParameterResolved.values).distinct()
+                    val td = domains.firstNotNullOfOrNull { it.findFirstDefinitionByPossiblyQualifiedNameOrNull(expr.possiblyQualifiedTypeName) }
+                    if (td is DataType) {
+                        val props = td.type().allResolvedProperty
+                        expr.propertyAssignments.forEach { pa ->
+                            props[PropertyName(pa.variable.name)]?.let { pd -> check(pa.rhs, pd.typeInstance, "property '${pa.variable.name}' of '${td.name.value}'") }
+                        }
+                    }
+                }
+
+                else -> targetVar?.let { check(expr, it.type, "'${it.name.value}'") }
+            }
+        }
+    }
+
+    private fun bindTemplate(rhs: PropertyTemplateRhs, bound: MutableSet<String>) {
+        rhs.identifier?.let { bound.add(it.value) }
+        when (rhs) {
+            is ObjectTemplate -> rhs.propertyTemplate.values.forEach { bindTemplate(it.rhs, bound) }
+            is CollectionTemplate -> {
+                rhs.gaps.forEach { g -> g?.name?.let { bound.add(it.value) } }
+                rhs.elements.forEach { bindTemplate(it, bound) }
+            }
+            is PropertyTemplateExpression -> (rhs.expression as? RootExpression)?.let { if (!it.isSelf && !it.isNothing) bound.add(it.name) }
+            else -> Unit
+        }
+    }
+
+    private fun usesInTemplate(rhs: PropertyTemplateRhs, used: MutableList<String>) {
+        when (rhs) {
+            is ObjectTemplate -> rhs.propertyTemplate.values.forEach { usesInTemplate(it.rhs, used) }
+            is CollectionTemplate -> rhs.elements.forEach { usesInTemplate(it, used) }
+            // a template that is only a variable binds it
+            is PropertyTemplateExpression -> if (rhs.expression !is RootExpression) usesIn(rhs.expression, emptySet(), used)
+            else -> Unit
+        }
+    }
+
+    private fun callUses(call: RuleCall, used: MutableList<String>) {
+        call.ruleArguments.values.forEach { usesIn(it, emptySet(), used) }
+        call.domainArguments.values.forEach { usesIn(it, emptySet(), used) }
+    }
+
+    /** the root names used in [expr] that are not [local] */
+    private fun usesIn(expr: Expression, local: Set<String>, used: MutableList<String>) {
+        fun u(e: Expression) = usesIn(e, local, used)
+        when (expr) {
+            is RootExpression -> if (!expr.isSelf && !expr.isNothing && !expr.name.startsWith("$") && expr.name !in local) used.add(expr.name)
+            is LiteralExpression -> Unit
+            is NavigationExpression -> {
+                u(expr.start)
+                expr.parts.forEach { p ->
+                    when (p) {
+                        is MethodCall -> p.arguments.forEach { u(it) }
+                        is IndexOperation -> p.indices.forEach { u(it) }
+                        else -> Unit
+                    }
+                }
+            }
+            is CreateObjectExpression -> {
+                expr.constructorArguments.forEach { u(it.rhs) }
+                // a name in '{ p := ... }' may be a property of the created object, it is not checked
+            }
+            is CreateTupleExpression -> expr.propertyAssignments.forEach { u(it.rhs) }
+            is OnExpression -> u(expr.expression) // its '{ p := ... }' as for a constructor
+            is FunctionCall -> expr.arguments.forEach { u(it) }
+            is LambdaExpression -> usesIn(expr.expression, local + expr.variables + "it", used)
+            is StatementBlockExpression -> {
+                val names = local + expr.assignment.map { it.variable.name }
+                expr.assignment.forEach { usesIn(it.rhs, names, used) }
+                usesIn(expr.expression, names, used)
+            }
+            is WithExpression -> u(expr.withContext) // names in its expression may be properties of the context
+            is WhenExpression -> {
+                expr.options.forEach { u(it.condition); u(it.expression) }
+                u(expr.elseOption.expression)
+            }
+            is TernaryConditionExpression -> { u(expr.condition); u(expr.trueExpression); u(expr.falseExpression) }
+            is InfixExpression -> expr.expressions.forEach { u(it) }
+            is CastExpression -> u(expr.expression)
+            is TypeTestExpression -> u(expr.expression)
+            is GroupExpression -> u(expr.expression)
+            is RuleCall -> callUses(expr, used)
             else -> Unit
         }
     }
