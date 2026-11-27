@@ -34,6 +34,7 @@ class test_ObjectGraphByReflection_typeCache {
     private class AM(td: net.akehurst.language.types.api.TypesDomain) : ObjectGraphAccessorMutatorByReflection(td, IssueHolder(), LocationMapDefault()) {
         fun props(t: TypeInstance) = allResolvedPropertyOf(t)
         fun def(t: TypeInstance) = resolvedDefinitionOrNullOf(t)
+        fun typeOf(qn: String) = typeOfQualifiedNameOrNull(qn.asQualifiedName)
     }
 
     private val domain = typesDomain("test", true) {
@@ -93,5 +94,16 @@ class test_ObjectGraphByReflection_typeCache {
             assertNull(am.def(unresolvable))
         }
         assertSame(expected, am.def(typeA()))
+    }
+
+    @Test
+    fun type_by_qualified_name_is_one_instance_in_a_run_and_not_found_is_null() {
+        val am = AM(domain)
+        assertNotSame(am.typeOf("ns.A"), am.typeOf("ns.A"))
+        am.withTypeCache {
+            assertSame(am.typeOf("ns.A"), am.typeOf("ns.A"))
+            assertNull(am.typeOf("ns.Unknown"))
+            assertNull(am.typeOf("ns.Unknown"))
+        }
     }
 }

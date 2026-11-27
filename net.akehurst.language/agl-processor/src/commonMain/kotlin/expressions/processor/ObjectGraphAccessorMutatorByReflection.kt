@@ -653,6 +653,8 @@ constructor(
 
             is Iterator<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
             is Function<*> -> StdLibDefault.Lambda
+            // looked up by name, cached while in a run; if not found the external getter gives ifNotFound (with its issue)
+            is AsmStructure -> typeOfQualifiedNameOrNull(obj.qualifiedTypeName) ?: externalGetter.typeFor(obj, ifNotFound)
             else -> externalGetter.typeFor(obj, ifNotFound)//typesDomain.findFirstTypeFor(obj::class)?.type() ?: externalGetter.typeFor(obj, ifNotFound)
         }
     }
