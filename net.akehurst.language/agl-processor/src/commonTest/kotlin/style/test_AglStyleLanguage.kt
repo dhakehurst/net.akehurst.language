@@ -367,4 +367,31 @@ class test_AglStyleLanguage {
         assertEquals("ID", (result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule).selector[0].value)
     }
 
+    // SD2: a declaration repeated in one rule gives a warning, the last value is used
+    @Test
+    fun duplicate_declaration__warning() {
+        val text = """
+            namespace test
+            styles Test {
+                ID {
+                    foreground: red;
+                    foreground: blue;
+                }
+                $$ "'[a-z]+'" { font-weight: bold; font-weight: normal; }
+            }
+        """.trimIndent()
+        val result = process(text)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(71, 9, 5, 17, null), "Style 'foreground' is declared more than once in this rule, the last value is used"),
+                LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(134, 40, 7, 20, null), "Style 'font-weight' is declared more than once in this rule, the last value is used"),
+            ),
+            result.allIssues.toList()
+        )
+        val rule = result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+        assertEquals("blue", rule.declaration["foreground"]?.value)
+        val meta = result.asm!!.allDefinitions[0].rules[1] as AglStyleMetaRule
+        assertEquals("normal", meta.declaration["font-weight"]?.value)
+    }
+
 }

@@ -393,7 +393,6 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     }
                     createObject("semanticSelector", "AglStyleSelector") { /* custom SyntaxAnalyser */ }
                     leafStringRule("semanticKind")
-                    transToListOf("styleList", "AglStyleDeclaration", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("style", "AglStyleDeclaration") { /* custom SyntaxAnalyser */ }
                     child0StringRule("styleValue")
                     leafStringRule("LITERAL")

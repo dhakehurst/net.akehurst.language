@@ -55,7 +55,6 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::selectorSingle)
         super.register(this::semanticSelector)
         super.register(this::semanticKind)
-        super.register(this::styleList)
         super.register(this::style)
         super.register(this::styleValue)
         super.register(this::possiblyQualifiedName)
@@ -65,6 +64,9 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
 
     /** the location of each possiblyQualifiedName node, in the order the nodes end (used to locate each name of an 'extends') */
     private val _pqnLocations = mutableListOf<InputLocation>()
+
+    /** the location of each 'style' node, in the order the nodes end (used to locate a repeated declaration) */
+    private val _styleLocations = mutableListOf<InputLocation>()
 
     // possiblyQualifiedName = [IDENTIFIER / '.']+ ; (from Base, the same value as BaseSyntaxAnalyser gives, but its location is kept)
     fun possiblyQualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName {
@@ -78,6 +80,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)>
         ruleBuilder.forEach { it.invoke(ns) }
         _pqnLocations.clear()
+        _styleLocations.clear()
         val su = AglStyleDomainDefault(name = SimpleName("ParsedStyleUnit"), namespace = listOf(ns))
         return su
     }
@@ -138,23 +141,23 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleRule =
         children[0] as AglStyleRule
 
-    // metaRule = '$$' PATTERN '{' styleList '}' ;
+    // metaRule = '$$' PATTERN '{' style* '}' ;
     fun metaRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleMetaRule {
         val patternStr = children[1] as String //TODO: ? selector combinations, and/or/contains etc
         val escaped = EscapedPattern(patternStr.removeSurrounding("\""))
         val styles: List<AglStyleDeclaration> = children[3] as List<AglStyleDeclaration>
         val rule = AglStyleMetaRuleDefault(escaped)
-        styles.forEach { rule.declaration[it.name] = it }
+        addDeclarations(rule.declaration, styles)
         return rule
     }
 
-    // tagRule = selectorExpression '{' styleList '}' ;
+    // tagRule = selectorExpression '{' style* '}' ;
     fun tagRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleTagRule {
         val selector = children[0] as List<AglStyleSelector> //TODO: ? selector combinations, and/or/contains etc
 
         val styles: List<AglStyleDeclaration> = children[2] as List<AglStyleDeclaration>
         val rule = AglStyleTagRuleDefault(selector)
-        styles.forEach { rule.declaration[it.name] = it }
+        addDeclarations(rule.declaration, styles)
         return rule
     }
 
@@ -217,15 +220,27 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun semanticKind(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
         children[0] as String
 
-    // styleList = style* ;
-    fun styleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleDeclaration> =
-        children as List<AglStyleDeclaration>
-
     // style = STYLE_ID ':' styleValue ';' ;
     fun style(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleDeclaration {
         val name = children[0] as String
         val value = children[2] as String
+        _styleLocations.add(sentence.locationForNode(nodeInfo.node))
         return AglStyleDeclaration(name, value)
+    }
+
+    /**
+     * the declarations of a rule, in order; a name declared more than once gives a warning, the last value is used (as in CSS).
+     * The declarations are the last 'style' nodes ended before the rule.
+     */
+    private fun addDeclarations(declaration: MutableMap<String, AglStyleDeclaration>, styles: List<AglStyleDeclaration>) {
+        val locations = _styleLocations.takeLast(styles.size)
+        repeat(styles.size) { _styleLocations.removeAt(_styleLocations.lastIndex) }
+        styles.forEachIndexed { i, st ->
+            if (declaration.containsKey(st.name)) {
+                issues.warn(locations[i], "Style '${st.name}' is declared more than once in this rule, the last value is used")
+            }
+            declaration[st.name] = st
+        }
     }
 
     // styleValue = STYLE_VALUE | STRING ;
