@@ -75,9 +75,25 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         super.register(this::expression)
     }
 
+    /** an option that the asm-transform does not know is a warning, e.g. a misspelt option (AT-Q6) */
+    private fun warnUnknownOptions(options: List<Pair<String, Any>>) {
+        options.filter { it.first !in KNOWN_OPTIONS }.forEach { opt ->
+            issues.warn(
+                // the option node may include following skip text, so the location is that of '#name'
+                locationMap[opt]?.let { InputLocation(it.position, it.column, it.line, 1 + opt.first.length, it.sentenceIdentity) },
+                "Unknown option '#${opt.first}', the asm-transform options are ${KNOWN_OPTIONS.joinToString(separator = " and ") { "'#$it'" }}"
+            )
+        }
+    }
+
+    private companion object {
+        val KNOWN_OPTIONS = listOf(AsmTransformSemanticAnalyser.OPTION_OVERRIDE_DEFAULT, AsmTransformSemanticAnalyser.OPTION_CREATE_TYPES)
+    }
+
     // override unit = option* namespace* ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AsmTransformDomain {
         val options = children[0] as List<Pair<String, String>>
+        warnUnknownOptions(options)
         val namespaces = children[1] as List<AsmTransformNamespace>
         val name = SimpleName("ParsedTransformUnit") //TODO: how to specify name, does it matter?
         //val typeModel = TypeModelSimple(name) //TODO: how to specify type model ?
@@ -95,6 +111,7 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         val pqn = children[1] as PossiblyQualifiedName
         val nsName = pqn.asQualifiedName(null)
         val options = children[2] as List<Pair<String, String>>
+        warnUnknownOptions(options)
         val imports = children[3] as List<Import>
         val transformBuilders = children[4] as List<(AsmTransformNamespaceDefault) -> AsmTransformRuleSet>
 
@@ -115,6 +132,7 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         val name = SimpleName(children[1] as String)
         val extends = children[2] as List<PossiblyQualifiedName>? ?: emptyList()
         val options = children[4] as List<Pair<String, String>>
+        warnUnknownOptions(options)
         val typeImports = children[5] as List<Import>
         val rules = children[6] as List<AsmTransformationRule>
 
