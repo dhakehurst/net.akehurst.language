@@ -46,7 +46,12 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
      * further types domains in which type references (e.g. in 'is', 'as') are looked up,
      * after the types domain of the objectGraph, e.g. the source domains of a model-to-model transform
      */
-    val otherTypesDomains: List<TypesDomain> = emptyList()
+    val otherTypesDomains: List<TypesDomain> = emptyList(),
+    /**
+     * if given, told about each expression node as it is evaluated (a step of kind EXPRESSION), with its result;
+     * null means no tracing
+     */
+    val traceListener: ExecutionTraceListener? = null
 ) {
 
     val issues get() = objectGraph.issues
@@ -92,6 +97,16 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         }
     }
 
+    private fun expressionStep(evc: EvaluationContext, expression: Expression) =
+        TraceStep(TraceStepKind.EXPRESSION, expression, evc.self, evc.allVisibleNamedValues()) {
+            expression.asString().replace(Regex("\\s+"), " ").trim()
+        }
+
+    private fun navigationPartStep(evc: EvaluationContext, from: TypedObject, part: NavigationPart) =
+        TraceStep(TraceStepKind.EXPRESSION, part, from, evc.allVisibleNamedValues()) {
+            part.asString().replace(Regex("\\s+"), " ").trim()
+        }
+
     // --- Non-suspending API ---
 
     /**
@@ -108,24 +123,26 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     open fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject = withIssueContext(evc, expression) {
         // the types do not change during an evaluation, so type lookups are cached (nested evaluations share the cache)
         objectGraph.withTypeCache {
-            when (expression) {
-                is RootExpression -> this.evaluateRootExpression(evc, expression)
-                is LiteralExpression -> this.evaluateLiteralExpression(expression)
-                is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
-                is FunctionCall -> this.evaluateFunctionCall(evc, expression)
-                is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
-                is OnExpression -> evaluateExpression(evc, expression.expression).also { self -> propertyAssignmentBlock(evc, self, expression.propertyAssignments) }
-                is NavigationExpression -> this.evaluateNavigation(evc, expression)
-                is LambdaExpression -> this.evaluateLambda(evc, expression)
-                is WithExpression -> this.evaluateWith(evc, expression)
-                is WhenExpression -> this.evaluateWhen(evc, expression)
-                is TernaryConditionExpression -> this.evaluateTernaryCondition(evc, expression)
-                is InfixExpression -> this.evaluateInfix(evc, expression)
-                is CastExpression -> this.evaluateCast(evc, expression)
-                is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
-                is GroupExpression -> this.evaluateGroup(evc, expression)
-                is StatementBlockExpression -> this.evaluateStatementBlockExpression(evc, expression)
-                else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
+            traceListener.traceStep({ expressionStep(evc, expression) }, { it }) { _ ->
+                when (expression) {
+                    is RootExpression -> this.evaluateRootExpression(evc, expression)
+                    is LiteralExpression -> this.evaluateLiteralExpression(expression)
+                    is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
+                    is FunctionCall -> this.evaluateFunctionCall(evc, expression)
+                    is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
+                    is OnExpression -> evaluateExpression(evc, expression.expression).also { self -> propertyAssignmentBlock(evc, self, expression.propertyAssignments) }
+                    is NavigationExpression -> this.evaluateNavigation(evc, expression)
+                    is LambdaExpression -> this.evaluateLambda(evc, expression)
+                    is WithExpression -> this.evaluateWith(evc, expression)
+                    is WhenExpression -> this.evaluateWhen(evc, expression)
+                    is TernaryConditionExpression -> this.evaluateTernaryCondition(evc, expression)
+                    is InfixExpression -> this.evaluateInfix(evc, expression)
+                    is CastExpression -> this.evaluateCast(evc, expression)
+                    is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
+                    is GroupExpression -> this.evaluateGroup(evc, expression)
+                    is StatementBlockExpression -> this.evaluateStatementBlockExpression(evc, expression)
+                    else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
+                }
             }
         }
     }
@@ -210,24 +227,26 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     open suspend fun evaluateExpressionSuspend(evc: EvaluationContext, expression: Expression): TypedObject = withIssueContext(evc, expression) {
         // the types do not change during an evaluation, so type lookups are cached (nested evaluations share the cache)
         objectGraph.withTypeCache {
-            when (expression) {
-                is RootExpression -> this.evaluateRootExpressionSuspend(evc, expression)
-                is LiteralExpression -> this.evaluateLiteralExpression(expression)
-                is CreateObjectExpression -> this.evaluateCreateObjectSuspend(evc, expression)
-                is FunctionCall -> this.evaluateFunctionCallSuspend(evc, expression)
-                is CreateTupleExpression -> this.evaluateCreateTupleSuspend(evc, expression)
-                is OnExpression -> evaluateExpressionSuspend(evc, expression.expression).also { self -> propertyAssignmentBlockSuspend(evc, self, expression.propertyAssignments) }
-                is NavigationExpression -> this.evaluateNavigationSuspend(evc, expression)
-                is LambdaExpression -> this.evaluateLambdaSuspend(evc, expression)
-                is WithExpression -> this.evaluateWithSuspend(evc, expression)
-                is WhenExpression -> this.evaluateWhenSuspend(evc, expression)
-                is TernaryConditionExpression -> this.evaluateTernaryConditionSuspend(evc, expression)
-                is InfixExpression -> this.evaluateInfixSuspend(evc, expression)
-                is CastExpression -> this.evaluateCastSuspend(evc, expression)
-                is TypeTestExpression -> this.evaluateTypeTestSuspend(evc, expression)
-                is GroupExpression -> this.evaluateGroupSuspend(evc, expression)
-                is StatementBlockExpression -> this.evaluateStatementBlockExpressionSuspend(evc, expression)
-                else -> error("Subtype of Expression not handled in evaluateExpressionSuspend '${expression::class.simpleName}'")
+            traceListener.traceStep({ expressionStep(evc, expression) }, { it }) { _ ->
+                when (expression) {
+                    is RootExpression -> this.evaluateRootExpressionSuspend(evc, expression)
+                    is LiteralExpression -> this.evaluateLiteralExpression(expression)
+                    is CreateObjectExpression -> this.evaluateCreateObjectSuspend(evc, expression)
+                    is FunctionCall -> this.evaluateFunctionCallSuspend(evc, expression)
+                    is CreateTupleExpression -> this.evaluateCreateTupleSuspend(evc, expression)
+                    is OnExpression -> evaluateExpressionSuspend(evc, expression.expression).also { self -> propertyAssignmentBlockSuspend(evc, self, expression.propertyAssignments) }
+                    is NavigationExpression -> this.evaluateNavigationSuspend(evc, expression)
+                    is LambdaExpression -> this.evaluateLambdaSuspend(evc, expression)
+                    is WithExpression -> this.evaluateWithSuspend(evc, expression)
+                    is WhenExpression -> this.evaluateWhenSuspend(evc, expression)
+                    is TernaryConditionExpression -> this.evaluateTernaryConditionSuspend(evc, expression)
+                    is InfixExpression -> this.evaluateInfixSuspend(evc, expression)
+                    is CastExpression -> this.evaluateCastSuspend(evc, expression)
+                    is TypeTestExpression -> this.evaluateTypeTestSuspend(evc, expression)
+                    is GroupExpression -> this.evaluateGroupSuspend(evc, expression)
+                    is StatementBlockExpression -> this.evaluateStatementBlockExpressionSuspend(evc, expression)
+                    else -> error("Subtype of Expression not handled in evaluateExpressionSuspend '${expression::class.simpleName}'")
+                }
             }
         }
     }
@@ -695,15 +714,18 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         val st = expression.start
         val start = eval(evc, st)
         val result = expression.parts.fold(start) { acc, it ->
-            when (it) {
-                is PropertyCall -> when {
-                    it.propertyName == PropertyCallDefault.TYPE -> evaluateRuntimeTypeOf(acc)
-                    it.propertyName.startsWith("\$") -> evaluateSpecialProperty(acc, it.propertyName) ?: evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), it.asReference, getProperty)
-                    else -> evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), it.asReference, getProperty)
+            // each part is a step, its 'self' is the value navigated from
+            traceListener.traceStep({ navigationPartStep(evc, acc, it) }, { r -> r }) { _ ->
+                when (it) {
+                    is PropertyCall -> when {
+                        it.propertyName == PropertyCallDefault.TYPE -> evaluateRuntimeTypeOf(acc)
+                        it.propertyName.startsWith("\$") -> evaluateSpecialProperty(acc, it.propertyName) ?: evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), it.asReference, getProperty)
+                        else -> evaluatePropertyNameInternal(acc, PropertyName(it.propertyName), it.asReference, getProperty)
+                    }
+                    is MethodCall -> evaluateMethodCallInternal(evc, acc, MethodName(it.methodName), it.arguments, eval, executeMethod)
+                    is IndexOperation -> evaluateIndexOperationInternal(evc, acc, it.indices, eval)
+                    else -> error("should not happen")
                 }
-                is MethodCall -> evaluateMethodCallInternal(evc, acc, MethodName(it.methodName), it.arguments, eval, executeMethod)
-                is IndexOperation -> evaluateIndexOperationInternal(evc, acc, it.indices, eval)
-                else -> error("should not happen")
             }
         }
         return result

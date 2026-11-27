@@ -33,6 +33,10 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.m2mTransform.processor.TemplateMatchResult.Companion.merge
 import net.akehurst.language.objectgraph.api.EvaluationContext
+import net.akehurst.language.objectgraph.api.ExecutionTraceListener
+import net.akehurst.language.objectgraph.api.TraceStep
+import net.akehurst.language.objectgraph.api.TraceStepKind
+import net.akehurst.language.objectgraph.api.traceStep
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.objectgraph.api.withTypeCache
@@ -189,7 +193,9 @@ class M2mTransformExecution(
     val targetTransform: M2mTransformRuleSet,
     val targetDomainRef: DomainReference,
     val domainAccessorMutator: Map<DomainReference, ObjectGraphAccessorMutator>,
-    val issues: IssueHolder
+    val issues: IssueHolder,
+    /** if given, told about each step of the transform (rule set, rules, 'when', 'where'); null means no tracing */
+    val traceListener: ExecutionTraceListener? = null
 ) {
 
     val executionContext = M2mTransformExecutionContext()
@@ -249,14 +255,17 @@ class M2mTransformExecution(
     }
 
     /**
-     * for recording main execution steps
+     * for recording main execution steps: [body] is run as a step of the trace (if there is a [traceListener])
      */
-    fun evaluationStep(msg: String) {}
+    inline fun <T> evaluationStep(kind: TraceStepKind, element: Any, namedValues: Map<String, TypedObject>, noinline text: () -> String, body: () -> T): T =
+        traceListener.traceStep({ TraceStep(kind, element, null, namedValues, text) }, { null }) { body() }
 
     /**
-     * for recording minor execution steps
+     * for recording minor execution steps: a note on the current step of the trace (if there is a [traceListener])
      */
-    fun evaluationTrace(msg: String) {}
+    fun evaluationTrace(msg: String) {
+        traceListener?.note(null, msg)
+    }
 }
 
 //TODO: combine with suspending version
