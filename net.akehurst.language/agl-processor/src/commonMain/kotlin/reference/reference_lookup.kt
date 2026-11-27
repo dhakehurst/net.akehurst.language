@@ -89,7 +89,7 @@ class CrossReferenceLookup(
     private data class Candidate<T>(val key: List<Int>, val item: T)
 
     /** where simple type names of a declaration are resolved: the types namespace with the name of the namespace block, and the block's imports */
-    private class NameContext(val typesNamespace: TypesNamespace?, val imported: List<TypesNamespace>)
+    private class NameContext(val typesNamespace: TypesNamespace?, val imported: List<TypesNamespace>, val globalPrefix: String?)
 
     /** an object used as a key by identity, so equal declarations in different namespace blocks are different keys */
     private class ByIdentity(val obj: Any) {
@@ -119,7 +119,7 @@ class CrossReferenceLookup(
         for (decl in crossReferenceDomain.declarationsForNamespace.values) {
             val typesNamespace = typesDomain.findNamespaceOrNull(decl.namespace.qualifiedName)
             val imported = decl.importedNamespaces.mapNotNull { typesDomain.findNamespaceOrNull(it.asQualifiedName) }
-            val nameContext = NameContext(typesNamespace, imported)
+            val nameContext = NameContext(typesNamespace, imported, decl.globalPrefix)
             decl.scopeDefinition.values.forEach { sd -> sd.scopeImports.forEach { _nameContext[ByIdentity(it)] = nameContext } }
             decl.references.forEach { ref -> ref.referenceExpressionList.forEach { addNameContext(it, nameContext) } }
             for ((scopeTypeName, scopeDef) in decl.scopeDefinition) {
@@ -236,6 +236,9 @@ class CrossReferenceLookup(
             else -> null
         }
     }
+
+    /** the 'global-prefix' of the namespace block that holds 'declaration', null if it has none (or 'declaration' is not a declaration of the domain) */
+    fun globalPrefixFor(declaration: Any): String? = _nameContext[ByIdentity(declaration)]?.globalPrefix
 
     private fun addNameContext(re: ReferenceExpression, nameContext: NameContext) {
         _nameContext[ByIdentity(re)] = nameContext
