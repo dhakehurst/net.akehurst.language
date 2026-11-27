@@ -538,8 +538,18 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val nextSpines = (byPosition[pos] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
                 val next = completionProvider!!.provide(nextSpines, optionsWithOwnSentence(sentence, pos, nextSpines, opts).completionProvider)
                     .onEach { it.offeredPosition = pos }
-                val offered = wordCompletions.firstOrNull()?.offeredPosition ?: pos
-                ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
+                val all = when {
+                    // TODO: future enhancement (David 2026-11-27, IC3): leave out items that cannot be followed by the text after the position
+                    //  (needs a parse of the sentence with each item inserted, so expensive in time)
+                    opts.completionProvider.omitLiteralsAlreadyAfterPosition -> {
+                        val after = sentence.substring(skipEnd(sentence, position))
+                        (wordCompletions + next).filterNot { it.kind == CompletionItemKind.LITERAL && isAtStartOf(it.text, after) }
+                    }
+
+                    else -> wordCompletions + next
+                }
+                val offered = all.firstOrNull { it.offeredPosition != pos }?.offeredPosition ?: pos
+                ExpectedAtResultDefault(position, offered, all, IssueHolder(LanguageProcessorPhase.ALL))
             }
 
             else -> expectedTerminalsAt(sentence, position, options)
@@ -553,19 +563,51 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         else -> null
     }
 
+    /** the position after any skip text (e.g. white space) that starts at [position] in [sentence] */
+    private fun skipEnd(sentence: String, position: Int): Int {
+        val skips = targetGrammar?.allResolvedSkipTerminal ?: emptySet()
+        var p = position
+        while (p < sentence.length) {
+            val ends = skips.mapNotNull { t ->
+                val txt = t.unescapedValue.value
+                when {
+                    t.isPattern -> prefixMatcherFor(txt)?.matchAt(sentence, p)?.matchedText?.length
+                    sentence.startsWith(txt, p) -> txt.length
+                    else -> null
+                }
+            }.filter { it > 0 }
+            if (ends.isEmpty()) break
+            p += ends.max()
+        }
+        return p
+    }
+
+    /**
+     * true if [text] is the start of [after], and is not just the start of a longer word in it
+     * (a text ending in a letter, digit or '_' followed by one of those)
+     */
+    private fun isAtStartOf(text: String, after: String): Boolean {
+        fun isWordChar(c: Char) = c.isLetterOrDigit() || c == '_'
+        return when {
+            text.isEmpty() || after.startsWith(text).not() -> false
+            after.length > text.length && isWordChar(text.last()) && isWordChar(after[text.length]) -> false
+            else -> true
+        }
+    }
+
     // the matcher for each pattern, so that a pattern is parsed once
     private val _prefixMatchers = mutableMapOf<String, RegexMatcher?>()
 
     /** true if [word] can be the start of a match of [pattern] (it is a match, or can be continued to one) */
-    private fun canContinue(pattern: String, word: String): Boolean {
-        val matcher = _prefixMatchers.getOrPut(pattern) {
-            try {
-                regexMatcher(pattern)
-            } catch (t: Throwable) {
-                null // a pattern the agl regex parser does not support, no continuation is offered
-            }
+    private fun canContinue(pattern: String, word: String): Boolean = prefixMatcherFor(pattern)?.isPrefixOfMatch(word) ?: false
+
+    /** the (cached) agl regex matcher for [pattern], null if the agl regex parser does not support the pattern */
+    private fun prefixMatcherFor(pattern: String): RegexMatcher? = _prefixMatchers.getOrPut(pattern) {
+        try {
+            regexMatcher(pattern)
+        } catch (t: Throwable) {
+            null
         }
-        return matcher?.isPrefixOfMatch(word) ?: false
     }
 
     /**
