@@ -22,6 +22,9 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
+import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.kotlinx.collections.toSeparatedList
 import net.akehurst.language.regex.api.EscapedPattern
@@ -55,15 +58,26 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::styleList)
         super.register(this::style)
         super.register(this::styleValue)
+        super.register(this::possiblyQualifiedName)
     }
 
     private val _localStore = mutableMapOf<String, Any>()
+
+    /** the location of each possiblyQualifiedName node, in the order the nodes end (used to locate each name of an 'extends') */
+    private val _pqnLocations = mutableListOf<InputLocation>()
+
+    // possiblyQualifiedName = [IDENTIFIER / '.']+ ; (from Base, the same value as BaseSyntaxAnalyser gives, but its location is kept)
+    fun possiblyQualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName {
+        _pqnLocations.add(sentence.locationForNode(nodeInfo.node))
+        return (children as List<String>).joinToString(separator = "").asPossiblyQualifiedName
+    }
 
     // unit = namespace rule* ;
     fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleDomainDefault {
         val ns = children[0] as StyleNamespaceDefault
         val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)>
         ruleBuilder.forEach { it.invoke(ns) }
+        _pqnLocations.clear()
         val su = AglStyleDomainDefault(name = SimpleName("ParsedStyleUnit"), namespace = listOf(ns))
         return su
     }
@@ -81,12 +95,23 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val extendsLambda = children[2] as? (StyleNamespace) -> List<StyleSetReference>
         val typeImports = children[4] as List<Import>
         val rules: List<AglStyleTagRule> = children[5] as List<AglStyleTagRule>
+        val location = sentence.locationForNode(nodeInfo.node)
         return { ns ->
-            val extends = extendsLambda?.invoke(ns) ?: emptyList()
-            val ss = AglStyleSetDefault(ns, name, extends)
-                .also { setLocationFor(it, nodeInfo, sentence) }
-            typeImports.forEach { ss.addImportType(it) }
-            (ss.rules as MutableList).addAll(rules)
+            when {
+                // a second style set with the same name is reported, not added (the first one is kept)
+                null != ns.findOwnedDefinitionOrNull(name) -> issues.error(
+                    location,
+                    "namespace '${ns.qualifiedName.value}' already contains a style set named '${name.value}'."
+                )
+
+                else -> {
+                    val extends = extendsLambda?.invoke(ns) ?: emptyList()
+                    val ss = AglStyleSetDefault(ns, name, extends)
+                        .also { setLocationFor(it, nodeInfo, sentence) }
+                    typeImports.forEach { ss.addImportType(it) }
+                    (ss.rules as MutableList).addAll(rules)
+                }
+            }
         }
     }
 
@@ -98,11 +123,13 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (StyleNamespace) -> List<StyleSetReference> {
         val extendNameList = children[1] as List<PossiblyQualifiedName>
         val sl = extendNameList.toSeparatedList<Any, PossiblyQualifiedName, String>()
-
+        // the names are the last possiblyQualifiedName nodes ended before this one, in order
+        val nameLocations = _pqnLocations.takeLast(sl.items.size)
+        repeat(sl.items.size) { _pqnLocations.removeAt(_pqnLocations.lastIndex) }
         return { ns ->
-             sl.items.map {
-                // need to manually add the Reference as it is not seen by the super class
-                StyleSetReferenceDefault(ns, it).also { setLocationFor(it, nodeInfo, sentence) }
+            sl.items.mapIndexed { i, pqn ->
+                // need to manually add the Reference as it is not seen by the super class; each reference is located at its name
+                StyleSetReferenceDefault(ns, pqn).also { locationMap.add(nodeInfo.path + i.toString(), it, nameLocations[i]) }
             }
         }
     }

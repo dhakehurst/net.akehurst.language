@@ -309,4 +309,62 @@ class test_AglStyleLanguage {
         assertEquals("bold", actual_0_0.declaration["font-weight"]?.value)
     }
 
+    // a value that is not a STYLE_VALUE is written back as a STRING, so asString can be parsed again
+    @Test
+    fun asString_quotes_string_values() {
+        val text = """
+            namespace test
+            styles Test {
+                ID {
+                    font-family: 'Courier New';
+                    content: 'it\'s here';
+                    foreground: #82AAFF;
+                    background: '#102030';
+                }
+            }
+        """.trimIndent()
+        val result = process(text)
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
+        val rule = result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+        assertEquals("Courier New", rule.declaration["font-family"]?.value)
+        assertEquals("it's here", rule.declaration["content"]?.value)
+
+        val str = result.asm!!.asString()
+        assertTrue(str.contains("font-family: 'Courier New';"), str)
+        assertTrue(str.contains("content: 'it\\'s here';"), str)
+        assertTrue(str.contains("foreground: #82AAFF;"), str)
+        assertTrue(str.contains("background: #102030;"), str)
+        val result2 = process(str)
+        assertTrue(result2.allIssues.errors.isEmpty(), result2.allIssues.toString())
+        assertEquals(str, result2.asm!!.asString())
+        val rule2 = result2.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+        assertEquals(rule.declaration, rule2.declaration)
+    }
+
+    // a second style set with the same name in one namespace is an error, the first is kept
+    @Test
+    fun duplicate_styleSet__error() {
+        val text = """
+            namespace test
+            styles Test {
+                ID { foreground: red; }
+            }
+            styles Test {
+                INT { foreground: blue; }
+            }
+        """.trimIndent()
+        val result = process(text)
+        assertEquals(
+            listOf(
+                LanguageIssue(
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(59, 1, 5, 45, null),
+                    "namespace 'test' already contains a style set named 'Test'."
+                )
+            ),
+            result.allIssues.errors.toList()
+        )
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals("ID", (result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule).selector[0].value)
+    }
+
 }

@@ -397,4 +397,23 @@ class test_SemanticAnalyser {
         val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
         assertEquals(listOf("B"), test.allRules.filterIsInstance<AglStyleTagRule>().map { it.selector.first().value })
     }
+
+    // each name of an 'extends' has its own location
+    @Test
+    fun extends_not_found__location_of_each_name() {
+        val sentence = """
+            namespace test
+            styles Test : A,
+               B {
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(29, 15, 2, 1, null), "StyleSet 'A' not found"),
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(35, 4, 3, 1, null), "StyleSet 'B' not found"),
+            ),
+            actual.allIssues.errors.toList()
+        )
+    }
 }
