@@ -58,7 +58,14 @@ in the order written; a later rule overrides only the declarations it sets.
 So `$keyword { font-weight: bold; }` then `'circle' { foreground: red; }` makes `circle` bold and red.
 
 The declarations are CSS-like `name: value;` pairs; the editor decides which names it supports.
-`styles B : A { }` extends style set `A`.
+A value that is not a single word (e.g. `font-family: 'Courier New';`) is written in single quotes.
+A name declared twice in one rule gives a warning; the last value is used.
+
+`styles B : A { }` extends style set `A`: `B` has the rules of `A`, then its own.
+`A` can be in the same style file or in the context (e.g. the style sets of other languages).
+A simple name is found in the namespace of `B`, then in the namespaces imported with `import`, in order
+(`namespace example import other.styles` then `styles B : A { }` can extend `other.styles.A`).
+A qualified name can always be used. A style set must not extend itself, directly or indirectly.
 A style set is used for the grammar with the same qualified name (`namespace example styles Shapes` for `namespace example grammar Shapes`).
 A style set named after no grammar of the language gives a warning, unless another style set extends it.
 

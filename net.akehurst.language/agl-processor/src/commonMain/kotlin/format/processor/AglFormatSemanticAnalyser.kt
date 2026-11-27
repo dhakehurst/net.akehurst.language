@@ -94,7 +94,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
             ns.definition.forEach { def ->
                 when (def) {
                     is FormatSet -> {
-                        this.resolveRefs(context, def)
+                        this.resolveRefs(context, domain, def)
                         this.checkRuleTypes(context, def)
                     }
                     is FormatFunctionDefinition -> Unit //TODO
@@ -104,8 +104,8 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
         }
     }
 
-    private fun resolveRefs(context: SentenceContext?, def: FormatSet) {
-        def.extends.forEach { checkGrammarExistsAndResolve(context, it) }
+    private fun resolveRefs(context: SentenceContext?, domain: AglFormatDomain, def: FormatSet) {
+        def.extends.forEach { checkFormatSetExistsAndResolve(context, domain, def, it) }
     }
 
     /**
@@ -138,13 +138,28 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
         }
     }
 
-    private fun checkGrammarExistsAndResolve(context: SentenceContext?, ref: FormatSetReference) {
-        val g = context?.let { findFormatSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
-        if (null == g) {
-            this.issueError(ref, "FormatSet '${ref.nameOrQName.value}' to extend not found", null)
-        } else {
-            ref.resolveAs(g)
+    /**
+     * The format set to extend is looked for first in the format domain being analysed, then in the context.
+     * A simple name is qualified with the namespace of the extending format set.
+     * A format set that extends itself, directly or via other format sets, is an error; that reference is left unresolved.
+     */
+    private fun checkFormatSetExistsAndResolve(context: SentenceContext?, domain: AglFormatDomain, def: FormatSet, ref: FormatSetReference) {
+        val qname = ref.nameOrQName.asQualifiedName(ref.localNamespace.qualifiedName)
+        val fs = domain.findDefinitionByQualifiedNameOrNull(qname) as? FormatSet
+            ?: context?.let { findFormatSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
+        when {
+            null == fs -> this.issueError(ref, "FormatSet '${ref.nameOrQName.value}' to extend not found", null)
+            fs == def || extendsTransitively(fs, def, mutableSetOf()) ->
+                this.issueError(ref, "FormatSet '${def.qualifiedName.value}' cannot extend '${ref.nameOrQName.value}', it would extend itself", null)
+
+            else -> ref.resolveAs(fs)
         }
+    }
+
+    /** true if [fs] extends [target], following the references resolved so far */
+    private fun extendsTransitively(fs: FormatSet, target: FormatSet, visited: MutableSet<FormatSet>): Boolean = when {
+        visited.add(fs).not() -> false
+        else -> fs.extends.any { r -> r.resolved?.let { it == target || extendsTransitively(it, target, visited) } ?: false }
     }
 
 }

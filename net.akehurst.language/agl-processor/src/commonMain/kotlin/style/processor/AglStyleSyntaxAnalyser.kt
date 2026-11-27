@@ -19,6 +19,7 @@ package net.akehurst.language.style.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -86,10 +87,17 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     }
 
     // namespace = namespace possiblyQualifiedName ;
+    // namespace = 'namespace' possiblyQualifiedName option* import* definition* ; (from Base)
+    // the options and imports are kept (SD3); the imports are used to find the style sets an 'extends' names
     fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StyleNamespace {
         val qualifiedName = children[1] as PossiblyQualifiedName
-        val imports = emptyList<Import>()
-        return StyleNamespaceDefault(qualifiedName = qualifiedName.asQualifiedName(null), import = imports)
+        val options = children[2] as List<Pair<String, Any>>
+        val imports = children[3] as List<Import>
+        return StyleNamespaceDefault(
+            qualifiedName = qualifiedName.asQualifiedName(null),
+            options = OptionHolderDefault(null, options.toMap()),
+            import = imports
+        )
     }
 
     // styleSet = 'styles' IDENTIFIER extends? '{' typeImport* rule* '}' ;
