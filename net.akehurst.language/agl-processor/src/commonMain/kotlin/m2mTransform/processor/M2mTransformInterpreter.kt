@@ -20,6 +20,7 @@ package net.akehurst.language.m2mTransform.processor
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.ExecutionStep
 import net.akehurst.language.agl.m2mTransform.processor.interpreter.M2mPatternExecutor2
+import net.akehurst.language.asm.api.AsmReference
 import net.akehurst.language.asm.simple.AnyExt.asString
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.CreateObjectExpression
@@ -198,8 +199,22 @@ class M2mTransformExecution(
     /** rules being applied on demand for a 'when' clause, so that a rule does not apply itself recursively */
     val rulesAppliedForWhen = mutableSetOf<M2mTransformRule>()
 
-    /** the variable bindings each rule was applied for, a rule is applied at most once for the same binding */
-    val appliedBindings = mutableMapOf<M2mTransformRule, MutableList<Map<String, TypedObject>>>()
+    /**
+     * the variable bindings each rule was applied for, a rule is applied at most once for the same binding.
+     * A binding is the same if each variable holds the same object: compared by the values' own equals/hashCode
+     * (an AsmStructure by its fixed identity), after resolving an AsmReference to its target (see [bindingIdentity]).
+     */
+    val appliedBindings = mutableMapOf<M2mTransformRule, MutableSet<Map<String, Any>>>()
+
+    /** each variable's value as the object it holds: an AsmReference is resolved to its target, if resolved */
+    fun bindingIdentity(binding: Map<String, TypedObject>): Map<String, Any> =
+        binding.mapValues { (_, v) ->
+            val self = v.self
+            when (self) {
+                is AsmReference -> self.value ?: self
+                else -> self
+            }
+        }
     val targetAccessorMutator = domainAccessorMutator[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
 
     fun addRecord(rule: M2mTransformRule, alternatives: List<Map<DomainReference, TypedObject>>) {
@@ -1266,10 +1281,10 @@ class M2mTransformInterpreter(
      * true if 'rule' was already applied for the variables bound in 'matched' (as QVT, a rule is applied at most once for the same binding)
      */
     private fun isAlreadyApplied(m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, matched: TemplateMatchResult): Boolean =
-        m2mExecution.appliedBindings[rule]?.any { b -> sameBinding(b, matched.matchedVariables) } ?: false
+        m2mExecution.appliedBindings[rule]?.contains(m2mExecution.bindingIdentity(matched.matchedVariables)) ?: false
 
     private fun markApplied(m2mExecution: M2mTransformExecution, rule: M2mTransformPatternRule, matched: TemplateMatchResult) {
-        m2mExecution.appliedBindings.getOrPut(rule) { mutableListOf() }.add(matched.matchedVariables)
+        m2mExecution.appliedBindings.getOrPut(rule) { mutableSetOf() }.add(m2mExecution.bindingIdentity(matched.matchedVariables))
     }
 
     private fun sameBinding(a: Map<String, TypedObject>, b: Map<String, TypedObject>): Boolean =

@@ -23,6 +23,7 @@ import net.akehurst.language.types.api.PropertyDeclarationResolved
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypeArgumentNamed
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.types.asm.TypeInstanceSimple
 
@@ -30,12 +31,13 @@ import net.akehurst.language.types.asm.TypeInstanceSimple
  * Lookups on types, cached for one run of an accessor-mutator (see ObjectGraphAccessorMutator.beginTypeCache),
  * during which the types do not change.
  *
- * TypeInstances are often created anew for each value (e.g. TypeDefinition.type()), and TypeInstance.equals does not
- * always mean 'resolves to the same definition', so:
- *  - the resolved definition of a TypeInstanceSimple is keyed by what it is resolved from (its namespace (identity) and name),
- *    of any other TypeInstance by the TypeInstance itself (identity),
- *  - resolved properties/methods of a TypeInstance without type arguments are keyed by its resolved definition (identity) and nullability,
- *    of any other TypeInstance by the TypeInstance itself (identity).
+ * TypeInstances are often created anew for each value (e.g. TypeDefinition.type(), List<T>.type(..)),
+ * so nothing is keyed by TypeInstance identity (that would add an entry per instance, all with the same hashCode).
+ * TypeInstance.equals does not always mean 'resolves to the same definition', so keys are made from what a type resolves to:
+ *  - the resolved definition of a TypeInstanceSimple is keyed by what it is resolved from (its namespace (identity) and name);
+ *    other TypeInstances (tuple types, type parameter references) are not cached, their resolvedDefinitionOrNull is not a lookup,
+ *  - resolved properties/methods are keyed by the resolved definition (identity), the keys of the type arguments and nullability;
+ *    a type that (or whose type arguments) does not resolve is not cached.
  */
 internal class TypeCache {
 
@@ -45,38 +47,51 @@ internal class TypeCache {
         override fun equals(other: Any?): Boolean = other is Identity && other.obj === this.obj
     }
 
-    private data class Key(val definitionOrInstance: Identity, val isNullable: Boolean)
+    /** a resolved type: its definition (identity), the keys of its type arguments (with their names for named arguments) and nullability */
+    private data class Key(val definition: Identity, val typeArguments: List<Any>, val isNullable: Boolean)
 
     /** TypeInstanceSimple.resolvedDefinitionOrNull is namespace.findTypeNamed(qualifiedOrImportedTypeName) */
     private data class NameKey(val namespace: Identity, val name: PossiblyQualifiedName)
 
-    private val _resolvedDefinition = mutableMapOf<Any, TypeDefinition?>()
+    private val _resolvedDefinition = mutableMapOf<NameKey, TypeDefinition?>()
 
-    fun resolvedDefinitionOrNull(type: TypeInstance): TypeDefinition? {
-        val k: Any = when (type) {
-            is TypeInstanceSimple -> NameKey(Identity(type.namespace), type.qualifiedOrImportedTypeName)
-            else -> Identity(type)
+    fun resolvedDefinitionOrNull(type: TypeInstance): TypeDefinition? = when (type) {
+        is TypeInstanceSimple -> {
+            val k = NameKey(Identity(type.namespace), type.qualifiedOrImportedTypeName)
+            when {
+                _resolvedDefinition.containsKey(k) -> _resolvedDefinition[k]
+                else -> type.resolvedDefinitionOrNull.also { _resolvedDefinition[k] = it }
+            }
         }
-        return when {
-            _resolvedDefinition.containsKey(k) -> _resolvedDefinition[k]
-            else -> type.resolvedDefinitionOrNull.also { _resolvedDefinition[k] = it }
-        }
+
+        else -> type.resolvedDefinitionOrNull
     }
 
     private val _allResolvedProperty = mutableMapOf<Key, Map<PropertyName, PropertyDeclarationResolved>>()
     private val _allResolvedMethod = mutableMapOf<Key, Map<MethodName, MethodDefinitionResolved>>()
 
-    private fun keyFor(type: TypeInstance): Key {
-        val def: TypeDefinition? = when {
-            type.typeArguments.isEmpty() -> resolvedDefinitionOrNull(type)
-            else -> null
+    /** null if the type, or one of its type arguments, does not resolve */
+    private fun keyFor(type: TypeInstance): Key? {
+        val def = resolvedDefinitionOrNull(type) ?: return null
+        val args = type.typeArguments.map { ta ->
+            val k = keyFor(ta.type) ?: return null
+            when (ta) {
+                is TypeArgumentNamed -> Pair(ta.name, k)
+                else -> k
+            }
         }
-        return Key(Identity(def ?: type), type.isNullable)
+        return Key(Identity(def), args, type.isNullable)
     }
 
     fun allResolvedProperty(type: TypeInstance): Map<PropertyName, PropertyDeclarationResolved> =
-        _allResolvedProperty.getOrPut(keyFor(type)) { type.allResolvedProperty }
+        when (val k = keyFor(type)) {
+            null -> type.allResolvedProperty
+            else -> _allResolvedProperty.getOrPut(k) { type.allResolvedProperty }
+        }
 
     fun allResolvedMethod(type: TypeInstance): Map<MethodName, MethodDefinitionResolved> =
-        _allResolvedMethod.getOrPut(keyFor(type)) { type.allResolvedMethod }
+        when (val k = keyFor(type)) {
+            null -> type.allResolvedMethod
+            else -> _allResolvedMethod.getOrPut(k) { type.allResolvedMethod }
+        }
 }

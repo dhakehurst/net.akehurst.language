@@ -52,8 +52,14 @@ namespace KerML.Root.Namespaces
     // Its names are its declaredName and declaredShortName; a Feature without names has the effective name of the
     // feature its first owned Redefinition redefines (KerML 8.3.3.3.4, Feature::namingFeature), i.e. the last segment of that name
     // (the transform puts the redefined feature's name in 'general', which redefinedFeature redefines in the metamodel).
+    // A redefined feature given as a feature chain ('redefines b.a') is an owned Feature of the Redefinition ('general' is not set);
+    // its effective name is that of its last chaining feature.
     identify Element by declaredName | declaredShortName
-        | when { $self is Feature -> when { ownedRelationship.filter({ r -> r is Redefinition }).size == 0 -> $nothing else -> ownedRelationship.filter({ r -> r is Redefinition }).first.general.last } else -> $nothing }
+        | when { $self is Feature -> when {
+                ownedRelationship.filter({ r -> r is Redefinition }).size == 0 -> $nothing
+                ownedRelationship.filter({ r -> r is Redefinition }).first.ownedRelatedElement.size > 0 -> ownedRelationship.filter({ r -> r is Redefinition }).first.ownedRelatedElement.first.ownedRelationship.last.chainingFeature.last
+                else -> ownedRelationship.filter({ r -> r is Redefinition }).first.general.last
+            } else -> $nothing }
         visibility $container.visibility
     // An alias: a Membership that is not an OwningMembership gives another name to its memberElement (KerML 7.2.5.3).
     // (An OwningMembership has no memberName of its own, it is derived from the owned member, so it gives no alias.)
@@ -71,8 +77,11 @@ namespace KerML.Root.Namespaces
         // and the original type of its Conjugation.
         // The transform puts the name of the general type of FeatureTyping, Subsetting, ReferenceSubsetting, CrossSubsetting and
         // Redefinition into 'general' (the BNF assigns it through GeneralType); a Subclassification has it in 'superclassifier'.
-        // OPEN: a general type given as a feature chain is an owned Feature in ownedRelatedElement, not in 'general'.
+        // A general type given as a feature chain ('subsets f.a') is an owned Feature in ownedRelatedElement, 'general' is not set
+        // (KerML 8.2.3.5.2 chains are owned features); it is inherited from there.
         inherit forall ownedRelationship of-type Specialization members-of general when ($self is Subclassification) == false
+        inherit forall ownedRelationship of-type Specialization members-of ownedRelatedElement.first
+            when when { ($self is Subclassification) -> false general != $nothing -> false else -> ownedRelatedElement.size > 0 }
         inherit forall ownedRelationship of-type Subclassification members-of superclassifier
         inherit forall ownedRelationship of-type PortConjugation members-of originalPortDefinition
         inherit forall ownedRelationship of-type Conjugation members-of originalType
@@ -94,7 +103,12 @@ namespace KerML.Root.Namespaces
     scope Function { inherit named Performances.Evaluation }
     scope Predicate { inherit named Performances.BooleanEvaluation }
     scope Metaclass { inherit named Metaobjects.Metaobject }
-    scope Feature { inherit named Base.things }
+    scope Feature {
+        // the members of a chained Feature ('f.a') are those of its last chaining feature
+        inherit members-of ownedRelationship.filter({ r -> r is FeatureChaining }).last.chainingFeature
+            when ownedRelationship.filter({ r -> r is FeatureChaining }).size > 0
+        inherit named Base.things
+    }
     scope Step { inherit named Performances.performances }
     scope Expression { inherit named Performances.evaluations }
     scope BooleanExpression { inherit named Performances.booleanEvaluations }

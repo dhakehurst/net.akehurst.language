@@ -38,3 +38,15 @@ styles SysMLv2_0 {
         font-style: italic;
     }
 }
+
+// the sub-language (view) grammars use the same styles
+styles SysMLStateMachine : SysMLv2_0 {
+}
+styles SysMLStructure : SysMLv2_0 {
+}
+styles SysMLActivity : SysMLv2_0 {
+}
+styles SysMLSequence : SysMLv2_0 {
+}
+styles SysMLRequirements : SysMLv2_0 {
+}

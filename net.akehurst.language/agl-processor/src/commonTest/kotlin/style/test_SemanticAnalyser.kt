@@ -18,6 +18,8 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.style.api.AglStyleTagRule
 import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageIssue
@@ -262,9 +264,156 @@ class test_SemanticAnalyser {
             styles Test : Base {
             }
         """.trimIndent()
-        // only the grammar is in this context, so 'Base' is not resolved (an error); no style set name warning is given
+        // 'Base' is found in the same style file; no style set name warning is given for it
         val context = contextFromGrammar(grammarFor(grammarStr))
         val actual = aglProc.process(sentence, Agl.options { semanticAnalysis { sentenceContext(context) } })
-        assertTrue(actual.allIssues.none { it.message.startsWith("Style set ") }, actual.allIssues.toString())
+        assertTrue(actual.allIssues.isEmpty(), actual.allIssues.toString())
+    }
+
+    // an extended style set is found in the same style file, not only in the sentence context
+    private fun processWithGrammar(grammarStr: String, sentence: String) =
+        aglProc.process(sentence, Agl.options { semanticAnalysis { sentenceContext(contextFromGrammar(grammarFor(grammarStr))) } })
+
+    private val grammarAB = """
+        namespace test
+        grammar Test {
+            S = A B ;
+            A = 'a' ;
+            B = 'b' ;
+        }
+    """
+
+    @Test
+    fun extends_styleSet_in_same_file() {
+        val sentence = """
+            namespace test
+            styles Base {
+              A { foreground: red; }
+            }
+            styles Test : Base {
+              B { foreground: blue; }
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertTrue(actual.allIssues.isEmpty(), actual.allIssues.toString())
+        val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
+        assertEquals(listOf("A", "B"), test.allRules.filterIsInstance<AglStyleTagRule>().map { it.selector.first().value })
+    }
+
+    @Test
+    fun extends_styleSet_in_same_file__defined_after() {
+        val sentence = """
+            namespace test
+            styles Test : Base {
+              B { foreground: blue; }
+            }
+            styles Base {
+              A { foreground: red; }
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertTrue(actual.allIssues.isEmpty(), actual.allIssues.toString())
+        val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
+        assertEquals(listOf("A", "B"), test.allRules.filterIsInstance<AglStyleTagRule>().map { it.selector.first().value })
+    }
+
+    @Test
+    fun extends_styleSet_in_same_file__qualified() {
+        // a style file has one namespace
+        val sentence = """
+            namespace test
+            styles Base {
+              A { foreground: red; }
+            }
+            styles Test : test.Base {
+              B { foreground: blue; }
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertTrue(actual.allIssues.isEmpty(), actual.allIssues.toString())
+        val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
+        assertEquals(listOf("A", "B"), test.allRules.filterIsInstance<AglStyleTagRule>().map { it.selector.first().value })
+    }
+
+    @Test
+    fun extends_styleSet_chain_in_same_file() {
+        val sentence = """
+            namespace test
+            styles Base1 {
+              A { foreground: red; }
+            }
+            styles Base2 : Base1 {
+              S { foreground: green; }
+            }
+            styles Test : Base2 {
+              B { foreground: blue; }
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertTrue(actual.allIssues.isEmpty(), actual.allIssues.toString())
+        val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
+        assertEquals(listOf("A", "S", "B"), test.allRules.filterIsInstance<AglStyleTagRule>().map { it.selector.first().value })
+    }
+
+    @Test
+    fun extends_styleSet_not_found__error() {
+        val sentence = """
+            namespace test
+            styles Test : Base {
+              B { foreground: blue; }
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertEquals(listOf("StyleSet 'Base' not found"), actual.allIssues.errors.map { it.message })
+    }
+
+    @Test
+    fun extends_itself__error() {
+        val sentence = """
+            namespace test
+            styles Test : Test {
+              B { foreground: blue; }
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertEquals(listOf("StyleSet 'test.Test' extends itself (via 'Test')"), actual.allIssues.errors.map { it.message })
+        val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
+        assertEquals(listOf("B"), test.allRules.filterIsInstance<AglStyleTagRule>().map { it.selector.first().value })
+    }
+
+    @Test
+    fun extends_cycle__error() {
+        val sentence = """
+            namespace test
+            styles Base : Test {
+              A { foreground: red; }
+            }
+            styles Test : Base {
+              B { foreground: blue; }
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertEquals(listOf("StyleSet 'test.Test' extends itself (via 'Base')"), actual.allIssues.errors.map { it.message })
+        val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
+        assertEquals(listOf("B"), test.allRules.filterIsInstance<AglStyleTagRule>().map { it.selector.first().value })
+    }
+
+    // each name of an 'extends' has its own location
+    @Test
+    fun extends_not_found__location_of_each_name() {
+        val sentence = """
+            namespace test
+            styles Test : A,
+               B {
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(29, 15, 2, 1, null), "StyleSet 'A' not found"),
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(35, 4, 3, 1, null), "StyleSet 'B' not found"),
+            ),
+            actual.allIssues.errors.toList()
+        )
     }
 }

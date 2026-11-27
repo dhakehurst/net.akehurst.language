@@ -58,8 +58,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                 typeImport = 'import-types' possiblyQualifiedName ;
                 extends = ':' [possiblyQualifiedName / ',']+ ;
                 rule = metaRule | tagRule ;
-                metaRule = '$$' PATTERN '{' styleList '}' ;
-                tagRule = selectorExpression '{' styleList '}' ;
+                metaRule = '$$' PATTERN '{' style* '}' ;
+                tagRule = selectorExpression '{' style* '}' ;
                 selectorExpression
                  = selectorAndComposition
                  | selectorSingle
@@ -68,13 +68,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                 selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER | semanticSelector ;
                 semanticSelector = semanticKind possiblyQualifiedName ;
                 semanticKind = 'type' | 'identify' | 'refers-to' ;
-                styleList = style* ;
-                style = STYLE_ID ':' styleValue ';' ;
-                styleValue = STYLE_VALUE | STRING ;
-                
                 leaf LITERAL = "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" ;
                 leaf PATTERN = "${CommonRegexPatterns.PATTERN.escapedFoAgl.value}" ;
-                leaf SPECIAL_IDENTIFIER = "[\\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
+                leaf SPECIAL_IDENTIFIER = "[\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
+                style = STYLE_ID ':' styleValue ';' ;
+                styleValue = STYLE_VALUE | STRING ;
                 leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
                 leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
             }
@@ -395,7 +393,6 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     }
                     createObject("semanticSelector", "AglStyleSelector") { /* custom SyntaxAnalyser */ }
                     leafStringRule("semanticKind")
-                    transToListOf("styleList", "AglStyleDeclaration", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("style", "AglStyleDeclaration") { /* custom SyntaxAnalyser */ }
                     child0StringRule("styleValue")
                     leafStringRule("LITERAL")
