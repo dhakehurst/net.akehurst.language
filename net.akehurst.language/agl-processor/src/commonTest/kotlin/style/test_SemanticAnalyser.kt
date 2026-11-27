@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromRegistryStyles
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.style.api.AglStyleTagRule
 import net.akehurst.language.grammar.api.GrammarDomain
@@ -396,5 +397,73 @@ class test_SemanticAnalyser {
         assertEquals(listOf("StyleSet 'test.Test' extends itself (via 'Base')"), actual.allIssues.errors.map { it.message })
         val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
         assertEquals(listOf("B"), test.allRules.filterIsInstance<AglStyleTagRule>().map { it.selector.first().value })
+    }
+
+    // each name of an 'extends' has its own location
+    @Test
+    fun extends_not_found__location_of_each_name() {
+        val sentence = """
+            namespace test
+            styles Test : A,
+               B {
+            }
+        """.trimIndent()
+        val actual = processWithGrammar(grammarAB, sentence)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(29, 15, 2, 1, null), "StyleSet 'A' not found"),
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(35, 4, 3, 1, null), "StyleSet 'B' not found"),
+            ),
+            actual.allIssues.errors.toList()
+        )
+    }
+
+    // SD3: a simple name in an 'extends' is also looked up in the imports of the namespace, in order
+    @Test
+    fun extends_styleSet_via_namespace_import() {
+        val sentence = """
+            namespace test
+              import net.akehurst.language
+            styles Test : Base {
+              B { foreground: blue; }
+            }
+        """.trimIndent()
+        val context = contextFromGrammar(grammarFor(grammarAB)).union(contextFromRegistryStyles())
+        val actual = aglProc.process(sentence, Agl.options { semanticAnalysis { sentenceContext(context) } })
+        assertTrue(actual.allIssues.errors.isEmpty(), actual.allIssues.toString())
+        val test = actual.asm!!.findDefinitionByQualifiedNameOrNull(QualifiedName("test.Test"))!!
+        assertEquals("net.akehurst.language.Base", test.extends[0].resolved?.qualifiedName?.value)
+        assertTrue(test.allRules.size > 1, test.allRules.toString())
+    }
+
+    @Test
+    fun extends_styleSet_without_import__not_found() {
+        val sentence = """
+            namespace test
+            styles Test : Base {
+              B { foreground: blue; }
+            }
+        """.trimIndent()
+        val context = contextFromGrammar(grammarFor(grammarAB)).union(contextFromRegistryStyles())
+        val actual = aglProc.process(sentence, Agl.options { semanticAnalysis { sentenceContext(context) } })
+        assertEquals(listOf("StyleSet 'Base' not found"), actual.allIssues.errors.map { it.message })
+    }
+
+    // SD3: the options and imports of a style namespace are kept
+    @Test
+    fun namespace_options_and_imports_kept() {
+        val sentence = """
+            namespace test
+              #myOption: 'x'
+              import net.akehurst.language
+            styles Test {
+            }
+        """.trimIndent()
+        val actual = aglProc.process(sentence)
+        assertTrue(actual.allIssues.errors.isEmpty(), actual.allIssues.toString())
+        val ns = actual.asm!!.namespace[0]
+        assertEquals(listOf("net.akehurst.language"), ns.import.map { it.value })
+        assertEquals("x", ns.options.get<String>("myOption"))
+        assertTrue(actual.asm!!.asString().contains("import net.akehurst.language"), actual.asm!!.asString())
     }
 }
