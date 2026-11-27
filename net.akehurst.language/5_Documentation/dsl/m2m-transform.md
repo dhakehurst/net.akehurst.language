@@ -34,6 +34,8 @@ transform ShapesToDrawing(s:Shapes, d:Drawing) {
 * `name == n` matches the property `name`. If `n` is not yet bound, it is bound to the value of `name`; otherwise the value must equal `n`.
 * `radius == Radius { ... }` matches a nested object; if `radius` has no value, the template does not match. `prop == 'text'` matches a literal value.
 * Variables are bound separately for each match.
+* A variable used in an expression must be bound (by a domain, a template, a parameter, a pivot or a `when`/`where` call), else it is an error when the transform is checked.
+  A value assigned with `:=` whose type is known must conform to the property (or target variable) it is assigned to.
 * `domain d disc:Disc := Disc() { label := n }` (a *mapping* only) creates the target object and sets its properties with `:=`.
 * Any expression works on the right, e.g. `domain d l:String := 'circle ' + n`.
 

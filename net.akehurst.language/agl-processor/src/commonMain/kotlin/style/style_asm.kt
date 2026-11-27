@@ -136,6 +136,13 @@ class AglStyleSetDefault(
 
 }
 
+/** a value is written as STYLE_VALUE when it is one, otherwise as STRING (in single quotes, a quote escaped), the reverse of AglStyleSyntaxAnalyser.styleValue */
+private val STYLE_VALUE_REGEX = Regex("[^;: \t\n\u000B\u000C\r]+")
+internal fun styleValueAsString(value: String): String = when {
+    STYLE_VALUE_REGEX.matches(value) && value.startsWith("'").not() -> value
+    else -> "'${value.replace("'", "\\'")}'"
+}
+
 data class AglStyleMetaRuleDefault(
     override val pattern: EscapedPattern
 ) : AglStyleMetaRule {
@@ -149,7 +156,7 @@ data class AglStyleMetaRuleDefault(
         sb.append("$$ \"$sel\" {\n")
         val newIndent = indent.inc
         val decls = declaration.values // do not sort, order matters
-            .joinToString(separator = "\n") { "$newIndent${it.name}: ${it.value};" }
+            .joinToString(separator = "\n") { "$newIndent${it.name}: ${styleValueAsString(it.value)};" }
         sb.append(decls)
         sb.append("\n$indent}")
         return sb.toString()
@@ -169,7 +176,7 @@ data class AglStyleTagRuleDefault(
         sb.append("$sel {\n")
         val newIndent = indent.inc
         val decls = declaration.values // do not sort, order matters
-            .joinToString(separator = "\n") { "$newIndent${it.name}: ${it.value};" }
+            .joinToString(separator = "\n") { "$newIndent${it.name}: ${styleValueAsString(it.value)};" }
         sb.append(decls)
         sb.append("\n$indent}")
         return sb.toString()

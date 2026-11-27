@@ -122,17 +122,24 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, SentenceCont
     }
 
     /**
-     * An extended style set is looked up first in the style domain being analysed (the same style file),
-     * by its qualified name (a simple name is qualified with the namespace of the extending style set),
-     * then in the sentence context.
+     * An extended style set is looked up by its qualified name; a simple name is qualified with the namespace of the
+     * extending style set, then with each import of that namespace, in order (SD3).
+     * For each of these qualified names, the style domain being analysed (the same style file) is searched first,
+     * then the sentence context.
      * A style set that is not found is an error, reported only when there is a sentence context (without one, nothing is checked).
      * A style set must not extend itself, directly or indirectly (allRules would never end):
      * a reference that would close a cycle is an error and is left unresolved.
      */
     private fun checkStyleSetExistsAndResolve(asm: AglStyleDomain, sentenceContext: SentenceContext?, styleSet: StyleSet, ref: StyleSetReference) {
-        val qualifiedName = ref.nameOrQName.asQualifiedName(ref.localNamespace.qualifiedName)
-        val resolvedSS = asm.findDefinitionByQualifiedNameOrNull(qualifiedName)
-            ?: sentenceContext?.let { findStyleSetOrNull(it, ref.localNamespace.qualifiedName, ref.nameOrQName) }
+        val ns = ref.localNamespace
+        val lookIn = when (ref.nameOrQName) {
+            is QualifiedName -> listOf(ns.qualifiedName)
+            else -> listOf(ns.qualifiedName) + ns.import.map { it.asQualifiedName }
+        }
+        val resolvedSS = lookIn.firstNotNullOfOrNull { nsQName ->
+            asm.findDefinitionByQualifiedNameOrNull(ref.nameOrQName.asQualifiedName(nsQName))
+                ?: sentenceContext?.let { findStyleSetOrNull(it, nsQName, ref.nameOrQName) }
+        }
         when {
             null != resolvedSS && extendsOrIs(resolvedSS, styleSet, mutableSetOf()) ->
                 this.issueError(ref, "StyleSet '${styleSet.qualifiedName.value}' extends itself (via '${ref.nameOrQName.value}')", null)

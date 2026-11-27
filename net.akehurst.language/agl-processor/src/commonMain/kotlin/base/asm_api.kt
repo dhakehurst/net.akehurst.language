@@ -56,8 +56,9 @@ data class QualifiedName(override val value: String) : PossiblyQualifiedName, Pu
     val isQualified: Boolean get() = value.isQualifiedName
 
     val parts: List<SimpleName> get() = value.split(".").map { it.asSimpleName }
-    val last: SimpleName get() = parts.last()
-    val front: QualifiedName get() = QualifiedName(parts.dropLast(1).joinToString(separator = "."))
+    // same results as parts.last() and parts.dropLast(1).joinToString("."), without splitting the whole name
+    val last: SimpleName get() = SimpleName(value.substringAfterLast('.'))
+    val front: QualifiedName get() = QualifiedName(value.substringBeforeLast('.', ""))
     val asPossiblyQualified: PossiblyQualifiedName get() = this.value.asPossiblyQualifiedName
 
     fun append(lastPart: SimpleName) = QualifiedName(this, lastPart)
@@ -75,6 +76,9 @@ data class QualifiedName(override val value: String) : PossiblyQualifiedName, Pu
 val String.isSimpleName: Boolean get() = this.contains(".").not()
 val String.asSimpleName: SimpleName get() = SimpleName(this)
 
+/** compiled once, used by SimpleName.toString */
+private val SIMPLE_NAME_WHITESPACE = Regex("\\s")
+
 // @JvmInline
 // TODO: value classes don't work (fully) in js and wasm
 data class SimpleName(override val value: String) : PossiblyQualifiedName, PublicValueType {
@@ -89,7 +93,7 @@ data class SimpleName(override val value: String) : PossiblyQualifiedName, Publi
     }
 
     override fun toString(): String = when {
-        value.contains(Regex("\\s")) -> "'$value'"
+        value.contains(SIMPLE_NAME_WHITESPACE) -> "'$value'"
         else -> value
     }
 }
