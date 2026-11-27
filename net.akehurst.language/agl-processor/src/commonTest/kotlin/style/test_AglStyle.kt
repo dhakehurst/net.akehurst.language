@@ -55,6 +55,18 @@ class test_AglStyle : test_LanguageObjectAbstract() {
     }
 
     @Test
+    fun process_grammarString_EQ_grammarModel() {
+        val res = Agl.registry.agl.grammar.processor!!.process(
+            AglBase.grammarString + "\n" + AglStyle.grammarString,
+            Agl.options { semanticAnalysis { sentenceContext(contextFromGrammarRegistry()) } }
+        )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val actual = res.asm!!.findDefinitionByQualifiedNameOrNull(AglStyle.defaultTargetGrammar.qualifiedName)!!.asString()
+        val expected = AglStyle.defaultTargetGrammar.asString()
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun styleStr() {
         val res = Agl.registry.agl.style.processor!!.process(AglStyle.styleString)
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
