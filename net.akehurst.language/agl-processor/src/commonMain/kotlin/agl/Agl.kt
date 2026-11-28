@@ -46,6 +46,7 @@ import net.akehurst.language.grammar.asm.GrammarDomainDefault
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.m2mTransform.processor.M2MTransformResult
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreterCombined
@@ -421,7 +422,11 @@ object Agl {
         options: FormatOptions<SelfType> = FormatOptionsDefault()
     ): FormatResult {
         val formatResult = formatDomain(template, typesDomain)
-        val formatDomain = formatResult.asm ?: error("AglFormatDomain not created from template.")
+        // a format definition with errors is not used, its issues are the result (no sentence)
+        if (formatResult.allIssues.errors.isNotEmpty() || null == formatResult.asm) {
+            return FormatResultDefault(emptyMap(), formatResult.allIssues)
+        }
+        val formatDomain = formatResult.asm!!
         if (null==options.locationMap) {
             options.locationMap = formatResult.syntaxAnalysis?.locationMap
         }
