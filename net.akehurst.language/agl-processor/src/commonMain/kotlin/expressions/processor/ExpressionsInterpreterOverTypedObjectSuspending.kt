@@ -20,6 +20,7 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.expressions.asm.groupedByPrecedence
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.objectgraph.api.*
@@ -304,7 +305,9 @@ open class ExpressionsInterpreterOverTypedObjectSuspending(
     }
 
     private suspend fun evaluateInfix(evc: EvaluationContext, expression: InfixExpression): TypedObject {
-        //TODO: Operator precedence
+        // operator precedence is semantic, the ASM keeps the chain as written
+        val grouped = expression.groupedByPrecedence
+        if (grouped !== expression) return evaluateExpression(evc, grouped)
         var result = evaluateExpression(evc, expression.expressions.first())
         for (i in expression.operators.indices) {
             val op = expression.operators[i]

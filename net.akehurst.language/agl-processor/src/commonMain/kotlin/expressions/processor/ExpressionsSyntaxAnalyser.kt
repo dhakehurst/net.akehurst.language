@@ -205,14 +205,34 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return TernaryConditionExpressionDefault(expression, trueExpression, falseExpression)
     }
 
-    // infix = expression INFIX_OPERATOR expression ;
     // infix = [expression / INFIX_OPERATOR]2+ ;
-    // the result is nested by operator precedence, see InfixExpressionDefault.withPrecedence
+    // the chain is kept flat, as written; operator precedence is semantic,
+    // it is applied by the interpreter and type resolver, see InfixExpressionDefault.groupedByPrecedence.
+    // An operand that is itself an (ungrouped) infix chain is merged into this chain,
+    // so the result does not depend on how the parser nested ambiguous chains.
     private fun infixExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): InfixExpression {
-        val expressions = children.filterIsInstance<Expression>()
-        val operators = children.filterIsInstance<String>()
-        // at least one operator, so the result is always an InfixExpression
-        return InfixExpressionDefault.withPrecedence(expressions, operators) as InfixExpression
+        val expressions = mutableListOf<Expression>()
+        val operators = mutableListOf<String>()
+        fun addOperand(e: Expression) {
+            when (e) {
+                is InfixExpression -> {
+                    addOperand(e.expressions.first())
+                    for (i in e.operators.indices) {
+                        operators.add(e.operators[i])
+                        addOperand(e.expressions[i + 1])
+                    }
+                }
+
+                else -> expressions.add(e)
+            }
+        }
+        for (c in children) {
+            when (c) {
+                is Expression -> addOperand(c)
+                is String -> operators.add(c)
+            }
+        }
+        return InfixExpressionDefault(expressions, operators)
     }
 
     // functionCall = IDENTIFIER '(' argumentList ')' ;

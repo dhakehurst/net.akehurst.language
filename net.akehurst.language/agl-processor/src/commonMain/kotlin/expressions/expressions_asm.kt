@@ -424,6 +424,8 @@ class InfixExpressionDefault(
         /**
          * Precedence of the infix operators, higher binds tighter (as in Kotlin).
          * All operators are left-associative.
+         * Precedence is semantic: the ASM keeps an infix chain flat, as written,
+         * and the interpreter and type resolver use [groupedByPrecedence].
          * TODO: make the precedence table configurable
          */
         val OPERATOR_PRECEDENCE = mapOf(
@@ -437,38 +439,16 @@ class InfixExpressionDefault(
         )
 
         /**
-         * Builds an expression for 'expressions' separated by 'operators', that respects the operator precedence.
-         * Operands that are themselves (not grouped) infix expressions are flattened first,
-         * so the result does not depend on how the parser nested them.
-         * Each resulting InfixExpression has exactly one operator.
+         * Groups the flat chain 'expressions' separated by 'operators' by [OPERATOR_PRECEDENCE] (precedence climbing).
+         * Operands are not changed, so an operand that is itself an InfixExpression stays one operand.
+         * Each InfixExpression in the result has exactly one operator.
          */
-        fun withPrecedence(expressions: List<Expression>, operators: List<String>): Expression {
-            val flatExpressions = mutableListOf<Expression>()
-            val flatOperators = mutableListOf<String>()
-            fun addOperand(e: Expression) {
-                when (e) {
-                    is InfixExpression -> {
-                        addOperand(e.expressions.first())
-                        for (i in e.operators.indices) {
-                            flatOperators.add(e.operators[i])
-                            addOperand(e.expressions[i + 1])
-                        }
-                    }
-
-                    else -> flatExpressions.add(e)
-                }
-            }
-            addOperand(expressions.first())
-            for (i in operators.indices) {
-                flatOperators.add(operators[i])
-                addOperand(expressions[i + 1])
-            }
-            // precedence climbing
+        fun groupByPrecedence(expressions: List<Expression>, operators: List<String>): Expression {
             var pos = 0
             fun parse(minPrec: Int): Expression {
-                var lhs = flatExpressions[pos]
-                while (pos < flatOperators.size) {
-                    val op = flatOperators[pos]
+                var lhs = expressions[pos]
+                while (pos < operators.size) {
+                    val op = operators[pos]
                     val prec = OPERATOR_PRECEDENCE[op] ?: 0
                     if (prec < minPrec) break
                     pos++
@@ -481,10 +461,35 @@ class InfixExpressionDefault(
         }
     }
 
-    override fun asString(indent: Indent, imports: List<Import>): String = "$this"
+    /**
+     * This chain grouped by operator precedence, computed once on first use.
+     * Is 'this' when there is only one operator.
+     */
+    val groupedByPrecedence: Expression by lazy {
+        when {
+            operators.size <= 1 -> this
+            else -> groupByPrecedence(expressions, operators)
+        }
+    }
 
-    override fun toString(): String = "${expressions.first()} ${operators.indices.joinToString { operators[it] + " " + expressions[it + 1] }}"
+    override fun asString(indent: Indent, imports: List<Import>): String =
+        expressions.first().asString(indent, imports) + operators.indices.joinToString(separator = "") { " ${operators[it]} ${expressions[it + 1].asString(indent, imports)}" }
+
+    override fun toString(): String = "${expressions.first()}" + operators.indices.joinToString(separator = "") { " ${operators[it]} ${expressions[it + 1]}" }
 }
+
+/**
+ * The infix chain grouped by operator precedence, see [InfixExpressionDefault.OPERATOR_PRECEDENCE].
+ * Is 'this' when there is only one operator.
+ */
+val InfixExpression.groupedByPrecedence: Expression
+    get() = when (this) {
+        is InfixExpressionDefault -> this.groupedByPrecedence
+        else -> when {
+            operators.size <= 1 -> this
+            else -> InfixExpressionDefault.groupByPrecedence(expressions, operators)
+        }
+    }
 
 class CastExpressionDefault(
     override val expression: Expression,
