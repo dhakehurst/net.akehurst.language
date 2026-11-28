@@ -57,27 +57,25 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
         namespace $NAMESPACE_NAME
         grammar Template {
             // no skip rules
-            templateString = '"' templateContentList '"' ;
-            templateContentList = templateContent* ;
+            templateString = '"' templateContent* '"' ;
             templateContent = text | templateExpression ;
             text = RAW_TEXT ;
             templateExpression = templateExpressionProperty | templateExpressionList | templateExpressionEmbedded ;
             templateExpressionProperty = DOLLAR_IDENTIFIER ;
             templateExpressionList = '$[' $NAME::separatedList ']' ;
-            templateExpressionEmbedded = '$${'{'}' $NAME::embeddedExpression '}'
-                        
-            leaf DOLLAR_IDENTIFIER = '$' "[a-zA-Z_][a-zA-Z_0-9-]*" ;
-            leaf RAW_TEXT = "(\\\"|[^\"])+" ;
+            templateExpressionEmbedded = '${'$'}{' $NAME::embeddedExpression '}' ;
+            
+            leaf DOLLAR_IDENTIFIER = "[$][a-zA-Z_][a-zA-Z_0-9-]*" ;
+            leaf RAW_TEXT = "([^$\"\\]|\\.)+" ;
         }
         
-        grammar $NAME extends ${AglExpressions.NAME} {        
+        grammar $NAME : ${AglExpressions.NAME} {
             override definition = format | function ;
-            format = 'format' IDENTIFIER extends? '{' option* ruleList '}' ;
+            format = 'format' IDENTIFIER extends? '{' option* formatRule* '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
-            ruleList = formatRule* ;
             formatRule = typeReference '->' expression ;
             
-            override literalExpression = literal | templateExpression 
+            override literalExpression = literal | templateExpression ;
             templateExpression = Template::templateString ;
             
             viaFormatSet = 'via' possiblyQualifiedName ;
