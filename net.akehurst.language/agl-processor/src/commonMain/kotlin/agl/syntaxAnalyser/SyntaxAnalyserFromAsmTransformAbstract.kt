@@ -169,7 +169,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 val tr = when {
                     isRoot -> {
                         isRoot = false
-                        val trRule = syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag, sentence.locationForNode(nodeInfo.node))
+                        val trRule = syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag, sentence, sentence.locationForNode(nodeInfo.node))
                         trRule
                     }
 
@@ -207,11 +207,11 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                     else -> downStack.peek().path
                 }
                 val parentTr = when {
-                    isRoot -> syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag, sentence.locationForNode(nodeInfo.node))
+                    isRoot -> syntaxAnalyserStack.peek().trRuleOrIssue(nodeInfo.node.rule.tag, sentence, sentence.locationForNode(nodeInfo.node))
                     else -> downStack.peek().trRule.forChildren
                 }
                 val p = nodeInfo.path //TODO: (for AsmPath) syntaxAnalyserStack.peek().pathFor(parentPath, parentTr.resolvedType.resolvedDeclaration, nodeInfo)
-                val tu = syntaxAnalyserStack.peek().trRuleOrIssue(embRuleName, sentence.locationForNode(nodeInfo.node))
+                val tu = syntaxAnalyserStack.peek().trRuleOrIssue(embRuleName, sentence, sentence.locationForNode(nodeInfo.node))
                 val dd = resolveCompressed(p, tu, nodeInfo)
                 downStack.push(dd)
             }
@@ -275,10 +275,20 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
      * the transformation rule for the grammar rule, or (with an error issue) a rule that gives nothing,
      * e.g. when the transform definition has errors (a missing rule), so that analysis ends gracefully instead of throwing
      */
-    private fun trRuleOrIssue(grammarRuleName: String, location: InputLocation?): AsmTransformationRule =
+    // the sentence, and the grammar rules already reported as missing in it (AT-Q16)
+    private var _missingRulesSentence: Sentence? = null
+    private val _missingRulesReported = mutableSetOf<String>()
+
+    private fun trRuleOrIssue(grammarRuleName: String, sentence: Sentence, location: InputLocation?): AsmTransformationRule =
         findTrRuleForGrammarRuleNamedOrNull(grammarRuleName) ?: run {
-            // located on the sentence text of the node (AT-Q7)
-            issues.error(location, "No transformation rule found for grammar rule '$grammarRuleName' (the transform definition may have errors)")
+            if (_missingRulesSentence !== sentence) {
+                _missingRulesSentence = sentence
+                _missingRulesReported.clear()
+            }
+            // once per grammar rule per sentence (AT-Q16), located on the sentence text of the first node (AT-Q7)
+            if (_missingRulesReported.add(grammarRuleName)) {
+                issues.error(location, "No transformation rule found for grammar rule '$grammarRuleName' (the transform definition may have errors)")
+            }
             asmTransformationRule(StdLibDefault.NothingType, RootExpressionDefault.NOTHING)
         }
 
@@ -365,7 +375,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 
                 }
 */
-                else -> this.trRuleOrIssue(nodeInfo.node.rule.tag, sentence.locationForNode(nodeInfo.node))
+                else -> this.trRuleOrIssue(nodeInfo.node.rule.tag, sentence, sentence.locationForNode(nodeInfo.node))
             }
         }
     }
