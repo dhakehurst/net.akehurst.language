@@ -63,7 +63,6 @@ interface AsmTransformRuleSet : Definition<AsmTransformRuleSet> {
      */
     val rules: Map<GrammarRuleName, AsmTransformationRule>
 
-    val createObjectRules: List<CreateObjectRule>
     val modifyObjectRules: List<ModifyObjectRule>
 
     fun findOwnedTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): AsmTransformationRule?
@@ -87,10 +86,6 @@ interface AsmTransformationRule {
 
     fun resolveTypeAs(type: TypeInstance)
     fun asString(indent: Indent = Indent(), imports: List<Import> = emptyList()): String
-}
-
-interface CreateObjectRule : AsmTransformationRule {
-
 }
 
 interface SelfStatement {

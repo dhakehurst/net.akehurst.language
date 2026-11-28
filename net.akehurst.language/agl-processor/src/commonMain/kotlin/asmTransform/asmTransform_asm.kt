@@ -162,7 +162,6 @@ class AsmTransformRuleSetDefault(
 
     override val rules: Map<GrammarRuleName, AsmTransformationRule> = _rules.associateBy(AsmTransformationRule::grammarRuleName).toMutableMap()
 
-    override val createObjectRules: List<CreateObjectRule> get() = rules.values.filterIsInstance<CreateObjectRule>()
     override val modifyObjectRules: List<ModifyObjectRule> get() = rules.values.filterIsInstance<ModifyObjectRule>()
 
     init {
