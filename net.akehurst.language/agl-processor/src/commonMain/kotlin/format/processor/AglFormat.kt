@@ -221,7 +221,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
                     //TODO: the other rules, currently only what completion (of format definitions) needs:
                     // the assignment says which property a type name gives a value to
                     importTypes("net.akehurst.language.base.api", "net.akehurst.language.expressions.asm")
-                    createObject("typeReference", "TypeReferenceDefault") { /* custom SyntaxAnalyser */ assignment("possiblyQualifiedName", 0, "child[0]") }
+                    createObject("typeReference", "TypeReferenceDefault") { /* custom SyntaxAnalyser */ assignment("possiblyQualifiedName", "child[0]") }
                     transRule("possiblyQualifiedName", "PossiblyQualifiedName", "children")
                 }
             }

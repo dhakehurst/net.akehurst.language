@@ -496,6 +496,63 @@ class test_CompletionProviderDefault_datatypes {
                     )
                 }
             }
+            // the property a leaf gives a value to is found from the child the rhs of a user transform rule reads (RI-Q1 a)
+            for ((name, rule) in listOf(
+                "child[i]" to "typeReference: TypeReference() { type := child[0] typeArguments := child[1] }",
+                "assignments in another order" to "typeReference: TypeReference() { typeArguments := child[1] type := child[0] }",
+                "cast" to "typeReference: TypeReference() { type := child[0] as String typeArguments := child[1] }",
+                "with" to "typeReference: TypeReference() { type := with(child[0]) ${'$'}self typeArguments := child[1] }",
+            )) {
+                testData("with reference model, user transform rule, $name") {
+                    grammarStr(GRAMMAR)
+                    transformStr(
+                        """
+                        #override-default-transform
+                        namespace test
+                        asm-transform Test {
+                            $rule
+                        }
+                        """.trimIndent()
+                    )
+                    referenceStr(CROSS_REFERENCE)
+                    processOptions(Agl.options { completionProvider { depth(1) } })
+                    sentencePass("primitive InternalType class A { prop :", "local item in scope") {
+                        context(contextAsmSimple { })
+                        expectedCompletionItems(
+                            listOf(
+                                CompletionItem(CompletionItemKind.REFERRED, "Datatype", "A"),
+                                CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"),
+                                CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
+                                CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
+                            )
+                        )
+                    }
+                }
+            }
+            // a rhs made from no one child gives no property, so no referred items
+            testData("with reference model, user transform rule, rhs reads no child") {
+                grammarStr(GRAMMAR)
+                transformStr(
+                    """
+                    #override-default-transform
+                    namespace test
+                    asm-transform Test {
+                        typeReference: TypeReference() { type := 'X' typeArguments := child[1] }
+                    }
+                    """.trimIndent()
+                )
+                referenceStr(CROSS_REFERENCE)
+                processOptions(Agl.options { completionProvider { depth(1) } })
+                sentencePass("primitive InternalType class A { prop :", "local item in scope") {
+                    context(contextAsmSimple { })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "TYPE", "<TYPE>"),
+                        )
+                    )
+                }
+            }
         }
 
         val tests = listOf(

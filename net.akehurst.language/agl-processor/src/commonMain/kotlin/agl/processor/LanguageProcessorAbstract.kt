@@ -464,6 +464,15 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
         val opts = defaultOptions(options)
         val (parserExpectedAt, pos) = parserExpectedAtOrAtError(sentence, position, opts)
+        val items = terminalItemsAt(sentence, parserExpectedAt, pos, opts)
+            .ifEmpty { atFirstErrorIfNone(sentence, position, pos, opts) { pe, errPos -> terminalItemsAt(sentence, pe, errPos, opts) } }
+        // the earliest position an item is offered at: a word start (or the error position), else 'pos'
+        val offered = items.mapNotNull { it.offeredPosition }.minOrNull() ?: pos
+        return ExpectedAtResultDefault(position, offered, items, IssueHolder(LanguageProcessorPhase.ALL))
+    }
+
+    /** the items of [expectedTerminalsAt] from [parserExpectedAt], the parser result at [pos] */
+    private fun terminalItemsAt(sentence: String, parserExpectedAt: net.akehurst.language.parser.api.ExpectedAtResult, pos: Int, opts: ProcessOptions<AsmType, ContextType>): List<CompletionItem> {
         val byPosition = parserExpectedAt.spines.groupBy { it.usedPosition }
         val wordCompletions = byPosition.keys.filter { it < pos }.sorted().flatMap { wordStart ->
             val prefix = sentence.substring(wordStart, pos)
@@ -480,8 +489,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             .toSet()
             .flatMap { completionItemsForTerminal(it, opts) }
             .onEach { it.offeredPosition = pos }
-        val offered = wordCompletions.firstOrNull()?.offeredPosition ?: pos
-        return ExpectedAtResultDefault(position, offered, wordCompletions + next, IssueHolder(LanguageProcessorPhase.ALL))
+        return wordCompletions + next
     }
 
     private fun completionItemsForTerminal(rule: Rule, opts: ProcessOptions<AsmType, ContextType>): List<CompletionItem> = when {
@@ -514,6 +522,32 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             null != completionProvider -> {
                 val opts = defaultOptions(options)
                 val (parserExpected, pos) = parserExpectedAtOrAtError(sentence, position, opts)
+                val items = completionItemsAt(sentence, parserExpected, pos, opts)
+                    .ifEmpty { atFirstErrorIfNone(sentence, position, pos, opts) { pe, errPos -> completionItemsAt(sentence, pe, errPos, opts) } }
+                val all = when {
+                    // TODO: future enhancement (David 2026-11-27, IC3): leave out items that cannot be followed by the text after the position
+                    //  (needs a parse of the sentence with each item inserted, so expensive in time)
+                    opts.completionProvider.omitLiteralsAlreadyAfterPosition -> {
+                        val after = sentence.substring(skipEnd(sentence, position))
+                        items.filterNot { it.kind == CompletionItemKind.LITERAL && isAtStartOf(it.text, after) }
+                    }
+
+                    else -> items
+                }
+                // the earliest position an item is offered at: a word start (or the error position), else 'pos'
+                val offered = all.mapNotNull { it.offeredPosition }.minOrNull() ?: pos
+                ExpectedAtResultDefault(position, offered, all, IssueHolder(LanguageProcessorPhase.ALL))
+            }
+
+            else -> expectedTerminalsAt(sentence, position, options)
+        }
+    }
+
+    /**
+     * the items of [expectedItemsAt] from [parserExpected], the parser result at [pos]:
+     * completions of a typed word (from its start) and what is expected next (at [pos])
+     */
+    private fun completionItemsAt(sentence: String, parserExpected: net.akehurst.language.parser.api.ExpectedAtResult, pos: Int, opts: ProcessOptions<AsmType, ContextType>): List<CompletionItem> {
                 // see comment on expectedTerminalsAt
                 // not the spine that only expects end-of-text (the text so far being a complete sentence)
                 val byPosition = parserExpected.spines
@@ -538,21 +572,22 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val nextSpines = (byPosition[pos] ?: emptyList()).map { rtSpine -> SpineDefault(rtSpine, mapToGrammar, targetGrammar) }.toSet()
                 val next = completionProvider!!.provide(nextSpines, optionsWithOwnSentence(sentence, pos, nextSpines, opts).completionProvider)
                     .onEach { it.offeredPosition = pos }
-                val all = when {
-                    // TODO: future enhancement (David 2026-11-27, IC3): leave out items that cannot be followed by the text after the position
-                    //  (needs a parse of the sentence with each item inserted, so expensive in time)
-                    opts.completionProvider.omitLiteralsAlreadyAfterPosition -> {
-                        val after = sentence.substring(skipEnd(sentence, position))
-                        (wordCompletions + next).filterNot { it.kind == CompletionItemKind.LITERAL && isAtStartOf(it.text, after) }
-                    }
+                return wordCompletions + next
+    }
 
-                    else -> wordCompletions + next
-                }
-                val offered = all.firstOrNull { it.offeredPosition != pos }?.offeredPosition ?: pos
-                ExpectedAtResultDefault(position, offered, all, IssueHolder(LanguageProcessorPhase.ALL))
-            }
-
-            else -> expectedTerminalsAt(sentence, position, options)
+    /**
+     * q21/IC4 (David 2026-11-16, 2026-11-28): when nothing is offered at [position] (e.g. the text before it is an unfinished word
+     * that nothing can continue) and the text before [position] has a parse error, the items expected at the first error position.
+     * Empty if [pos] is already an error position (not [position]) or there is no error.
+     */
+    private fun atFirstErrorIfNone(
+        sentence: String, position: Int, pos: Int, opts: ProcessOptions<AsmType, ContextType>,
+        itemsAt: (net.akehurst.language.parser.api.ExpectedAtResult, Int) -> List<CompletionItem>
+    ): List<CompletionItem> {
+        val errorPosition = if (pos == position) firstErrorBefore(sentence, position, opts) else null
+        return when (errorPosition) {
+            null -> emptyList()
+            else -> itemsAt(parser!!.expectedAt(sentence, errorPosition, opts.parse), errorPosition)
         }
     }
 
@@ -661,15 +696,21 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val atPosition = parser.expectedAt(sentence, position, opts.parse)
         val errorPosition = when {
             atPosition.spines.isNotEmpty() -> null
-            else -> parser.parse(sentence.substring(0, position), opts.parse).issues.errors
-                .mapNotNull { it.location?.position }
-                .filter { it < position }
-                .minOrNull()
+            else -> firstErrorBefore(sentence, position, opts)
         }
         return when (errorPosition) {
             null -> Pair(atPosition, position)
             else -> Pair(parser.expectedAt(sentence, errorPosition, opts.parse), errorPosition)
         }
+    }
+
+    /** the first position of a parse error in the text before [position], null if none */
+    private fun firstErrorBefore(sentence: String, position: Int, opts: ProcessOptions<AsmType, ContextType>): Int? {
+        val parser = this.parser ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
+        return parser.parse(sentence.substring(0, position), opts.parse).issues.errors
+            .mapNotNull { it.location?.position }
+            .filter { it < position }
+            .minOrNull()
     }
 
     internal fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {

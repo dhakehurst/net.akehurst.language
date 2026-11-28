@@ -71,6 +71,8 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
                 when {
                     // the type name of a semantic selector ('type T', 'identify T', 'refers-to T'): the types of the context (SD6)
                     isTypeNameOfSemanticSelector(spine) -> typeNameItems(context, options.sentenceAsm)
+                    // the value of a declaration: the values that fit its name (SD7)
+                    expectsStyleValue(spine) -> styleValueItems(styleNameBeforePosition(options))
                     else -> {
                         // items referring to the grammar being styled, from the references definition of AglStyle
                         val refs = CompletionProviderAbstract.provideReferencesForSpine(spine, context, styleTransformRuleSet, AglStyle.typesDomain, AglStyle.crossReferenceDomain)
@@ -82,6 +84,32 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
             }
             defaultSortAndFilter(items)
         }
+    }
+
+    /** true if the spine expects the value of a declaration, i.e. child 2 of 'style = STYLE_ID ':' styleValue ';'' */
+    private fun expectsStyleValue(spine: Spine): Boolean =
+        spine.expectedNextLeafNonTerminalOrTerminal.any { it.owningRule.isLeaf && it.owningRule.name.value == "STYLE_VALUE" }
+
+    /**
+     * the name of the declaration whose value is completed: the last declaration of the sentence (completed up to the position),
+     * null if not known (no sentence ASM)
+     */
+    private fun styleNameBeforePosition(options: CompletionProviderOptions<SentenceContext>): String? {
+        val asm = options.sentenceAsm as? AglStyleDomain ?: return null
+        val locationMap = options.sentenceLocationMap ?: return null
+        return asm.allDefinitions.flatMap { it.rules }.flatMap { it.declaration.values }
+            .maxByOrNull { locationMap[it]?.position ?: -1 }?.name
+    }
+
+    /** the values offered for a declaration named [name] (any of them when the name is not known) */
+    private fun styleValueItems(name: String?): List<CompletionItem> {
+        val values = when (name) {
+            "foreground", "background" -> listOf("<colour>")
+            "font-style" -> listOf("italic", "normal")
+            "font-weight" -> listOf("bold", "normal")
+            else -> listOf("<colour>", "bold", "italic")
+        }
+        return values.map { CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", it) }
     }
 
     /** true if the spine expects the type name of a semantic selector, i.e. child 1 of 'semanticSelector = semanticKind possiblyQualifiedName' */

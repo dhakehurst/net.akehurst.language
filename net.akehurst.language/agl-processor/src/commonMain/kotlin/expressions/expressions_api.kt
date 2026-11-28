@@ -136,7 +136,6 @@ interface IndexOperation : NavigationPart {
 
 interface VariableAssignmentStatement : Expression {
     val variable: VariableDefinition
-    val lhsGrammarRuleIndex: Int?
     val rhs: Expression
 
     override fun asString(indent: Indent, imports: List<Import>): String

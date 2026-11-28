@@ -69,7 +69,6 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         super.register(this::modifyRule)
         super.register(this::assignmentStatement)
         super.register(this::propertyName)
-        super.register(this::grammarRuleIndex)
         super.register(this::grammarRuleName)
         super.register(this::possiblyQualifiedTypeName)
         super.register(this::expression)
@@ -197,13 +196,12 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         return ModifyObjectRuleDefault(possiblyQualifiedTypeName, statements)
     }
 
-    // assignmentStatement = propertyName grammarRuleIndex? ':=' expression ;
+    // assignmentStatement = propertyName ':=' expression ;
     private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableAssignmentStatementDefault {
         val propName = children[0] as String
-        val grIndex = children[1] as Int?
-        val expr = children[3] as Expression
+        val expr = children[2] as Expression
         val variable = VariableDefinitionDefault(propName, null) //TODO: variables?
-        return VariableAssignmentStatementDefault(variable, grIndex, expr)
+        return VariableAssignmentStatementDefault(variable, expr)
     }
 
     // propertyName = IDENTIFIER ;
@@ -217,10 +215,6 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
     // grammarRuleName = IDENTIFIER ;
     private fun grammarRuleName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarRuleName =
         GrammarRuleName(children[0] as String)
-
-    // grammarRuleIndex = '$' POSITIVE_INTEGER ;
-    private fun grammarRuleIndex(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int =
-        (children[1] as String).toInt()
 
     // possiblyQualifiedTypeName = qualifiedName ;
     private fun possiblyQualifiedTypeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =

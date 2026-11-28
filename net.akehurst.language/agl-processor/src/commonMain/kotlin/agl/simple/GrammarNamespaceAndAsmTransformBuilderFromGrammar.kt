@@ -1696,7 +1696,7 @@ internal class Grammar2TransformRuleSet(
         }
         //(trRule as TransformationRuleAbstract).appendAssignment(lhsPropertyName = uniqueName, rhs = rhsExpression)
         val variable = VariableDefinitionDefault(uniqueName.value, null)
-        return VariableAssignmentStatementDefault(variable = variable, lhsGrammarRuleIndex = childIndex, rhs = rhsExpression)
+        return VariableAssignmentStatementDefault(variable = variable, rhs = rhsExpression)
     }
 
     private fun createUniquePropertyNameFor(et: StructuredType, name: PropertyName): PropertyName {
