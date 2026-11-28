@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.leftcorner
 
+import net.akehurst.language.parser.leftcorner.parseFailureMessage
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
@@ -198,8 +199,7 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
 
     protected fun parseError(location: InputLocation, sentence: String, tryingFor:Set<String>, expected: Set<String>):LanguageIssue {
         val failed = tryingFor.sorted().joinToString(separator = " | ")
-        val posIndication = SentenceDefault(sentence, null).contextInText(location.position)
-        val message = "Failed to match {$failed} at: $posIndication"
+        val message = parseFailureMessage(SentenceDefault(sentence, null), failed, location.position)
         return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, message, expected)
     }
 

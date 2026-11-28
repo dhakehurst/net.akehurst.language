@@ -67,6 +67,28 @@ class ScannerClassic(
         return l?.rule?.equals(terminalRule) ?: false
     }
 
+    /**
+     * Same result as terminalRules.any { isLookingAt(sentence, position, it) }.
+     * The classic scanner has one leaf per position, so a non-empty terminal is looked at iff it is the rule of that leaf
+     * (RuntimeRule equality is by rule set and rule number, consistent with its hashCode, so Set.contains is that test).
+     * Empty (list) terminals do not depend on the leaf, so if there are any, each terminal is checked as before.
+     */
+    fun isLookingAtAny(sentence: Sentence, position: Int, terminalRules: Set<Rule>): Boolean = when {
+        terminalRules.isEmpty() -> false
+        terminalRules.any { it.isEmptyTerminal || it.isEmptyListTerminal } -> terminalRules.any { isLookingAt(sentence, position, it) }
+        else -> {
+            val leaf = findOrTryCreateLeaf(sentence, position, terminalRules.first())
+                ?: leafAt(sentence, position)
+            null != leaf && terminalRules.contains(leaf.rule)
+        }
+    }
+
+    /** the (cached) leaf at position, null if no terminal matches there; the caller has already scanned the position */
+    private fun leafAt(sentence: Sentence, position: Int): CompleteTreeDataNode? = when (val l = _leaves[position]) {
+        null, LEAF_NONE -> null
+        else -> l
+    }
+
     override fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): CompleteTreeDataNode? {
         // cached leaves belong to one sentence; reset() is not used to clear them
         // because the skip parser shares this scanner and resets it at every skip parse

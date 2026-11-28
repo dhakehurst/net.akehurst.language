@@ -45,7 +45,7 @@ namespace net.akehurst.language.sysML
         import-types SysML.Systems.Views
 
         NAME: child[0].removeSurrounding('\'') as String
-        QualifiedName: (child[1].children.map({ x1 -> x1.child[0] }) + children.filter({ y -> y == child[2] })) as Any
+        QualifiedName: (children.filter({ y -> y == child[0] }).filter({ y -> when { y != $nothing -> (y.child[0] != $nothing) else -> false } }).map({ g -> '$::' }) + child[1].children.map({ x1 -> x1.child[0] }) + children.filter({ y -> y == child[2] })) as Any
         FeatureChain: Feature(_identity := $path) {
             ownedRelationship := children.filter({ y -> y == child[0] and y != $nothing }) + child[1].children.map({ x1 -> x1.child[1] }).filter({ y -> y != $nothing })
         }

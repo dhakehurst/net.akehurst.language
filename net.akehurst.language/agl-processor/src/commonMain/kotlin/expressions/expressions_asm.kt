@@ -381,7 +381,6 @@ data class IndexOperationDefault(
 
 class VariableAssignmentStatementDefault(
     override val variable: VariableDefinition,
-    override val lhsGrammarRuleIndex: Int?,
     override val rhs: Expression
 ) : VariableAssignmentStatement {
 
