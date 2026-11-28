@@ -132,6 +132,9 @@ class CrossReferenceDomainDefault(
     override fun findTypeNamedIn(typesDomain: TypesDomain, declaration: Any, typeName: PossiblyQualifiedName): TypeDefinition? =
         lookupFor(typesDomain).findTypeNamedIn(declaration, typeName)
 
+    override fun globalPrefixFor(typesDomain: TypesDomain, declaration: Any): String? =
+        lookupFor(typesDomain).globalPrefixFor(declaration)
+
     private var _lookup: CrossReferenceLookup? = null
 
     /**
@@ -181,6 +184,7 @@ data class DeclarationsForNamespaceDefault(
     override val scopeDefinition = mutableMapOf<PossiblyQualifiedName, ScopeDefinition>()
     override val references = mutableListOf<ReferenceDefinition>()
     override val typeGroups = linkedMapOf<SimpleName, TypeGroupDefault>()
+    override var globalPrefix: String? = null
 
     init {
         namespace.addDefinition(this)
@@ -218,6 +222,7 @@ data class DeclarationsForNamespaceDefault(
      */
     override fun asString(indent: Indent, imports: List<Import>): String {
         val lines = mutableListOf<String>()
+        globalPrefix?.let { lines.add("${indent}global-prefix '${it.replace("\\", "\\\\").replace("'", "\\'")}'") }
         typeGroups.values.forEach { lines.add(it.asString(indent)) }
         // identifiables of the root scope are written at the top level
         scopeDefinition[CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME.last]?.let { root ->

@@ -51,6 +51,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::importIntoScope)
         super.register(this::scopeForall)
         super.register(this::typeGroup)
+        super.register(this::globalPrefix)
         super.register(this::scopes)
         super.register(this::scope)
         super.register(this::identifiables)
@@ -129,6 +130,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val rootIdentifiables = rootDeclarations.filterIsInstance<IdentifiableDefault>()
         val importsIntoScope = rootDeclarations.filterIsInstance<ScopeImportDefault>()
         val typeGroups = rootDeclarations.filterIsInstance<TypeGroupDefault>()
+        val globalPrefixes = rootDeclarations.filterIsInstance<GlobalPrefix>()
         val scopes = children[1] as List<ScopeDefinitionDefault>
         val referencesOpt = children[2] as List<ReferenceDefinitionDefault>?
         return { ns ->
@@ -159,9 +161,30 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
                 }
                 decl.typeGroups[it.name] = it
             }
+            globalPrefixes.drop(1).forEach {
+                issues.error(locationMap[it], "There is more than one 'global-prefix' in namespace '${ns.qualifiedName.value}', only one is allowed", null)
+            }
+            globalPrefixes.firstOrNull()?.let { gp ->
+                when {
+                    gp.prefix.isEmpty() -> issues.error(locationMap[gp], "In namespace '${ns.qualifiedName.value}', the 'global-prefix' must not be empty", null)
+                    else -> decl.globalPrefix = gp.prefix
+                }
+            }
             expandTypeGroups(decl)
             decl.also { setLocationFor(it,nodeInfo,sentence) }
         }
+    }
+
+    /** the value of a 'global-prefix' line (an object, so that its location can be recorded) */
+    private class GlobalPrefix(val prefix: String)
+
+    // globalPrefix = 'global-prefix' STRING ;
+    private fun globalPrefix(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GlobalPrefix =
+        GlobalPrefix(unquote(children[1] as String)).also { setLocationFor(it, nodeInfo, sentence) }
+
+    private fun unquote(s: String): String = when {
+        s.startsWith("'") -> s.substring(1, s.length - 1).replace("\\'", "'").replace("\\\\", "\\")
+        else -> s
     }
 
     // typeGroup = 'type-group' IDENTIFIER '=' typeReferences ;
