@@ -131,15 +131,6 @@ class test_asmTransformLanguage {
                     }
                 """.trimIndent()
             ),
-            TestData(
-                testName = "single create rule, no args, with one assignment including grammarRuleIndex",
-                sentence = """
-                    namespace test
-                    asm-transform Test {
-                        rule1 : Type() { prop1 $3 := nonTerminal }
-                    }
-                """.trimIndent()
-            ),
         )
 
         private fun test_process(data: TestData) {
@@ -151,6 +142,19 @@ class test_asmTransformLanguage {
             }
         }
 
+    }
+
+    // the grammar rule index 'p $n := e' was removed (RI-Q1 a), the child a property is set from is found from the rhs
+    @Test
+    fun grammarRuleIndex_removed__parse_error() {
+        val sentence = """
+            namespace test
+            asm-transform Test {
+                rule1 : Type() { prop1 $3 := nonTerminal }
+            }
+        """.trimIndent()
+        val result = Agl.registry.agl.asmTransform.processor!!.process(sentence)
+        assertTrue(result.allIssues.errors.isNotEmpty(), "'$sentence'\n${result.allIssues}")
     }
 
     @Test

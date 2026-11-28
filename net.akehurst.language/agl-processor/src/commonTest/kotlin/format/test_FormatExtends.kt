@@ -191,4 +191,43 @@ class test_FormatExtends {
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         assertEquals("B:3", res.sentence)
     }
+
+    @Test
+    fun option_of_extended_set_is_inherited() {
+        val res = Agl.formatByReflection(
+            FormatString(
+                $$"""
+                namespace test
+                format A {
+                  #output: 'TestObject -> "extra output"'
+                }
+                format B : A {
+                  TestObject -> "B:$intValue"
+                }
+                """
+            ), types, TestObject()
+        )
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertEquals("B:3", res.output["extra output"], res.output.toString())
+    }
+
+    @Test
+    fun own_option_replaces_inherited_option() {
+        val res = Agl.formatByReflection(
+            FormatString(
+                $$"""
+                namespace test
+                format A {
+                  #output: 'TestObject -> "from A"'
+                }
+                format B : A {
+                  #output: 'TestObject -> "from B"'
+                  TestObject -> "B:$intValue"
+                }
+                """
+            ), types, TestObject()
+        )
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertEquals(setOf("from B"), res.output.keys - "sentence", res.output.toString())
+    }
 }

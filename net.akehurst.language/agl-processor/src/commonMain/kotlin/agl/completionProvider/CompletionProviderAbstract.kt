@@ -32,7 +32,8 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.expressions.api.CreateObjectExpression
+import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
+import net.akehurst.language.expressions.api.*
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.ReferenceExpressionProperty
 import net.akehurst.language.types.api.TypesDomain
@@ -308,6 +309,35 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
         }
 
         /**
+         * true when the value of [rhs] (the right-hand side of an assignment in the transform rule of a grammar rule)
+         * is made from the child [childNumber] of the grammar rule, used to find the property a child gives a value to (RI-Q1 a):
+         * - `child[i]`, also navigated from (`child[i].p`), cast (`child[i] as T`), grouped, or as the context of `with(child[i]) ...`, is made from child i
+         * - `children` (also navigated from, e.g. `children.items`) is made from every child when the grammar rule is a list ([ruleIsList]),
+         *   in other rules it is made from several children, so from no one child
+         * - any other expression (e.g. `when`, a literal, a function call) is made from no one child
+         */
+        fun readsChild(rhs: Expression, childNumber: Int, ruleIsList: Boolean): Boolean = when (rhs) {
+            is RootExpression -> ruleIsList && rhs.name == AsmTransformInterpreter.CHILDREN.value
+            is NavigationExpression -> {
+                val start = rhs.start
+                val first = rhs.parts.firstOrNull()
+                when {
+                    start is RootExpression && start.name == AsmTransformInterpreter.CHILD.value -> when (first) {
+                        is IndexOperation -> ((first.indices.singleOrNull() as? LiteralExpression)?.value as? Number)?.toInt() == childNumber
+                        else -> false
+                    }
+
+                    else -> readsChild(start, childNumber, ruleIsList)
+                }
+            }
+
+            is CastExpression -> readsChild(rhs.expression, childNumber, ruleIsList)
+            is GroupExpression -> readsChild(rhs.expression, childNumber, ruleIsList)
+            is WithExpression -> readsChild(rhs.withContext, childNumber, ruleIsList)
+            else -> false
+        }
+
+        /**
          * The key used by [provideReferencesForSpine] for a leaf item expected next:
          * the name of the leaf rule, or the id of a literal terminal.
          */
@@ -322,7 +352,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
          * Items that refer to elements in the [sentenceContext], for the leaf items expected next in the [spine].
          *
          * - the property a leaf item gives a value to comes from the asm-transform rule of the grammar rule that holds the leaf:
-         *   its assignment for the child number of the leaf.
+         *   its first assignment whose right-hand side is made from the child number of the leaf ([readsChild]).
          *   When that rule's transform rule does not create an object (e.g. `context = 'in' IDENTIFIER` transformed to a String),
          *   the value is the value of the rule, so the assignment of the rule that holds it (for its child number) is used, and so on outwards
          *   (rules from the grammar, and rules of the spine). A rule with no transform rule stops the search.
@@ -367,19 +397,20 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
 
             // path: (rule, child number in that rule), innermost first
             fun lookup(path: List<Pair<GrammarRule, Int>>, leafKey: String, leaf: Terminal) {
-                var found: Pair<CreateObjectExpression, Int>? = null
+                var found: Triple<CreateObjectExpression, GrammarRule, Int>? = null
                 var ownerTypeName: QualifiedName? = null
                 for ((rule, childNumber) in path) {
                     val tr = transformRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(rule.name) ?: return
                     val expr = tr.expression
                     if (expr is CreateObjectExpression) {
-                        found = Pair(expr, childNumber)
+                        found = Triple(expr, rule, childNumber)
                         ownerTypeName = tr.resolvedType.resolvedDefinition.qualifiedName
                         break
                     }
                 }
-                val (expr, childNumber) = found ?: return
-                val propertyName = expr.propertyAssignments.firstOrNull { it.lhsGrammarRuleIndex == childNumber }?.variable?.name ?: return
+                val (expr, rule, childNumber) = found ?: return
+                val ruleIsList = rule.rhs is ListOfItems
+                val propertyName = expr.propertyAssignments.firstOrNull { readsChild(it.rhs, childNumber, ruleIsList) }?.variable?.name ?: return
                 val owner = ownerTypeName ?: return
                 val refersTo = crossReferenceDomain.referencesFor(typesDomain, owner)
                     .flatMap { it.candidates }

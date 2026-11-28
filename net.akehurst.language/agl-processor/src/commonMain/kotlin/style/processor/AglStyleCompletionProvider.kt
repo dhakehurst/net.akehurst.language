@@ -28,6 +28,7 @@ import net.akehurst.language.grammar.api.Terminal
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.asm.AglStyleDomainDefault
+import net.akehurst.language.types.api.TypeDefinition
 import net.akehurst.language.types.api.TypeInstance
 
 class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, SentenceContext> {
@@ -67,14 +68,69 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, Sentence
             emptyList()
         } else {
             val items = spines.flatMap { spine ->
-                // items referring to the grammar being styled, from the references definition of AglStyle
-                val refs = CompletionProviderAbstract.provideReferencesForSpine(spine, context, styleTransformRuleSet, AglStyle.typesDomain, AglStyle.crossReferenceDomain)
-                refs.values.flatten() + spine.expectedNextLeafNonTerminalOrTerminal
-                    .filter { CompletionProviderAbstract.referenceKeyFor(it) !in refs.keys }
-                    .flatMap { provideForTerminalItem(spine, it, options) }
+                when {
+                    // the type name of a semantic selector ('type T', 'identify T', 'refers-to T'): the types of the context (SD6)
+                    isTypeNameOfSemanticSelector(spine) -> typeNameItems(context, options.sentenceAsm)
+                    // the value of a declaration: the values that fit its name (SD7)
+                    expectsStyleValue(spine) -> styleValueItems(styleNameBeforePosition(options))
+                    else -> {
+                        // items referring to the grammar being styled, from the references definition of AglStyle
+                        val refs = CompletionProviderAbstract.provideReferencesForSpine(spine, context, styleTransformRuleSet, AglStyle.typesDomain, AglStyle.crossReferenceDomain)
+                        refs.values.flatten() + spine.expectedNextLeafNonTerminalOrTerminal
+                            .filter { CompletionProviderAbstract.referenceKeyFor(it) !in refs.keys }
+                            .flatMap { provideForTerminalItem(spine, it, options) }
+                    }
+                }
             }
             defaultSortAndFilter(items)
         }
+    }
+
+    /** true if the spine expects the value of a declaration, i.e. child 2 of 'style = STYLE_ID ':' styleValue ';'' */
+    private fun expectsStyleValue(spine: Spine): Boolean =
+        spine.expectedNextLeafNonTerminalOrTerminal.any { it.owningRule.isLeaf && it.owningRule.name.value == "STYLE_VALUE" }
+
+    /**
+     * the name of the declaration whose value is completed: the last declaration of the sentence (completed up to the position),
+     * null if not known (no sentence ASM)
+     */
+    private fun styleNameBeforePosition(options: CompletionProviderOptions<SentenceContext>): String? {
+        val asm = options.sentenceAsm as? AglStyleDomain ?: return null
+        val locationMap = options.sentenceLocationMap ?: return null
+        return asm.allDefinitions.flatMap { it.rules }.flatMap { it.declaration.values }
+            .maxByOrNull { locationMap[it]?.position ?: -1 }?.name
+    }
+
+    /** the values offered for a declaration named [name] (any of them when the name is not known) */
+    private fun styleValueItems(name: String?): List<CompletionItem> {
+        val values = when (name) {
+            "foreground", "background" -> listOf("<colour>")
+            "font-style" -> listOf("italic", "normal")
+            "font-weight" -> listOf("bold", "normal")
+            else -> listOf("<colour>", "bold", "italic")
+        }
+        return values.map { CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", it) }
+    }
+
+    /** true if the spine expects the type name of a semantic selector, i.e. child 1 of 'semanticSelector = semanticKind possiblyQualifiedName' */
+    private fun isTypeNameOfSemanticSelector(spine: Spine): Boolean =
+        spine.elements.any { it.rule.name.value == "semanticSelector" && it.nextChildNumber >= 1 }
+
+    /**
+     * The types (TypeDefinition items) of the context, except those of 'std'.
+     * The name is written as a simple name when the style set finds it that way (the types namespace with the qualified name
+     * of the style set, or an 'import-types' namespace, see AglStyleSemanticAnalyser.resolveSemanticSelector),
+     * otherwise qualified (CR1); the qualified name is the description.
+     * The style set is the last one of the sentence before the position.
+     */
+    private fun typeNameItems(context: SentenceContext, sentenceAsm: Any?): List<CompletionItem> {
+        val styleSet = (sentenceAsm as? AglStyleDomain)?.allDefinitions?.lastOrNull()
+        val visible = styleSet?.let {
+            CompletionProviderAbstract.Companion.VisibleNamespaces(it.qualifiedName.value, it.importTypes.map { imp -> imp.value }, null)
+        }
+        val found = CompletionProviderAbstract.allItemsConformingTo(context) { it.value == TypeDefinition::class.simpleName }
+            .filter { (path, _) -> path.isNotEmpty() && path != listOf("std") }
+        return found.map { (path, item) -> CompletionProviderAbstract.completionItemForReferred(path, item, found, visible) }
     }
 
     private fun provideForTerminalItem(spine: Spine, nextExpected: RuleItem, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {

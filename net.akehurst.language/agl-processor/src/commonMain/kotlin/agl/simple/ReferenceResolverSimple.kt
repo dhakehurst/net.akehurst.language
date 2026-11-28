@@ -379,12 +379,16 @@ class ReferenceResolverSimple(
         val selfStr = (self as? TypedObject)?.self as? AsmStructure ?: self as? AsmStructure
         val outerExcluding = _excluding
         _excluding = selfStr?.let { r -> { f: Found -> isNamedByReference(f, r, refExpr) } }
+        // 'global-prefix': a name whose first part is the prefix is looked up from the root scopes only, without that part
+        val globalPrefix = crossReferenceDomain.globalPrefixFor(typesDomain, refExpr)
+        val isGlobal = null != globalPrefix && qName.size > 1 && qName.first() == globalPrefix
         val found = try { when {
             // 'from \$previous...' : members of the previous target, visible from outside
             null != chain -> when (chainScope) {
                 null -> emptyList()
                 else -> resolveMembersOf(chainScope, qName)
             }
+            isGlobal -> resolveQualifiedNameInAll(emptyList(), qName.drop(1), scope.rootScope)
             // Use context (not scope) because the reference could have been created from a different sentence
             null == fromScopes -> resolveQualifiedNameInAll(scope.scopePath, qName, scope.rootScope)
             // 'from inherited E' (E has the scope 'scope'): each inherited scope in turn (in the order the inheriting elements are in the sentence),

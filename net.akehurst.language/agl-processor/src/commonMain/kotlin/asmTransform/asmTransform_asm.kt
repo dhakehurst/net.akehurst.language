@@ -17,6 +17,7 @@
 
 package net.akehurst.language.asmTransform.asm
 
+import net.akehurst.language.base.asm.optionsAsString
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
@@ -114,6 +115,7 @@ class AsmTransformNamespaceDefault(
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc
+        sb.append(optionsAsString(options, newIndent))
         if (import.isNotEmpty()) {
             val importStr = import
                 .sortedBy { it.value }
@@ -220,6 +222,7 @@ class AsmTransformRuleSetDefault(
         }
         sb.append("asm-transform $name$extStr{\n")
         val newIndent = indent.inc
+        sb.append(optionsAsString(options, newIndent))
         if (importTypes.isNotEmpty()) {
             val importStr = importTypes
                 .sortedBy { it.value }

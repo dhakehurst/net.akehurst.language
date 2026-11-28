@@ -17,6 +17,7 @@
 
 package net.akehurst.language.types.asm
 
+import net.akehurst.language.base.asm.optionsAsString
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.agl.Agl
@@ -296,7 +297,7 @@ abstract class TypesDomainSimpleAbstract() : TypesDomain {
             .filterNot { it == StdLibDefault } // Don't show the stdlib details
             .sortedBy { it.qualifiedName.value }
             .joinToString(separator = "\n") { it.asString() }
-        return "$ns"
+        return "${optionsAsString(options, indent)}$ns"
     }
 
     // --- Any ---
@@ -1011,8 +1012,9 @@ abstract class TypesNamespaceAbstract(
                 "end $owned${asTypesString(e.characteristics, "${e.endName.value.asTypesName()}: $endType")}"
             }
         }
+        val optionStr = optionsAsString(options, Indent("", "  ").inc)
         val s = """namespace $qualifiedName
-$importstr
+$optionStr$importstr
 $types$assocstr
 """.trimIndent()
         return s

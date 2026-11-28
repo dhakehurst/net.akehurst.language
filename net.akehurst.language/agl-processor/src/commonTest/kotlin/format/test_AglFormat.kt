@@ -17,6 +17,10 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.expressions.processor.AglExpressions
+import net.akehurst.language.agl.processor.contextFromRegistryGrammars
+import kotlin.test.assertEquals
 import net.akehurst.language.format.test.FormatModelTest
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
@@ -27,6 +31,20 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class test_AglFormat {
+
+    @Test
+    fun process_grammarString_EQ_grammarModel() {
+        // FD6: the grammar string must parse and be the same as the grammar built in code
+        val res = Agl.registry.agl.grammar.processor!!.process(
+            AglBase.grammarString + "\n" + AglExpressions.grammarString + "\n" + AglFormat.grammarString,
+            Agl.options { semanticAnalysis { sentenceContext(contextFromRegistryGrammars(Agl.registry)) } }
+        )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        for (g in AglFormat.grammarDomain.allDefinitions) {
+            val actual = res.asm!!.findDefinitionByQualifiedNameOrNull(g.qualifiedName)?.asString()
+            assertEquals(g.asString(), actual)
+        }
+    }
 
     private companion object {
         data class TestData(

@@ -108,10 +108,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
             constructorArguments = '(' [propertyAssignment / ',']* ')' ;
             tuple = 'tuple' propertyAssignmentBlock ;
             propertyAssignmentBlock = '{' propertyAssignment*  '}' ;
-            propertyAssignment = propertyName grammarRuleIndex? ASSIGN_OP expression ;
+            propertyAssignment = propertyName ASSIGN_OP expression ;
             leaf ASSIGN_OP = ':=' | '+=' ;
             propertyName = SPECIAL | IDENTIFIER ;
-            grammarRuleIndex = '$' POSITIVE_INTEGER ;
                 
             with = 'with' '(' expression ')' expression ;
             
@@ -322,7 +321,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         lit("{"); lst(0, -1) { ref("propertyAssignment") }; lit("}")
                     }
                     concatenation("propertyAssignment") {
-                        ref("propertyName"); opt { ref("grammarRuleIndex") }; ref("ASSIGN_OP"); ref("expression")
+                        ref("propertyName"); ref("ASSIGN_OP"); ref("expression")
                     }
                     choice("ASSIGN_OP", isLeaf = true) {
                         lit(":=")
@@ -332,7 +331,6 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                         ref("SPECIAL")
                         ref("IDENTIFIER")
                     }
-                    concatenation("grammarRuleIndex") { lit("$"); ref("POSITIVE_INTEGER") }
                     concatenation("with") {
                         lit("with"); lit("("); ref("expression"); lit(")"); ref("expression")
                     }
@@ -694,10 +692,8 @@ object AglExpressions : LanguageObjectAbstract<Expression, SentenceContext>() {
                     supertype("AssignmentStatement")
                     constructor_ {
                         parameter(setOf(), "lhsPropertyName", "String")
-                        parameter(setOf(), "lhsGrammarRuleIndex", "Integer")
                         parameter(setOf(), "rhs", "Expression")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "lhsGrammarRuleIndex", "Integer", false)
                     propertyOf(setOf(VAL, REF, STR), "lhsPropertyName", "String", false)
                     propertyOf(setOf(VAL, CMP, STR), "rhs", "Expression", false)
                 }

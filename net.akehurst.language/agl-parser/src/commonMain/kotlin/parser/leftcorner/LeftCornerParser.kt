@@ -85,6 +85,16 @@ class ParseInterruptDefault : ParseInterrupt {
     }
 }
 
+/**
+ * the message of a parse failure: the rules being matched and the text around the failure, '^' marking the position.
+ * A failure at the end of the text says so, as nothing follows the '^' there (issue #20, ER11).
+ */
+fun parseFailureMessage(sentence: Sentence, rules: String, position: Int): String {
+    val contextInText = sentence.contextInText(position)
+    val at = if (position >= sentence.text.length) "at end of text" else "at"
+    return "Failed to match {$rules} $at: $contextInText"
+}
+
 data class ParseResultDefault(
     override val sppt: SharedPackedParseTree?,
     override val issues: IssueCollection<LanguageIssue>
@@ -99,9 +109,7 @@ data class ParseFailureRuntime(
 
     fun message(sentence: Sentence, location: InputLocation): String {
         val p = failedSpines.map { it.elements.last().rule.tag }.joinToString(separator = " | ")
-        val contextInText = sentence.contextInText(location.position)
-        val message = "Failed to match {$p} at: $contextInText"
-        return message
+        return parseFailureMessage(sentence, p, location.position)
     }
 }
 
@@ -308,8 +316,7 @@ class LeftCornerParser(
         val location = sentence.locationFor(errorPos, errorLength)
 
         val p = nextExpected.map { it.elements.last().rule.tag }.toSet().sorted().joinToString(separator = " | ")
-        val contextInText = sentence.contextInText(location.position)
-        val message = "Failed to match {$p} at: $contextInText"
+        val message = parseFailureMessage(sentence, p, location.position)
 
         issues.error(location, message, expected)
     }

@@ -80,28 +80,60 @@ class FormatterOverTypedObject(
     private val _formatSet: Map<PossiblyQualifiedName, FormatSet> = lazyMap { formatSetName: PossiblyQualifiedName ->
         formatDomain.findFirstFormatSetDefinitionByNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
     }
-    private val _rules: Map<PossiblyQualifiedName, Map<TypeInstance, AglFormatRule>> = lazyMap { formatSetName: PossiblyQualifiedName ->
+    /**
+     * the rules of a format set with their evaluated types, in priority order: the own rules (as written),
+     * then the rules of each extended format set (in the order of 'extends', each in its own priority order).
+     * A rule for a type that already has a rule earlier in the list is not used (an own rule replaces the extended rule).
+     */
+    private val _rules: Map<PossiblyQualifiedName, List<Pair<TypeInstance, AglFormatRule>>> = lazyMap { formatSetName: PossiblyQualifiedName ->
         val fs = formatDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
         when (fs) {
             is FormatSet -> {
-                // rules of the extended format sets first, so an own rule for the same type replaces the extended one
-                var map = fs.allRules.associateBy { rl ->
-                    super.evaluateTypeReference(rl.forTypeName)
+                val result = mutableListOf<Pair<TypeInstance, AglFormatRule>>()
+                fun addRules(set: FormatSet, visited: MutableSet<FormatSet>) {
+                    if (visited.add(set)) {
+                        set.rules.forEach { rl ->
+                            val ti = super.evaluateTypeReference(rl.forTypeName)
+                            if (result.none { it.first == ti }) result.add(Pair(ti, rl))
+                        }
+                        set.extends.forEach { ref -> ref.resolved?.let { addRules(it, visited) } }
+                    }
                 }
-                map
+                addRules(fs, mutableSetOf())
+                result
             }
 
             else -> error("Definition named '${formatSetName.value}' is not a FormatSet")
         }
     }
+    private val _ruleFor = mutableMapOf<Pair<PossiblyQualifiedName, TypeInstance>, AglFormatRule?>()
     private val _output = mutableMapOf<String, String>()
 
     // the caches, the outputs and the issues of the object graph are shared by all calls, so one format at a time
     private val _lock = ReentrantLockCommon()
 
-    fun findRuleFor(formatSetName: PossiblyQualifiedName, type: TypeInstance): AglFormatRule? = _rules[formatSetName]?.entries?.firstOrNull { (ti, rl) ->
-        type.conformsTo(ti)
-    }?.value
+    /**
+     * The rule for the most specific of the types (of the rules) that [type] conforms to.
+     * If several of them are most specific (e.g. unrelated supertypes of [type]), the first in priority order is used
+     * (own rules before rules of extended format sets, then as written) and a warning is given.
+     */
+    fun findRuleFor(formatSetName: PossiblyQualifiedName, type: TypeInstance): AglFormatRule? {
+        val key = Pair(formatSetName, type)
+        if (_ruleFor.containsKey(key)) return _ruleFor[key]
+        val candidates = _rules[formatSetName]?.filter { (ti, _) -> type.conformsTo(ti) } ?: emptyList()
+        val mostSpecific = candidates.filter { c ->
+            candidates.none { o -> o !== c && o.first.conformsTo(c.first) && c.first.conformsTo(o.first).not() }
+        }
+        if (mostSpecific.size > 1) {
+            issueWarn(
+                mostSpecific[0].second,
+                "Format rules for ${mostSpecific.joinToString { "'${it.first.typeName.value}'" }} all match type '${type.typeName.value}' in formatSet '${formatSetName.value}', using the rule for '${mostSpecific[0].first.typeName.value}'"
+            )
+        }
+        val rule = mostSpecific.firstOrNull()?.second
+        _ruleFor[key] = rule
+        return rule
+    }
 
     override fun formatSelf(formatSetName: PossiblyQualifiedName, self: Any): FormatResult = _lock.withLock {
         val typesSelf = objectGraph.toTypedObject(self, StdLibDefault.AnyType)
@@ -164,9 +196,15 @@ class FormatterOverTypedObject(
         return resultStr
     }
 
+    /** the option of [formatSet], else of the format sets it extends (in the order of 'extends'): an own option replaces an inherited one */
+    private fun findOption(formatSet: FormatSet, name: String, visited: MutableSet<FormatSet>): Any? = when {
+        visited.add(formatSet).not() -> null
+        else -> formatSet.options.get<Any>(name) ?: formatSet.extends.firstNotNullOfOrNull { ref -> ref.resolved?.let { findOption(it, name, visited) } }
+    }
+
     private fun setAdditionalOutputIfRequired(self: TypedObject, formatSetName: PossiblyQualifiedName, resultStr: String): String {
         val formatSet = _formatSet[formatSetName] ?: error("Format named '${formatSetName.value}' cannot be found")
-        val outputOptionAny: Any? = formatSet.options["output"]
+        val outputOptionAny: Any? = findOption(formatSet, "output", mutableSetOf())
         return when {
             null == outputOptionAny -> resultStr // nothing needed - use result string
             else -> when {

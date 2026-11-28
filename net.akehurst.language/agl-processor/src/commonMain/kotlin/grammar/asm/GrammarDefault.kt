@@ -16,6 +16,7 @@
 
 package net.akehurst.language.grammar.asm
 
+import net.akehurst.language.base.asm.optionsAsString
 import net.akehurst.kotlinx.collections.*
 import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.utils.Indent
@@ -311,6 +312,7 @@ abstract class GrammarAbstract(
         sb.append(extendsStr)
         sb.append(" {\n")
         val ni = indent.inc
+        sb.append(optionsAsString(options, ni))
         val rulesStr = grammarRule.joinToString(separator = "\n") { "${ni}${it.asString(ni)}" }
         sb.append(rulesStr)
         sb.append("\n$indent}")

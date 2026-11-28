@@ -254,19 +254,19 @@ class AsmTransformRuleSetBuilder internal constructor(
 @AsmTransformModelDslMarker
 class AssignmentBuilder() {
 
-    private val _assignments = mutableListOf<Triple<String, Int?, Expression>>()
+    private val _assignments = mutableListOf<Pair<String, Expression>>()
 
-    fun assignment(lhsPropertyName: String, lhsGrammarRuleIndex: Int?, expressionStr: String) {
+    fun assignment(lhsPropertyName: String, expressionStr: String) {
         val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
         check(res.allIssues.isEmpty()) { res.allIssues.toString() }
         val expr = res.asm!!
-        _assignments.add(Triple(lhsPropertyName, lhsGrammarRuleIndex, expr))
+        _assignments.add(Pair(lhsPropertyName, expr))
     }
 
     fun build(): List<VariableAssignmentStatement> {
         return _assignments.map {
             val variable = VariableDefinitionDefault(it.first, null)
-            VariableAssignmentStatementDefault(variable, it.second, it.third)
+            VariableAssignmentStatementDefault(variable, it.second)
         }
     }
 }
