@@ -48,6 +48,10 @@ namespace KerML.Root.Namespaces
     import KerML.Kernel.Expressions
     import SysML.Systems.Ports
 
+    // KerML: a qualified name starting with '$::' is resolved in the global Namespace (the root scopes);
+    // the transform puts '$::' as the first name part (not '$': a quoted name '$' is stored as $, e.g. package '$' in Scoping.kerml)
+    global-prefix '$::'
+
     // An element is a member of the Namespace that owns its OwningMembership ($container), with the visibility of that membership.
     // Its names are its declaredName and declaredShortName; a Feature without names has the effective name of the
     // feature its first owned Redefinition redefines (KerML 8.3.3.3.4, Feature::namingFeature), i.e. the last segment of that name
