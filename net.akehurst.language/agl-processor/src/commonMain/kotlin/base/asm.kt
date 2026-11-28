@@ -25,6 +25,8 @@ class OptionHolderDefault(
     val options: Map<String, Any> = emptyMap()
 ) : OptionHolder {
 
+    override val ownOptions: Map<String, Any> get() = options
+
     override operator fun <T> get(name: String): T? {
         return (this.options[name] ?: this.parent?.get(name)) as? T
     }
@@ -42,6 +44,27 @@ class OptionHolderDefault(
         options != other.options -> false
         else -> true
     }
+}
+
+private val OPTION_IDENTIFIER_REGEX = Regex("[a-zA-Z_][a-zA-Z_0-9-]*")
+
+/**
+ * The own options of [holder] in the syntax of the base language, `option = '#' IDENTIFIER (':' optionValue)? ;`,
+ * one per line, each line starting with [indent] and ending with a newline (empty when there are no options).
+ * The reverse of BaseSyntaxAnalyser.option:
+ * a value `true` is written as the flag `#name`; a String is written as an IDENTIFIER when it is one
+ * (and is not 'true' or 'false'), otherwise as a STRING in single quotes; any other value with toString().
+ */
+fun optionsAsString(holder: OptionHolder, indent: Indent): String = holder.ownOptions.entries.joinToString(separator = "") { (name, value) ->
+    val valueStr = when (value) {
+        true -> ""
+        is String -> when {
+            OPTION_IDENTIFIER_REGEX.matches(value) && value != "true" && value != "false" -> ": $value"
+            else -> ": '$value'"
+        }
+        else -> ": $value"
+    }
+    "$indent#$name$valueStr\n"
 }
 
 abstract class DomainAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
@@ -132,6 +155,7 @@ abstract class DomainAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
     // --- Formatable ---
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
+        sb.append(optionsAsString(options, indent))
         val ns = namespace.joinToString(separator = "\n") { "$indent${it.asString(indent)}" }
         sb.append(ns)
         return sb.toString()
@@ -220,6 +244,7 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc
+        sb.append(optionsAsString(options, newIndent))
         if (import.isNotEmpty()) {
             val importStr = import.joinToString(separator = "\n") { "${newIndent}import ${it.value}" }
             sb.append(importStr)
