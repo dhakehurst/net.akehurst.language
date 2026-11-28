@@ -22,6 +22,7 @@ import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -114,7 +115,8 @@ class test_Expressions_systematic {
 
     private fun typeOf(expression: String): TypeInstance {
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        return ExpressionTypeResolver(tm, StdLibDefault, issues).typeOfExpressionStr(expression, selfType)
+        val ns = tm.findNamespaceOrNull(QualifiedName("ns"))!!
+        return ExpressionTypeResolver(tm, ns, issues).typeOfExpressionStr(expression, selfType)
     }
 
     private fun parse(expression: String): Expression {
@@ -436,5 +438,73 @@ class test_Expressions_systematic {
         assertValue("Integer", "num.\$type.name")
         assertValue("B", "aList[1].\$type.name")
         assertValue("B", "(aList[1] as A).\$type.name")
+    }
+
+    // ---------------- EP3: errors give an issue and $nothing, not an exception ----------------
+
+    @Test
+    fun ep3_A1_real_division() = runTest {
+        assertValue(2.5, "5.0 / 2.0")
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "7.0 / 2")
+    }
+
+    @Test
+    fun ep3_A2_integer_division_by_zero() = runTest {
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "num / 0")
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "num % 0")
+    }
+
+    @Test
+    fun ep3_A3_when_condition_not_boolean() = runTest {
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "when { 1 -> 1 else -> 2 }")
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "when { \$nothing -> 1 else -> 2 }")
+    }
+
+    @Test
+    fun ep3_A4_unknown_type_in_is_and_as() = runTest {
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "aList[0] is Unknown")
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "aList[0] as Unknown")
+    }
+
+    @Test
+    fun ep3_A5_unknown_method() = runTest {
+        assertNothingWithIssue(LanguageIssueKind.WARNING, "aList.unknownMethod()")
+    }
+
+    @Test
+    fun ep3_A6_method_argument_not_a_lambda() = runTest {
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "aList.map(1)")
+        assertNothingWithIssue(LanguageIssueKind.ERROR, "aList.filter('x')")
+    }
+
+    @Test
+    fun ep3_B_type_resolver() {
+        assertEquals(StdLibDefault.Boolean, typeOf("aList[0] is B"))
+        assertEquals(StdLibDefault.Integer, typeOf("{ x := 2 x * 3 }"))
+        assertEquals(StdLibDefault.Integer, typeOf("{ x := 2 y := x + 1 y }"))
+        assertEquals(StdLibDefault.Integer, typeOf("{ x := 2 { y := x y } }"))
+        assertEquals(StdLibDefault.String, typeOf("{ x := 'a' x }"))
+        assertEquals("ns.B", typeOf("aList[1] as B").qualifiedTypeName.value)
+        assertEquals(StdLibDefault.Integer, typeOf("(aList[1] as B).prop2"))
+    }
+
+    // ---------------- EP4: and/or/xor are three-valued, $nothing is unknown ----------------
+
+    @Test
+    fun ep4_logic_with_nothing() = runTest {
+        val n = "\$nothing"
+        assertValue(false, "false and $n")
+        assertValue(false, "$n and false")
+        assertValue(Unit, "true and $n")
+        assertValue(Unit, "$n and true")
+        assertValue(Unit, "$n and $n")
+        assertValue(true, "true or $n")
+        assertValue(true, "$n or true")
+        assertValue(Unit, "false or $n")
+        assertValue(Unit, "$n or false")
+        assertValue(Unit, "$n or $n")
+        assertValue(Unit, "true xor $n")
+        assertValue(Unit, "$n xor false")
+        assertValue(Unit, "$n xor $n")
     }
 }
