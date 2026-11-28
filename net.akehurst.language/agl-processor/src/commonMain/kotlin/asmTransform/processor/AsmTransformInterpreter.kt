@@ -60,7 +60,7 @@ class AsmTransformInterpreter(
                     property(MATCHED_TEXT.value, StdLibDefault.String, 2)
                 }
                 data("Leaf") {
-                    subtypes("Node")
+                    supertypes("Node")
                     property("value", StdLibDefault.String, 0)
                 }
                 data("Branch") {

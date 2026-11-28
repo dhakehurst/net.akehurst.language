@@ -56,9 +56,22 @@ data class M2MTransformResult(
      */
     val targets: List<TypedObject>
         get() {
+            // the same entry (same entryId) can be in the records of more than one rule: it is counted once, at its first place
             val alts = mutableListOf<Map<DomainReference, TypedObject>>()
+            val seenIds = mutableSetOf<Int>()
+            val noIdAlts = mutableListOf<Map<DomainReference, TypedObject>>() // records not made by a transform execution have no entry ids
             record.values.filter { it.rule.isTop }.forEach { rec ->
-                rec.alternatives.forEach { alt -> if (alts.none { it === alt }) alts.add(alt) }
+                rec.alternatives.forEachIndexed { i, alt ->
+                    val id = rec.entryIds[i]
+                    when {
+                        MappingRecord.NO_ID == id -> if (noIdAlts.none { it === alt }) {
+                            noIdAlts.add(alt); alts.add(alt)
+                        }
+
+                        seenIds.add(id) -> alts.add(alt)
+                        else -> Unit
+                    }
+                }
             }
             return alts.mapNotNull { it[targetDomainRef] }
         }
@@ -137,16 +150,23 @@ data class MappingRecord(
      * for each alternative, the values of the rule's parameters it was applied with (MT13: a rule called with other
      * arguments for the same source has another result)
      */
-    val arguments: List<Map<String, TypedObject>> = alternatives.map { emptyMap() }
+    val arguments: List<Map<String, TypedObject>> = alternatives.map { emptyMap() },
+    /**
+     * for each alternative, an id of the entry: an entry that is also recorded for another rule (an extended rule, an abstract rule)
+     * has the same id there, [NO_ID] if not known
+     */
+    val entryIds: List<Int> = alternatives.map { NO_ID }
 ) {
     companion object {
+        const val NO_ID = -1
+
         fun EMPTY(rule: M2mTransformRule) = MappingRecord(rule, emptyList())
         fun Collection<MappingRecord>.merge(rule: M2mTransformRule) = this.fold(MappingRecord.EMPTY(rule)) { acc, it -> acc.merge(it) }
     }
 
     fun merge(other: MappingRecord): MappingRecord {
         check(rule == other.rule) { "Can only merge MappingRecord if rules are the same." }
-        return MappingRecord(rule, alternatives + other.alternatives, arguments + other.arguments)
+        return MappingRecord(rule, alternatives + other.alternatives, arguments + other.arguments, entryIds + other.entryIds)
     }
 
     /** true if alternative 'rec' has one of the given values for each domain in 'source' */
@@ -154,6 +174,16 @@ data class MappingRecord(
         source.all { (k, v) ->
             val alt = rec[k]
             null != alt && v.any { alt.accessor.equalTo(alt, it) }
+        }
+
+    /** the indices of the alternatives that [bySource] returns */
+    fun bySourceIndices(source: Map<DomainReference, List<TypedObject>>): List<Int> =
+        alternatives.indices.filter { i ->
+            val rec = alternatives[i]
+            source.all { (k, v) ->
+                val alt = rec[k]!!
+                v.any { alt.accessor.equalTo(alt, it) }
+            }
         }
 
     fun bySource(source: Map<DomainReference, List<TypedObject>>): List<Map<DomainReference, TypedObject>> {
@@ -223,23 +253,46 @@ class M2mTransformExecution(
         }
     val targetAccessorMutator = domainAccessorMutator[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
 
-    fun addRecord(rule: M2mTransformRule, alternatives: List<Map<DomainReference, TypedObject>>) {
-        val rec = records[rule]
-        if (null == rec) {
-            (records as MutableMap)[rule] = MappingRecord(rule, alternatives)
-        } else {
-            (records as MutableMap)[rule] = rec.merge(MappingRecord(rule, alternatives))
-        }
+    /**
+     * the lists of each rule's record: an entry is appended in place (copying the record for each entry is O(n^2) in the number of entries).
+     * records[rule] is created once and holds these lists, so it always shows every entry added so far.
+     * Readers either copy (filter/map) before anything else is recorded, or read records[rule] again after a rule was applied.
+     */
+    private class RecordLists(
+        val alternatives: MutableList<Map<DomainReference, TypedObject>> = mutableListOf(),
+        val arguments: MutableList<Map<String, TypedObject>> = mutableListOf(),
+        val entryIds: MutableList<Int> = mutableListOf()
+    )
+
+    private val recordLists = mutableMapOf<M2mTransformRule, RecordLists>()
+    private var nextEntryId = 0
+
+    private fun recordListsFor(rule: M2mTransformRule): RecordLists = recordLists.getOrPut(rule) {
+        RecordLists().also { (records as MutableMap)[rule] = MappingRecord(rule, it.alternatives, it.arguments, it.entryIds) }
     }
 
-    /** 'arguments' are the values of the rule's parameters the rule was applied with */
+    private fun append(rule: M2mTransformRule, mapping: Map<DomainReference, TypedObject>, arguments: Map<String, TypedObject>, entryId: Int) {
+        val lists = recordListsFor(rule)
+        // the three lists are read by index, they always have the same size
+        lists.alternatives.add(mapping)
+        lists.arguments.add(arguments)
+        lists.entryIds.add(entryId)
+    }
+
+    /** a new entry for 'rule'; 'arguments' are the values of the rule's parameters the rule was applied with */
     fun addRecord(rule: M2mTransformRule, mapping: Map<DomainReference, TypedObject>, arguments: Map<String, TypedObject> = emptyMap()) {
-        val rec = records[rule]
-        if (null == rec) {
-            (records as MutableMap)[rule] = MappingRecord(rule, listOf(mapping), listOf(arguments))
-        } else {
-            (records as MutableMap)[rule] = rec.merge(MappingRecord(rule, listOf(mapping), listOf(arguments)))
-        }
+        append(rule, mapping, arguments, nextEntryId++)
+    }
+
+    /** 'rule' has a record (possibly empty) from now on */
+    fun ensureRecord(rule: M2mTransformRule) {
+        recordListsFor(rule)
+    }
+
+    /** entry 'index' of the record of 'fromRule' is also an entry of 'rule' (same entry id) */
+    fun addRecordCopiedFrom(rule: M2mTransformRule, fromRule: M2mTransformRule, index: Int, arguments: Map<String, TypedObject> = emptyMap()) {
+        val from = recordLists[fromRule] ?: error("No record for rule '${fromRule.name.value}'") // should never happen, called only for an existing entry
+        append(rule, from.alternatives[index], arguments, from.entryIds[index])
     }
 
     fun errorIssue(msg: String) {

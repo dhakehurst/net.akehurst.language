@@ -18,6 +18,8 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.grammar.api.GrammarDomain
@@ -149,6 +151,7 @@ class test_CompletionProvider {
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-weight"),
             CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
         )
         test(grammarStr, sentence, sentence.length, expected)
@@ -179,9 +182,8 @@ class test_CompletionProvider {
         """
         val sentence = "namespace test styles StyleSet { S { foreground:"
         val expected = listOf(
+            // SD7: the values that fit 'foreground'
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -196,9 +198,8 @@ class test_CompletionProvider {
         """
         val sentence = "namespace test styles StyleSet { S { foreground: "
         val expected = listOf(
+            // SD7: the values that fit 'foreground'
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -232,6 +233,7 @@ class test_CompletionProvider {
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-weight"),
             CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
         )
         test(grammarStr, sentence, sentence.length, expected)
@@ -262,4 +264,83 @@ class test_CompletionProvider {
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
+
+    // SD6: after 'type', 'identify' or 'refers-to' the types of the context are offered
+    private fun testWithTypes(sentence: String, expected: List<CompletionItem>) {
+        val lp = Agl.processorFromStringSimple(GrammarString("namespace test grammar Test { S = A B ; A = 'a' ; B = 'b' ; }")).processor!!
+        val context = contextFromGrammar(lp.grammarDomain!!).union(contextFromTypesDomain(lp.typesDomain))
+        val actual = aglProc.expectedItemsAt(sentence, sentence.length, Agl.options { completionProvider { sentenceContext(context) } })
+        assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
+        assertEquals(expected.joinToString("\n"), actual.items.joinToString("\n"))
+        assertEquals(expected.map { it.description }, actual.items.map { it.description })
+    }
+
+    private fun typeItem(text: String, qualified: String) = CompletionItem(CompletionItemKind.REFERRED, "TypeDefinition", text).also { it.description = qualified }
+
+    // 'type' alone can also be a selector for a grammar rule named 'type', so '{' and ',' are offered too
+    private val afterTypeAlone = listOf(
+        CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
+        CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
+        CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
+    )
+
+    @Test
+    fun after_type__types_of_own_namespace_simple_names() = testWithTypes(
+        "namespace test styles Test { type ",
+        listOf(typeItem("S", "test.Test.S"), typeItem("A", "test.Test.A"), typeItem("B", "test.Test.B")) + afterTypeAlone
+    )
+
+    @Test
+    fun after_refers_to__types() = testWithTypes(
+        "namespace test styles Test { refers-to ",
+        listOf(typeItem("S", "test.Test.S"), typeItem("A", "test.Test.A"), typeItem("B", "test.Test.B")) + afterTypeAlone
+    )
+
+    @Test
+    fun after_type__types_of_other_namespace_qualified() = testWithTypes(
+        "namespace test styles Other { type ",
+        listOf(typeItem("test.Test.S", "test.Test.S"), typeItem("test.Test.A", "test.Test.A"), typeItem("test.Test.B", "test.Test.B")) + afterTypeAlone
+    )
+
+    @Test
+    fun after_type__types_of_import_types_simple_names() = testWithTypes(
+        "namespace test styles Other { import-types test.Test type ",
+        listOf(typeItem("S", "test.Test.S"), typeItem("A", "test.Test.A"), typeItem("B", "test.Test.B")) + afterTypeAlone
+    )
+
+    // SD7: the values offered fit the name of the declaration
+    private val grammarS = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+
+    @Test
+    fun after_font_style_colon() = test(
+        grammarS, "namespace test styles StyleSet { S { font-style: ", 49,
+        listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "normal"),
+        )
+    )
+
+    @Test
+    fun after_font_weight_colon__second_declaration() = test(
+        grammarS, "namespace test styles StyleSet { S { foreground: red; font-weight: ", 67,
+        listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "normal"),
+        )
+    )
+
+    @Test
+    fun after_unknown_name_colon() = test(
+        grammarS, "namespace test styles StyleSet { S { text-decoration: ", 54,
+        listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
+        )
+    )
 }

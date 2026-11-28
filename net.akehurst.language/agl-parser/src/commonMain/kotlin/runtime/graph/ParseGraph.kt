@@ -24,9 +24,11 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
+import net.akehurst.language.automaton.leftcorner.LookaheadSetsKey
 import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.kotlinx.collections.binaryHeap
 import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
@@ -801,15 +803,28 @@ internal class ParseGraph(
             runtimeLookahead.includesRT -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
             eotLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
             else -> {
-                val rtResolved = runtimeLookahead.resolve(eotLookahead, runtimeLookahead)
-                val lhs = lookaheadGuard.resolve(eotLookahead, rtResolved)
-                when {
-                    lhs.matchANY -> true
-                    lhs.includesEOT && this.scanner.isEnd(sentence, nextInputPosition) -> true
-                    lhs.content.isEmpty() -> false
-                    else -> lhs.content.any { this.scanner.isLookingAt(sentence, nextInputPosition, it) }
+                // the resolved set depends only on the three (immutable, interned) lookahead sets, so it is computed once per parse
+                val lhs = _resolvedForLookingAt.getOrPut(LookaheadSetsKey(arrayOf(lookaheadGuard, eotLookahead, runtimeLookahead))) {
+                    val rtResolved = runtimeLookahead.resolve(eotLookahead, runtimeLookahead)
+                    lookaheadGuard.resolve(eotLookahead, rtResolved)
                 }
+                isLookingAtResolved(lhs, nextInputPosition)
             }
+        }
+    }
+
+    private val _resolvedForLookingAt = hashMapOf<LookaheadSetsKey, LookaheadSetPart>()
+
+    /**
+     * true if the next token at nextInputPosition is one of the (already resolved, no RT) lookahead 'lhs'
+     */
+    fun isLookingAtResolved(lhs: LookaheadSetPart, nextInputPosition: Int): Boolean = when {
+        lhs.matchANY -> true
+        lhs.includesEOT && this.scanner.isEnd(sentence, nextInputPosition) -> true
+        lhs.content.isEmpty() -> false
+        else -> when (val sc = this.scanner) {
+            is ScannerClassic -> sc.isLookingAtAny(sentence, nextInputPosition, lhs.content)
+            else -> lhs.content.any { sc.isLookingAt(sentence, nextInputPosition, it) }
         }
     }
 
