@@ -106,4 +106,21 @@ class test_AsmTransform_issueLocations {
         val saErrors = res.allIssues.errors.filter { it.message.startsWith("No transformation rule found for grammar rule 'square'") }
         assertEquals(listOf(InputLocation(0, 1, 1, 8, null)), saErrors.map { it.location }, res.allIssues.toString())
     }
+
+    @Test
+    fun missing_rule__reported_once_per_sentence_on_first_node() {
+        // AT-Q16
+        val transform = """
+            namespace example
+            asm-transform Shapes {
+                circle: Circle() { id := child[1] }
+            }
+        """.trimIndent()
+        val proc = Agl.processorFromStringSimple(GrammarString(GRAMMAR), transformStr = AsmTransformString(transform)).processor!!
+        repeat(2) {
+            val res = proc.process("square s square t")
+            val saErrors = res.allIssues.errors.filter { it.message.startsWith("No transformation rule found for grammar rule 'square'") }
+            assertEquals(listOf(InputLocation(0, 1, 1, 8, null)), saErrors.map { it.location }, res.allIssues.toString())
+        }
+    }
 }
