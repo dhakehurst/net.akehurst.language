@@ -76,8 +76,45 @@ internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationA
                  lines.joinToString("\n")
              }
          }*/
-        val unescaped = parsedText.replace("\\", "")
-        return TemplateElementTextDefault(unescaped)
+        return TemplateElementTextDefault(unescapeTemplateText(parsedText))
+    }
+
+    /**
+     * Kotlin style escapes (David FD5): \t \b \n \r \' \" \\ \$ and \uXXXX;
+     * a backslash before any other character gives that character.
+     */
+    internal fun unescapeTemplateText(text: String): String {
+        val sb = StringBuilder()
+        var i = 0
+        while (i < text.length) {
+            val c = text[i]
+            if (c == '\\' && i + 1 < text.length) {
+                val n = text[i + 1]
+                when (n) {
+                    't' -> sb.append('\t')
+                    'b' -> sb.append('\b')
+                    'n' -> sb.append('\n')
+                    'r' -> sb.append('\r')
+                    'u' -> {
+                        val hex = text.substring(i + 2, minOf(i + 6, text.length))
+                        val code = if (hex.length == 4) hex.toIntOrNull(16) else null
+                        if (null != code) {
+                            sb.append(code.toChar())
+                            i += 4
+                        } else {
+                            sb.append('u')
+                        }
+                    }
+
+                    else -> sb.append(n)
+                }
+                i += 2
+            } else {
+                sb.append(c)
+                i++
+            }
+        }
+        return sb.toString()
     }
 
     // templateExpression = templateExpressionSimple | templateExpressionEmbedded ;
