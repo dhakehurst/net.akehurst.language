@@ -336,4 +336,18 @@ class test_Issue57 {
         assertEquals(setOf(), texts(pIf, "if x", 0, options).filter { it == "if" }.toSet())
         assertEquals(setOf("if"), texts(pIf, "ifx", 0, options).filter { it == "if" }.toSet(), "'if' is only the start of the word 'ifx'")
     }
+
+    @Test
+    fun BracketsComplex_invalid_text_before_position() {
+        // issue #57 (IC4, q21): 'x' is not a NAME_CHAR, the text is invalid from position 1;
+        // the items expected at the first error position are offered (from that position), wherever the position is after it
+        val p = processor(grammarBracketsComplex)
+        val expected = setOf("<word>@1", "]@1", "<NAME>@1")
+        for ((sentence, position) in listOf("[x" to 2, "[x " to 3, "[x]" to 3, "[x] " to 4)) {
+            val res = p.expectedItemsAt(sentence, position)
+            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+            assertEquals(expected, res.items.map { "${it.text}@${it.offeredPosition}" }.toSet(), "'$sentence'@$position")
+            assertEquals(1, res.offeredPosition, "'$sentence'@$position")
+        }
+    }
 }
