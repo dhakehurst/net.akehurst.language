@@ -76,6 +76,9 @@ interface CrossReferenceDomain : Domain<CrossReferenceNamespace, DeclarationsFor
      * null if not found, or if 'declaration' is not a declaration of this domain and 'typeName' is not qualified
      */
     fun findTypeNamedIn(typesDomain: TypesDomain, declaration: Any, typeName: PossiblyQualifiedName): TypeDefinition?
+
+    /** the 'global-prefix' of the namespace block that holds 'declaration' (a ReferenceExpression of the domain), null if it has none */
+    fun globalPrefixFor(typesDomain: TypesDomain, declaration: Any): String? = null
 }
 
 /**
@@ -118,6 +121,13 @@ interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
      * It is not a type: where it is used it stands for its list.
      */
     val typeGroups: Map<SimpleName, TypeGroup> get() = emptyMap()
+
+    /**
+     * 'global-prefix '$'': a referring name (a qualified name, as a list of parts) whose first part is this prefix
+     * is looked up from the root scopes only, without the prefix part (e.g. KerML/SysML '$::A::B', C# 'global::System').
+     * null if there is none. It applies to every reference of this namespace block.
+     */
+    val globalPrefix: String? get() = null
 
     val isEmpty: Boolean
 

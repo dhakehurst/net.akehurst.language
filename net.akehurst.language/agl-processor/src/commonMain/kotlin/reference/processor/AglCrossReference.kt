@@ -52,7 +52,8 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                 override namespace = 'namespace' possiblyQualifiedName import* declarations ;
                 declarations = rootDeclarations scopes references? ;
                 rootDeclarations = rootDeclaration* ;
-                rootDeclaration = typeGroup | identifiable | importIntoScope ;
+                rootDeclaration = globalPrefix | typeGroup | identifiable | importIntoScope ;
+                globalPrefix = 'global-prefix' STRING ;
                 typeGroup = 'type-group' IDENTIFIER '=' typeReferences ;
                 scopes = scope* ;
                 scope = 'scope' possiblyQualifiedTypeReference '{' identifiables scopeImports '}' ;
@@ -211,10 +212,12 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     }
                     list("rootDeclarations", 0, -1) { ref("rootDeclaration") }
                     choice("rootDeclaration") {
+                        ref("globalPrefix")
                         ref("typeGroup")
                         ref("identifiable")
                         ref("importIntoScope")
                     }
+                    concatenation("globalPrefix") { lit("global-prefix"); ref("STRING") }
                     concatenation("typeGroup") { lit("type-group"); ref("IDENTIFIER"); lit("="); ref("typeReferences") }
                     list("scopes", 0, -1) { ref("scope") }
                     concatenation("scope") {
@@ -398,6 +401,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("SimpleName")
                         typeArgument("TypeGroup")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "globalPrefix", "String", true)
                     propertyOf(setOf(VAR, CMP, STR), "references", "List", false){
                         typeArgument("ReferenceDefinition")
                     }
@@ -566,6 +570,7 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                         typeArgument("SimpleName")
                         typeArgument("TypeGroup")
                     }
+                    propertyOf(setOf(VAR, CMP, STR), "globalPrefix", "String", true)
                 }
                 data("CrossReferenceNamespaceDefault") {
                     supertype("NamespaceAbstract"){ ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
