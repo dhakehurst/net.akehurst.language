@@ -145,13 +145,11 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
             STYLE_ID -> replace [
               CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'foreground' },
               CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'background' },
-              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'font-style' }
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'font-style' },
+              CompletionItem() { kind := 'LITERAL' label := 'STYLE_ID' text := 'font-weight' }
             ]
-            STYLE_VALUE -> replace [
-              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := '<colour>' },
-              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'bold' },
-              CompletionItem() { kind := 'LITERAL' label := 'STYLE_VALUE' text := 'italic' }
-            ]
+            // the values that fit the name of the declaration are given by AglStyleCompletionProvider
+            STYLE_VALUE -> hide
             SPECIAL_IDENTIFIER -> add [
               CompletionItem() { kind := 'LITERAL' label := 'SPECIAL_IDENTIFIER' text := '${'$'}keyword' },
               CompletionItem() { kind := 'LITERAL' label := 'SPECIAL_IDENTIFIER' text := '${'$'}nostyle' }
@@ -502,12 +500,10 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                         item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "foreground")
                         item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "background")
                         item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "font-style")
+                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_ID", text = "font-weight")
                     }
-                    replace("STYLE_VALUE") {
-                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "<colour>")
-                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "bold")
-                        item(kind = CompletionItemKind.LITERAL, label = "STYLE_VALUE", text = "italic")
-                    }
+                    // the values that fit the name of the declaration are given by AglStyleCompletionProvider
+                    hide("STYLE_VALUE")
                     add("SPECIAL_IDENTIFIER") {
                         item(kind = CompletionItemKind.LITERAL, label = "SPECIAL_IDENTIFIER", text = AglStyleDomainDefault.KEYWORD_STYLE_ID.value)
                         item(kind = CompletionItemKind.LITERAL, label = "SPECIAL_IDENTIFIER", text = AglStyleDomainDefault.NO_STYLE_ID.value)

@@ -833,14 +833,18 @@ class M2mTransformInterpreterCombined(
                             val winner = mostSpecific.first()
                             executeRule(m2mExecution, winner, single, ruleArguments)
                             // the winner's results are also results of 'rule' (e.g. for 'where map Rule' and 'mapped Rule')
+                            // entries are added after the loop, so 'known' does not change while it is used (as when records were copied on each add)
                             val known = m2mExecution.records[rule]?.alternatives ?: emptyList()
                             val winnerArgs = parameterArguments(winner) { ruleArguments[it] }
                             m2mExecution.records[winner]?.let { rec ->
                                 val srcOnly = combination.mapValues { listOf(it.value) }
+                                val toAdd = mutableListOf<Int>()
                                 rec.alternatives.forEachIndexed { i, alt ->
                                     val isForThis = sameBinding(rec.arguments[i], winnerArgs) && rec.bySourceMatches(alt, srcOnly)
-                                    if (isForThis && known.none { it === alt }) m2mExecution.addRecord(rule, alt, parameterArguments(rule) { ruleArguments[it] })
+                                    if (isForThis && known.none { it === alt }) toAdd.add(i)
                                 }
+                                val ruleArgs = parameterArguments(rule) { ruleArguments[it] }
+                                toAdd.forEach { i -> m2mExecution.addRecordCopiedFrom(rule, winner, i, ruleArgs) }
                             }
                         }
                     }
@@ -889,8 +893,11 @@ class M2mTransformInterpreterCombined(
         subrules.forEach { sr ->
             executeRule(m2mExecution, sr, source, ruleArguments)
             val rec = m2mExecution.records[sr]
-            rec?.bySource(source)?.let {
-                m2mExecution.addRecord(rule, it)
+            if (null != rec) {
+                // the indices first (a copy), then the entries are added to the record of 'rule' (another rule, sr is not abstract)
+                val indices = rec.bySourceIndices(source)
+                m2mExecution.ensureRecord(rule) // as before: the abstract rule has a record, even if empty
+                indices.forEach { i -> m2mExecution.addRecordCopiedFrom(rule, sr, i) }
             }
         }
     }

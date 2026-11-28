@@ -21,6 +21,7 @@ import kotlinx.coroutines.runBlocking
 import net.akehurst.language.api.processor.M2mTransformString
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.m2mTransform.api.DomainReference
+import net.akehurst.language.m2mTransform.api.M2mTransformDomain
 import net.akehurst.language.m2mTransform.processor.M2MTransformResult
 import net.akehurst.language.objectgraph.api.EvaluationContext
 import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
@@ -48,5 +49,16 @@ object AglJava {
         targetDomainReference: DomainReference
     ): M2MTransformResult = runBlocking {
         Agl.transformSuspend(m2m, typeDomains, accessorMutators, domains, emptyMap(), targetDomainReference)
+    }
+
+    /** like [transformSuspendBlocking], with a transform parsed once by [Agl.m2mTransformDomain] */
+    @JvmStatic
+    fun transformSuspendBlocking(
+        m2mDomain: M2mTransformDomain,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
+        domains: Map<DomainReference, List<TypedObject>>,
+        targetDomainReference: DomainReference
+    ): M2MTransformResult = runBlocking {
+        Agl.transformSuspend(m2mDomain, accessorMutators, domains, emptyMap(), targetDomainReference)
     }
 }

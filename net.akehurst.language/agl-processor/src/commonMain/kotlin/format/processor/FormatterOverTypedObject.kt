@@ -196,9 +196,15 @@ class FormatterOverTypedObject(
         return resultStr
     }
 
+    /** the option of [formatSet], else of the format sets it extends (in the order of 'extends'): an own option replaces an inherited one */
+    private fun findOption(formatSet: FormatSet, name: String, visited: MutableSet<FormatSet>): Any? = when {
+        visited.add(formatSet).not() -> null
+        else -> formatSet.options.get<Any>(name) ?: formatSet.extends.firstNotNullOfOrNull { ref -> ref.resolved?.let { findOption(it, name, visited) } }
+    }
+
     private fun setAdditionalOutputIfRequired(self: TypedObject, formatSetName: PossiblyQualifiedName, resultStr: String): String {
         val formatSet = _formatSet[formatSetName] ?: error("Format named '${formatSetName.value}' cannot be found")
-        val outputOptionAny: Any? = formatSet.options["output"]
+        val outputOptionAny: Any? = findOption(formatSet, "output", mutableSetOf())
         return when {
             null == outputOptionAny -> resultStr // nothing needed - use result string
             else -> when {

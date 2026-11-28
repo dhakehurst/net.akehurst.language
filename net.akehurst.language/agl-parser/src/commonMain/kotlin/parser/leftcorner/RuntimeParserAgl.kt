@@ -102,6 +102,14 @@ internal class RuntimeParserAgl(
 
     val graph = ParseGraph(sentence, scanner, this.stateSet.number)
 
+    // memo of matchedLookahead's resolved sets, a pure function of the lookahead sets (one parse)
+    private val _matchedLookaheadResolved = hashMapOf<LookaheadSetsKey, Pair<LookaheadSetPart, LookaheadSetPart>>()
+
+    // memo of this.stateSet.createLookaheadSet(lh.resolve(eot, rt)), a pure function of the three lookahead sets (one parse)
+    private val _resolvedLookaheadSet = hashMapOf<LookaheadSetsKey, LookaheadSet>()
+    private fun createResolvedLookaheadSet(lh: LookaheadSet, eot: LookaheadSet, rt: LookaheadSet): LookaheadSet =
+        _resolvedLookaheadSet.getOrPut(LookaheadSetsKey(arrayOf(lh, eot, rt))) { this.stateSet.createLookaheadSet(lh.resolve(eot, rt)) }
+
     val canGrow: Boolean get() = this.graph.canGrow
 
     val failedReasons = mutableMapOf<Int, MutableList<FailedParseReason>>()
@@ -409,19 +417,32 @@ internal class RuntimeParserAgl(
 //            possibleEndOfText.size > 1 -> TODO()
 //            runtimeLhs.size > 1 -> TODO()
             else -> {
-                val lh1: LookaheadSetPart = lookahead.map { it.guardLookaheadSet.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
-                val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
-                val rt: LookaheadSetPart = runtimeLhs.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                // the resolved sets depend only on the (immutable, interned) lookahead sets, not on the position,
+                // so they are computed once per parse; the scanner check below still uses the position
+                val key = LookaheadSetsKey((lookahead.map { it.guardLookaheadSet } + LookaheadSetsKey.SEPARATOR + possibleEndOfText + LookaheadSetsKey.SEPARATOR + runtimeLhs).toTypedArray())
+                val (forLookingAt, resolvedNoEnd) = _matchedLookaheadResolved.getOrPut(key) {
+                    val lh1: LookaheadSetPart = lookahead.map { it.guardLookaheadSet.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                    val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                    val rt: LookaheadSetPart = runtimeLhs.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                    // as ParseGraph.isLookingAt(LookaheadSetPart, LookaheadSetPart, LookaheadSetPart, Int)
+                    val forLookingAt = when {
+                        lh1.matchANY -> LookaheadSetPart.ANY
+                        rt.includesRT -> error("Runtime lookahead must be real lookahead values")
+                        eot.includesRT -> error("EOT lookahead must be real lookahead values")
+                        else -> lh1.resolve(eot, rt.resolve(eot, rt))
+                    }
+                    Pair(forLookingAt, lh1.resolve(eot, rt))
+                }
                 //possibleEndOfText.flatMap { eot ->
                 //    runtimeLhs.map { rt ->
                 // acceptEOT: also accept the real end of the text (e.g. the position given to expectedAt).
                 // EOT is not added to the guard before resolving, because in an embedded (or skip) parser
                 // EOT resolves to the lookahead of the outer parser, which would make every transition valid there.
                 val atEnd = acceptEOT && this.graph.scanner.isEnd(sentence, position)
-                val lookingAt: Boolean = atEnd || this.graph.isLookingAt(lh1, eot, rt, position)
+                val lookingAt: Boolean = atEnd || this.graph.isLookingAtResolved(forLookingAt, position)
                 val resolved = when (atEnd) {
-                    true -> lh1.resolve(eot, rt).union(LookaheadSetPart.EOT)
-                    false -> lh1.resolve(eot, rt)
+                    true -> resolvedNoEnd.union(LookaheadSetPart.EOT)
+                    false -> resolvedNoEnd
                 }
                 Pair(lookingAt, resolved)
                 //     }
@@ -1393,7 +1414,7 @@ internal class RuntimeParserAgl(
                                 runtimeLhs.map { rt ->
                                     if (up.includesRT || up.includesEOT) {
                                         //this.stateSet.createWithParent(up, rt)
-                                        this.stateSet.createLookaheadSet(up.resolve(eot, rt))
+                                        createResolvedLookaheadSet(up, eot, rt)
                                     } else {
                                         up
                                     }
@@ -1407,7 +1428,7 @@ internal class RuntimeParserAgl(
                             val up = t.third
                             if (up.includesRT || up.includesEOT) {
                                 //this.stateSet.createWithParent(up, rt)
-                                this.stateSet.createLookaheadSet(up.resolve(eot, rt))
+                                createResolvedLookaheadSet(up, eot, rt)
                             } else {
                                 up
                             }
@@ -1482,7 +1503,7 @@ internal class RuntimeParserAgl(
         } else {
             val skipLh = if (lhs.includesEOT || lhs.includesRT) {
                 //possibleEndOfText.map { eot -> this.stateSet.createWithParent(lh, eot) }.toSet()
-                runtimeLhs.flatMap { rt -> possibleEndOfText.map { eot -> this.stateSet.createLookaheadSet(lhs.resolve(eot, rt)) } }.toSet()
+                runtimeLhs.flatMap { rt -> possibleEndOfText.map { eot -> createResolvedLookaheadSet(lhs, eot, rt) } }.toSet()
             } else {
                 setOf(lhs)
             }

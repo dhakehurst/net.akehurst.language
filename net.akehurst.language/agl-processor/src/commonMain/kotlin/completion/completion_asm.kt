@@ -17,6 +17,7 @@
 
 package net.akehurst.language.completion.asm
 
+import net.akehurst.language.base.asm.optionsAsString
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
@@ -84,6 +85,7 @@ class CompletionSetDefault(
         val sb = StringBuilder()
         sb.append("completion ${name.value} {\n")
         val ni = indent.inc
+        sb.append(optionsAsString(options, ni))
         rules.forEach { sb.append("$ni${(it as CompletionRuleDefault).asString(ni)}\n") }
         sb.append("$indent}")
         return sb.toString()

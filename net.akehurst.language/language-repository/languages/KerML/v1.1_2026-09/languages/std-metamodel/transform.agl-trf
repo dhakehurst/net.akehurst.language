@@ -130,7 +130,7 @@ namespace net.akehurst.language.kerML
             ownedRelatedElement := child[6].ownedRelatedElement
             ownedRelationship := child[6].ownedRelationship
         }
-        QualifiedName: (child[1].children.map({ x1 -> x1.child[0] }) + children.filter({ y -> y == child[2] })) as Any
+        QualifiedName: (children.filter({ y -> y == child[0] }).filter({ y -> when { y != $nothing -> (y.child[0] != $nothing) else -> false } }).map({ g -> '$::' }) + child[1].children.map({ x1 -> x1.child[0] }) + children.filter({ y -> y == child[2] })) as Any
         Import: (when {
             child[3] is MembershipImport -> MembershipImport(_identity := $path) {
                 importedMembership := child[3].importedMembership
