@@ -254,3 +254,21 @@ class LookaheadSet(
     }
 
 }
+/**
+ * Key over LookaheadSet objects compared by identity.
+ * LookaheadSets are interned per automaton (ParserStateSet.createLookaheadSet), so identity equals content equality
+ * within one automaton; sets of different automata (outer, skip, embedded) can share a number, so 'number' is only the hash.
+ */
+internal class LookaheadSetsKey(val sets: Array<LookaheadSet>) {
+    companion object {
+        /** separates groups of sets in one key; never part of an automaton, so it cannot be confused with a real set */
+        val SEPARATOR = LookaheadSet(-100, false, false, false, emptySet())
+    }
+    private val hash = sets.fold(1) { acc, it -> acc * 31 + it.number }
+    override fun hashCode(): Int = hash
+    override fun equals(other: Any?): Boolean = when {
+        other !is LookaheadSetsKey -> false
+        other.sets.size != this.sets.size -> false
+        else -> this.sets.indices.all { this.sets[it] === other.sets[it] }
+    }
+}

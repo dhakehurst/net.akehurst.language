@@ -126,6 +126,9 @@ interface OptionHolder {
     /** gets the value of the option */
     operator  fun <T> get(name: String): T?
 
+    /** the options held by this holder itself, not those of its parent, in the order they were given */
+    val ownOptions: Map<String, Any>
+
     fun clone(parent:OptionHolder?): OptionHolder
 }
 
