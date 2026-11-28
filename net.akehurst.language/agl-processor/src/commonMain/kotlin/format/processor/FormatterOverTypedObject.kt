@@ -587,6 +587,7 @@ class FormatterOverTypedObject(
         }
     }
 
+    // TODO(David FD8): only reached for a FormatExpressionWhen, which is never created
     private fun formatFromWhen(formatSetName: PossiblyQualifiedName, evc: EvaluationContext, formatExpr: FormatExpressionWhen): String {
         for (opt in formatExpr.options) {
             val condValue = formatEvaluateExpression(formatSetName, evc, opt.condition)

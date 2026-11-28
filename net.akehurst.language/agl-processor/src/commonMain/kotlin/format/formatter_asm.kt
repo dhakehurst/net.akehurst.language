@@ -64,6 +64,8 @@ class FormatDomainDefault(
             else -> error("Internal error: subtype of RuleItem not handled: '${ruleItem::class.simpleName}'")
         }
 
+        // TODO(David FD8): fromGrammar (a format generated from a grammar) is not used anywhere and is unfinished
+        //  (TODO() for most rule items, addRule not implemented)
         fun fromGrammar(grammarDomain: GrammarDomain, typesDomain: TypesDomain): ProcessResult<AglFormatDomain> {
             val issues = IssueHolder(LanguageProcessorPhase.ALL)
             val formatModel = FormatDomainDefault(grammarDomain.name)
@@ -197,6 +199,8 @@ class AglFormatRuleDefault(
 ) : AglFormatRule {
 }
 
+// TODO(David FD8): FormatExpressionWhenDefault, FormatWhenOptionDefault and FormatWhenOptionElseDefault are never created
+//  (the format grammar has no format specific 'when'; a 'when' in a format rule is the expressions 'when'), asString is unfinished
 class FormatExpressionWhenDefault(
     override val options: List<FormatWhenOption>
 ) : FormatExpressionWhen {
