@@ -252,7 +252,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, SentenceContext>() {
     }
 
     override val formatDomain by lazy {
-        formatDomain(AglStyle.NAME) {
+        formatDomain(NAME) {
 //            TODO("not implemented")
         }
     }
