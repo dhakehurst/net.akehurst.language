@@ -48,7 +48,7 @@ For Kotlin objects use `ObjectGraphAccessorMutatorByReflection(typesDomain, issu
 | `list.size`, `.isEmpty`, `.first`, `.last`, `.get(i)`, `.map(f)`, `.filter(f)` | list properties and methods |
 | `set.size`, `.isEmpty`, `.map(f)`, `.filter(f)` | properties and methods of any collection (`List`, `Set`, `OrderedSet`, `Map`); an `OrderedSet` also has `.first` and `.last` |
 | `list.foldRight(initial, { x, acc -> expr })` | accumulates a value from the last element to the first, as Kotlin `foldRight`; e.g. nested objects from a list: `l.front.foldRight(l.last, { x, acc -> N() { v := x  n := acc } })` |
-| `+ - * / %`, `== != < <= > >=`, `and or xor` | infix operators, Kotlin precedence (tightest first): `* / %`, `+ -`, `< <= > >=`, `== !=`, `and`, `xor`, `or` |
+| `+ - * / %`, `== != < <= > >=`, `and or xor` | infix operators, Kotlin precedence (tightest first): `* / %`, `+ -`, `< <= > >=`, `== !=`, `and`, `xor`, `or`; all left associative. Precedence is applied when the expression is evaluated or typed; the ASM keeps the chain as written |
 | `c ? a : b` | `a` if `c` is true, else `b` |
 | `when { c1 -> e1 ... else -> e }` | first true condition wins |
 | `{ x -> expr }` | lambda, e.g. for `map` and `filter` |

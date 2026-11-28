@@ -20,7 +20,7 @@ package net.akehurst.language.asm.simple
 import net.akehurst.kotlinx.utils.Indent
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AnyExt.asString
-import net.akehurst.language.asm.simple.AnyExt.equalTo
+import net.akehurst.language.asm.simple.AnyExt.equalToDeep
 import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.kotlinx.collections.ListSeparated
@@ -150,16 +150,15 @@ open class AsmSimple(
 
 abstract class AsmValueAbstract() : AsmValue {
     override val typeName get() = qualifiedTypeName.last
+
+    final override fun equalTo(other: AsmValue): Boolean = this == other
 }
 
 @Deprecated("Use Unit instead")
 object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
     override val qualifiedTypeName: QualifiedName get() = StdLibDefault.NothingType.qualifiedTypeName
     override fun asString(indent: Indent): String = $$"$nothing"
-    override fun equalTo(other: AsmValue): Boolean = when {
-        other !is AsmNothing -> false
-        else -> true
-    }
+    override fun equalToDeep(other: AsmValue): Boolean = other is AsmNothing
 
     override fun hashCode(): Int = 0
     override fun equals(other: Any?): Boolean = when (other) {
@@ -181,10 +180,9 @@ class AsmAnySimple(
 
     override fun asString(indent: Indent): String = value.asString(indent)
 
-    override fun equalTo(other: AsmValue): Boolean = when {
+    override fun equalToDeep(other: AsmValue): Boolean = when {
         other !is AsmAny -> false
-        other.value != this.value -> false
-        else -> true
+        else -> this.value.equalToDeep(other.value)
     }
 
     override fun hashCode(): Int = listOf(qualifiedTypeName, value).hashCode()
@@ -211,10 +209,10 @@ class AsmPrimitiveSimple(
     }
 
     override fun asString(indent: Indent): String = value.asString(indent)
-    override fun equalTo(other: AsmValue): Boolean = when {
+    override fun equalToDeep(other: AsmValue): Boolean = when {
         other !is AsmPrimitive -> false
-        other.value != this.value -> false
-        else -> true
+        this.qualifiedTypeName != other.qualifiedTypeName -> false
+        else -> this.value == other.value
     }
 
     override fun hashCode(): Int = listOf(qualifiedTypeName, value).hashCode()
@@ -281,14 +279,34 @@ object AnyExt {
             else -> error("Type cannot be converted to AsmValue '${this::class.simpleName}'")
         }
 
-    fun Any.equalTo(other: Any): Boolean {
+    /**
+     * deep equality (see AsmValue.equalToDeep) of values that may be plain kotlin values (e.g. structure property values, list elements):
+     * an AsmPrimitive (deprecated) equals the same unwrapped value, Unit and AsmNothing are both nothing,
+     * an AsmList/AsmListSeparated/AsmSet compares as its elements.
+     */
+    fun Any?.equalToDeep(other: Any?): Boolean {
+        val t = this.unwrappedForDeep()
+        val o = other.unwrappedForDeep()
         return when {
-            this is AsmReferenceSimple && other is AsmReferenceSimple -> this.equalTo(other)
-            this is AsmStructureSimple && other is AsmStructureSimple -> this.equalTo(other)
-            // AsmPrimitive (deprecated) wraps a kotlin primitive value, the same value is equal whether wrapped or not
-            this is AsmPrimitive || other is AsmPrimitive -> (if (this is AsmPrimitive) this.value else this) == (if (other is AsmPrimitive) other.value else other)
-            else -> this == other
+            t is AsmValue && o is AsmValue -> t.equalToDeep(o)
+            t is AsmValue || o is AsmValue -> false
+            t is ListSeparated<*, *, *> && o is ListSeparated<*, *, *> -> t.elements.size == o.elements.size && t.elements.indices.all { t.elements[it].equalToDeep(o.elements[it]) }
+            t is ListSeparated<*, *, *> || o is ListSeparated<*, *, *> -> false
+            t is List<*> && o is List<*> -> t.size == o.size && t.indices.all { t[it].equalToDeep(o[it]) }
+            t is Set<*> && o is Set<*> -> t.size == o.size && t.all { tEl -> o.any { oEl -> tEl.equalToDeep(oEl) } }
+            t is Map<*, *> && o is Map<*, *> -> t.keys == o.keys && t.all { (k, v) -> v.equalToDeep(o[k]) }
+            t is Collection<*> || o is Collection<*> || t is Map<*, *> || o is Map<*, *> -> false
+            else -> t == o
         }
+    }
+
+    private fun Any?.unwrappedForDeep(): Any? = when (this) {
+        null, Unit, is AsmNothing -> Unit
+        is AsmPrimitive -> this.value
+        is AsmListSeparated -> this.elements
+        is AsmList -> this.elements
+        is AsmSet -> this.elements
+        else -> this
     }
 }
 
@@ -312,10 +330,10 @@ class AsmReferenceSimple(
         else -> "&{'${value!!.parsePath.toString()}' : ${value!!.typeName}}"
     }
 
-    override fun equalTo(other: AsmValue): Boolean = when {
+    /** by reference text only, the referred structure is not followed */
+    override fun equalToDeep(other: AsmValue): Boolean = when {
         other !is AsmReference -> false
-        other.reference != this.reference -> false
-        else -> true
+        else -> other.reference == this.reference
     }
 
     override fun hashCode(): Int = reference.hashCode()
@@ -444,27 +462,12 @@ class AsmStructureSimple(
         }
     }
 
-    override fun equalTo(other: AsmValue): Boolean = when {
+    override fun equalToDeep(other: AsmValue): Boolean = when {
+        this === other -> true
         other !is AsmStructure -> false
         this.qualifiedTypeName != other.qualifiedTypeName -> false
-        //this.parsePath != other.parsePath -> false
-        else -> when {
-            null != this.semanticQualifiedPath && null != other.semanticQualifiedPath -> this.semanticQualifiedPath == other.semanticQualifiedPath
-            else -> when {
-                this.property.size != other.property.size -> false
-                else -> {
-                    this.property.all { (k, v) ->
-                        val o = other.property[k]
-                        if (null == o) {
-                            false
-                        } else {
-                            v.equalTo(o)
-                        }
-                    }
-                }
-            }
-        }
-
+        this.property.keys != other.property.keys -> false
+        else -> this.property.all { (k, v) -> v.equalToDeep(other.property[k]!!) }
     }
 
     override fun hashCode(): Int = identity.hashCode()
@@ -524,24 +527,11 @@ class AsmStructurePropertySimple(
         }
     }
 
-    override fun equalTo(other: AsmStructureProperty): Boolean {
-        return when {
-            this.name != other.name -> false
-            this.isReference != other.isReference -> false
-            else -> {
-                val t = this.value
-                val o = other.value
-                if (this.isReference) {
-                    if (t is AsmReferenceSimple && o is AsmReferenceSimple) {
-                        t.equalTo(o)
-                    } else {
-                        error("Cannot compare property values: ${t} and ${o}")
-                    }
-                } else {
-                    t.equalTo(o)
-                }
-            }
-        }
+    override fun equalTo(other: AsmStructureProperty): Boolean = this == other
+
+    override fun equalToDeep(other: AsmStructureProperty): Boolean = when {
+        this.name != other.name -> false
+        else -> this.value.equalToDeep(other.value) // a reference is compared by its reference text (AsmReferenceSimple.equalToDeep)
     }
 
     override fun toString(): String {
@@ -578,20 +568,15 @@ class AsmSetSimple(
         else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
 
-    override fun equalTo(other: AsmValue): Boolean = when {
+    override fun equalToDeep(other: AsmValue): Boolean = when {
         other !is AsmSet -> false
-        other.elements.size != this.elements.size -> false
-        else -> {
-            this.elements.all { tEl ->
-                other.elements.any { othEl -> tEl.equalTo(othEl) }
-            }
-        }
+        else -> this.elements.equalToDeep(other.elements)
     }
 
     override fun hashCode(): Int = elements.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
-        !is AsmList -> false
-        else -> this.elements == other.elements //TODO: should use equalTo on elements !
+        !is AsmSet -> false
+        else -> this.elements == other.elements
     }
 
     override fun toString(): String = "Set(${elements.joinToString()})"
@@ -612,14 +597,9 @@ class AsmListSimple(
         else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
 
-    override fun equalTo(other: AsmValue): Boolean = when {
+    override fun equalToDeep(other: AsmValue): Boolean = when {
         other !is AsmList -> false
-        other.elements.size != this.elements.size -> false
-        else -> {
-            (0 until this.elements.size).all {
-                this.elements[it].equalTo(other.elements[it])
-            }
-        }
+        else -> this.elements.equalToDeep(other.elements)
     }
 
     override fun hashCode(): Int = elements.hashCode()
@@ -646,14 +626,9 @@ class AsmListSeparatedSimple(
         else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
 
-    override fun equalTo(other: AsmValue): Boolean = when {
+    override fun equalToDeep(other: AsmValue): Boolean = when {
         other !is AsmListSeparated -> false
-        other.elements.size != this.elements.size -> false
-        else -> {
-            (0 until this.elements.size).all {
-                (this.elements[it]).equalTo(other.elements[it])
-            }
-        }
+        else -> this.elements.equalToDeep(other.elements)
     }
 
     override fun hashCode(): Int = elements.hashCode()
@@ -677,9 +652,7 @@ class AsmLambdaSimple(
         return this.lambda.invoke(it)
     }
 
-    override fun equalTo(other: AsmValue): Boolean {
-        return false
-    }
+    override fun equalToDeep(other: AsmValue): Boolean = this === other
 
     override fun asString(indent: Indent): String {
         return "{ <lambda expression> }" //TODO

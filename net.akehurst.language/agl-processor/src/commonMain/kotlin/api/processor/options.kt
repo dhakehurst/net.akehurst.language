@@ -103,6 +103,14 @@ interface CompletionProviderOptions<ContextType : Any> {
     var provideValuesForPatternTerminals: Boolean
 
     /**
+     * true: a LITERAL item is left out when its text is already the text after the completion position
+     * (after any skip text, e.g. white space), e.g. no ']' for the position between '[' and ']' (issue #57, IC3a).
+     * Only literals, and only an exact match of the text is checked, the rest of the sentence is not.
+     * Default false.
+     */
+    var omitLiteralsAlreadyAfterPosition: Boolean
+
+    /**
      * depth for named rules (rule name -> depth), used instead of the current depth when the rule is expanded.
      * Set by a completion definition (AGL completion language, 'depth' action).
      */

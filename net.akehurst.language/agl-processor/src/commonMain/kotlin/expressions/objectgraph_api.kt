@@ -94,11 +94,6 @@ class EvaluationContext private constructor(
     val namedValues: Map<String, TypedObject> get() = _namedValues
     val self get() = getOrInParent(RootExpressionDefault.SELF.name)
 
-    //TODO: conceptual flaw (review 2026-11-26): a trace describes a run, but this list is per scope frame, so a trace added in a
-    // lambda, 'with' or statement block frame is lost with that frame. Unused so far (no callers of addExecutionTrace).
-    // Needs a bigger redesign (e.g. a trace owned by the run/interpreter), agreed with David to do separately.
-    val executionTrace: List<String> = mutableListOf()
-
     fun getOrInParent(name: String): TypedObject? =
         namedValues[name]
             ?: parent?.getOrInParent(name)
@@ -119,10 +114,6 @@ class EvaluationContext private constructor(
         }
         (_namedValues as MutableMap)[name] = value
         return this
-    }
-
-    fun addExecutionTrace(trace: String) {
-        (executionTrace as MutableList).add(trace)
     }
 
     override fun toString(): String {

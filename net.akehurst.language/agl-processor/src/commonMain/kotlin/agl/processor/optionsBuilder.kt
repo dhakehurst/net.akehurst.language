@@ -292,6 +292,7 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
     private var _path: List<Pair<Int,Int>> = base.path
     private var _showOptionalItems = base.showOptionalItems
     private var _provideValuesForPatternTerminals = base.provideValuesForPatternTerminals
+    private var _omitLiteralsAlreadyAfterPosition = base.omitLiteralsAlreadyAfterPosition
     private val _options = base.other.toMutableMap()
 
     fun sentenceContext(value: ContextType?) {
@@ -314,6 +315,11 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
         _provideValuesForPatternTerminals = value
     }
 
+    /** see [CompletionProviderOptions.omitLiteralsAlreadyAfterPosition] */
+    fun omitLiteralsAlreadyAfterPosition(value: Boolean) {
+        _omitLiteralsAlreadyAfterPosition = value
+    }
+
     fun option(key: String, value: Any) {
         _options[key] = value
     }
@@ -325,6 +331,7 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
             path = _path,
             showOptionalItems = _showOptionalItems,
             provideValuesForPatternTerminals = _provideValuesForPatternTerminals,
+            omitLiteralsAlreadyAfterPosition = _omitLiteralsAlreadyAfterPosition,
             other = _options
         )
     }

@@ -54,29 +54,25 @@ object AsmTransform : LanguageObjectAbstract<AsmTransformDomain, SentenceContext
 
     override val extends by lazy { listOf(AglBase) }
 
+    // must be the same as [grammarDomain] (checked by test_asmTransformLanguage.process_grammarString_EQ_grammarModel)
     override val grammarString: String = """
 namespace $NAMESPACE_NAME
 
 grammar $NAME : Base {
     override namespace = 'namespace' possiblyQualifiedName option* import* asmTransform* ;
-    asmTransform = 'asm-transform' IDENTIFIER extends? '{' option* typeImport* transformRule* '} ;
-    typeImport = 'import-types' possiblyQualifiedName ;
+    asmTransform = 'asm-transform' IDENTIFIER extends? '{' option* typeImport* transformRule* '}' ;
     extends = ':' [possiblyQualifiedName / ',']+ ;
+    typeImport = 'import-types' possiblyQualifiedName ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
     transformRuleRhs = expressionRule | modifyRule ;
     expressionRule = expression ;
-    modifyRule = '{' possiblyQualifiedTypeName '->' statement+ '}' ;
-    statement
-      = assignmentStatement
-      ;
+    modifyRule = '{' possiblyQualifiedTypeName '->' assignmentStatement+ '}' ;
     assignmentStatement = propertyName grammarRuleIndex? ':=' expression ;
     propertyName = IDENTIFIER ;
-    expression = Expression::expression ;
-   
     grammarRuleName = IDENTIFIER ;
-    grammarRuleIndex = '$' POSITIVE_INTEGER ;
     possiblyQualifiedTypeName = possiblyQualifiedName ;
-
+    expression = ${AglExpressions.NAME}::expression ;
+    grammarRuleIndex = '$' POSITIVE_INTEGER ;
     leaf POSITIVE_INTEGER = "[0-9]+" ;
 }
     """

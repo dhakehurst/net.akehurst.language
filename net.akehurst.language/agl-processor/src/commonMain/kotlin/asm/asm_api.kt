@@ -53,7 +53,20 @@ interface AsmValue {
     val typeName: SimpleName
 
     fun asString(indent: Indent = Indent()): String
+
+    /**
+     * the same as equals (and consistent with hashCode): for an AsmStructure its fixed identity.
+     * See [equalToDeep] to compare values.
+     */
     fun equalTo(other: AsmValue): Boolean
+
+    /**
+     * true if the values are equal, deeply: structures of the same type with the same property names and deeply equal property values,
+     * lists element by element in order, sets element by element in any order, primitives by type and value,
+     * references by their reference text only (the referred structure is not followed), nothing only to nothing.
+     * The semantic identity (semanticQualifiedPath) is not used.
+     */
+    fun equalToDeep(other: AsmValue): Boolean
 }
 
 interface AsmNothing : AsmValue
@@ -168,7 +181,11 @@ interface AsmStructureProperty {
 
     fun convertToReferenceTo(referredValue: AsmStructure?)
 
+    /** the same as equals (and consistent with hashCode). See [equalToDeep] to compare values. */
     fun equalTo(other: AsmStructureProperty): Boolean
+
+    /** true if both have the same name and their values are deeply equal (see [AsmValue.equalToDeep]) */
+    fun equalToDeep(other: AsmStructureProperty): Boolean
 }
 
 interface AsmCollection : AsmValue {

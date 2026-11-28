@@ -19,6 +19,7 @@ package net.akehurst.language.style.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -86,10 +87,17 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     }
 
     // namespace = namespace possiblyQualifiedName ;
+    // namespace = 'namespace' possiblyQualifiedName option* import* definition* ; (from Base)
+    // the options and imports are kept (SD3); the imports are used to find the style sets an 'extends' names
     fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StyleNamespace {
         val qualifiedName = children[1] as PossiblyQualifiedName
-        val imports = emptyList<Import>()
-        return StyleNamespaceDefault(qualifiedName = qualifiedName.asQualifiedName(null), import = imports)
+        val options = children[2] as List<Pair<String, Any>>
+        val imports = children[3] as List<Import>
+        return StyleNamespaceDefault(
+            qualifiedName = qualifiedName.asQualifiedName(null),
+            options = OptionHolderDefault(null, options.toMap()),
+            import = imports
+        )
     }
 
     // styleSet = 'styles' IDENTIFIER extends? '{' typeImport* rule* '}' ;
@@ -180,16 +188,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     // selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER | semanticSelector ;
     fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleSelector {
         if (4 == nodeInfo.alt.option.asIndex) return children[0] as AglStyleSelector
-        // Must match what is done in AglGrammarSyntaxAnalyser.terminal,
-        // but keep the enclosing (single or double) quotes
-        val isPattern = nodeInfo.node.rule.tag == "PATTERN"
+        // the value is the selector as written, with its enclosing quotes and escapes (e.g. '\''), which is how it is matched
         val mt = children[0] as String
-        //val escaped = mt.substring(1, mt.length - 1)
-        val value = if (isPattern) {
-            mt.replace("\\\"", "\"")
-        } else {
-            mt.replace("\\'", "'").replace("\\\\", "\\")
-        }
         val kind = when (nodeInfo.alt.option.asIndex) {
             0 -> AglStyleSelectorKind.LITERAL
             1 -> AglStyleSelectorKind.PATTERN
@@ -197,8 +197,6 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
             3 -> AglStyleSelectorKind.SPECIAL
             else -> error("Internal error: AglStyleSelectorKind not handled")
         }
-        //val str = target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
-        //return listOf(value)
         return AglStyleSelector(mt, kind)
     }
 

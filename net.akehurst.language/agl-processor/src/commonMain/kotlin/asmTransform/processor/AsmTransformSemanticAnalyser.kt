@@ -143,7 +143,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                     for (ref in trs.extends) {
                         val resolved = asm.resolveReference(ref)
                         when (resolved) {
-                            null -> _issues.error(null, "Cannot resolve '${ref.nameOrQName}' in the context of '${ref.localNamespace.qualifiedName}'")
+                            null -> _issues.error(_locationMap?.get(trs), "Cannot resolve '${ref.nameOrQName}' in the context of '${ref.localNamespace.qualifiedName}'")
                         }
                     }
                     for (trr in trs.rules.values) {
@@ -259,7 +259,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                             .filter { trs.rules.containsKey(it.name).not() && extendedRules.contains(it.name).not() }
                         missing.forEach { gr ->
                             _issues.error(
-                                null,
+                                _locationMap?.get(trs),
                                 "No transformation rule for grammar rule '${gr.name.value}' in '${trs.qualifiedName.value}', write one or use '#${OPTION_OVERRIDE_DEFAULT}'"
                             )
                         }
@@ -312,7 +312,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
 
             else -> when {
                 rulesToConvert.isNotEmpty() -> {
-                    _issues.error(null, "Transformation rules in '${trs.qualifiedName}' rewrite their type, but '${OPTION_OVERRIDE_DEFAULT}' is not specified")
+                    _issues.error(locationOfRuleName(rulesToConvert.first()), "Transformation rules in '${trs.qualifiedName}' rewrite their type, but '${OPTION_OVERRIDE_DEFAULT}' is not specified")
                 }
             }
         }
@@ -359,7 +359,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
             }
             when (typeDecl) {
                 null -> _issues.error(
-                    null,
+                    locationOfRuleName(trr),
                     "Type '${pqn.value}' not found (in the transformation rule for '${trr.grammarRuleName.value}'), use '#${OPTION_CREATE_TYPES}' to create it"
                 )
 
@@ -377,7 +377,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                             }
 
                             else -> _issues.error(
-                                null,
+                                _locationMap?.get(ms) ?: locationOfRuleName(trr),
                                 "Type '${typeDecl.qualifiedName.value}' has no property '${propName.value}' (set in the transformation rule for '${trr.grammarRuleName.value}'), use '#${OPTION_CREATE_TYPES}' to create it"
                             )
                         }
@@ -429,7 +429,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
 
                     else -> {
                         _issues.error(
-                            null,
+                            locationOfRuleName(trr),
                             "Type '${expr.possiblyQualifiedTypeName.value}' for rule '${trr.grammarRuleName.value}' not found, define it or use '#${OPTION_CREATE_TYPES}'"
                         )
                         StdLibDefault.NothingType
@@ -447,7 +447,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
 
     private fun unsupportedRuleExpression(trr: AsmTransformationRule): TypeInstance {
         _issues.error(
-            null,
+            locationOfRuleName(trr),
             "The type of rule '${trr.grammarRuleName.value}' cannot be determined from '${trr.expression}', use 'Type() { ... }', 'tuple { ... }' or '<expression> as Type'"
         )
         return StdLibDefault.NothingType
@@ -524,7 +524,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
             ns.options.overrideDefault -> {
                 val grmNs = transformFromGrammar.value.findNamespaceOrNull(ns.qualifiedName)
                 when (grmNs) {
-                    null -> _issues.error(null, "No default namespace with name '${ns.qualifiedName}' found, can't override it")
+                    null -> _issues.error(_locationMap?.get(ns), "No default namespace with name '${ns.qualifiedName}' found, can't override it")
                     else -> {
                         for (grmTrs in grmNs.definition) {
                             when {
@@ -564,7 +564,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                 when (grmRs) {
                     null -> when (_grammarDomain.findDefinitionByQualifiedNameOrNull(trs.qualifiedName)) {
                         null -> Unit // no grammar for the rule set, error given in checkRulesNameGrammarRules
-                        else -> _issues.error(null, "No default ruleset with name '${trs.qualifiedName}' found")
+                        else -> _issues.error(_locationMap?.get(trs), "No default ruleset with name '${trs.qualifiedName}' found")
                     }
                     else -> {
                         for (grmRl in grmRs.rules.values) {
@@ -607,7 +607,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                         expr is CreateObjectExpression && isNotDataType(findOrCreateGrammarTypeNamespace(trs.qualifiedName), expr) -> {
                             val existing = findOrCreateGrammarTypeNamespace(trs.qualifiedName).findOwnedTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
                             _issues.error(
-                                null,
+                                locationOfRuleName(trr),
                                 "Cannot create an object of '${expr.possiblyQualifiedTypeName.value}' (in the transformation rule for '${trr.grammarRuleName.value}'): ${if (existing is InterfaceType) "it is an interface" else "it is not a data type"}"
                             )
                             null
@@ -654,7 +654,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                                         //     //TODO
                                         // }
                                         else -> _issues.error(
-                                            null,
+                                            _locationMap?.get(ass) ?: locationOfRuleName(trr),
                                             "Trying to create missing property '${propName}: ${displayName(propType)}', '${t.qualifiedName}' already contains incompatible property '${existingProp.name}: ${displayName(existingProp.typeInstance)}'."
                                         )
                                     }

@@ -71,14 +71,15 @@ class test_m2mTransformInterpreter_issuesAndArgs {
 
         val m2m = compile(suite.transform)
 
-        // 'unknownVar' is not defined, so evaluating the target expression raises a warning
+        // a property of '$nothing' is read, so evaluating the target expression raises a warning
+        // (an unbound variable such as 'unknownVar' is an error when the transform is checked, issue #20 ER8)
         val m2mWithWarning = compile(
             $$"""
             namespace test
             transform Test(d1:Domain1, d2:Domain2) {
                 top mapping A12A2 {
                     domain d1 a1:String == 'Any'
-                    domain d2 a2:String := 'Hello ' + unknownVar
+                    domain d2 a2:String := 'Hello ' + $nothing.foo
                 }
             }
         """
