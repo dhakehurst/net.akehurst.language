@@ -480,7 +480,35 @@ object Agl {
     }
 
     /**
+     * Parse a model-to-model transform (m2m-transform DSL) once, so that it can be run many times with [transform] or [transformSuspend]
+     * without parsing the text again on each call.
+     *
+     * @param m2m the text of the transform
+     * @param typeDomains the types of each domain parameter of the transform
+     * @return the parsed transforms; errors in the transform text are the issues of the result, check them before running it
+     */
+    fun m2mTransformDomain(
+        m2m: M2mTransformString,
+        typeDomains: Map<DomainReference, TypesDomain>
+    ): ProcessResult<M2mTransformDomain> {
+        val sentenceContext = SentenceContextAny()
+        typeDomains.forEach { (k, v) ->
+            sentenceContext.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
+        }
+        return Agl.registry.agl.m2mTransform.processor!!.process(
+            m2m.value,
+            options = Agl.options {
+                semanticAnalysis {
+                    sentenceContext(sentenceContext)
+                }
+            }
+        )
+    }
+
+    /**
      * Run a model-to-model transform (m2m-transform DSL).
+     * The text is parsed on every call; to run the same transform many times, parse it once with [m2mTransformDomain]
+     * and use the [transform] that takes an [M2mTransformDomain].
      *
      * @param typeDomains the types of each domain parameter of the transform
      * @param accessorMutators how to access the objects of each types domain, keyed by the types domain name
@@ -501,34 +529,46 @@ object Agl {
         transformName: PossiblyQualifiedName? = null,
         traceListener: ExecutionTraceListener? = null
     ): M2MTransformResult {
-        val sentenceContext = SentenceContextAny()
-        typeDomains.forEach { (k, v) ->
-            sentenceContext.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
-        }
-        val res = Agl.registry.agl.m2mTransform.processor!!.process(
-            m2m.value,
-            options = Agl.options {
-                semanticAnalysis {
-                    sentenceContext(sentenceContext)
-                }
-            }
-        )
-        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        val res = m2mTransformDomain(m2m, typeDomains)
+        val m2mDomain = res.asm
         // errors in the transform text are returned in the result, the transform is not run (MT8)
-        val m2m = res.asm
-        if (res.allIssues.errors.isNotEmpty() || null == m2m) {
-            issueHolder.addAll(res.allIssues.all)
-            if (null == m2m && res.allIssues.errors.isEmpty()) issueHolder.error(null, "The transform text gave no transform.")
-            return M2MTransformResult(issueHolder, emptyMap(), targetDomainReference)
-        }
-        val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder, traceListener)
-        val tgtTransform = selectTransform(m2m, transformName)
-            ?: return M2MTransformResult(
-                issueHolder.also { it.error(null, "Transform '${transformName?.value}' not found.") },
-                emptyMap(), targetDomainReference
-            )
-        val transResult = interpreter.transform(tgtTransform, targetDomainReference, ruleArguments, domains)
-        return transResult
+        if (res.allIssues.errors.isNotEmpty() || null == m2mDomain) return textIssuesResult(res, targetDomainReference)
+        return transform(m2mDomain, accessorMutators, domains, ruleArguments, targetDomainReference, transformName, traceListener)
+    }
+
+    /**
+     * Run a model-to-model transform that was parsed with [m2mTransformDomain]; nothing is parsed on this call.
+     * Each call uses its own interpreter, so calls are independent of each other.
+     *
+     * TODO: streaming. The source of each domain is a List, so a caller with a Flow (e.g. from a Datastore read) collects it first,
+     *  and the targets come out at the end. Measured 2026-11-27 (simple 1-to-1 mapping, JVM): about 18k-29k source items/s,
+     *  faster than most network or database sources, so streaming would gain little. Revisit if a real datastore shows the
+     *  transform as the bottleneck. A streamed transform would need rules that use one item at a time (no 'when' on another
+     *  rule's result, no references to items not yet read, no tables, overrides or multi-domain rules), or else collect first;
+     *  the MappingRecords also keep every source object.
+     *
+     * @param m2mDomain the parsed transforms, from [m2mTransformDomain]
+     * @param accessorMutators how to access the objects of each types domain, keyed by the types domain name
+     * @param domains the input objects of each source domain
+     * @param ruleArguments values for rule parameters
+     * @param targetDomainReference the domain to create
+     * @param transformName the transform in [m2mDomain] to run, a simple or qualified name; null runs the first transform in [m2mDomain]
+     * @param traceListener if given, told about each step of the transform (see [ExecutionTraceListener]); null means no tracing
+     */
+    fun transform(
+        m2mDomain: M2mTransformDomain,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
+        domains: Map<DomainReference, List<TypedObject>>,
+        ruleArguments: Map<String, TypedObject>,
+        targetDomainReference: DomainReference,
+        transformName: PossiblyQualifiedName? = null,
+        traceListener: ExecutionTraceListener? = null
+    ): M2MTransformResult {
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        val interpreter = M2mTransformInterpreterCombined(m2mDomain, accessorMutators, issueHolder, traceListener)
+        val tgtTransform = selectTransform(m2mDomain, transformName)
+            ?: return transformNotFoundResult(issueHolder, transformName, targetDomainReference)
+        return interpreter.transform(tgtTransform, targetDomainReference, ruleArguments, domains)
     }
 
     /** like [transform], where the object graphs have suspending accessors */
@@ -542,33 +582,38 @@ object Agl {
         transformName: PossiblyQualifiedName? = null,
         traceListener: ExecutionTraceListener? = null
     ): M2MTransformResult {
-        val sentenceContext = SentenceContextAny()
-        typeDomains.forEach { (k, v) ->
-            sentenceContext.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
-        }
-        val res = Agl.registry.agl.m2mTransform.processor!!.process(
-            m2m.value,
-            options = Agl.options {
-                semanticAnalysis {
-                    sentenceContext(sentenceContext)
-                }
-            }
-        )
-        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        val res = m2mTransformDomain(m2m, typeDomains)
+        val m2mDomain = res.asm
         // errors in the transform text are returned in the result, the transform is not run (MT8)
-        val m2m = res.asm
-        if (res.allIssues.errors.isNotEmpty() || null == m2m) {
-            issueHolder.addAll(res.allIssues.all)
-            if (null == m2m && res.allIssues.errors.isEmpty()) issueHolder.error(null, "The transform text gave no transform.")
-            return M2MTransformResult(issueHolder, emptyMap(), targetDomainReference)
-        }
-        val interpreter = M2mTransformInterpreterCombined(m2m, accessorMutators, issueHolder, traceListener)
-        val tgtTransform = selectTransform(m2m, transformName)
-            ?: return M2MTransformResult(
-                issueHolder.also { it.error(null, "Transform '${transformName?.value}' not found.") },
-                emptyMap(), targetDomainReference
-            )
-        val transResult = interpreter.transformSuspend(tgtTransform, targetDomainReference, ruleArguments, domains)
-        return transResult
+        if (res.allIssues.errors.isNotEmpty() || null == m2mDomain) return textIssuesResult(res, targetDomainReference)
+        return transformSuspend(m2mDomain, accessorMutators, domains, ruleArguments, targetDomainReference, transformName, traceListener)
     }
+
+    /** like [transform] with an [M2mTransformDomain], where the object graphs have suspending accessors */
+    suspend fun transformSuspend(
+        m2mDomain: M2mTransformDomain,
+        accessorMutators: Map<SimpleName, ObjectGraphAccessorMutator>,
+        domains: Map<DomainReference, List<TypedObject>>,
+        ruleArguments: Map<String, TypedObject>,
+        targetDomainReference: DomainReference,
+        transformName: PossiblyQualifiedName? = null,
+        traceListener: ExecutionTraceListener? = null
+    ): M2MTransformResult {
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        val interpreter = M2mTransformInterpreterCombined(m2mDomain, accessorMutators, issueHolder, traceListener)
+        val tgtTransform = selectTransform(m2mDomain, transformName)
+            ?: return transformNotFoundResult(issueHolder, transformName, targetDomainReference)
+        return interpreter.transformSuspend(tgtTransform, targetDomainReference, ruleArguments, domains)
+    }
+
+    /** the result when the transform text has errors (or gives no transform): its issues, nothing run */
+    private fun textIssuesResult(res: ProcessResult<M2mTransformDomain>, targetDomainReference: DomainReference): M2MTransformResult {
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.INTERPRET)
+        issueHolder.addAll(res.allIssues.all)
+        if (null == res.asm && res.allIssues.errors.isEmpty()) issueHolder.error(null, "The transform text gave no transform.")
+        return M2MTransformResult(issueHolder, emptyMap(), targetDomainReference)
+    }
+
+    private fun transformNotFoundResult(issueHolder: IssueHolder, transformName: PossiblyQualifiedName?, targetDomainReference: DomainReference): M2MTransformResult =
+        M2MTransformResult(issueHolder.also { it.error(null, "Transform '${transformName?.value}' not found.") }, emptyMap(), targetDomainReference)
 }
