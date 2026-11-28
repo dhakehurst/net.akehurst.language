@@ -342,6 +342,15 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         return decl.type(targs, typeReference.isNullable)
     }
 
+    /** as [evaluateTypeReference], but null if the type (or a type argument) is not found */
+    private fun evaluateTypeReferenceOrNull(typeReference: TypeReference, preferredTypesDomain: TypesDomain?): TypeInstance? {
+        val domains = (listOfNotNull(preferredTypesDomain, typesDomain) + otherTypesDomains).distinct()
+        val decl = domains.firstNotNullOfOrNull { it.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) }
+            ?: return null
+        val targs = typeReference.typeArguments.map { evaluateTypeReferenceOrNull(it, preferredTypesDomain)?.asTypeArgument ?: return null }
+        return decl.type(targs, typeReference.isNullable)
+    }
+
     private fun castListElement(obj: TypedObject, elem: TypedObject): TypedObject {
         val listElementType = obj.type.typeArguments.getOrNull(0)?.type
             ?: StdLibDefault.AnyType
@@ -415,6 +424,8 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         return objectGraph.createCollection(colType.type(listOf(elType.asTypeArgument)), elements)
     }
 
+    private fun isBooleanOrNothing(v: TypedObject): Boolean = objectGraph.isNothing(v) || v.type.conformsTo(StdLibDefault.Boolean)
+
     //TODO: add operator functions to StdLib
     private fun evaluateInfixOperator(lhs: TypedObject, op: String, rhs: TypedObject): TypedObject = when (op) {
         // logical
@@ -430,6 +441,9 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
                 val rhsv = objectGraph.valueOf(rhs) as Boolean
                 objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, lhsv && rhsv)
             }
+
+            // three-valued (EP4): $nothing is unknown, so true and $nothing -> $nothing
+            isBooleanOrNothing(lhs) && isBooleanOrNothing(rhs) -> objectGraph.nothing()
 
             else -> {
                 issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
@@ -450,6 +464,9 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
                 objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, lhsv || rhsv)
             }
 
+            // three-valued (EP4): $nothing is unknown, so false or $nothing -> $nothing
+            isBooleanOrNothing(lhs) && isBooleanOrNothing(rhs) -> objectGraph.nothing()
+
             else -> {
                 issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
                 objectGraph.nothing()
@@ -465,6 +482,9 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
                 val rhsv = objectGraph.valueOf(rhs) as Boolean
                 objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, lhsv xor rhsv)
             }
+
+            // three-valued (EP4): $nothing is unknown, so x xor $nothing -> $nothing
+            isBooleanOrNothing(lhs) && isBooleanOrNothing(rhs) -> objectGraph.nothing()
 
             else -> {
                 issues.error(null, "'$op' not supported for types '${lhs.type.qualifiedTypeName}' and '${rhs.type.qualifiedTypeName}'")
@@ -509,10 +529,17 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
                 val lhsv = objectGraph.valueOf(lhs) as Long
                 val rhsv = objectGraph.valueOf(rhs) as Long
-                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv / rhsv)
+                when (rhsv) {
+                    0L -> {
+                        issues.error(null, "Division by zero")
+                        objectGraph.nothing()
+                    }
+
+                    else -> objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv / rhsv)
+                }
             }
 
-            lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
+            lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
                 val lhsv = objectGraph.valueOf(lhs) as Double
                 val rhsv = objectGraph.valueOf(rhs) as Double
                 objectGraph.createPrimitiveValue(StdLibDefault.Real.qualifiedTypeName, lhsv / rhsv)
@@ -547,7 +574,14 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
             lhs.type.conformsTo(StdLibDefault.Integer) && rhs.type.conformsTo(StdLibDefault.Integer) -> {
                 val lhsv = objectGraph.untyped(lhs) as Long
                 val rhsv = objectGraph.untyped(rhs) as Long
-                objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv % rhsv)
+                when (rhsv) {
+                    0L -> {
+                        issues.error(null, "Division by zero (in '%')")
+                        objectGraph.nothing()
+                    }
+
+                    else -> objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, lhsv % rhsv)
+                }
             }
 
             lhs.type.conformsTo(StdLibDefault.Real) && rhs.type.conformsTo(StdLibDefault.Real) -> {
@@ -925,7 +959,10 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
                     }
                 }
 
-                else -> error("Conditions/Options in a when expression must result in a Boolean value: '${opt.condition}' is of type '${condValue.type}' = ${condValue.self}")
+                else -> return issueErrorReturnNothing(
+                    opt.condition,
+                    "Conditions/Options in a when expression must result in a Boolean value: '${opt.condition}' is of type '${condValue.type}' = ${condValue.self}"
+                )
             }
         }
         return eval(evc, expression.elseOption.expression)
@@ -938,7 +975,8 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     ): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = eval(evc, expression.expression)
-        val tgtType = evaluateTypeReference(expression.targetType, exprResult.accessor.typesDomain)
+        val tgtType = evaluateTypeReferenceOrNull(expression.targetType, exprResult.accessor.typesDomain)
+            ?: return issueErrorReturnNothing(expression, "Type not found ${expression.targetType.possiblyQualifiedName.value}")
         return objectGraph.cast(exprResult, tgtType)
     }
 
@@ -949,7 +987,8 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
     ): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = eval(evc, expression.expression)
-        val tgtType = evaluateTypeReference(expression.targetType, exprResult.accessor.typesDomain)
+        val tgtType = evaluateTypeReferenceOrNull(expression.targetType, exprResult.accessor.typesDomain)
+            ?: return issueErrorReturnNothing(expression, "Type not found ${expression.targetType.possiblyQualifiedName.value}")
         val res = exprResult.type.conformsTo(tgtType)
         return objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, res)
     }

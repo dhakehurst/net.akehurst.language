@@ -997,12 +997,39 @@ constructor(
         methodExecution: (obj: Any, decl: MethodDefinition, args: List<*>) -> Any?
     ): TypedObject {
         val methRes = allResolvedMethodOf(tobj.type)[MethodName(methodName)]
+        val argIssue = methRes?.let { checkMethodArguments(it, args) }
         return when {
+            null != argIssue -> issueErrorReturnNothing(null, argIssue)
             // typed values are passed as they are, and the result is not re-typed
             null != methRes && hasTypedExecution(methRes.original) -> typedExecution(methRes.original, tobj, args)
             else -> executeMethodUntypedInternal(tobj, methRes, methodName, args, methodExecution)
         }
     }
+
+    /**
+     * null if 'args' fit the parameters of 'meth' (count, and a lambda where a Lambda is declared),
+     * otherwise the message of the error.
+     */
+    private fun checkMethodArguments(meth: MethodDefinitionResolved, args: List<TypedObject>): String? {
+        val required = meth.parameters.count { null == it.defaultValue }
+        return when {
+            args.size < required || args.size > meth.parameters.size ->
+                "Method '${meth.name.value}' takes ${meth.parameters.size} argument(s), got ${args.size}, using value \$nothing."
+
+            else -> meth.parameters.zip(args).firstNotNullOfOrNull { (p, a) ->
+                when {
+                    // TODO: std methods declare lambda parameters as type 'Lambda', which does not resolve (the std type is 'LambdaType'), so compare by name
+                    isLambdaParameter(p) && a !is TypedLambda && a.self !is Function<*> ->
+                        "Method '${meth.name.value}' argument '${p.name.value}' must be a lambda, got a value of type '${a.type.qualifiedTypeName.value}', using value \$nothing."
+
+                    else -> null
+                }
+            }
+        }
+    }
+
+    private fun isLambdaParameter(p: ParameterDeclaration): Boolean =
+        p.typeInstance.typeName.value == "Lambda" || p.typeInstance.resolvedDefinitionOrNull == StdLibDefault.Lambda.resolvedDefinitionOrNull
 
     private inline fun executeMethodUntypedInternal(
         tobj: TypedObject,
@@ -1015,6 +1042,9 @@ constructor(
             null -> {
                 val obj = untyped(tobj)
                 val arguments = args.map { untyped(it) }.toTypedArray()
+                if (obj.reflect().kclass.reflect().allMemberFunctions.none { it.name == methodName }) {
+                    return issueWarningReturnNothing(null, "Method '$methodName' not found on '${obj::class.simpleName}', using value \$nothing.")
+                }
                 val value = obj.reflect().call(methodName, *arguments)
                 value?.let { toTypedObject(it, StdLibDefault.AnyType) }
                 // could be validly null

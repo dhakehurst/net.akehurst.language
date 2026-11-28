@@ -17,6 +17,11 @@ class ExpressionTypeResolver(
     val issues: IssueHolder
 ) {
 
+    /** types of the variables of the enclosing statement blocks, innermost last */
+    private val _variables = mutableListOf<Map<String, TypeInstance>>()
+
+    private fun variableTypeOrNull(name: String): TypeInstance? = _variables.asReversed().firstNotNullOfOrNull { it[name] }
+
     /** the location given for issues found while typing the current expression (issue #20); expressions have no location of their own */
     private var _location: InputLocation? = null
 
@@ -54,6 +59,8 @@ class ExpressionTypeResolver(
         is TernaryConditionExpression -> this.typeOfTernaryConditionFor(self)
         is InfixExpression -> this.typeOfInfixExpressionFor(self)
         is CastExpression -> this.typeOfCastExpressionFor(self)
+        is TypeTestExpression -> StdLibDefault.Boolean
+        is StatementBlockExpression -> this.typeOfStatementBlockExpressionFor(self)
         is GroupExpression -> this.typeOfGroupExpressionFor(self)
         is FunctionCall -> this.typeOfFunctionCallFor(self)
         else -> error("Subtype of Expression not handled in 'typeOfExpressionFor' : '${this::class.simpleName}'")
@@ -66,6 +73,7 @@ class ExpressionTypeResolver(
     fun RootExpression.typeOfRootExpressionFor(self: TypeInstance): TypeInstance = when {
         this.isNothing -> StdLibDefault.NothingType
         this.isSelf -> self
+        null != variableTypeOrNull(this.name) -> variableTypeOrNull(this.name)!!
         else -> {
             when (self.resolvedDefinition) {
                 is StructuredType -> {
@@ -235,6 +243,28 @@ class ExpressionTypeResolver(
 
     fun CastExpression.typeOfCastExpressionFor(self: TypeInstance): TypeInstance =
         this.targetType.typeOfTypeReference()
+
+    /**
+     * As the interpreter: an assignment to a property of self sets that property,
+     * any other assignment defines a variable of the block, typed by its declared type if given, else by its value.
+     */
+    fun StatementBlockExpression.typeOfStatementBlockExpressionFor(self: TypeInstance): TypeInstance {
+        val vars = mutableMapOf<String, TypeInstance>()
+        _variables.add(vars)
+        try {
+            for (ass in this.assignment) {
+                val rhsType = ass.rhs.typeOfExpressionFor(self)
+                val name = ass.variable.name
+                val isSelfProperty = self.allResolvedProperty.containsKey(PropertyName(name))
+                if (isSelfProperty.not()) {
+                    vars[name] = ass.variable.typeRef?.typeOfTypeReference() ?: rhsType
+                }
+            }
+            return this.expression.typeOfExpressionFor(self)
+        } finally {
+            _variables.removeAt(_variables.lastIndex)
+        }
+    }
 
     fun GroupExpression.typeOfGroupExpressionFor(self: TypeInstance): TypeInstance =
         this.expression.typeOfExpressionFor(self)
