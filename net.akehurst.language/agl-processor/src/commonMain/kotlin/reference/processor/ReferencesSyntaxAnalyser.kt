@@ -120,6 +120,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val declarations = children[3] as (CrossReferenceNamespace) -> DeclarationsForNamespaceDefault
 
         val ns = CrossReferenceNamespaceDefault(qualifiedName = qualifiedName.asQualifiedName(null), import = imports)
+        locationMap[qualifiedName]?.let { locationMap.add(ParsePath(), PropertyValue(ns, "qualifiedName"), it) }
         val def = declarations.invoke(ns)
         return ns
     }
@@ -425,6 +426,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         }
         return options.mapIndexed { i, opt ->
             ReferenceExpressionPropertyDefault(navigation, opt.typeReferences, opt.from?.first, opt.condition, opt.from?.second, opt.from?.third ?: false, i).also {
+                locationMap[children[1]]?.let { loc -> locationMap.add(ParsePath(), PropertyValue(it, "propertyReference"), loc) }
                 opt.typeReferences.forEachIndexed { j, n ->
                     locationMap.add(ParsePath(), PropertyValue(it, "typeReferences[$j]"), locationMap[n]!!)
                 }
@@ -462,6 +464,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
             }
         }
         return ReferenceExpressionPropertyDefault(navigation, typeReferences, from?.first, condition, from?.second, from?.third ?: false).also {
+            locationMap[expr]?.let { loc -> locationMap.add(ParsePath(), PropertyValue(it, "propertyReference"), loc) }
             typeReferences.forEachIndexed { i, n ->
 //                locationMap[PropertyValue(it, "typeReferences[$i]")] = locationMap[n]!!
                 locationMap.add(ParsePath(), PropertyValue(it, "typeReferences[$i]"), locationMap[n]!!)

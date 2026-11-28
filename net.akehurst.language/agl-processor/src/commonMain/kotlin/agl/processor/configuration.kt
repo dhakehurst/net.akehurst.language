@@ -207,12 +207,11 @@ internal fun defaultScannerFor(processor: LanguageProcessor<*, *>, scannerKind: 
     val issues = IssueHolder(LanguageProcessorPhase.ALL)
     val options = processor.targetGrammar?.options
     val sk = options?.get<Any>(AglGrammar.OPTION_scanner)?.let { v ->
+        // an unknown value is reported, at the option, by the grammar semantic analyser (issue #20); the default is used
         ScannerKind.entries.firstOrNull { it.name == v.toString() }
-            ?: null.also { issues.warn(null, "Grammar option '${AglGrammar.OPTION_scanner}' has value '$v', using '${scannerKind.name}'") }
     } ?: scannerKind
     val rek = options?.get<Any>(AglGrammar.OPTION_regexEngine)?.let { v ->
         RegexEngineKind.entries.firstOrNull { it.name == v.toString() }
-            ?: null.also { issues.warn(null, "Grammar option '${AglGrammar.OPTION_regexEngine}' has value '$v', using '${regexEngineKind.name}'") }
     } ?: regexEngineKind
     val regexEngine = when (rek) {
         RegexEngineKind.PLATFORM -> RegexEnginePlatform

@@ -146,11 +146,11 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, SentenceCon
     private fun checkOptions(grammar: Grammar) {
         val scanner = grammar.options.get<Any>(AglGrammar.OPTION_scanner)
         if (null != scanner && null == ScannerKind.entries.firstOrNull { it.name == scanner.toString() }) {
-            issueWarn(grammar, "Grammar option '${AglGrammar.OPTION_scanner}' has value '$scanner', expected one of ${ScannerKind.entries.joinToString { it.name }}", null)
+            issueWarn(grammar, "Grammar option '${AglGrammar.OPTION_scanner}' has value '$scanner', expected one of ${ScannerKind.entries.joinToString { it.name }}, the default is used", null)
         }
         val regexEngine = grammar.options.get<Any>(AglGrammar.OPTION_regexEngine)
         if (null != regexEngine && null == RegexEngineKind.entries.firstOrNull { it.name == regexEngine.toString() }) {
-            issueWarn(grammar, "Grammar option '${AglGrammar.OPTION_regexEngine}' has value '$regexEngine', expected one of ${RegexEngineKind.entries.joinToString { it.name }}", null)
+            issueWarn(grammar, "Grammar option '${AglGrammar.OPTION_regexEngine}' has value '$regexEngine', expected one of ${RegexEngineKind.entries.joinToString { it.name }}, the default is used", null)
         }
     }
 

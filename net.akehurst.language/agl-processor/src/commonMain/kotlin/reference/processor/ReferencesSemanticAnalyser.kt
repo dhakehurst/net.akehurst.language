@@ -89,7 +89,7 @@ class ReferencesSemanticAnalyser(
                 }
                 val ns = typesDomain.findNamespaceOrNull(it.namespace.qualifiedName)
                 when(ns)  {
-                   null -> raiseError(null, "Namespace '${it.namespace.qualifiedName}' not found in typeModel.")
+                   null -> raiseError(ReferencesSyntaxAnalyser.PropertyValue(it.namespace, "qualifiedName"), "Namespace '${it.namespace.qualifiedName}' not found in the types domain.")
 
                     else -> {
                         _typeResolver = ExpressionTypeResolver(typesDomain, ns, _issues)

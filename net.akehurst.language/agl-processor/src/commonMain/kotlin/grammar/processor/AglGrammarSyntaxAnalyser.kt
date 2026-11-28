@@ -414,7 +414,7 @@ internal class AglGrammarSyntaxAnalyser(
         val embeddedStartRuleRef = children[2] as (Grammar) -> NonTerminal
         return { grm ->
             val namespace = grm.namespace
-            val embeddedGrammarRef = GrammarReferenceDefault(namespace, embeddedGrammarStr)
+            val embeddedGrammarRef = GrammarReferenceDefault(namespace, embeddedGrammarStr).also { setLocationFor(it, target, sentence) }
             EmbeddedDefault(embeddedStartRuleRef.invoke(grm).ruleReference, embeddedGrammarRef)
                 .also { setLocationFor(it, target, sentence) }
         }
