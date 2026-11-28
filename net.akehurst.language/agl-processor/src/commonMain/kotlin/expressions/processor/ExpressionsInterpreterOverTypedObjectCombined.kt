@@ -22,6 +22,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.expressions.asm.groupedByPrecedence
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
@@ -878,7 +879,9 @@ open class ExpressionsInterpreterOverTypedObjectCombined(
         expression: InfixExpression,
         eval: (evc: EvaluationContext, expression: Expression) -> TypedObject
     ): TypedObject {
-        //TODO: Operator precedence
+        // operator precedence is semantic, the ASM keeps the chain as written
+        val grouped = expression.groupedByPrecedence
+        if (grouped !== expression) return eval(evc, grouped)
         var result = eval(evc, expression.expressions.first())
         for (i in expression.operators.indices) {
             val op = expression.operators[i]

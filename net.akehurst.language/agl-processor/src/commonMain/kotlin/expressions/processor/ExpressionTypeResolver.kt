@@ -3,6 +3,7 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.expressions.asm.PropertyCallDefault
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.expressions.asm.groupedByPrecedence
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.types.api.*
@@ -193,7 +194,9 @@ class ExpressionTypeResolver(
 
     //TODO: add operator functions to StdLib
     fun InfixExpression.typeOfInfixExpressionFor(self: TypeInstance): TypeInstance {
-        //TODO: Operator precedence
+        // operator precedence is semantic, the ASM keeps the chain as written
+        val grouped = this.groupedByPrecedence
+        if (grouped !== this) return grouped.typeOfExpressionFor(self)
         var result = this.expressions.first().typeOfExpressionFor(self)
         for (i in this.operators.indices) {
             val op = this.operators[i]

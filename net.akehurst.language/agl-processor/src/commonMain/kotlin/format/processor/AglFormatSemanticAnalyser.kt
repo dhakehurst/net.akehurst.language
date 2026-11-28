@@ -34,6 +34,8 @@ import net.akehurst.language.formatter.api.FormatSetReference
 import net.akehurst.language.formatter.api.FormatExpressionTemplate
 import net.akehurst.language.formatter.api.TemplateElementExpressionProperty
 import net.akehurst.language.types.api.DataType
+import net.akehurst.language.types.api.TypeDefinition
+import net.akehurst.language.formatter.api.AglFormatRule
 import net.akehurst.language.types.api.PropertyName
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.grammar.api.Grammar
@@ -102,6 +104,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
 
             }
         }
+        domain.namespace.forEach { ns -> ns.formatSet.forEach { checkOverlappingRules(context, it) } }
     }
 
     private fun resolveRefs(context: SentenceContext?, domain: AglFormatDomain, def: FormatSet) {
@@ -134,6 +137,48 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatDomain, SentenceCont
                 }
 
                 else -> Unit
+            }
+        }
+    }
+
+    /**
+     * Two rules (own or of an extended format set) for types A and B where neither conforms to the other both match an object
+     * whose type conforms to A and to B. For each such type T in the types of the language that has no rule of its own
+     * (a rule for a type R that T conforms to, and that conforms to A and B) a warning is given:
+     * when formatting, the rule written first (own rules before extended ones) is used.
+     */
+    private fun checkOverlappingRules(context: SentenceContext?, def: FormatSet) {
+        val typesDomains = context?.findItemsConformingTo { it.value == TypesDomain::class.simpleName }?.mapNotNull { it.item as? TypesDomain } ?: emptyList()
+        if (typesDomains.isEmpty()) return
+        val ruleTypes = mutableListOf<Pair<TypeDefinition, AglFormatRule>>()
+        fun addRules(set: FormatSet, visited: MutableSet<FormatSet>) {
+            if (visited.add(set)) {
+                set.rules.forEach { rl ->
+                    val td = typesDomains.firstNotNullOfOrNull { it.findFirstDefinitionByPossiblyQualifiedNameOrNull(rl.forTypeName.possiblyQualifiedName) }
+                    if (null != td && ruleTypes.none { it.first == td }) ruleTypes.add(Pair(td, rl))
+                }
+                set.extends.forEach { ref -> ref.resolved?.let { addRules(it, visited) } }
+            }
+        }
+        addRules(def, mutableSetOf())
+        if (ruleTypes.size < 2) return
+        val allTypes = typesDomains.flatMap { it.allDefinitions }.distinct()
+        for (a in ruleTypes.indices) {
+            for (b in a + 1 until ruleTypes.size) {
+                val ta = ruleTypes[a].first
+                val tb = ruleTypes[b].first
+                if (ta.conformsTo(tb) || tb.conformsTo(ta)) continue
+                val ambiguous = allTypes.filter { t ->
+                    t.conformsTo(ta) && t.conformsTo(tb) &&
+                            ruleTypes.none { (r, _) -> t.conformsTo(r) && r.conformsTo(ta) && r.conformsTo(tb) }
+                }
+                if (ambiguous.isNotEmpty()) {
+                    issueWarn(
+                        ruleTypes[b].second,
+                        "In format set '${def.qualifiedName.value}' the rules for '${ta.name.value}' and '${tb.name.value}' both match ${ambiguous.joinToString { "'${it.name.value}'" }}, the rule for '${ta.name.value}' is used; add a rule for each of these types to choose",
+                        null
+                    )
+                }
             }
         }
     }
