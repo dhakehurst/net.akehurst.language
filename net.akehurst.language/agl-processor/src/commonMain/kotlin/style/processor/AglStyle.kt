@@ -429,7 +429,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, SentenceContext>() {
                     transToListOf("selectorAndComposition", "AglStyleSelector", $$"/* custom SyntaxAnalyser */ $nothing")
                     createObject("selectorSingle", "AglStyleSelector") {
                         /* custom SyntaxAnalyser, the assignment says which property the leaf gives a value to (used for completion) */
-                        assignment("value", 0, "child[0]")
+                        assignment("value", "child[0]")
                     }
                     createObject("semanticSelector", "AglStyleSelector") { /* custom SyntaxAnalyser */ }
                     leafStringRule("semanticKind")

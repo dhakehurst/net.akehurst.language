@@ -60,7 +60,6 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::propertyAssignmentBlock)
         super.register(this::propertyAssignment)
         super.register(this::propertyName)
-        super.register(this::grammarRuleIndex)
         super.register(this::with)
         super.registerFor("when", this::when_)
         super.register(this::whenOption)
@@ -266,22 +265,17 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun propertyAssignmentBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<VariableAssignmentStatement> =
         children[1] as List<VariableAssignmentStatement>
 
-    // propertyAssignment = propertyName  grammarRuleIndex? ':=' expression ;
+    // propertyAssignment = propertyName ASSIGN_OP expression ;
     private fun propertyAssignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableAssignmentStatement {
         val lhsPropertyName = children[0] as String
-        val lhsGrammarRuleIndex = children[1] as Int?
-        val rhs = children[3] as Expression
+        val rhs = children[2] as Expression
         val variable = VariableDefinitionDefault(lhsPropertyName, null) //TODO: should this be reused ?
-        return VariableAssignmentStatementDefault(variable, lhsGrammarRuleIndex, rhs) //TODO: should this be reused !?
+        return VariableAssignmentStatementDefault(variable, rhs) //TODO: should this be reused !?
     }
 
     // propertyName = IDENTIFIER | SPECIAL
     private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         children[0] as String
-
-    // grammarRuleIndex = '$' POSITIVE_INTEGER ;
-    private fun grammarRuleIndex(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int =
-        (children[1] as String).toInt()
 
     // with = 'with' '(' expression ')' expression ;
     private fun with(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WithExpression {
@@ -367,7 +361,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun variableAssignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableAssignmentStatement {
         val variable = children[0] as VariableDefinition
         val rhs = children[2] as Expression
-        return VariableAssignmentStatementDefault(variable, -1, rhs)
+        return VariableAssignmentStatementDefault(variable, rhs)
     }
 
     // variableDefinition = IDENTIFIER (':' typeReference)? ;

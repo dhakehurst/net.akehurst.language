@@ -603,16 +603,16 @@ object AglCrossReference : LanguageObjectAbstract<CrossReferenceDomain, Sentence
                     //TODO: the other rules, currently only what completion (of references definitions) needs:
                     // the assignments say which property the type names give a value to
                     importTypes("net.akehurst.language.base.api", "net.akehurst.language.reference.asm")
-                    createObject("scope", "ScopeDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("scopeForTypeName", 1, "child[1]") }
-                    createObject("identifiable", "IdentifiableDefault") { /* custom SyntaxAnalyser */ assignment("typeName", 1, "child[1]") }
+                    createObject("scope", "ScopeDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("scopeForTypeName", "child[1]") }
+                    createObject("identifiable", "IdentifiableDefault") { /* custom SyntaxAnalyser */ assignment("typeName", "child[1]") }
                     // 'forall elements of-type T' of an import or inherit
-                    createObject("scopeForall", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 2, "child[2]") }
-                    createObject("importIntoScope", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 1, "child[1]") }
-                    createObject("referenceDefinition", "ReferenceDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("inTypeName", 1, "child[1]") }
-                    createObject("propertyReferenceExpression", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
-                    createObject("propertyWhenOption", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
-                    createObject("propertyWhenElse", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", 3, "child[3]") }
-                    createObject("collectionReferenceExpression", "ReferenceExpressionCollectionDefault") { /* custom SyntaxAnalyser */ assignment("ofType", 2, "child[2]") }
+                    createObject("scopeForall", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", "child[2]") }
+                    createObject("importIntoScope", "ScopeImportDefault") { /* custom SyntaxAnalyser */ assignment("ofType", "child[1]") }
+                    createObject("referenceDefinition", "ReferenceDefinitionDefault") { /* custom SyntaxAnalyser */ assignment("inTypeName", "child[1]") }
+                    createObject("propertyReferenceExpression", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", "child[3]") }
+                    createObject("propertyWhenOption", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", "child[3]") }
+                    createObject("propertyWhenElse", "ReferenceExpressionPropertyDefault") { /* custom SyntaxAnalyser */ assignment("refersToTypeName", "child[3]") }
+                    createObject("collectionReferenceExpression", "ReferenceExpressionCollectionDefault") { /* custom SyntaxAnalyser */ assignment("ofType", "child[2]") }
                     transToListOf("ofType", "PossiblyQualifiedName", "child[1]")
                     transToListOf("typeReferences", "PossiblyQualifiedName", "children")
                     transRule("possiblyQualifiedTypeReference", "PossiblyQualifiedName", "child[0]")

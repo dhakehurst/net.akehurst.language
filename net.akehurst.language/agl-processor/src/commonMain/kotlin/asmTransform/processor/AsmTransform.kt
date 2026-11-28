@@ -67,13 +67,11 @@ grammar $NAME : Base {
     transformRuleRhs = expressionRule | modifyRule ;
     expressionRule = expression ;
     modifyRule = '{' possiblyQualifiedTypeName '->' assignmentStatement+ '}' ;
-    assignmentStatement = propertyName grammarRuleIndex? ':=' expression ;
+    assignmentStatement = propertyName ':=' expression ;
     propertyName = IDENTIFIER ;
     grammarRuleName = IDENTIFIER ;
     possiblyQualifiedTypeName = possiblyQualifiedName ;
     expression = ${AglExpressions.NAME}::expression ;
-    grammarRuleIndex = '$' POSITIVE_INTEGER ;
-    leaf POSITIVE_INTEGER = "[0-9]+" ;
 }
     """
 
@@ -160,14 +158,12 @@ grammar $NAME : Base {
                         lit("{"); ref("possiblyQualifiedTypeName"); lit("->"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
                     }
                     concatenation("assignmentStatement") {
-                        ref("propertyName"); opt { ref("grammarRuleIndex") }; lit(":="); ref("expression")
+                        ref("propertyName"); lit(":="); ref("expression")
                     }
                     concatenation("propertyName") { ref("IDENTIFIER") }
                     concatenation("grammarRuleName") { ref("IDENTIFIER") }
                     concatenation("possiblyQualifiedTypeName") { ref("possiblyQualifiedName") }
                     concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
-                    concatenation("grammarRuleIndex") { lit("$"); ref("POSITIVE_INTEGER") }
-                    concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
                 }
             }
         }
@@ -208,9 +204,9 @@ grammar $NAME : Base {
 
                     }
                     // custom SyntaxAnalyser, the assignment says which property the grammar rule name gives a value to (used for completion)
-                    createObject("transformRule", "AsmTransformationRuleDefault") { assignment("grammarRuleName", 0, "child[0]") }
+                    createObject("transformRule", "AsmTransformationRuleDefault") { assignment("grammarRuleName", "child[0]") }
                     transRule("grammarRuleName", "String", "child[0]")
-                    createObject("modifyRule", "ModifyObjectRuleDefault") { assignment("possiblyQualifiedTypeName", 1, "child[1]") }
+                    createObject("modifyRule", "ModifyObjectRuleDefault") { assignment("possiblyQualifiedTypeName", "child[1]") }
                     transRule("possiblyQualifiedTypeName", "String", "child[0]")
                     transRule("possiblyQualifiedName", "String", "\$matchedText")
                     //TODO: currently the types are not found in the typemodel

@@ -211,8 +211,8 @@ object AglCompletion : LanguageObjectAbstract<AglCompletionDomain, SentenceConte
                     importTypes("net.akehurst.language.completion.api")
                     createObject("completionRule", "CompletionRule") {
                         /* custom SyntaxAnalyser, the assignments say which property the leaves give a value to (used for completion) */
-                        assignment("context", 0, "child[0]")
-                        assignment("forItem", 1, "child[1]")
+                        assignment("context", "child[0]")
+                        assignment("forItem", "child[1]")
                     }
                     transRule("forItem", "String", "child[0]")
                     transRule("context", "String", "child[1]")

@@ -373,7 +373,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                                 if (propType == StdLibDefault.NothingType) {
                                     propType = StdLibDefault.AnyType
                                 }
-                                typeDecl.appendPropertyStored(propName, propType, setOf(PropertyCharacteristic.COMPOSITE), ms.lhsGrammarRuleIndex ?: -1)
+                                typeDecl.appendPropertyStored(propName, propType, setOf(PropertyCharacteristic.COMPOSITE), -1)
                             }
 
                             else -> _issues.error(
@@ -638,7 +638,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Sent
                                 when {
                                     null == existingProp -> {
                                         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-                                        t.appendPropertyStored(propName, propType, characteristics, ass.lhsGrammarRuleIndex ?: -1)
+                                        t.appendPropertyStored(propName, propType, characteristics, -1)
                                     }
 
                                     else -> when {
