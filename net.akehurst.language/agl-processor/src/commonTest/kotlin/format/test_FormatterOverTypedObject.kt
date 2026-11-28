@@ -378,7 +378,8 @@ class test_FormatterOverTypedObject {
                 }
             },
             self = TestObject(),
-            expected = "3"
+            // the text of an object an '#output' applies to goes only to that output, the main sentence gets "" (David FD4)
+            expected = ""
         )
         val actual = test(td)
 
